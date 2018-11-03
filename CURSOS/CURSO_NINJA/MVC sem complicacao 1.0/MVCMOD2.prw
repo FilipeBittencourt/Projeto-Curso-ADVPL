@@ -5,18 +5,21 @@
 #INCLUDE "FWMVCDEF.CH"
 #INCLUDE "TOPCONN.CH
 
+Static cTitulo := "Cadastro Fornecedor x Rota/Trecho"
+Static cCodGestor := GetNewPar("MV_YVLROTX", "000000")
+
 User Function VIXA256()
 
 	Local aArea       := GetArea()
 	Local oBrowse     := nil
 
-	Private cCodGestor := GetNewPar("MV_YVLROTX", "000000")
-	private aRotina   := MenuDef()
-	Private cTitulo := "Cadastro Fornecedor x Rota/Trecho"
+	//Private cCodGestor := GetNewPar("MV_YVLROTX", "000000")
+	private aRotina   := MenuDef()	
 
 	oBrowse := FWMBrowse():New()
 	oBrowse:SetAlias('ZZ0')
 	oBrowse:SetDescription(cTitulo)
+	oBrowse:SetFilterDefault("ZZ0->ZZ0_CODFOR == SA2->A2_COD  .And.  ZZ0->ZZ0_LOJA == SA2->A2_LOJA")
 	//oBrowse:SetFilterDefault("ZZ0->ZZ0_CODIGO == '000001'")	
 	//oBrowse:AddLegend("ZZ0_STATUS = 'N'", "GREEN", "Novo") 
 	//oBrowse:AddLegend("ZZ0_STATUS = 'A'", "RED"  , "Aprovado")
@@ -44,11 +47,13 @@ Static Function ModelDef()
 	Local oFormFil := FWFormStruct(1, 'ZZ0', {|cCampo| AllTrim(cCampo) $ "ZZ0_TRECHO|ZZ0_UFORIG|ZZ0_CIDORI|ZZ0_DESCIO|ZZ0_UFDEST|ZZ0_CIDDES|ZZ0_DESCID|ZZ0_MODALI|"})// exibe campos na GRID
 	Local aZZ0Rel  := {}
 
-	oFormPai:SetProperty('ZZ0_DESCTR', MODEL_FIELD_INIT, {|oView| U_VIX256IG("SA4", 1, ZZ0->ZZ0_CTRANS, "A4_NOME")})
+   oFormPai:SetProperty('ZZ0_DESCTR', MODEL_FIELD_INIT, {|oView| U_VIX256IG("SA4", 1, ZZ0->ZZ0_CTRANS, "A4_NOME")})	
+   oFormPai:SetProperty('ZZ0_CODFOR', MODEL_FIELD_INIT, {|oView| SA2->A2_COD })   
+   oFormPai:SetProperty('ZZ0_LOJA', MODEL_FIELD_INIT, {|oView| SA2->A2_LOJA })
+ 
 	
 	//Gatilhos para preencher campos com consultas padrão
-	oFormPai:AddTrigger("ZZ0_CTRANS", "ZZ0_DESCTR", {|| .T.}, {|oView| U_VIX256IG("SA4", 1, oView:GetValue('ZZ0_CTRANS'), "A4_NOME", .T.)})
-		
+	oFormPai:AddTrigger("ZZ0_CTRANS", "ZZ0_DESCTR", {|| .T.}, {|oView| U_VIX256IG("SA4", 1, oView:GetValue('ZZ0_CTRANS'), "A4_NOME", .T.)})		
 	oFormPai:AddTrigger("ZZ0_CODFOR", "ZZ0_LOJA", 	{|| .T.}, {|oView| U_VIX256IG("SA2", 1, oView:GetValue('ZZ0_CODFOR'), "A2_LOJA", .T.)})
 	oFormFil:AddTrigger("ZZ0_CIDORI", "ZZ0_DESCIO", {|| .T.}, {|oView| U_VIX256IG("CC2", 1, oView:GetValue('ZZ0_UFORIG') + oView:GetValue('ZZ0_CIDORI'), "CC2_MUN", .T.)})
 	oFormFil:AddTrigger("ZZ0_CIDDES", "ZZ0_DESCID", {|| .T.}, {|oView| U_VIX256IG("CC2", 1, oView:GetValue('ZZ0_UFDEST') + oView:GetValue('ZZ0_CIDDES'), "CC2_MUN", .T.)})

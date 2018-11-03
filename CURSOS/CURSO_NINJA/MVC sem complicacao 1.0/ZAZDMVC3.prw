@@ -42,19 +42,26 @@ Static Function ModelDef()
 	Local oModel		:= Nil
 	Local oStruZZA  := FwFormStruct(1,"ZZA")  // Não filtre campos da ModelDef, deixe isso apenas para ViewDef
 	Local oStruZZD  := FwFormStruct(1,"ZZD") // Não filtre campos da ModelDef, deixe isso apenas para ViewDef	 
-	Local bPosValidacao  := {|oModel| VLDGRVZZA(oModel)}
-	Local bLinePre  := {|oModelGrid, nLine, cAction, cField| LinePre(oModelGrid, nLine, cAction, cField)}
-	Local bLinePos  := {|oModelGrid| LinePos(oModelGrid)}
+	Local bPosValidacao  := {|oModel| PosValid(oModel)}	
+	
+	Local bLinePre  := {|oModelGrid, nLine, cAction, cField| LinePre(oModelGrid, nLine, cAction, cField)} //http://tdn.totvs.com/display/framework/MPFormModel
+	Local bLinePost  := {|oModelGrid| LinePos(oModelGrid)}	
 	//Local bInitDados  := {|oModelGrid| InitDados(oModelGrid)}
 	Local aZZDRel		:= {}
+	Local nMax := Val(Replicate("9",TamSX3("ZZD_COD")[1]))
+
+	 
 	
 	//Cria/Instanciando o objeto do Modelo de Dados, não é recomendado, respeitar 10 caracteres no ID(ZAZDMV3_M) 
 	oModel := MPFormModel():New("ZAZDMV3_M", /*bPreValidacao*/,bPosValidacao,/*bCommit*/,/*bCancel*/ ) 
 	oModel:AddFields("ZZAMASTER",/*cOwner*/,oStruZZA, /*bPreValidacao*/, /*bPosValidacao*/, /*bCarga*/ )// Adiciona ao modelo um componente de formulário
+		 
+	//oModel:AddTrigger("ZZD_TECNIC","ZZD_NOMTEC","Gatilhos()",.F.,Nil,Nil,Nil,)//Cria gatilhos
+
 	
 	//Amarração das tabelas. Aqui você diz que o filho(ZZDDETAIL) pertence ao pai(ZZAMASTER) passando a estrutura do filho oStruZZD
 	//oModel:AddGrid( "ZZDDETAIL", "ZZAMASTER", oStruZZD,/*bLinePre*/, /*bLinePos*/ ,/*bPreVal*/ , , /*bLoad*/)	
-	oModel:AddGrid( "ZZDDETAIL", "ZZAMASTER", oStruZZD, bLinePre, bLinePos ,/*bPreVal*/ , , /*bLoad*/)
+	oModel:AddGrid( "ZZDDETAIL", "ZZAMASTER", oStruZZD, /*bLinePre*/, bLinePost ,/*bPreVal*/, , /*bLoad*/)
 		
 	//Os relacionamentos são sempre do filho(ZZDDETAIL) e os campos seguem a mesma ordem do FILHO para o PAI SEMPRE!!!		  
 	aAdd(aZZDRel, {"ZZD_FILIAL","xFilial('ZZA')"} )
@@ -67,10 +74,16 @@ Static Function ModelDef()
 	oModel:GetModel("ZZAMASTER" ):SetDescription("Cabeçalho")// Adiciona a descrição do Componente do Modelo de Dados
 	oModel:GetModel("ZZDDETAIL" ):SetDescription("Itens")// Adiciona a descrição do Componente do Modelo de Dados			
 	
-		
-	oModel:SetPrimaryKey({'ZZA_FILIAL','ZZA_COD'}) //Defina a chave primaria
-	//oModel:SetPrimaryKey({}) //Defina a chave primaria	
-	oModel:GetModel('ZZDDETAIL'):SetOptional(.T.)
+	oModel:GetModel("ZZDDETAIL" ):SetMaxLine(nMax) // Limita a quantidades de linhas de uma grid.
+
+	//Permissão da linha
+	oModel:GetModel('ZZDDETAIL'):SetNoInsertLine(.T.)
+	oModel:GetModel('ZZDDETAIL'):SetNoDeleteLine(.T.)
+
+
+	oModel:SetPrimaryKey({'ZZA_FILIAL','ZZA_COD'}) // ou 	oModel:SetPrimaryKey({}) //Defina a chave primaria  
+
+	oModel:GetModel('ZZDDETAIL'):SetOptional(.T.) // Para permitir que o Grid sem dados ou não  .T. é opcional
 	
 	oModel:SetActivate()
 	
@@ -184,11 +197,12 @@ Return( lRetorno )
 //----------------------------------------------------------
 // VALIDAÇÃO DO MODELO
 //----------------------------------------------------------
-Static Function VLDGRVZZA(oModel)
+Static Function PosValid(oModel)
 
 	Local oModZZA := oModel:GetModel("ZZAMASTER")
 	Local oModZZD := oModel:GetModel("ZZDDETAIL")
 	Local lRet    := .T.
+	Local nI := 0
 	
 	If(Empty(oModZZA:GetValue("ZZA_NOME")))
 		lRet := .F.
@@ -212,23 +226,91 @@ Static Function LinePre(oModelGrid, nLine, cAction, cField)
 
 	Local lRet       := .T. 	
 	Local oModel     := oModelGrid:GetModel()
-	Local nOperation := oModelGrid:GetOperation()
-	//validação dos dados  de cada linha carregada do campo ZZD_TIPO
-	If cAction == "DELETE" .AND. nOperation == 4	 // pega o valor do campo na grid	
+	Local nOperation := oModelGrid:GetOperation()	
+	Local oModZZD  := oModel:GetModel("ZZDDETAIL")
+
+	
+   If cAction == "DELETE" .AND. nOperation == 4	 // pega o valor do campo na grid	
 		lRet := .F.				
-		Help(NIL, NIL, "HELP", NIL, "Não é permitido apagar chamados em atendimento. Na linha "+ Alltrim(Str(nLine)), 1, 0, NIL, NIL, NIL, NIL, NIL, {"Favor informar com F3"}) //http://tdn.totvs.com/display/public/PROT/Help
-	EndIf
+		Help(NIL, NIL, "HELP", NIL, "Ação não permitida.", 1, 0, NIL, NIL, NIL, NIL, NIL, {"Favor informar com F3"}) //http://tdn.totvs.com/display/public/PROT/Help	
+	EndIf	
+
+	
+	If Empty(FWFLDGET("ZZD_TIPO"))	 // pega o valor do campo no grid na linha selecionada
+		lRet := .F.
+		MsgStop("O tipo de de atendimento não foi informado.","Stop")		
+		//Help(NIL, NIL, "VLDGRIZZD", NIL, "O tipo de de atendimento não foi informado.", 1, 0, NIL, NIL, NIL, NIL, NIL, {"Favor informar com F3"}) //http://tdn.totvs.com/display/public/PROT/Help
+	EndIf 
 
 Return( lRet )
 
 
 Static Function LinePos(oModelGrid)
-
-	Local lRet := .T. 	
+	
+	//Local oModZZD  := oModelGrid:GetModel("ZZDDETAIL")
+		
+	Local lRet     := .T. 	
+	Local nI       := 0
+	Local oModel   := FWModelActive()
+	Local oModZZD  := oModel:GetModel("ZZDDETAIL")
+	
+	
 	//validação dos dados  de cada linha carregada do campo ZZD_TIPO
+	
 	If Empty(FWFLDGET("ZZD_TIPO"))	 // pega o valor do campo na grid	
 		lRet := .F.		
 		Help(NIL, NIL, "VLDGRIZZD", NIL, "O tipo de de atendimento não foi informado.", 1, 0, NIL, NIL, NIL, NIL, NIL, {"Favor informar com F3"}) //http://tdn.totvs.com/display/public/PROT/Help
 	EndIf
+	
+	If oModZZD:IsDeleted()	
+		lRet := .F.				
+		Help(NIL, NIL, "LinePos", NIL, "Não pode deletar chamados", 1, 0, NIL, NIL, NIL, NIL, NIL, {""}) //http://tdn.totvs.com/display/public/PROT/Help
+	ElseIf oModZZD:IsInserted()
+		lRet := .F.				
+		Help(NIL, NIL, "LinePos", NIL, "Não é permitido inserir chamados nessa tela", 1, 0, NIL, NIL, NIL, NIL, NIL, {""}) //http://tdn.totvs.com/display/public/PROT/Help
+	ElseIf oModZZD:IsUpdated()
+		lRet := .F.				
+		Help(NIL, NIL, "LinePos", NIL, "Não é permitido alterar chamados chamados nessa tela", 1, 0, NIL, NIL, NIL, NIL, NIL, {""}) //http://tdn.totvs.com/display/public/PROT/Help		
+	
+	EndIf
 
 Return( lRet )
+
+ 
+
+ //----------------------------------------------------------
+// GATILHO
+//----------------------------------------------------------
+
+Static Function Gatilhos(tabela,indice,campo,campoRet)
+
+	Local cNomTec := ""
+	
+	//cNomTec := AllTrim(Posicione("ZZA",1,XFilial("ZZA")+FWFLDGET("ZZE_TECNIC"),"ZZA_NOME"))
+	cNomTec := AllTrim(Posicione(tabela,indice,XFilial(tabela)+FWFLDGET(campo),campoRet))
+
+Return  (cNomeTec)
+
+
+User Function VIX256IG(cTab, nIndex, cConteudo, cCampoRet, lTrigger, aCampoDest)
+
+	Local lRet 		:= .T.
+	Local oModel	:= FWModelActive()
+	Local oView		:= FwViewActive()
+	Local cRetorno	:= ""
+	
+	Default cTab		:= ""
+	Default lTrigger 	:= .F.
+	Default aCampoDest	:= {}
+
+	If (!oView:IsActive() .And. !INCLUI) .Or. lTrigger
+
+		If ! Empty(cTab)
+
+			cRetorno := PadL(Posicione(cTab, nIndex, xFilial(cTab) + cConteudo, cCampoRet), TamSx3(cCampoRet)[1])
+
+		EndIf
+
+	EndIf
+
+Return(cRetorno)
