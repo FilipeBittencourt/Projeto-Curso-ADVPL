@@ -6,49 +6,18 @@
 Static cTitulo := "Contatos da empresa"
 User Function CONTATO()	   
 
-	Local aArea   := GetArea()
-	Local oBrowse
-	Local cFunBkp := FunName()
-	
-	SetFunName("CONTATO")
-	
-	//Instânciando FWMBrowse - Somente com dicionário de dados
-	oBrowse := FWMBrowse():New()
-	
-	//Setando a tabela de cadastro de Autor/Interprete
+	Local aArea  := GetArea()
+	Local oBrowse := FwMBrowse():New()
+	oBrowse:SetDescription(cTitulo) 
 	oBrowse:SetAlias("ZXV")
-
-	//Setando a descrição da rotina
-	oBrowse:SetDescription(cTitulo)
 	
 	//Legendas
 	oBrowse:AddLegend( "ZXV->ZXV_STATUS == '1'", "GREEN",	"Ativo" )
 	oBrowse:AddLegend( "ZXV->ZXV_STATUS == '2'", "RED",	"Bloqueado" )
-	
-	//Filtrando LOGO QUANDO ABRE A TELA
-	//oBrowse:SetFilterDefault("ZXV->ZXV_COD >= '000000' .And. ZXV->ZXV_COD <= 'ZZZZZZ'")
-	
-	//Ativa a Browse
+
 	oBrowse:Activate()
-	
-	SetFunName(cFunBkp)
 	RestArea(aArea)
 
-
-/*
-	Local aArea       := GetArea() 
-	Local oBrowse     := nil
-	private aRotina   := fMenuDef()
-	private cCadastro := "Contatos" 	
-   
-
-	oBrowse := FWMBrowse():New()
-	oBrowse:SetAlias('ZXV')
-	oBrowse:SetDescription(cCadastro)
-	oBrowse:AddLegend("ZXV_STATUS = 'N'", "GREEN", "Novo") 
-	oBrowse:AddLegend("ZXV_STATUS = 'A'", "RED"  , "Aprovado")
-	oBrowse:Activate() 
-	RestArea(aArea)*/
 Return 
 
 //menu
@@ -59,7 +28,7 @@ Static Function MenuDef()
 	ADD OPTION aRotina TITLE 'Incluir'    ACTION 'VIEWDEF.CONTATO' OPERATION MODEL_OPERATION_INSERT ACCESS 0 //OPERATION 3
 	ADD OPTION aRotina TITLE 'Alterar'    ACTION 'VIEWDEF.CONTATO' OPERATION MODEL_OPERATION_UPDATE ACCESS 0 //OPERATION 4
 	ADD OPTION aRotina TITLE 'Excluir'    ACTION 'VIEWDEF.CONTATO' OPERATION MODEL_OPERATION_DELETE ACCESS 0 //OPERATION 5
-	ADD OPTION aRotina TITLE 'Legenda'    ACTION 'U_CONTALEG'      OPERATION 6                      ACCESS 0 //OPERATION X	
+	
 return aRotina
 
 
@@ -85,7 +54,7 @@ Static Function ModelDef()
 	
 	//Instanciando o modelo, não é recomendado colocar nome da user function (por causa do u_), respeitando 10 caracteres
 	//oModel := MPFormModel():New("MODCONTAT",/*bPre*/, /*u_zM1bPos*/, /*bCom*/, /*bCan*/) 
-	 oModel := MPFormModel():New('MODCONTAT', { |oModel| CONCA01AAA(oModel)} , { |oModel| CONCA01VLD(oModel)})
+	 oModel := MPFormModel():New('MODCONTAT', /*bPre*/ , { |oModel| CONTA01VLD(oModel)}, /*bCom*/, /*bCan*/)
 	
 	//Atribuindo formulários para o modelo
 	oModel:AddFields("FORMZXV",/*cOwner*/,oStZXV)
@@ -148,20 +117,6 @@ Static Function ViewDef()
 Return oView
 
 
-User Function CONTALEG()
-	Local aLegenda := {}
-	
-	//Monta as cores
-	AADD(aLegenda,{"BR_VERDE",		"Ativo"  })
-	AADD(aLegenda,{"BR_VERMELHO",	"Bloqueado"})
-	
-	BrwLegenda(cTitulo, "Status", aLegenda)
-Return
-
-
-
-
-
 //----------------------------------------
 //Validações das ações da enchoice (crud)
 //----------------------------------------
@@ -178,13 +133,11 @@ Static Function CONCA01AAA(oModel)
 Return lRet
 
 
-Static Function CONCA01VLD(oModel)   
+Static Function CONTA01VLD(oModel)   
 	Local aArea      := GetArea()		
 	Local nOpc       := oModel:GetOperation()
 	Local lRet       := .T.
-		 
-	ALERT(oModel:GetValue('FORMZXV','ZXV_NOME'))
-	 
+
 	If (Empty(oModel:GetValue('FORMZXV','ZXV_NOME')) .Or. Alltrim(Upper(oModel:GetValue('FORMZXV','ZXV_NOME'))) == "")
 		ALERT("aQUI") 
 	EndIf
