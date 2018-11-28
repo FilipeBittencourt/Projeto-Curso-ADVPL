@@ -1,0 +1,210 @@
+
+#INCLUDE 'FWMVCDEF.CH'
+#Include "Protheus.ch"
+
+
+/*/{Protheus.doc} MT360GRV
+Este ponto de entrada é executado apos a atualização de todas as tabelas da rotina de
+condição de pagamento nas operações de inclusão, alteração e exclusão.
+
+@author Sandro Costa
+@since 07/06/2017
+@version 1.0
+
+@return Nil, Nao esperado
+
+@example
+(examples)
+
+@see (links_or_references)
+/*/
+
+User Function MT360GRV
+	
+	Local nI
+	
+	If INCLUI .and. MsgYesNO("Deseja cadastrar essa condição para as demais filiais?")
+		aFiliais	:= GetFiliais()
+		
+		If Len(aFiliais) > 0
+			BEGIN TRANSACTION
+			For nI := 1 to Len(aFiliais)
+				cFilAtuE4 := AllTrim(aFiliais[nI])
+				If !Posicione("SE4",1,cFilAtuE4+M->E4_CODIGO,"FOUND()") // Se nao existir o codigo, cadastra na filial selecionada
+//					lRet := MyMata360(cFilAtuE4)
+					lRet := CriaSE4(cFilAtuE4)
+					If !lRet
+						DisarmTransaction()
+						Exit
+					EndIf
+				Else
+					Alert("Código "+M->E4_CODIGO + " Já existe na filial "+cFilAtuE4)
+				EndIf
+			Next nI
+			END TRANSACTION
+		EndIf
+	EndIf	
+
+	EmailSE4() // Envia email se a condição de pagamento for altereada, caso a mesma esteja vinculada a um fornecedor
+
+Return
+
+
+Static Function GetFiliais
+	Local aFiliais
+	aFiliais := U_SelFil01() // Função generica de tela de filiais
+	
+	If Len(aFiliais) == 0
+		Alert("Não foi selecionada ao menos 1 filial. Criando somente para a atual.")
+	EndIf
+	
+Return aFiliais
+
+Static Function CriaSE4(cFilialAtu)
+	Local lRet := .T.
+	If !Posicione("SX3",1,"SE4","FOUND()")
+		Alert("SX3 da tabela SE4 não localizada, favor contactar o TI.")
+		Return
+	EndIf
+	
+	RECLOCK("SE4",.T.)
+	//Populando Cabeçalho
+	Do While !SX3->(EOF()) .and. SX3->X3_ARQUIVO == "SE4"
+		cCampo := SX3->X3_CAMPO
+		If AllTrim(cCampo) $ "E4_FILIAL"
+			SE4->&(cCampo) := cFilialAtu
+		Else
+			SE4->&(cCampo) := M->&(cCampo)
+		EndIf
+		SX3->(DbSkip())
+	EndDo
+	SE4->(MsUnLock())
+
+Return lRet
+
+Static Function MyMata360(cFilialAtu)
+	//DEFININDO variáveis
+	Local aItemAux := {} //Array auxiliar para inserção dos itens
+	Local aDados := {} //Array do cabeçalho (SE4)
+	Local aItens := {} //Array que irá conter os itens (SEC)
+	Local lRet := .T.
+	Private lMsErroAuto := .F. //Indicador do status pós chamada
+	
+	If !Posicione("SX3",1,"SE4","FOUND()")
+		Alert("SX3 da tabela SE4 não localizada, favor contactar o TI.")
+		Return
+	EndIf
+	
+		
+	//Populando Cabeçalho
+	Do While !SX3->(EOF()) .and. SX3->X3_ARQUIVO == "SE4"
+		cCampo := SX3->X3_CAMPO
+		If AllTrim(cCampo) $ "E4_FILIAL"
+			aAdd(aDados, {cCampo , cFilialAtu, Nil})
+		Else
+			aAdd(aDados, {cCampo , M->&(cCampo), Nil})
+		EndIf
+		SX3->(DbSkip())
+	EndDo
+	
+	
+	//Chamando rotina automática de inclusão
+	MSExecAuto({|x,y,z|mata360(x,y,z)},aDados,aItens, 3)
+	
+	//Verificando status da rotina executada
+	If lMsErroAuto
+		MostraErro()
+		lRet := .F.
+	EndIf
+	
+Return lRet
+
+
+Static Function EmailSE4()
+
+	Local cAlias := GetNextAlias()
+	Local cScryptHtml 	:= ""
+	Local cLinkImg	 	:= "http://www.grupouniaosa.com.br/wp-content/themes/grupouniao/images/logo.png"
+	Local cNomeEmp	 	:= Alltrim(SM0->M0_NOME) + "-" + Alltrim(SM0->M0_FILIAL)
+	Local cLinkSit 	:= "http://www.grupouniaosa.com.br/"
+	Local cAssunto 	:= "Condição de pgto. alterada"
+	Local cEmailOut	:= "filipe.vieira@facilesistemas.com.br;wlysses@facilesistemas.com.br"
+	
+	
+	BeginSql Alias cAlias
+	
+		SELECT	COUNT(*) as NUM FROM SA2010 WHERE A2_COND = %Exp:SE4->E4_CODIGO%
+	
+	EndSql
+	
+	IF (cAlias)->NUM > 0 
+	
+		cScryptHtml := '	<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"'
+		cScryptHtml += '	xmlns="http://www.w3.org/TR/REC-html40">'
+		cScryptHtml += '	<head>'
+		cScryptHtml += '	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />'
+		cScryptHtml += '		<title>Comunicado Orçamento '+SM0->M0_FILIAL+'</title>'
+		cScryptHtml += '      <style type="text/css">'
+		cScryptHtml += '<!--'
+		cScryptHtml += '.style6 {font-size: 12px; font-weight: bold; }'
+		cScryptHtml += '.style7 {font-size: 12px}'
+		cScryptHtml += '-->'
+		cScryptHtml += '        </style>'
+		cScryptHtml += '</head>'
+		cScryptHtml += '	<body>'
+		cScryptHtml += '<div class="gs">'
+		cScryptHtml += '<div class="gE iv gt"></div>'
+		cScryptHtml += '<div class="utdU2e"></div><div class="tx78Ic"></div><div class="QqXVeb"></div><div id=":10g" tabindex="-1"></div><div id=":118" class="ii gt adP adO"><div id=":119"><u></u>'
+		cScryptHtml += '	<div style="padding:0;margin:0;background:#eaeaea">'
+		cScryptHtml += '		<table style="background:#eaeaea;font-family:Lucida grande,Sans-SerIf;border-spacing:0" align="center" border="0" cellpadding="0" cellspacing="0" width="100%">'
+		cScryptHtml += '			<tbody><tr>'
+		cScryptHtml += '				<td style="padding:25px 0 55px" align="center">'
+		cScryptHtml += '					<table style="padding:0 50px;text-align:left;border-spacing:0" align="center" border="0" cellpadding="0" cellspacing="0" width="800">'
+		cScryptHtml += '		    <tbody><tr>'
+		cScryptHtml += '							<td style="padding-bottom:10px">'
+		cScryptHtml += '								<img src="'+cLinkImg+'">							</td>'
+		cScryptHtml += '						</tr>'
+		cScryptHtml += '						<tr>'
+		cScryptHtml += '							<td height="400" style="font-size:13px;color:#888;padding:30px 40px;border:1px solid #b8b8b8;background-color:#fff">'
+		cScryptHtml += '								<p style="color:black;margin:0">Você acaba de receber um informativo de '+ cEmpAnt + cFilAnt + "-" + cNomeEmp +'.</p>'
+		cScryptHtml += '				  <div style="background-color:#e3e3e3;padding:20px;color:black;margin:30px 0">'
+		cScryptHtml += '									<span style="font-weight:bold;font-size:14px;margin:0">Validação condição de pagamento</span>'
+
+		
+		cScryptHtml += '			                        <hr style="margin:15px 0">'
+		cScryptHtml += '									<p style="margin:0"></p>'
+		
+		cScryptHtml += '									<table width="674" border="0">'
+
+
+			cScryptHtml += '                                      <tr>'
+			cScryptHtml += '                                       		<td width="547" style="border 1px black">A condição de pagamento ' +SE4->E4_CODIGO+'  foi Alterada.</td>'
+			cScryptHtml += '                                      </tr>'		
+										
+		
+		cScryptHtml += '                                 </table>'
+		cScryptHtml += '                            <br>'
+		
+		cScryptHtml += '					          </div>'
+		cScryptHtml += '						  <p>Esta notIficação foi enviada por um email configurado para não receber resposta.<br>'
+		cScryptHtml += '									Por favor, não responda esta mensagem.							  </p>'
+		cScryptHtml += '						  </td>'
+		cScryptHtml += '						</tr>'
+		cScryptHtml += '					</tbody></table>'
+		
+		cScryptHtml += '	    <p align="center" style="width:640px;padding:10px 20px;font-size:10px;color:#888;line-height:14px">'
+		cScryptHtml += '						Para acessar o site da '+cNomeEmp+','
+		cScryptHtml += '						<a href="'+cLinkSit+'" style="color:#666;text-decoration:underline" target="_blank">clique aqui.</a>					</p>'
+		cScryptHtml += '			  </td>'
+		cScryptHtml += '			</tr>'
+		cScryptHtml += '		</tbody></table><div class="yj6qo"></div><div class="adL">'
+		cScryptHtml += '	</div></div><div class="adL">'
+		cScryptHtml += '</div></div></div><div id=":104" class="ii gt" style="display:none"><div id=":103"></div></div><div class="hi"></div></div>'
+		cScryptHtml += '		</body>'
+		cScryptHtml += '	</html>'
+		
+		u_EnvEmail(cEmailOut, cAssunto, cScryptHtml)
+	
+	EndIf 
+
+Return()
