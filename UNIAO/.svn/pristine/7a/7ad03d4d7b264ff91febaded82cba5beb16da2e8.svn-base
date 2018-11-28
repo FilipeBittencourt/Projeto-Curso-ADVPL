@@ -1,0 +1,38 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "TOPCONN.CH"
+
+/*
+###########################################################################################################################
+# P.E.............: A140IIMP
+# DATA CRIACAO....: 20/09/2017
+# AUTOR...........: WLYSSES CERQUEIRA (GRUPO UNIAO)
+# DESCRICAO.......: EXECUTADO NA LEITURA DOS ARQUIVOS XML CONTIDOS NA ESTRUTURA DE PASTAS DO TOTVS COLABORACAO. 
+# RETORNO.........: LÓGICO.
+###########################################################################################################################
+# DATA ALTERACAO..:
+# AUTOR...........:
+# MOTIVO..........:
+###########################################################################################################################
+*/
+
+User Function A140IIMP()
+	
+	Local lRet := .T.
+	
+	Conout("PE: A140IIMP")
+	
+Return(lRet)
+
+
+User Function SCHEDWSC()
+	
+	Local aParam := {"08", "01"}
+	
+	RpcSetType(3)
+	RpcSetEnv(aParam[1],aParam[2],,,"COM")
+
+	SchedComCol(aParam)
+	
+	RpcClearEnv()
+	
+Return()
