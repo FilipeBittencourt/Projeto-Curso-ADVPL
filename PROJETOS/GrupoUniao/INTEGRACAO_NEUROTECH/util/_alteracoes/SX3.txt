@@ -1,0 +1,46 @@
+MUDANÇAS NA SX3
+
+------------------------------------------------------------------------------------
+DATA: 03-12-2018
+TABELA: SUA
+CAMPO: X3_VLDUSER
+    ORIGINAL:  U_OBSCLI() .AND. EMPTY(ACOLS[1,2]) 
+    ALTERADO:  X3_VLDUSER = U_FPINVL02() .AnD. U_OBSCLI() .AND. EMPTY(ACOLS[1,2]) 
+USER: FILIPE
+-------------------------------------------------------------------------------------
+
+
+---------------------------------- TABELA: SUA --------------------------------------------------
+ DATA: 22-04-2019
+ 
+Titulo: UA_YNEUROT
+Tipo: Caracter
+Tamanho: 50
+Formato: @!
+Contexto: 1-Real
+Propriedade: 2-Visualizar
+----- Informacoes -----
+Titulo: Status Neuro
+Descricao: Status Neurotech
+---- Uso ----
+Obrigatório: False
+Usado: True    
+Browse: True 
+
+Titulo: A1_YDTNEU
+Tipo: Data
+Tamanho: --
+Formato: --
+Contexto: 1-Real
+Propriedade: 2-Visualizar
+----- Informacoes -----
+Titulo: Dt Neurotech
+Descricao: DATA validade de CREDITO NEUROTECH PARA liberar compras apenas com titulos em atraso.
+---- Uso ----
+Obrigatório: False
+Usado: True    
+Browse: True 
+
+
+ 
+ 

@@ -1,0 +1,85 @@
+﻿body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+}
+
+/* Set padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+ 
+.titulo {		 
+	width:100%;
+	margin:2px auto;
+    color: #fff;
+    
+}
+.tituloText{
+	width:100%;
+	font-size:25px;
+	margin:0px 35%;
+    cursor: pointer;
+     
+}
+
+
+.table tr td {
+    margin: 0px;
+    border:0px solid #fff;
+}
+
+
+.tableForm{
+    
+    background-color:#ffffff;
+    overflow-x:hidden;
+    margin: 0 auto;
+	
+}
+
+.tableForm tr td {
+    border:1px solid #fff !important;
+}
+
+select {
+   padding: 7px;    
+	border-radius: 3px;
+	border:1px solid #ccc;
+}
+input {
+    padding: 7px;    
+	border-radius: 3px;
+	border:1px solid #ccc;
+}
+
+#cod-barras-produto{
+    padding: 5px;
+}
+
+.selectWidth200px{
+    width: 200px;
+}
+
+.inputWidth100px {
+    width: 100px;
+}
+.inputWidth200px {
+    width: 200px;
+}
+.inputWidth300px {
+    width: 300px;
+}
+
+.inputWidth400px {
+    width: 400px;
+}
+
+.inputWidth500px {
+    width: 500px;
+}
+
+.inputWidth600px {
+    width: 600px;
+}

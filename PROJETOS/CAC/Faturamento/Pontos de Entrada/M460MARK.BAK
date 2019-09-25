@@ -1,0 +1,7 @@
+User Function M460MARK()
+Local oDocSai := TCacDocumentoSaida():New()
+
+	If oDocSai:PossuiDanfeATransmitir()
+		
+	EndIf
+Return(!oDocSai:lPossuiDanfeATransmitir)

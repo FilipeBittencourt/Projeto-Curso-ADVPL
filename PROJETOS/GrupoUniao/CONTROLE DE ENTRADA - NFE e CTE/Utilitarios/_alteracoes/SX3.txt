@@ -1,0 +1,145 @@
+
+
+TABELE SDS080
+
+-- Campo 01--
+
+Titulo: DS_YUSERLB
+Tipo: Caracter
+Tamanho: 50
+Formato: !@
+Contexto: 1-Real
+Propriedade: 2-Visualizar
+
+-- Informações --
+
+Titulo: User Lib.
+Descricao: Usuario que liberou a NF 
+
+-- Uso --
+
+Obrigatório: False
+Usado: True    
+Browse: True  
+
+ 
+
+-- Campo 02 --
+
+Titulo: DS_YMOTIVO
+Tipo: Memo
+Tamanho: -
+Formato: -
+Contexto: 1-Real
+Propriedade: 2-Visualizar
+
+-- Informações --
+
+Titulo: Motivo
+Descricao: Usuario que liberou a NF 
+
+-- Uso --
+
+Obrigatório: False
+Usado: True    
+Browse: True  
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+
+TABELA GXG080
+
+-- Campo 01--
+
+Titulo: GXG_YUSERL
+Tipo: Caracter
+Tamanho: 50
+Formato: !@
+Contexto: 1-Real
+Propriedade: 2-Visualizar
+
+-- Informações --
+
+Titulo: User Lib.
+Descricao: User que liberou o CT-e  
+
+-- Uso --
+
+Obrigatório: False
+Usado: True    
+Browse: True  
+
+ 
+
+-- Campo 02 --
+
+Titulo: GXG_YMOTIV
+Tipo: Memo
+Tamanho: -
+Formato: -
+Contexto: 1-Real
+Propriedade: 2-Visualizar
+
+-- Informações --
+
+Titulo: Motivo
+Descricao: Motivo da liberacao      
+
+-- Uso --
+
+Obrigatório: False
+Usado: True    
+Browse: True 
+
+
+
+-- Campo 03 --
+
+Titulo: GXG_YVLDXM
+Tipo: Memo
+Tamanho: -
+Formato: -
+Contexto: 1-Real
+Propriedade: 2-Visualizar
+
+-- Informações --
+
+Titulo: Motivo
+Descricao: Motivo da liberacao      
+
+-- Uso --
+
+Obrigatório: False
+Usado: False    
+Browse: False 
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+
+TABELA SDS080
+
+-- Campo --
+
+Titulo: DS_YINFONF
+Tipo: Memo
+Tamanho: 
+Formato: 
+Contexto: 1-Real
+Propriedade: 2-Visualizar
+
+-- Informações --
+
+Titulo: Erro NF-e
+Descricao: Erro NF-e Condicao PGTO
+Help: Exibie erros referentes as tags do XML da NF-e no grupo de cobrança <cobr>  e <pag>                                        
+
+-- Uso --
+
+Obrigatório: False
+Usado: True    
+Browse: True  
+
+ 
+ 

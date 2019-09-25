@@ -1,0 +1,5 @@
+User Function MT100TOK()
+Local lRet := .F.
+
+
+Rerurn lRet

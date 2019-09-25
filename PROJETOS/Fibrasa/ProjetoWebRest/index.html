@@ -1,0 +1,89 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Consulta Produto - PROD</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet" />
+    <link href="css/site.css" rel="stylesheet" />
+    <link href="css/jquery-ui-1.12.1.custom/jquery-ui.css" rel="stylesheet">
+    
+
+</head>
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+			<div class="titulo">
+				<img id="logo"  src="logo_fibrasa.png" width="100px" />
+				<span class="tituloText"> Consultar produtos</span>
+			</div>
+        </div>
+    </div>
+    <div class="container body-content">
+
+        <div id="body" class="help-page">
+            <section class="featured">
+                <div class="content-wrapper">
+				
+                <table class="table" cellpadding="0" cellspacing="0">
+					<tr>						
+						<td><input name="cod-barras-produto" class="inputWidth600px inputText" id="cod-barras-produto" type="text" placeholder="Digite ou BIP o codigo de barras ou do protheus" maxlength="200" />
+						</td>
+						<td align="center">   
+							<select name="ddlEmpresa" id="ddlEmpresa" class="selectWidth200px">
+								<option value="15">Empresa 15</option>							
+							</select>
+						</td>
+						<td align="center">   
+							<select name="ddlFilial" id="ddlFilial" class="selectWidth200px">
+								<option value="01">Filial 01 Sudeste</option>
+								<option value="02">Filial 02 Nordeste</option>
+							</select>
+						</td>
+					</tr>
+				</table>
+				
+				<table class="tableForm" cellpadding="3" cellspacing="0">
+					<tr>
+					   <td> Codigo: <br/><input name="cod-produto" readonly class="inputWidth200px inputText" id="cod-produto"   type="text" /></td>						
+						<td> Nome: <br/><input name="nome-produto" readonly class="inputWidth500px inputText"  id="nome-produto"   type="text" /></td>
+						
+						<td> U. Medida: <br/><input name="u-medida" readonly class="inputWidth200px inputText" id="u-medida"    type="text" /></td> 
+						<td> Peso: <br/><input name="peso-produto" readonly class="inputWidth200px inputText" id="peso-produto"      type="text" /></td> 
+					</tr>
+					<tr>
+					<td colspan="3"> Desc. Técnica: <br/><input name="desc-tecnica-produto" readonly  style="width:100%;" class="inputText"id="desc-tecnica-produto" type="text" /></td>
+					<td > Codigo Barras: <br/><input name="cod-barras-produto2" readonly class="inputWidth200px inputText" id="cod-barras-produto2"  type="text" /></td>						
+						
+						
+					</tr>
+				</table>
+				
+				<table class="tableForm" align="center" cellpadding="3" cellspacing="3">
+			<tr>
+				<td>
+					<img  align="center" id="image-load"  src="images/load.gif" />
+					<img  align="center" id="image-produto"   width="300px"/>
+				</td>					
+			</tr>					
+		</table>
+                </div>
+            </section>
+
+
+
+ 
+
+        </div>
+
+
+        <hr />
+        <footer>
+            <p>&copy; 2019 - FIBRASA</p>
+        </footer>
+    </div>  
+</body>
+<script src="jquery-3.3.1.min.js"></script>
+<script src="index.js"></script>
+</html>

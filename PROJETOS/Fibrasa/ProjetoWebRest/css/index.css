@@ -1,0 +1,54 @@
+body
+{
+    margin: 5px 0px 0px 0px;
+    padding: 0px;
+    font-family: tahoma, Verdana,Palatino Linotype, "Lucida Sans Unicode" , Verdana, Arial, Georgia;
+    font-size: 10px;
+    color: #3b3b3b;
+    
+  
+}
+
+#main {
+    margin: 0;
+    padding: 0;
+    background-color: #ffffff;
+    height:100%;
+}
+
+.table{
+    margin: 0px;
+    width:100%; 
+    background-color:#ffffff;
+    overflow-x:hidden;
+    
+}
+
+.table tr td {
+    margin: 0px;
+    border:0px solid red;
+}
+
+
+.tableForm{
+    
+    background-color:#ffffff;
+    overflow-x:hidden;
+    margin: 0 auto;
+}
+
+.tableForm tr td {
+    border:0px solid blue;
+}
+
+select, input {
+    padding: 15px;
+    border-radius: 5px;
+	width: 100%;
+}
+ 
+
+#cod-barras-produto{
+    padding: 15px;
+}
+ 

@@ -1,0 +1,58 @@
+#INCLUDE "RWMAKE.CH"
+#INCLUDE "TOPCONN.CH"
+
+/*
+##############################################################################################################
+# PROGRAMA...: A010TOK         
+# AUTOR......: Rubens Junior (FACILE SISTEMAS)
+# DATA.......: 10/02/2014                      
+# DESCRICAO..: Ponto de Entrada para validacao do cadastro de produtos
+##############################################################################################################
+# ALTERACAO..:
+# AUTOR......:
+# MOTIVO.....:
+##############################################################################################################
+*/
+
+User Function A010TOK()
+
+Local aArea := GetArea()
+Local lRet	:= .T.
+Local lContinua := .T.                                               
+
+//SOMENTE PRODUTOS DA ATLAS COPCO DEVEM TER REFERENCIA PREENCHIDO
+	DbSelectArea("SBM")
+	DbSetOrder(1)
+	DbSeek(xFilial("SBM")+M->B1_GRUPO)
+	If (SBM->BM_YATLAS == '1')      
+		If(Empty(M->B1_YREF))
+			MsgStop("Produtos da Atlas Copco devem ter o Campo REFERENCIA preenchido!","Verifique")       
+			lRet := .F.
+			lContinua := .F.
+		EndIf
+//VALIDAR SE EXISTE ALGUM PRODUTO ATLAS COM A REFERENCIA JA CADASTRADA
+		If lContinua			
+			lRet	:= .T.			
+			DbSelectArea("SB1")
+			DbSetOrder(12)
+			If(DbSeek(xFilial("SB1")+M->B1_YREF))
+				If (Alltrim(M->B1_COD) != Alltrim(SB1->B1_COD))
+					MsgStop("Já existe Essa referencia Cadastrada!","Verifique")       
+					lRet := .F. 
+					lContinua := .F.
+				EndIf
+			EndIf
+		EndIf
+		If lContinua
+			lRet	:= .T.
+			If(Empty(M->B1_YMODELO))
+				MsgStop("Produtos da Atlas Copco devem ter o Campo MODELO preenchido!","Verifique")            
+				lRet := .F. 
+				lContinua := .F.
+			EndIf
+		EndIf
+	EndIf      
+	
+RestArea(aArea)       
+
+Return(lRet)

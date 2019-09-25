@@ -1,0 +1,33 @@
+Declare @Dt_De Varchar(8),
+		@Dt_Ate Varchar(8)
+
+Set @Dt_De = '20100101'
+Set @Dt_Ate = Convert(Varchar(8),Getdate(),112)
+
+
+If OBJECT_ID('TempDB.dbo.#PRODUTOS') IS NOT NULL DROP TABLE #PRODUTOS
+
+Select D1_COD, D1_QUANT, D1_TOTAL, D2_QUANT, D2_TOTAL
+into #PRODUTOS
+From SD1010,SD2010
+Where 1=2
+
+Select Distinct D1_COD FROM SD1010 
+where D1_DTDIGIT BETWEEN @Dt_De and @Dt_Ate
+and D_E_L_E_T_ = ''
+
+
+/*
+Select D1_COD, 
+	CASE WHEN D1_TIPO <> 'D' THEN D1_QUANT ELSE 0 END as QTENT,
+	CASE WHEN D1_TIPO = 'D' THEN D1_QUANT ELSE 0 END as QTDEVFOR,
+	CAST(0 As DECIMAL() as QTVEN,
+	0 as QTDEVCLI,
+	CASE WHEN D1_TIPO <> 'D' THEN D1_TOTAL ELSE 0 END as TOTENT,
+	CASE WHEN D1_TIPO = 'D' THEN D1_QUANT ELSE 0 END as TOTDEVFOR,
+	0 as TOTVEN,
+	0 as TOTDEVCLI
+from SD1010 
+where D1_TES <> ''
+and  D_E_L_E_T_ = ''
+ */

@@ -1,0 +1,59 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "TOPCONN.CH"
+
+#DEFINE CRLF Chr(13) + Chr(10)
+
+Class TCacDocumentoSaida From LongClassName
+	Data nQuantidadeDanfesATransmitir
+	Data lPossuiDanfeATransmitir
+
+	Method New() Constructor
+	Method PossuiDanfeATransmitir()
+End Class
+
+Method New() Class TCacDocumentoSaida
+	::nQuantidadeDanfesATransmitir := 0
+	::lPossuiDanfeATransmitir := .F.
+Return Self
+
+Method PossuiDanfeATransmitir() Class TCacDocumentoSaida
+Local cSql   := ""
+Local cAlias := "QRYNF"
+Local aArea  := GetArea()
+
+	If Select(cAlias) > 0
+		(cAlias)->(DbCloseArea())
+	EndIf
+
+	cSql += "SELECT COUNT(*) DANFES_A_TRANSMITIR "
+	cSql += "  FROM " + RetSqlName("SF2") + " SF2 (NOLOCK) "
+	cSql += " WHERE F2_FILIAL BETWEEN '' AND 'ZZ' "
+	cSql += "   AND F2_FIMP = ' ' "
+	cSql += "   AND F2_ESPECIE = 'SPED' "
+	cSql += "   AND F2_CHVNFE NOT IN ('32140839346283000163550010000050681000053580', "
+	cSql += "                         '32140839346283000163550010000050701000053600', "
+	cSql += "                         '32140839346283000163550010000050711000053616', "
+	cSql += "                         '32140839346283000163550010000050641000053573') "
+	cSql += "   AND SF2.D_E_L_E_T_ = '' "
+	cSql += "   AND NOT EXISTS ( "
+	cSql += "       SELECT 1  "
+	cSql += "	     FROM SPED050 SPED (NOLOCK)  "
+	cSql += "		WHERE NFE_ID = F2_SERIE + F2_DOC "
+	cSql += "		  AND D_E_L_E_T_ = '') "
+
+	DbUseArea(.T.,"TOPCONN",TcGenQry(,,cSql),cAlias,.T.,.T.)
+		
+	DbSelectArea(cAlias)
+
+	::nQuantidadeDanfesATransmitir := 0
+		
+	If !Eof()	
+		::nQuantidadeDanfesATransmitir := (cAlias)->DANFES_A_TRANSMITIR
+	EndIf
+	
+	DbCloseArea()
+	
+	RestArea(aArea)
+
+	::lPossuiDANFEATransmitir := ::nQuantidadeDanfesATransmitir > 0
+Return(::lPossuiDanfeATransmitir)

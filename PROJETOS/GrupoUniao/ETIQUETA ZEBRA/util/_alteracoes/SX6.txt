@@ -1,0 +1,9 @@
+MUDANÇAS NA SX6
+
+------------------------------------------------------------------------------------
+NOVOS PARAMETROS
+MV_YIMPZEB - C - Codigo da impressora zebra padrão
+MV_YSRVIMP - C - endereço do servidor de impressoras na rede
+MV_YNOMIMP - C - Nome da impressora Laser
+MV_YCONPAC - C - Código dos contratos que são PAC (default: 41068,41211,04669)
+-------------------------------------------------------------------------------------

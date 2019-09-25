@@ -1,0 +1,266 @@
+#include "protheus.ch"
+#include "totvs.ch"
+//
+//
+//
+User Function FImOrdSe()
+Local wnRel
+Local cAlias    := "AB6"
+Local cTitulo   := "Impressão OS CAC"
+Local cPrograma := "FImOrdSe"
+Local cTamanho  := "M"
+
+Private aReturn  := {"Zebrado", 1, "Administraçao", 1, 2, 1, "", 1}
+Private nLastKey := 0
+
+//wnRel := SetPrint(cString, NomeProg, "", @titulo,"", "", "",.F.,.F.,.F.,Tamanho,,.F.)
+wnRel := SetPrint(cAlias, cPrograma, "" , @cTitulo, "", "", "", .F., .F., .T., cTamanho, , .F.)
+//SetPrint(cAlias, cProgram,  cPergunte, cTitle, cDesc1, cDesc2, cDesc3, lDic, aOrd, lCompres, cSize, uParm12, lFilter, lCrystal, cNameDrv, uParm16, lServer, cPortPrint)
+
+If nLastKey == 27
+	Return
+EndIf
+
+SetDefault(aReturn, cAlias)
+
+RptStatus({| lEnd | U_ImOrdSe(@lEnd, wnRel, cAlias, cTamanho, cPrograma)}, cTitulo)
+Return
+//
+//
+//
+User Function ImOrdSe(lEnd, wnRel, cAlias, cTamanho, cPrograma)
+Local aAreaAA1  := AA1->(GetArea())
+Local aAreaAA3  := AA3->(GetArea())
+Local aAreaAB1  := AB1->(GetArea())
+Local aAreaAB3  := AB3->(GetArea())
+Local aAreaAB7  := AB7->(GetArea())
+Local aAreaSA1  := SA1->(GetArea())
+Local nLi       := 00
+Local nPosItem  := 00
+Local lAchouAA1 := .F.
+Local lAchouAA3 := .F.
+Local lAchouAB7 := .F.
+Local lAchouAB1 := .F.
+Local lAchouAB3 := .F.
+//
+Local cDados    := "012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789"
+Local cEsc0     := Chr(27) + "0"
+Local cEsc1     := Chr(27) + "1"
+Local cEsc2     := Chr(27) + "2"
+
+m_Pag := 1
+
+SetRegua(AB6->(Recno()))
+
+/*
+ESC 0		48	30	Seleciona espaçamento de linha de 1/8 polegada
+ESC 1		49	31	Seleciona espaçamento de linha de 7/72 polegada
+ESC 2		50	32	Seleciona espaçamento de linha de 1/6 polegada
+ESC 3 n		51	33	Seleciona espaçamento de linha de n/216 polegada	(n=0 a 255)
+ESC A n	65	41	Seleciona espaçamento de linha de n/72 polegada	(n = 0-85)
+ESC J n		74	4A	Executa alimentação de linha n/216 polegada  n=0-255
+*/
+
+SA1->(DbSetOrder(1))
+SA1->(DbSeek(xFilial("SA1") + AB6->AB6_CODCLI + AB6->AB6_LOJA))
+
+//AB7_FILIAL, AB7_NUMOS, AB7_ITEM, R_E_C_N_O_, D_E_L_E_T_
+AB7->(DbSetOrder(1))
+If Type("aCols") == "A"
+	nPosItem  := aScan(aHeader, { |x| AllTrim(x[2]) == "AB7_ITEM" })
+	lAchouAB7 := AB7->(DbSeek(xFilial("AB7") + AB6->AB6_NUMOS + aCols[n, nPosItem]))
+Else
+	If xFilial("AB7") + AB7->AB7_NUMOS <> xFilial("AB6") + AB6->AB6_NUMOS
+		lAchouAB7 := AB7->(DbSeek(xFilial("AB7") + AB6->AB6_NUMOS))
+	Else
+		lAchouAB7 := .T.
+	EndIf
+EndIf
+
+AA1->(DbSetOrder(1))
+lAchouAA1 := AA1->(DbSeek(xFilial("AA1") + AB6->AB6_YCODTE))
+
+AA3->(DbSetOrder(1))
+lAchouAA3 := AA3->(DbSeek(xFilial("AA3") +  AB6->AB6_CODCLI + AB6->AB6_LOJA + AB7->AB7_CODPRO + AB7->AB7_NUMSER))
+
+If lAchouAB7 .And. !Empty(AB7->AB7_NRCHAM)
+	AB1->(DbSetOrder(1))
+	lAchouAB1 := AB1->(DbSeek( xFilial("AB1") + Left(AB7->AB7_NRCHAM, 8) ))
+EndIf
+
+If lAchouAB7 .And. !Empty(AB7->AB7_NUMORC)
+	AB3->(DbSetOrder(1))
+	lAchouAB3 := AB3->(DbSeek(xFilial("AB3") + Left(AB7->AB7_NUMORC, 6) ))
+EndIf
+
+@nLi,00 PSay cEsc0
+
+nLi := 05//04
+@nLi,74 PSay AllTrim(AB6->AB6_NUMOS) //COD SERV.
+If !Empty(AB6->AB6_YDTATE)
+	@nLi,86 PSay AB6->AB6_YDTATE //DATA
+Else
+	@nLi,86 PSay " "
+EndIf
+
+nLi := 07 //05
+@nLi,00 PSay AllTrim(SA1->A1_NOME) //NOME
+@nLi,74 PSay SA1->("(" + Alltrim(A1_DDD) + ")" + AllTrim(A1_TEL)) //FONE
+@nLi,98 PSay AllTrim(AB6->AB6_YTELCO) //CELULAR
+
+nLi := 09 //07
+@nLi,00 PSay AllTrim(SA1->A1_END)    //ENDERECO DE ATENDIMENTO
+@nLi,74 PSay AllTrim(SA1->A1_BAIRRO) //BAIRRO
+@nLi,98 PSay AllTrim(SA1->A1_MUN)	 //MUNICIPIO
+
+nLi := 11 //08
+@nLi,00 PSay LimparEsp(AllTrim(AB6->AB6_YLOREF)) //LOCAL DE REFERENCIA
+@nLi,74 PSay LimparEsp(AllTrim(AB6->AB6_YSOLIC)) //SOLICITADO POR
+@nLi,98 PSay LimparEsp(AllTrim(AB6->AB6_YPROCU)) //PROCURAR SR
+
+nLi := 13 //10
+If lAchouAA3
+	@nLi,00 PSay LimparEsp(AllTrim(AA3->AA3_MODELO)) //TIPO DE MAQUINA
+	@nLi,30 PSay LimparEsp(AA3->(AllTrim(AA3_NUMSER) + IIf(!Empty(AA3->AA3_YTAG), "/" + AllTrim(AA3_YTAG), ""))) //Nº SERIE DA MAQUINA
+	@nLi,53 PSay LimparEsp(AllTrim(AA3->AA3_YMSERI)) //NUMERO DE SERIE DO MOTOR
+	@nLi,74 PSay LimparEsp(AllTrim(AA3->AA3_YELEBP)) //ELEMENTO BP
+	@nLi,98 PSay LimparEsp(AllTrim(AA3->AA3_YELEAP)) //ELEMENTO AP
+Else
+	@nLi,00 PSay " "
+	@nLi,30 PSay " "
+	@nLi,53 PSay " "
+	@nLi,74 PSay " "
+	@nLi,98 PSay "."
+EndIf
+
+//DESCRICAO DOS SERVIÇOS
+nLi := 15 //11
+@nLi,00 PSay LimparEsp(AllTrim(SubString(AB6->AB6_YDSSER, 1, 95)))
+
+nLi := 17  //13
+If lAchouAA1
+	@nLi,74 PSay AllTrim(AA1->AA1_NOMTEC) //TECNICO
+Else
+	@nLi,74 PSay " "
+EndIf
+/*
+If lAchouAB1
+@nLi,59 PSay AllTrim(AB1->AB1_ATEND) //TECNICO
+EndIf
+If lAchouAB3
+@nLi,59 PSay AllTrim(AB3->AB3_ATEND) //TECNICO
+EndIf
+*/
+
+nLi++
+@nLi,00 PSay cEsc1
+
+//MOTOR - RODAPÉ O.S.
+If lAchouAA3
+	nLi := 79	//49
+	If!Empty(AA3->AA3_YMOTMA)
+		@nLi,74 PSay AllTrim(AA3->AA3_YMOTMA)
+	Else
+		@nLi,74 PSay " "
+	EndIf
+	
+	nLi := 81  //51
+	If !Empty(AA3->AA3_YMOTTP)
+		@nLi,74 PSay AllTrim(AA3->AA3_YMOTTP)
+	Else
+		@nLi,74 PSay " "
+	EndIf
+	
+	nLi := 83  //52
+	If !Empty(AA3->AA3_YPOTEN)
+		@nLi,74 PSay AA3->AA3_YPOTEN
+	Else
+		@nLi,74 PSay " "
+	EndIf
+	
+	nLi := 86 //53
+	If !Empty(AA3->AA3_YEMARC)
+		@nLi,93 PSay AllTrim(AA3->AA3_YEMARC)
+	Else
+		@nLi,93 PSay " "
+	EndIf
+	
+	nLi := 89 //55
+	If !Empty(AA3->AA3_YEPOTE)
+		@nLi,93 PSay AA3->AA3_YEPOTE
+	Else
+		@nLi,93 PSay " "
+	EndIf
+	
+	nLi := 91  //56
+	If !Empty(AA3->AA3_YETIPO)
+		@nLi,93 PSay AllTrim(AA3->AA3_YETIPO)
+	Else
+		@nLi,93 PSay " "
+	EndIf
+	
+	nLi := 93 //57
+	If !Empty(AA3->AA3_YESERI)
+		@nLi,93 PSay AllTrim(AA3->AA3_YESERI)
+	Else
+		@nLi,93 PSay " "
+	EndIf
+Else
+	@nLi,74 PSay " "
+	
+	@nLi,74 PSay " "
+	
+	@nLi,74 PSay " "
+	
+	@nLi,93 PSay " "
+	
+	@nLi,93 PSay " "
+	
+	@nLi,93 PSay " "
+	
+	@nLi,93 PSay " "
+EndIf
+
+nLi++
+@nLi,00 PSay cEsc2
+
+RestArea(aAreaAA1)
+RestArea(aAreaAA3)
+RestArea(aAreaAB1)
+RestArea(aAreaAB3)
+RestArea(aAreaAB7)
+RestArea(aAreaSA1)
+
+Set Device to Screen
+
+If aReturn[5] == 1
+	Set Printer To
+	DbCommitAll()
+	OurSpool(wnRel)
+Endif
+
+Ms_Flush()
+Return
+
+Static Function LimparEsp(cTexto)
+Local cPermitidas := " 0123456789ABCDEFGHIJKLMNOPQRSTUVXYZW/?;:.,()-\[]{}"
+Local cResult     := ""
+Local cChar       := ""
+
+If (Len(cTexto) > 0)
+	cTexto := Upper(NoAcento(cTexto))
+	
+	For nCar := 1 to Len(cTexto)
+		cChar := SubStr(cTexto, nCar, 1)
+		
+		If cChar $ cPermitidas
+			cResult += cChar
+		EndIf
+	Next nCar
+EndIf
+
+If Empty(cResult)
+	cResult := " "
+EndIf
+
+Return cResult

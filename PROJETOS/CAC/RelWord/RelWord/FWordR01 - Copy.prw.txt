@@ -1,0 +1,136 @@
+#include "rwmake.ch"
+
+User Function FWordR01
+Private cPerg := "FWORDR01"         
+Private bVarExpRW
+
+	//Criacao da pergunta
+	ValPerg()
+
+	//bloco para preenchimento das Variaveis
+	bVarExpRW := {|| fPrepVar()}
+                             
+	//Executa funcao
+	U_RelWord(cPerg, {"Equipamentos", "Proposta"},"Orcamento Técnico")
+Return
+
+/*ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ ValPerg  ³   Fernando Rocha              ³ Data ³09.01.2008³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descricao ³Validar se existe e criar grupo de perguntas                ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³                                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
+Static Function ValPerg()
+	aRegs :={}
+	cPerg := PADR(cPerg,10)
+	aAdd(aRegs,{cPerg,'01' ,'Nro. de Copias     ?',''				 ,''			   ,'mv_ch1','N'  ,03     ,0      ,0     ,'G','                                ','mv_par01','               '  ,''		 ,''	 ,'                ',''   ,'        	   ',''   	 ,''   	  ,''	 ,''   ,'       ' ,''   	 ,''      ,''	 ,''	,'       ',''  		 ,''  	  ,''	 ,''	,''			,''  	   ,''		 ,''	,'   ',''})
+	aAdd(aRegs,{cPerg,'02' ,'Impressao          ?','Impresion      ','Printing       ','mv_ch2','N'  ,01     ,0      ,0     ,'C','                                ','mv_par02','Impressora' 		 ,'Impresone','Printer','              ',''   ,'Arquivo        ','Archivo'      ,'File'       ,''         ,''        ,'Exibir   ',''    ,''    ,''       ,''        ,'      ',''    ,''    ,''         ,''        ,''       ,''    ,''   ,''})
+	aAdd(aRegs,{cPerg,'03' ,'Arquivo do Word    ?',''				 ,''			   ,'mv_ch3','C'  ,30     ,0      ,0     ,'G','U_fOpenArqRW()                  ','mv_par03','               '  ,''		 ,''	 ,'                ',''   ,'        	   ',''   	 ,''   	  ,''	 ,''   ,'       ' ,''   	 ,''      ,''	 ,''	,'       ',''  		 ,''  	  ,''	 ,''	,''			,''  	   ,''		 ,''	,'   ',''})
+	aAdd(aRegs,{cPerg,'04' ,'Arquivo Saida      ?','Archivo Salida ','Output File    ','mv_ch4','C'  ,30     ,0      ,0     ,'G','                                ','mv_par04','         '  		 ,''         ,''     ,'                ',''   ,'               ',''      ,''      ,''    ,''   ,'       ' ,''        ,''      ,''    ,''    ,'       ',''        ,''      ,''    ,''    ,''         ,''        ,''       ,''    ,'   ',''})
+	
+	DbSelectArea("SX1")
+
+	For i:=1 to Len(aRegs)
+		If !DbSeek(cPerg+aRegs[i,2])
+			RecLock("SX1",.T.)
+			For j:=1 to FCount()
+				If j <= Len(aRegs[i])
+					FieldPut(j,aRegs[i,j])
+				Endif
+			Next
+			MsUnlock()
+		Endif
+	Next
+Return  
+
+/*ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Programa  ³ fImpRelat³   Fernando Rocha              ³ Data ³09.01.2008³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descricao ³Preenche as variaveis do documento do word                  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³                                                            ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/                    
+Static Function fPrepVar()    
+Local aExp  := {}
+Local cMVal := "@E 999,999,999.99"
+Local cServ := ""
+Local nEqp  := 0
+Local nProp := 0
+Local aUsu  
+
+	PswSeek(__cUserId, .T.)
+    aUsu := PswRet()
+
+	SA1->(DbSetOrder(1))                                                                
+	SA1->(DbSeek(XFilial("SA1")+AB3->AB3_CODCLI+AB3->AB3_LOJA))
+    
+	//aAdd( aExp, {"CNPJ_CLI"		,SA1->A1_CGC   		, "@R 99.999.999/9999-99"	,"CNPJ"			} )
+	//A1_NOME, A1_CONTATO, A1_DDD, A1_TEL, A1_MUN, A1_EST, A1_EMAIL
+	aAdd(aExp, {"RAZAO_SOCIAL",  AllTrim(SA1->A1_NOME),                           "SA1->A1_NOME",    "Nome"})
+	aAdd(aExp, {"CIDADE",        AllTrim(SA1->A1_MUN),                            "SA1->A1_MUN",     "Cidade"})
+	aAdd(aExp, {"UF",            AllTrim(SA1->A1_EST),                            "SA1->A1_EST",     "Estado"})
+	aAdd(aExp, {"CONTATO",       AllTrim(SA1->A1_CONTATO),                        "SA1->A1_CONTATO", "Contato"})
+	aAdd(aExp, {"TELEFONE",      SA1->("("+AllTrim(A1_DDD)+") "+AllTrim(A1_TEL)), "SA1->A1_TEL",     "Telefone"})
+	aAdd(aExp, {"EMAIL_CONTATO", AllTrim(SA1->A1_EMAIL),                          "SA1->A1_EMAIL",   "Email Contato"})
+	aAdd(aExp, {"AB3_NUMORC",    AB3->AB3_NUMORC,                                 "AB3->AB3_NUMORC", "Num. Orçamento"})
+	aAdd(aExp, {"NOME_USUARIO",  AllTrim(aUsu[1, 04]),                            "@!",              "Nome Usuario"})
+	aAdd(aExp, {"DEPARTAMENTO",  AllTrim(aUsu[1, 12]),                            "@!",              "Departamento"})
+	aAdd(aExp, {"TEL_USUARIO",   AllTrim(aUsu[1, 20]),                            "@!",              "Tel Usu"})
+	aAdd(aExp, {"EMAIL_USUARIO", AllTrim(aUsu[1, 14]),                            "@!",              "Email Usu"})	
+
+	//Condicao de Pagamento
+	SE4->(DbSetOrder(1))
+	SE4->(DbSeek(XFilial("SE4")+AB3->AB3_CONPAG))  
+	aAdd(aExp, {"CONDICAO_PAGTO", SE4->E4_DESCRI, "SE4->E4_DESCRI", "Cond PG"})
+
+	//equipamentos do orcamento
+	SB1->(DbSetOrder(1))	
+	AB4->(DbSetOrder(1))
+	If AB4->(DbSeek(xFilial("AB4")+AB3->AB3_NUMORC))  
+        While !AB4->(Eof()) .And. xFilial("AB4")+AB4->AB4_NUMORC == xFilial("AB3")+AB3->AB3_NUMORC
+			SB1->(DbSeek(xFilial("SB1")+AB4->AB4_CODPRO))
+
+			nEqp++
+		
+			cServ += MSMM(AB4->AB4_MEMO) + Chr(13)
+
+			aAdd(aExp, {"EQUIPAMENTO"+cValToChar(nEqp), ;
+			            AllTrim(SB1->B1_DESC)+AllTrim(SB1->B1_YMODELO)+" série: "+AB4->AB4_NUMSER+";", ;
+			            "@!", "Equipamento"})
+
+			AB4->(DbSkip())
+		EndDo
+	EndIf       
+	
+	aAdd(aExp, {"N_EQUIP", nEqp, "", "Num Equip"})	
+	
+	//serviços
+	aAdd(aExp, {"SERVICOS", cServ, "AB4->AB4_MEMO", "Serviços"})	
+
+	//Selcionando Apontamentos
+	AB5->(DbSetOrder(1))
+	If AB5->(DbSeek(xFilial("AB5")+AB3->AB3_NUMORC))
+		While !AB5->(Eof()) .And. AB5->(AB5_FILIAL+AB5_NUMORC) == xFilial("AB3")+AB3->AB3_NUMORC
+			SB1->(DbSeek(xFilial("SB1")+AB5->AB5_CODPRO))
+
+			nProp++
+		
+			aAdd(aExp, {"PROPOSTA"+cValToChar(nProp), AllTrim(AB5->AB5_DESPRO), "@!",  "PROPOSTA"})
+			aAdd(aExp, {"PROPVAL"+cValToChar(nProp),  AllTrim(Transform(AB5->AB5_VUNIT, cMVal)), "@!", "VALOR"})
+			aAdd(aExp, {"PROPUN"+cValToChar(nProp),   AllTrim(SB1->B1_UM),      "@!",  "UN MEDIDA"})			
+
+			AB5->(DbSkip())
+		EndDo
+	EndIf
+
+	aAdd(aExp, {"N_PROP", nProp, "", "Qtd Propostas"})		
+Return(aExp)

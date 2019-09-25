@@ -1,0 +1,307 @@
+Group CAC
+   Version=7.0
+   VSSDB=
+   HasProperties=1
+   Properties
+      BeforeApply=
+      AfterApply=
+      Icon=
+      ID=
+      Version=
+      PalmName=
+      OutPut=
+   End
+   ProjectsCount=6
+   Project Faturamento
+      FoldersCount=6
+      Folder NFESEFAZ
+         VSSPath=Fontes
+         FilesCount=4
+         File \Protheus12\Protheus\Projetos\NFESEFAZ\nfesefaz.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\NFESEFAZ\danfeiii.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\NFESEFAZ\danfeii.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\NFESEFAZ\rtmsr31.prw
+             Type=T
+         End
+      End
+      Folder Pontos de Entrada
+         VSSPath=Nova Pasta2
+         FilesCount=6
+         File \Protheus12\Protheus\Projetos\Faturamento\Pontos de Entrada\MTA416PV.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Faturamento\Pontos de Entrada\M460FIM.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Faturamento\Pontos de Entrada\MA415BUT.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Faturamento\Pontos de Entrada\M460MARK.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Faturamento\Pontos de Entrada\M410PVNF.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Faturamento\Pontos de Entrada\PE01NFESEFAZ.prw
+             Type=T
+         End
+      End
+      Folder NFSE_VITORIA
+         VSSPath=Nova Pasta3
+         FilesCount=5
+         File \Protheus12\Protheus\Projetos\NFSE\nfsexmlenv.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\NFSE\NFSEXml102.PRW
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\NFSE\NFSEXml003.PRW
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\NFSE\NFSEXml002.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\NFSE\NFSEXml001.prw
+             Type=T
+         End
+      End
+      Folder Rotinas
+         VSSPath=Nova Pasta4
+         FilesCount=4
+         File \Protheus12\Protheus\Projetos\Faturamento\Rotinas\FCOMIS01.PRW
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Faturamento\Rotinas\CADSZ0.PRW
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Faturamento\Rotinas\CADSZ1.PRW
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Faturamento\Rotinas\updcomis.prw
+             Type=T
+         End
+      End
+      Folder Classes
+         VSSPath=Nova Pasta5
+         FilesCount=1
+         File \Protheus12\Protheus\Projetos\Faturamento\Classes\TCacDocumentoSaida.PRW
+             Type=T
+         End
+      End
+      Folder Relatorios
+         VSSPath=Nova Pasta6
+         FilesCount=7
+         File \Protheus12\Protheus\Projetos\Faturamento\Relatorios\cactr780.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Faturamento\Relatorios\cactr660.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Faturamento\Relatorios\FMATR780.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Faturamento\Relatorios\MATR780.CH
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Faturamento\Relatorios\matr660.prx
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Faturamento\Relatorios\FMATR660.prx
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Faturamento\Relatorios\MATR660.ch
+             Type=T
+         End
+      End
+   End
+   Project Gestão de Serviços
+      FoldersCount=6
+      Folder Gatilhos
+         VSSPath=Nova Pasta1
+         FilesCount=3
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Gatilhos\DTGARANTIA.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Gatilhos\FCACGA01.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Gatilhos\FCACGA02.PRW
+             Type=T
+         End
+      End
+      Folder Pontos de Entrada
+         VSSPath=Nova Pasta2
+         FilesCount=8
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Pontos de Entrada\AT400BUT.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Pontos de Entrada\TC450ROT.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Pontos de Entrada\AT450BUT.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Pontos de Entrada\AT410GRV.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Pontos de Entrada\AT460BUT.PRW
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Pontos de Entrada\AT200ROT.PRW
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Pontos de Entrada\AT200BUT.PRW
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Pontos de Entrada\AT040ROT.PRW
+             Type=T
+         End
+      End
+      Folder Relatorios
+         VSSPath=Nova Pasta3
+         FilesCount=6
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Relatorios\FIMORDSE.PRW
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Relatorios\FCACRE02.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Relatorios\FCACRE03.PRW
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Relatorios\FCACRE04.PRW
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Relatorios\FCACRE05.PRW
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Relatorios\FIMORDWG.PRW
+             Type=T
+         End
+      End
+      Folder Rotinas
+         VSSPath=Nova Pasta4
+         FilesCount=6
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Rotinas\OSPARAM.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Rotinas\CADSZ2.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Rotinas\CONTGOS.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Rotinas\FCACRT01.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Rotinas\CADSZ4.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Rotinas\calcHori.prw
+             Type=T
+         End
+      End
+      Folder Validações
+         VSSPath=Nova Pasta5
+         FilesCount=1
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Validações\FCACVA01.PRW
+             Type=T
+         End
+      End
+      Folder workflow
+         VSSPath=Nova Pasta6
+         FilesCount=3
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Workflow\FCACWF01.PRW
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Workflow\SendMail.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Gestao de Servicos\Workflow\FCACWF02.PRW
+             Type=T
+         End
+      End
+   End
+   Project RelWord
+      FoldersCount=1
+      Folder RelWord
+         VSSPath=Nova Pasta1
+         FilesCount=7
+         File \Protheus12\Protheus\Projetos\RelWord\RelWord\RELWORD.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\RelWord\RelWord\FWordR01.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\RelWord\RelWord\FWordR02.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\RelWord\RelWord\FWordR03.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\RelWord\RelWord\FWordR0B.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\RelWord\RelWord\FWordR0C.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\RelWord\RelWord\FWordR0D.prw
+             Type=T
+         End
+      End
+   End
+   Project Compras
+      FoldersCount=1
+      Folder Pontos de Entrada
+         VSSPath=Nova Pasta1
+         FilesCount=1
+         File \Protheus12\Protheus\Projetos\Compras\Pontos de Entrada\MT100LOK.prw
+             Type=T
+         End
+      End
+   End
+   Project Geral
+      FoldersCount=1
+      Folder Fontes
+         VSSPath=Nova Pasta1
+         FilesCount=5
+         File \Protheus12\Protheus\Projetos\Geral\FSU5F3.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Geral\A010TOK.PRW
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Geral\NSEQCLIFOR.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Geral\NSEQCOND.PRW
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Geral\NUMSEQPRD.PRW
+             Type=T
+         End
+      End
+   End
+   Project Financeiro
+      FoldersCount=1
+      Folder Relatorio
+         VSSPath=Nova Pasta1
+         FilesCount=3
+         File \Protheus12\Protheus\Projetos\Financeiro\Relatorios\FINR004.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Financeiro\Relatorios\FCACRE01.prw
+             Type=T
+         End
+         File \Protheus12\Protheus\Projetos\Financeiro\Relatorios\FINR001.prw
+             Type=T
+         End
+      End
+   End
+End

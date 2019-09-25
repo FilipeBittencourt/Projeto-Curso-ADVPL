@@ -1,0 +1,140 @@
+MUDANÇAS NA SX3
+
+---------------------------------- TABELA: ZZB --------------------------------------------------
+DATA: 05/02/2019
+TABELA: ZZB
+CAMPO: ZZB_PLP
+    ORIGINAL:  Tamanho 10
+    ALTERADO:  Tamanho 15
+USER: Pontin
+
+
+///////  01 Campo ZZB_DTBIP  /////
+
+Titulo: ZZB_DTBIP
+Tipo: Data
+Tamanho: -
+Formato: -
+Contexto: 1-Real
+Propriedade: 2-Visualizar
+
+-- Informaç?es --
+
+Titulo: Dt BIP
+Descricao: data do bip
+
+-- Uso --
+
+Obrigatório: False
+Usado: True    
+Browse: True 
+
+
+///// 02 Campo ZZB_HRBIP  ////
+
+Titulo: ZZB_HRBIP
+Tipo: Caracter
+Tamanho: 5
+Formato: -
+Contexto: 1-Real
+Propriedade: 2-Visualizar
+
+-- Informaç?es --
+
+Titulo: Hr BIP
+Descricao: hora do bip
+
+-- Uso --
+
+Obrigatório: False
+Usado: True    
+Browse: True  
+
+
+
+///////  03 Campo ZZB_DTPRIN  /////
+
+Titulo: ZZB_DTPRIN
+Tipo: Data
+Tamanho: -
+Formato: -
+Contexto: 1-Real
+Propriedade: 2-Visualizar
+
+-- Informaç?es --
+
+Titulo: Dt do print
+Descricao: data do print
+
+-- Uso --
+
+Obrigatório: False
+Usado: True    
+Browse: True 
+
+
+///// 04 Campo ZZB_HRPRIN  ////
+
+Titulo: ZZB_HRPRIN
+Tipo: Caracter
+Tamanho: 5
+Formato: -
+Contexto: 1-Real
+Propriedade: 2-Visualizar
+
+-- Informaç?es --
+
+Titulo: Hr print
+Descricao: hora do print
+
+-- Uso --
+
+Obrigatório: False
+Usado: True    
+Browse: True 
+---------------------------------- FIM TABELA: ZZB --------------------------------------------------
+
+---------------------------------- TABELA: SC5 -----------------------------------------
+
+///////  01 Campo C5_YDTLIB  /////    
+
+Titulo: C5_YDTLIB
+Tipo: Data
+Tamanho: -
+Formato: -
+Contexto: 1-Real
+Propriedade: 2-Visualizar
+
+-- Informaç?es --
+
+Titulo: Dt Lib Ped
+Descricao: data liberação do pedido
+
+-- Uso --
+
+Obrigatório: False
+Usado: True    
+Browse: True 
+
+
+///// Campo C5_YHRLIBP   ////
+
+Titulo: C5_YHRLIBP 
+Tipo: Caracter
+Tamanho: 5
+Formato: -
+Contexto: 1-Real
+Propriedade: 2-Visualizar
+
+-- Informaç?es --
+
+Titulo: Hr Lib Ped
+Descricao: hora liberação do pedido
+
+-- Uso --
+
+Obrigatório: False
+Usado: True    
+Browse: True  
+
+---------------------------------- FIM TABELA: SC5 --------------------------------------
