@@ -3,8 +3,6 @@
 #INCLUDE "PROTHEUS.CH"
 
 
-
-
 User Function OlaMundo()
 	
 	Local cNome  := "Filipe"

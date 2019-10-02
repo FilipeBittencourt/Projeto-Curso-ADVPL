@@ -11,7 +11,7 @@ Funcao para Solicitacao Eletronica
 @type function
 @history 23/10/2018, TOTVS-IURY, Chamado 14596- GE - ID40 - Ajustar rotina de solicitação eletrônica para tratar romaneado e não expedido
 /*/
-user function BRA0637()
+user function V000001()
 	local oBrowse
 	private cCadastro := "Solicitação Eletrônica de Nota Fiscal"
 	private aRotina   := menuDef()

@@ -1,92 +1,74 @@
-#include "protheus.ch"
-#include "fwmvcdef.ch"
+#include "protheus.ch"          
 
-//-------------------------------------------------------------------
-/*/{Protheus.doc} MVC05
-Exemplo de grid com "markbrowse" (coluna de selecao)
+User Function TestSelec()    
+    Local _stru:={}
+    Local aCpoBro := {}
+    Local oDlgLocal aCores := {}
+    Private lInverte := .F.
+    Private cMark   := GetMark()   
+    Private oMark
+    //Cria um arquivo de Apoio
+    AADD(_stru,{"OK"     ,"C"	,2		,0		})
+    AADD(_stru,{"COD"    ,"C"	,6		,0		})
+    AADD(_stru,{"LOJA"   ,"C"	,2		,0		})
+    AADD(_stru,{"NOME"   ,"C"	,40		,0		})
+    AADD(_stru,{"MCOMPRA","N"	,17		,2		})
+    AADD(_stru,{"END"    ,"C"	,40		,0		})
+    AADD(_stru,{"STATUS" ,"C"	,2		,0		})
+    cArq:=Criatrab(_stru,.T.)DBUSEAREA(.t.,,carq,"TTRB")
+    //Alimenta o arquivo de apoio com os registros do cadastro de clientes (SA1)
+    DbSelectArea("SA1")
+    DbGotop()
+    
+    While  SA1->(!Eof())	
+        DbSelectArea("TTRB")	
+        RecLock("TTRB",.T.)		
+            TTRB->COD     :=  SA1->A1_COD		
+            TTRB->LOJA    :=  SA1->A1_LOJA		
+            TTRB->NOME    :=  SA1->A1_NOME		
+            TTRB->MCOMPRA :=  SA1->A1_MCOMPRA		
+            TTRB->END	  :=  SA1->A1_END		
+            TTRB->STATUS  := "0"    //Verde	
+        MsunLock()	
+        SA1->(DbSkip())
+    Enddo
+    
+    //Define as cores dos itens de legenda.
+    aCores := {}
+    aAdd(aCores,{"TTRB->STATUS == '0'","BR_VERDE"	})
+    aAdd(aCores,{"TTRB->STATUS == '1'","BR_AMARELO"	})
+    aAdd(aCores,{"TTRB->STATUS == '2'","BR_VERMELHO"})
 
-@since 01/06/2018
-/*/
-//-------------------------------------------------------------------
-User Function Checkbox()
-Local oBrowse
-	oBrowse := FWMBrowse():New()
-	oBrowse:SetAlias('ZB5')
-	oBrowse:SetDescription('Cadastro de Turma x Aluno x Nota')
-	oBrowse:Activate()
+
+    //Define quais colunas (campos da TTRB) serao exibidas na MsSelect
+    aCpoBro	:= {{ "OK"			,, "Mark"           ,"@!"},;
+                { "COD"			,, "Codigo"         ,"@!"},;
+                { "LOJA"		,, "Loja"           ,"@1!"},;
+                { "NOME"		,, "Nome"           ,"@X"},;
+                { "MCOMPRA"		,, "Maior Compra"   ,"@E 999,999,999.99"},;
+                { "End"			,, "Endereco"       ,"@!"}}
+
+    //Cria uma Dialog                                                
+    DEFINE MSDIALOG oDlg TITLE "MarkBrowse c/Refresh" From 9,0 To 315,800 PIXELDbSelectArea("TTRB")DbGotop()
+    
+    //Cria a MsSelect
+    oMark := MsSelect():New("TTRB","OK","",aCpoBro,@lInverte,@cMark,{17,1,150,400},,,,,aCores)oMark:bMark := {| | Disp()} 
+
+    //Exibe a Dialog
+    ACTIVATE MSDIALOG oDlg CENTERED ON INIT EnchoiceBar(oDlg,{|| oDlg:End()},{|| oDlg:End()})
+    
+    //Fecha a Area e elimina os arquivos de apoio criados em disco.
+    TTRB->(DbCloseArea())
+    Iif(File(cArq + GetDBExtension()),FErase(cArq  + GetDBExtension()) ,Nil)
+    
 Return
 
-Static Function MenuDef()
-Local aRotina := {}
-
-ADD OPTION aRotina TITLE 'Visualizar' ACTION 'VIEWDEF.MVC15' OPERATION 2 ACCESS 0
-ADD OPTION aRotina TITLE 'Incluir'    ACTION 'VIEWDEF.MVC15' OPERATION 3 ACCESS 0
-ADD OPTION aRotina TITLE 'Alterar'    ACTION 'VIEWDEF.MVC15' OPERATION 4 ACCESS 0
-ADD OPTION aRotina TITLE 'Excluir'    ACTION 'VIEWDEF.MVC15' OPERATION 5 ACCESS 0
-
-Return aRotina
-
-Static Function ModelDef()
-Local oModel := FWLoadModel("MVC05")
-Local oStruZB7 := oModel:GetModel("DETAILZB7"):GetStruct()
-
-    oStruZB7:DeActivate()
-    oStruZB7:AddField('SELECT', ' ', 'SELECT', 'L', 1, 0, , , {}, .F.,FWBuildFeature( STRUCT_FEATURE_INIPAD, ".F."))
-    oStruZB7:Activate()
-
-Return oModel
-
-Static Function ViewDef()
-Local oModel := ModelDef()
-Local oView
-Local oStrZB5:= FWFormStruct(2, 'ZB5')
-Local oStrZB6:= FWFormStruct(2, 'ZB6')
-Local oStruZB7:= FWFormStruct(2, 'ZB7')
-
-    oStrZB6:RemoveField('ZB6_CODTUR')
-
-    oStruZB7:RemoveField('ZB7_CODTUR')
-    oStruZB7:RemoveField('ZB7_RA')
-    oStruZB7:AddField( 'SELECT','01','SELECT','SELECT',, 'Check')
-
-	oView := FWFormView():New()
-	oView:SetModel(oModel)
-
-	oView:AddField('FORM_TURMA' , oStrZB5,'MASTERZB5' )
-	oView:AddGrid('FORM_ALUNOS' , oStrZB6,'DETAILZB6')
-	oView:AddGrid('FORM_NOTA' , oStruZB7,'DETAILZB7')
-	oView:AddOtherObject("PANEL_SEL",{|oPanel,oOtherObject| criaButtonSel(oPanel,oOtherObject)})
-
-	oView:CreateHorizontalBox( 'BOX_FORM_TURMA', 20)
-	oView:CreateHorizontalBox( 'BOX_FORM_ALUNOS', 35)
-	oView:CreateHorizontalBox( 'BOX_FORM_NOTA', 35)
-	oView:CreateHorizontalBox( "BOX_SEL",10)
-
- 	oView:SetOwnerView('FORM_NOTA','BOX_FORM_NOTA')
- 	oView:SetOwnerView('FORM_ALUNOS','BOX_FORM_ALUNOS')
- 	oView:SetOwnerView('FORM_TURMA','BOX_FORM_TURMA')
-    oView:SetOwnerView('PANEL_SEL','BOX_SEL')
-
-Return oView
-
-Static Function criaButtonSel(oPanel,oOtherObject)
-    TButton():New( 01, 10, "Selecionar Todos",oPanel,{|| SelGrid(oOtherObject)}, 60,10,,,.F.,.T.,.F.,,.F.,,,.F. )
-Return
-
-Static Function SelGrid(oOtherObject)
-Local oGrid := oOtherObject:GetModel():GetModel("DETAILZB7")
-Local nX
-Local lValue
-Local nLine := oGrid:GetLine()
-
-    For nX:=1 to oGrid:Length()
-        oGrid:GoLine(nX)
-        If !oGrid:isDeleted()
-            lValue := oGrid:GetValue("SELECT")
-            oGrid:LoadValue("SELECT", !lValue)
-        EndIf
-    Next nX
-
-    oGrid:GoLine(nLine)
-    oOtherObject:oControl:Refresh('FORM_NOTA')
-Return
+//Funcao executada ao Marcar/Desmarcar um registro.   
+Static Function Disp()
+    RecLock("TTRB",.F.)
+        If Marked("OK")	
+            TTRB->OK := cMarkElse	TTRB->OK := ""
+        Endif             
+    MSUNLOCK()
+    oMark:oBrowse:Refresh()
+Return()
