@@ -14,7 +14,6 @@ Rotina para geração dados para popular a ZD6 , PARA RATEIO NO PEDIDO DE COMPRA
 @since 02/10/2019
 @version 1.0
 /*/
- 
 
 User function PCPTEST()	
 	

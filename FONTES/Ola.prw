@@ -2,7 +2,7 @@
 
 User Function Ola() 
 
-	FwAlertSuccess(" Giovani Motumbo cadastrado com sucesso !!! ")
+	FwAlertSuccess(" Cadastrado com sucesso !!! ")
 	
 Return
 
