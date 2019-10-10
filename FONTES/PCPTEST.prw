@@ -221,7 +221,7 @@ User Function BtnDel(cAliasMrk)
 	Local lInverte := oMrkBrowse:IsInvert()	 
 	Local cMens    := "Você selecionou a(s) lista(s): " +STR_PULA+STR_PULA
 	Local cMenDel  := "A(s) lista(s) abaixo será/serão deletada(s): "+STR_PULA+STR_PULA
-	Local cMenAdd  := "A(s) lista(s) abaixo <b>NÃO</b> será/Serão deletada(s), pois já está/estão em pedido de compra. "+STR_PULA+STR_PULA
+	Local cMenAdd  := "A(s) lista(s) abaixo <b>NÃO</b> será/serão deletada(s), pois já está/estão em pedido de compra. "+STR_PULA+STR_PULA
 	Local aListId  := {}
 	 
  
@@ -413,7 +413,7 @@ Static Function Salvar(aListId)
 	cQuery += " 		,SB1.B1_PESO as B1PESO " + STR_PULA
 	cQuery += " 		,(SC2.C2_QUANT * SB1.B1_PESO) PESO_TOTAL_OP " + STR_PULA
 	cQuery += " 		,SC2.C2_YPRJODM AS PRJODM  " + STR_PULA
-	cQuery += " 		,(SELECT TOP 100  SUM(C3_QUANT) - SUM(C3_QUJE) AS SALDO FROM "+RetSQLName("SC3")+" WHERE C3_NUM = " + ValToSql(cValidSC3)+ "  AND D_E_L_E_T_ = '' AND C3_FILIAL = "+ ValToSql(FWxFilial('SC2'))+" )  as TOTAL_CP " + STR_PULA
+	cQuery += " 		,(SELECT SUM(C3_QUANT) - SUM(C3_QUJE) AS SALDO FROM "+RetSQLName("SC3")+" WHERE C3_NUM = " + ValToSql(cValidSC3)+ "  AND D_E_L_E_T_ = '' AND C3_FILIAL = "+ ValToSql(FWxFilial('SC2'))+" )  as TOTAL_CP " + STR_PULA
 	cQuery += " 	FROM "+RetSQLName("SC2")+" SC2 (NOLOCK) " + STR_PULA
 	cQuery += " 		INNER JOIN "+RetSQLName("SB1")+" SB1 (NOLOCK) ON SB1.B1_COD  = SC2.C2_PRODUTO AND   SB1.D_E_L_E_T_ = '' " + STR_PULA
 	cQuery += " 		INNER JOIN "+RetSQLName("SD4")+" SD4  (NOLOCK) ON SD4.D4_OP   = SC2.C2_NUM + SC2.C2_ITEM + SC2.C2_SEQUEN AND SD4.D_E_L_E_T_ = ''  " + STR_PULA
@@ -455,7 +455,7 @@ Static Function Salvar(aListId)
 			ZD6X->(dbSkip())
 		EndDo
 
-		MsgInfo("A(s) lista(s): <b>"+STR_PULA+STR_PULA+cINQuery+STR_PULA+STR_PULA+"</b>  foi/foram salva(s) com sucesso. ", "AVISO")
+		FwAlertSuccess("A(s) lista(s): <b>"+STR_PULA+STR_PULA+cINQuery+STR_PULA+STR_PULA+"</b>  foi/foram salva(s) com sucesso. ")
 		ZD6X->(dbCloseArea())		
 		LoadBrowse()
 

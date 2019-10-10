@@ -1,13 +1,31 @@
 #Include 'TOTVS.CH'
-#Include 'RESTFUL.CH'
-#INCLUDE "PROTHEUS.CH"
 
+User Function Ola() 
 
-
-
-User Function Ola()
+	FwAlertSuccess(" Giovani Motumbo cadastrado com sucesso !!! ")
 	
-	Local cNome  := "Filipe"
+Return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	/*
 	RPCSetEnv("99", "01", NIL, NIL, "COM", NIL, {"SB1", "SB5"})
 	Alert("Olá")
 	
@@ -22,4 +40,4 @@ User Function Ola()
   
 
 Return
- 
+ */
