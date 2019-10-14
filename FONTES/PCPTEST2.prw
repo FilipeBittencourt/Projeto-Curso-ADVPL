@@ -25,7 +25,7 @@ User Function PCPTEST2()
 	
 	//Setando semáforo, descrição e campo de mark
 	//oMark:SetSemaphore(.T.)
-	oMark:SetDescription('Seleção das OPs')
+	oMark:SetDescription('Seleção das OPs para criação do Pedido de Compra')
 	oMark:SetFieldMark( 'ZD6_OK' )
 	 
 	//Setando Legenda
@@ -134,9 +134,12 @@ User Function DListZD6()
 
 	Local aArea    := GetArea()
 	Local cMarca   := oMark:Mark()	 
-	Local aListId  := {}
-	Local lContro  := .T.
+	Local aListOP  := {} 
+	Local aListID  := {} 
+	Local lContro := .T. 
 	Local nI  := 1
+	Local cQuery := ""
+	Local cINQuery := ""	
 	Local cMens   := "Você selecionou a(s) OP(s): " + STR_PULA+STR_PULA
 	 
 
@@ -145,11 +148,13 @@ User Function DListZD6()
 	While !ZD6->(EoF())
 		//Caso esteja marcado, aumenta o contador
 		If oMark:IsMark(cMarca)
-			cMens += "<b>"+cValTochar(ZD6->ZD6_OP_ID)+"</b> " +STR_PULA
+			cMens += "<b>"+cValTochar(ZD6->ZD6_OP_ID)+"</b> " +STR_PULA	
 			if !Empty(ZD6->ZD6_STATUS)
 				lContro := .F.
 			EndIf
-			AADD(aListId, ZD6->ZD6_OP_ID)		
+			AADD(aListOP, ZD6->ZD6_OP_ID)
+			AADD(aListID, ZD6->ZD6_LISTID)	
+								
 		EndIf		
 		//Pulando registro
 		ZD6->(DbSkip())
@@ -157,12 +162,33 @@ User Function DListZD6()
 	
 	cMens +=  STR_PULA	+"  E será/serão <b> DELETADA(S) </b>. Tem certeza ? "
 
-    If Len(aListId) > 0 .AND. lContro
+    If Len(aListOP) > 0 .AND. lContro
+
+		For nI := 1 To Len(aListID)
+			cINQuery += aListID[nI]+","
+		Next nI
+
+		cQuery += " SELECT count(ZD6_LISTID) as NumListID  "
+		cQuery += " FROM "+RetSQLName("ZD6")+""  
+		cQuery += " WHERE ZD6_FILIAL = "+ ValToSql(FWxFilial('ZD6'))
+		cQuery += " AND D_E_L_E_T_ = '' "	 
+		cQuery += " AND ZD6_LISTID IN " + FormatIn(cINQuery,",") + " "
+
+		
+		TcQuery cQuery new alias "ZD6F"
+		If ZD6F->NumListID > Len(aListOP)
+			MsgInfo('Por favor, selecione todas as OPs da lista para prosseguir.', "Atenção")
+			ZD6F->(dbCloseArea())
+			Return .F.
+		EndIf
+		ZD6F->(dbCloseArea())
+
 	 
-		If MsgYesNo(cMens,"ATENÇÃO","YESNO")	
-			ZD6->(DbSetOrder(2))  // ZD6_FILIAL, ZD6_OP_ID, R_E_C_N_O_, D_E_L_E_T_ 	 
-			for nI := 1 to Len(aListId)	
-				if ZD6->(DbSeek(FWxFilial('ZD6')+AllTrim(aListId[nI])))
+		If MsgYesNo(cMens,"ATENÇÃO","YESNO")		
+		
+			ZD6->(DbSetOrder(2))  // ZD6_FILIAL, ZD6_OP_ID, R_E_C_N_O_, D_E_L_E_T_
+			for nI := 1 to Len(aListOP)	
+				if ZD6->(DbSeek(FWxFilial('ZD6')+AllTrim(aListOP[nI])))
 					
 					If Empty(ZD6->ZD6_STATUS)
 						RecLock( "ZD6", .F.)
@@ -200,12 +226,13 @@ Static Function Salvar(aListId)
 	Local aArea  := GetArea()
 	Local aCab   := {}
 	Local aItem  := {}	 
-	Local aOPCad := {}
-	Local cQuery := ""
+	Local aOPCad   := {}
+	Local aNumItem := {}
+	Local cQuery   := ""
 	Local cNumPC := ""
 	Local cINQuery := ""
 	Local nI     := 1
-    Local nOpc      := 3 //inclusao
+    Local nOpc      := 3 //inclusao   1 - C7_FILIAL, C7_NUM, C7_ITEM, C7_SEQUEN, R_E_C_N_O_, D_E_L_E_T_
 
 	Private lMsErroAuto := .F.
 
@@ -257,8 +284,8 @@ Static Function Salvar(aListId)
 
 		cNumPC := GetNumSC7() //GetSXENum("SC7","C7_NUM")
 
-			aAdd( aCab,	{"C7_FILIAL"    ,FWxFilial('ZD6'), NIL} )
-			aAdd( aCab,	{"C7_NUM"       ,cNumPC ,   Nil } ) // Numero do Pedido	 
+			aAdd( aCab,	{"C7_FILIAL"    ,FWxFilial('ZD6'), NIL} )		
+			aAdd( aCab,	{"C7_NUM"       ,cNumPC ,   Nil } ) // Numero do Pedido				
 			aAdd( aCab,	{"C7_EMISSAO"   ,dDataBase, NIL } ) // Data de Emissao
 			aAdd( aCab,	{"C7_FORNECE"   ,ZD6PZ->C3FORNECE,NIL} ) // Fornecedor
 			aAdd( aCab,	{"C7_LOJA"      ,ZD6PZ->C3LOJA,NIL} ) // Loja do Fornecedor
@@ -272,30 +299,33 @@ Static Function Salvar(aListId)
 			aAdd( aCab,	{"C7_MSG"		,CriaVar("C7_MSG",.F.)			,NIL})        	//Mensagem
 			aAdd( aCab,	{"C7_REAJUST"	,CriaVar("C7_REAJUST",.F.)		,NIL}) 			//Reajuste
 		nI := 1
-		While !ZD6PZ->(EOF()) //Enquando não for fim de arquivo
+		
+		Begin Transaction
 
-			aAdd( aItem, {"C7_ITEM"     ,StrZero(nI, 4),NIL} )
-			aAdd( aItem, {"C7_PRODUTO"  ,AllTrim(ZD6PZ->C3PRODUTO),NIL } )		
-			aAdd( aItem, {"C7_QUANT"    ,ZD6PZ->C2QUANT,NIL } )
-			aAdd( aItem, {"C7_PRECO"    ,ZD6PZ->C3PRECO,NIL } )
-			aAdd( aItem, {"C7_TOTAL"    ,(ZD6PZ->C2QUANT*ZD6PZ->C3PRECO),NIL } ) 
-			aAdd( aItem, {"C7_DESC"	    ,CriaVar("C7_DESC",.F.)	,Nil})    	//Desconto
-			aAdd( aItem, {"C7_IPI"		,CriaVar("C7_IPI",.F.)						,NIL})    	//IPI
-			aAdd( aItem, {"C7_IPIBRUT"	,'B'										,NIL})    	//IPI Bruto
-			aAdd( aItem, {"C7_REAJUST"	,CriaVar("C7_REAJUST",.F.)					,NIL})    	//Reajuste
-			aAdd( aItem, {"C7_FRETE"	,CriaVar("C7_FRETE",.F.)				,NIL})    	//Frete
-			aAdd( aItem, {"C7_DATPRF"   ,Date()+2,NIL } )  //Data de entrega
-			aAdd( aItem, {"C7_LOCAL"	, "01"									,NIL})    	//Local
-			aAdd( aItem, {"C7_TPFRETE"	,CriaVar("C7_TPFRETE",.F.)					,NIL})    	//Tipo de frete
-			aAdd( aItem, {"C7_OBS"		,ZD6PZ->C3OBS		,NIL})    	//Observacao
-			aAdd( aItem, {"C7_CONTA"  	,CriaVar("C7_CONTA",.F.)					,NIL})    	//Conta do produto
-			aAdd( aItem, {"C7_CC"       ,ZD6PZ->C3CC           ,NIL} ) // VENDA MERCADO INTERNO	//Centro de custo
-			aAdd( aItem, {"C7_YTPJNC","CTN",NIL} )    // TP JUST COMP - JUSTIFICATIVA DA COMPRA
-			aAdd( aItem, {"C7_OP",AllTrim(ZD6PZ->OP),NIL} )
-			aAdd( aItem, {"C7_YOP",AllTrim(ZD6PZ->OP),NIL} )
-	
-			Begin Transaction				 
-				
+			While !ZD6PZ->(EOF()) //Enquando não for fim de arquivo
+
+				aAdd( aItem, {"C7_ITEM"     ,StrZero(nI, 4),NIL} )
+				aAdd( aItem, {"C7_PRODUTO"  ,AllTrim(ZD6PZ->C3PRODUTO),NIL } )		
+				aAdd( aItem, {"C7_QUANT"    ,ZD6PZ->TOTAL_OP,NIL } )
+				aAdd( aItem, {"C7_PRECO"    ,ZD6PZ->C3PRECO,NIL } )
+				aAdd( aItem, {"C7_TOTAL"    ,(ZD6PZ->TOTAL_OP*ZD6PZ->C3PRECO),NIL } ) 
+				aAdd( aItem, {"C7_DESC"	    ,CriaVar("C7_DESC",.F.)	,Nil})    	//Desconto
+				aAdd( aItem, {"C7_IPI"		,CriaVar("C7_IPI",.F.)						,NIL})    	//IPI
+				aAdd( aItem, {"C7_IPIBRUT"	,'B'										,NIL})    	//IPI Bruto
+				aAdd( aItem, {"C7_REAJUST"	,CriaVar("C7_REAJUST",.F.)					,NIL})    	//Reajuste
+				aAdd( aItem, {"C7_FRETE"	,CriaVar("C7_FRETE",.F.)				,NIL})    	//Frete
+				aAdd( aItem, {"C7_DATPRF"   ,Date()+2,NIL } )  //Data de entrega
+				aAdd( aItem, {"C7_LOCAL"	, "01"									,NIL})    	//Local
+				aAdd( aItem, {"C7_TPFRETE"	,CriaVar("C7_TPFRETE",.F.)					,NIL})    	//Tipo de frete
+				aAdd( aItem, {"C7_OBS"		,ZD6PZ->C3OBS		,NIL})    	//Observacao
+				aAdd( aItem, {"C7_CONTA"  	,CriaVar("C7_CONTA",.F.)					,NIL})    	//Conta do produto
+				aAdd( aItem, {"C7_CC"       ,ZD6PZ->C3CC           ,NIL} ) // VENDA MERCADO INTERNO	//Centro de custo
+				aAdd( aItem, {"C7_YTPJNC","CTN",NIL} )    // TP JUST COMP - JUSTIFICATIVA DA COMPRA
+				aAdd( aItem, {"C7_OP",AllTrim(ZD6PZ->OP),NIL} )
+				aAdd( aItem, {"C7_YOP",AllTrim(ZD6PZ->OP),NIL} )
+				aAdd( aItem, {"C7_TIPO"      ,2                , NIL} )	
+								
+					
 				If  nOpc == 3
 					MSExecAuto({|u,v,x,y| MATA120(u,v,x,y)},1,aCab,{aItem},nOpc) // 3 - Inclusao, 4 - Alteração, 5 - Exclusão				
 				Else
@@ -308,7 +338,9 @@ Static Function Salvar(aListId)
 						ConfirmSX8()
 					EndIf	
 					nOpc := 4	
-					AADD(aOPCad, AllTrim(ZD6PZ->OP))			 
+					AADD(aOPCad, AllTrim(ZD6PZ->OP))	
+					AADD(aNumItem, {cNumPC, StrZero(nI, 4)})		
+					 	 
 				Else
 					RollbackSx8()				 
 					cError := MostraErro("/dirdoc", "error.log") // ARMAZENA A MENSAGEM DE ERRO
@@ -317,15 +349,15 @@ Static Function Salvar(aListId)
 					MsgInfo("Nenhum pedido foi processado!"+STR_PULA+STR_PULA +cValToChar(cError)+"", "Error")
 					ZD6PZ->(dbCloseArea())
 					Return .F.
-				EndIf
+				EndIf		
 				
-			End Transaction
-			
-			aItem := {} 
-			nI++ 		 
-			ZD6PZ->(dbSkip())
-		EndDo  
-		
+				aItem := {} 
+				nI++ 		 
+				ZD6PZ->(dbSkip())
+			EndDo  
+
+		End Transaction
+
 		ZD6->(DbSetOrder(2))  // ZD6_FILIAL, ZD6_OP_ID, R_E_C_N_O_, D_E_L_E_T_ 	 
 		If Len(aOPCad) > 0
 			For nI := 1 To Len(aOPCad)
@@ -336,6 +368,18 @@ Static Function Salvar(aListId)
 					msUnLock()
 				EndIf
 			Next nI
+			
+			DbSelectArea("SC7")   			 	 
+			SC7->(DbSetOrder(1))  //1 - C7_FILIAL, C7_NUM, C7_ITEM, C7_SEQUEN, R_E_C_N_O_, D_E_L_E_T_		 
+			For nI := 1 To Len(aNumItem)
+				if SC7->(DbSeek(FWxFilial('ZD6')+AllTrim(aNumItem[nI,1])+AllTrim(aNumItem[nI,2])))
+					RecLock("SC7", .F.)	
+						SC7->C7_TIPO  := 2	 // AUTORIZAÇÃO DE ENTREGA						 
+					msUnLock()
+				EndIf
+			Next nI
+			SC7->(dbCloseArea())
+			 
 			FwAlertSuccess("Pedido de compra / Autorização de entrega criado com sucesso! "+STR_PULA+STR_PULA+" Código: <b>"+cNumPC+"</b>")
 			oMark:oBrowse:Refresh()
 			oMark:oBrowse:Refresh(.T.)

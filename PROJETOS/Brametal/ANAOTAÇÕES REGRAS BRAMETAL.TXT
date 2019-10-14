@@ -1,0 +1,31 @@
+Validações de telas:
+
+Lista de OPs
+
+1 - Semaforo/informação da lista gerada na ZD6 
+2 - Validar peso do que já foi selecionado na ZD6 onde o saldo do contrato de parceria deve ser <= ao to total já selecionado. -- ok
+3 - Incluir campo projeto adm na ZD6 -- ok
+
+Lista das OPs
+
+1 - Filtro do projeto ADM
+2 - Na elaboração do pedido de compra habilitar o campo de OBS para preechimento.
+3 -  Executar calculo para gerar pedido de compra excauto
+4 - Tratar o desfazer PC -> Saldo do contrato de parceria -> limprar status da ZD6
+
+//query mãe para realizar as validações...
+
+SELECT DISTINCT
+	 SD4.D4_UD4DOC AS LISTID
+	,SC2.C2_NUM + C2_ITEM + C2_SEQUEN AS OP --COMPOSIÇÃO DO NUMERO DA OP	
+	,SC2.C2_QUANT as C2QUANT -- QUANTIDADE EM UNIDADE
+	,SB1.B1_PESO as B1PESO -- PESO DE 1 UN PEÇA PRONTA
+	,(SC2.C2_QUANT * SB1.B1_PESO) PESO_TOTAL_OP -- PESO DA OP INTEIRA
+	,SC2.C2_YPRJODM AS PRJODM -- NUMERO DO PROJETO ODM
+	,(SELECT TOP 100  SUM(C3_QUANT) - SUM(C3_QUJE) AS SALDO FROM SC3010 WHERE C3_NUM = '000002')  as tot
+FROM dbo.SC2010 SC2 (NOLOCK)
+	INNER JOIN SB1010 SB1 (NOLOCK) ON SB1.B1_COD  = SC2.C2_PRODUTO AND   SB1.D_E_L_E_T_ = '' 
+	INNER JOIN SD4010 SD4 (NOLOCK) ON SD4.D4_OP   = SC2.C2_NUM + SC2.C2_ITEM + SC2.C2_SEQUEN AND SD4.D_E_L_E_T_ = ''
+WHERE SC2.D_E_L_E_T_ = '' -- INDICA OP NÃO EXCLUIDA - COLOCAR NA 1A VALIDACAO
+AND SD4.D4_UD4DOC IN ('LS0001L6S' ) -- LISTAS SELECINADAS
+AND SC2.C2_DATRF = ''  -- INDICA OP NÃO FINALIZADA - COLOCAR NA 1A VALIDACAO

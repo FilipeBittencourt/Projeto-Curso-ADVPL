@@ -14,6 +14,7 @@ Rotina para geração dados para popular a ZD6 , PARA RATEIO NO PEDIDO DE COMPRA
 @since 02/10/2019
 @version 1.0
 /*/
+ 
 
 User function PCPTEST()	
 	
@@ -84,6 +85,7 @@ Static Function FIMenudef(cAliasMrk)
 
 	Local aRotina := {} 
 	AADD(aRotina, {"Adicionar" , "U_BtnAdd(cAliasMrk)"  , 0, 2}) 
+	AADD(aRotina, {"Atualizar"   , "U_BtnAtu", 0, 2})	
 	AADD(aRotina, {"Remover"   , "U_BtnDel(cAliasMrk)", 0, 2})	
 	AADD(aRotina, {"Desmarc. Todos" , "U_DMarkPCP(cAliasMrk)"  , 0, 2}) 
 	
@@ -213,6 +215,11 @@ Static Function fQryTrb()
 Return({cTempTab,aColumns,{cIndTRB1,cIndTRB2},aFilterX,aSeeks}) 
 
 
+User Function BtnAtu()
+
+	LoadBrowse()
+	
+Return
 
 User Function BtnDel(cAliasMrk)
 
