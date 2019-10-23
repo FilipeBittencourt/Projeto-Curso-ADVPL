@@ -16,7 +16,7 @@ Rotina para geração dados para popular a ZD6 , PARA RATEIO NO PEDIDO DE COMPRA
 /*/
  
 
-User function PCPTEST()	
+User function BRA0722()	
 	
 	LoadBrowse()
 	
@@ -118,10 +118,16 @@ Static Function fQryTrb()
 		LEFT JOIN %Table:ZD6% ZD6 (NOLOCK) ON UD4.UD4_DOC = ZD6.ZD6_LISTID  AND  ZD6.D_E_L_E_T_  = ''
 		INNER JOIN %Table:SD4% SD4 ON UD4.UD4_DOC = SD4.D4_UD4DOC  AND SD4.D_E_L_E_T_ = '' AND SD4.D4_FILIAL = %exp:cEFilial%
 		INNER JOIN %Table:SC2% SC2 (NOLOCK) ON SD4.D4_OP   = SC2.C2_NUM + SC2.C2_ITEM + SC2.C2_SEQUEN AND SC2.D_E_L_E_T_ = '' AND SC2.C2_FILIAL = %exp:cEFilial% 
+
+	 	LEFT JOIN %Table:SH6% SH6  (NOLOCK) ON SH6.D_E_L_E_T_ = '' AND SH6.H6_OP = SC2.C2_NUM + SC2.C2_ITEM + SC2.C2_SEQUEN AND SC2.C2_FILIAL  = %exp:cEFilial%
+	    LEFT JOIN %Table:SD3%  SD3 (NOLOCK) ON SD3.D_E_L_E_T_ = ''  AND SD3.D3_OP = SC2.C2_NUM + SC2.C2_ITEM + SC2.C2_SEQUEN AND SD3.D3_ESTORNO = ''  AND SC2.C2_FILIAL = %exp:cEFilial%
+
 		WHERE  UD4.UD4_STATUS <= 3 
 		AND UD4.D_E_L_E_T_ = '' 
 		AND UD4.UD4_FILIAL =  %exp:cEFilial% 
 		AND SC2.C2_DATRF = '' 
+		AND SH6.H6_OP IS NULL 
+		AND SD3.D3_OP IS NULL
 		ORDER BY  UD4.UD4_DOC DESC
 
           
@@ -423,17 +429,33 @@ Static Function Salvar(aListId)
 	cQuery += " 	FROM "+RetSQLName("SC2")+" SC2 (NOLOCK) " + STR_PULA
 	cQuery += " 		INNER JOIN "+RetSQLName("SB1")+" SB1 (NOLOCK) ON SB1.B1_COD  = SC2.C2_PRODUTO AND   SB1.D_E_L_E_T_ = '' " + STR_PULA
 	cQuery += " 		INNER JOIN "+RetSQLName("SD4")+" SD4  (NOLOCK) ON SD4.D4_OP   = SC2.C2_NUM + SC2.C2_ITEM + SC2.C2_SEQUEN AND SD4.D_E_L_E_T_ = ''  " + STR_PULA
+	
+	cQuery += " 	LEFT JOIN "+RetSQLName("SH6")+" SH6  (NOLOCK) ON SH6.D_E_L_E_T_ = '' AND SH6.H6_OP = SC2.C2_NUM + SC2.C2_ITEM + SC2.C2_SEQUEN AND SC2.C2_FILIAL  = "+ ValToSql(FWxFilial('SC2'))+ ""+ STR_PULA
+	cQuery += "     LEFT JOIN "+RetSQLName("SD3")+" SD3 (NOLOCK) ON SD3.D_E_L_E_T_ = ''  AND SD3.D3_OP = SC2.C2_NUM + SC2.C2_ITEM + SC2.C2_SEQUEN AND SD3.D3_ESTORNO = ''  AND SC2.C2_FILIAL  = "+ ValToSql(FWxFilial('SC2'))+ ""+ STR_PULA 
+	
 	cQuery += " 	WHERE SC2.D_E_L_E_T_ = '' " + STR_PULA
 	cQuery += " 	AND SD4.D4_UD4DOC IN " + FormatIn(cINQuery,",") + STR_PULA
 	cQuery += "     AND SC2.C2_FILIAL = "+ ValToSql(FWxFilial('SC2'))
 	cQuery += " 	AND SC2.C2_DATRF = ''  "
 	
-	TcQuery cQuery new alias "ZD6X" 		
+	cQuery += "	 AND SH6.H6_OP IS NULL "+ STR_PULA
+	cQuery += "  AND SD3.D3_OP IS NULL "+ STR_PULA
+
+ 
+	
+	
+	If Select("ZD6X") > 0
+		ZD6X->(dbCloseArea())
+	EndIf
+
+	TcQuery cQuery new alias "ZD6X" 
+
+
 	ZD6X->(DBGotop())
 
 	If Empty(ZD6X->TOTAL_CP)		 
 		MsgInfo("Não existem OPs válidas na SC2 para a(s) lista(s): <b>"+cINQuery+"</b>  ", "AVISO")
-		ZD6X->(dbCloseArea())
+	 
 		Return .F.
 	EndIf
 	
@@ -441,28 +463,40 @@ Static Function Salvar(aListId)
 		nOPTotal += ZD6X->PESO_TOTAL_OP
 		ZD6X->(dbSkip())
 	EndDo
+	
 
-   
-	ZD6X->(dbGoTop())
+	ZD6X->(DbGoTop())
 	If (ZD6X->TOTAL_CP > 0  .AND.  ZD6X->TOTAL_CP >=  (nOPTotal + nOPTotZD6))
 		
 		While !ZD6X->(EOF()) //Enquando não for fim de arquivo
 
 			RecLock( "ZD6", .T.)
-
-			ZD6->ZD6_FILIAL  := FWxFilial('SD4')
-			ZD6->ZD6_LISTID  := AllTrim(ZD6X->LISTID)
-			ZD6->ZD6_OP_ID   := AllTrim(ZD6X->OP)
-			ZD6->ZD6_ODM_ID  := AllTrim(ZD6X->PRJODM)
-			ZD6->ZD6_CP_ID   := AllTrim(cValidSC3)
-			ZD6->ZD6_STATUS  := ''
-			
+				ZD6->ZD6_FILIAL  := FWxFilial('SD4')
+				ZD6->ZD6_LISTID  := AllTrim(ZD6X->LISTID)
+				ZD6->ZD6_OP_ID   := AllTrim(ZD6X->OP)
+				ZD6->ZD6_ODM_ID  := AllTrim(ZD6X->PRJODM)
+				ZD6->ZD6_CP_ID   := AllTrim(cValidSC3)
+				ZD6->ZD6_STATUS  := ''			
 			msUnLock() 	
+
+			// Bloqueando a etiqueta para uso futuro
+			DbSelectArea("ZC2")
+				ZC2->(DbSetOrder(7))  // 7 - ZC2_FILIAL, ZC2_OP, R_E_C_N_O_, D_E_L_E_T_	
+				ZC2->(DbGoTOP())
+				If ZC2->(DbSeek(FWxFilial('ZD6')+AllTrim(ZD6X->OP)))
+					IF ZC2->ZC2_STATUS == "N"
+						RecLock( "ZC2", .F.)							
+							ZC2->ZC2_MSBLQL := '1'
+						ZC2->(msUnLock())
+					Endif			
+				Endif
+			ZC2->(dbCloseArea())		 
+
 			ZD6X->(dbSkip())
 		EndDo
 
 		FwAlertSuccess("A(s) lista(s): <b>"+STR_PULA+STR_PULA+cINQuery+STR_PULA+STR_PULA+"</b>  foi/foram salva(s) com sucesso. ")
-		ZD6X->(dbCloseArea())		
+		 	
 		LoadBrowse()
 
 	Else
@@ -473,7 +507,7 @@ Static Function Salvar(aListId)
 		"<b>Saldo total do CP</b>: "+cValToChar(ZD6X->TOTAL_CP)+"", "AVISO")
 
 	EndIf 
-
+	
 	ZD6X->(dbCloseArea())		 
  
 Return
@@ -491,9 +525,3 @@ Static Function SC3f3()
 	ACTIVATE MSDIALOG oDlg CENTER	
 
 Return cNroContr
-
-
-
-
-////////////////////////// FUNÇÕES QUE AUXILIAM A CRIAÇÃO DO PEDIDO DE COMPRA COM BASE NOS ITENS DAS OPS DA ZD6  //////////////////////////
-

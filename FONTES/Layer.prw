@@ -24,9 +24,9 @@ user function Layer()
 
 	oPnl := oModal:GetPanelMain()	
 
-
-	 oPnl := TScrollBox():New(oPnl,01,01,140,295,.T.,.T.,.T.)
-	@ 005,005 GROUP oGrop1 TO  130,290  PROMPT "Formulário A" OF oPnl PIXEL
+	//TScrollBox():New( [ oWnd ], [ nTop ], [ nLeft ], [ nHeight ], [ nWidth ], [ lVertical ], [ lHorizontal ], [ lBorder ] )
+	oPnl := TScrollBox():New(oPnl,01,01,150,295,.T.,.F.,.F.)
+	//@ 005,005 GROUP oGrop1 TO  130,285  PROMPT "Formulário A" OF oPnl PIXEL
 	
 	@ 030,030 SAY "Nome: " SIZE 050,010 OF oPnl PIXEL
 	@ 027,060 MSGET oGet01 VAR cNome  SIZE 0100, 011  OF oPnl PIXEL 
@@ -39,8 +39,17 @@ user function Layer()
  
 	@ 090,030 SAY "Obs: " SIZE 050,010 OF oPnl PIXEL
 	@ 087,060 GET oGet04 VAR cOBS MEMO SIZE 110, 020 OF oPnl PIXEL MULTILINE
+	
+	aBtn := {}
+	AADD(aBtn, {"","Confirmar01",{||Alert("Ok!")} ,"ToolTip01",5,.T.,.T. })
+	AADD(aBtn, {"","Confirmar02",{||Alert("Ok!")} ,"ToolTip02",5,.T.,.T. })
+	AADD(aBtn, {"","Confirmar03",{||Alert("Ok!")} ,"ToolTip03",5,.T.,.T. })
+	AADD(aBtn, {"","Confirmar04",{||Alert("Ok!")} ,"ToolTip04",5,.T.,.T. })
 
-	oModal:addButton("Confirmar",{|| Alert("Ok!") })
+	oModal:addButtons( aBtn  ) 
+
+	//oModal:addButtons("Confirmar",{|| Alert("Ok!") }) 
+  
 	//oModal:addCloseButton(nil, "Fechar")
  
 	oModal:Activate()

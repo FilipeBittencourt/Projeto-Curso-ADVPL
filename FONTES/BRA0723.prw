@@ -6,14 +6,13 @@
 #Define STR_PULA	Chr(13)+Chr(10)
 
 /*/{Protheus.doc} zMkMVC
-MarkBrow em MVC da tabela de Artistas
-@author Atilio
+@Filipe Facile
 @since 03/10/2019
 @version 1.0
 @obs Criar a coluna ZD6_OK com o tamanho 2 no Configurador e deixar como não usado
 /*/
 
-User Function PCPTEST2()
+User Function BRA0723()
 	
 	Local aArea  := GetArea()
 	Private oMark
@@ -64,7 +63,7 @@ Return aRotina
  *---------------------------------------------------------------------*/
  
 Static Function ModelDef()
-Return FWLoadModel('zPCPTEST2')
+Return FWLoadModel('zBRA0723')
 
 /*---------------------------------------------------------------------*
  | Func:  ViewDef                                                      |
@@ -74,11 +73,11 @@ Return FWLoadModel('zPCPTEST2')
  *---------------------------------------------------------------------*/
  
 Static Function ViewDef()
-Return FWLoadView('zPCPTEST2')
+Return FWLoadView('zBRA0723')
 
-/*/{Protheus.doc} PCPTEST2
+/*/{Protheus.doc} BRA0723
 Rotina para processamento e verificação de quantos registros estão marcados
-@author Atilio
+@Filipe Facile
 @since 03/10/2019
 @version 1.0
 /*/
@@ -191,9 +190,24 @@ User Function DListZD6()
 				if ZD6->(DbSeek(FWxFilial('ZD6')+AllTrim(aListOP[nI])))
 					
 					If Empty(ZD6->ZD6_STATUS)
+
 						RecLock( "ZD6", .F.)
 							ZD6->(dbdelete())
-						ZD6->(MsUnLock())					 
+						ZD6->(MsUnLock())	
+
+						// Desbloqueando a etiqueta para uso futuro
+						DbSelectArea("ZC2")
+							ZC2->(DbSetOrder(7))  // 7 - ZC2_FILIAL, ZC2_OP, R_E_C_N_O_, D_E_L_E_T_	
+							ZC2->(DbGoTOP())
+							If ZC2->(DbSeek(FWxFilial('ZD6')+AllTrim(aListOP[nI])))
+								IF ZC2->ZC2_STATUS == "N"
+									RecLock( "ZC2", .F.)							
+										ZC2->ZC2_MSBLQL := '2'
+									ZC2->(msUnLock())	
+								Endif			
+							Endif
+						ZC2->(dbCloseArea())
+
 					EndIf	
 
 				EndIf
@@ -251,7 +265,7 @@ Static Function Salvar(aListId)
 		cQuery += " ,SB1.B1_UM as B1UM   "+STR_PULA
 		cQuery += " ,SB1.B1_CONTA as B1CONTA   "+STR_PULA
 		cQuery += " ,SB1.B1_CC as B1CC   "+STR_PULA
-		cQuery += " ,(SC2.C2_QUANT * SB1.B1_PESO) TOTAL_OP"+STR_PULA   
+		cQuery += " ,(SC2.C2_QUANT * SB1.B1_PESO) AS QUANT"+STR_PULA   
 		cQuery += " ,SC2.C2_YPRJODM AS PRJODM   "+STR_PULA
 		cQuery += " ,ZD6.ZD6_CP_ID "+STR_PULA
 		cQuery += " ,SC3.C3_NUM AS C3NUM "+STR_PULA
@@ -306,9 +320,9 @@ Static Function Salvar(aListId)
 
 				aAdd( aItem, {"C7_ITEM"     ,StrZero(nI, 4),NIL} )
 				aAdd( aItem, {"C7_PRODUTO"  ,AllTrim(ZD6PZ->C3PRODUTO),NIL } )		
-				aAdd( aItem, {"C7_QUANT"    ,ZD6PZ->TOTAL_OP,NIL } )
+				aAdd( aItem, {"C7_QUANT"    ,ZD6PZ->QUANT,NIL } )
 				aAdd( aItem, {"C7_PRECO"    ,ZD6PZ->C3PRECO,NIL } )
-				aAdd( aItem, {"C7_TOTAL"    ,(ZD6PZ->TOTAL_OP*ZD6PZ->C3PRECO),NIL } ) 
+				aAdd( aItem, {"C7_TOTAL"    ,(ZD6PZ->QUANT*ZD6PZ->C3PRECO),NIL } ) 
 				aAdd( aItem, {"C7_DESC"	    ,CriaVar("C7_DESC",.F.)	,Nil})    	//Desconto
 				aAdd( aItem, {"C7_IPI"		,CriaVar("C7_IPI",.F.)						,NIL})    	//IPI
 				aAdd( aItem, {"C7_IPIBRUT"	,'B'										,NIL})    	//IPI Bruto
