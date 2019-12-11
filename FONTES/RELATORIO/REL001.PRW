@@ -54,7 +54,6 @@ Static Function FP001()
 
  
     dbSelectArea('SX5')
- 
 
 	u_zPutSX1("REL001","01", "Emissao De ?",   "MV_PAR01","MVCH01","D",08,0,"G", "","","","","","","","", "Informe a data inicial a ser considerada")
 	u_zPutSX1("REL001","02", "Emissao Ate ?",  "MV_PAR02","MVCH02","D",08,0,"G", "","","","","","","","", "Informe a data final   a ser considerada")	
@@ -249,3 +248,14 @@ Static Function PrintReport(oReport)
  
 	
 Return
+
+
+#include "protheus.ch"
+User Function TestPergunt()
+     Pergunte("XXX", .T.) 
+	 If mv_par01 == 01   
+	  ApMsgInfo("Opção escolhida foi a 1")
+	  Else    
+	  ApMsgInfo("Opção escolhida foi a 2")
+	  EndIf
+Return 

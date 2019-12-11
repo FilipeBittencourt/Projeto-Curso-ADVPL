@@ -4,6 +4,11 @@
 $(document).ready(function () {	
 
 	
+	$("#campo").keyup(function() {
+		var valor = $("#campo").val().replace(/[^a-zA-Z_.SELECT 0-9_.]+/g,'');
+		$("#campo").val(valor);
+	});
+	/*
 	$("#cod-barras-produto").val(""); 
     $( "#cod-barras-produto" ).focus();
  
@@ -65,6 +70,6 @@ $(document).ready(function () {
 				
             });
         }
-      });	 
+      });	*/ 
 });
  
