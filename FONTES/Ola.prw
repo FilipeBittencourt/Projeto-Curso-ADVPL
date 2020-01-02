@@ -1,6 +1,10 @@
 #Include 'TOTVS.CH'
 
 User Function Ola() 
+	
+	Local nNum := "011"
+
+	nNum := Val(nNum)
 
 	FwAlertSuccess(" Cadastrado com sucesso !!! ")
 	
