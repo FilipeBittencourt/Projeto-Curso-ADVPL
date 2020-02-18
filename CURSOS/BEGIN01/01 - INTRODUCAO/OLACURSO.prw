@@ -1,9 +1,9 @@
 #Include 'Protheus.ch'
 #Include 'Parmtype.ch'
 
-User Function OLAMUNDO()
+User Function OLACURSO()
 
-	MsgAlert("Olá mundo !!!")
+	MsgAlert("Olá OLACURSO !!!")
 
 Return
 

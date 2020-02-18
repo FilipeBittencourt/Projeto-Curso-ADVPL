@@ -24,13 +24,19 @@ User Function PTX0013(cNomeArq)
 				"A rotina de impressão de DANFE está homologada apenas para NF-e.","XML-e")
 		Return .F.
 	EndIf
+	
+	If cNomeArq == "ZZZ"
+		cNomeArq	:= ""
+	EndIf
 
 	//|Valida o status da NF |
 	If !U_VldStatus()
 		Return
 	EndIf
 
-	U_PTX0007(.F.,.T.)
+	If Empty(cNomeArq)
+		U_PTX0007(.F.,.T.)
+	EndIf
 
 	If !Empty(ZZZ->ZZZ_XML)
 
