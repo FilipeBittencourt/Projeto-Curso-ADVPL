@@ -107,7 +107,7 @@ Static Function ReportDef()
 	oSecCE := TRSection():New(oReport,"CE")	
 	
  
-	TRCell():New(oSecCE, "FILIAL"	    ,"", "FILIAL" ,"",01,/**/	)
+	TRCell():New(oSecCE, "FILIAL"	    ,"", "FILIALx" ,"",01,/**/	)
 	TRCell():New(oSecCE, "PEDIDO"	    ,"", "PEDIDO" ,"",01,/**/	)		
 	TRCell():New(oSecCE, "CLINOME"	    ,"", "CLINOME"	,"",20,/**/	)
 	TRCell():New(oSecCE, "ITEM"		    ,"", "ITEM"	,"",01,/**/	)		
@@ -144,7 +144,7 @@ Static Function PrintReport(oReport)
 
 	cQuery += " SELECT  "
 
-	cQuery += "  TRIM(SC5.C5_FILIAL) AS FILIAL "
+	cQuery += "  TRIM(SC5.C5_FILIAL) AS FILIALx "
 	cQuery += " ,SC6.C6_NUM    AS PEDIDO "
 	cQuery += " ,TRIM(SA1.A1_COD)||' - '||TRIM(SA1.A1_NOME)    AS CLINOME "		
 	cQuery += " ,SC6.C6_ITEM   AS ITEM	 "
@@ -221,7 +221,7 @@ Static Function PrintReport(oReport)
 	While !(cAlias->(EoF()))
 
 		oSecCE:Init()
-		oSecCE:Cell("FILIAL"):SetValue(cAlias->FILIAL)
+		oSecCE:Cell("FILIAL"):SetValue(cAlias->FILIALx)
 		oSecCE:Cell("PEDIDO"):SetValue(cAlias->PEDIDO)		
 		oSecCE:Cell("CLINOME"):SetValue(cAlias->CLINOME)						
 		oSecCE:Cell("ITEM"):SetValue(cAlias->ITEM)		
