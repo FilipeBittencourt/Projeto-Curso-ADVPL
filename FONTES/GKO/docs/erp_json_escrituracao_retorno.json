@@ -1,0 +1,27 @@
+{
+	"empresa": "22761584003257",
+	"documentos": [   
+		{   "numero": "000000123",
+			"serie": "1",   
+			"transportadora": "44914992000138",
+			"idtransportadora": "20339",
+			"cdSubSerie": "0",
+			"noControle": 2005,
+			"idnc": "218710",
+			"dtemissao": "2020-04-02",
+			"status": "OK",
+			"observacao": ""
+		},
+		{   "numero": "000000124",
+			"serie": "1",
+			"transportadora": "44914992000138",
+			"idtransportadora": "20339",
+			"cdSubSerie": "0",
+			"noControle": 2005,
+			"idnc": "218711",
+			"dtemissao": "2020-04-02",
+			"status": "ERRO",
+			"observacao": "Fornecedor não existe na base de dados"
+		}
+	]
+}

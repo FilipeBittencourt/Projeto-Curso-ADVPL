@@ -1,0 +1,25 @@
+{
+	"empresa": "22761584003257",
+	"faturas": [   
+		{   "serie": "1",      
+			"fatura": "000000123",
+			"fornecedor": "44914992000138",
+			"idfatura": "224545",
+			"idtransportadora": 20337,
+			"idpartransportadora": 20339,
+			"nocontrole": 2020,
+			"status": "OK",
+			"observacao": ""
+		},
+		{   "serie": "1",
+			"fatura": "000000124",
+			"fornecedor": "44914992000138",
+			"idfatura": "224546",
+			"idtransportadora": 20337,
+			"idpartransportadora": 20339,
+			"nocontrole": 2020,
+			"status": "ERRO",
+			"observacao": "Fornecedor não existe na base de dados"
+		}
+	]
+}

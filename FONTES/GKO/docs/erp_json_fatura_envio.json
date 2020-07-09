@@ -1,0 +1,31 @@
+{
+	"empresa": "22761584003257",
+	"faturas": [   
+		{   "fatura": "000000123",
+			"serie": "1",      			
+			"dtemissao": "2019-12-05",
+			"dtvencimento": "2020-02-05",
+			"fornecedor": "44914992000138",
+			"valorapagar": 100.00,
+			"desconto": 0,
+			"idfatura": 224545,
+			"idtransportadora": 20337,
+			"idpartransportadora": 20339,
+			"nocontrole": 2020,
+			"observacao": "Incluido via integração ERP x GKO"
+		},
+		{   "fatura": "000000124",
+			"serie": "1", 			
+			"dtemissao": "2019-12-05",
+			"dtvencimento": "2020-02-05",
+			"fornecedor": "44914992000138",
+			"valorapagar": 150.00,
+			"desconto": 0,
+			"idfatura": "224546",
+			"idtransportadora": 20337,
+			"idpartransportadora": 20339,
+			"nocontrole": 2020,
+			"observacao": "Incluido via integração ERP x GKO"
+		}
+	]
+}

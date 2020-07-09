@@ -1,0 +1,69 @@
+{
+	"empresa": "22761584003257",
+	"documentos": [  
+		{ 	"numero": "025570317",
+			"serie": "1",
+			"dtemissao": "2020-04-02",
+			"dtlancamento": "2020-04-02",
+			"transportadora": "44914992000138",
+			"idtransportadora": 20339,
+			"natfiscal": "5353",
+			"valor": 73.24,
+			"chave": "35200444914992000138570010255703171255703171",
+			"tipodoc": "57",
+			"aliqicms": 12,
+            "basecalcicms": 83.23,
+            "valoricms": 9.99,
+            "basecalciss": 0,
+			"valoriss": 0,
+			"cst": "90",
+			"cdSubSerie": "0",
+			"noControle": 2005,
+			"idnc": 218710,
+			"notasvinculadas": [
+				{	"numero": "000042988",
+					"serie": "2",
+					"cnpjdestinatario": "22761584005624",
+					"cnpjemitente": "22761584003257"
+				},
+				{	"numero": "000042989",
+					"serie": "2",
+					"cnpjdestinatario": "22761584005624",
+					"cnpjemitente": "22761584003257"
+				}								
+			]
+		},
+		{ 	"numero": "025570321",
+			"serie": "1",
+			"dtemissao": "2020-04-02",
+			"dtlancamento": "2020-04-02",
+			"transportadora": "44914992000138",
+			"idtransportadora": 20339,
+			"natfiscal": "5353",
+			"valor": 123.44,
+			"chave": "35200444914992000138570010255703171255703171",
+			"tipodoc": "57",
+			"aliqicms": 12,
+            "basecalcicms": 83.23,
+            "valoricms": 9.99,
+			"basecalciss": 0,
+			"valoriss": 0,
+			"cst": "90",
+			"cdSubSerie": "0",
+			"noControle": 2005,
+			"idnc": 218711,
+			"notasvinculadas": [
+				{	"numero": "000042998",
+					"serie": "2",
+					"cnpjdestinatario": "22761584005624",
+					"cnpjemitente": "22761584003257"
+				},
+				{	"numero": "000042991",
+					"serie": "2",
+					"cnpjdestinatario": "22761584005624",
+					"cnpjemitente": "22761584003257"
+				}								
+			]
+		}
+	]
+}
