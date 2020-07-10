@@ -370,11 +370,15 @@ Static Function DbClick(nNumPos)
     TMultiget():new( 098, 050, {| u | aCols[1,8]/*C5_YOBS*/ }, oDlgInfo, 0120,050, , , , , , .T., , , , , , .T. )
 
     If aCols[1,9] $ "P/S"   /* YSTAZAP */
-      TButton():New( 160,050,"Sincronizar",oDlgInfo,{|| MSGALERT("(EM DESENV) Sincronismos com todos as pesquisas listadas em tela, caso existam.", "Aviso" ) },040,015,,,,.T.,,"",,,,.F. )
+      TButton():New( 160,050,"Sincronizar",oDlgInfo,{|| WSWAGETID(cFilialx,cDoc, cSerie, aCols[1,2]/* IDZAP */, aCols[1,10]/*ROTIGEM*/) },040,015,,,,.T.,,"",,,,.F. )      
+    EndIf
+
+    If aCols[1,9] $ "P"   /* YSTAZAP */
+      TButton():New( 160,130,"Reenviar Pesq.",oDlgInfo,{||EnvPesq("S", cFilialx,cDoc, cSerie, aCols[1,2]/* IDZAP */, aCols[1,10]/*ROTIGEM*/, cNomeCli,cTelZap, oDlgInfo)},040,015,,,,.T.,,"",,,,.F. )
     EndIf
     
-    If aCols[1,9] $ "A/P" .OR. EMPTY(aCols[1,9]) /* YSTAZAP */
-      TButton():New( 160,130,"Enviar Pesq.",oDlgInfo,{||VldInfo(cNomeCli,cTelZap, cFilialx,cDoc,cSerie, oDlgInfo)},040,015,,,,.T.,,"",,,,.F. )
+    If aCols[1,9] $ "A" .OR. EMPTY(aCols[1,9]) /* YSTAZAP */
+      TButton():New( 160,130,"Enviar Pesq.",oDlgInfo,{||EnvPesq("N", cFilialx,cDoc, cSerie, aCols[1,2]/* IDZAP */, aCols[1,10]/*ROTIGEM*/, cNomeCli,cTelZap, oDlgInfo)},040,015,,,,.T.,,"",,,,.F. )         
     EndIf
 
     oDlgInfo:Activate(,,,.T.)
@@ -384,9 +388,10 @@ Static Function DbClick(nNumPos)
 
 Return
 
-Static Function VldInfo(cNomeCli, cTelZap, cFilialx, cDoc, cSerie, oDlgInfo)
+Static Function EnvPesq(cReenvio, cFilialx,cDoc, cSerie, cIDZAP , cORIGEM, cNomeCli, cTelZap, oDlgInfo)
 
   Local lRet    := .T.
+  Local cMsgRet := ""
   Local cNewTel := cTelZap
 
   if EMPTY(cNomeCli)
@@ -404,9 +409,17 @@ Static Function VldInfo(cNomeCli, cTelZap, cFilialx, cDoc, cSerie, oDlgInfo)
   EndIf
 
   If lRet
-  MSGALERT("(EM DESENV). Preparando dados para envio...", "Aviso" )
-  oDlgInfo:End()
+    cNewTel := "55"+cNewTel
+    If (cReenvio == "N")
+      FWMsgRun(, {||  WSWAPOST(cFilialx,cDoc, cSerie, cORIGEM, cNomeCli, cNewTel) }, "Aguarde!", "Preparando dados para envio da pesquisa.")   
+    Else
+      FWMsgRun(, {||  WSWAPUT(cFilialx,cDoc, cSerie, cIDZAP, cORIGEM, cNomeCli, cNewTel) }, "Aguarde!", "Preparando dados para reenvio da pesquisa.")   
+    EndIF
+    oDlgInfo:End()  
+    oBrw1:Refresh()    
   EndIf
+  
+  
   
 
 Return lRet
@@ -592,70 +605,361 @@ Return aColsZap
 
 ///// SERVICES //////
 
-// POST
-User Function WSWAPOST(cFilialx, cDoc, cSerie)
 
-  Local cYIDQZAP  := SuperGetMV("MV_YIDQZAP",.F.,"") // ID DO CHAT DO ZAP
-  Local cYTLOZAP  := SuperGetMV("MV_YTLOZAP",.F.,"") // TEL. DE ORIGEM DO ZAP
-  Local cYLOGZAP  := SuperGetMV("MV_YLOGZAP",.F.,"") // LOGIN NO ZAP CODE AUTH
-  Local cYPSWZAP  := SuperGetMV("MV_YPSWZAP",.F.,"") // PSW NO ZAP CODE AUTH
-  Local aDados    := QueryZap(cFilialx, cDoc, cSerie)
-  Local lRet      := .F.
+// POST  LOGIN
+Static Function PLOGIN()
+	
+  Local aHeader   := {"Content-Type: application/json"}	
+	Local cHostWS	  := ""
+  Local cLogin	  := ""  
+  Local cPass	    := ""
   Local oJson     := JsonObject():New()
-  Local oJBodyP   := Nil 
+  Local oSession  := Nil
+  Local cStringJS := ""
+  Local oRest     := Nil
+  Local cMsg      := ""
 
-  oJson['quiz']   := "Token"
-  oJson['customer_number']  := "5527999999999"
-  oJBodyP  := JsonObject():New()
-  oJBodyP['nome'] := "Luiz Soto"
-  oJson['arguments']  := oJBodyP
-  oJson:ToJson()
+  If Select("SX6") <= 0
+    RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+  EndIf
 
-Return aColsZap
+  cHostWS	  := SuperGetMV("MV_YCAHWS",.F.,"") // HOST DO SERVICO DE MSG VIA WHATSAPP          
+  cLogin	  := SuperGetMV("MV_YCALOG",.F.,"") // EMAIL DO USER QUE IRA CONSUMIR O SERVIÇO DE MSG VIA WHATSAAP
+  cPass	    := SuperGetMV("MV_YCAPSW",.F.,"")	// SENHA DO USER QUE IRA CONSUMIR O SERVIÇO DE MSG VIA WHATSAAP  
 
+  oRest     := FWRest():New(cHostWS) 		 
+  oJson['email']       := cLogin
+  oJson['password']    := cPass
+  oJson['branch_key']  := "10037964000168" //SM0->M0_CGC 
+
+	oRest:setPath("/sessions")	 
+  oRest:SetPostParams(oJson:ToJson())	
+	
+  If oRest:Post(aHeader ) .OR. !Empty( oRest:GetResult() )
+    If (oRest:ORESPONSEH:CSTATUSCODE == "200")
+			cStringJS :=  oRest:GetResult()
+		  FWJsonDeserialize(cStringJS, @oSession)				 
+			Aadd(aHeader,"Authorization:"+oSession:token:token+"")      
+    else
+        cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
+        cMsg += "<b>Detalhes</b>: "+oRest:GetResult()+" "  + CRLF + CRLF
+        Alert(cMsg)	  
+    EndIf
+  Else
+    conout(oRest:GetLastError()) 
+    cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
+    cMsg += "<b>Detalhes</b>: "+oRest:GetLastError()+" "  + CRLF + CRLF
+    Alert(cMsg)     
+  Endif
+
+Return aHeader
+
+
+// POST
+Static Function WSWAPOST(cFilialx,cDoc, cSerie, cORIGEM, cNomeCli, cTelCli)
+
+
+    Local aHeader  := PLOGIN()    
+    Local cYTLOZAP  := "" 
+    Local aDados    := {}   
+    Local lRet      := .F.
+    Local oJson     := JsonObject():New()
+    Local oJBodyP   := Nil 
+    Local oRest     := Nil     
+    Local cHostWS	  := "" 
+    Local cMsg      := ""
+    Local oResult   := Nil
+   
+  If Len(aHeader) > 0
+
+    cHostWS	  := SuperGetMV("MV_YCAHWS",.F.,"") // HOST DO SERVICO DE MSG VIA WHATSAPP          
+    cYIDQZAP  := SuperGetMV("MV_YIDQ001",.F.,"") // ID DO QUIZ QUE É O ID DA PERGUNTA DO CHAT DO WHATSAAP
+    cYTLOZAP  := SuperGetMV("MV_YTLO001",.F.,"") // TEL. DE ORIGEM DO ENVIO PARA O WHATSAAP    
+
+    
+    AADD(aHeader,"Branch-Number:"+cYTLOZAP+"")
+    oRest                     := FWRest():New(cHostWS) 
+    oJson['quiz_id_ref']      := cYIDQZAP
+    oJson['customer_number']  := cTelCli
+    oJBodyP                   := JsonObject():New()
+    oJBodyP['nome']           := cNomeCli
+    oJson['arguments']        := oJBodyP
+
+
+	  oRest:setPath("/chat")	 
+    oRest:SetPostParams(oJson:ToJson())	
+    If oRest:Post(aHeader ) .OR. !Empty( oRest:GetResult() )
+      If (oRest:ORESPONSEH:CSTATUSCODE == "200")
+			  cStringJS :=  oRest:GetResult()
+		    FWJsonDeserialize(cStringJS, @oResult)		
+        If cOrigem == "SF2"
+                //cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cIdZap,    cStatus
+          UpdtSF2(cFilialx,   cDoc,   cSerie,   "",   oResult:_id, "P") 
+        Else
+          UpdtSC5(cFilialx,cDoc, "", oResult:_id, "P")
+        EndIf
+      else
+        cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
+        cMsg += "<b>Detalhes</b>: "+oRest:GetResult()+" "  + CRLF + CRLF
+        Alert(cMsg)	  
+      EndIf
+    Else
+		  conout(oRest:GetLastError()) 
+        cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
+        cMsg += "<b>Detalhes</b>: "+oRest:GetLastError()+" "  + CRLF + CRLF
+        Alert(cMsg)     
+    Endif
+
+  EndIf
+
+Return .T.
+
+// PATCH  
+Static Function WSWAPUT(cFilialx,cDoc, cSerie, cIDZAP , cORIGEM, cNomeCli, cTelCli)
+
+
+    Local aHeader  := PLOGIN()    
+    Local cYTLOZAP  := "" 
+    Local aDados    := {}   
+    Local lRet      := .F.
+    Local oJson     := JsonObject():New()
+    Local oJBodyP   := Nil 
+    Local oRest     := Nil     
+    Local cHostWS	  := "" 
+    Local cMsg      := ""
+    Local oResult   := Nil
+   
+  If Len(aHeader) > 0
+
+    cHostWS	  := SuperGetMV("MV_YCAHWS",.F.,"") // HOST DO SERVICO DE MSG VIA WHATSAPP          
+    cYIDQZAP  := SuperGetMV("MV_YIDQ001",.F.,"") // ID DO QUIZ QUE É O ID DA PERGUNTA DO CHAT DO WHATSAAP
+    cYTLOZAP  := SuperGetMV("MV_YTLO001",.F.,"") // TEL. DE ORIGEM DO ENVIO PARA O WHATSAAP    
+
+    
+    AADD(aHeader,"Branch-Number:"+cYTLOZAP+"")
+    oRest                     := FWRest():New(cHostWS) 
+    oJson['quiz_id_ref']      := cYIDQZAP
+    oJson['customer_number']  := cTelCli
+    oJBodyP                   := JsonObject():New()
+    oJBodyP['nome']           := cNomeCli
+    oJson['arguments']        := oJBodyP
+
+
+	  oRest:setPath("/chat/"+cIDZAP+"")	     
+    If oRest:Put(aHeader, oJson:ToJson() ) .OR. !Empty( oRest:GetResult() )
+      If (oRest:ORESPONSEH:CSTATUSCODE == "200")
+			  cStringJS :=  oRest:GetResult()
+		    FWJsonDeserialize(cStringJS, @oResult)		        
+        If oResult:is_open == "false"
+          If cOrigem == "SF2"
+            //cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cIdZap, cStatus           
+              UpdtSF2(cFilialx,cDoc, cSerie, "", oResult:_id, "S") 
+          Else
+              UpdtSC5(cFilialx,cDoc,         "", oResult:_id, "S")
+          EndIf
+        EndIf
+      else
+        cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
+        cMsg += "<b>Detalhes</b>: "+oRest:GetResult()+" "  + CRLF + CRLF
+        Alert(cMsg)	  
+      EndIf
+    Else
+		  conout(oRest:GetLastError()) 
+        cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
+        cMsg += "<b>Detalhes</b>: "+oRest:GetLastError()+" "  + CRLF + CRLF
+        Alert(cMsg)     
+    Endif
+
+  EndIf
+
+Return .T.
+
+Static Function WSWAGETID(cFilialx,cDoc, cSerie, cIdResZp,cOrigem)
+
+  Local aHeader   := PLOGIN()
+  Local cMsg      := ""  
+  Local oRest     := Nil   
+  Local cHostWS   := "" 
+  Local cStringJS := "" 
+  Local cYTLOZAP  := "" 
+  Local oResult   := "" 
+  Local oJson     := JsonObject():New()
+  
+  If Len(aHeader) > 0
+
+    cYTLOZAP  := SuperGetMV("MV_YTLO001",.F.,"") // TEL. DE ORIGEM DO ENVIO PARA O WHATSAAP   
+    cHostWS	  := SuperGetMV("MV_YCAHWS",.F.,"") // HOST DO SERVICO DE MSG VIA WHATSAPP             
+    
+    
+    oJson['chat_ids']  := {cIdResZp}    
+
+    AADD(aHeader,"Branch-Number:"+cYTLOZAP+"")
+    oRest     := FWRest():New(cHostWS) 
+    oRest:setPath("/chat")
+    oRest:SetPostParams(oJson:ToJson())		    
+    If oRest:Get(aHeader) .OR. !Empty( oRest:GetResult() )
+      If (oRest:ORESPONSEH:CSTATUSCODE == "200")
+			  cStringJS :=  oRest:GetResult()
+		    FWJsonDeserialize(cStringJS, @oResult)
+        //TO-DO
+        If Len(oResult) > 0
+          If Len(oResult[1]:messages) > 0 .AND. oResult[1]:is_open == "true"
+            If cOrigem == "SF2"
+            //cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cIdZap, cStatus
+              UpdtSF2(cFilialx,cDoc, cSerie, oResult[1]:messages[Len(oResult:messages)-1]:body, oResult[1]:_id, "R") 
+            Else
+              UpdtSC5(cFilialx,cDoc, oResult[1]:messages[Len(oResult[1]:messages)-1]:body , oResult[1]:_id, "R")
+            EndIf
+          EndIf
+        EndIf
+                
+      else
+        cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
+        cMsg += "<b>Detalhes</b>: "+oRest:GetResult()+" "  + CRLF + CRLF
+        Alert(cMsg)	  
+      EndIf
+    Else
+		  conout(oRest:GetLastError()) 
+        cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
+        cMsg += "<b>Detalhes</b>: "+oRest:GetLastError()+" "  + CRLF + CRLF
+        Alert(cMsg)     
+    Endif
+  
+
+     
+  EndIf
+
+Return .T.
 
 // GET  JOBS u_WSWAGET
 User Function WSWAGET()
-
-  Local lRet   := .T.
-  Local aDados := {}  
-  Local nW     := 0 
-
-  RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"}) 
   
-  aDados := QueryZap()
+  Local aHeader   := PLOGIN()
+  Local aDados    := {}
+  Local aIDZAP      := {}
+  Local cMsg      := ""  
+  Local oRest     := Nil   
+  Local cHostWS   := "" 
+  Local cStringJS := "" 
+  Local cYTLOZAP  := "" 
+  Local oResult   := "" 
+  Local nW        := 0
+  Local nK        := 0
 
-  If Len(aDados) > 0
+  Local oJson     := JsonObject():New()
+  
+  If Len(aHeader) > 0
 
-    For nW := 1 To Len(aDados)
+    aDados := QueryZap()
 
-      If aDados[nW,10] == "SF2"
+    If Len(aDados) > 0
 
-        dbSelectArea("SF2")
-        SF2->(dbSetOrder(1)) //F2_FILIAL, F2_DOC, F2_SERIE, F2_CLIENTE, F2_LOJA, F2_FORMUL, F2_TIPO, R_E_C_N_O_, D_E_L_E_T_
-        If SF2->(dbSeek( aDados[nW,1] + aDados[nW,11] + aDados[nW,12] ))
-          RecLock("SF2",.F.)    
-            SF2->F2_YSTAZAP	:= "R"
-          SF2->(MsUnLock())
+      cYTLOZAP  := SuperGetMV("MV_YTLO001",.F.,"") // TEL. DE ORIGEM DO ENVIO PARA O WHATSAAP   
+      cHostWS	  := SuperGetMV("MV_YCAHWS",.F.,"") // HOST DO SERVICO DE MSG VIA WHATSAPP             
+    
+      For nW := 1 To Len(aDados)
+         AADD(aIDZAP, aDados[nW,2])
+      Next nW
+
+      oJson['chat_ids']  := aIDZAP      
+      oRest     := FWRest():New(cHostWS) 
+      oRest:setPath("/chat")
+      oRest:SetPostParams(oJson:ToJson())		    
+
+      AADD(aHeader,"Branch-Number:"+cYTLOZAP+"")
+      If oRest:Get(aHeader) .OR. !Empty( oRest:GetResult() )
+        If (oRest:ORESPONSEH:CSTATUSCODE == "200")
+          cStringJS :=  oRest:GetResult()
+          FWJsonDeserialize(cStringJS, @oResult)
+          
+          If Len(oResult) > 0
+
+            For nW := 1 To Len(oResult)
+              If Len(oResult[nW]:messages) > 0 .AND. oResult[nW]:is_open == "true"
+                For nK := 1 To Len(oResult[nW]:messages)
+                  If cOrigem == "SF2"
+                    //cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cIdZap, cStatus
+                    UpdtSF2(cFilialx,cDoc, cSerie, oResult[nW]:messages[Len(oResult[nW]:messages[nK])-1]:body, oResult[nW]:_id, "R") 
+                  Else
+                    UpdtSC5(cFilialx,cDoc, oResult[nW]:messages[Len(oResult[nW]:messages[nK])-1]:body, oResult[nW]:_id, "R") 
+                  EndIf
+                Next nK
+              EndIf
+            Next nW
+          EndIf
+          
+        else
+          cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
+          cMsg += "<b>Detalhes</b>: "+oRest:GetResult()+" "  + CRLF + CRLF
+          Alert(cMsg)	  
         EndIf
-
       Else
+        conout(oRest:GetLastError()) 
+          cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
+          cMsg += "<b>Detalhes</b>: "+oRest:GetLastError()+" "  + CRLF + CRLF
+          Alert(cMsg)     
+      Endif
 
-        dbSelectArea("SC5")   
-        SC5->(dbSetOrder(1)) //C5_FILIAL, C5_NUM, R_E_C_N_O_, D_E_L_E_T_
-        If SC5->(dbSeek( aDados[nW,1] + aDados[nW,11] ))
-          RecLock("SC5",.F.)    
-            SC5->C5_YSTAZAP	:= "R"
-          SC5->(MsUnLock())
+    /* Aguardando resposta da API
+      For nW := 1 To Len(aDados)
+
+        If aDados[nW,10] == "SF2"
+          UpdtSF2(aDados[nW,1] + aDados[nW,11] + aDados[nW,12], cResp)
+        Else
+          UpdtSC5(aDados[nW,1] + aDados[nW,11],cResp)
         EndIf
 
-      EndIf
+      Next nW
+    */
 
-    Next nW
+    EndIf
 
   EndIf
 
 Return lRet
 
+Static Function UpdtSF2(cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cIdZap, cStatus)
 
+  Local cDtHrZap := StrTran( FWTimeStamp(3,Date(), Time()), "T", " ") // aaaa-mm-dd hh:mm:ss
+
+  dbSelectArea("SF2")
+  SF2->(dbSetOrder(1)) //F2_FILIAL, F2_DOC, F2_SERIE, F2_CLIENTE, F2_LOJA, F2_FORMUL, F2_TIPO, R_E_C_N_O_, D_E_L_E_T_
+  If SF2->(dbSeek( cF2FILIAL + cF2DOC + cF2SERIE ))
+
+    If !Empty(SF2->F2_DTEVZAP)
+      cDtHrZap := SF2->F2_DTEVZAP
+    EndIf
+
+    RecLock("SF2",.F.)
+    SF2->F2_IDZAP	  := cIdZap
+    SF2->F2_YSTAZAP	:= cStatus
+    SF2->F2_DTEVZAP	:= cDtHrZap
+    SF2->F2_RESPZAP	:= cRESP
+    SF2->(MsUnLock())
+  EndIf
+
+Return .T.
+
+Static Function UpdtSC5(cC5FILIAL, cC5NUM, cRESP, cIdZap, cStatus)
+
+  Local cDtHrZap := StrTran( FWTimeStamp(3,Date(), Time()), "T", " ") // aaaa-mm-dd hh:mm:ss
+
+  dbSelectArea("SC5")
+  SC5->(dbSetOrder(1)) //C5_FILIAL, C5_NUM, R_E_C_N_O_, D_E_L_E_T_
+  If SC5->(dbSeek( cC5FILIAL + cC5NUM ))
+
+    If !Empty(SF2->C5_DTEVZAP)
+      cDtHrZap := SC5->C5_DTEVZAP
+    EndIf
+
+    RecLock("SC5",.F.)
+    SC5->C5_IDZAP	  := cIdZap
+    SC5->C5_YSTAZAP	:= cStatus
+    SC5->C5_DTEVZAP	:= cDtHrZap
+    SC5->C5_RESPZAP	:= cRESP
+    SC5->(MsUnLock())
+
+  EndIf
+
+Return .T.
 
