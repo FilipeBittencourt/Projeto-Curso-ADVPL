@@ -409,9 +409,13 @@ Static Function EnvPesq(cReenvio, cFilialx,cDoc, cSerie, cIDZAP , cORIGEM, cNome
   If lRet
     cNewTel := cNewTel
     If (cReenvio == "N")
+      
       FWMsgRun(, {||  WSWAPOST(cFilialx,cDoc, cSerie, cORIGEM, cNomeCli, cNewTel) }, "Aguarde!", "Preparando dados para envio da pesquisa.")   
     Else
-      FWMsgRun(, {||  WSWAPUT(cFilialx,cDoc, cSerie, cIDZAP, cORIGEM, cNomeCli, cNewTel) }, "Aguarde!", "Preparando dados para reenvio da pesquisa.")   
+        FWMsgRun(, {||  lRet := WSWAGETID(cFilialx,cDoc, cSerie, cIDZAP, cORIGEM, cNomeCli, cNewTel, oDlgInfo) }, "Aguarde!", "Verificando resposta antes do reenvio.")   
+      If !lRet
+        FWMsgRun(, {||  WSWAPUT(cFilialx,cDoc, cSerie, cIDZAP, cORIGEM, cNomeCli, cNewTel) }, "Aguarde!", "Preparando dados para reenvio da pesquisa.")   
+      EndIf
     EndIF
     oDlgInfo:End()  
     oBrw1:Refresh()    
@@ -454,14 +458,14 @@ Static function Legenda()
   Local aLegenda := {}
 
   AADD(aLegenda,{"BR_VERMELHO" 	 ,"   A = Não enviados" })         //A=Não Enviada'
-  AADD(aLegenda,{"BR_AZUL"    	 ,"   P = Um Envio sem resposta" }) //P=1 Envio sem resposta'
-  AADD(aLegenda,{"BR_AMARELO"    ,"   S = Dois Envio sem resposta" }) //S=2 Envios sem resposta'
+  AADD(aLegenda,{"BR_AZUL"    	 ,"   P = Um envio sem resposta" }) //P=1 Envio sem resposta'
+  AADD(aLegenda,{"BR_AMARELO"    ,"   S = Dois envios sem resposta" }) //S=2 Envios sem resposta'
   AADD(aLegenda,{"BR_VERDE"    	 ,"   R = Resposta enviada" })     //R= Resposta Enviada'
   BrwLegenda("Legenda", "Legenda", aLegenda)
 
 Return Nil
 
-Static function QueryZap(cFilialx, cDoc, cSerie)Ã
+Static function QueryZap(cFilialx, cDoc, cSerie)
 
 
   Local aColsZap   := {}
@@ -586,17 +590,13 @@ Static function QueryZap(cFilialx, cDoc, cSerie)Ã
       cStatus  := "A = Não enviada"
     EndIf
 
-    aAdd(aColsZap, {__TRZ->F2_FILIAL, __TRZ->F2_IDZAP,  cStatus, __TRZ->F2_YNOMZAP, __TRZ->F2_TELZAP,   AllTrim(cDate), __TRZ->F2_RESPZAP, cObs, __TRZ->F2_YSTAZAP, __TRZ->ORIGEM, __TRZ->F2_DOC, __TRZ->F2_SERIE })
+    //                        1               2              3            4                  5                 6                  7          8             9                10            11              12              13                   14                          
+    aAdd(aColsZap, {__TRZ->F2_FILIAL, __TRZ->F2_IDZAP,  cStatus, __TRZ->F2_YNOMZAP, __TRZ->F2_TELZAP,   AllTrim(cDate), __TRZ->F2_RESPZAP, cObs, __TRZ->F2_YSTAZAP, __TRZ->ORIGEM, __TRZ->F2_DOC, __TRZ->F2_SERIE, __TRZ->F2_YNOMZAP, __TRZ->F2_TELZAP })
     __TRZ->(DbSkip())
   EndDo
   __TRZ->(DbCloseArea()) 
 
-
-  /*If EMPTY(cFilialx) .AND. EMPTY(cDoc) //JOBS - IRÁ CHAMAR A API PARA VINDA DO JOB
-    //CHAMA API'S DO ZAP
-    aColsZap := {}
-     
-EndIf*/
+ 
 Return aColsZap
 
 
@@ -807,11 +807,11 @@ Static Function WSWAGETID(cFilialx,cDoc, cSerie, cIdResZp,cOrigem , cNomeCli, cT
 
   Local aHeader   := PLOGIN()
   Local cMsg      := ""  
+  Local lRet      := .F.  
   Local oRest     := Nil   
   Local cHostWS   := ""   
   Local cYTLOZAP  := "" 
   Local oResult   := "" 
-  Local oJson     := JsonObject():New()
   
   If Len(aHeader) > 0
 
@@ -835,6 +835,7 @@ Static Function WSWAGETID(cFilialx,cDoc, cSerie, cIdResZp,cOrigem , cNomeCli, cT
             oBrw1:ACOLS  := GetaCols()
             oBrw1:Refresh()
             oDlgInfo:End()
+            lRet := .T.
           EndIf
         EndIf
                 
@@ -853,7 +854,7 @@ Static Function WSWAGETID(cFilialx,cDoc, cSerie, cIdResZp,cOrigem , cNomeCli, cT
          
   EndIf
   
-Return .T.
+Return lRet
 
 // GET  JOBS u_WSWAGET
 User Function WSWAGET()
@@ -869,8 +870,9 @@ User Function WSWAGET()
   Local oResult   := "" 
   Local nW        := 0
   Local nK        := 0
+  Local nI        := 0
 
-  Local oJson     := JsonObject():New()
+  
   
   If Len(aHeader) > 0
 
@@ -899,12 +901,14 @@ User Function WSWAGET()
             For nW := 1 To Len(oResult)
               If Len(oResult[nW]:messages) > 0 .AND. oResult[nW]:is_open == .F.
                 For nK := 1 To Len(oResult[nW]:messages)
-                  If cOrigem == "SF2"
-                    //cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cIdZap, cStatus
-                    UpdtSF2(cFilialx,cDoc, cSerie, oResult[nW]:messages[Len(oResult[nW]:messages[nK])-1]:body, oResult[nW]:_id, "R") 
-                  Else
-                    UpdtSC5(cFilialx,cDoc, oResult[nW]:messages[Len(oResult[nW]:messages[nK])-1]:body, oResult[nW]:_id, "R") 
-                  EndIf
+                  For nI := 1 To Len(aDados)
+                    If aDados[nI,10] == "SF2"
+                            //cF2FILIAL,         cF2DOC,     cF2SERIE   ,                              cRESP                        , cIdZap      , cStatus, cNomeCli,         cTelCli 
+                      UpdtSF2(aDados[nI,1], aDados[nI,11], aDados[nI,12], oResult[nW]:messages[Len(oResult[nW]:messages)-1]:body, oResult[nW]:_id, "R", aDados[nI,13], aDados[nI,14]) 
+                    Else
+                      UpdtSC5(aDados[nI,1], aDados[nI,11], oResult[nW]:messages[Len(oResult[nW]:messages)-1]:body, oResult[nW]:_id, "R", aDados[nI,13], aDados[nI,14]) 
+                    EndIf
+                  Next nI
                 Next nK
               EndIf
             Next nW
