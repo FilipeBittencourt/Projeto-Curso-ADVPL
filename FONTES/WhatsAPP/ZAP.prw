@@ -70,7 +70,7 @@ User Function PESQSATS
   굇 Declara豫o de Variaveis Private dos Objetos                             굇
   袂굼컴컴컴컴컴컴컴좔컴컴컴컨컴컴컴좔컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴�*/
   SetPrvt("oDlg1","oGrp1","oSay1","oSay2","oSay3","oSay4","oSay5","oSay6","oSay7","oSay8","oSay8","oGet1","oGet2")
-  SetPrvt("oGet4","oGet5","oGet6","oGet7","oGet8","oGet9","oBtn1","oBtn2","oBtn3","oBrw1")
+  SetPrvt("oGet4","oGet5","oGet6","oGet7","oGet8","oGet9","oBtn1","oBtn2","oBtn3","oBtn4","oBrw1")
 
 
   /*컴컴컴컴컴컴컨컴컴컴컴좔컴컴컨컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴袂�
@@ -100,7 +100,9 @@ User Function PESQSATS
   oBtn1      := TButton():New( 010,450,"Filtrar",oGrp1,{||fFiltra()},040,015,,,,.T.,,"",,,,.F. )
   oBtn2      := TButton():New( 030,450,"Sair",oGrp1,{||fFechar()},040,015,,,,.T.,,"",,,,.F. )
   oBtn3      := TButton():New( 050,450,"Legenda",oGrp1,{||Legenda()},040,015,,,,.T.,,"",,,,.F. )
-
+  oBtn4      := TButton():New( 045,325,"Sincronizar Tudo",oGrp1,{|| fSincAll() },080,015,,,,.T.,,"",,,,.F. )
+  
+         
 
   //Monta o browser  
   oBrw1 :=   MsNewGetDados():New(;
@@ -369,7 +371,7 @@ Static Function DbClick(nNumPos)
     TMultiget():new( 098, 050, {| u | aCols[1,8]/*C5_YOBS*/ }, oDlgInfo, 0120,050, , , , , , .T., , , , , , .T. )
 
     If aCols[1,9] $ "P/S"   /* YSTAZAP */
-      TButton():New( 160,050,"Sincronizar",oDlgInfo,{|| WSWAGETID(cFilialx,cDoc, cSerie, aCols[1,2]/* IDZAP */, aCols[1,10]/*ROTIGEM*/, cNomeCli, cTelZap, oDlgInfo) },040,015,,,,.T.,,"",,,,.F. )      
+      TButton():New( 160,050,"Sincronizar",oDlgInfo,{|| fSincro(cFilialx,cDoc, cSerie, aCols[1,2]/* IDZAP */, aCols[1,10]/*ROTIGEM*/, cNomeCli, cTelZap, oDlgInfo) },040,015,,,,.T.,,"",,,,.F. )      
     EndIf
 
     If aCols[1,9] $ "P"   /* YSTAZAP */
@@ -425,6 +427,24 @@ Static Function EnvPesq(cReenvio, cFilialx,cDoc, cSerie, cIDZAP , cORIGEM, cNome
   
 
 Return lRet
+
+Static Function fSincAll()
+  
+  FWMsgRun(, {||  U_WSWAGET() }, "Aguarde!", "Sincronizando..."  + CRLF + CRLF)
+  fFiltra()
+  FwAlertSuccess(" Sincornizado! ")     
+
+Return .T.
+
+Static Function fSincro(cFilialx,cDoc, cSerie, cIDZAP , cORIGEM, cNomeCli, cTelZap, oDlgInfo)
+    
+    FWMsgRun(, {|| WSWAGETID(cFilialx,cDoc, cSerie, cIDZAP, cORIGEM, cNomeCli, cTelZap, oDlgInfo) }, "Aguarde!", "Verificando resposta antes do reenvio.")   
+    FwAlertSuccess(" Sincornizado! ")  
+    oDlgInfo:End()  
+    oBrw1:Refresh()    
+
+Return .T.
+
 
 Static Function fFiltra()
 

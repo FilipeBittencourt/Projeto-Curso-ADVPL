@@ -1,14 +1,24 @@
 #Include 'TOTVS.CH'
 
-User Function Ola() 
-	
-	Local nNum := "011"
-	
+User Function Ola()
 
-	nNum := Val(nNum)
+  Local nNum := "011"
 
-	FwAlertSuccess(" Cadastrado com sucesso !!! ")
-	
+
+  nNum := Val(nNum)
+
+  FwAlertSuccess(" Cadastrado com sucesso !!! ")
+
+Return
+
+
+
+
+
+User Function TESTCOPY()
+
+  FwAlertSuccess(" Cadastrado com sucesso !!! ")
+
 Return
 
 
@@ -39,9 +49,9 @@ Return
 	SB1->(DbGoTop())
 
         
-	If dbSeek(xFilial("SB1")+"000001")	        // verifica a existencia do registro    	   	            
+  If dbSeek(xFilial("SB1")+"000001")	        // verifica a existencia do registro
 		cNome := AllTrim(SB1->B1_DESC)
-	EndIf
+  EndIf
   
 
 Return
