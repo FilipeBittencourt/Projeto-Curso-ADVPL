@@ -330,7 +330,7 @@ Static Function DbClick(nNumPos)
 
   Local oDlgInfo := Nil
   Local cNomeCli := SPACE(50)
-  Local cTelZap  := SPACE(19)  
+  Local cYTELZAP  := SPACE(19)  
   Local cFilialx := ""
   Local cDoc     := ""
   Local cSerie   := ""
@@ -345,12 +345,12 @@ Static Function DbClick(nNumPos)
     aCols := QueryZap(cFilialx,cDoc, cSerie)
 
     cNomeCli  := aCols[1,4] /*YNOMZAP*/
-    cTelZap   := aCols[1,5] /*TELZAP*/ 
+    cYTELZAP   := aCols[1,5] /*YTELZAP*/ 
 
     oDlgInfo := MSDialog():New( 100,232,485,650,"Informativo:",,,.F.,,,,,,.T.,,,.T. )
 
     TSay():New( 010,015,{||"ID:"},oDlgInfo,,,.F.,.F.,.F.,.T.,CLR_BLACK,CLR_WHITE,0120,008)
-    TGet():New( 008,050,{|u| aCols[1,2]/*F2_IDZAP*/},oDlgInfo,0120,008,'',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.T.,.F.,"","",,)
+    TGet():New( 008,050,{|u| aCols[1,2]/*F2_YIDZAP*/},oDlgInfo,0120,008,'',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.T.,.F.,"","",,)
 
     TSay():New( 025,015,{||"STAUS:"},oDlgInfo,,,.F.,.F.,.F.,.T.,CLR_BLACK,CLR_WHITE,0120,008)
     TGet():New( 023,050,{|u| aCols[1,3]/*F2_YSTAZAP*/},oDlgInfo,0120,008,'',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.T.,.F.,"","",,)
@@ -359,27 +359,27 @@ Static Function DbClick(nNumPos)
     TGet():New( 038,050,{|u|  If(PCount()>0,cNomeCli:=u,cNomeCli)  /*F2_YNOMZAP*/ },oDlgInfo,120,008,'',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","cNomeCli",,)
 
     TSay():New( 055,015,{||"TELEFONE:"},oDlgInfo,,,.F.,.F.,.F.,.T.,CLR_BLACK,CLR_WHITE,0120,008)
-    TGet():New( 053,050,{|u| If(PCount()>0,cTelZap:=u,cTelZap)/*F2_TELZAP*/ },oDlgInfo,120,008,'@R (99) 99999-9999',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","cTelZap",,)
+    TGet():New( 053,050,{|u| If(PCount()>0,cYTELZAP:=u,cYTELZAP)/*F2_YTELZAP*/ },oDlgInfo,120,008,'@R (99) 99999-9999',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.F.,.F.,"","cYTELZAP",,)
 
     TSay():New( 070,015,{||"DT. ENVIO:"},oDlgInfo,,,.F.,.F.,.F.,.T.,CLR_BLACK,CLR_WHITE,0120,008)
-    TGet():New( 068,050,{|u| aCols[1,6]/*F2_DTEVZAP2*/ },oDlgInfo,120,008,'',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.T.,.F.,"","",,)
+    TGet():New( 068,050,{|u| aCols[1,6]/*F2_YDTEZAP2*/ },oDlgInfo,120,008,'',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.T.,.F.,"","",,)
 
     TSay():New( 085,015,{||"RESPOSTA:"},oDlgInfo,,,.F.,.F.,.F.,.T.,CLR_BLACK,CLR_WHITE,0120,008)
-    TGet():New( 083,050,{|u| aCols[1,7]/*F2_RESPZAP*/ },oDlgInfo,120,008,'',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.T.,.F.,"","",,)
+    TGet():New( 083,050,{|u| aCols[1,7]/*F2_YRSPZAP*/ },oDlgInfo,120,008,'',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.T.,.F.,"","",,)
 
     TSay():New( 0100,015,{||"OBS PV:"},oDlgInfo,,,.F.,.F.,.F.,.T.,CLR_BLACK,CLR_WHITE,0120,008)
     TMultiget():new( 098, 050, {| u | aCols[1,8]/*C5_YOBS*/ }, oDlgInfo, 0120,050, , , , , , .T., , , , , , .T. )
 
-    If aCols[1,9] $ "P/S"   /* YSTAZAP */
-      TButton():New( 160,050,"Sincronizar",oDlgInfo,{|| fSincro(cFilialx,cDoc, cSerie, aCols[1,2]/* IDZAP */, aCols[1,10]/*ROTIGEM*/, cNomeCli, cTelZap, oDlgInfo) },040,015,,,,.T.,,"",,,,.F. )      
-    EndIf
+    //If aCols[1,9] $ "P/S"   /* YSTAZAP */
+    //  TButton():New( 160,050,"Sincronizar",oDlgInfo,{|| fSincro(cFilialx,cDoc, cSerie, aCols[1,2]/* YIDZAP */, aCols[1,10]/*ROTIGEM*/, cNomeCli, cYTELZAP, oDlgInfo) },040,015,,,,.T.,,"",,,,.F. )      
+    //EndIf
 
     If aCols[1,9] $ "P"   /* YSTAZAP */
-      TButton():New( 160,130,"Reenviar Pesq.",oDlgInfo,{||EnvPesq("S", cFilialx,cDoc, cSerie, aCols[1,2]/* IDZAP */, aCols[1,10]/*ROTIGEM*/, cNomeCli,cTelZap, oDlgInfo)},040,015,,,,.T.,,"",,,,.F. )
+      TButton():New( 160,130,"Reenviar Pesq.",oDlgInfo,{||EnvPesq("S", cFilialx,cDoc, cSerie, aCols[1,2]/* YIDZAP */, aCols[1,10]/*ROTIGEM*/, cNomeCli,cYTELZAP, oDlgInfo)},040,015,,,,.T.,,"",,,,.F. )
     EndIf
     
     If aCols[1,9] $ "A" .OR. EMPTY(aCols[1,9]) /* YSTAZAP */
-      TButton():New( 160,130,"Enviar Pesq.",oDlgInfo,{||EnvPesq("N", cFilialx,cDoc, cSerie, aCols[1,2]/* IDZAP */, aCols[1,10]/*ROTIGEM*/, cNomeCli,cTelZap, oDlgInfo)},040,015,,,,.T.,,"",,,,.F. )         
+      TButton():New( 160,130,"Enviar Pesq.",oDlgInfo,{||EnvPesq("N", cFilialx,cDoc, cSerie, aCols[1,2]/* YIDZAP */, aCols[1,10]/*ROTIGEM*/, cNomeCli,cYTELZAP, oDlgInfo)},040,015,,,,.T.,,"",,,,.F. )         
     EndIf
 
     oDlgInfo:Activate(,,,.T.)
@@ -389,19 +389,19 @@ Static Function DbClick(nNumPos)
 
 Return
 
-Static Function EnvPesq(cReenvio, cFilialx,cDoc, cSerie, cIDZAP , cORIGEM, cNomeCli, cTelZap, oDlgInfo)
+Static Function EnvPesq(cReenvio, cFilialx,cDoc, cSerie, cYIDZAP , cORIGEM, cNomeCli, cYTELZAP, oDlgInfo)
 
   Local lRet    := .T.  
-  Local cNewTel := cTelZap
+  Local cNewTel := cYTELZAP
 
   if EMPTY(cNomeCli)
     ALERT("O campo nome precisa ser preenchido.")
     lRet := .F.
   Else
-    cTelZap := StrTran( cTelZap, "(", "")
-    cTelZap := StrTran( cTelZap, ")", "")
-    cTelZap := StrTran( cTelZap, "-", "")
-    cNewTel := StrTran( cTelZap, " ", "")
+    cYTELZAP := StrTran( cYTELZAP, "(", "")
+    cYTELZAP := StrTran( cYTELZAP, ")", "")
+    cYTELZAP := StrTran( cYTELZAP, "-", "")
+    cNewTel := StrTran( cYTELZAP, " ", "")
     if Len(cNewTel)  < 11 .OR. EMPTY(cNewTel)
       ALERT("O campo Telefone precisa ser preenchido.")
       lRet := .F.
@@ -411,14 +411,10 @@ Static Function EnvPesq(cReenvio, cFilialx,cDoc, cSerie, cIDZAP , cORIGEM, cNome
   If lRet
     cNewTel := cNewTel
     If (cReenvio == "N")
-      
       FWMsgRun(, {||  WSWAPOST(cFilialx,cDoc, cSerie, cORIGEM, cNomeCli, cNewTel) }, "Aguarde!", "Preparando dados para envio da pesquisa.")   
     Else
-        FWMsgRun(, {||  lRet := WSWAGETID(cFilialx,cDoc, cSerie, cIDZAP, cORIGEM, cNomeCli, cNewTel, oDlgInfo) }, "Aguarde!", "Verificando resposta antes do reenvio.")   
-      If !lRet
-        FWMsgRun(, {||  WSWAPUT(cFilialx,cDoc, cSerie, cIDZAP, cORIGEM, cNomeCli, cNewTel) }, "Aguarde!", "Preparando dados para reenvio da pesquisa.")   
-      EndIf
-    EndIF
+        FWMsgRun(, {||  WSWAPUT(cFilialx,cDoc, cSerie, cYIDZAP, cORIGEM, cNomeCli, cNewTel) }, "Aguarde!", "Preparando dados para reenvio da pesquisa.")   
+    EndIf
     oDlgInfo:End()  
     oBrw1:Refresh()    
   EndIf
@@ -436,9 +432,9 @@ Static Function fSincAll()
 
 Return .T.
 
-Static Function fSincro(cFilialx,cDoc, cSerie, cIDZAP , cORIGEM, cNomeCli, cTelZap, oDlgInfo)
+Static Function fSincro(cFilialx,cDoc, cSerie, cYIDZAP , cORIGEM, cNomeCli, cYTELZAP, oDlgInfo)
     
-    FWMsgRun(, {|| WSWAGETID(cFilialx,cDoc, cSerie, cIDZAP, cORIGEM, cNomeCli, cTelZap, oDlgInfo) }, "Aguarde!", "Verificando resposta antes do reenvio.")   
+    FWMsgRun(, {|| WSWAGETID(cFilialx,cDoc, cSerie, cYIDZAP, cORIGEM, cNomeCli, cYTELZAP, oDlgInfo) }, "Aguarde!", "Verificando resposta antes do reenvio.")   
     FwAlertSuccess(" Sincornizado! ")  
     oDlgInfo:End()  
     oBrw1:Refresh()    
@@ -504,12 +500,12 @@ Static function QueryZap(cFilialx, cDoc, cSerie)
   cQuery += "     SF2.F2_SERIE,             				      " + CRLF
   cQuery += "     SF2.F2_YSTAZAP,           				      " + CRLF
   cQuery += "     SF2.F2_YNOMZAP,           				      " + CRLF
-  cQuery += "     SF2.F2_TELZAP,            				      " + CRLF
-  cQuery += "     SF2.F2_RESPZAP,           				      " + CRLF
-  cQuery += "     SF2.F2_DTEVZAP,           				      " + CRLF
+  cQuery += "     SF2.F2_YTELZAP,            				      " + CRLF
+  cQuery += "     SF2.F2_YRSPZAP,           				      " + CRLF
+  cQuery += "     SF2.F2_YDTEZAP,           				      " + CRLF
   
-  cQuery += "     SF2.F2_IDZAP,           				      " + CRLF
-  cQuery += "     FORMAT(CONVERT(datetime, SF2.F2_DTEVZAP, 121), 'dd/MM/yyyy HH:mm:ss', 'en-US' ) AS F2_DTEVZAP2   	" + CRLF
+  cQuery += "     SF2.F2_YIDZAP,           				      " + CRLF
+  cQuery += "     FORMAT(CONVERT(datetime, SF2.F2_YDTEZAP, 121), 'dd/MM/yyyy HH:mm:ss', 'en-US' ) AS F2_YDTEZAP2   	" + CRLF
   cQuery += " FROM " + RetSqlName("SF2") + "  SF2    " + CRLF
   cQuery += "     INNER JOIN  							              " + CRLF
   cQuery += "        " + RetSqlName("SD2") + " SD2        " + CRLF
@@ -540,10 +536,10 @@ Static function QueryZap(cFilialx, cDoc, cSerie)
   cQuery += "     SF2.F2_SERIE,                           " + CRLF
   cQuery += "     SF2.F2_YSTAZAP,                         " + CRLF
   cQuery += "     SF2.F2_YNOMZAP,                         " + CRLF
-  cQuery += "     SF2.F2_TELZAP,                          " + CRLF
-  cQuery += "     SF2.F2_RESPZAP,                         " + CRLF
-  cQuery += "     SF2.F2_DTEVZAP,                         " + CRLF  
-  cQuery += "     SF2.F2_IDZAP,						                " + CRLF
+  cQuery += "     SF2.F2_YTELZAP,                          " + CRLF
+  cQuery += "     SF2.F2_YRSPZAP,                         " + CRLF
+  cQuery += "     SF2.F2_YDTEZAP,                         " + CRLF  
+  cQuery += "     SF2.F2_YIDZAP,						                " + CRLF
   
   cQuery += "     ISNULL(CONVERT(VARCHAR(MAX), CONVERT(VARBINARY(MAX), SC5.C5_YOBS)), '')    	  	" + CRLF
   cQuery += "  UNION ALL                 					        " + CRLF
@@ -554,11 +550,11 @@ Static function QueryZap(cFilialx, cDoc, cSerie)
   cQuery += "     '' AS F2_SERIE,        					        " + CRLF
   cQuery += "     SC5B.C5_YSTAZAP,       					        " + CRLF
   cQuery += "     SC5B.C5_YNOMZAP,       					        " + CRLF
-  cQuery += "     SC5B.C5_TELZAP,        					        " + CRLF
-  cQuery += "     SC5B.C5_RESPZAP,       					        " + CRLF
-  cQuery += "     SC5B.C5_DTEVZAP,	   					          " + CRLF  
-  cQuery += "     SC5B.C5_IDZAP,           				        " + CRLF
-  cQuery += "     FORMAT(CONVERT(datetime, SC5B.C5_DTEVZAP, 121), 'dd/MM/yyyy HH:mm:ss', 'en-US' ) AS C5_DTEVZAP2   	" + CRLF  
+  cQuery += "     SC5B.C5_YTELZAP,        					        " + CRLF
+  cQuery += "     SC5B.C5_YRSPZAP,       					        " + CRLF
+  cQuery += "     SC5B.C5_YDTEZAP,	   					          " + CRLF  
+  cQuery += "     SC5B.C5_YIDZAP,           				        " + CRLF
+  cQuery += "     FORMAT(CONVERT(datetime, SC5B.C5_YDTEZAP, 121), 'dd/MM/yyyy HH:mm:ss', 'en-US' ) AS C5_YDTEZAP2   	" + CRLF  
   cQuery += "  FROM                                 		  " + CRLF
   cQuery += "     " + RetSqlName("SC5") + " SC5B     		  " + CRLF
   cQuery += "  WHERE                                		  " + CRLF
@@ -578,10 +574,10 @@ Static function QueryZap(cFilialx, cDoc, cSerie)
   cQuery += "     SC5B.C5_NUM,                      		  " + CRLF
   cQuery += "     SC5B.C5_YSTAZAP,                  		  " + CRLF
   cQuery += "     SC5B.C5_YNOMZAP,                  		  " + CRLF
-  cQuery += "     SC5B.C5_TELZAP,                   		  " + CRLF
-  cQuery += "     SC5B.C5_RESPZAP,                  		  " + CRLF
-  cQuery += "     SC5B.C5_DTEVZAP,				  		          " + CRLF
-  cQuery += "     SC5B.C5_IDZAP,           				        " + CRLF
+  cQuery += "     SC5B.C5_YTELZAP,                   		  " + CRLF
+  cQuery += "     SC5B.C5_YRSPZAP,                  		  " + CRLF
+  cQuery += "     SC5B.C5_YDTEZAP,				  		          " + CRLF
+  cQuery += "     SC5B.C5_YIDZAP,           				        " + CRLF
   cQuery += "  ISNULL(CONVERT(VARCHAR(MAX), CONVERT(VARBINARY(MAX), SC5B.C5_YOBS)), '')   	" + CRLF
 
   If Select("__TRZ") > 0
@@ -594,7 +590,7 @@ Static function QueryZap(cFilialx, cDoc, cSerie)
   While ! __TRZ->(EoF())
     
     cObs := Posicione("SC5", 1, __TRZ->F2_FILIAL+__TRZ->F2_DOC, "C5_YOBS") 
-    cDate := AllTrim(__TRZ->F2_DTEVZAP2)
+    cDate := AllTrim(__TRZ->F2_YDTEZAP2)
     
     If cDate == "01/01/1900 00:00:00"
       cDate := ""
@@ -611,7 +607,7 @@ Static function QueryZap(cFilialx, cDoc, cSerie)
     EndIf
 
     //                        1               2              3            4                  5                 6                  7          8             9                10            11              12              13                   14                          
-    aAdd(aColsZap, {__TRZ->F2_FILIAL, __TRZ->F2_IDZAP,  cStatus, __TRZ->F2_YNOMZAP, __TRZ->F2_TELZAP,   AllTrim(cDate), __TRZ->F2_RESPZAP, cObs, __TRZ->F2_YSTAZAP, __TRZ->ORIGEM, __TRZ->F2_DOC, __TRZ->F2_SERIE, __TRZ->F2_YNOMZAP, __TRZ->F2_TELZAP })
+    aAdd(aColsZap, {__TRZ->F2_FILIAL, __TRZ->F2_YIDZAP,  cStatus, __TRZ->F2_YNOMZAP, __TRZ->F2_YTELZAP,   AllTrim(cDate), __TRZ->F2_YRSPZAP, cObs, __TRZ->F2_YSTAZAP, __TRZ->ORIGEM, __TRZ->F2_DOC, __TRZ->F2_SERIE, __TRZ->F2_YNOMZAP, __TRZ->F2_YTELZAP })
     __TRZ->(DbSkip())
   EndDo
   __TRZ->(DbCloseArea()) 
@@ -717,10 +713,10 @@ Static Function WSWAPOST(cFilialx,cDoc, cSerie, cORIGEM, cNomeCli, cTelCli)
       If (oRest:ORESPONSEH:CSTATUSCODE == "200")
 		    FWJsonDeserialize(oRest:GetResult(), @oResult)		
         If cOrigem == "SF2"
-                //cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cIdZap,    cStatus, cNomeCli,  cTelCli
+                //cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cYIDZAP,    cStatus, cNomeCli,  cTelCli
           UpdtSF2(cFilialx,   cDoc,   cSerie,   "",   oResult:_id, "P", cNomeCli, cTelCli) 
         Else
-                 //cF2FILIAL, cF2DOC, cRESP  , cIdZap,    cStatus, cNomeCli,  cTelCli
+                 //cF2FILIAL, cF2DOC, cRESP  , cYIDZAP,    cStatus, cNomeCli,  cTelCli
           UpdtSC5(cFilialx , cDoc    , ""    , oResult:_id, "P"  , cNomeCli, cTelCli) 
         EndIf
         
@@ -746,7 +742,7 @@ Static Function WSWAPOST(cFilialx,cDoc, cSerie, cORIGEM, cNomeCli, cTelCli)
 Return .T.
 
 // REEENVIO PUT  
-Static Function WSWAPUT(cFilialx,cDoc, cSerie, cIDZAP , cORIGEM, cNomeCli, cTelCli)
+Static Function WSWAPUT(cFilialx,cDoc, cSerie, cYIDZAP , cORIGEM, cNomeCli, cTelCli)
 
 
   Local aHeader  := {}   
@@ -761,7 +757,7 @@ Static Function WSWAPUT(cFilialx,cDoc, cSerie, cIDZAP , cORIGEM, cNomeCli, cTelC
 
   aDados := FindPesq(cFILIALx, cDOC, cSERIE,  cNomeCli, cTelCli)
   If Len(aDados) > 0
-    If cValToChar(AllTrim(aDados[1,5])) != AllTrim(cIDZAP)
+    If cValToChar(AllTrim(aDados[1,5])) != AllTrim(cYIDZAP)
       MSGALERT( "O número <b>"+cValToChar(cTelCli)+"</b> está pendente de retorno pelo doc <b>"+cValToChar(aDados[1,3])+" "+cValToChar(aDados[1,4])+"</b>", "AVISO" )   
       Return .F.
     EndIf
@@ -785,7 +781,7 @@ Static Function WSWAPUT(cFilialx,cDoc, cSerie, cIDZAP , cORIGEM, cNomeCli, cTelC
     oJson['arguments']        := oJBodyP
 
 
-	  oRest:setPath("/chats/"+cIDZAP+"")	     
+	  oRest:setPath("/chats/"+cYIDZAP+"")	     
     If oRest:Put(aHeader, oJson:ToJson() ) .OR. !Empty( oRest:GetResult() )
       If (oRest:ORESPONSEH:CSTATUSCODE == "200")
 			  cStringJS :=  oRest:GetResult()
@@ -793,10 +789,10 @@ Static Function WSWAPUT(cFilialx,cDoc, cSerie, cIDZAP , cORIGEM, cNomeCli, cTelC
         If oResult:is_open == .T.
 
           If cOrigem == "SF2"
-                  //cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cIdZap,    cStatus, cNomeCli,  cTelCli
+                  //cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cYIDZAP,    cStatus, cNomeCli,  cTelCli
             UpdtSF2(cFilialx,   cDoc,   cSerie,   "",   oResult:_id, "S", cNomeCli, cTelCli) 
           Else
-                  //cF2FILIAL, cF2DOC, cRESP  , cIdZap,    cStatus, cNomeCli,  cTelCli
+                  //cF2FILIAL, cF2DOC, cRESP  , cYIDZAP,    cStatus, cNomeCli,  cTelCli
             UpdtSC5(cFilialx , cDoc    , ""    , oResult:_id, "S"  , cNomeCli, cTelCli) 
           EndIf
           
@@ -832,6 +828,7 @@ Static Function WSWAGETID(cFilialx,cDoc, cSerie, cIdResZp,cOrigem , cNomeCli, cT
   Local cHostWS   := ""   
   Local cYTLOZAP  := "" 
   Local oResult   := "" 
+  Local nMsg      := 0
   
   If Len(aHeader) > 0
 
@@ -846,8 +843,9 @@ Static Function WSWAGETID(cFilialx,cDoc, cSerie, cIdResZp,cOrigem , cNomeCli, cT
 		    FWJsonDeserialize(oRest:GetResult(), @oResult)        
         If Len(oResult) > 0
           If Len(oResult[1]:messages) > 0 .AND. oResult[1]:is_open == .F.
+            
             If cOrigem == "SF2"
-              //cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cIdZap, cStatus
+              //cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cYIDZAP, cStatus
               UpdtSF2(cFilialx,cDoc, cSerie, oResult[1]:messages[Len(oResult[1]:messages)-1]:body, oResult[1]:_id, "R", cNomeCli, cTelCli) 
             Else
               UpdtSC5(cFilialx,cDoc, oResult[1]:messages[Len(oResult[1]:messages)-1]:body , oResult[1]:_id, "R", cNomeCli, cTelCli)
@@ -881,7 +879,7 @@ User Function WSWAGET()
   
   Local aHeader   := PLOGIN()
   Local aDados    := {}
-  Local cIDZAP    := ""
+  Local cYIDZAP    := ""
   Local cMsg      := ""  
   Local oRest     := Nil   
   Local cHostWS   := "" 
@@ -904,13 +902,13 @@ User Function WSWAGET()
     cYTLOZAP  := SuperGetMV("MV_YTLO001",.F.,"") // TEL. DE ORIGEM DO ENVIO PARA O WHATSAAP                   
     
       For nW := 1 To Len(aDados)
-        cIDZAP += AllTrim(cValToChar(aDados[nW,2]))+","         
+        cYIDZAP += AllTrim(cValToChar(aDados[nW,2]))+","         
       Next nW
 
-      cIDZAP :=  SUBSTR(cIDZAP, 0, (LEN(cIDZAP)-1))
+      cYIDZAP :=  SUBSTR(cYIDZAP, 0, (LEN(cYIDZAP)-1))
       AADD(aHeader,"Branch-Number:"+AllTrim(cYTLOZAP)+"")
       oRest     := FWRest():New(AllTrim(cHostWS)) 
-      oRest:setPath("/chats?chat_ids="+cIDZAP+"")        
+      oRest:setPath("/chats?chat_ids="+cYIDZAP+"")        
       If oRest:Get(aHeader) .OR. !Empty( oRest:GetResult() )
         If (oRest:ORESPONSEH:CSTATUSCODE == "200")
           cStringJS :=  oRest:GetResult()
@@ -919,11 +917,11 @@ User Function WSWAGET()
           If Len(oResult) > 0
 
             For nW := 1 To Len(oResult)
-              If Len(oResult[nW]:messages) > 0 .AND. oResult[nW]:is_open == .F.
+              If Len(oResult[nW]:messages) > 1 .AND. oResult[nW]:is_open == .F.
                 For nK := 1 To Len(oResult[nW]:messages)
                   For nI := 1 To Len(aDados)
                     If aDados[nI,10] == "SF2"
-                            //cF2FILIAL,         cF2DOC,     cF2SERIE   ,                              cRESP                        , cIdZap      , cStatus, cNomeCli,         cTelCli 
+                            //cF2FILIAL,         cF2DOC,     cF2SERIE   ,                              cRESP                        , cYIDZAP      , cStatus, cNomeCli,         cTelCli 
                       UpdtSF2(aDados[nI,1], aDados[nI,11], aDados[nI,12], oResult[nW]:messages[Len(oResult[nW]:messages)-1]:body, oResult[nW]:_id, "R", aDados[nI,13], aDados[nI,14]) 
                     Else
                       UpdtSC5(aDados[nI,1], aDados[nI,11], oResult[nW]:messages[Len(oResult[nW]:messages)-1]:body, oResult[nW]:_id, "R", aDados[nI,13], aDados[nI,14]) 
@@ -952,7 +950,7 @@ User Function WSWAGET()
 
 Return 
 
-Static Function UpdtSF2(cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cIdZap, cStatus, cNomeCli, cTelCli )
+Static Function UpdtSF2(cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cYIDZAP, cStatus, cNomeCli, cTelCli )
 
   Local cDtHrZap := StrTran( FWTimeStamp(3,Date(), Time()), "T", " ") // aaaa-mm-dd hh:mm:ss
 
@@ -960,23 +958,25 @@ Static Function UpdtSF2(cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cIdZap, cStatus, cNo
   SF2->(dbSetOrder(1)) //F2_FILIAL, F2_DOC, F2_SERIE, F2_CLIENTE, F2_LOJA, F2_FORMUL, F2_TIPO, R_E_C_N_O_, D_E_L_E_T_
   If SF2->(dbSeek( cF2FILIAL + cF2DOC + cF2SERIE ))
 
-    If !Empty(SF2->F2_DTEVZAP)
-      cDtHrZap := SF2->F2_DTEVZAP
+    If !Empty(SF2->F2_YDTEZAP)
+      cDtHrZap := SF2->F2_YDTEZAP
     EndIf
 
-    RecLock("SF2",.F.)
-    SF2->F2_IDZAP	  := cIdZap
-    SF2->F2_YSTAZAP	:= cStatus
-    SF2->F2_DTEVZAP	:= cDtHrZap
-    SF2->F2_RESPZAP	:= cRESP
-    SF2->F2_YNOMZAP	:= cNomeCli
-    SF2->F2_TELZAP	:= cTelCli
-    SF2->(MsUnLock())
+    If Empty(SF2->F2_YIDZAP)  .OR. AllTrim(SF2->F2_YIDZAP) == AllTrim(cYIDZAP) .OR. cStatus == "S"
+      RecLock("SF2",.F.)
+      SF2->F2_YIDZAP	:= cYIDZAP
+      SF2->F2_YSTAZAP	:= cStatus
+      SF2->F2_YDTEZAP	:= cDtHrZap
+      SF2->F2_YRSPZAP	:= cRESP
+      SF2->F2_YNOMZAP	:= cNomeCli
+      SF2->F2_YTELZAP	:= cTelCli
+      SF2->(MsUnLock())
+    EndIf
   EndIf
 
 Return .T.
 
-Static Function UpdtSC5(cC5FILIAL, cC5NUM, cRESP, cIdZap, cStatus, cNomeCli, cTelCli )
+Static Function UpdtSC5(cC5FILIAL, cC5NUM, cRESP, cYIDZAP, cStatus, cNomeCli, cTelCli )
 
   Local cDtHrZap := StrTran( FWTimeStamp(3,Date(), Time()), "T", " ") // aaaa-mm-dd hh:mm:ss
 
@@ -984,18 +984,21 @@ Static Function UpdtSC5(cC5FILIAL, cC5NUM, cRESP, cIdZap, cStatus, cNomeCli, cTe
   SC5->(dbSetOrder(1)) //C5_FILIAL, C5_NUM, R_E_C_N_O_, D_E_L_E_T_
   If SC5->(dbSeek( cC5FILIAL + cC5NUM ))
 
-    If !Empty(SC5->C5_DTEVZAP)
-      cDtHrZap := SC5->C5_DTEVZAP
+    If !Empty(SC5->C5_YDTEZAP)
+      cDtHrZap := SC5->C5_YDTEZAP
     EndIf
 
-    RecLock("SC5",.F.)
-    SC5->C5_IDZAP	  := cIdZap
-    SC5->C5_YSTAZAP	:= cStatus
-    SC5->C5_DTEVZAP	:= cDtHrZap
-    SC5->C5_RESPZAP	:= cRESP
-    SC5->C5_YNOMZAP	:= cNomeCli
-    SC5->C5_TELZAP	:= cTelCli
-    SC5->(MsUnLock())
+    If Empty(SC5->C5_YIDZAP) .OR. AllTrim(SC5->C5_YIDZAP) == AllTrim(cYIDZAP) .OR. cStatus == "S"
+      RecLock("SC5",.F.)
+      SC5->C5_YIDZAP	  := cYIDZAP
+      SC5->C5_YSTAZAP	:= cStatus
+      SC5->C5_YDTEZAP	:= cDtHrZap
+      SC5->C5_YRSPZAP	:= cRESP
+      SC5->C5_YNOMZAP	:= cNomeCli
+      SC5->C5_YTELZAP	:= cTelCli
+      SC5->(MsUnLock())
+    EndIf
+    
 
   EndIf
 
@@ -1014,15 +1017,15 @@ Static Function FindPesq(cFILIALx, cDOC, cSERIE,  cNomeCli, cTelCli )
   cQuery += " ,SF2.F2_FILIAL                          " + CRLF
   cQuery += " ,SF2.F2_DOC                             " + CRLF
   cQuery += " ,SF2.F2_SERIE AS SERIE                  " + CRLF
-  cQuery += " ,SF2.F2_IDZAP                           " + CRLF
+  cQuery += " ,SF2.F2_YIDZAP                           " + CRLF
   cQuery += " ,SF2.F2_YSTAZAP                         " + CRLF
-  cQuery += " ,SF2.F2_DTEVZAP                         " + CRLF
-  cQuery += " ,SF2.F2_RESPZAP                         " + CRLF
+  cQuery += " ,SF2.F2_YDTEZAP                         " + CRLF
+  cQuery += " ,SF2.F2_YRSPZAP                         " + CRLF
   cQuery += " ,SF2.F2_YNOMZAP                         " + CRLF
-  cQuery += " ,SF2.F2_TELZAP                          " + CRLF
+  cQuery += " ,SF2.F2_YTELZAP                          " + CRLF
 												  
   cQuery += " FROM " + RetSqlName("SF2") + " SF2  " + CRLF
-  cQuery += " WHERE SF2.F2_TELZAP = "+ValToSql(cTelCli)+"        " + CRLF    
+  cQuery += " WHERE SF2.F2_YTELZAP = "+ValToSql(cTelCli)+"        " + CRLF    
   cQuery += " AND SF2.F2_YSTAZAP <> 'R'               " + CRLF
   cQuery += " AND SF2.D_E_L_E_T_ = ''                 " + CRLF
 												 
@@ -1033,16 +1036,16 @@ Static Function FindPesq(cFILIALx, cDOC, cSERIE,  cNomeCli, cTelCli )
   cQuery += " ,SC5B.C5_FILIAL                          " + CRLF
   cQuery += " ,SC5B.C5_NUM                             " + CRLF
   cQuery += " ,'' AS SERIE                        " + CRLF
-  cQuery += " ,SC5B.C5_IDZAP                           " + CRLF
+  cQuery += " ,SC5B.C5_YIDZAP                           " + CRLF
   cQuery += " ,SC5B.C5_YSTAZAP                         " + CRLF
-  cQuery += " ,SC5B.C5_DTEVZAP                         " + CRLF
-  cQuery += " ,SC5B.C5_RESPZAP                         " + CRLF
+  cQuery += " ,SC5B.C5_YDTEZAP                         " + CRLF
+  cQuery += " ,SC5B.C5_YRSPZAP                         " + CRLF
   cQuery += " ,SC5B.C5_YNOMZAP                         " + CRLF
-  cQuery += " ,SC5B.C5_TELZAP                          " + CRLF
+  cQuery += " ,SC5B.C5_YTELZAP                          " + CRLF
 							
   cQuery += " FROM " + RetSqlName("SC5") + " SC5B  "   + CRLF
 							
-  cQuery += " WHERE SC5B.C5_TELZAP = "+ValToSql(cTelCli)+"        " + CRLF    
+  cQuery += " WHERE SC5B.C5_YTELZAP = "+ValToSql(cTelCli)+"        " + CRLF    
   cQuery += " AND SC5B.C5_YSTAZAP <> 'R'	              " + CRLF
   cQuery += " AND SC5B.D_E_L_E_T_ = ''                 " + CRLF
 
@@ -1050,7 +1053,7 @@ Static Function FindPesq(cFILIALx, cDOC, cSERIE,  cNomeCli, cTelCli )
   __TRW->(dbGoTop())
 
   While ! __TRW->(EoF())
-    aAdd(aDados, {__TRW->ORIGEM, __TRW->F2_FILIAL, __TRW->F2_DOC, __TRW->SERIE, __TRW->F2_IDZAP})
+    aAdd(aDados, {__TRW->ORIGEM, __TRW->F2_FILIAL, __TRW->F2_DOC, __TRW->SERIE, __TRW->F2_YIDZAP})
     __TRW->(DbSkip())
   EndDo
   __TRW->(DbCloseArea()) 
