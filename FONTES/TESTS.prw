@@ -43,3 +43,25 @@ METHOD SAYHELLO() CLASS APHELLO
   MsgInfo(self:cMsg)
 Return .T.
 */
+
+
+
+
+
+  //Local cTimeIni := IncTime(Time(), 0, 0, 10)
+  //Local aResult  := {}
+  //Local cCount   := 0
+
+
+  //While  cTimeIni >= Time()
+
+  //  If cCount == 0
+  //    MsgRun("Autenticando dados do cliente..", "Aguarde..." , {|| aResult := PLOGIN() })
+  //    cCount := 1
+  //  EndIf
+
+  //  If Len(aResult) > 0
+  //    alert("TimeOut")
+  //  EndIf
+
+  //EndDo
