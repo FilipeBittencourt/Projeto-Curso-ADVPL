@@ -3,21 +3,28 @@
 
 #Define cBR Chr(13)+Chr(10)
 
-CLASS TWSessionCodeAuth From LongClassName
+//U_FACTEST
+USER FUNCTION FACTEST()
+  Local oSession := TWSessionCodeAuth():New()
+  FWMsgRun(, {||  oSession:PLOGIN() }, "Aguarde! Autenticando dados do cliente...", "Processando...")
+RETURN oSession
 
-  Data cUName  // User Name
-  Data cUEmail // User Email
-  Data cUToken // User Token
-  Data lAdmin  // .T. or .F.
-  Data cEFName // first_name
-  Data cELName // last_name
-  Data cECGC   // branch_key
-  Data cEKey   // company_key
+  CLASS TWSessionCodeAuth From LongClassName
+
+    Data cUName  // User Name
+    Data cUEmail // User Email
+    Data cUToken // User Token
+    Data lAdmin  // .T. or .F.
+    Data cEFName // first_name
+    Data cELName // last_name
+    Data cECGC   // branch_key
+    Data cEKey   // company_key
 
 
-  Method New() CONSTRUCTOR
-  Method PLOGIN()
-ENDCLASS
+    Method New() CONSTRUCTOR
+    Method PLOGIN()
+  ENDCLASS
+
 
 METHOD NEW() CLASS TWSessionCodeAuth
 
@@ -31,23 +38,6 @@ METHOD NEW() CLASS TWSessionCodeAuth
   ::cEKey   := ""
 
 Return self
-
-//U_FACTEST
-USER FUNCTION FACTEST()
-  Local oSession := TWSessionCodeAuth():New()
-
-
-  If !MsgYesNo("Desaja enviar uma nova pesquisa ?","ATENÇÃO","YES NO")
-    alert("TRUE")
-    Return .F.
-  EndIf
-
-  If Select("SX6") <= 0
-    // MsgRun("Preparando AMBIENTE...", "Aguarde..." , {||RPCSetEnv("99", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})} )
-    //MsgRun("Autenticando dados do cliente..", "Aguarde..." , {|| oSession:PLOGIN() })
-  EndIf
-  FWMsgRun(, {||  oSession:PLOGIN() }, "Aguarde! Autenticando dados do cliente...", "Processando...")
-RETURN oSession
 
 Method PLOGIN() CLASS TWSessionCodeAuth
 

@@ -4,31 +4,6 @@
 #INCLUDE 'COLORS.CH'
 #Include "TopConn.ch"
 
-/*ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
-±±³Programa  ³         ³ Autor ³                       ³ Data ³           ³±±
-±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
-±±³Locacao   ³                  ³Contato ³                                ³±±
-±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-±±³Descricao ³                                                            ³±±
-±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-±±³Parametros³                                                            ³±±
-±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-±±³Retorno   ³                                                            ³±±
-±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-±±³Aplicacao ³                                                            ³±±
-±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-±±³Uso       ³                                                            ³±±
-±±ÃÄÄÄÄÄÄÄÄÄÄÁÄÄÄÂÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-±±³Analista Resp.³  Data  ³                                               ³±±
-±±ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-±±³              ³  /  /  ³                                               ³±±
-±±³              ³  /  /  ³                                               ³±±
-±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß*/
-
 User Function PESQSATS
 
   /*ÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
@@ -47,7 +22,7 @@ User Function PESQSATS
   Private aCols      := Nil
   Private aColsDEF   := Nil
   Private cAlertIN    := .F.
-  Private aStatus := {'A=Não enviados','P=Um Envio sem resposta','S=Dois Envios sem resposta','R=Resposta enviada','T=Todos'}
+  Private aStatus := {'A=Não enviados','P=Um Envio sem resposta','S=Dois Envios sem resposta','R=Resposta enviada','N=Fechada sem resposta','T=Todos'}
   
   
   If Select("SX6") <= 0
@@ -134,7 +109,6 @@ User Function PESQSATS
 
 
 Return
-
 
 Static Function GetHead()
 
@@ -302,7 +276,9 @@ Static Function GetaCols()
       ElseIf __TRB->F2_YSTAZAP == "S" //S=2 Envio sem resposta
           oCorLeg     := LoadBitmap( GetResources(), "BR_AMARELO")      
       ElseIf __TRB->F2_YSTAZAP == "R" //R=Resposta enviada
-          oCorLeg     := LoadBitmap( GetResources(), "BR_VERDE")      
+          oCorLeg     := LoadBitmap( GetResources(), "BR_VERDE") 
+      ElseIf __TRB->F2_YSTAZAP == "N" //N=Fechada sem resposta
+          oCorLeg     := LoadBitmap( GetResources(), "BR_PRETO")               
       Else
           oCorLeg     := LoadBitmap( GetResources(), "BR_VERMELHO")
       EndIf
@@ -314,15 +290,17 @@ Static Function GetaCols()
       __TRB->(DbCloseArea()) 
 
   else
-
+    
+    /*
     If cAlertIN == .T.
         MSGALERT("Dados não encontrados, por favor refaça os filtros.", "Aviso" )         
     EndIf
     cAlertIN := .T. // para não alertar que nao existe dados ao iniciar a tela
+    */
 
   EndIf
 
- 
+
 
 RETURN aCols
 
@@ -330,29 +308,29 @@ Static Function DbClick(nNumPos)
 
   Local oDlgInfo := Nil
   Local cNomeCli := SPACE(50)
-  Local cYTELZAP  := SPACE(19)  
+  Local cYTELZAP  := SPACE(19)
   Local cFilialx := ""
   Local cDoc     := ""
   Local cSerie   := ""
   Local aCols    := {}
- 
-  
+
+
   If  Len(oBrw1:Acols) > 0 .AND. !Empty(oBrw1:Acols[1,2])
 
-    cFilialx := oBrw1:Acols[nNumPos][aScan(aHeader, {|x| AllTrim(x[2]) == "Filial"})] 
-    cDoc     := oBrw1:Acols[nNumPos][aScan(aHeader, {|x| AllTrim(x[2]) == "Documento"})] 
-    cSerie   := oBrw1:Acols[nNumPos][aScan(aHeader, {|x| AllTrim(x[2]) == "Serie"})] 
+    cFilialx := oBrw1:Acols[nNumPos][aScan(aHeader, {|x| AllTrim(x[2]) == "Filial"})]
+    cDoc     := oBrw1:Acols[nNumPos][aScan(aHeader, {|x| AllTrim(x[2]) == "Documento"})]
+    cSerie   := oBrw1:Acols[nNumPos][aScan(aHeader, {|x| AllTrim(x[2]) == "Serie"})]
     aCols := QueryZap(cFilialx,cDoc, cSerie)
 
     cNomeCli  := aCols[1,4] /*YNOMZAP*/
-    cYTELZAP   := aCols[1,5] /*YTELZAP*/ 
+    cYTELZAP   := aCols[1,5] /*YTELZAP*/
 
     oDlgInfo := MSDialog():New( 100,232,485,650,"Informativo:",,,.F.,,,,,,.T.,,,.T. )
 
     TSay():New( 010,015,{||"ID:"},oDlgInfo,,,.F.,.F.,.F.,.T.,CLR_BLACK,CLR_WHITE,0120,008)
     TGet():New( 008,050,{|u| aCols[1,2]/*F2_YIDZAP*/},oDlgInfo,0120,008,'',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.T.,.F.,"","",,)
 
-    TSay():New( 025,015,{||"STAUS:"},oDlgInfo,,,.F.,.F.,.F.,.T.,CLR_BLACK,CLR_WHITE,0120,008)
+    TSay():New( 025,015,{||"STATUS:"},oDlgInfo,,,.F.,.F.,.F.,.T.,CLR_BLACK,CLR_WHITE,0120,008)
     TGet():New( 023,050,{|u| aCols[1,3]/*F2_YSTAZAP*/},oDlgInfo,0120,008,'',,CLR_BLACK,CLR_WHITE,,,,.T.,"",,,.F.,.F.,,.T.,.F.,"","",,)
 
     TSay():New( 040,015,{||"NOME:"},oDlgInfo,,,.F.,.F.,.F.,.T.,CLR_BLACK,CLR_WHITE,0120,008)
@@ -370,28 +348,28 @@ Static Function DbClick(nNumPos)
     TSay():New( 0100,015,{||"OBS PV:"},oDlgInfo,,,.F.,.F.,.F.,.T.,CLR_BLACK,CLR_WHITE,0120,008)
     TMultiget():new( 098, 050, {| u | aCols[1,8]/*C5_YOBS*/ }, oDlgInfo, 0120,050, , , , , , .T., , , , , , .T. )
 
-    //If aCols[1,9] $ "P/S"   /* YSTAZAP */
-    //  TButton():New( 160,050,"Sincronizar",oDlgInfo,{|| fSincro(cFilialx,cDoc, cSerie, aCols[1,2]/* YIDZAP */, aCols[1,10]/*ROTIGEM*/, cNomeCli, cYTELZAP, oDlgInfo) },040,015,,,,.T.,,"",,,,.F. )      
-    //EndIf
+    If aCols[1,9] $ "P/S/R/N"   /* YSTAZAP */
+      TButton():New( 160,050,"Exlcuir pesquisa",oDlgInfo,{|| fCancela(cFilialx,cDoc, cSerie, aCols[1,2]/* YIDZAP */, aCols[1,10]/*ROTIGEM*/, cNomeCli, cYTELZAP, oDlgInfo) },050,015,,,,.T.,,"",,,,.F. )
+    EndIf
 
     If aCols[1,9] $ "P"   /* YSTAZAP */
       TButton():New( 160,130,"Reenviar Pesq.",oDlgInfo,{||EnvPesq("S", cFilialx,cDoc, cSerie, aCols[1,2]/* YIDZAP */, aCols[1,10]/*ROTIGEM*/, cNomeCli,cYTELZAP, oDlgInfo)},040,015,,,,.T.,,"",,,,.F. )
     EndIf
-    
+
     If aCols[1,9] $ "A" .OR. EMPTY(aCols[1,9]) /* YSTAZAP */
-      TButton():New( 160,130,"Enviar Pesq.",oDlgInfo,{||EnvPesq("N", cFilialx,cDoc, cSerie, aCols[1,2]/* YIDZAP */, aCols[1,10]/*ROTIGEM*/, cNomeCli,cYTELZAP, oDlgInfo)},040,015,,,,.T.,,"",,,,.F. )         
+      TButton():New( 160,130,"Enviar Pesq.",oDlgInfo,{||EnvPesq("N", cFilialx,cDoc, cSerie, aCols[1,2]/* YIDZAP */, aCols[1,10]/*ROTIGEM*/, cNomeCli,cYTELZAP, oDlgInfo)},040,015,,,,.T.,,"",,,,.F. )
     EndIf
 
     oDlgInfo:Activate(,,,.T.)
 
   EndIf
-   
+
 
 Return
 
 Static Function EnvPesq(cReenvio, cFilialx,cDoc, cSerie, cYIDZAP , cORIGEM, cNomeCli, cYTELZAP, oDlgInfo)
 
-  Local lRet    := .T.  
+  Local lRet    := .T.
   Local cNewTel := cYTELZAP
 
   if EMPTY(cNomeCli)
@@ -411,62 +389,62 @@ Static Function EnvPesq(cReenvio, cFilialx,cDoc, cSerie, cYIDZAP , cORIGEM, cNom
   If lRet
     cNewTel := cNewTel
     If (cReenvio == "N")
-      FWMsgRun(, {||  WSWAPOST(cFilialx,cDoc, cSerie, cORIGEM, cNomeCli, cNewTel) }, "Aguarde!", "Preparando dados para envio da pesquisa.")   
+      FWMsgRun(, {||  WSWAPOST(cFilialx,cDoc, cSerie, cORIGEM, cNomeCli, cNewTel) }, "Aguarde!", "Preparando dados para envio da pesquisa.")
     Else
-        FWMsgRun(, {||  WSWAPUT(cFilialx,cDoc, cSerie, cYIDZAP, cORIGEM, cNomeCli, cNewTel) }, "Aguarde!", "Preparando dados para reenvio da pesquisa.")   
+      FWMsgRun(, {||  WSWAPUT(cFilialx,cDoc, cSerie, cYIDZAP, cORIGEM, cNomeCli, cNewTel) }, "Aguarde!", "Preparando dados para reenvio da pesquisa.")
     EndIf
-    oDlgInfo:End()  
-    oBrw1:Refresh()    
+    oDlgInfo:End()
   EndIf
-  
-  
-  
+  fFiltra()
 
 Return lRet
 
 Static Function fSincAll()
-  
+
   FWMsgRun(, {||  U_WSWAGET() }, "Aguarde!", "Sincronizando..."  + CRLF + CRLF)
   fFiltra()
-  FwAlertSuccess(" Sincornizado! ")     
+  FwAlertSuccess(" Sincronizado! ")
 
 Return .T.
 
-Static Function fSincro(cFilialx,cDoc, cSerie, cYIDZAP , cORIGEM, cNomeCli, cYTELZAP, oDlgInfo)
-    
-    FWMsgRun(, {|| WSWAGETID(cFilialx,cDoc, cSerie, cYIDZAP, cORIGEM, cNomeCli, cYTELZAP, oDlgInfo) }, "Aguarde!", "Verificando resposta antes do reenvio.")   
-    FwAlertSuccess(" Sincornizado! ")  
-    oDlgInfo:End()  
-    oBrw1:Refresh()    
+Static Function fCancela(cFilialx,cDoc, cSerie, cYIDZAP , cORIGEM, cNomeCli, cYTELZAP, oDlgInfo)
+
+  If MsgYesNo("Tem certeza que deseja DELETAR a pesquisa ?","ATENÇÃO","YES NO")
+    If .T.
+      FWMsgRun(, {|| WSDELL(cFilialx,cDoc, cSerie, cYIDZAP, cORIGEM, cNomeCli, cYTELZAP,"") }, "Aguarde!", "Verificando resposta antes do reenvio.")
+      oDlgInfo:End()
+    endif
+  EndIf
+  fFiltra()
 
 Return .T.
 
 
 Static Function fFiltra()
 
-  Local aColsF := {}   
- 
-  FWMsgRun(, {|| aColsF := GetaCols() }, "Aguarde!", "Carregando informações...")   
-  
+  Local aColsF := {}
+
+  FWMsgRun(, {|| aColsF := GetaCols() }, "Aguarde!", "Carregando informações...")
+
   If Len(aColsF) > 0
-      oBrw1:ACOLS := aColsF 
+    oBrw1:ACOLS := aColsF
   else
-      oBrw1:ACOLS := aColsDEF 
+    oBrw1:ACOLS := aColsDEF
   EndIf
-    
-    oBrw1:Refresh()  
+
+  oBrw1:Refresh()
 
 Return .T.
 
 
 Static Function fFechar()
-  
+
   If MsgYesNo("Tem certeza que deseja sair da função?","ATENÇÃO","YES NO")
     If .T.
-         oDlg1:End()
+      oDlg1:End()
     endif
   EndIf
-  
+
 Return .T.
 
 Static function Legenda()
@@ -477,6 +455,8 @@ Static function Legenda()
   AADD(aLegenda,{"BR_AZUL"    	 ,"   P = Um envio sem resposta" }) //P=1 Envio sem resposta'
   AADD(aLegenda,{"BR_AMARELO"    ,"   S = Dois envios sem resposta" }) //S=2 Envios sem resposta'
   AADD(aLegenda,{"BR_VERDE"    	 ,"   R = Resposta enviada" })     //R= Resposta Enviada'
+  AADD(aLegenda,{"BR_PRETO"    	 ,"   N = Fechada sem resposta" })     //R= Fechada sem resposta
+
   BrwLegenda("Legenda", "Legenda", aLegenda)
 
 Return Nil
@@ -503,7 +483,7 @@ Static function QueryZap(cFilialx, cDoc, cSerie)
   cQuery += "     SF2.F2_YTELZAP,            				      " + CRLF
   cQuery += "     SF2.F2_YRSPZAP,           				      " + CRLF
   cQuery += "     SF2.F2_YDTEZAP,           				      " + CRLF
-  
+
   cQuery += "     SF2.F2_YIDZAP,           				      " + CRLF
   cQuery += "     FORMAT(CONVERT(datetime, SF2.F2_YDTEZAP, 121), 'dd/MM/yyyy HH:mm:ss', 'en-US' ) AS F2_YDTEZAP2   	" + CRLF
   cQuery += " FROM " + RetSqlName("SF2") + "  SF2    " + CRLF
@@ -521,7 +501,7 @@ Static function QueryZap(cFilialx, cDoc, cSerie)
   cQuery += "  WHERE                                      " + CRLF
   cQuery += "     SF2.D_E_L_E_T_ = ''                     " + CRLF
   cQuery += "     AND SF2.F2_SERIE IN ('RPS', '1')        " + CRLF
-  
+
   If !EMPTY(cFilialx) .AND. !EMPTY(cDoc)
     cQuery += "     AND SF2.F2_FILIAL = "+ValToSql(cFilialx)+"  " + CRLF
     cQuery += "     AND SF2.F2_DOC = "+ValToSql(cDoc)+"        " + CRLF
@@ -538,9 +518,9 @@ Static function QueryZap(cFilialx, cDoc, cSerie)
   cQuery += "     SF2.F2_YNOMZAP,                         " + CRLF
   cQuery += "     SF2.F2_YTELZAP,                          " + CRLF
   cQuery += "     SF2.F2_YRSPZAP,                         " + CRLF
-  cQuery += "     SF2.F2_YDTEZAP,                         " + CRLF  
+  cQuery += "     SF2.F2_YDTEZAP,                         " + CRLF
   cQuery += "     SF2.F2_YIDZAP,						                " + CRLF
-  
+
   cQuery += "     ISNULL(CONVERT(VARCHAR(MAX), CONVERT(VARBINARY(MAX), SC5.C5_YOBS)), '')    	  	" + CRLF
   cQuery += "  UNION ALL                 					        " + CRLF
   cQuery += "  SELECT                    					        " + CRLF
@@ -552,19 +532,19 @@ Static function QueryZap(cFilialx, cDoc, cSerie)
   cQuery += "     SC5B.C5_YNOMZAP,       					        " + CRLF
   cQuery += "     SC5B.C5_YTELZAP,        					        " + CRLF
   cQuery += "     SC5B.C5_YRSPZAP,       					        " + CRLF
-  cQuery += "     SC5B.C5_YDTEZAP,	   					          " + CRLF  
+  cQuery += "     SC5B.C5_YDTEZAP,	   					          " + CRLF
   cQuery += "     SC5B.C5_YIDZAP,           				        " + CRLF
-  cQuery += "     FORMAT(CONVERT(datetime, SC5B.C5_YDTEZAP, 121), 'dd/MM/yyyy HH:mm:ss', 'en-US' ) AS C5_YDTEZAP2   	" + CRLF  
+  cQuery += "     FORMAT(CONVERT(datetime, SC5B.C5_YDTEZAP, 121), 'dd/MM/yyyy HH:mm:ss', 'en-US' ) AS C5_YDTEZAP2   	" + CRLF
   cQuery += "  FROM                                 		  " + CRLF
   cQuery += "     " + RetSqlName("SC5") + " SC5B     		  " + CRLF
   cQuery += "  WHERE                                		  " + CRLF
   cQuery += "     SC5B.D_E_L_E_T_ = ''              		  " + CRLF
   cQuery += "     AND SC5B.C5_YCATEGO = '4'         		  " + CRLF
-  cQuery += "     AND SC5B.C5_NOTA = ''             		  " + CRLF 
+  cQuery += "     AND SC5B.C5_NOTA = ''             		  " + CRLF
 
   If !EMPTY(cFilialx) .AND. !EMPTY(cDoc)
     cQuery += "     AND SC5B.C5_FILIAL = "+ValToSql(cFilialx)+"  " + CRLF
-    cQuery += "     AND SC5B.C5_NUM = "+ValToSql(cDoc)+"        " + CRLF    
+    cQuery += "     AND SC5B.C5_NUM = "+ValToSql(cDoc)+"        " + CRLF
   Else
     cQuery += "     AND SC5B.C5_YSTAZAP IN ('P','S')                " + CRLF   //PARA O JOBS
   EndIf
@@ -588,10 +568,10 @@ Static function QueryZap(cFilialx, cDoc, cSerie)
   __TRZ->(dbGoTop())
 
   While ! __TRZ->(EoF())
-    
-    cObs := Posicione("SC5", 1, __TRZ->F2_FILIAL+__TRZ->F2_DOC, "C5_YOBS") 
+
+    cObs := Posicione("SC5", 1, __TRZ->F2_FILIAL+__TRZ->F2_DOC, "C5_YOBS")
     cDate := AllTrim(__TRZ->F2_YDTEZAP2)
-    
+
     If cDate == "01/01/1900 00:00:00"
       cDate := ""
     EndIf
@@ -602,29 +582,30 @@ Static function QueryZap(cFilialx, cDoc, cSerie)
       cStatus  := "S = Dois envios sem resposta"
     ElseIf __TRZ->F2_YSTAZAP == "R" //R=Resposta enviada
       cStatus  := "R = Resposta enviada"
+    ElseIf __TRZ->F2_YSTAZAP == "N" //N=Fechada sem resposta
+      cStatus  := "N = Fechada sem resposta"
     Else
       cStatus  := "A = Não enviada"
     EndIf
 
-    //                        1               2              3            4                  5                 6                  7          8             9                10            11              12              13                   14                          
+    //                        1               2              3            4                  5                 6                  7          8             9                10            11              12              13                   14
     aAdd(aColsZap, {__TRZ->F2_FILIAL, __TRZ->F2_YIDZAP,  cStatus, __TRZ->F2_YNOMZAP, __TRZ->F2_YTELZAP,   AllTrim(cDate), __TRZ->F2_YRSPZAP, cObs, __TRZ->F2_YSTAZAP, __TRZ->ORIGEM, __TRZ->F2_DOC, __TRZ->F2_SERIE, __TRZ->F2_YNOMZAP, __TRZ->F2_YTELZAP })
     __TRZ->(DbSkip())
   EndDo
-  __TRZ->(DbCloseArea()) 
+  __TRZ->(DbCloseArea())
 
- 
+
 Return aColsZap
 
 
 ///// SERVICES //////
 
-
 // POST  LOGIN
 Static Function PLOGIN()
-	
-  Local aHeader   := {"Content-Type: application/json"}	
-	Local cHostWS	  := ""
-  Local cLogin	  := ""  
+
+  Local aHeader   := {"Content-Type: application/json"}
+  Local cHostWS	  := ""
+  Local cLogin	  := ""
   Local cPass	    := ""
   Local oJson     := JsonObject():New()
   Local oSession  := Nil
@@ -636,33 +617,33 @@ Static Function PLOGIN()
     RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
   EndIf
 
-  cHostWS	  := SuperGetMV("MV_YCAHWS",.F.,"") // HOST DO SERVICO DE MSG VIA WHATSAPP          
+  cHostWS	  := SuperGetMV("MV_YCAHWS",.F.,"") // HOST DO SERVICO DE MSG VIA WHATSAPP
   cLogin	  := SuperGetMV("MV_YCALOG",.F.,"") // EMAIL DO USER QUE IRA CONSUMIR O SERVIÇO DE MSG VIA WHATSAAP
-  cPass	    := SuperGetMV("MV_YCAPSW",.F.,"")	// SENHA DO USER QUE IRA CONSUMIR O SERVIÇO DE MSG VIA WHATSAAP  
+  cPass	    := SuperGetMV("MV_YCAPSW",.F.,"")	// SENHA DO USER QUE IRA CONSUMIR O SERVIÇO DE MSG VIA WHATSAAP
 
-  oRest     := FWRest():New(cHostWS) 		 
+  oRest     := FWRest():New(cHostWS)
   oJson['email']       := AllTrim(cLogin)
   oJson['password']    := AllTrim(cPass)
-  oJson['branch_key']  := SM0->M0_CGC 
+  oJson['branch_key']  := SM0->M0_CGC
 
-	oRest:setPath("/sessions")	 
-  oRest:SetPostParams(oJson:ToJson())	
-	
+  oRest:setPath("/sessions")
+  oRest:SetPostParams(oJson:ToJson())
+
   If oRest:Post(aHeader ) .OR. !Empty( oRest:GetResult() )
     If (oRest:ORESPONSEH:CSTATUSCODE == "200")
-			cStringJS :=  oRest:GetResult()
-		  FWJsonDeserialize(cStringJS, @oSession)				 
-			Aadd(aHeader,"Authorization:bearer "+oSession:token:token+"")      
+      cStringJS :=  oRest:GetResult()
+      FWJsonDeserialize(cStringJS, @oSession)
+      Aadd(aHeader,"Authorization:bearer "+oSession:token:token+"")
     else
-        cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
-        cMsg += "<b>Detalhes</b>: "+oRest:GetResult()+" "  + CRLF + CRLF
-        Alert(cMsg)	  
+      cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
+      cMsg += "<b>Detalhes</b>: "+oRest:GetResult()+" "  + CRLF + CRLF
+      Alert(cMsg)
     EndIf
   Else
-    conout(oRest:GetLastError()) 
+    conout(oRest:GetLastError())
     cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
     cMsg += "<b>Detalhes</b>: "+oRest:GetLastError()+" "  + CRLF + CRLF
-    Alert(cMsg)     
+    Alert(cMsg)
   Endif
 
 Return aHeader
@@ -674,67 +655,77 @@ Static Function WSWAPOST(cFilialx,cDoc, cSerie, cORIGEM, cNomeCli, cTelCli)
 
   Local aHeader   := {}
   Local aDados    := {}
-  Local cYTLOZAP  := ""          
+  Local cYTLOZAP  := ""
   Local oJson     := JsonObject():New()
-  Local oJBodyP   := Nil 
-  Local oRest     := Nil     
-  Local cHostWS	  := "" 
+  Local oJBodyP   := Nil
+  Local oRest     := Nil
+  Local cHostWS	  := ""
   Local cMsg      := ""
   Local oResult   := Nil
 
   aDados := FindPesq(cFILIALx, cDOC, cSERIE,  cNomeCli, cTelCli)
-  If Len(aDados) > 0
-    MSGALERT( "O número <b>"+cValToChar(cTelCli)+"</b> está pendente de retorno pelo doc <b>"+cValToChar(aDados[1,3])+" "+cValToChar(aDados[1,4])+"</b>", "AVISO" )   
-    Return .F.
+  If Len(aDados) > 0 .AND. (ALLTRIM(aDados[1,3])+ALLTRIM(aDados[1,4]) != ALLTRIM(cDOC)+ALLTRIM(cSERIE))
+
+    cMsg := "O cliente com número: <b>"+cValToChar(cTelCli)+"</b> ."
+    cMsg += "Possui uma pesquisa pelo doc <b>"+cValToChar(aDados[1,3])+" "+cValToChar(aDados[1,4])+"</b>. "
+    cMsg += "sem resposta. <b>Caso prossiga, a mesma será fechada por falta de resposta.</b>" + CRLF + CRLF
+    cMsg += "Deseja prosseguir ? "
+    If MsgYesNo(cMsg,"ATENÇÃO","YES NO")
+      WSDELL(cFilialx,aDados[1,3], aDados[1,4], aDados[1,5], aDados[1,1] , cNomeCli, cTelCli, "N")
+    Else
+      Return .F.
+    EndIf
   EndIf
 
   aHeader  := PLOGIN()
   If Len(aHeader) > 0
 
-    cHostWS	  := SuperGetMV("MV_YCAHWS",.F.,"") // HOST DO SERVICO DE MSG VIA WHATSAPP                 
+    cHostWS	  := SuperGetMV("MV_YCAHWS",.F.,"") // HOST DO SERVICO DE MSG VIA WHATSAPP
     cYIDQZAP  := SuperGetMV("MV_YIDQ001",.F.,"") // ID DO QUIZ QUE É O ID DA PERGUNTA DO CHAT DO WHATSAAP
-    cYTLOZAP  := SuperGetMV("MV_YTLO001",.F.,"") // TEL. DE ORIGEM DO ENVIO PARA O WHATSAAP    
+    cYTLOZAP  := SuperGetMV("MV_YTLO001",.F.,"") // TEL. DE ORIGEM DO ENVIO PARA O WHATSAAP
 
-    
+
     AADD(aHeader,"Branch-Number:"+AllTrim(cYTLOZAP)+"")
-    oRest                     := FWRest():New(AllTrim(cHostWS)) 
+    oRest                     := FWRest():New(AllTrim(cHostWS))
     oJson['quiz_id_ref']      := cYIDQZAP
     oJson['customer_number']  := "55"+AllTrim(cTelCli)
     oJBodyP                   := JsonObject():New()
     oJBodyP['nome']           := AllTrim(cNomeCli)
+    oJBodyP['nota']           := AllTrim(cDoc)+"/"+AllTrim(cSerie)
+
+    If Empty(cSerie)
+      oJBodyP['nota']         := AllTrim(cDoc)
+    EndIf
+
     oJson['arguments']        := oJBodyP
-
-
-	  oRest:setPath("/chats")	 
-    oRest:SetPostParams(oJson:ToJson())	
+    oRest:setPath("/chats")
+    oRest:SetPostParams(oJson:ToJson())
 
 
     If oRest:Post(aHeader ) .OR. !Empty( oRest:GetResult() )
       If (oRest:ORESPONSEH:CSTATUSCODE == "200")
-		    FWJsonDeserialize(oRest:GetResult(), @oResult)		
+        FWJsonDeserialize(oRest:GetResult(), @oResult)
         If cOrigem == "SF2"
-                //cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cYIDZAP,    cStatus, cNomeCli,  cTelCli
-          UpdtSF2(cFilialx,   cDoc,   cSerie,   "",   oResult:_id, "P", cNomeCli, cTelCli) 
+          //cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cYIDZAP,    cStatus, cNomeCli,  cTelCli
+          UpdtSF2(cFilialx,   cDoc,   cSerie,   "",   oResult:_id, "P", cNomeCli, cTelCli)
         Else
-                 //cF2FILIAL, cF2DOC, cRESP  , cYIDZAP,    cStatus, cNomeCli,  cTelCli
-          UpdtSC5(cFilialx , cDoc    , ""    , oResult:_id, "P"  , cNomeCli, cTelCli) 
+          //cF2FILIAL, cF2DOC, cRESP  , cYIDZAP,    cStatus, cNomeCli,  cTelCli
+          UpdtSC5(cFilialx , cDoc    , ""    , oResult:_id, "P"  , cNomeCli, cTelCli)
         EndIf
-        
+
         oBrw1:ACOLS  := GetaCols()
         oBrw1:Refresh()
-        
+
       else
-        
-        FWJsonDeserialize(oRest:GetResult(), @oResult)	
-        cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
-        cMsg += "<b>Detalhes</b>: "+oResult:error:message+" "  + CRLF + CRLF
-        Alert(cMsg)	  
+        FWJsonDeserialize(oRest:GetResult(), @oResult)
+        cMsg := " Ops! "+AllTrim(DecodeUTF8(oResult:message, "WINDOWS-1252"))+" "  + CRLF + CRLF
+        FwAlertWarning(cMsg , "Atenção")
       EndIf
     Else
-		  conout(oRest:GetLastError()) 
-        cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
-        cMsg += "<b>Detalhes</b>: "+oRest:GetLastError()+" "  + CRLF + CRLF
-        Alert(cMsg)     
+      FWJsonDeserialize(oRest:GetResult(), @oResult)
+      conout(oResult)
+      cMsg := " Ops! "+oResult+" "  + CRLF + CRLF
+      FwAlertWarning(cMsg , "Atenção")
     Endif
 
   EndIf
@@ -745,71 +736,85 @@ Return .T.
 Static Function WSWAPUT(cFilialx,cDoc, cSerie, cYIDZAP , cORIGEM, cNomeCli, cTelCli)
 
 
-  Local aHeader  := {}   
-  Local aDados  := {}   
-  Local cYTLOZAP  := ""           
+  Local aHeader  := {}
+  Local aDados  := {}
+  Local cYTLOZAP  := ""
   Local oJson     := JsonObject():New()
-  Local oJBodyP   := Nil 
-  Local oRest     := Nil     
-  Local cHostWS	  := "" 
+  Local oJBodyP   := Nil
+  Local oRest     := Nil
+  Local cHostWS	  := ""
   Local cMsg      := ""
   Local oResult   := Nil
 
   aDados := FindPesq(cFILIALx, cDOC, cSERIE,  cNomeCli, cTelCli)
-  If Len(aDados) > 0
-    If cValToChar(AllTrim(aDados[1,5])) != AllTrim(cYIDZAP)
-      MSGALERT( "O número <b>"+cValToChar(cTelCli)+"</b> está pendente de retorno pelo doc <b>"+cValToChar(aDados[1,3])+" "+cValToChar(aDados[1,4])+"</b>", "AVISO" )   
+  If Len(aDados) > 0 .AND. (ALLTRIM(aDados[1,3])+ALLTRIM(aDados[1,4]) != ALLTRIM(cDOC)+ALLTRIM(cSERIE))
+
+    cMsg := "O cliente com número: <b>"+cValToChar(cTelCli)+"</b> ."
+    cMsg += "Possui uma pesquisa pelo doc <b>"+cValToChar(aDados[1,3])+" "+cValToChar(aDados[1,4])+"</b>. "
+    cMsg += "sem resposta. <b>Caso prossiga, a mesma será fechada por falta de resposta.</b>" + CRLF + CRLF
+    cMsg += "Deseja prosseguir ? "
+    If MsgYesNo(cMsg,"ATENÇÃO","YES NO")
+      WSDELL(cFilialx,aDados[1,3], aDados[1,4], aDados[1,5], aDados[1,1] , cNomeCli, cTelCli,"N")
+    Else
       Return .F.
     EndIf
   EndIf
 
   aHeader  := PLOGIN()
-   
+
   If Len(aHeader) > 0
 
-    cHostWS	  := SuperGetMV("MV_YCAHWS",.F.,"") // HOST DO SERVICO DE MSG VIA WHATSAPP          
+    cHostWS	  := SuperGetMV("MV_YCAHWS",.F.,"") // HOST DO SERVICO DE MSG VIA WHATSAPP
     cYIDQZAP  := SuperGetMV("MV_YIDQ001",.F.,"") // ID DO QUIZ QUE É O ID DA PERGUNTA DO CHAT DO WHATSAAP
-    cYTLOZAP  := SuperGetMV("MV_YTLO001",.F.,"") // TEL. DE ORIGEM DO ENVIO PARA O WHATSAAP    
+    cYTLOZAP  := SuperGetMV("MV_YTLO001",.F.,"") // TEL. DE ORIGEM DO ENVIO PARA O WHATSAAP
 
-    
+
     AADD(aHeader,"Branch-Number:"+AllTrim(cYTLOZAP)+"")
-    oRest                     := FWRest():New(AllTrim(cHostWS)) 
+    oRest                     := FWRest():New(AllTrim(cHostWS))
     oJson['quiz_id_ref']      := AllTrim(cYIDQZAP)
     oJson['customer_number']  := "55"+AllTrim(cTelCli)
     oJBodyP                   := JsonObject():New()
     oJBodyP['nome']           := AllTrim(cNomeCli)
+    oJBodyP['nota']           := AllTrim(cDoc)+"/"+AllTrim(cSerie)
+
+    If Empty(cSerie)
+      oJBodyP['nota']         := AllTrim(cDoc)
+    EndIf
+
     oJson['arguments']        := oJBodyP
 
 
-	  oRest:setPath("/chats/"+cYIDZAP+"")	     
+    oRest:setPath("/chats/"+cYIDZAP+"")
     If oRest:Put(aHeader, oJson:ToJson() ) .OR. !Empty( oRest:GetResult() )
       If (oRest:ORESPONSEH:CSTATUSCODE == "200")
-			  cStringJS :=  oRest:GetResult()
-		    FWJsonDeserialize(cStringJS, @oResult)		        
+        cStringJS :=  oRest:GetResult()
+        FWJsonDeserialize(cStringJS, @oResult)
         If oResult:is_open == .T.
 
           If cOrigem == "SF2"
-                  //cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cYIDZAP,    cStatus, cNomeCli,  cTelCli
-            UpdtSF2(cFilialx,   cDoc,   cSerie,   "",   oResult:_id, "S", cNomeCli, cTelCli) 
+            //cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cYIDZAP,    cStatus, cNomeCli,  cTelCli
+            UpdtSF2(cFilialx,   cDoc,   cSerie,   "",   oResult:_id, "S", cNomeCli, cTelCli)
           Else
-                  //cF2FILIAL, cF2DOC, cRESP  , cYIDZAP,    cStatus, cNomeCli,  cTelCli
-            UpdtSC5(cFilialx , cDoc    , ""    , oResult:_id, "S"  , cNomeCli, cTelCli) 
+            //cF2FILIAL, cF2DOC, cRESP  , cYIDZAP,    cStatus, cNomeCli,  cTelCli
+            UpdtSC5(cFilialx , cDoc    , ""    , oResult:_id, "S"  , cNomeCli, cTelCli)
           EndIf
-          
+
           oBrw1:ACOLS  := GetaCols()
           oBrw1:Refresh()
 
         EndIf
       else
-        cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
-        cMsg += "<b>Detalhes</b>: "+oRest:GetResult()+" "  + CRLF + CRLF
-        Alert(cMsg)	  
+
+        FWJsonDeserialize(oRest:GetResult(), @oResult)
+        // cMsg := " Ops! "+AllTrim(DecodeUTF8(oResult:message, "WINDOWS-1252"))+" "  + CRLF + CRLF
+        cMsg := " Por favor, clique no botão 'Sincronizar Todos' para atualizar os status. "
+        FwAlertWarning(cMsg , "Atenção")
       EndIf
     Else
-		  conout(oRest:GetLastError()) 
-        cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
-        cMsg += "<b>Detalhes</b>: "+oRest:GetLastError()+" "  + CRLF + CRLF
-        Alert(cMsg)     
+      FWJsonDeserialize(oRest:GetResult(), @oResult)
+      conout(oResult)
+      cMsg := " Ops! "+oResult+" "  + CRLF + CRLF
+      FwAlertWarning(cMsg , "Atenção")
     Endif
 
   EndIf
@@ -818,102 +823,106 @@ Static Function WSWAPUT(cFilialx,cDoc, cSerie, cYIDZAP , cORIGEM, cNomeCli, cTel
 
 Return .T.
 
-//SINCRONIZAR EM TELA
-Static Function WSWAGETID(cFilialx,cDoc, cSerie, cIdResZp,cOrigem , cNomeCli, cTelCli, oDlgInfo)
+// DELETE / Cancelar 
+Static Function WSDELL(cFilialx,cDoc, cSerie, cIdResZp,cOrigem , cNomeCli, cTelCli,cYSTATUS)
 
   Local aHeader   := PLOGIN()
-  Local cMsg      := ""  
-  Local lRet      := .F.  
-  Local oRest     := Nil   
-  Local cHostWS   := ""   
-  Local cYTLOZAP  := "" 
-  Local oResult   := "" 
-  Local nMsg      := 0
-  
+  Local cMsg      := ""
+  Local lRet      := .F.
+  Local oRest     := Nil
+  Local cHostWS   := ""
+  Local cYTLOZAP  := ""
+  Local oResult   := ""
+
   If Len(aHeader) > 0
 
-    cHostWS	  := SuperGetMV("MV_YCAHWS",.F.,"") // HOST DO SERVICO DE MSG VIA WHATSAPP               
-    cYTLOZAP  := SuperGetMV("MV_YTLO001",.F.,"") // TEL. DE ORIGEM DO ENVIO PARA O WHATSAAP         
+    cHostWS	  := SuperGetMV("MV_YCAHWS",.F.,"") // HOST DO SERVICO DE MSG VIA WHATSAPP
+    cYTLOZAP  := SuperGetMV("MV_YTLO001",.F.,"") // TEL. DE ORIGEM DO ENVIO PARA O WHATSAAP
 
     AADD(aHeader,"Branch-Number:"+AllTrim(cYTLOZAP)+"")
-    oRest     := FWRest():New(AllTrim(cHostWS)) 
-    oRest:setPath("/chats?chat_ids="+AllTrim(cIdResZp)+"")        
-    If oRest:Get(aHeader) .OR. !Empty( oRest:GetResult() )
-      If (oRest:ORESPONSEH:CSTATUSCODE == "200")
-		    FWJsonDeserialize(oRest:GetResult(), @oResult)        
-        If Len(oResult) > 0
-          If Len(oResult[1]:messages) > 0 .AND. oResult[1]:is_open == .F.
-            
-            If cOrigem == "SF2"
-              //cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cYIDZAP, cStatus
-              UpdtSF2(cFilialx,cDoc, cSerie, oResult[1]:messages[Len(oResult[1]:messages)-1]:body, oResult[1]:_id, "R", cNomeCli, cTelCli) 
-            Else
-              UpdtSC5(cFilialx,cDoc, oResult[1]:messages[Len(oResult[1]:messages)-1]:body , oResult[1]:_id, "R", cNomeCli, cTelCli)
-            EndIf
-            oBrw1:ACOLS  := GetaCols()
-            oBrw1:Refresh()
-            oDlgInfo:End()
-            lRet := .T.
-          EndIf
+    oRest     := FWRest():New(AllTrim(cHostWS))
+    oRest:setPath("/chats/"+AllTrim(cIdResZp)+"")
+    If oRest:DELETE(aHeader) .or. oRest:LCHKSTATUSCODE
+
+
+
+      If cOrigem == "SF2"
+        dbSelectArea("SF2")
+        SF2->(dbSetOrder(1)) //F2_FILIAL, F2_DOC, F2_SERIE, F2_CLIENTE, F2_LOJA, F2_FORMUL, F2_TIPO, R_E_C_N_O_, D_E_L_E_T_
+        If SF2->(dbSeek( cFilialx + cDoc + cSerie ))
+          RecLock("SF2",.F.)
+          SF2->F2_YIDZAP	:= ""
+          SF2->F2_YSTAZAP	:= cYSTATUS
+          SF2->F2_YDTEZAP	:= ""
+          SF2->F2_YRSPZAP	:= ""
+          SF2->F2_YNOMZAP	:= ""
+          SF2->F2_YTELZAP	:= ""
+          SF2->(MsUnLock())
         EndIf
-                
-      else
-        FWJsonDeserialize(oRest:GetResult(), @oResult)
-        cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
-        cMsg += "<b>Detalhes</b>: "+oRest:GetResult()+" "  + CRLF + CRLF
-        Alert(cMsg)	  
+      Else
+        dbSelectArea("SC5")
+        SC5->(dbSetOrder(1)) //C5_FILIAL, C5_NUM, R_E_C_N_O_, D_E_L_E_T_
+        If SC5->(dbSeek( cFilialx + cDoc))
+          RecLock("SC5",.F.)
+          SC5->C5_YIDZAP	:=  ""
+          SC5->C5_YSTAZAP	:= cYSTATUS
+          SC5->C5_YDTEZAP	:= ""
+          SC5->C5_YRSPZAP	:= ""
+          SC5->C5_YNOMZAP	:= ""
+          SC5->C5_YTELZAP	:= ""
+          SC5->(MsUnLock())
+        EndIf
       EndIf
     Else
-		  conout(oRest:GetLastError()) 
-        cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
-        cMsg += "<b>Detalhes</b>: "+oRest:GetLastError()+" "  + CRLF + CRLF
-        Alert(cMsg)     
-    Endif
-         
+      conout(oRest:GetLastError())
+      cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
+      cMsg += "<b>Detalhes</b>: "+oRest:GetLastError()+" "  + CRLF + CRLF
+      Alert(cMsg)
+    EndIf
   EndIf
-  
+
 Return lRet
 
 // GET  JOBS u_WSWAGET
 User Function WSWAGET()
-  
+
   Local aHeader   := PLOGIN()
   Local aDados    := {}
   Local cYIDZAP    := ""
-  Local cMsg      := ""  
-  Local oRest     := Nil   
-  Local cHostWS   := "" 
-  Local cStringJS := "" 
-  Local cYTLOZAP  := "" 
-  Local oResult   := "" 
+  Local cMsg      := ""
+  Local oRest     := Nil
+  Local cHostWS   := ""
+  Local cStringJS := ""
+  Local cYTLOZAP  := ""
+  Local oResult   := ""
   Local nW        := 0
   Local nK        := 0
   Local nI        := 0
 
-  
-  
+
+
   If Len(aHeader) > 0
 
     aDados := QueryZap()
 
     If Len(aDados) > 0
 
-    cHostWS	  := SuperGetMV("MV_YCAHWS",.F.,"") // HOST DO SERVICO DE MSG VIA WHATSAPP               
-    cYTLOZAP  := SuperGetMV("MV_YTLO001",.F.,"") // TEL. DE ORIGEM DO ENVIO PARA O WHATSAAP                   
-    
+      cHostWS	  := SuperGetMV("MV_YCAHWS",.F.,"") // HOST DO SERVICO DE MSG VIA WHATSAPP
+      cYTLOZAP  := SuperGetMV("MV_YTLO001",.F.,"") // TEL. DE ORIGEM DO ENVIO PARA O WHATSAAP
+
       For nW := 1 To Len(aDados)
-        cYIDZAP += AllTrim(cValToChar(aDados[nW,2]))+","         
+        cYIDZAP += AllTrim(cValToChar(aDados[nW,2]))+","
       Next nW
 
       cYIDZAP :=  SUBSTR(cYIDZAP, 0, (LEN(cYIDZAP)-1))
       AADD(aHeader,"Branch-Number:"+AllTrim(cYTLOZAP)+"")
-      oRest     := FWRest():New(AllTrim(cHostWS)) 
-      oRest:setPath("/chats?chat_ids="+cYIDZAP+"")        
+      oRest     := FWRest():New(AllTrim(cHostWS))
+      oRest:setPath("/chats?chat_ids="+cYIDZAP+"")
       If oRest:Get(aHeader) .OR. !Empty( oRest:GetResult() )
         If (oRest:ORESPONSEH:CSTATUSCODE == "200")
           cStringJS :=  oRest:GetResult()
           FWJsonDeserialize(cStringJS, @oResult)
-          
+
           If Len(oResult) > 0
 
             For nW := 1 To Len(oResult)
@@ -921,34 +930,34 @@ User Function WSWAGET()
                 For nK := 1 To Len(oResult[nW]:messages)
                   For nI := 1 To Len(aDados)
                     If aDados[nI,10] == "SF2"
-                            //cF2FILIAL,         cF2DOC,     cF2SERIE   ,                              cRESP                        , cYIDZAP      , cStatus, cNomeCli,         cTelCli 
-                      UpdtSF2(aDados[nI,1], aDados[nI,11], aDados[nI,12], oResult[nW]:messages[Len(oResult[nW]:messages)-1]:body, oResult[nW]:_id, "R", aDados[nI,13], aDados[nI,14]) 
+                      //cF2FILIAL,         cF2DOC,     cF2SERIE   ,                              cRESP                        , cYIDZAP      , cStatus, cNomeCli,         cTelCli
+                      UpdtSF2(aDados[nI,1], aDados[nI,11], aDados[nI,12], oResult[nW]:messages[Len(oResult[nW]:messages)-1]:body, oResult[nW]:_id, "R", aDados[nI,13], aDados[nI,14])
                     Else
-                      UpdtSC5(aDados[nI,1], aDados[nI,11], oResult[nW]:messages[Len(oResult[nW]:messages)-1]:body, oResult[nW]:_id, "R", aDados[nI,13], aDados[nI,14]) 
+                      UpdtSC5(aDados[nI,1], aDados[nI,11], oResult[nW]:messages[Len(oResult[nW]:messages)-1]:body, oResult[nW]:_id, "R", aDados[nI,13], aDados[nI,14])
                     EndIf
                   Next nI
                 Next nK
               EndIf
             Next nW
           EndIf
-          
+
         else
           cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
           cMsg += "<b>Detalhes</b>: "+oRest:GetResult()+" "  + CRLF + CRLF
-          Alert(cMsg)	  
+          Alert(cMsg)
         EndIf
       Else
-        conout(oRest:GetLastError()) 
-          cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
-          cMsg += "<b>Detalhes</b>: "+oRest:GetLastError()+" "  + CRLF + CRLF
-          Alert(cMsg)     
+        conout(oRest:GetLastError())
+        cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
+        cMsg += "<b>Detalhes</b>: "+oRest:GetLastError()+" "  + CRLF + CRLF
+        Alert(cMsg)
       Endif
 
     EndIf
 
   EndIf
 
-Return 
+Return
 
 Static Function UpdtSF2(cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cYIDZAP, cStatus, cNomeCli, cTelCli )
 
@@ -957,10 +966,6 @@ Static Function UpdtSF2(cF2FILIAL, cF2DOC, cF2SERIE, cRESP, cYIDZAP, cStatus, cN
   dbSelectArea("SF2")
   SF2->(dbSetOrder(1)) //F2_FILIAL, F2_DOC, F2_SERIE, F2_CLIENTE, F2_LOJA, F2_FORMUL, F2_TIPO, R_E_C_N_O_, D_E_L_E_T_
   If SF2->(dbSeek( cF2FILIAL + cF2DOC + cF2SERIE ))
-
-    If !Empty(SF2->F2_YDTEZAP)
-      cDtHrZap := SF2->F2_YDTEZAP
-    EndIf
 
     If Empty(SF2->F2_YIDZAP)  .OR. AllTrim(SF2->F2_YIDZAP) == AllTrim(cYIDZAP) .OR. cStatus == "S"
       RecLock("SF2",.F.)
@@ -984,10 +989,6 @@ Static Function UpdtSC5(cC5FILIAL, cC5NUM, cRESP, cYIDZAP, cStatus, cNomeCli, cT
   SC5->(dbSetOrder(1)) //C5_FILIAL, C5_NUM, R_E_C_N_O_, D_E_L_E_T_
   If SC5->(dbSeek( cC5FILIAL + cC5NUM ))
 
-    If !Empty(SC5->C5_YDTEZAP)
-      cDtHrZap := SC5->C5_YDTEZAP
-    EndIf
-
     If Empty(SC5->C5_YIDZAP) .OR. AllTrim(SC5->C5_YIDZAP) == AllTrim(cYIDZAP) .OR. cStatus == "S"
       RecLock("SC5",.F.)
       SC5->C5_YIDZAP	  := cYIDZAP
@@ -998,20 +999,20 @@ Static Function UpdtSC5(cC5FILIAL, cC5NUM, cRESP, cYIDZAP, cStatus, cNomeCli, cT
       SC5->C5_YTELZAP	:= cTelCli
       SC5->(MsUnLock())
     EndIf
-    
+
 
   EndIf
 
-  
+
 
 Return .T.
 
- 
+
 Static Function FindPesq(cFILIALx, cDOC, cSERIE,  cNomeCli, cTelCli )
-  
+
   Local cQuery := ""
   Local aDados := {}
-  												  
+
   cQuery += " SELECT                              " + CRLF
   cQuery += " 'SF2' AS ORIGEM                     " + CRLF
   cQuery += " ,SF2.F2_FILIAL                          " + CRLF
@@ -1023,14 +1024,15 @@ Static Function FindPesq(cFILIALx, cDOC, cSERIE,  cNomeCli, cTelCli )
   cQuery += " ,SF2.F2_YRSPZAP                         " + CRLF
   cQuery += " ,SF2.F2_YNOMZAP                         " + CRLF
   cQuery += " ,SF2.F2_YTELZAP                          " + CRLF
-												  
+
   cQuery += " FROM " + RetSqlName("SF2") + " SF2  " + CRLF
-  cQuery += " WHERE SF2.F2_YTELZAP = "+ValToSql(cTelCli)+"        " + CRLF    
-  cQuery += " AND SF2.F2_YSTAZAP <> 'R'               " + CRLF
+  cQuery += " WHERE SF2.F2_FILIAL = "+ValToSql(cFILIALx)+"        " + CRLF
+  cQuery += " AND SF2.F2_YTELZAP = "+ValToSql(cTelCli)+"        " + CRLF
+  cQuery += " AND SF2.F2_YSTAZAP not in('R','N')               " + CRLF
   cQuery += " AND SF2.D_E_L_E_T_ = ''                 " + CRLF
-												 
+
   cQuery += " UNION ALL		                      " + CRLF
-  
+
   cQuery += " SELECT                              " + CRLF
   cQuery += " 'SC5' AS ORIGEM                     " + CRLF
   cQuery += " ,SC5B.C5_FILIAL                          " + CRLF
@@ -1042,11 +1044,12 @@ Static Function FindPesq(cFILIALx, cDOC, cSERIE,  cNomeCli, cTelCli )
   cQuery += " ,SC5B.C5_YRSPZAP                         " + CRLF
   cQuery += " ,SC5B.C5_YNOMZAP                         " + CRLF
   cQuery += " ,SC5B.C5_YTELZAP                          " + CRLF
-							
+
   cQuery += " FROM " + RetSqlName("SC5") + " SC5B  "   + CRLF
-							
-  cQuery += " WHERE SC5B.C5_YTELZAP = "+ValToSql(cTelCli)+"        " + CRLF    
-  cQuery += " AND SC5B.C5_YSTAZAP <> 'R'	              " + CRLF
+
+  cQuery += " WHERE SC5B.C5_FILIAL = "+ValToSql(cFILIALx)+"        " + CRLF
+  cQuery += " AND SC5B.C5_YTELZAP = "+ValToSql(cTelCli)+"        " + CRLF
+  cQuery += " AND SC5B.C5_YSTAZAP not in('R','N')	              " + CRLF
   cQuery += " AND SC5B.D_E_L_E_T_ = ''                 " + CRLF
 
   TcQuery cQuery New Alias "__TRW"
@@ -1056,7 +1059,6 @@ Static Function FindPesq(cFILIALx, cDOC, cSERIE,  cNomeCli, cTelCli )
     aAdd(aDados, {__TRW->ORIGEM, __TRW->F2_FILIAL, __TRW->F2_DOC, __TRW->SERIE, __TRW->F2_YIDZAP})
     __TRW->(DbSkip())
   EndDo
-  __TRW->(DbCloseArea()) 
+  __TRW->(DbCloseArea())
 
-  Return aDados
-                          
+Return aDados

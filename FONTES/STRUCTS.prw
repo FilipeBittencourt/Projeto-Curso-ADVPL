@@ -1,7 +1,7 @@
 #include "protheus.ch"
 
 //U_TESTS
-USER FUNCTION TESTS()
+USER FUNCTION STRUCTS()
   Local oObj   := CLIENTE():New()
   Local oObj2   := CLIENTECONTA():New()
   Local aObj2   := {}
