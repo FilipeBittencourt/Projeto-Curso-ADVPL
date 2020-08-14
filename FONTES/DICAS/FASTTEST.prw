@@ -2,29 +2,30 @@
 #Include 'RESTFUL.CH'
 #INCLUDE "PROTHEUS.CH"
 
-User Function CallRest()
+User Function FASTTEST()
 
-  Local aHeader   := {"Content-Type: application/json"}
-  Local cHostWS	  := "http://codeauth.facilecloud.com.br"
-  Local cLogin	  := "pontin@aap.com.br"
-  Local cPass	    := "jascsp@321"
-  Local cCNPJ	    := "27340074000123"
-  Local oJson     := JsonObject():New()
-  Local oRest     := Nil
   Local cResponse := ""
+  Local oJson     := JsonObject():New()
 
-  oJson['email']       := AllTrim(cLogin)
-  oJson['password']    := AllTrim(cPass)
-  oJson['branch_key']  := AllTrim(cCNPJ)
+  Local cUrl	    := "https://servicodados.ibge.gov.br/api/v1/localidades/estados/"
+  Local cMethod   := "GET" //POST, PUT, GET, DELETE, PATCH ....
+  Local cQParams  := ""
+  Local cBody     := "" //Vamos usar uma classe para montar nosso Json
+  Local nTimeOut  := 15 //Tempo máximo sem retorno  da API em segundos
+  Local aHeader   := {"Content-Type: application/json","Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."} // O cabeçalho da requisição
+  Local cHRet     := "" // Retorno do cabençalho passado via referência (@)
 
-  //                       ( |cUrl|            ,|cMethod|, [cGETParms], [cPOSTParms],  [nTimeOut], [aHeadStr], [@cHeaderRet] )
-  cResponse := HTTPQuote ( cHostWS+"/SESSIONS" , "POST",       ""     , oJson:ToJson(),   005    ,    aHeader,      "" ) //Retorno: cResponse - Através de cResponse será retornada a String correspondendo ao documento solicitado.
-  FWJsonDeserialize(cResponse, @oRest) // Depreciada, mas funciona
-  //oJson := jsonobject()new()
-  //oJson:FromJson(cResponse) // Nova , mas não funciona
+  oJson['email']       := "pontin@aap.com.br"
+  oJson['password']    := "jascsp@321"
+  oJson['branch_key']  := "27340074000123"
+  cBody := oJson:ToJson()
+
+  //cResponse - Através de cResponse será retornada a String correspondendo ao documento solicitado.
+  cResponse := HTTPQuote (cUrl,cMethod,cQParams,cBody,nTimeOut,aHeader,cHRet)
+
   oJson           := JsonObject():New()
+  oJson:FromJson(cResponse)
   oJson['code']   := HttpGetStatus()
-  oJson['result'] := oRest
 
 Return oJson
 
