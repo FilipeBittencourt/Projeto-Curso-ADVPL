@@ -1,74 +1,72 @@
 #Include 'TOTVS.CH'
 #Include 'RESTFUL.CH'
 #INCLUDE "PROTHEUS.CH"
+#define CRLF Chr(13) + Chr(10)
 
+
+//U_FASTTEST
 User Function FASTTEST()
 
-  Local cResponse := ""
-  Local oJson     := JsonObject():New()
+  Local  cText1 := "35,60"
+  Local  cText2 := "35,60"
 
-  Local cUrl	    := "https://servicodados.ibge.gov.br/api/v1/localidades/estados/"
-  Local cMethod   := "GET" //POST, PUT, GET, DELETE, PATCH ....
-  Local cQParams  := ""
-  Local cBody     := "" //Vamos usar uma classe para montar nosso Json
-  Local nTimeOut  := 15 //Tempo máximo sem retorno  da API em segundos
-  Local aHeader   := {"Content-Type: application/json","Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."} // O cabeçalho da requisição
-  Local cHRet     := "" // Retorno do cabençalho passado via referência (@)
+  Local  cText3 := "35.60"
+  Local  cText4 := "35,60"
 
-  oJson['email']       := "pontin@aap.com.br"
-  oJson['password']    := "jascsp@321"
-  oJson['branch_key']  := "27340074000123"
-  cBody := oJson:ToJson()
+Return
 
-  //cResponse - Através de cResponse será retornada a String correspondendo ao documento solicitado.
-  cResponse := HTTPQuote (cUrl,cMethod,cQParams,cBody,nTimeOut,aHeader,cHRet)
-
-  oJson           := JsonObject():New()
-  oJson:FromJson(cResponse)
-  oJson['code']   := HttpGetStatus()
-
-Return oJson
+//U_FASTTEST 
 
 
+Static Function FASTTEST()
+
+  Local oJson  := JsonObject():New()
+  Local cEmail := "pontin@facilesistemas.com.br;fsbvieira@gmail.com;filipe.bittencourt@facilesistemas.com.br"
+  Local aEmailA := {}
+  Local aEmailB := {}
+  Local nI      := 0
+
+  If ";" $ cEmail
+    aEmailA := StrTokArr( cEmail, ";" )
+    For nI := 1 To Len(aEmailA)
+      Aadd(aEmailB,JsonObject():new())
+      aEmailB[nI]['email' ] := aEmailA[nI]
+    Next nI
+    oJson['to'] := aEmailB
+  else
+    oJson['to'] := cEmail
+  EndIf
+  oJson['html']     :=  ""
+  oJson['from']     := "xmle@facilesistemas.com.br"
+  oJson['subject']  := "Divergência Central XML-e"
+  U_Exemplo()
+Return
 
 
-// POST  LOGIN
-Static Function PLOGIN()
 
+Static Function Exemplo()
 
-  Local aHeader   := {"Content-Type: application/json"}
-  Local cHostWS	  := "http://codeauth.facilecloud.com.br"
-  Local cLogin	  := "pontin@aap.com.br"
-  Local cPass	    := "jascsp@321"
-  Local cCNPJ	    := "27340074000123"
-  Local oJson     := JsonObject():New()
-  Local oRest     := Nil
-  Local oSession     := Nil
-  Local cResponse := ""
+  Local cTexto := ""
+  Local cEncodeUTF8 := ""
+  Local cDecodeUTF8 := ""
+  Local cMensagem := ""
 
-  oRest     := FWRest():New(cHostWS)
-  oJson['email']       := AllTrim(cLogin)
-  oJson['password']    := AllTrim(cPass)
-  oJson['branch_key']  := SM0->M0_CGC
+  cTexto := "à noite, vovô kowalsky vê o ímã cair no pé do pingüim "
+  cTexto += "queixoso e vovó põe açúcar no chá de tâmaras do jabuti feliz."
+  cEncodeUTF8 := EncodeUTF8(cTexto, "cp1252")
+  cDecodeUTF8 := DecodeUTF8(cEncodeUTF8, "cp1252")
+  cMensagem := "Pangrama origem: [" + cTexto + "]"
+  cMensagem += CRLF + "Texto -> UTF8: [" + cEncodeUTF8 + "]"
+  cMensagem += CRLF + "UTF8 -> Texto: [" + cDecodeUTF8 + "]"
+  MsgInfo(cMensagem, "Exemplo")
 
-  oRest:setPath("/sessions")
-  oRest:SetPostParams(oJson:ToJson())
+  // Brasil em Russo
+  cTexto := chr(193)+chr(240)+chr(224)+chr(231)+chr(232)+chr(235)+chr(201)+chr(235)+chr(255)
+  cEncodeUTF8 := EncodeUTF8(cTexto, "cp1251")
+  cDecodeUTF8 := DecodeUTF8(cEncodeUTF8, "cp1251")
+  cMensagem := "Pangrama origem: [" + cTexto + "]"
+  cMensagem += CRLF + "Texto -> UTF8: [" + cEncodeUTF8 + "]"
+  cMensagem += CRLF + "UTF8 -> Texto: [" + cDecodeUTF8 + "]"
+  MsgInfo(cMensagem, "Exemplo")
 
-  If oRest:Post(aHeader ) .OR. !Empty( oRest:GetResult() )
-    If (oRest:ORESPONSEH:CSTATUSCODE == "200")
-      cStringJS :=  oRest:GetResult()
-      FWJsonDeserialize(cStringJS, @oSession)
-      Aadd(aHeader,"Authorization:bearer "+oSession:token:token+"")
-    else
-      cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
-      cMsg += "<b>Detalhes</b>: "+oRest:GetResult()+" "  + CRLF + CRLF
-      Alert(cMsg)
-    EndIf
-  Else
-    conout(oRest:GetLastError())
-    cMsg := "<b>Erro</b>: Ops! Um erro inesperado aconteceu."  + CRLF + CRLF
-    cMsg += "<b>Detalhes</b>: "+oRest:GetLastError()+" "  + CRLF + CRLF
-    Alert(cMsg)
-  Endif
-
-Return aHeader
+Return

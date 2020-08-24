@@ -32,6 +32,7 @@ Return oJson
 
 
 
+
 // POST  LOGIN
 Static Function PLOGIN()
 
@@ -45,6 +46,8 @@ Static Function PLOGIN()
   Local oRest     := Nil
   Local oSession     := Nil
   Local cResponse := ""
+  cResponse := DecodeUTF8(cResponse)
+  cResponse := EncodeUTF8(cResponse)
 
   oRest     := FWRest():New(cHostWS)
   oJson['email']       := AllTrim(cLogin)
@@ -72,3 +75,4 @@ Static Function PLOGIN()
   Endif
 
 Return aHeader
+
