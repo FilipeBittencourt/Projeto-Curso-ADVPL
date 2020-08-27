@@ -1,0 +1,470 @@
+User Function LJ7030()
+
+Local nTipo		:= PARAMIXB[1]
+Local nOpc		:= PARAMIXB[2]
+Local lRet  	:= .T.
+Local aArea 	:= GetArea()
+Local aAreaSL2	:= SL2->(GetArea())
+Local aAreaSB1 	:= SB1->(GetArea())
+Local aAreaSB2 	:= SB2->(GetArea())
+Local aAreaSB5 	:= SB5->(GetArea())
+Local aAreaZCP 	:= ZCP->(GetArea())
+Local aAreaZCQ 	:= ZCQ->(GetArea())
+Local aAreaSZS 	:= SZS->(GetArea())
+Local aFormaPg	:= {}
+Local nI		:= 0
+Local cMsg  	:= ""
+Local cCod		:= ""
+Local cNome 	:= ""
+Local cDoc		:= ""
+Local cEnd		:= ""
+Local cBai		:= ""
+Local cCid		:= ""
+Local cEst		:= ""
+Local cErro		:= ""
+Local cMsg		:= ""
+Local cForma	:= ""
+Local cSolDesc	:= ""
+Local lPanVA3	:= .F.
+Local nAuxTotal	:= 0
+Local nVlUnit	:= 0
+Local lYALCORC	:= GetMv("MV_YALCORC")
+Local lYLORFLU	:= GetMv("MV_YLORFLU")
+Local lYLJBENO	:= GetMv("MV_YLJBENO")
+Local cYAMBEVT	:= GetMV("MV_YAMBEVT")	// Identifica o ambiente do evento atual: 1 = Offline (PDV), 2 = Online (Retaguarda)
+Local cYLJESTE	:= GetMv("MV_YLJESTE")	// Codigo da estacao relacionada a eventos
+Local cYLJCLCF	:= GetMv("MV_YLJCLCF")
+Local cYLJFPCF	:= GetMv("MV_YLJFPCF")
+Local nYLJLVCF	:= GetMv("MV_YLJLVCF")
+Local cYFILVEF 	:= GetMv("MV_YFILVEF")
+Local cYFPBVEF 	:= GetMv("MV_YFPBVEF")
+
+Local nPLote		:= Ascan(aPosCpoDet,{|x| AllTrim(Upper(x[1])) == "LR_LOTECTL"})			// Posicao do Lote
+Local nPDTES		:= Ascan(aPosCpoDet,{|x| AllTrim(Upper(x[1])) == "LR_TES"})				// Posicao do TES
+Local nPDLocal		:= Ascan(aPosCpoDet,{|x| AllTrim(Upper(x[1])) == "LR_LOCAL"})			// Posicao do Local
+Local nPDPrcTab		:= Ascan(aPosCpoDet,{|x| AllTrim(Upper(x[1])) == "LR_PRCTAB"})			// Posicao do Preço de tabela
+Local nPReserv		:= AScan(aposCpoDet,{|x| AllTrim(Upper(x[1])) == "LR_RESERVA"})			// Posicao do Numero da Reserva
+
+Local nPTES		:= aPosCpo[Ascan(aPosCpo,{|x| AllTrim(Upper(x[1])) == "LR_YTES"})][2]		// Posicao da TES padrao
+Local nPLocal	:= aPosCpo[Ascan(aPosCpo,{|x| AllTrim(Upper(x[1])) == "LR_YLOCAL"})][2]		// Posicao da TES padrao
+Local nPPrcTab	:= aPosCpo[Ascan(aPosCpo,{|x| AllTrim(Upper(x[1])) == "LR_YPRCTAB"})][2] 	// Posicao do preco de tabela
+Local nPProd	:= aPosCpo[Ascan(aPosCpo,{|x| AllTrim(Upper(x[1])) == "LR_PRODUTO"})][2]	// Posicao do Produto
+Local nPItem	:= aPosCpo[Ascan(aPosCpo,{|x| Alltrim(Upper(x[1])) == "LR_ITEM"})][2]		// Posicao do Item
+Local nPDescr	:= aPosCpo[Ascan(aPosCpo,{|x| Alltrim(Upper(x[1])) == "LR_DESCRI"})][2]		// Posicao da Descricao do produto
+Local nPQuant	:= aPosCpo[Ascan(aPosCpo,{|x| Alltrim(Upper(x[1])) == "LR_QUANT"})][2]		// Posicao da Quantidade
+Local nPCult	:= aPosCpo[Ascan(aPosCpo,{|x| AllTrim(Upper(x[1])) == "LR_YCULTRA"})][2]	// Posicao da Cultura
+
+Local nPDesc	:= aPosCpo[Ascan(aPosCpo,{|x| AllTrim(Upper(x[1])) == "LR_DESC"})][2]		// Posicao do Desconto
+Local nPValDesc	:= aPosCpo[Ascan(aPosCpo,{|x| AllTrim(Upper(x[1])) == "LR_VALDESC"})][2]	// Posicao do valor de desconto
+Local nPPerDesc	:= aPosCpo[Ascan(aPosCpo,{|x| AllTrim(Upper(x[1])) == "LR_YPERDES"})][2]	// Posicao do Desconto da Regra
+Local nPVlUnit	:= aPosCpo[Ascan(aPosCpo,{|x| AllTrim(Upper(x[1])) == "LR_VRUNIT"})][2] 	// Posicao do valor unitario do item
+Local nPVlItem	:= aPosCpo[Ascan(aPosCpo,{|x| AllTrim(Upper(x[1])) == "LR_VLRITEM"})][2] 	// Posicao do valor total do item
+
+Local nPAbast	:= aPosCpo[Ascan(aPosCpo,{|x| AllTrim(Upper(x[1])) == "LR_YABAST"})][2] 	// Posicao do código de abastecimento
+Local nPBico	:= aPosCpo[Ascan(aPosCpo,{|x| AllTrim(Upper(x[1])) == "LR_YBICO"})][2] 		// Posicao do código de abastecimento
+Local cAbaste	:= ""
+Local cQuerySL2	:= ""
+Local nQtdAbas	:= 0
+	
+Local nPrcTab   := 0
+Local nVlUnit   := 0
+Local nVlItem   := 0
+Local nValDesc  := 0
+Local nDesc     := 0
+Local nPerDesc  := 0
+	
+Private cMotCredito	:= ""
+Private cMotDesconto 	:= ""
+Private cMotVenFut		:= ""
+Private cMotCotacao	:= ""
+
+//O objeto oCondPg esta definido na tela de pagamentos, seu estado visivel indica se o usuario esta na tela de itens ou na tela de pagamentos.
+If Type("oCondPg") == "O"
+	lPanVA3 := oCondPg:lVisible 	//Quando igual a .T., foi chamado a partir da tela de definicao de pagamentos.
+EndIf
+
+//Inicializacao das variaveis STATIC.
+cFluigLib 	:= ""
+lCotacao	:= .F.
+lDesconto	:= .F.
+lCredito	:= .F.
+lVenFut		:= .F.
+
+If nTipo == 2
+	LjNFFimVd(.T.)
+EndIf
+
+//Tratamento da condicao de pagamento DATA FIXA quando EXECAUTO.
+//Deve ser tratado neste ponto pois do contrario ira ocorrer erro na gravacao da data de vencimento.
+If lAutoExec .And. nTipo == 2 .And. nOpc <> 0
+	//Posiciona na condicao de pagamento
+	SE4->(DbSetOrder(1))
+	SE4->(DbSeek(xFilial("SE4")+M->LQ_YCOND))
+	If SE4->E4_YDTFIXA == 'S'
+		//Por questao de compatiblidade, utiliza sempre a rotina do VENDA ASSISTIDA.
+		For i := 1 to Len(aPgtos)
+			If SEC->(DbSeek(xFilial("SEC")+M->LQ_YCOND+Padl(i,2,"0")))
+	 			dVencto := StoD(Alltrim(SEC->EC_COND))
+	 			If !Empty(dVencto)
+	 				aPgtos[i,1] := dVencto
+	 				aPgtos[i,5] := dVencto
+	 			EndIf
+			EndIf
+		Next
+	EndIf		
+EndIf
+
+
+// --------------------------------------------------
+// Tratamento de atualização de valores da venda
+// na utilização de ExecAuto
+// --------------------------------------------------
+
+If lAutoExec .And. nTipo == 1 .And. nOpc == 0
+
+	nVlUnit := 0
+
+	// Tratamento de valores dos orçamentos integrados via CRM
+	
+	If FunName() != "RPC"
+		
+		If !AllTrim(FunName()) $ "LOJAY023"
+			ZCP->(DbSetOrder(3))	
+			ZCP->(DbSeek(xFilial("ZCP") + M->LQ_NUM + "O"))			
+		EndIf
+		
+		ZCQ->(DbSetOrder(1))
+		If ZCQ->(DbSeek(xFilial("ZCQ") + ZCP->ZCP_ORCCRM + M->LR_PRODUTO))
+			nVlUnit 	:= ZCQ->ZCQ_VALOR
+			nPrcTab	 	:= ZCQ->ZCQ_VALOR
+			nVlItem		:= ZCQ->ZCQ_VALOR * ZCQ->ZCQ_QUANT
+			nValDesc	:= 0
+			nDesc		:= 0		
+		EndIf
+		
+		RestArea(aAreaZCP)
+		RestArea(aAreaZCQ)
+		
+		// -----------------------------------------------------
+		// Tratamento de valores dos orçamentos em eventos
+		// Valida se não está sendo alterado por um webservice
+		// -----------------------------------------------------
+		If !AllTrim(FunName()) $ "LOJAY027" 
+			ZD9->(DbSetOrder(2))
+			ZD9->(DbSeek(xFilial("ZD9") + xFilial("SL1") + M->LQ_NUM))			
+		EndIf
+		
+		ZD8->(DbSetOrder(1))
+		If ZD8->(DbSeek(xFilial("ZD8") + ZD9->ZD9_CODEVT + ZD9->ZD9_CODIGO + M->LR_ITEM + M->LR_PRODUTO))
+			nVlUnit 	:= ZD8->ZD8_VRUNIT
+			nPrcTab 	:= ZD8->ZD8_PRCTAB
+			nValDesc	:= ZD8->ZD8_VALDES
+			nDesc		:= ZD8->ZD8_DESC
+			nPerDesc	:= ZD8->ZD8_DESC
+			nVlItem		:= ZD8->ZD8_VRITEM
+		EndIf	
+	EndIf
+	
+	// -----------------------------------------------------
+	// Tratamento de valores dos orçamentos
+	// Valida para não alterar os valores nos orçamentos automáticos vindos do barter LOJAY043
+	// -----------------------------------------------------
+	If AllTrim(FunName()) $ "LOJAY043"
+		nVlUnit 	:= ZD3->ZD3_VLUNIT
+		nPrcTab 	:= ZD3->ZD3_VLUNIT
+		nValDesc	:= 0
+		nDesc		:= 0
+		nPerDesc	:= 0
+		nVlItem		:= ZD3->ZD3_VLTOT
+	EndIf	
+			
+	// Atualiza valores do item
+	If nVlUnit > 0 
+		nAuxTotal := LJ7T_Subtotal(2) - MaFisRet(n, "IT_TOTAL")
+		Lj7T_Subtotal(2, nAuxTotal)
+
+		aColsDet[n,nPDPrcTab] 	:= nPrcTab
+		aCols[n,nPPrcTab] 		:= nPrcTab
+		aCols[n,nPVlUnit] 		:= nVlUnit
+		aCols[n,nPVlItem] 		:= nVlItem
+		aCols[n,nPValDesc] 		:= nValDesc
+		aCols[n,nPDesc] 		:= nDesc
+		aCols[n,nPPerDesc] 		:= nPerDesc
+		
+		MaFisAlt("IT_VALMERC"	, aCols[n,nPVlItem], n)
+		MaFisAlt("IT_PRCUNI"	, aCols[n,nPVlUnit], n)
+		MaFisAlt("IT_DESCONTO"	, 0				   , n)
+		
+		nAuxTotal := LJ7T_Subtotal(2) + MaFisRet(n, "IT_TOTAL")
+		nAuxTotal := Max(nAuxTotal, 0)
+		Lj7T_Subtotal(2, nAuxTotal)
+		Lj7T_Total(2, Lj7T_SubTotal(2) - Lj7T_DescV(2) + LJ7CalcFrete())
+	EndIf
+	
+EndIf
+
+
+//Tratamento para nao processar quando EXECAUTO a partir de rotinas customizadas.
+If !lAutoExec
+
+	//Valida se a forma de pagamento do orcamento pode ser utilizada.
+	//Verifica forma de pagamento
+	cForma 	 := U_CLJFPG()
+	//Monta o array de formas de pagamento que podem ser utilizadas.
+	aFormaPg := STRTOKARR(cForma,"_")
+	
+	If nTipo == 2 .And. nOpc <> 0
+		//O objeto oCondPg esta definido na tela de pagamentos, seu estado visivel indica se o usuario
+		//esta na tela de itens ou na tela de pagamentos.
+		If !lPanVA3
+			//Forca o usuario a finalizar pela tela de pagamentos.
+			//Isso e necessario pois ao alterar o desconto de algum produto, o sistema zera
+			//os pagamentos existentes, e se o usuario escolher a opcao de gravar a partir da tela de itens
+			//por padrao nao ocorre o recalculo das parcelas.
+			//Ao alterar para a tela de pagamentos, este recalculo sera feito.
+			Aviso("Erro", "Você deve finalizar pela tela de pagamentos (tecla F7).", {"Ok"},,"Atenção")
+			lRet := .F.
+		EndIf
+
+		//Validacoes para VENDA ENTREGA FUTURA.
+//		If lRet .And. M->LQ_YVENFUT == 'S'
+//			For nI := 1 To Len(aFormaPg)
+//				If (aFormaPg[nI] $ cYFPBVEF)
+//					MessageBox("Não é permitido o uso da forma de pagamento "+aFormaPg[nI]+" na VENDA ENTREGA FUTURA. Utilize uma condição de pagamento que não seja vinculada a "+cYFPBVEF+".",,16)
+//					lRet := .F.
+//				EndIf
+//			Next
+//		EndIf
+
+		//Validacoes para venda a CONSUMIDOR FINAL.
+		If lRet .And. M->LQ_CLIENTE == cYLJCLCF
+			For nI := 1 To Len(aFormaPg)
+				If !(aFormaPg[nI] $ cYLJFPCF)
+					MessageBox("Não é permitido o uso da forma de pagamento "+aFormaPg[nI]+" na venda a consumidor final. Utilize uma condição de pagamento que seja vinculada a uma das formas de pagamento permitidas ("+AllTrim(StrTran(cYLJFPCF,";"," "))+").",,16)
+					lRet := .F.
+				EndIf
+			Next
+
+			//Valida se o valor total da venda ultrapassa o limite permitido.
+			If lRet .And. Lj7T_Total(2) > nYLJLVCF
+				MessageBox("Valor total do orçamento ultrapassa o valor máximo permitido para venda a consumidor final (R$ "+AllTrim(Transform(nYLJLVCF,"@E 999,999.99"))+"). Informe um cliente válido ou altere o orçamento.",,16)
+				lRet := .F.
+			EndIf
+		EndIf
+
+		//Faz a validacao dos dados dos cheques.
+		If lRet .And. nOpc <> 1 .And. !U_CLJNEG(.T.)
+			lRet := .F.
+		EndIf
+
+		//EVENTOS - Nao permite finalizar como venda no ambiente OFFLINE.
+		If lRet .And. nOpc <> 1 .And. cEstacao == cYLJESTE .And. cYAMBEVT == "1"
+			MsgAlert("Não é possível finalizar o orcamento de EVENTO no ambiente OFFLINE!","Atenção")
+			lRet := .F.
+		EndIf
+
+		If lYALCORC
+			//Verifica se o orcamento ja passou pelas regras de bloqueio.
+			If lRet .And. M->LQ_YBLOQ <> "L"
+
+				cMotCredito 	:= U_CLJVLC()
+				cMotDesconto 	:= U_CLJVDA()
+				cMotVenFut		:= U_CLJVFUT()
+				cMotCotacao		:= U_CLJVCOT()
+
+				lCotacao  		:= !Empty(cMotCotacao)
+				lDesconto	 	:= !Empty(cMotDesconto)
+				lCredito  		:= !Empty(cMotCredito)
+				lVenFut   		:= !Empty(cMotVenFut)
+
+				If lCotacao .Or. lDesconto .Or. lCredito .Or. lVenFut
+					If nOpc == 1
+						If lYLORFLU
+							cFluigLib := U_LOJAY019()
+							lRet := !Empty(cFluigLib)
+						Else
+							cMsg := "Orçamento bloqueado! "
+
+							If lCotacao
+								cMsg += chr(13)+chr(10)+cMotCotacao
+							EndIf
+
+							If lDesconto
+								cMsg += chr(13)+chr(10)+cMotDesconto
+							EndIf
+
+							If lCredito
+								cMsg += chr(13)+chr(10)+cMotCredito
+							EndIf
+
+							If lVenFut
+								cMsg += chr(13)+chr(10)+cMotVenFut
+							EndIf
+
+							Aviso("Erro", cMsg, {"Ok"},,"Atenção")
+						EndIf
+					Else
+						MessageBox("O orçamento sofreu bloqueios. Utilize a opção Gravar como orçamento (F4).",,16)
+						lRet := .F.
+					EndIf
+				EndIf
+			EndIf
+		EndIf
+		
+		
+	EndIf
+
+	//Validacoes da TudoOK e da LinOK
+	If nOpc == 0
+
+		//Posiciona ordem das tabelas.
+		SB2->(DbSetOrder(1))
+		SB5->(DbSetOrder(1))
+	
+		nI := If(nTipo == 1, n, 1)
+				
+		Do While lRet .And. ((nTipo == 1 .And. nI == n) .Or. (nTipo == 2 .And. nI <= Len(aCols)))
+			If !GdDeleted(nI, aHeader, aCols)
+				
+				// Não permite inserir linhas vazias no orçamento
+				If lRet .And. Empty(aCols[nI,nPProd])
+					lRet := .F.
+				EndIf
+				
+				SB1->(DbSeek(xFilial("SB1")+aCols[nI,nPProd]))
+				SB2->(DbSeek(xFilial("SB2")+aCols[nI,nPProd]+aCols[nI,nPLocal]))
+				SB5->(DbSeek(xFilial("SB5")+aCols[nI,nPProd]))
+		
+				If lRet .And. nI <= Len(aColsDet)
+					aCols[nI, nPTES] 	:= aColsDet[nI, nPDTES]
+					aCols[nI, nPLocal] 	:= aColsDet[nI, nPDLocal]
+					aCols[nI, nPPrcTab] := aColsDet[nI, nPDPrcTab]
+				EndIf
+				
+				If lRet .And. Empty(aCols[nI,nPTES])
+					Aviso("Erro", "TES não informada!"+Chr(13)+Chr(10)+"Exclua o item sem TES ou solicite a correção junto ao setor fiscal.", {"Ok"},,"Atenção")
+					lRet := .F.
+				EndIf
+
+				If lRet .And. SB5->B5_YCTRCUL == "1" .And. Empty(aCols[nI,nPCult])
+					Aviso("Erro", "Cultura não informada!"+Chr(13)+Chr(10)+"É obrigatorio informar a cultura a que se destina o produto "+AllTrim(aCols[nI,nPDescr])+".", {"Ok"},,"Atenção")
+					lRet := .F.
+				EndIf
+									
+				SZS->(DbSetOrder(1))
+				If lRet .And. SZS->(DbSeek(xFilial("SZS") + FWFilial())) .And. SZS->ZS_TIPOFIL == "8" .And. !Empty(aCols[nI,nPAbast])
+
+					cAbaste := ""
+					nI2 	:= 1
+				
+					Do While nI2 <= Len(aCols)
+						If !GdDeleted(nI2, aHeader, aCols) .And. !nI2 == nI 
+							cAbaste += aCols[nI2,nPAbast] + aCols[nI2,nPBico] + "-"							
+						EndIf
+						nI2++	
+					EndDo
+										
+					If  aCols[nI,nPAbast] + aCols[nI,nPBico] $ cAbaste
+						Aviso("Erro", "Abastecimento já informado!"+Chr(13)+Chr(10)+"O abastecimento já foi informado na tela", {"Ok"},,"Atenção")
+						lRet := .F.
+					EndIf	
+					
+					If lRet
+					
+						cQuerySL2	:= GetNextAlias() 
+						
+						BeginSql ALIAS cQuerySL2   
+							SELECT 	SL2.L2_NUM AS ORCAMENTO,
+							 		SL2.L2_ITEM AS ITEM, 
+							 		SL2.L2_DOC AS NOTA
+								FROM %TABLE:SL2% SL2 
+								WHERE	SL2.L2_FILIAL 		= %EXP:FwFilial("SL2")% 
+										AND SL2.L2_EMISSAO 	>= '20191201' 
+										AND SL2.%NOTDEL%
+										AND SL2.L2_YABAST 	= %EXP:aCols[nI,nPAbast]%
+										AND SL2.L2_YBICO 	= %EXP:aCols[nI,nPBico]% 
+										AND SL2.L2_DOC		<> ' ';
+	
+							EndSQL
+											
+						If (cQuerySL2)->(!Eof())
+							Aviso("Erro", "Abastecimento já informado!"+Chr(13)+Chr(10)+"O abastecimento: " + aCols[nI,nPAbast] + " Bico: " +;
+								aCols[nI,nPBico] +  " item " + aCols[nI,nPItem] + " já foi informado na venda com orçamento numero: " + ;
+								(cQuerySL2)->ORCAMENTO + " Item: " + (cQuerySL2)->ITEM + ", favor excluir esse abastecimento para continuar," + ;
+								"e comunicar ao HelpDesk pois possívelmente não foi vinculado a venda.", {"Ok"},,"Atenção")
+							lRet := .F.
+						EndIf
+						
+						(cQuerySL2)->(DbCloseArea())
+						
+					EndIf	
+				EndIf
+
+				lRet := lRet .And. U_CLJ008(nI)
+
+				//Valida numero do lote quando produto com rastreabilidade.
+				//Nao aplicavel quando orcamento pai de uma VENDA ENTREGA FUTURA.
+				//Não aplicável na Recria para permitir salvar o orçamento quanto utilizada a opção VEF,
+				//mesmo a filial não estando no parâmetro MV_YFILVEF
+				If lRet .And. Empty(aColsDet[nI,nPLote]) .And. Rastro(aCols[nI,nPProd]) .And. !((cFilAnt $ cYFILVEF .Or. cFilAnt == '06') .And. M->LQ_YVENFUT == 'S')
+					Aviso("Erro","É obrigatório o preenchimento do campo lote para produtos que utilizam rastreabilidade!",{"Voltar"},2)
+					lRet := .F.
+				EndIf
+
+				If lRet .And. M->LQ_CLIENTE == cYLJCLCF
+					//Validacoes para venda a CONSUMIDOR FINAL.
+					If lRet .And. !Empty(SB5->B5_CLTOXI)
+						//Nao permite a venda de produtos controlados.
+						MessageBox("Não é permitido a venda do produto controlado "+AllTrim(aCols[nI,nPDescr])+" para consumidor final. Informe um cliente válido ou altere o produto.",,16)
+						lRet := .F.
+					EndIf
+				EndIf
+
+				If lRet .And. cEstacao == cYLJESTE .And. lYLJBENO .And. Empty(aColsDet[nI,nPReserv]) .And. SaldoSB2() < aCols[nI,nPQuant]
+					//EVENTOS - Bloqueio de estoque negativo para orcamento.
+					Aviso("Erro","Saldo insuficiente em estoque para o produto "+aCols[nI,nPProd],{"Ok"})
+					lRet := .F.
+				EndIf
+
+				If lRet .And. M->LQ_YCOTFLU == 'S' .And. aCols[nI,nPDesc] > aCols[nI,nPPerDesc]
+					//Valida se tentou alterar o desconto em cotacao.
+					Aviso("Atenção", "O desconto inserido no produto " + AllTrim(aCols[nI,nPDescr])+ " ultrapassa o MÁXIMO PERMITIDO ("+Transform(aCols[nI,nPPerDesc],"@E 99.9999") + "% ).",{"Ok"})
+					lRet := .F.
+				EndIf
+
+			EndIf
+
+			nI++
+		EndDo
+	EndIf
+
+	If nTipo <> 1 .And. nOpc == 0
+
+		//nRotina - Variavel que indica qual a opcao selecionada no menu (aRotina) | 1-Pesquisar 2-Visualizar 3-Atendimento 4-Finaliza Venda
+
+		//Foi necessario fazer um tratamento especial nesta parte pois observou-se que na saida da tela de venda
+		//sempre estava gerando novamente as parcelas, com isso se perdia as alteracoes feitas no orcamento gravado
+		//ou na tela de parcelas.
+	 	If nRotina == 4 .And. !Empty(M->LQ_HORA)
+			//Foi chamado a partir da opcao de finaliza venda, portanto o campo LQ_HORA sera preenchido com X
+			//para posteriormente ser indentificado a necessidade de leitura dos dados ja gravados no SL4.
+			//Ver rotina LJ7031 e CLJGPG
+			M->LQ_HORA		:= Replicate("X",Len(M->LQ_HORA))
+		ElseIf nRotina == 3 .And. M->LQ_YCOND == M->LQ_CONDPG
+			//Foi chamado a partir da opcao de atendimento e nao houve alteracao da condicao de pagamento,
+			//portanto o campo LQ_CONDPG ficara em branco para que o sistema nao recalcule as parcelas
+			//o que faria com que fossem perdidas as alteracoes feitas na tela de pagamento.
+			M->LQ_CONDPG	:= Space(Len(M->LQ_CONDPG))
+		EndIf
+
+	EndIf
+
+EndIf
+
+RestArea(aAreaSB1)
+RestArea(aAreaSB2)
+RestArea(aAreaSB5)
+RestArea(aAreaSZS)
+RestArea(aArea)
+
+Return lRet
