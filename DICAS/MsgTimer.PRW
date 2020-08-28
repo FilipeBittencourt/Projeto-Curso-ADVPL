@@ -24,6 +24,8 @@ Função para exibição de mensagens com Timer para fechamento automático.
 @see https://github.com/AlencarGabriel/advpl-MsgTimer
 @obs Uso de HTML no Título e/ou Mensagem pode ocasionar problemas de dimensionamento nas mensagens.
 /*/
+
+// U_MsgTimer
 User Function MsgTimer(nSeconds, cMensagem, cTitulo, cIcone, nTipo)
   Local xRet := Nil
   Local nCountEnter := 0

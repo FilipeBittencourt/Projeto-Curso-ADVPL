@@ -1,5 +1,6 @@
 #include 'totvs.ch'
 
+//U_Layer
 user function Layer()
 
 
@@ -8,6 +9,7 @@ user function Layer()
 	Local cNome  := NIL
 	Local cCodPgto := NIL
 	Local cOBS     := Nil
+	Local aStatus := {'A=Não enviados','P=Um Envio sem resposta','S=Dois Envios sem resposta','R=Resposta enviada','N=Fechada sem resposta','T=Todos'}
 
 	RPCSetEnv("99", "01", NIL, NIL, "COM", NIL, {"SB1", "SB5"})
 
@@ -56,106 +58,3 @@ user function Layer()
 
 return
 
-
-
-
-/*
-user function Layer()
-
-	
-
-	local oDlg    as object
-	local oLayer  as object
-	local oPnlDoc as object
-	local oPnlObs as object
-	local oWdwDoc as object
-	local oWdwObs as object
-
-
-
-	Local oDlg := Nil
-	Local aButtons := {}
-	Local oBtn
-	Local cCCusto  := NIL
-	Local cCodPgto := NIL
-	Local cOBS     := Nil
-
-	RPCSetEnv("99", "01", NIL, NIL, "COM", NIL, {"SB1", "SB5"})
-
-	cCCusto :=  Space(TamSX3("CTT_CUSTO")[1]) 
-	cCCusto  := Space(TamSX3("CTT_CUSTO")[1]) 
-	cCodPgto := Space(TamSX3("E4_CODIGO")[1])
-	cOBS     := Space(TamSX3("C7_OBS")[1])
-
-	oDlg := FwDialogModal():New()
-	oDlg:SetTitle("Filipe Teste")
-	oDlg:SetSize(100,200)
-	oDlg:CreateDialog()
-	 
-
-	Define MsDialog oDlg Title 'Teste de Tela com Enchoice' From 0, 0 To 450, 700 Pixel Style DS_MODALFRAME
-
-	//Cria a enchoide primeiro, dessa forma o Layer já terá conhecimento da enchoice e de seu tamanho
-	EnchoiceBar(oDlg,{ || oDlg:End() },{ || oDlg:End() },.F.,,,,.F.,.F.,.F.,.T.,.F.)
-
-	oLayer := FwLayer():New()
-
-	oLayer:Init(oDlg)
-
-	//Montagem das Layers
-	oLayer:AddLine('LIN1', 035, .F.)
-	oLayer:AddLine('LIN2', 065, .F.)
-
-	oLayer:AddCollumn('COL1', 100, .T., 'LIN1')
-	oLayer:AddCollumn('COL2', 100, .T., 'LIN2')
-
-	oLayer:AddWindow('COL1', 'DOC'    , 'Dados do Manifesto'        , 100, .F. ,.T.,, 'LIN1', { || })
-	oLayer:AddWindow('COL2', 'OBS'    , 'Observação do Manifesto'    , 100, .F. ,.T.,, 'LIN2', { || })
-
-	//Montagem dos Painéis
-	oPnlDoc := oLayer:GetWinPanel('COL1', 'DOC'    , 'LIN1')
-	oPnlObs    := oLayer:GetWinPanel('COL2', 'OBS'    , 'LIN2')
-
-	//Informando Títulos dos Painéis
-	oLayer:GetWindow('COL1', 'DOC', @oWdwDoc, 'LIN1')
-	oWdwDoc:oTitleBar:oFont := TFont():New('MS Sans Serif',,16,,.T.)
-
-	oLayer:GetWindow('COL2', 'OBS', @oWdwObs, 'LIN2')
-	oWdwObs:oTitleBar:oFont := TFont():New('MS Sans Serif',,16,,.T.)
-
-
-		@ 010,020 SAY "CC: " SIZE 50,10 PIXEL OF oDlg
-		@ 025,020 MSGET cCCusto F3 "CTT" SIZE 50, 10 PIXEL OF oDlg
-
-	Activate MsDialog oDlg
-
-return nil
-*/
-
-/*
-user function Layer()
-//DEFINE MSDIALOG oDlg TITLE "Teste EnchoiceBar" FROM 000,000 TO 400,600 PIXEL 	
-
-Aadd( aButtons, {"HISTORIC", {|| TestHist()}, "Histórico1...", "Histórico1" , {|| .T.}} )     		
-Aadd( aButtons, {"HISTORIC", {|| TestHist()}, "Histórico2...", "Histórico2" , {|| .T.}} )  
-Aadd( aButtons, {"HISTORIC", {|| TestHist()}, "Histórico3...", "Histórico3" , {|| .T.}} )  
-
-	@ 050,030 SAY "CC: " SIZE 50,10 PIXEL OF oDlg
-	@ 047,060 MSGET cCCusto Picture "@!" F3 "CTT" SIZE 50, 10 PIXEL OF oDlg  
-
-	//@ 142,019 Get cFiltro of oDlg Picture "@!" F3 "SED" 
-
-    @ 070,030 SAY "Cond. Pgto: " SIZE 50,10 PIXEL OF oDlg
-	@ 067,060 MSGET cCodPgto F3 "SE4" SIZE 50, 10 PIXEL OF oDlg
- 
-	@ 090,030 SAY "Obs: " SIZE 50,10 PIXEL OF oDlg
-	@ 087,060 GET cOBS MEMO SIZE 110, 020 PIXEL OF oDlg MULTILINE        
-
-//ACTIVATE MSDIALOG oDlg ON INIT (EnchoiceBar(oDlg,{||lOk:=.T.,oDlg:End()},{||oDlg:End()},,@aButtons))
- oDlg:Activate()
-Return 
-
-Static Function TestHist()	
-	FwAlertSuccess("Mostra histórico")
-Return
-*/
