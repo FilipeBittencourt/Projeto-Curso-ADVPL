@@ -1,43 +1,31 @@
-#Include 'TOTVS.CH'
+#include "protheus.ch"
 #Include 'RESTFUL.CH'
-
 
 #Define cEOL Chr(13)+Chr(10)
 
-WsRestFul FILIPE Description "Facile Sistemas Webservices - Motor de Integração"
-  WSMETHOD GET DESCRIPTION "Session Motor de Integração" WSSYNTAX "/FILIPE"
+WsRestFul pedidocompra Description "Facile Sistemas Webservices - Motor de Integração"
+  WSMETHOD POST DESCRIPTION "Session Motor de Integração" WSSYNTAX "/pedidocompra"
 End WsRestFul
-//----------------------------------------
-// POST
-//----------------------------------------
-WSMETHOD GET WSSERVICE FILIPE
 
-  Local cResponse := ""
-  Local cBody     := ""
-  Local aHeader   := {"Content-Type: application/json"}
-  Local oJson     := JsonObject():New()  
-  Local cHost	    := "http://localhost:9999"
-  Local cAPI	    := "/api/oauth2/v1/token?grant_type=password"
-  
-  self:SetContentType("application/json")
-
-  //|Recupera os dados do body |
-  /*
+WSMETHOD POST WSSERVICE pedidocompra
  
-  oJson:FromJson(cBody)
-  cAPI += "&username="+oJson["login"]+"&password="+oJson["password"]+"" 
-  cResponse := HTTPQuote(cHost+cAPI,"POST","","",10,aHeader,cHRet)
+  Local cBody    := "" 
+  Local oJson    := JsonObject():New() 
+  Local oIMAbast := TIntegracaoMotorAbastecimentoParse():New()
+  
+  self:SetContentType("application/json")   
 
-  oJson:FromJson(cResponse)
-  */
-    cBody := ::GetContent()
-    conOut('FILIPE - POST METHOD')
+  //|Recupera os dados do body |  
+  cBody := ::GetContent()
+  conOut('pedidocompra - POST METHOD')  
+  oJson:FromJson(cBody)  // converte para JsonObject 
 
-   self:SetStatus(500)
-   oJson:FromJson(cBody)
+
+  oJson := oIMAbast:PedidoCompra(oJson)   
+  self:SetStatus(oJson["Status"])
+  oJson:DelName("Status") 
+  self:SetResponse(oJson:ToJson())
    
-   self:SetResponse(oJson:ToJson())
 
-Return 
-
+Return .T.
  

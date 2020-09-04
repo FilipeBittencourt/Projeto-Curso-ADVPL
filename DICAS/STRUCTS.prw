@@ -175,7 +175,9 @@ USER FUNCTION STRUCTS4()
   oJSI["OtherInfo"]["SubInfo"]["Info01"] := "SUB-A"
   oJSI["OtherInfo"]["SubInfo"]["Info02"] := "SUB-B"
   oJSI["OtherInfo"]["SubInfo"]["Info03"] := "SUB-C"
- 
+
+
+   oJSI["OtherInfo"] := Nil
  
 Return oJSI
 
