@@ -16,6 +16,16 @@
 // Descrição : Gerencia o processo de geração de boletos aos clientes								| 
 //__________________________________________________________________________________________________|    
 
+User Function TECTEC() 
+
+  If Select("SX6") <= 0
+    RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+  EndIf
+  
+  u_TECFAT04()
+RETURN 
+
+
 User Function TECFAT04() 
 	     
 	Local oDlgBol
@@ -52,7 +62,7 @@ User Function TECFAT04()
 	Private cCliDe    := Space(TAMSX3("A1_COD")[1]) 
 	
 	Private oCliAte
-	Private cCliAte   := Space(TAMSX3("A1_COD")[1])    
+	Private cCliAte   := Space(TAMSX3("A1_COD")[1])   
 
 	Private oVenctoDe
 	Private dVenctoDe := CTOD("")                  
