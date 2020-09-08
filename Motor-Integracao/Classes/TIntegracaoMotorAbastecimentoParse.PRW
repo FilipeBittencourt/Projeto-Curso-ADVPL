@@ -8,10 +8,11 @@ CLASS TIntegracaoMotorAbastecimentoParse From LongClassName
     Method New() CONSTRUCTOR
     Method PedidoCompra(oJson) 
     Method PedidoVenda(oJson) 	
-    Method ParseEmpresa() 
-    Method ParseFornecedor() 
-    Method ParseCliete() 
-    Method ParseProduto()
+    Method ParseEmpresa(oJson) 
+    Method ParseFornecedor(oJson) 
+    Method ParseCliete(oJson) 
+    Method ParseProduto(oJson)
+	Method MontaPCompra(oJson)
     
 
 ENDCLASS
@@ -27,14 +28,10 @@ METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 	Local oJSRet  := JsonObject():New()
 	Local aError  := {}
 	Local lError  := .F.
-	Local nI      := 0 
-	
-	Local cEmp     := ""
-	Local cFil     := ""
-	Local lRpcSet  := ""
-	Local lRecursa := ""
-	Local cMsg     := ""
-	Local aMsg     := {}
+	Local nI      := 0 	
+	Local nW      := 0 	
+	Local cMsg    := ""
+ 
 
 
 	oJSPC["empresa"]    := ::ParseEmpresa(oJson)
@@ -54,138 +51,150 @@ METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 	If 	lError == .F.		
 
 		//Monta ambiente
+		If (StartJob( "U_MontaEnv" , GetEnvServer(), .T. , oJSPC:tojson())) == .T. //https://tdn.totvs.com/display/tec/StartJob
 		
-    cEmp     := oJSPC["empresa"]["empresaCodigo"]
-    cFil     := oJSPC["empresa"]["empresaFilial"]
-    lRpcSet  := GetEnvServer()       
+			//Fornecedor
+			oJSPC["fornecedor"] := ::ParseFornecedor(oJson)
+			If Empty(oJSPC["fornecedor"]["A2_COD"])
+				lError := .T.
+				nI++
+				AADD(aError,   JsonObject():New())
+				aError[nI]["field"]          := "fornecedor"
+				aError[nI]["rejectedValue"]  := oJson["fornecedor"]
+				aError[nI]["defaultMessage"] := EncodeUtf8("O CNPJ do fornecedor informado não foi locaizado.")
+			EndIf
 
-		cTst	:= oJSPC:tojson()
+
+			//oJSPC["codigoComprador"] := ::ParseFornecedor(oJson)
+			//If Empty(oJSPC["codigoComprador"])
+			//	lError := .T.
+			//	nI++
+			//	AADD(aError,   JsonObject():New())
+			//	aError[nI]["field"]          := "codigoComprador"
+			//	aError[nI]["rejectedValue"]  := oJson["codigoComprador"]
+			//	aError[nI]["defaultMessage"] := EncodeUtf8("O código do comprador informado não foi locaizado.")
+			//EndIf
 
 
+			//Data de entrega
+			oJSPC["dataEntrega"] := StrTran(oJson["dataEntrega"],"-","")
+			If Empty(oJSPC["dataEntrega"])
+				lError := .T.
+				nI++
+				AADD(aError,   JsonObject():New())
+				aError[nI]["field"]          := "dataEntrega"
+				aError[nI]["rejectedValue"]  := oJson["dataEntrega"]
+				aError[nI]["defaultMessage"] := EncodeUtf8("A data de entrega não foi informada.")
+			EndIf
 
-		cMsg     := StartJob( "U_MontaEnv" , GetEnvServer(), .T. , cTst) //https://tdn.totvs.com/display/tec/StartJob
-		
-		//Fornecedor
-		oJSPC["fornecedor"] := ::ParseFornecedor(oJson)
-		If Empty(oJSPC["fornecedor"]["A2_COD"])
+			//Data de faturamento	
+			oJSPC["dataFaturamento"] := StrTran(oJson["dataEntrega"],"-","")
+			If Empty(oJSPC["dataEntrega"])
+				lError := .T.
+				nI++
+				AADD(aError,   JsonObject():New())
+				aError[nI]["field"]          := "dataFaturamento"
+				aError[nI]["rejectedValue"]  := oJson["dataFaturamento"]
+				aError[nI]["defaultMessage"] := EncodeUtf8("A data do Faturamento não foi informada corretamente.")
+			EndIf	
+
+			// Pedido de compra da CITEL
+			oJSPC["numeroPedido"] := oJson["numeroPedido"] // CRIAR campo na C7_YIDCITE
+			If Empty(oJSPC["numeroPedido"])
+				lError := .T.
+				nI++
+				AADD(aError,   JsonObject():New())
+				aError[nI]["field"]          := "numeroPedido"
+				aError[nI]["rejectedValue"]  := oJson["numeroPedido"]
+				aError[nI]["defaultMessage"] := EncodeUtf8("O numero do Pedido CITEL não foi informada corretamente.")
+			EndIf
+	
+
+			//Produtos
+			oJSPC["itens"]      := ::ParseProduto(oJson)						
+			For nW := 1 To Len(oJSPC["itens"]) 
+
+				If oJSPC["itens"][nW]["achou"] == .F.
+
+					lError := .T.
+					nI++
+					AADD(aError,   JsonObject():New())
+					aError[nI]["field"]          := "itens["+cValToChar(nW)+"].produto"
+					aError[nI]["rejectedValue"]  := oJSPC["itens"][nW]["produto"]
+					aError[nI]["defaultMessage"] := EncodeUtf8("O código do produto informado não foi encontrado")	
+
+				EndIf 
+
+			Next nI
+
+
+		Else // ERRO POR NAO ACHAR A FILIAL PELO CNPJ DA EMPRESA INFORMADO
+
 			lError := .T.
 			nI++
 			AADD(aError,   JsonObject():New())
-			aError[nI]["field"]          := "fornecedor"
-			aError[nI]["rejectedValue"]  := oJson["fornecedor"]
-			aError[nI]["defaultMessage"] := EncodeUtf8("O CNPJ do fornecedor informado não foi locaizado.")
-		EndIf
+			aError[nI]["field"]          := "codigoEmpresa"
+			aError[nI]["rejectedValue"]  := oJson["codigoEmpresa"]
+			aError[nI]["defaultMessage"] := EncodeUtf8("Erro ao montar ambiente para o CNPJ informado. Favor entrar em contatdo com o administrador PROTHEUS.")
 
-
-		//oJSPC["codigoComprador"] := ::ParseFornecedor(oJson)
-		If Empty(oJSPC["codigoComprador"])
-			lError := .T.
-			nI++
-			AADD(aError,   JsonObject():New())
-			aError[nI]["field"]          := "codigoComprador"
-			aError[nI]["rejectedValue"]  := oJson["codigoComprador"]
-			aError[nI]["defaultMessage"] := EncodeUtf8("O código do comprador informado não foi locaizado.")
-		EndIf
-
-
-		//Data de entrega
-		oJSPC["dataEntrega"] := StrTran(oJson["dataEntrega"],"-","")
-		If Empty(oJSPC["dataEntrega"])
-			lError := .T.
-			nI++
-			AADD(aError,   JsonObject():New())
-			aError[nI]["field"]          := "dataEntrega"
-			aError[nI]["rejectedValue"]  := oJson["dataEntrega"]
-			aError[nI]["defaultMessage"] := EncodeUtf8("A data de entrega não foi informada.")
-		EndIf
-
-		//Data de faturamento	
-		oJSPC["dataFaturamento"] := StrTran(oJson["dataEntrega"],"-","")
-		If Empty(oJSPC["dataEntrega"])
-			lError := .T.
-			nI++
-			AADD(aError,   JsonObject():New())
-			aError[nI]["field"]          := "dataFaturamento"
-			aError[nI]["rejectedValue"]  := oJson["dataFaturamento"]
-			aError[nI]["defaultMessage"] := EncodeUtf8("A data do Faturamento não foi informada corretamente.")
-		EndIf	
-
-		oJSPC["numeroPedido"] := oJson["numeroPedido"] // Precisa criar campo na C7
-		If Empty(oJSPC["numeroPedido"])
-			lError := .T.
-			nI++
-			AADD(aError,   JsonObject():New())
-			aError[nI]["field"]          := "numeroPedido"
-			aError[nI]["rejectedValue"]  := oJson["numeroPedido"]
-			aError[nI]["defaultMessage"] := EncodeUtf8("O numero do Pedido CITEL não foi informada corretamente.")
-		EndIf
- 
-
-		//Produtos
-		oJSPC["itens"]      := ""//::ParseProduto(oJson)
-	  oJSPC["info"]       := ""//EncodeUtf8("Criar função para reunir dados, TES, FRETE e etc...")  
+	  	EndIf
 
 	EndIf
 
   
-	If lError
-		//eXECUTAR VERIFICAÇÃO DOS RETORNOS DOS JSON ANTES  DO EXECAUTO
-		//TRATAR ERROS COMO NA DOSC
-		//oJSRet retorna Erros em lista
+	If lError //EXECUTAR VERIFICAÇÃO DOS RETORNOS DOS JSON ANTES  DO EXECAUTO TRATAR ERROS COMO NA DESC		
+
 		oJSRet["Status"] := 400
 		oJSRet["Erros"] := aError
+
 	Else
+		
+		oJSPC := ::MontaPCompra(oJSPC)
 		//oJSRet :=  oIMADAO:ExecAutoPedidoCompra(oJSPC)
 		oJSRet["Status"] := 200
-		oJSRet := oJSPC
+		oJSRet["pedidoCompra"] := oJSPC
+
 	EndIf
 		
     
 Return oJSRet
+
+// Função para montar o ambiente
+User Function MontaEnv(cJSonTxt) 
+
+	Local oJSEnv := JsonObject():New()
+	Local lRet   := .F.
+	oJSEnv:FromJson(cJSonTxt)	  
+	RpcSetType( 3 )	
+	lRet := RPCSetEnv( oJSEnv["empresa"]["empresaCodigo"], oJSEnv["empresa"]["empresaFilial"], NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"}) 
+
+Return lRet
  
 Method PedidoVenda(oJson) Class TIntegracaoMotorAbastecimentoParse
-		Local oJSon      := JsonObject():New()
+	Local oJSon      := JsonObject():New()
 Return oJSon
-
-
-User Function MontaEnv(cTst) 
-
-	Local oteste := JsonObject():New()
-
-	oTeste:FromJson(cTst)
-	  
-	RpcSetType( 3 )	
-	RPCSetEnv( cEmp, cFil, NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
-	
-/*
-	IF ( lRpcSet )
-        RpcSetType( 3 )
-        RpcSetEnv( cEmp , cFil )
-    EndIF
-		*/
-	//StartJob( < cName >, < cEnv >, < lWait >, [ parm1,parm2,...parm25 ] )
-	//https://tdn.totvs.com/display/public/PROT/FWSM0Util
-	//https://tdn.totvs.com/display/tec/StartJob
-
-Return .T.
 
 Method ParseEmpresa(oJson) Class TIntegracaoMotorAbastecimentoParse 
    
 	Local oJSEmp  := JsonObject():New()
-	Local aSM0	  := FWLoadSM0() // Retorna um ARRAY com as informações das filiais disponíveis no arquivo SIGAMAT.EMP  - https://tdn.totvs.com/display/public/PROT/FWLoadSM0
 	Local nI      := 1
+
+ 	//Retorna um ARRAY com as informações das filiais disponíveis no arquivo SIGAMAT.EMP  - 
+ 	//https://tdn.totvs.com/display/public/PROT/FWLoadSM0 e https://tdn.totvs.com/display/public/PROT/FWSM0Util
+	Local aSM0	  := FWLoadSM0() 
+	
 
 	If Len(aSM0) > 0
 
 		For nI := 1 To Len(aSM0)
 
-			If AllTrim(aSM0[nI][18]) == AllTrim(oJson["codigoEmpresa"])
+			If AllTrim(aSM0[nI][18]) == AllTrim(oJson["codigoEmpresa"])	 
 
-				oJSEmp["empresaCodigo"]      := aSM0[nI][1]   //aSM0[nI][1]:"99"
-				oJSEmp["empresaFilial"]      := aSM0[nI][2]   //aSM0[nI][2]:"01"
-				oJSEmp["empresaRazaoSocial"] := aSM0[nI][6]   //aSM0[nI][6]:"TESTE"
-				oJSEmp["empresaGrupoNome"]   := aSM0[nI][7]   //aSM0[nI][7]:"MATRIZ"
-				oJSEmp["empresaCnpj"]        := aSM0[nI][18]  //aSM0[nI][18]:"99949078000199"
+				oJSEmp["empresaCodigo"]      := ALLTRIM(aSM0[nI][1])   //aSM0[nI][1]:"99"
+				oJSEmp["empresaFilial"]      := ALLTRIM(aSM0[nI][2])   //aSM0[nI][2]:"01"
+				oJSEmp["empresaRazaoSocial"] := ALLTRIM(aSM0[nI][6])   //aSM0[nI][6]:"TESTE"
+				oJSEmp["empresaGrupoNome"]   := ALLTRIM(aSM0[nI][7])   //aSM0[nI][7]:"MATRIZ"
+				oJSEmp["empresaCnpj"]        := ALLTRIM(aSM0[nI][18])  //aSM0[nI][18]:"99949078000199"
 
 				Exit 
 
@@ -207,6 +216,7 @@ Method ParseFornecedor(oJson) Class TIntegracaoMotorAbastecimentoParse
     cQuery += "     ,A2_LOJA                      " + CRLF
     cQuery += "     ,A2_NOME                      " + CRLF
     cQuery += "     ,A2_CGC                       " + CRLF
+	cQuery += "     ,A2_COND                      " + CRLF
     cQuery += " FROM                              " + CRLF
 		cQuery += "  " + RetSqlName("SA2") + "        " + CRLF
     cQuery += " WHERE D_E_L_E_T_ = ''             " + CRLF
@@ -225,6 +235,7 @@ Method ParseFornecedor(oJson) Class TIntegracaoMotorAbastecimentoParse
     oJSFor["A2_LOJA"] := __TRZ->A2_LOJA
     oJSFor["A2_NOME"] := __TRZ->A2_NOME
     oJSFor["A2_CGC"]  := __TRZ->A2_CGC   
+	oJSFor["A2_COND"] := __TRZ->A2_COND  
   Else    
 
    // Criar Json de retorno 
@@ -235,12 +246,96 @@ Method ParseFornecedor(oJson) Class TIntegracaoMotorAbastecimentoParse
 Return oJSFor
 
 Method ParseCliete(oJson) Class TIntegracaoMotorAbastecimentoParse
-		Local oJSon      := JsonObject():New()
+	Local oJSon      := JsonObject():New()
 Return oJSon
 
 Method ParseProduto(oJson) Class TIntegracaoMotorAbastecimentoParse
-		Local oJSon      := JsonObject():New()
-Return oJSon
-
  
+    
+	Local aJSPro      := {}
+	Local nI          := 1
 
+	If Len(oJson["itens"]) > 0 
+
+		For nI := 1 To Len(oJson["itens"])
+
+			AADD(aJSPro,   JsonObject():New())				
+
+			If SB1->(dbSeek(FWxFilial("SB1")+oJson["itens"][nI]["produto"] ))  
+
+				aJSPro[nI]["produto"]    := SB1->B1_COD
+				aJSPro[nI]["descricao"]  := SB1->B1_DESC
+				aJSPro[nI]["quantidade"] := oJson["itens"][nI]["quantidade"]
+				aJSPro[nI]["preco"]      := oJson["itens"][nI]["preco"]
+				aJSPro[nI]["achou"]      := .T.
+
+			Else
+
+				aJSPro[nI]["produto"]    := oJson["itens"][nI]["produto"]
+				aJSPro[nI]["descricao"]  := ""
+				aJSPro[nI]["quantidade"] := 0
+				aJSPro[nI]["preco"]      := 0
+				aJSPro[nI]["achou"]      := .F.
+
+			EndIf
+
+		Next nI
+
+	EndIf     
+
+Return aJSPro
+
+Method MontaPCompra(oJson) Class TIntegracaoMotorAbastecimentoParse
+ 
+	Local aJSPC      := {}
+	Local oJSPC      := JsonObject():New()
+	Local cNumPC     := "000099" //GetNumSC7() //GetSXENum("SC7","C7_NUM")
+	Local cFil       := FWxFilial('SC7')
+	Local nI         := 1					
+
+	oJSPC["cab"] := JsonObject():New()
+
+	oJSPC["cab"]["C7_FILIAL"]  :=  cFil	
+	oJSPC["cab"]["C7_NUM"]     :=  cNumPC                        // Numero do Pedido				
+	oJSPC["cab"]["C7_EMISSAO"] :=  Date()                        // Data de Emissao 
+	oJSPC["cab"]["C7_CONTATO"] :=  CriaVar("C7_CONTATO",.F.)     // Contato
+	oJSPC["cab"]["C7_COND"]    :=  oJson["fornecedor"]["A2_COND"] // Condicao de Pagamento  - 001	- A VISTA    			  
+	oJSPC["cab"]["C7_FILENT"]  :=  cFil         	             // Filial de Entrega
+	oJSPC["cab"]["C7_FILCEN"]  :=  cFil	                         // Filial de Entrega
+	oJSPC["cab"]["C7_FRETE"]   :=  CriaVar("C7_FRETE",.F.)    	 // Frete
+	oJSPC["cab"]["C7_DESPESA"] :=  CriaVar("C7_DESPESA",.F.)	 // Despesa
+	oJSPC["cab"]["C7_SEGURO"]  :=  CriaVar("C7_SEGURO",.F.)	 	 // Seguro
+	oJSPC["cab"]["C7_MSG"]     :=  CriaVar("C7_MSG",.F.)	     // Mensagem
+	oJSPC["cab"]["C7_REAJUST"] :=  CriaVar("C7_REAJUST",.F.)     // Reajuste	
+
+	For nI := 1 To Len(oJson["itens"])
+
+		AADD(aJSPC,   JsonObject():New())	
+
+		aJSPC[nI]["achou"]      := .T.
+		aJSPC[nI]["C7_ITEM"]    := StrZero(nI, 4)
+		aJSPC[nI]["C7_PRODUTO"] := SB1->B1_COD				
+		aJSPC[nI]["C7_QUANT"]   := oJson["itens"][nI]["quantidade"]
+		aJSPC[nI]["C7_PRECO"]   := oJson["itens"][nI]["preco"] 
+		aJSPC[nI]["C7_TOTAL"]   := (oJson["itens"][nI]["quantidade"])*(oJson["itens"][nI]["preco"])		
+		aJSPC[nI]["C7_DESC"]    := CriaVar("C7_DESC",.F.)     //Desconto
+		aJSPC[nI]["C7_IPI"]     := CriaVar("C7_IPI",.F.)      //IPI
+		aJSPC[nI]["C7_IPIBRUT"] := ""                         //IPI bruto
+		aJSPC[nI]["C7_REAJUST"] := CriaVar("C7_REAJUST",.F.)  //REAJUSTE
+		aJSPC[nI]["C7_FRETE"]   := CriaVar("C7_FRETE",.F.)    //FRETE
+		aJSPC[nI]["C7_DATPRF"]  := oJson["dataEntrega"]       //Data de entrega
+		aJSPC[nI]["C7_LOCAL"]   := "01"	                   //LOCAL  OU ARMAZEM
+		aJSPC[nI]["C7_TPFRETE"] := CriaVar("C7_TPFRETE",.F.)  //TIPO FRETE
+		aJSPC[nI]["C7_OBS"]     := "COMPRA REALIZADA PELO MOTOR DE ABASTECIMENTO CITEL VIA WEBSERVICE"  //TIPO FRETE
+		aJSPC[nI]["C7_CONTA"]   := CriaVar("C7_CONTA",.F.)    //CONTA CONTABIL
+		aJSPC[nI]["C7_CC"]      := CriaVar("C7_CC",.F.)       //CENTRO DE CUSTO
+		aJSPC[nI]["C7_OP"]      := CriaVar("C7_OP",.F.)       //ORDEM DE PRODUCAO
+		aJSPC[nI]["C7_TIPO"]    := CriaVar("C7_TIPO",.F.)     //ORDEM DE PRODUCAO	 	 
+
+	Next nI
+	
+	oJSPC["itens"] := JsonObject():New()
+	oJSPC["itens"] := aJSPC
+   
+
+Return oJSPC

@@ -5,8 +5,8 @@ CLASS TIntegracaoMotorAbastecimentoDAO From LongClassName
     Data oJSon
 
     Method New() CONSTRUCTOR
-    Method ExecAutoPedidoCompra()
-    Method ExecAutoPedidoVenda()
+    Method ExecAutoPCompra(oJson)
+    Method ExecAutoPVenda(oJson)
     
 
 ENDCLASS
@@ -16,10 +16,10 @@ METHOD NEW() CLASS TIntegracaoMotorAbastecimentoDAO
 Return self
 
 
-Method ExecAutoPedidoCompra(oJson) Class TIntegracaoMotorAbastecimentoDAO
+Method ExecAutoPCompra(oJson) Class TIntegracaoMotorAbastecimentoDAO
 Return ::oJson
 
-Method ExecAutoPedidoVenda(oJson) Class TIntegracaoMotorAbastecimentoDAO
+Method ExecAutoPVenda(oJson) Class TIntegracaoMotorAbastecimentoDAO
 Return ::oJson
 
  
