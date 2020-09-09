@@ -23,7 +23,7 @@ Return self
 
 METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 
-	Local oIMADAO := TIntegracaoMotorAbastecimentoParse():New()
+	Local oIMADAO := TIntegracaoMotorAbastecimentoDAO():New()
 	Local oJSPC   := JsonObject():New() 
 	Local oJSRet  := JsonObject():New()
 	Local aError  := {}
@@ -141,7 +141,8 @@ METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 
 	EndIf
 
-  
+  	oJSRet["Status"] := 200
+	
 	If lError //EXECUTAR VERIFICAÇÃO DOS RETORNOS DOS JSON ANTES  DO EXECAUTO TRATAR ERROS COMO NA DESC		
 
 		oJSRet["Status"] := 400
@@ -149,10 +150,8 @@ METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 
 	Else
 		
-		oJSPC := ::MontaPCompra(oJSPC)
-		//oJSRet :=  oIMADAO:ExecAutoPedidoCompra(oJSPC)
-		oJSRet["Status"] := 200
-		oJSRet["pedidoCompra"] := oJSPC
+		oJSPC := ::MontaPCompra(oJSPC)		
+		oJSRet :=  oIMADAO:ExecAutoPCompra(oJSPC)		 
 
 	EndIf
 		
@@ -288,25 +287,27 @@ Return aJSPro
 Method MontaPCompra(oJson) Class TIntegracaoMotorAbastecimentoParse
  
 	Local aJSPC      := {}
-	Local oJSPC      := JsonObject():New()
-	Local cNumPC     := "000099" //GetNumSC7() //GetSXENum("SC7","C7_NUM")
+	Local oJSPC      := JsonObject():New()	
 	Local cFil       := FWxFilial('SC7')
 	Local nI         := 1					
 
-	oJSPC["cab"] := JsonObject():New()
-
-	oJSPC["cab"]["C7_FILIAL"]  :=  cFil	
-	oJSPC["cab"]["C7_NUM"]     :=  cNumPC                        // Numero do Pedido				
-	oJSPC["cab"]["C7_EMISSAO"] :=  Date()                        // Data de Emissao 
-	oJSPC["cab"]["C7_CONTATO"] :=  CriaVar("C7_CONTATO",.F.)     // Contato
-	oJSPC["cab"]["C7_COND"]    :=  oJson["fornecedor"]["A2_COND"] // Condicao de Pagamento  - 001	- A VISTA    			  
-	oJSPC["cab"]["C7_FILENT"]  :=  cFil         	             // Filial de Entrega
-	oJSPC["cab"]["C7_FILCEN"]  :=  cFil	                         // Filial de Entrega
-	oJSPC["cab"]["C7_FRETE"]   :=  CriaVar("C7_FRETE",.F.)    	 // Frete
-	oJSPC["cab"]["C7_DESPESA"] :=  CriaVar("C7_DESPESA",.F.)	 // Despesa
-	oJSPC["cab"]["C7_SEGURO"]  :=  CriaVar("C7_SEGURO",.F.)	 	 // Seguro
-	oJSPC["cab"]["C7_MSG"]     :=  CriaVar("C7_MSG",.F.)	     // Mensagem
-	oJSPC["cab"]["C7_REAJUST"] :=  CriaVar("C7_REAJUST",.F.)     // Reajuste	
+	oJSPC["pedidoCompra"]                      := JsonObject():New()
+	oJSPC["pedidoCompra"]["cab"]               := JsonObject():New()
+	oJSPC["pedidoCompra"]["cab"]["C7_FILIAL"]  :=  cFil	
+	oJSPC["pedidoCompra"]["cab"]["C7_NUM"]     :=  ""                                // Numero do Pedido				
+	oJSPC["pedidoCompra"]["cab"]["C7_EMISSAO"] :=  Date()                            // Data de Emissao 
+	oJSPC["pedidoCompra"]["cab"]["C7_CONTATO"] :=  ""                                // Contato 
+	oJSPC["pedidoCompra"]["cab"]["C7_COND"]    :=  oJson["fornecedor"]["A2_COND"]    // Condicao de Pagamento
+	oJSPC["pedidoCompra"]["cab"]["C7_FORNECE"] :=  oJson["fornecedor"]["A2_COD"]     // Fornecedor 	codigo		  
+	oJSPC["pedidoCompra"]["cab"]["C7_LOJA"]    :=  oJson["fornecedor"]["A2_LOJA"]    // Loja do Fornecedor    
+	oJSPC["pedidoCompra"]["cab"]["C7_FILENT"]  :=  cFil         	                 // Filial de Entrega
+	oJSPC["pedidoCompra"]["cab"]["C7_FILCEN"]  :=  cFil	                             // Filial de Entrega
+	oJSPC["pedidoCompra"]["cab"]["C7_FRETE"]   :=  0                           	     // Frete
+	oJSPC["pedidoCompra"]["cab"]["C7_DESPESA"] :=  0                           	     // Despesa
+	oJSPC["pedidoCompra"]["cab"]["C7_SEGURO"]  :=  0                           	     // Seguro
+	oJSPC["pedidoCompra"]["cab"]["C7_MSG"]     :=  "COMPRA REALIZADA PELO MOTOR DE ABASTECIMENTO CITEL VIA WEBSERVICE" // Mensagem
+	oJSPC["pedidoCompra"]["cab"]["C7_REAJUST"] :=  0                                 // Reajuste	
+	oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"] :=  oJson["numeroPedido"]             // ID pedido da CITEL 
 
 	For nI := 1 To Len(oJson["itens"])
 
@@ -318,24 +319,24 @@ Method MontaPCompra(oJson) Class TIntegracaoMotorAbastecimentoParse
 		aJSPC[nI]["C7_QUANT"]   := oJson["itens"][nI]["quantidade"]
 		aJSPC[nI]["C7_PRECO"]   := oJson["itens"][nI]["preco"] 
 		aJSPC[nI]["C7_TOTAL"]   := (oJson["itens"][nI]["quantidade"])*(oJson["itens"][nI]["preco"])		
-		aJSPC[nI]["C7_DESC"]    := CriaVar("C7_DESC",.F.)     //Desconto
-		aJSPC[nI]["C7_IPI"]     := CriaVar("C7_IPI",.F.)      //IPI
+		aJSPC[nI]["C7_DESC"]    := 0                          //Desconto
+		aJSPC[nI]["C7_IPI"]     := 0                          //IPI
 		aJSPC[nI]["C7_IPIBRUT"] := ""                         //IPI bruto
-		aJSPC[nI]["C7_REAJUST"] := CriaVar("C7_REAJUST",.F.)  //REAJUSTE
-		aJSPC[nI]["C7_FRETE"]   := CriaVar("C7_FRETE",.F.)    //FRETE
+		aJSPC[nI]["C7_REAJUST"] := 0                          //REAJUSTE
+		aJSPC[nI]["C7_FRETE"]   := 0                          //FRETE
 		aJSPC[nI]["C7_DATPRF"]  := oJson["dataEntrega"]       //Data de entrega
-		aJSPC[nI]["C7_LOCAL"]   := "01"	                   //LOCAL  OU ARMAZEM
-		aJSPC[nI]["C7_TPFRETE"] := CriaVar("C7_TPFRETE",.F.)  //TIPO FRETE
-		aJSPC[nI]["C7_OBS"]     := "COMPRA REALIZADA PELO MOTOR DE ABASTECIMENTO CITEL VIA WEBSERVICE"  //TIPO FRETE
-		aJSPC[nI]["C7_CONTA"]   := CriaVar("C7_CONTA",.F.)    //CONTA CONTABIL
-		aJSPC[nI]["C7_CC"]      := CriaVar("C7_CC",.F.)       //CENTRO DE CUSTO
-		aJSPC[nI]["C7_OP"]      := CriaVar("C7_OP",.F.)       //ORDEM DE PRODUCAO
-		aJSPC[nI]["C7_TIPO"]    := CriaVar("C7_TIPO",.F.)     //ORDEM DE PRODUCAO	 	 
+		aJSPC[nI]["C7_LOCAL"]   := "01"	                      //LOCAL  OU ARMAZEM
+		aJSPC[nI]["C7_TPFRETE"] := ""                         //TIPO FRETE
+		aJSPC[nI]["C7_OBS"]     := "COMPRA REALIZADA PELO MOTOR DE ABASTECIMENTO CITEL VIA WEBSERVICE" // Mensagem
+		aJSPC[nI]["C7_CONTA"]   := ""                         //CONTA CONTABIL
+		aJSPC[nI]["C7_CC"]      := ""                         //CENTRO DE CUSTO
+		aJSPC[nI]["C7_OP"]      := ""                         //ORDEM DE PRODUCAO
+		aJSPC[nI]["C7_TIPO"]    := ""                         //TIPO  DE PRODUCAO	 	 
 
 	Next nI
 	
-	oJSPC["itens"] := JsonObject():New()
-	oJSPC["itens"] := aJSPC
+	oJSPC["pedidoCompra"]["itens"] := JsonObject():New()
+	oJSPC["pedidoCompra"]["itens"] := aJSPC
    
 
 Return oJSPC
