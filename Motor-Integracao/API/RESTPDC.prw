@@ -13,7 +13,7 @@ WSMETHOD POST WSSERVICE pedidocompra
   Local oJson    := JsonObject():New() 
   Local oIMAbast := TIntegracaoMotorAbastecimentoParse():New()
   
-  self:SetContentType("application/json")   
+  ::SetContentType("application/json")   
 
   //|Recupera os dados do body |  
   cBody := ::GetContent()
@@ -21,11 +21,12 @@ WSMETHOD POST WSSERVICE pedidocompra
   oJson:FromJson(cBody)  // converte para JsonObject 
 
 
-  oJson := oIMAbast:PedidoCompra(oJson)   
-  self:SetStatus(oJson["Status"])
+  oJson := FromJson(oIMAbast:PedidoCompra(oJson))   
+  ::SetStatus(oJson["Status"])
   oJson:DelName("Status") 
-  self:SetResponse(oJson:ToJson())
-   
+  ::SetResponse(oJson:ToJson())
+
+  FreeObj(oJson)   
 
 Return .T.
  

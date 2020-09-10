@@ -50,94 +50,67 @@ METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 
 	If 	lError == .F.		
 
-		//Monta ambiente
-		If (StartJob( "U_MontaEnv" , GetEnvServer(), .T. , oJSPC:tojson())) == .T. //https://tdn.totvs.com/display/tec/StartJob
-		
-			//Fornecedor
-			oJSPC["fornecedor"] := ::ParseFornecedor(oJson)
-			If Empty(oJSPC["fornecedor"]["A2_COD"])
-				lError := .T.
-				nI++
-				AADD(aError,   JsonObject():New())
-				aError[nI]["field"]          := "fornecedor"
-				aError[nI]["rejectedValue"]  := oJson["fornecedor"]
-				aError[nI]["defaultMessage"] := EncodeUtf8("O CNPJ do fornecedor informado não foi locaizado.")
-			EndIf
-
-
-			//oJSPC["codigoComprador"] := ::ParseFornecedor(oJson)
-			//If Empty(oJSPC["codigoComprador"])
-			//	lError := .T.
-			//	nI++
-			//	AADD(aError,   JsonObject():New())
-			//	aError[nI]["field"]          := "codigoComprador"
-			//	aError[nI]["rejectedValue"]  := oJson["codigoComprador"]
-			//	aError[nI]["defaultMessage"] := EncodeUtf8("O código do comprador informado não foi locaizado.")
-			//EndIf
-
-
-			//Data de entrega
-			oJSPC["dataEntrega"] := StrTran(oJson["dataEntrega"],"-","")
-			If Empty(oJSPC["dataEntrega"])
-				lError := .T.
-				nI++
-				AADD(aError,   JsonObject():New())
-				aError[nI]["field"]          := "dataEntrega"
-				aError[nI]["rejectedValue"]  := oJson["dataEntrega"]
-				aError[nI]["defaultMessage"] := EncodeUtf8("A data de entrega não foi informada.")
-			EndIf
-
-			//Data de faturamento	
-			oJSPC["dataFaturamento"] := StrTran(oJson["dataEntrega"],"-","")
-			If Empty(oJSPC["dataEntrega"])
-				lError := .T.
-				nI++
-				AADD(aError,   JsonObject():New())
-				aError[nI]["field"]          := "dataFaturamento"
-				aError[nI]["rejectedValue"]  := oJson["dataFaturamento"]
-				aError[nI]["defaultMessage"] := EncodeUtf8("A data do Faturamento não foi informada corretamente.")
-			EndIf	
-
-			// Pedido de compra da CITEL
-			oJSPC["numeroPedido"] := oJson["numeroPedido"] // CRIAR campo na C7_YIDCITE
-			If Empty(oJSPC["numeroPedido"])
-				lError := .T.
-				nI++
-				AADD(aError,   JsonObject():New())
-				aError[nI]["field"]          := "numeroPedido"
-				aError[nI]["rejectedValue"]  := oJson["numeroPedido"]
-				aError[nI]["defaultMessage"] := EncodeUtf8("O numero do Pedido CITEL não foi informada corretamente.")
-			EndIf
-	
-
-			//Produtos
-			oJSPC["itens"]      := ::ParseProduto(oJson)						
-			For nW := 1 To Len(oJSPC["itens"]) 
-
-				If oJSPC["itens"][nW]["achou"] == .F.
-
-					lError := .T.
-					nI++
-					AADD(aError,   JsonObject():New())
-					aError[nI]["field"]          := "itens["+cValToChar(nW)+"].produto"
-					aError[nI]["rejectedValue"]  := oJSPC["itens"][nW]["produto"]
-					aError[nI]["defaultMessage"] := EncodeUtf8("O código do produto informado não foi encontrado")	
-
-				EndIf 
-
-			Next nI
-
-
-		Else // ERRO POR NAO ACHAR A FILIAL PELO CNPJ DA EMPRESA INFORMADO
-
+		//Fornecedor
+		oJSPC["fornecedor"] := ::ParseFornecedor(oJson)
+		If Empty(oJSPC["fornecedor"]["A2_COD"])
 			lError := .T.
 			nI++
 			AADD(aError,   JsonObject():New())
-			aError[nI]["field"]          := "codigoEmpresa"
-			aError[nI]["rejectedValue"]  := oJson["codigoEmpresa"]
-			aError[nI]["defaultMessage"] := EncodeUtf8("Erro ao montar ambiente para o CNPJ informado. Favor entrar em contatdo com o administrador PROTHEUS.")
+			aError[nI]["field"]          := "fornecedor"
+			aError[nI]["rejectedValue"]  := oJson["fornecedor"]
+			aError[nI]["defaultMessage"] := EncodeUtf8("O CNPJ do fornecedor informado não foi locaizado.")
+		EndIf
 
-	  	EndIf
+		//Data de entrega
+		oJSPC["dataEntrega"] := StrTran(oJson["dataEntrega"],"-","")
+		If Empty(oJSPC["dataEntrega"])
+			lError := .T.
+			nI++
+			AADD(aError,   JsonObject():New())
+			aError[nI]["field"]          := "dataEntrega"
+			aError[nI]["rejectedValue"]  := oJson["dataEntrega"]
+			aError[nI]["defaultMessage"] := EncodeUtf8("A data de entrega não foi informada.")
+		EndIf
+
+		//Data de faturamento	
+		oJSPC["dataFaturamento"] := StrTran(oJson["dataEntrega"],"-","")
+		If Empty(oJSPC["dataEntrega"])
+			lError := .T.
+			nI++
+			AADD(aError,   JsonObject():New())
+			aError[nI]["field"]          := "dataFaturamento"
+			aError[nI]["rejectedValue"]  := oJson["dataFaturamento"]
+			aError[nI]["defaultMessage"] := EncodeUtf8("A data do Faturamento não foi informada corretamente.")
+		EndIf	
+
+		// Pedido de compra da CITEL
+		oJSPC["numeroPedido"] := oJson["numeroPedido"] // CRIAR campo na C7_YIDCITE
+		If Empty(oJSPC["numeroPedido"])
+			lError := .T.
+			nI++
+			AADD(aError,   JsonObject():New())
+			aError[nI]["field"]          := "numeroPedido"
+			aError[nI]["rejectedValue"]  := oJson["numeroPedido"]
+			aError[nI]["defaultMessage"] := EncodeUtf8("O numero do Pedido CITEL não foi informada corretamente.")
+		EndIf
+	
+
+		//Produtos
+		oJSPC["itens"]      := ::ParseProduto(oJson)						
+		For nW := 1 To Len(oJSPC["itens"]) 
+
+			If oJSPC["itens"][nW]["achou"] == .F.
+
+				lError := .T.
+				nI++
+				AADD(aError,   JsonObject():New())
+				aError[nI]["field"]          := "itens["+cValToChar(nW)+"].produto"
+				aError[nI]["rejectedValue"]  := oJSPC["itens"][nW]["produto"]
+				aError[nI]["defaultMessage"] := EncodeUtf8("O código do produto informado não foi encontrado")	
+
+			EndIf 
+
+		Next nI
 
 	EndIf
 
@@ -315,7 +288,7 @@ Method MontaPCompra(oJson) Class TIntegracaoMotorAbastecimentoParse
 
 		aJSPC[nI]["achou"]      := .T.
 		aJSPC[nI]["C7_ITEM"]    := StrZero(nI, 4)
-		aJSPC[nI]["C7_PRODUTO"] := SB1->B1_COD				
+		aJSPC[nI]["C7_PRODUTO"] := oJson["itens"][nI]["produto"]
 		aJSPC[nI]["C7_QUANT"]   := oJson["itens"][nI]["quantidade"]
 		aJSPC[nI]["C7_PRECO"]   := oJson["itens"][nI]["preco"] 
 		aJSPC[nI]["C7_TOTAL"]   := (oJson["itens"][nI]["quantidade"])*(oJson["itens"][nI]["preco"])		
