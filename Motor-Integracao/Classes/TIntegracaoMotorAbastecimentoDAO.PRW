@@ -38,6 +38,7 @@ Method ExecAutoPCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
     aAdd(aCab,  {"C7_LOJA"	    ,oJSPC["pedidoCompra"]["cab"]["C7_LOJA"]     ,NIL}) // Loja do Fornecedor
     aAdd(aCab,  {"C7_COND"	    ,oJSPC["pedidoCompra"]["cab"]["C7_COND"]     ,NIL}) // Condicao de Pagamento   
     aAdd(aCab,  {"C7_FILENT"	,oJSPC["pedidoCompra"]["cab"]["C7_FILENT"]   ,NIL}) // Filial de Entrega
+    aAdd(aCab,  {"C7_CONAPRO "  ,'L' 		                                 ,Nil})  // Pedido já caindo liberado
     aAdd(aCab,	{"C7_YIDCITE"	,oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]	 ,NIL}) // ID CITEL
     
  
@@ -54,7 +55,9 @@ Method ExecAutoPCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
             aAdd(aItem, {"C7_QTDSOL"	,oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]             ,NIL})
             aAdd(aItem, {"C7_DATPRF"	,StoD(oJSPC["pedidoCompra"]["itens"][nI]["C7_DATPRF"])      ,NIL})  //Data de entrega
             aAdd(aItem, {"C7_OPER"	    ,'01'				                                     	,Nil})
-            aAdd(aItem, {"C7_YTIPCMP"   ,'OT'					                                    ,Nil})  
+            aAdd(aItem, {"C7_YTIPCMP"   ,'OT'					                                    ,Nil})        
+            aAdd(aItem,  {"C7_CONAPRO "  ,'L' 		                                 ,Nil})  // Pedido já caindo liberado      
+            aAdd(aItem,	{"C7_YIDCITE"	,oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]	                ,NIL}) // ID CITEL
             
             aAdd(aIClone, AClone(aItem))
 

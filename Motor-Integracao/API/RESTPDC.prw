@@ -21,12 +21,12 @@ WSMETHOD POST WSSERVICE pedidocompra
   oJson:FromJson(cBody)  // converte para JsonObject 
 
 
-  oJson := FromJson(oIMAbast:PedidoCompra(oJson))   
-  ::SetStatus(oJson["Status"])
-  oJson:DelName("Status") 
+  oJson := oIMAbast:PedidoCompra(oJson)
+  ::SetStatus(oJson["Status"])  
   ::SetResponse(oJson:ToJson())
 
   FreeObj(oJson)   
 
 Return .T.
+ 
  
