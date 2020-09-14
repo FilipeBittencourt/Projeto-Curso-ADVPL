@@ -7,6 +7,7 @@ CLASS TIntegracaoMotorAbastecimentoDAO From LongClassName
     Method New() CONSTRUCTOR
     Method ExecAutoPCompra(oJson)
     Method ExecAutoPVenda(oJson)
+    Method EliminaResiduoPC(oJson)
     
 
 ENDCLASS
@@ -38,7 +39,7 @@ Method ExecAutoPCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
     aAdd(aCab,  {"C7_LOJA"	    ,oJSPC["pedidoCompra"]["cab"]["C7_LOJA"]     ,NIL}) // Loja do Fornecedor
     aAdd(aCab,  {"C7_COND"	    ,oJSPC["pedidoCompra"]["cab"]["C7_COND"]     ,NIL}) // Condicao de Pagamento   
     aAdd(aCab,  {"C7_FILENT"	,oJSPC["pedidoCompra"]["cab"]["C7_FILENT"]   ,NIL}) // Filial de Entrega
-    aAdd(aCab,  {"C7_CONAPRO "  ,'L' 		                                 ,Nil})  // Pedido já caindo liberado
+    aAdd(aCab,  {"C7_CONAPRO"  ,'L' 		                                 ,Nil})  // Pedido já caindo liberado
     aAdd(aCab,	{"C7_YIDCITE"	,oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]	 ,NIL}) // ID CITEL
     
  
@@ -47,30 +48,49 @@ Method ExecAutoPCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
         For nI := 1 To  Len(oJSPC["pedidoCompra"]["itens"])    
              
             aItem := {}
-
-            aAdd(aItem, {"C7_PRODUTO"   ,AllTrim(oJSPC["pedidoCompra"]["itens"][nI]["C7_PRODUTO"])  ,NIL})	
-            aAdd(aItem, {"C7_QUANT"	    ,oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]             ,NIL})
-            aAdd(aItem, {"C7_LOCAL"	    ,"01"                       	                            ,Nil})	
-            aAdd(aItem, {"C7_PRECO"	    ,oJSPC["pedidoCompra"]["itens"][nI]["C7_PRECO"]             ,NIL})            
-            aAdd(aItem, {"C7_QTDSOL"	,oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]             ,NIL})
-            aAdd(aItem, {"C7_DATPRF"	,StoD(oJSPC["pedidoCompra"]["itens"][nI]["C7_DATPRF"])      ,NIL})  //Data de entrega
-            aAdd(aItem, {"C7_OPER"	    ,'01'				                                     	,Nil})
-            aAdd(aItem, {"C7_YTIPCMP"   ,'OT'					                                    ,Nil})        
-            aAdd(aItem,  {"C7_CONAPRO "  ,'L' 		                                 ,Nil})  // Pedido já caindo liberado      
-            aAdd(aItem,	{"C7_YIDCITE"	,oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]	                ,NIL}) // ID CITEL
-            
+            aAdd(aItem, {"C7_PRODUTO"     ,AllTrim(oJSPC["pedidoCompra"]["itens"][nI]["C7_PRODUTO"])  ,NIL})	
+            aAdd(aItem, {"C7_QUANT"	      ,oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]             ,NIL})
+            aAdd(aItem, {"C7_LOCAL"	      ,"01"                       	                              ,Nil})	
+            aAdd(aItem, {"C7_PRECO"	      ,oJSPC["pedidoCompra"]["itens"][nI]["C7_PRECO"]             ,NIL})            
+            aAdd(aItem, {"C7_QTDSOL"	  ,oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]             ,NIL})
+            aAdd(aItem, {"C7_DATPRF"	  ,StoD(oJSPC["pedidoCompra"]["itens"][nI]["C7_DATPRF"])      ,NIL})  //Data de entrega
+            aAdd(aItem, {"C7_OPER"	      ,'01'				                                     	  ,Nil})
+            aAdd(aItem, {"C7_YTIPCMP"     ,'OT'					                                      ,Nil})        
+            aAdd(aItem, {"C7_CONAPRO"     ,'L' 		                                                  ,Nil})  // Pedido já caindo liberado      
+            aAdd(aItem, {"C7_YQTDLIB"     ,oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]		      ,Nil})  // Pedido já caindo liberado              
+            aAdd(aItem,	{"C7_YIDCITE"	  ,oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]	              ,NIL})  // ID CITEL            
             aAdd(aIClone, AClone(aItem))
 
         Next nI  
                        
         //SetFunName('RESTPC')
-        MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,aIClone,3,.F.) // 3 - Inclusao, 4 - Alteração, 5 - Exclusão 
+        MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,aIClone,3,.F.) // 3 - Inclusao, 4 - Alteração, 5 - Exclusão         
 
         If !lMsErroAuto
 
             ConOut("Incluido com sucesso o PEDIDO: " + cNumPC + "")
             oJSRet["Status"]           := 200
-            oJSRet["numeroDocumento"]  := cNumPC                       
+            oJSRet["numeroDocumento"]  := cNumPC  
+
+            // Logica abaixo para ja alterar os PC para Liberado
+            SC7->(DbSetOrder(1)) //C7_FILIAL, C7_NUM, C7_ITEM, C7_SEQUEN, R_E_C_N_O_, D_E_L_E_T_
+
+            If SC7->(dbSeek(FWxFilial("SC7")+cNumPC))  
+
+                While SC7->(!Eof()) .AND. FWxFilial("SC7")+cNumPC == SC7->C7_FILIAL+ SC7->C7_NUM               
+
+                    SC7->(RecLock('SC7', .F.))
+                        SC7->C7_CONAPRO := 'L'
+                    SC7->(MsUnlock())
+
+                    SC7->(DbSkip())
+
+                EndDo   
+
+            EndIf 
+
+             
+
 
         Else     
                 	
@@ -97,6 +117,7 @@ Method ExecAutoPCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
 
 
 Return oJSRet
+
 
 Method ExecAutoPVenda(oJson) Class TIntegracaoMotorAbastecimentoDAO
 Return ::oJson

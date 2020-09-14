@@ -1,15 +1,14 @@
 #include "protheus.ch"
 
-
-/*/{Protheus.doc} MT120ALT
-PE que Valida o registro do PC e retorna andamento do processo. Apos o usuario clicar em alterar o registro posicionado
+/*/{Protheus.doc} MT235G2
+PE Antes de processar a eliminação de cada Pedido de Compra, por residuo
 @author Filipe - Facile
 @programa inicial em 14/09/2020
-@Fonte/Link://https://tdn.totvs.com/display/public/PROT/MT120ALT+-+Valida+o+registro+do+PC+e+retorna+andamento+do+processo
+@Fonte/Link: https://tdn.totvs.com/display/public/PROT/MT235G2
 @return boolean
 */
 
-User Function MT120ALT()
+User Function MT235G2()
 
 	Local lExecuta := .T.	
     Local lCitel   :=  SuperGetMv("MV_YCITEL1",.F.,.F.)  //Parametro CITEL ON/OFF inserir, edicao, exclusao  do pedido de compra gerados pelo motor de abastecimento via WS 
@@ -17,7 +16,7 @@ User Function MT120ALT()
 	//INICIO - Condição para pedidos feitos pelo motor de abastecimento CITEL em TELA    
     If !IsBlind() .AND. lCitel
 		If !Empty(SC7->C7_YIDCITE)
-            FwAlertWarning('Não é possivel modificar pedido de compra criado pelo motor de abastecimento CITEL.','ATENÇÃO - MT120ALT')
+            FwAlertWarning('Não é possivel modificar pedido de compra criado pelo motor de abastecimento CITEL.','ATENÇÃO - MT235G2')
             return lExecuta := .F.
         Endif
     Endif
