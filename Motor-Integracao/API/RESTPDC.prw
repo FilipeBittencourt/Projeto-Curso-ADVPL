@@ -12,6 +12,7 @@ WSMETHOD POST WSSERVICE pedidocompra
   Local cBody    := "" 
   Local oJson    := JsonObject():New() 
   Local oIMAbast := TIntegracaoMotorAbastecimentoParse():New()
+  Local oIMADAO := TIntegracaoMotorAbastecimentoDAO():New()
   
   ::SetContentType("application/json")   
 
@@ -20,7 +21,7 @@ WSMETHOD POST WSSERVICE pedidocompra
   conOut('pedidocompra - POST METHOD')  
   oJson:FromJson(cBody)  // converte para JsonObject 
 
-
+  //oIMADAO:EliminaResiduoPC(oJson)
   oJson := oIMAbast:PedidoCompra(oJson)
   ::SetStatus(oJson["Status"])  
   ::SetResponse(oJson:ToJson())

@@ -262,24 +262,17 @@ Method MontaPCompra(oJson) Class TIntegracaoMotorAbastecimentoParse
 	Local aJSPC      := {}
 	Local oJSPC      := JsonObject():New()	
 	Local cFil       := FWxFilial('SC7')
-	Local nI         := 1					
-
+	Local nI         := 1	
+	  
+ 
 	oJSPC["pedidoCompra"]                      := JsonObject():New()
 	oJSPC["pedidoCompra"]["cab"]               := JsonObject():New()
-	oJSPC["pedidoCompra"]["cab"]["C7_FILIAL"]  :=  cFil	
-	oJSPC["pedidoCompra"]["cab"]["C7_NUM"]     :=  ""                                // Numero do Pedido				
-	oJSPC["pedidoCompra"]["cab"]["C7_EMISSAO"] :=  Date()                            // Data de Emissao 
-	oJSPC["pedidoCompra"]["cab"]["C7_CONTATO"] :=  ""                                // Contato 
-	oJSPC["pedidoCompra"]["cab"]["C7_COND"]    :=  oJson["fornecedor"]["A2_COND"]    // Condicao de Pagamento
+	oJSPC["pedidoCompra"]["cab"]["C7_EMISSAO"] :=  dDataBase                         // Data de Emissao 
 	oJSPC["pedidoCompra"]["cab"]["C7_FORNECE"] :=  oJson["fornecedor"]["A2_COD"]     // Fornecedor 	codigo		  
-	oJSPC["pedidoCompra"]["cab"]["C7_LOJA"]    :=  oJson["fornecedor"]["A2_LOJA"]    // Loja do Fornecedor    
+	oJSPC["pedidoCompra"]["cab"]["C7_LOJA"]    :=  oJson["fornecedor"]["A2_LOJA"]    // Loja do Fornecedor  
+	oJSPC["pedidoCompra"]["cab"]["C7_COND"]    :=  oJson["fornecedor"]["A2_COND"]    // Condicao de Pagamento
 	oJSPC["pedidoCompra"]["cab"]["C7_FILENT"]  :=  cFil         	                 // Filial de Entrega
-	oJSPC["pedidoCompra"]["cab"]["C7_FILCEN"]  :=  cFil	                             // Filial de Entrega
-	oJSPC["pedidoCompra"]["cab"]["C7_FRETE"]   :=  0                           	     // Frete
-	oJSPC["pedidoCompra"]["cab"]["C7_DESPESA"] :=  0                           	     // Despesa
-	oJSPC["pedidoCompra"]["cab"]["C7_SEGURO"]  :=  0                           	     // Seguro
-	oJSPC["pedidoCompra"]["cab"]["C7_MSG"]     :=  "COMPRA REALIZADA PELO MOTOR DE ABASTECIMENTO CITEL VIA WEBSERVICE" // Mensagem
-	oJSPC["pedidoCompra"]["cab"]["C7_REAJUST"] :=  0                                 // Reajuste	
+	oJSPC["pedidoCompra"]["cab"]["C7_FILCEN"]  :=  cFil	                             // Filial de Entrega 	
 	oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"] :=  oJson["numeroPedido"]             // ID pedido da CITEL 
 
 	For nI := 1 To Len(oJson["itens"])
@@ -287,24 +280,17 @@ Method MontaPCompra(oJson) Class TIntegracaoMotorAbastecimentoParse
 		AADD(aJSPC,   JsonObject():New())	
 
 		aJSPC[nI]["achou"]      := .T.
-		aJSPC[nI]["C7_ITEM"]    := StrZero(nI, 4)
+		//aJSPC[nI]["C7_ITEM"]    := StrZero(nI, 4)
 		aJSPC[nI]["C7_PRODUTO"] := oJson["itens"][nI]["produto"]
 		aJSPC[nI]["C7_QUANT"]   := oJson["itens"][nI]["quantidade"]
+		aJSPC[nI]["C7_LOCAL"]   := "01"
 		aJSPC[nI]["C7_PRECO"]   := oJson["itens"][nI]["preco"] 
-		aJSPC[nI]["C7_TOTAL"]   := (oJson["itens"][nI]["quantidade"])*(oJson["itens"][nI]["preco"])		
-		aJSPC[nI]["C7_DESC"]    := 0                          //Desconto
-		aJSPC[nI]["C7_IPI"]     := 0                          //IPI
-		aJSPC[nI]["C7_IPIBRUT"] := ""                         //IPI bruto
-		aJSPC[nI]["C7_REAJUST"] := 0                          //REAJUSTE
-		aJSPC[nI]["C7_FRETE"]   := 0                          //FRETE
-		aJSPC[nI]["C7_DATPRF"]  := oJson["dataEntrega"]       //Data de entrega
-		aJSPC[nI]["C7_LOCAL"]   := "01"	                      //LOCAL  OU ARMAZEM
-		aJSPC[nI]["C7_TPFRETE"] := ""                         //TIPO FRETE
-		aJSPC[nI]["C7_OBS"]     := "COMPRA REALIZADA PELO MOTOR DE ABASTECIMENTO CITEL VIA WEBSERVICE" // Mensagem
-		aJSPC[nI]["C7_CONTA"]   := ""                         //CONTA CONTABIL
-		aJSPC[nI]["C7_CC"]      := ""                         //CENTRO DE CUSTO
-		aJSPC[nI]["C7_OP"]      := ""                         //ORDEM DE PRODUCAO
-		aJSPC[nI]["C7_TIPO"]    := ""                         //TIPO  DE PRODUCAO	 	 
+		aJSPC[nI]["C7_QTDSOL"]  := oJson["itens"][nI]["quantidade"]
+		aJSPC[nI]["C7_DATPRF"]  := oJson["dataEntrega"] 	
+		aJSPC[nI]["C7_OPER"]    := "01"	                      
+		aJSPC[nI]["C7_YTIPCMP"] := "OT"                       
+		aJSPC[nI]["C7_CONAPRO"] := "L"   
+		aJSPC[nI]["C7_YIDCITE"] :=  oJson["numeroPedido"]             // ID pedido da CITEL 
 
 	Next nI
 	
