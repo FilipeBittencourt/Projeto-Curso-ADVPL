@@ -8,7 +8,9 @@ CLASS TIntegracaoMotorAbastecimentoParse From LongClassName
     Method New() CONSTRUCTOR
     Method PedidoCompra(oJson) 
     Method PedidoVenda(oJson) 	
-    Method ParseEmpresa(oJson) 
+    Method BaixaTotalPC(oJson)
+
+	Method ParseEmpresa(oJson)
     Method ParseFornecedor(oJson) 
     Method ParseCliete(oJson) 
     Method ParseProduto(oJson)
@@ -99,14 +101,14 @@ METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 		oJSPC["itens"]      := ::ParseProduto(oJson)						
 		For nW := 1 To Len(oJSPC["itens"]) 
 
-			If oJSPC["itens"][nW]["achou"] == .F.
+			If !Empty(oJSPC["itens"][nW]["erro"])
 
 				lError := .T.
 				nI++
 				AADD(aError,   JsonObject():New())
 				aError[nI]["field"]          := "itens["+cValToChar(nW)+"].produto"
 				aError[nI]["rejectedValue"]  := oJSPC["itens"][nW]["produto"]
-				aError[nI]["defaultMessage"] := EncodeUtf8("O código do produto informado não foi encontrado")	
+				aError[nI]["defaultMessage"] := EncodeUtf8(oJSPC["itens"][nW]["erro"])	
 
 			EndIf 
 
@@ -123,25 +125,15 @@ METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 
 	Else
 		
-		oJSPC := ::MontaPCompra(oJSPC)		
-		oJSRet :=  oIMADAO:ExecAutoPCompra(oJSPC)		 
+		oJSPC := ::MontaPCompra(oJSPC)	
+		oJSRet["ok"] := "ok"	
+		//oJSRet :=  oIMADAO:ExecAutoPCompra(oJSPC)		 
 
 	EndIf
 		
     
 Return oJSRet
-
-// Função para montar o ambiente
-User Function MontaEnv(cJSonTxt) 
-
-	Local oJSEnv := JsonObject():New()
-	Local lRet   := .F.
-	oJSEnv:FromJson(cJSonTxt)	  
-	RpcSetType( 3 )	
-	lRet := RPCSetEnv( oJSEnv["empresa"]["empresaCodigo"], oJSEnv["empresa"]["empresaFilial"], NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"}) 
-
-Return lRet
- 
+  
 Method PedidoVenda(oJson) Class TIntegracaoMotorAbastecimentoParse
 	Local oJSon      := JsonObject():New()
 Return oJSon
@@ -223,35 +215,91 @@ Return oJSon
 
 Method ParseProduto(oJson) Class TIntegracaoMotorAbastecimentoParse
  
-    
-	Local aJSPro      := {}
-	Local nI          := 1
+    Local aDuplic	:= {}
+	Local aJSPro   := {}
+	Local nI       := 1
+	Local nW       := 1
+	Local nDupItem := 0
+	Local lErro    := .F.  	    
 
 	If Len(oJson["itens"]) > 0 
 
+		// valida itens repetidos no array		
 		For nI := 1 To Len(oJson["itens"])
 
-			AADD(aJSPro,   JsonObject():New())				
+			nDupItem := aScanX( oJson["itens"], { |x,y| x["produto"] == oJson["itens"][nI]["produto"] .And. y != nI } )
+			
+			if nDupItem > 0
 
-			If SB1->(dbSeek(FWxFilial("SB1")+oJson["itens"][nI]["produto"] ))  
+				AADD(aJSPro,   JsonObject():New())	
+				aJSPro[Len(aJSPro)]["produto"]    := oJson["itens"][nI]["produto"]
+				aJSPro[Len(aJSPro)]["descricao"]  := ""
+				aJSPro[Len(aJSPro)]["quantidade"] := 0
+				aJSPro[Len(aJSPro)]["preco"]      := 0
+				aJSPro[Len(aJSPro)]["erro"]       := "O Item está duplicado, favor remover."				
+				lErro    := .T.
+					 
+			EndIf
 
-				aJSPro[nI]["produto"]    := SB1->B1_COD
-				aJSPro[nI]["descricao"]  := SB1->B1_DESC
-				aJSPro[nI]["quantidade"] := oJson["itens"][nI]["quantidade"]
-				aJSPro[nI]["preco"]      := oJson["itens"][nI]["preco"]
-				aJSPro[nI]["achou"]      := .T.
+			nDupItem := 0
 
-			Else
+		Next nI
+
+
+
+		If lErro == .F.
+
+			nI := 1 
+			For nI := 1 To Len(oJson["itens"])
+
+				AADD(aJSPro,   JsonObject():New())	
 
 				aJSPro[nI]["produto"]    := oJson["itens"][nI]["produto"]
 				aJSPro[nI]["descricao"]  := ""
 				aJSPro[nI]["quantidade"] := 0
 				aJSPro[nI]["preco"]      := 0
-				aJSPro[nI]["achou"]      := .F.
+				aJSPro[nI]["erro"]       := ""			
 
-			EndIf
+				SB1->(DbSetOrder(1))
+				If SB1->(dbSeek(FWxFilial("SB1")+oJson["itens"][nI]["produto"] )) 			
 
-		Next nI
+					If ALLTRIM(SB1->B1_YCOMPRA) == "2"
+						aJSPro[nI]["erro"]  := "PRODUTO BLOQUEADO (B1_YCOMPRA) == '2') PARA COMPRAS (LINHA COMPRAR NAO)."					
+						lErro := .T.	
+						loop									
+					EndIf
+
+					If ALLTRIM(SB1->B1_YCOMPRA) == "3"
+						aJSPro[nI]["erro"]  := "PRODUTO BLOQUEADO (B1_YCOMPRA) == '3') FORA DE LINHA."					
+						lErro := .T.
+						loop										
+					EndIf				 
+
+					If ALLTRIM(SB1->B1_MSBLQL) == "1"					 
+						aJSPro[nI]["erro"]       := "PRODUTO BLOQUEADO (B1_MSBLQL == '1') PARA COMPRAS"	
+						lErro := .T.
+						loop				
+					EndIf
+
+					if lErro == .F.
+
+						aJSPro[nI]["produto"]    := SB1->B1_COD
+						aJSPro[nI]["descricao"]  := SB1->B1_DESC
+						aJSPro[nI]["quantidade"] := oJson["itens"][nI]["quantidade"]
+						aJSPro[nI]["preco"]      := oJson["itens"][nI]["preco"]
+						aJSPro[nI]["erro"]       := ""
+
+					EndIf
+
+				Else
+					
+					aJSPro[nI]["erro"]       := "Produto não encontrado"
+
+				EndIf
+
+			Next nI
+
+		EndIf
 
 	EndIf     
 
@@ -299,3 +347,62 @@ Method MontaPCompra(oJson) Class TIntegracaoMotorAbastecimentoParse
    
 
 Return oJSPC
+
+
+
+METHOD BaixaTotalPC(oJson) CLASS TIntegracaoMotorAbastecimentoParse
+    
+    Local oIMADAO := TIntegracaoMotorAbastecimentoDAO():New()
+	Local oJSPC   := JsonObject():New() 
+	Local oJSRet  := JsonObject():New()
+	Local aError  := {}
+	Local lError  := .F.
+	Local nI      := 1 	
+		
+
+	oJSPC["empresa"]    := ::ParseEmpresa(oJson)
+
+	//INICIO Validando
+	If Empty(oJSPC["empresa"]["empresaCnpj"])
+
+		lError := .T.		
+		AADD(aError,   JsonObject():New())
+		aError[nI]["field"]          := "codigoEmpresa"
+		aError[nI]["rejectedValue"]  := oJson["codigoEmpresa"]
+		aError[nI]["defaultMessage"] := EncodeUtf8("O CNPJ da empresa informada não foi locaizado.")
+		
+	EndIf
+
+
+	If 	lError == .F.	
+ 
+		If Empty(oJson["numeroPedidoERP"])
+
+			lError := .T.			
+			AADD(aError,   JsonObject():New())
+			aError[nI]["field"]          := "numeroPedidoERP"
+			aError[nI]["rejectedValue"]  := oJson["numeroPedidoERP"]
+			aError[nI]["defaultMessage"] := EncodeUtf8("O numeroPedidoERP  não foi informado.")	
+
+		EndIf
+
+	EndIf
+	//FIM Validando
+
+	
+  	oJSRet["Status"] := 200
+	
+	If lError	
+
+		oJSRet["Status"] := 400
+		oJSRet["Erros"] := aError
+
+	Else		
+	
+		oJSPC["C7_NUM"] := oJson["numeroPedidoERP"]	 
+		oJSRet := oIMADAO:EliminaResiduoPC(oJSPC)		 
+
+	EndIf
+
+
+Return oJSRet
