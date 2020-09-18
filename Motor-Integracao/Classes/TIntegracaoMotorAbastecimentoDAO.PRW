@@ -68,7 +68,7 @@ Method ExecAutoPCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
             aAdd(aIClone, AClone(aItem))
 
         Next nI                         
-     
+        ConOut("INICIO MsExecAuto Mata120")
         MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,aIClone,3,.F.) // 3 - Inclusao, 4 - Alteração, 5 - Exclusão         
         //MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,{aItem},nOP,.F.) // 3 - Inclusao, 4 - Alteração, 5 - Exclusão         
 
@@ -129,7 +129,7 @@ Method ExecAutoPCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
         oJSRet["Status"] := 400
         oJSRet["Erros"]  := aError
     Else
-       ConOut("FIM Incluido com sucesso o PEDIDO: " + cNumPC)
+        ConOut("FIM MsExecAuto Mata120")       
     EndIf	
     
     FreeObj(oJSPC)
@@ -219,7 +219,7 @@ METHOD EliminaResiduoPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
         AADD(aError,   JsonObject():New())
         aError[nI]["field"]          := "numeroPedidoERP"
         aError[nI]["rejectedValue"]  := oJson["C7_NUM"]
-        aError[nI]["defaultMessage"] := "O pedido não tem residuo para ser eliminado."
+        aError[nI]["defaultMessage"] := EncodeUtf8("O pedido não tem residuo para ser eliminado.")
 
     Else
 
@@ -229,16 +229,18 @@ METHOD EliminaResiduoPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
 
             While SC7->(!Eof()) .AND. FWxFilial("SC7")+cCodigoDe == SC7->C7_FILIAL+SC7->C7_NUM               
                 
-                If SC7->C7_RESIUO != 'S'
+                If SC7->C7_RESIDUO != 'S'
 
                     lError     := .T.
                     AADD(aError,   JsonObject():New())
                     aError[nI]["field"]          := "numeroPedidoERP"
                     aError[nI]["rejectedValue"]  := oJson["C7_NUM"]
-                    aError[nI]["defaultMessage"] := "O residuo do item: "+SC7->C7_ITEM+"  não foi eliminado."
+                    aError[nI]["defaultMessage"] := EncodeUtf8("O residuo do item: "+SC7->C7_ITEM+"  não foi eliminado.")
 
                 EndIf
-
+                
+                SC7->(DbSkip())
+                
             EndDo  
             
         EndIf   

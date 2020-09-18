@@ -125,9 +125,8 @@ METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 
 	Else
 		
-		oJSPC := ::MontaPCompra(oJSPC)	
-		oJSRet["ok"] := "ok"	
-		//oJSRet :=  oIMADAO:ExecAutoPCompra(oJSPC)		 
+		oJSPC := ::MontaPCompra(oJSPC)				
+		oJSRet :=  oIMADAO:ExecAutoPCompra(oJSPC)		 
 
 	EndIf
 		
@@ -182,7 +181,7 @@ Method ParseFornecedor(oJson) Class TIntegracaoMotorAbastecimentoParse
     cQuery += "     ,A2_CGC                       " + CRLF
 	cQuery += "     ,A2_COND                      " + CRLF
     cQuery += " FROM                              " + CRLF
-		cQuery += "  " + RetSqlName("SA2") + "        " + CRLF
+	cQuery += "  " + RetSqlName("SA2") + "        " + CRLF
     cQuery += " WHERE D_E_L_E_T_ = ''             " + CRLF
     cQuery += " AND A2_CGC = "+ValToSql(oJson["fornecedor"])+"   " + CRLF
 		
@@ -195,14 +194,13 @@ Method ParseFornecedor(oJson) Class TIntegracaoMotorAbastecimentoParse
   __TRZ->(dbGoTop())
 
   If (! __TRZ->(EoF()) )
+
     oJSFor["A2_COD"]  := __TRZ->A2_COD
     oJSFor["A2_LOJA"] := __TRZ->A2_LOJA
     oJSFor["A2_NOME"] := __TRZ->A2_NOME
     oJSFor["A2_CGC"]  := __TRZ->A2_CGC   
 	oJSFor["A2_COND"] := __TRZ->A2_COND  
-  Else    
 
-   // Criar Json de retorno 
   EndIf
 
   __TRZ->(DbCloseArea())
@@ -263,23 +261,33 @@ Method ParseProduto(oJson) Class TIntegracaoMotorAbastecimentoParse
 				SB1->(DbSetOrder(1))
 				If SB1->(dbSeek(FWxFilial("SB1")+oJson["itens"][nI]["produto"] )) 			
 
-					If ALLTRIM(SB1->B1_YCOMPRA) == "2"
-						aJSPro[nI]["erro"]  := "PRODUTO BLOQUEADO (B1_YCOMPRA) == '2') PARA COMPRAS (LINHA COMPRAR NAO)."					
-						lErro := .T.	
-						loop									
-					EndIf
+					//If cEmpAnt == "08" .and. cFilAnt == "01"
 
-					If ALLTRIM(SB1->B1_YCOMPRA) == "3"
-						aJSPro[nI]["erro"]  := "PRODUTO BLOQUEADO (B1_YCOMPRA) == '3') FORA DE LINHA."					
-						lErro := .T.
-						loop										
-					EndIf				 
+						If ALLTRIM(SB1->B1_YCOMPRA) == "2"
+							aJSPro[nI]["erro"]  := "PRODUTO BLOQUEADO (B1_YCOMPRA) == '2') PARA COMPRAS (LINHA COMPRAR NAO)."					
+							lErro := .T.	
+							loop									
+						EndIf
 
-					If ALLTRIM(SB1->B1_MSBLQL) == "1"					 
-						aJSPro[nI]["erro"]       := "PRODUTO BLOQUEADO (B1_MSBLQL == '1') PARA COMPRAS"	
-						lErro := .T.
-						loop				
-					EndIf
+						If ALLTRIM(SB1->B1_YCOMPRA) == "3"
+							aJSPro[nI]["erro"]  := "PRODUTO BLOQUEADO (B1_YCOMPRA) == '3') FORA DE LINHA."					
+							lErro := .T.
+							loop										
+						EndIf				 
+
+						If ALLTRIM(SB1->B1_MSBLQL) == "1"					 
+							aJSPro[nI]["erro"]       := "PRODUTO BLOQUEADO (B1_MSBLQL == '1') PARA COMPRAS"	
+							lErro := .T.
+							loop				
+						EndIf
+
+						If !Mod(oJson["itens"][nI]["quantidade"],IF(SB1->B1_QE=0,1,SB1->B1_QE)) == 0 
+							aJSPro[nI]["erro"]       := "QUANTIDADE BLOQUEADA LOGICA função 'u_AnaliQE' "	
+							lErro := .T.
+							loop
+						EndIf
+
+					//EndIf
 
 					if lErro == .F.
 

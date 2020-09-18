@@ -17,7 +17,7 @@ User Function MT235G2()
 	//INICIO - Condição para pedidos feitos pelo motor de abastecimento CITEL em TELA 
     If !IsBlind() .AND. lCitel
 		If !Empty(SC7->C7_YIDCITE)            
-            FwAlertWarning('Não é possivel modificar pedido de compra criado pelo motor de abastecimento CITEL.','ATENÇÃO - MT235G2')
+            FwAlertWarning('Não é possivel modificar pedido de compra criado pelo motor de abastecimento CITEL.','ATENÇÃO - MT235G2')            
             lExecuta := .F.             
         Endif
     Endif
