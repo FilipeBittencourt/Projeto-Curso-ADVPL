@@ -8,25 +8,23 @@ CLASS TIntegracaoMotorAbastecimentoDAO From LongClassName
     Method ExecAutoPCompra(oJson)
     Method ExecAutoPVenda(oJson)
     Method EliminaResiduoPC(oJson)
+    Method EnviaError(oJson)
     
 
 ENDCLASS
 
 METHOD NEW() CLASS TIntegracaoMotorAbastecimentoDAO
     ::oJSon := JsonObject():New() 
-Return self
+Return ::self
 
 
 Method ExecAutoPCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
 	
     Local oJSRet    := JsonObject():New() 
-    Local oJSexec   := Nil
-    Local oEnvMail  := Nil
 	Local aCab      := {}
 	Local aItem     := {}		
     Local aIClone   := {}
-	Local cNumPC    := ""	
-    Local nOP       := 3
+	Local cNumPC    := ""	 
 	Local nI        := 1  
     Local nW        := 1  
     
@@ -55,12 +53,14 @@ Method ExecAutoPCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
             aItem := {}
             //aAdd(aItem,	{"C7_NUM"         ,cNumPC                                                     ,Nil}) // Numero do Pedido
             //aAdd(aItem, {"C7_ITEM"        ,StrZero(nI, TamSX3('C7_ITEM')[01])                         ,NIL})
-            aAdd(aItem, {"C7_PRODUTO"     ,AllTrim(oJSPC["pedidoCompra"]["itens"][nI]["C7_PRODUTO"])  ,NIL})	
+           // aAdd(aItem, {"C7_PRODUTO"     ,oJSPC["pedidoCompra"]["itens"][nI]["C7_PRODUTO"]           ,NIL})//U_NAOCOMPRAR() 
+            aAdd(aItem, {"C7_PRODUTO"     ,"XXXXX99"           ,NIL})//U_NAOCOMPRAR() 
             aAdd(aItem, {"C7_QUANT"	      ,oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]             ,NIL})
             aAdd(aItem, {"C7_LOCAL"	      ,oJSPC["pedidoCompra"]["itens"][nI]["C7_LOCAL"]             ,Nil})	
             aAdd(aItem, {"C7_PRECO"	      ,oJSPC["pedidoCompra"]["itens"][nI]["C7_PRECO"]             ,NIL})            
+            aAdd(aItem, {"C7_TOTAL"	      ,oJSPC["pedidoCompra"]["itens"][nI]["C7_PRECO"] * oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]             ,NIL})            
             aAdd(aItem, {"C7_QTDSOL"	  ,oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]             ,NIL})
-            aAdd(aItem, {"C7_DATPRF"	  ,StoD(oJSPC["pedidoCompra"]["itens"][nI]["C7_DATPRF"])      ,NIL})  //Data de entrega
+            aAdd(aItem, {"C7_DATPRF"	  ,oJSPC["pedidoCompra"]["itens"][nI]["C7_DATPRF"]            ,NIL})  //Data de entrega
             aAdd(aItem, {"C7_OPER"	      ,oJSPC["pedidoCompra"]["itens"][nI]["C7_OPER"]			  ,Nil})
             aAdd(aItem, {"C7_YTIPCMP"     ,oJSPC["pedidoCompra"]["itens"][nI]["C7_YTIPCMP"]			  ,Nil})        
             aAdd(aItem, {"C7_CONAPRO"     ,oJSPC["pedidoCompra"]["itens"][nI]["C7_CONAPRO"]		      ,Nil})  // Pedido já caindo liberado                  
@@ -69,8 +69,7 @@ Method ExecAutoPCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
 
         Next nI                         
         ConOut("INICIO MsExecAuto Mata120")
-        MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,aIClone,3,.F.) // 3 - Inclusao, 4 - Alteração, 5 - Exclusão         
-        //MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,{aItem},nOP,.F.) // 3 - Inclusao, 4 - Alteração, 5 - Exclusão         
+        MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,aIClone,3,.F.) // 3 - Inclusao, 4 - Alteração, 5 - Exclusão                   
 
         If !lMsErroAuto
 
@@ -106,16 +105,9 @@ Method ExecAutoPCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
             aError[nw]["rejectedValue"]  := ""
             aError[nw]["defaultMessage"] := EncodeUtf8(cError)	                           
             lError := .T.   
-            nW++                
+            nW++         
 
-            // Criando body e a mensagem de erro para enviar via email - workflow
-           //oJSexec   := JsonObject():New() 
-           //oEnvMail  := TIntegracaoMotorAbastecimentoEmail():New()
-           //oJSexec["cabecalho"] := aCab
-           //oJSexec["item"]      := aItem
-           //oJSexec["Error"]     := EncodeUtf8(cError)
-           //oEnvMail:EnvEmail(oJSexec)
-           //FreeObj(oJSexec)
+            ::EnviaError(oJSPC, cError, "POST - Pedido de Compra")
 
             ErrorBlock(oError)      
 
@@ -127,7 +119,7 @@ Method ExecAutoPCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
     If lError
         oJSRet           := JsonObject():New()
         oJSRet["Status"] := 400
-        oJSRet["Erros"]  := aError
+        oJSRet["Erros"]  := aError       
     Else
         ConOut("FIM MsExecAuto Mata120")       
     EndIf	
@@ -165,8 +157,10 @@ METHOD EliminaResiduoPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
     Local nI         := 0    
     Local lError     := .F.    
     Local aError     := {}
-    Local cError    := ""
+    Local cError     := ""
     Local oError     := ErrorBlock({|e| cError := e:Description})
+    Local cTime      :=  ""
+   
 
  	
     /*
@@ -189,7 +183,9 @@ METHOD EliminaResiduoPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
       EndDo      
       
       If Len(aRecSC7) > 0
-
+        cTime    := FwTimeStamp()
+        cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s
+        ConOut("INICIO Eliminando residuo PC MA235PC" + cTime)
         Begin Transaction    
         
             MA235PC(nPerc, cTipo, dEmisDe, dEmisAte, cCodigoDe, cCodigoAte, cProdDe, cProdAte, cFornDe, cFornAte, dDatprfde, dDatPrfAte, cItemDe, cItemAte, lConsEIC, aRecSC7)     
@@ -259,6 +255,29 @@ METHOD EliminaResiduoPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
 
     EndIf  
    
+    cTime := FwTimeStamp()
+    cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s
+    ConOut("FIM Eliminando residuo PC MA235PC" + cTime)
+
     FreeObj(oJson)
 
 Return oJSRet
+
+METHOD EnviaError(oJSPC,cError,cTitulo) CLASS TIntegracaoMotorAbastecimentoDAO
+	
+  Local cHtml  := ""	
+ 	
+
+  cError :=  StrTran( EncodeUtf8(cError), Chr(13) + Chr(10), "<BR>" )
+
+  cHtml += ' <html> '
+  cHtml += ' <body> ' 
+  cHtml += ' <h3>'+cTitulo+'</h3><BR>' 
+  cHtml += ' '+cError+'<BR> '  
+  cHtml += ' </body> ' 
+  cHtml += ' </html> '
+
+  //EnvEmail(cDestin,cAssunto,cMensagem,cAnexos,lUsaLogado)
+  U_EnvEmail("filipe.bittencourt@facilesistemas.com.br"," Error motor de abastecimento CITERL: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
+
+Return

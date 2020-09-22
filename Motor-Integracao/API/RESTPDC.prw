@@ -13,23 +13,31 @@ WSMETHOD POST WSSERVICE pedidocompra
   Local cBody    := "" 
   Local oJson    := JsonObject():New() 
   Local oIMAbast := TIntegracaoMotorAbastecimentoParse():New()
-  Local oIMADAO := TIntegracaoMotorAbastecimentoDAO():New()
-  
+  Local oIMADAO  := TIntegracaoMotorAbastecimentoDAO():New()
+  Local cTime    := ""
+  Local nTotIten := 0
+
+ 
   ::SetContentType("application/json")   
 
   //|Recupera os dados do body |  
   cBody := ::GetContent()
   conOut('pedidocompra - POST METHOD')  
   oJson:FromJson(cBody)  // converte para JsonObject 
-
-  //oIMADAO:EliminaResiduoPC(oJson)
-  memowrite("\data\TESTE-" + FwTimeStamp() + ".txt", "")
-
+  
+  nTotIten := Len(oJson["itens"])
+  
+  cTime := FwTimeStamp()
+  cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'+'__com_'+cvalToChar(nTotIten)+'Itens'
+  memowrite("\data\TESTE-INI_" + cTime + ".txt", "")
+  
   oJson := oIMAbast:PedidoCompra(oJson)
   ::SetStatus(oJson["Status"])  
   ::SetResponse(oJson:ToJson())
 
-  memowrite("\data\TESTE-" + FwTimeStamp() + ".txt", oJson:ToJson())
+  cTime := FwTimeStamp()
+  cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'+'__com_'+cvalToChar(nTotIten)+'Itens'
+  memowrite("\data\TESTE-FIM_" + cTime + ".txt", oJson:ToJson())
 
 Return .T.
 
@@ -69,20 +77,23 @@ WsRestFul gerajsontestepc Description "Facile Sistemas Webservices - Motor de In
 End WsRestFul
 
 WSMETHOD POST WSSERVICE gerajsontestepc
- 
-    Local oJSTest  := JsonObject():New()
-    Local aItem    := {}    
-    Local nI       := 0
-    Local cQuery   := ""
 
- ::SetContentType("application/json") 
+  Local oJSTest  := JsonObject():New()
+  Local oJson    := JsonObject():New()
+  Local aItem    := {}    
+  Local nI       := 0
+  Local cQuery   := ""
+  Local cBody    := ""
+  
+  conOut('Gerar JSON - POST METHOD') 
+
+  ::SetContentType("application/json") 
+
+  //|Recupera os dados do body |  
+  cBody := ::GetContent()     
+  oJson:FromJson(cBody)  // converte para JsonObject 
+
  
-      oJSTest["codigoEmpresa"]     :=  "12377080000188"   
-      oJSTest["codigoComprador"]   :=  "50254873073"
-      oJSTest["condicaoPagamento"] :=  "03030060090"
-      oJSTest["dataEntrega"]       :=  "2020-09-30"
-      oJSTest["dataFaturamento"]   :=  "2020-09-30"
-      oJSTest["numeroPedido"]      :=  "1234567"
  
   /*
   If Select("SX6") <= 0	
@@ -96,10 +107,8 @@ WSMETHOD POST WSSERVICE gerajsontestepc
   cQuery += " INNER JOIN SA2010 SA2 ON SA2.A2_COD = SC7.C7_FORNECE AND SA2.A2_LOJA = SC7.C7_LOJA "
   cQuery += " WHERE SB1.B1_YCOMPRA = '1' "
   cQuery += " AND   SB1.B1_MSBLQL  = '2' "
-  cQuery += " AND   SC7.C7_NUM in ('341244') "
-
-  
-  oJSTest["fornecedor"]        :=  "09388615000292"  
+  cQuery += " AND   SC7.C7_NUM     = "+ValToSql(oJson["numeroPedido"])+" " 
+   
 
   //cQuery += " SELECT C7_PRODUTO,C7_QUANT,C7_PRECO FROM SC7080 WHERE C7_NUM IN ('427005' )"
   //oJSTest["fornecedor"]        :=  "60860681000432" // C7_NUM IN ('427005' )
@@ -121,7 +130,14 @@ WSMETHOD POST WSSERVICE gerajsontestepc
 
   EndDo  
 
-  oJSTest["itens"] := aItem
+  oJSTest["codigoEmpresa"]     :=  oJson["codigoEmpresa"]   
+  oJSTest["codigoComprador"]   :=  oJson["codigoComprador"]
+  oJSTest["condicaoPagamento"] :=  oJson["condicaoPagamento"]
+  oJSTest["dataEntrega"]       :=  oJson["dataEntrega"]
+  oJSTest["dataFaturamento"]   :=  oJson["dataFaturamento"]
+  oJSTest["numeroPedido"]      :=  oJson["numeroPedido"]
+  oJSTest["fornecedor"]        :=  oJson["fornecedor"]
+  oJSTest["itens"]             :=  aItem
 
   ::SetStatus(200)  
   ::SetResponse(oJSTest:ToJson())

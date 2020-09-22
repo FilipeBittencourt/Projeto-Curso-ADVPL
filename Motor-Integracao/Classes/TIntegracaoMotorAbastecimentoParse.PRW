@@ -21,7 +21,7 @@ ENDCLASS
 
 METHOD NEW() CLASS TIntegracaoMotorAbastecimentoParse
     ::oJSon := JsonObject():New() 
-Return self
+Return ::self
 
 METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 
@@ -336,13 +336,13 @@ Method MontaPCompra(oJson) Class TIntegracaoMotorAbastecimentoParse
 		AADD(aJSPC,   JsonObject():New())	
 
 		aJSPC[nI]["achou"]      := .T.
-		//aJSPC[nI]["C7_ITEM"]    := StrZero(nI, 4)
-		aJSPC[nI]["C7_PRODUTO"] := oJson["itens"][nI]["produto"]
+		aJSPC[nI]["C7_ITEM"]    := StrZero(nI, 4)
+		aJSPC[nI]["C7_PRODUTO"] := AllTrim(oJson["itens"][nI]["produto"])
 		aJSPC[nI]["C7_QUANT"]   := oJson["itens"][nI]["quantidade"]
 		aJSPC[nI]["C7_LOCAL"]   := "01"
 		aJSPC[nI]["C7_PRECO"]   := oJson["itens"][nI]["preco"] 
 		aJSPC[nI]["C7_QTDSOL"]  := oJson["itens"][nI]["quantidade"]
-		aJSPC[nI]["C7_DATPRF"]  := oJson["dataEntrega"] 	
+		aJSPC[nI]["C7_DATPRF"]  := StoD(oJson["dataEntrega"]) 	
 		aJSPC[nI]["C7_OPER"]    := "01"	                      
 		aJSPC[nI]["C7_YTIPCMP"] := "OT"                       
 		aJSPC[nI]["C7_CONAPRO"] := "L"   
