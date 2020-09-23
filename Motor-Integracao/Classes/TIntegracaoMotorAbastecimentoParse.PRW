@@ -9,6 +9,7 @@ CLASS TIntegracaoMotorAbastecimentoParse From LongClassName
     Method PedidoCompra(oJson) 
     Method PedidoVenda(oJson) 	
     Method BaixaTotalPC(oJson)
+	Method BaixaParcialPC(oJson)
 
 	Method ParseEmpresa(oJson)
     Method ParseFornecedor(oJson) 
@@ -334,8 +335,7 @@ Method MontaPCompra(oJson) Class TIntegracaoMotorAbastecimentoParse
 	For nI := 1 To Len(oJson["itens"])
 
 		AADD(aJSPC,   JsonObject():New())	
-
-		aJSPC[nI]["achou"]      := .T.
+		
 		aJSPC[nI]["C7_ITEM"]    := StrZero(nI, 4)
 		aJSPC[nI]["C7_PRODUTO"] := AllTrim(oJson["itens"][nI]["produto"])
 		aJSPC[nI]["C7_QUANT"]   := oJson["itens"][nI]["quantidade"]
@@ -355,7 +355,6 @@ Method MontaPCompra(oJson) Class TIntegracaoMotorAbastecimentoParse
    
 
 Return oJSPC
-
 
 
 METHOD BaixaTotalPC(oJson) CLASS TIntegracaoMotorAbastecimentoParse
@@ -408,7 +407,64 @@ METHOD BaixaTotalPC(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 	Else		
 	
 		oJSPC["C7_NUM"] := oJson["numeroPedidoERP"]	 
-		oJSRet := oIMADAO:EliminaResiduoPC(oJSPC)		 
+		oJSRet := oIMADAO:BaixaTotalPC(oJSPC)		 
+
+	EndIf
+
+
+Return oJSRet
+
+METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoParse
+    
+    Local oIMADAO := TIntegracaoMotorAbastecimentoDAO():New()
+	Local oJSPC   := JsonObject():New() 
+	Local oJSRet  := JsonObject():New()
+	Local aError  := {}
+	Local lError  := .F.
+	Local nI      := 1 	
+		
+
+	oJSPC["empresa"]    := ::ParseEmpresa(oJson)
+
+	//INICIO Validando
+	If Empty(oJSPC["empresa"]["empresaCnpj"])
+
+		lError := .T.		
+		AADD(aError,   JsonObject():New())
+		aError[nI]["field"]          := "codigoEmpresa"
+		aError[nI]["rejectedValue"]  := oJson["codigoEmpresa"]
+		aError[nI]["defaultMessage"] := EncodeUtf8("O CNPJ da empresa informada não foi locaizado.")
+		
+	EndIf
+
+
+	If 	lError == .F.	
+ 
+		If Empty(oJson["numeroPedidoERP"])
+
+			lError := .T.			
+			AADD(aError,   JsonObject():New())
+			aError[nI]["field"]          := "numeroPedidoERP"
+			aError[nI]["rejectedValue"]  := oJson["numeroPedidoERP"]
+			aError[nI]["defaultMessage"] := EncodeUtf8("O numeroPedidoERP  não foi informado.")	
+
+		EndIf
+
+	EndIf
+	//FIM Validando
+
+	
+  	oJSRet["Status"] := 200
+	
+	If lError	
+
+		oJSRet["Status"] := 400
+		oJSRet["Erros"] := aError
+
+	Else		
+	
+		oJSPC["C7_NUM"] := oJson["numeroPedidoERP"]	 
+		oJSRet := oIMADAO:BaixaParcialPC(oJSPC)		 
 
 	EndIf
 

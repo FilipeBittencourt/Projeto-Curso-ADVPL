@@ -12,11 +12,7 @@ WSMETHOD POST WSSERVICE pedidocompra
  
   Local cBody    := "" 
   Local oJson    := JsonObject():New() 
-  Local oIMAbast := TIntegracaoMotorAbastecimentoParse():New()
-  Local oIMADAO  := TIntegracaoMotorAbastecimentoDAO():New()
-  Local cTime    := ""
-  Local nTotIten := 0
-
+  Local oIMAbast := TIntegracaoMotorAbastecimentoParse():New()  
  
   ::SetContentType("application/json")   
 
@@ -29,7 +25,7 @@ WSMETHOD POST WSSERVICE pedidocompra
   
   cTime := FwTimeStamp()
   cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'+'__com_'+cvalToChar(nTotIten)+'Itens'
-  memowrite("\data\TESTE-INI_" + cTime + ".txt", "")
+  //memowrite("\data\TESTE-INI_" + cTime + ".txt", "")
   
   oJson := oIMAbast:PedidoCompra(oJson)
   ::SetStatus(oJson["Status"])  
@@ -37,7 +33,7 @@ WSMETHOD POST WSSERVICE pedidocompra
 
   cTime := FwTimeStamp()
   cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'+'__com_'+cvalToChar(nTotIten)+'Itens'
-  memowrite("\data\TESTE-FIM_" + cTime + ".txt", oJson:ToJson())
+  //memowrite("\data\TESTE-FIM_" + cTime + ".txt", oJson:ToJson())
 
 Return .T.
 
@@ -51,8 +47,9 @@ WSMETHOD POST WSSERVICE pedidocomprabaixatotal
  
   Local cBody    := "" 
   Local oJson    := JsonObject():New() 
-  Local oIMAbast := TIntegracaoMotorAbastecimentoParse():New()
-  Local oIMADAO := TIntegracaoMotorAbastecimentoDAO():New()
+  Local oIMAbast := TIntegracaoMotorAbastecimentoParse():New()  
+  Local cTime    := ""
+ 
   
   ::SetContentType("application/json")   
 
@@ -61,10 +58,17 @@ WSMETHOD POST WSSERVICE pedidocomprabaixatotal
   conOut('pedidocomprabaixatotal - POST METHOD')  
   oJson:FromJson(cBody)  // converte para JsonObject 
 
-  //oIMADAO:EliminaResiduoPC(oJson)
+  cTime := FwTimeStamp()
+  cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'
+  memowrite("\data\TESTE-INI-ELIMINIATOTAL_" + cTime + ".txt", "")
+
   oJson := oIMAbast:BaixaTotalPC(oJson)
   ::SetStatus(oJson["Status"])  
   ::SetResponse(oJson:ToJson())
+  
+  cTime := FwTimeStamp()
+  cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'
+  memowrite("\data\TESTE-FIM-ELIMINIATOTAL_" + cTime + ".txt", "")
 
   FreeObj(oJson)   
 
