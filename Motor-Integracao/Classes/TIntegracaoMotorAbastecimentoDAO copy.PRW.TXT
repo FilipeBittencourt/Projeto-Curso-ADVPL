@@ -31,56 +31,78 @@ Method ExecAutoPCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
     Local aIClone   := {}
 	Local cNumPC    := ""	 
 	Local nI        := 1  
-    Local nW        := 1    
+    Local nW        := 1  
     
     Local lError    := .F.    
     Local aError    := {}
     Local cError    := ""
-    Local oError    := ErrorBlock({|e| cError := e:Description})    
+    Local oError    := ErrorBlock({|e| cError := e:Description})
+
+	Private lMsErroAuto := .F.
+
+    cNumPC := GetNumSC7()   
+    aAdd(aCab,	{"C7_NUM"       ,cNumPC                                      ,Nil}) // Numero do Pedido
+    aAdd(aCab,  {"C7_EMISSAO"	,oJSPC["pedidoCompra"]["cab"]["C7_EMISSAO"]  ,Nil})
+    aAdd(aCab,  {"C7_FORNECE"	,oJSPC["pedidoCompra"]["cab"]["C7_FORNECE"]  ,NIL}) // Fornecedor
+    aAdd(aCab,  {"C7_LOJA"	    ,oJSPC["pedidoCompra"]["cab"]["C7_LOJA"]     ,NIL}) // Loja do Fornecedor
+    aAdd(aCab,  {"C7_COND"	    ,oJSPC["pedidoCompra"]["cab"]["C7_COND"]     ,NIL}) // Condicao de Pagamento   
+    aAdd(aCab,  {"C7_FILENT"	,oJSPC["pedidoCompra"]["cab"]["C7_FILENT"]   ,NIL}) // Filial de Entrega
+    aAdd(aCab,  {"C7_CONAPRO"   ,oJSPC["pedidoCompra"]["cab"]["C7_CONAPRO"]  ,Nil})  // Pedido jï¿½ caindo liberado
+    aAdd(aCab,	{"C7_YIDCITE"	,oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]	 ,NIL}) // ID CITEL
+    
  
-    //Private lMsErroAuto := .F.
+    Begin Transaction
 
-    Begin Transaction       
-        
-       cNumPC := GetNumSC7()  
-        For nI := 1 To  Len(oJSPC["pedidoCompra"]["itens"])  
-            Z42->(RecLock('Z42', .T.))
-                Z42->Z42_FILIAL   :=  FWxFilial("SC7")  
-                Z42->Z42_NUM      :=  cNumPC                                    
-                Z42->Z42_EMISSA   :=  oJSPC["pedidoCompra"]["cab"]["C7_EMISSAO"]    
-                Z42->Z42_FORNEC   :=  oJSPC["pedidoCompra"]["cab"]["C7_FORNECE"]    
-                Z42->Z42_LOJA     :=  oJSPC["pedidoCompra"]["cab"]["C7_LOJA"]       
-                Z42->Z42_COND     :=  oJSPC["pedidoCompra"]["cab"]["C7_COND"]       
-                Z42->Z42_FILENT   :=  oJSPC["pedidoCompra"]["cab"]["C7_FILENT"]                        
-                Z42->Z42_YIDCIT  :=  oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]
+        For nI := 1 To  Len(oJSPC["pedidoCompra"]["itens"])    
+             
+            aItem := {}
+            //aAdd(aItem,	{"C7_NUM"         ,cNumPC                                                 ,Nil}) // Numero do Pedido
+            aAdd(aItem, {"C7_ITEM"        ,StrZero(nI, TamSX3('C7_ITEM')[01])                       ,NIL})
+            aAdd(aItem, {"C7_PRODUTO"     ,oJSPC["pedidoCompra"]["itens"][nI]["C7_PRODUTO"]           ,NIL})//U_NAOCOMPRAR()            
+            aAdd(aItem, {"C7_QUANT"	      ,oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]             ,NIL})
+            aAdd(aItem, {"C7_LOCAL"	      ,oJSPC["pedidoCompra"]["itens"][nI]["C7_LOCAL"]             ,Nil})	
+            aAdd(aItem, {"C7_PRECO"	      ,oJSPC["pedidoCompra"]["itens"][nI]["C7_PRECO"]             ,NIL})            
+            aAdd(aItem, {"C7_TOTAL"	      ,oJSPC["pedidoCompra"]["itens"][nI]["C7_PRECO"] * oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]             ,NIL})            
+            aAdd(aItem, {"C7_QTDSOL"	  ,oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]             ,NIL})
+            aAdd(aItem, {"C7_DATPRF"	  ,oJSPC["pedidoCompra"]["itens"][nI]["C7_DATPRF"]            ,NIL})  //Data de entrega
+            aAdd(aItem, {"C7_OPER"	      ,oJSPC["pedidoCompra"]["itens"][nI]["C7_OPER"]			  ,Nil})
+            aAdd(aItem, {"C7_YTIPCMP"     ,oJSPC["pedidoCompra"]["itens"][nI]["C7_YTIPCMP"]			  ,Nil})        
+            aAdd(aItem, {"C7_CONAPRO"     ,oJSPC["pedidoCompra"]["itens"][nI]["C7_CONAPRO"]		      ,Nil})  // Pedido jï¿½ caindo liberado                  
+            aAdd(aItem,	{"C7_YIDCITE"	  ,oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]	              ,NIL})  // ID CITEL            
+            aAdd(aIClone, AClone(aItem))
 
-                Z42->Z42_ITEM     :=  StrZero(nI, TamSX3('C7_ITEM')[01])                  
-                Z42->Z42_PRODUT   :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_PRODUTO"] 
-                Z42->Z42_QUANT    :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]      
-                Z42->Z42_LOCAL    :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_LOCAL"]      	
-                Z42->Z42_PRECO    :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_PRECO"]                  
-                Z42->Z42_TOTAL    :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_PRECO"] * oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]                                  
-                Z42->Z42_DATPRF   :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_DATPRF"]                             
-                Z42->Z42_YTIPCM   :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_YTIPCMP"]                                
-                Z42->Z42_YIDCIT   :=  oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]
-                Z42->Z42_SYCSC7   :=  "N"
-            Z42->(MsUnlock())   
-        Next nI
+        Next nI                         
+        ConOut("INICIO MsExecAuto Mata120")
+        MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,aIClone,3,.F.) // 3 - Inclusao, 4 - Alteraï¿½ï¿½o, 5 - Exclusï¿½o                   
 
-        ErrorBlock(oError) 
+        If !lMsErroAuto
 
-        If Empty(cError)          
-         
             ConOut("Incluido com sucesso o PEDIDO: " + cNumPC )
             oJSRet["Status"]           := 200
-            oJSRet["numeroDocumento"]  := cNumPC 
+            oJSRet["numeroDocumento"]  := cNumPC             
+          
 
-        Else             
+            // Logica abaixo para ja alterar os PC para Liberado, PARA NÃƒO CONFLITAR COM REGRAS DE LIBERAÃ‡ÃƒO EXISTENTES
+            SC7->(DbSetOrder(1)) //C7_FILIAL, C7_NUM, C7_ITEM, C7_SEQUEN, R_E_C_N_O_, D_E_L_E_T_
 
-            If !Empty(MostraErro("/dirdoc", "error.log")) 
-                cError := MostraErro("/dirdoc", "error.log") // ARMAZENA A MENSAGEM DE ERRO
-                ConOut(PadC("Automatic routine ended with error", 80))
-            EndIf
+            If SC7->(dbSeek(FWxFilial("SC7")+cNumPC))  
+
+                While SC7->(!Eof()) .AND. FWxFilial("SC7")+cNumPC == SC7->C7_FILIAL+ SC7->C7_NUM               
+
+                    SC7->(RecLock('SC7', .F.))
+                        SC7->C7_CONAPRO := 'L'
+                    SC7->(MsUnlock())
+
+                    SC7->(DbSkip())
+
+                EndDo   
+
+            EndIf 
+
+        Else                     	
+            
+            cError := MostraErro("/dirdoc", "error.log") // ARMAZENA A MENSAGEM DE ERRO
+            ConOut(PadC("Automatic routine ended with error", 80))
             ConOut("Error: "+ cError)
             AADD(aError,   JsonObject():New())            
             aError[nw]["field"]          := ""
@@ -89,20 +111,23 @@ Method ExecAutoPCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
             lError := .T.   
             nW++         
 
-            ::EnviaError(oJSPC, cError, "POST - Pedido de Compra na tabela Z42")
+            ::EnviaError(oJSPC, cError, "POST - Pedido de Compra")
 
-        EndIf  
+            ErrorBlock(oError)      
 
-        If lError
-            oJSRet           := JsonObject():New()
-            oJSRet["Status"] := 400
-            oJSRet["Erros"]  := aError       
-        Else
-            ConOut("FIM RECLONK Z42")       
-        EndIf	
+        EndIf
+       		
 
     End Transaction
-       
+
+    If lError
+        oJSRet           := JsonObject():New()
+        oJSRet["Status"] := 400
+        oJSRet["Erros"]  := aError       
+    Else
+        ConOut("FIM MsExecAuto Mata120")       
+    EndIf	
+    
     FreeObj(oJSPC)
  
 
@@ -138,14 +163,14 @@ METHOD BaixaTotalPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
 
  	
     /*
-    No caso da eleminição de resíduos ficou decido da seguinte forma:
+    No caso da eleminiï¿½ï¿½o de resï¿½duos ficou decido da seguinte forma:
 
-    1 - Usar a função MA235PC que se encontra no fonte padrão TOTVS MATA235;
+    1 - Usar a funï¿½ï¿½o MA235PC que se encontra no fonte padrï¿½o TOTVS MATA235;
 
-    2 - Na eleminição parcial dos itens do pedido de compra ficou da forma:
+    2 - Na eleminiï¿½ï¿½o parcial dos itens do pedido de compra ficou da forma:
         a) Se for informado a quantidade igual a ZERO de algum item do PC o mesmo tera o residuo eliminido pela rotina acima
-        b) Se for informado a quantidade diferente de ZERO o item será alterado(ExecAuto)apenas em sua quantidade de acordo com
-           o informado pela CITEL. Caso a quantidade informada a ser eliminada forma maior que o atual será enviada uma mensagem de erro.           
+        b) Se for informado a quantidade diferente de ZERO o item serï¿½ alterado(ExecAuto)apenas em sua quantidade de acordo com
+           o informado pela CITEL. Caso a quantidade informada a ser eliminada forma maior que o atual serï¿½ enviada uma mensagem de erro.           
     */
     SC7->(DbSetOrder(1)) //C7_FILIAL, C7_NUM, C7_ITEM, C7_SEQUEN, R_E_C_N_O_, D_E_L_E_T_
     
@@ -189,11 +214,11 @@ METHOD BaixaTotalPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
         AADD(aError,   JsonObject():New())
         aError[nI]["field"]          := "numeroPedidoERP"
         aError[nI]["rejectedValue"]  := oJson["C7_NUM"]
-        aError[nI]["defaultMessage"] := EncodeUtf8("O pedido não tem residuo para ser eliminado.")
+        aError[nI]["defaultMessage"] := EncodeUtf8("O pedido nï¿½o tem residuo para ser eliminado.")
 
     Else
 
-        // VERIFICO SE O RESIUDO FOI ELIMINADO de fato, PARA NÃO CORRER O RISCO DE NÃO ESTAR POSICIONADO  o registro
+        // VERIFICO SE O RESIUDO FOI ELIMINADO de fato, PARA Nï¿½O CORRER O RISCO DE Nï¿½O ESTAR POSICIONADO  o registro
         SC7->(DbSetOrder(1))     
         If SC7->(dbSeek(FWxFilial("SC7")+cCodigoDe)) 
 
@@ -205,7 +230,7 @@ METHOD BaixaTotalPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
                     AADD(aError,   JsonObject():New())
                     aError[nI]["field"]          := "numeroPedidoERP"
                     aError[nI]["rejectedValue"]  := oJson["C7_NUM"]
-                    aError[nI]["defaultMessage"] := EncodeUtf8("O residuo do item: "+SC7->C7_ITEM+"  não foi eliminado.")
+                    aError[nI]["defaultMessage"] := EncodeUtf8("O residuo do item: "+SC7->C7_ITEM+"  nï¿½o foi eliminado.")
 
                 EndIf
                 
@@ -261,7 +286,7 @@ Method BaixaParcialPC(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
     aAdd(aCab,  {"C7_LOJA"	    ,oJSPC["pedidoCompra"]["cab"]["C7_LOJA"]     ,NIL}) // Loja do Fornecedor
     aAdd(aCab,  {"C7_COND"	    ,oJSPC["pedidoCompra"]["cab"]["C7_COND"]     ,NIL}) // Condicao de Pagamento   
     aAdd(aCab,  {"C7_FILENT"	,oJSPC["pedidoCompra"]["cab"]["C7_FILENT"]   ,NIL}) // Filial de Entrega
-    aAdd(aCab,  {"C7_CONAPRO"   ,oJSPC["pedidoCompra"]["cab"]["C7_CONAPRO"]  ,Nil})  // Pedido já caindo liberado
+    aAdd(aCab,  {"C7_CONAPRO"   ,oJSPC["pedidoCompra"]["cab"]["C7_CONAPRO"]  ,Nil})  // Pedido jï¿½ caindo liberado
     aAdd(aCab,	{"C7_YIDCITE"	,oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]	 ,NIL}) // ID CITEL
     
  
@@ -281,13 +306,13 @@ Method BaixaParcialPC(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
             aAdd(aItem, {"C7_DATPRF"	  ,oJSPC["pedidoCompra"]["itens"][nI]["C7_DATPRF"]            ,NIL})  //Data de entrega
             aAdd(aItem, {"C7_OPER"	      ,oJSPC["pedidoCompra"]["itens"][nI]["C7_OPER"]			  ,Nil})
             aAdd(aItem, {"C7_YTIPCMP"     ,oJSPC["pedidoCompra"]["itens"][nI]["C7_YTIPCMP"]			  ,Nil})        
-            aAdd(aItem, {"C7_CONAPRO"     ,oJSPC["pedidoCompra"]["itens"][nI]["C7_CONAPRO"]		      ,Nil})  // Pedido já caindo liberado                  
+            aAdd(aItem, {"C7_CONAPRO"     ,oJSPC["pedidoCompra"]["itens"][nI]["C7_CONAPRO"]		      ,Nil})  // Pedido jï¿½ caindo liberado                  
             aAdd(aItem,	{"C7_YIDCITE"	  ,oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]	              ,NIL})  // ID CITEL            
             aAdd(aIClone, AClone(aItem))
 
         Next nI                         
         ConOut("INICIO MsExecAuto Mata120")
-        MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,aIClone,3,.F.) // 3 - Inclusao, 4 - Alteração, 5 - Exclusão                   
+        MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,aIClone,3,.F.) // 3 - Inclusao, 4 - Alteraï¿½ï¿½o, 5 - Exclusï¿½o                   
 
         If !lMsErroAuto
 
