@@ -127,7 +127,7 @@ METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 	Else
 		
 		oJSPC := ::MontaPCompra(oJSPC)				
-		oJSRet :=  oIMADAO:ExecAutoPCompra(oJSPC)		 
+		oJSRet :=  oIMADAO:CreatePCompra(oJSPC)		 
 
 	EndIf
 		
@@ -344,7 +344,7 @@ Method MontaPCompra(oJson) Class TIntegracaoMotorAbastecimentoParse
 		aJSPC[nI]["C7_QTDSOL"]  := oJson["itens"][nI]["quantidade"]
 		aJSPC[nI]["C7_DATPRF"]  := StoD(oJson["dataEntrega"]) 	
 		aJSPC[nI]["C7_OPER"]    := "01"	                      
-		aJSPC[nI]["C7_YTIPCMP"] := "OT"                       
+		aJSPC[nI]["C7_YTIPCMP"] := "MT"                       
 		aJSPC[nI]["C7_CONAPRO"] := "L"   
 		aJSPC[nI]["C7_YIDCITE"] :=  oJson["numeroPedido"]             // ID pedido da CITEL 
 

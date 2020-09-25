@@ -1,0 +1,225 @@
+#Include 'TOTVS.CH'
+#Include "TopConn.ch"
+
+/*
+------------------------------------------------------------------------------------------------------------
+Função   	: PCMOTOR1
+Tipo		  : job
+Descrição	: função para pegar os dados na Z42  e incluir via ExecAUTO NA TABEA SC7
+Autor     : Filipe Bittencourt - Facile
+Retorno 	: .T.
+Obs.      : Z42_SYCSC7 -   N = Não integrado  ou  S = Integrado 
+------------------------------------------------------------------------------------------------------------
+*/
+
+
+//U_PCMOTOR1
+User Function  PCMOTOR1() 
+ 
+  Local aCab      := {}
+  Local aItem     := {}		
+  Local aIClone   := {}
+  Local aNumPC    := {}
+  Local cNumPC    := ""	   
+  Local cFilialX  := ""
+  Local cQuery    := ""   
+  Local cError    := ""
+  Local cHtml     := ""
+  Local oError    := ErrorBlock({|e| cError := e:Description})
+  Local cEmCitel  :=  ""
+ 
+	Private lMsErroAuto := .F.
+   
+  If Select("SX6") <= 0	
+    RPCSetEnv("08", "01", NIL, NIL, "COM", NIL, {"SB1","SF2","Z42"})	
+  EndIf
+
+  cFilialX := FWxFilial("SC7")
+  cEmCitel := SuperGetMv("MV_YCITEL3",.F., "")  //Parametro CITEL email de quem ira receber o email de erro ao gerar PC pelo motor de abastecimento.
+
+  
+  aNumPC := GetNumPC()
+
+  For nI := 1 To  Len(aNumPC)
+    
+    cQuery := ""
+    cQuery += " SELECT R_E_C_N_O_ AS RECNO ,  * " + CRLF
+    cQuery += " FROM " + RetSqlName("Z42")  + CRLF
+    cQuery += " WHERE  Z42_FILIAL = "+ValToSql(cFilialX)  + CRLF
+    cQuery += " AND D_E_L_E_T_  = '' "  + CRLF
+    cQuery += " AND  Z42_SYCSC7 = 'N' " + CRLF  
+    cQuery += " AND  Z42_NUM    = "+ValToSql(AllTrim(aNumPC[nI]))  + CRLF  
+    cQuery += " ORDER BY Z42_NUM , Z42_ITEM ASC "    + CRLF 
+
+    If Select("__TRZ") > 0
+      __TRZ->(dbCloseArea())
+    EndIf
+
+    TcQuery cQuery New Alias "__TRZ"
+    __TRZ->(dbGoTop())
+
+    
+    If (! __TRZ->(EoF()) )
+      
+      aCab := {}
+      cNumPC := __TRZ->Z42_NUM
+
+      aAdd(aCab,	{"C7_NUM"       ,__TRZ->Z42_NUM      ,Nil}) // Numero do Pedido
+      aAdd(aCab,  {"C7_EMISSAO"	  ,dDataBase           ,Nil})
+      aAdd(aCab,  {"C7_FORNECE"	  ,__TRZ->Z42_FORNEC   ,NIL}) // Fornecedor
+      aAdd(aCab,  {"C7_LOJA"	    ,__TRZ->Z42_LOJA     ,NIL}) // Loja do Fornecedor
+      aAdd(aCab,  {"C7_COND"	    ,__TRZ->Z42_COND     ,NIL}) // Condicao de Pagamento   
+      aAdd(aCab,  {"C7_FILENT"	  ,__TRZ->Z42_FILENT   ,NIL}) // Filial de Entrega    
+      aAdd(aCab,	{"C7_YIDCITE"	  ,__TRZ->Z42_YIDCIT	 ,NIL}) // ID CITEL
+      
+      While __TRZ->(!Eof())
+        
+        aItem := {}            
+        aAdd(aItem, {"C7_ITEM"        ,__TRZ->Z42_ITEM                      ,NIL})
+        aAdd(aItem, {"C7_PRODUTO"     ,__TRZ->Z42_PRODUT                    ,NIL})
+        aAdd(aItem, {"C7_QUANT"	      ,__TRZ->Z42_QUANT                     ,NIL})
+        aAdd(aItem, {"C7_LOCAL"	      ,"01"                                 ,NIL})
+        aAdd(aItem, {"C7_PRECO"	      ,__TRZ->Z42_PRECO                     ,NIL})            
+        aAdd(aItem, {"C7_TOTAL"	      ,__TRZ->Z42_PRECO * __TRZ->Z42_QUANT  ,NIL})            
+        aAdd(aItem, {"C7_QTDSOL"	    ,__TRZ->Z42_QUANT                     ,NIL})
+        aAdd(aItem, {"C7_DATPRF"	    ,StoD(__TRZ->Z42_DATPRF)              ,NIL})
+        aAdd(aItem, {"C7_OPER"	      ,"01"			                            ,Nil})
+        aAdd(aItem, {"C7_YTIPCMP"     ,__TRZ->Z42_YTIPCMP		                ,Nil})                            
+        aAdd(aItem,	{"C7_YIDCITE"	    ,__TRZ->Z42_YIDCIT	                  ,NIL})
+        aAdd(aIClone, AClone(aItem))       
+
+        __TRZ->(DbSkip())
+
+      EndDo 
+
+    EndIf
+
+  Next nI
+
+ 
+  If Len(aCab) > 0
+ 
+    
+    SC7->(DbSetOrder(1)) //C7_FILIAL, C7_NUM, C7_ITEM, C7_SEQUEN, R_E_C_N_O_, D_E_L_E_T_
+    
+    If SC7->(dbSeek(FWxFilial("SC7")+AllTrim(cNumPC)))
+
+      ConOut("*******************************************************************************") 
+      ConOut(" ") 
+      ConOut("O codigo " + AllTrim(cNumPC)+ " do pedido de compra ja existe na SC7  na Filial: "+FWxFilial("SC7")) 
+      ConOut(" ") 
+      ConOut("*******************************************************************************") 
+
+      return .F.
+
+    EndIf
+
+    Begin Transaction
+                                 
+        ConOut("INICIO MsExecAuto Mata120")
+        MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,aIClone,3,.F.) // 3 - Inclusao, 4 - Alteracao, 5 - Excluso                   
+
+        If !lMsErroAuto
+
+            ConOut("Incluido com sucesso o PEDIDO: " + cNumPC )
+
+            // Logica abaixo para ja alterar os PC para Liberado, PARA NÃO CONFLITAR COM REGRAS DE LIBERAÇÃO EXISTENTES 
+            If SC7->(dbSeek(FWxFilial("SC7")+cNumPC))  
+
+                While SC7->(!Eof()) .AND. FWxFilial("SC7")+cNumPC == SC7->C7_FILIAL+ SC7->C7_NUM               
+
+                    SC7->(RecLock('SC7', .F.))
+                        SC7->C7_CONAPRO := 'L'                        
+                    SC7->(MsUnlock())
+
+                    SC7->(DbSkip())
+
+                EndDo   
+
+            EndIf 
+
+          // Logica abaixo para marcar o pedido sincronizado
+          __TRZ->(dbGoTop())                 
+          While __TRZ->(!Eof())
+ 
+            Z42->(dbGoTo(__TRZ->RECNO))
+
+            Z42->(RecLock('Z42', .F.))
+              Z42->Z42_SYCSC7 := 'S'                        
+            Z42->(MsUnlock())           
+
+            __TRZ->(DbSkip())
+
+          EndDo 
+
+          ErrorBlock(oError) 
+
+        Else                     	
+            
+            cError := MostraErro("/dirdoc", "error.log") // ARMAZENA A MENSAGEM DE ERRO
+            ConOut(PadC("Automatic routine ended with error", 80))
+            ConOut("Error: "+ cError)
+
+            cError :=  StrTran( EncodeUtf8(cError), Chr(13) + Chr(10), "<BR>" )
+            cHtml  += ' <html> '
+            cHtml  += ' <body> ' 
+            cHtml  += ' <h3>JOB EXECAUTO - Pedido de Compra CITEL - '+ cNumPC+'</h3><BR>' 
+            cHtml  += ' '+cError+'<BR> '  
+            cHtml  += ' </body> ' 
+            cHtml  += ' </html> '
+
+            if !Empty(cEmCitel)
+
+              U_EnvEmail(cEmCitel," Erro no motor de abastecimento CITEL: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
+
+            EndIf
+
+        EndIf       		
+
+    End Transaction
+    
+    ConOut("FIM MsExecAuto Mata120") 
+  
+  Else  
+
+    ConOut("*******************************************************************************") 
+    ConOut(" ") 
+    ConOut("Nao ha dados para serem processados pelo JOB EXECAUTO - Pedido de Compra CITEL ") 
+    ConOut(" ") 
+    ConOut("*******************************************************************************") 
+
+  EndIf 
+
+Return .T.
+
+ 
+Static Function GetNumPC()
+  
+  Local cQuery   := ""
+  Local aNumPC   := {}
+  Local cFilialX := FWxFilial("SC7")
+
+  cQuery += " SELECT DISTINCT Z42_NUM  " + CRLF
+  cQuery += " FROM " + RetSqlName("Z42")  + CRLF
+  cQuery += " WHERE  Z42_FILIAL = "+ValToSql(cFilialX)  + CRLF
+  cQuery += " AND D_E_L_E_T_  = '' "  + CRLF
+  cQuery += " AND  Z42_SYCSC7 = 'N' " + CRLF
+
+  If Select("__TRX") > 0
+    __TRX->(dbCloseArea())
+  EndIf
+
+  TcQuery cQuery New Alias "__TRX"
+
+  __TRX->(dbGoTop())
+
+  While __TRX->(!Eof())
+
+    aAdd(aNumPC,AllTrim(__TRX->Z42_NUM))
+     __TRX->(DbSkip())
+
+  EndDo
+
+  __TRX->(dbCloseArea())
+
+Return aNumPC
