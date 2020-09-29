@@ -9,8 +9,12 @@ CLASS TIntegracaoMotorAbastecimentoDAO From LongClassName
     Method ExecAutoPVenda(oJson)
     Method BaixaTotalPC(oJson)
     Method BaixaParcialPC(oJson)
+    
     Method EnviaError(oJson)
     
+
+Method _BaixaParcialPC(oJson)
+
 
 ENDCLASS
 
@@ -62,8 +66,10 @@ Method CreatePCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
                 Z42->Z42_DATPRF   :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_DATPRF"]                             
                 Z42->Z42_YTIPCM   :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_YTIPCMP"]                                
                 Z42->Z42_YIDCIT   :=  oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]
-                Z42->Z42_SYCSC7   :=  "N"
-                Z42->Z42_SYCELE   :=  "N"
+                Z42->Z42_SYCSC7   :=  "N" // INICIA COMO NÃO SINCRONIZADO, JOB
+                Z42->Z42_SYCELE   :=  "N" // INICIA COMO RESIDUO NÃO ELIMNADO,  JOB
+                Z42->Z42_QTDNOV   :=  0   // CASO HAJA ALTERAÇÃO DA QUANTIDADE
+                
             Z42->(MsUnlock())   
         Next nI
 
@@ -112,6 +118,91 @@ METHOD BaixaTotalPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
 
     Local cCodigoDe  := oJson["C7_NUM"] 
     Local oJSRet     := JsonObject():New()
+    Local nI         := 0  
+    Local lError     := .F.    
+    Local aError     := {}
+    Local cError     := ""
+    Local oError     := ErrorBlock({|e| cError := e:Description})    
+
+    Z42->(DbSetOrder(1)) //Z42_FILIAL, Z42_NUM, Z42_ITEM, R_E_C_N_O_, D_E_L_E_T_
+    
+    If Z42->(dbSeek(FWxFilial("Z42")+AllTrim(cCodigoDe))) 
+
+        Begin Transaction           
+
+            While Z42->(!Eof()) .AND. FWxFilial("Z42")+AllTrim(cCodigoDe) == Z42->Z42_FILIAL+AllTrim(Z42->Z42_NUM)
+
+                if   Z42->Z42_SYCELE != 'S' .AND. Z42->Z42_SYCSC7 == 'S'   
+                
+                    Z42->(RecLock('Z42', .F.))
+
+                        Z42->Z42_SYCELE   :=  "T" 
+                    
+                    Z42->(MsUnlock())
+                
+                Else
+                    
+                    nI++
+                    lError     := .T.
+                    AADD(aError,   JsonObject():New())
+                    aError[nI]["field"]          := "item["+cValToChar(nI)+"].produto"
+                    aError[nI]["rejectedValue"]  := AllTrim(Z42->Z42_PRODUT)
+                    aError[nI]["defaultMessage"] := EncodeUtf8("O código do produto informado não foi encontrado ou ainda não foi sincronizado pelo ERP.")      
+                   
+
+                EndIf
+
+                Z42->(DbSkip())
+
+            EndDo    
+
+        End Transaction        
+
+        ErrorBlock(oError) 
+
+        If !Empty(cError)
+            nI++
+            lError     := .T.
+            AADD(aError,   JsonObject():New())
+            aError[nI]["field"]          := "numeroPedidoERP"
+            aError[nI]["rejectedValue"]  := AllTrim(oJson["C7_NUM"])
+            aError[nI]["defaultMessage"] := EncodeUtf8(cError)          
+
+        EndIf
+
+    Else
+
+        nI++
+        lError     := .T.
+        AADD(aError,   JsonObject():New())
+        aError[nI]["field"]          := "numeroPedidoERP"
+        aError[nI]["rejectedValue"]  := AllTrim(oJson["C7_NUM"])
+        aError[nI]["defaultMessage"] := EncodeUtf8("O pedido não foi encontrado.")
+
+    EndIf  
+
+    If lError
+
+        oJSRet["Status"] := 400
+        oJSRet["errors"] := aError
+
+    Else
+
+        oJSRet["Status"] := 200        
+        oJSRet["numeroPedidoERP"] := AllTrim(oJson["C7_NUM"])
+
+    EndIf  
+
+    FreeObj(oJson)
+
+Return oJSRet
+
+
+
+METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
+
+    Local cCodigoDe  := oJson["C7_NUM"] 
+    Local oJSRet     := JsonObject():New()
     Local nI         := 1  
     Local lError     := .F.    
     Local aError     := {}
@@ -122,27 +213,42 @@ METHOD BaixaTotalPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
     
     If Z42->(dbSeek(FWxFilial("Z42")+AllTrim(cCodigoDe))) 
 
-        //Begin Transaction
-           
-            //Z42->(dbGoTo(Z42->((Recno())))
-            //Z42->(dbGoTop())
+        Begin Transaction           
+
             While Z42->(!Eof()) .AND. FWxFilial("Z42")+AllTrim(cCodigoDe) == Z42->Z42_FILIAL+AllTrim(Z42->Z42_NUM)
 
-                if  Z42->Z42_SYCELE == 'N'  .AND.  Z42->Z42_SYCSC7 == 'S'   
-                
-                    Z42->(RecLock('Z42', .F.))
-
-                        Z42->Z42_SYCELE   :=  "T" 
+                For nI := 1 To Len(oJson["itens"])
                     
-                    Z42->(MsUnlock())
-                
-                EndIf
+                    If oJson["itens"][nI]["produto"] == Z42->Z42_PRODUT .AND. Z42->Z42_SYCELE != 'S' .AND.  Z42->Z42_SYCSC7 == 'S'                           
+
+                        If oJson["itens"][nI]["quantidade"] == 0
+                            
+                            Z42->(RecLock('Z42', .F.))
+
+                                Z42->Z42_SYCELE   :=  "P" // Eliminação DE 100%  de apenas um ÚNICO item do PC
+                            
+                            Z42->(MsUnlock()) 
+
+                        Else
+
+                            Z42->(RecLock('Z42', .F.))
+
+                                Z42->Z42_SYCELE   :=  "A" // Alteração de quantidade de apenas um ÚNICO item do PC
+                                Z42->Z42_QTDNOV   :=  oJson["itens"][nI]["quantidade"] // Nova quantidade
+
+                            Z42->(MsUnlock()) 
+
+                        EndIf                       
+                        
+                    EndIf
+
+                Next nI
 
                 Z42->(DbSkip())
 
             EndDo    
 
-        //End Transaction        
+        End Transaction        
 
         ErrorBlock(oError) 
 
@@ -182,7 +288,7 @@ METHOD BaixaTotalPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
 
 Return oJSRet
 
-Method BaixaParcialPC(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
+Method _BaixaParcialPC(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
 	
     Local oJSRet    := JsonObject():New() 
 	Local aCab      := {}

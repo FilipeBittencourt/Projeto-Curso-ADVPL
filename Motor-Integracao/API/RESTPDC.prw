@@ -60,7 +60,7 @@ WSMETHOD POST WSSERVICE pedidocomprabaixatotal
 
   cTime := FwTimeStamp()
   cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'
-  memowrite("\data\TESTE-INI-ELIMINIATOTAL_" + cTime + ".txt", "")
+  //memowrite("\data\TESTE-INI-ELIMINIATOTAL_" + cTime + ".txt", "")
 
   oJson := oIMAbast:BaixaTotalPC(oJson)
   ::SetStatus(oJson["Status"])  
@@ -68,12 +68,48 @@ WSMETHOD POST WSSERVICE pedidocomprabaixatotal
   
   cTime := FwTimeStamp()
   cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'
-  memowrite("\data\TESTE-FIM-ELIMINIATOTAL_" + cTime + ".txt", "")
+  //memowrite("\data\TESTE-FIM-ELIMINIATOTAL_" + cTime + ".txt", "")
 
   FreeObj(oJson)   
 
 Return .T.
 
+
+
+WsRestFul pedidocomprabaixaparcial Description "Facile Sistemas Webservices - Motor de Integração"
+  WSMETHOD POST DESCRIPTION "Session Motor de Integração" WSSYNTAX "/pedidocomprabaixaparcial"
+End WsRestFul
+
+WSMETHOD POST WSSERVICE pedidocomprabaixaparcial
+ 
+  Local cBody    := "" 
+  Local oJson    := JsonObject():New() 
+  Local oIMAbast := TIntegracaoMotorAbastecimentoParse():New()  
+  Local cTime    := ""
+ 
+  
+  ::SetContentType("application/json")   
+
+  //|Recupera os dados do body |  
+  cBody := ::GetContent()
+  conOut('pedidocomprabaixaparcial - POST METHOD')  
+  oJson:FromJson(cBody)  // converte para JsonObject 
+
+  cTime := FwTimeStamp()
+  cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'
+  //memowrite("\data\TESTE-INI-ELIMINIATOTAL_" + cTime + ".txt", "")
+
+  oJson := oIMAbast:BaixaParcialPC(oJson)
+  ::SetStatus(oJson["Status"])  
+  ::SetResponse(oJson:ToJson())
+  
+  cTime := FwTimeStamp()
+  cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'
+  //memowrite("\data\TESTE-FIM-ELIMINIATOTAL_" + cTime + ".txt", "")
+
+  FreeObj(oJson)   
+
+Return .T.
 
 
 WsRestFul gerajsontestepc Description "Facile Sistemas Webservices - Motor de Integração"

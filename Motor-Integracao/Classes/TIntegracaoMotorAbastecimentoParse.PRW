@@ -414,6 +414,7 @@ METHOD BaixaTotalPC(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 
 Return oJSRet
 
+
 METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoParse
     
     Local oIMADAO := TIntegracaoMotorAbastecimentoDAO():New()
@@ -421,14 +422,16 @@ METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 	Local oJSRet  := JsonObject():New()
 	Local aError  := {}
 	Local lError  := .F.
-	Local nI      := 1 	
+	Local nI      := 0
+	Local nW      := 0
 		
 
 	oJSPC["empresa"]    := ::ParseEmpresa(oJson)
 
 	//INICIO Validando
 	If Empty(oJSPC["empresa"]["empresaCnpj"])
-
+		
+		nI++
 		lError := .T.		
 		AADD(aError,   JsonObject():New())
 		aError[nI]["field"]          := "codigoEmpresa"
@@ -440,8 +443,10 @@ METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 
 	If 	lError == .F.	
  
+ 		
 		If Empty(oJson["numeroPedidoERP"])
-
+			
+			nI++
 			lError := .T.			
 			AADD(aError,   JsonObject():New())
 			aError[nI]["field"]          := "numeroPedidoERP"
@@ -449,6 +454,34 @@ METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 			aError[nI]["defaultMessage"] := EncodeUtf8("O numeroPedidoERP  não foi informado.")	
 
 		EndIf
+		
+		//Fornecedor
+		oJSPC["fornecedor"] := ::ParseFornecedor(oJson)
+		If Empty(oJSPC["fornecedor"]["A2_COD"])
+			lError := .T.
+			nI++
+			AADD(aError,   JsonObject():New())
+			aError[nI]["field"]          := "fornecedor"
+			aError[nI]["rejectedValue"]  := oJson["fornecedor"]
+			aError[nI]["defaultMessage"] := EncodeUtf8("O CNPJ do fornecedor informado não foi locaizado.")
+		EndIf
+
+		//Produtos
+		oJSPC["itens"]      := ::ParseProduto(oJson)						
+		For nW := 1 To Len(oJSPC["itens"]) 
+
+			If !Empty(oJSPC["itens"][nW]["erro"])
+
+				lError := .T.
+				nI++
+				AADD(aError,   JsonObject():New())
+				aError[nI]["field"]          := "itens["+cValToChar(nW)+"].produto"
+				aError[nI]["rejectedValue"]  := oJSPC["itens"][nW]["produto"]
+				aError[nI]["defaultMessage"] := EncodeUtf8(oJSPC["itens"][nW]["erro"])	
+
+			EndIf 
+
+		Next nW
 
 	EndIf
 	//FIM Validando
