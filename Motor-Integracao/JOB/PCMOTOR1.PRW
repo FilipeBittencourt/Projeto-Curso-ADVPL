@@ -23,6 +23,8 @@ Obs.      : Z42_SYCSC7 -
 
 
 //U_PCMOTOR1
+
+
 User Function  PCMOTOR1(xParam1,xParam2) 
  
   Local aCab      := {}
@@ -90,9 +92,9 @@ User Function  PCMOTOR1(xParam1,xParam2)
       
       aCab    := {}
       aIClone := {}
-      cNumPC  := __TRZ->Z42_NUM
+      cNumPC  := AllTrim(__TRZ->Z42_NUM)
 
-      aAdd(aCab,	{"C7_NUM"       ,__TRZ->Z42_NUM      ,Nil}) // Numero do Pedido
+      aAdd(aCab,	{"C7_NUM"       ,cNumPC      ,Nil}) // Numero do Pedido
       aAdd(aCab,  {"C7_EMISSAO"	  ,dDataBase           ,Nil})
       aAdd(aCab,  {"C7_FORNECE"	  ,__TRZ->Z42_FORNEC   ,NIL}) // Fornecedor
       aAdd(aCab,  {"C7_LOJA"	    ,__TRZ->Z42_LOJA     ,NIL}) // Loja do Fornecedor
@@ -104,14 +106,13 @@ User Function  PCMOTOR1(xParam1,xParam2)
         
         aItem := {}            
         aAdd(aItem, {"C7_ITEM"        ,__TRZ->Z42_ITEM                      ,NIL})
-        aAdd(aItem, {"C7_PRODUTO"     ,__TRZ->Z42_PRODUT                    ,NIL})
+        aAdd(aItem, {"C7_PRODUTO"     ,AllTrim(__TRZ->Z42_PRODUT)           ,NIL})
         aAdd(aItem, {"C7_QUANT"	      ,__TRZ->Z42_QUANT                     ,NIL})
         aAdd(aItem, {"C7_LOCAL"	      ,"01"                                 ,NIL})
         aAdd(aItem, {"C7_PRECO"	      ,__TRZ->Z42_PRECO                     ,NIL})            
         aAdd(aItem, {"C7_TOTAL"	      ,__TRZ->Z42_PRECO * __TRZ->Z42_QUANT  ,NIL})            
-       // aAdd(aItem, {"C7_QTDSOL"	    ,__TRZ->Z42_QUANT                    ,NIL})
+        aAdd(aItem, {"C7_QTDSOL"	    ,__TRZ->Z42_QUANT                     ,NIL})
         aAdd(aItem,	{"C7_TIPO"	      ,1                	                  ,NIL})
-       // aAdd(aItem, {"C7_TEST"	      ,"101"                                ,NIL})
         aAdd(aItem, {"C7_DATPRF"	    ,StoD(__TRZ->Z42_DATPRF)              ,NIL})
         aAdd(aItem, {"C7_OPER"	      ,"01"			                            ,Nil})
         aAdd(aItem, {"C7_YTIPCMP"     ,__TRZ->Z42_YTIPCMP		                ,Nil})                            
@@ -122,9 +123,7 @@ User Function  PCMOTOR1(xParam1,xParam2)
 
       EndDo 
 
-    EndIf
-
-  
+    EndIf 
 
   
     If Len(aCab) > 0
@@ -148,7 +147,7 @@ User Function  PCMOTOR1(xParam1,xParam2)
                                   
           ConOut("INICIO MsExecAuto Mata120")
           
-          MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,aItem,3,.F.) // 3 - Inclusao, 4 - Alteracao, 5 - Excluso                   
+          MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,aIClone,3,.F.) // 3 - Inclusao, 4 - Alteracao, 5 - Excluso                   
 
           If !lMsErroAuto
 
@@ -256,3 +255,205 @@ Static Function GetNumPC()
   __TRX->(dbCloseArea())
 
 Return aNumPC
+
+
+
+User Function  ____PCMOTOR1(xParam1,xParam2) 
+ 
+  Local aCab      := {}
+  Local aItem     := {}		
+  Local aIClone   := {}
+  Local aNumPC    := {}
+  Local cNumPC    := ""   
+ 
+  Local cQuery    := ""   
+  Local cError    := ""
+  Local cHtml     := ""
+  Local oError    := ErrorBlock({|e| cError := e:Description})
+  Local cEmCitel  :=  ""
+  Local nI        :=  0
+ 
+  Local cEmp		:= ""
+	Local cFil		:= "" 
+  Local nOpc	  := 3
+  
+
+  Private lMsErroAuto := .F.
+
+	If ValType(xParam1) == "A"
+		cEmp 		:= xParam1[1]
+		cFil 		:= xParam1[2]
+	ElseIf ValType(xParam1) == "C"
+		cEmp 		:= xParam1
+		cFil 		:= xParam2
+	Else
+		ConOut('## ERROR - NÃO FOI INFORMADO EMPRESA E FILIAL ##')
+		ConOut('## ERROR - FIM DO JOB ##')
+	  //Return
+    cEmp 		:= "08"
+		cFil 		:= "01"
+ 
+	EndIf
+
+  If Select("SX6") <= 0	
+    RPCSetEnv(cEmp, cFil, NIL, NIL, "COM", NIL, {"SB1","SF2","Z42"})	
+  EndIf
+
+  
+  cEmCitel := SuperGetMv("MV_YCITEL3",.F., "fsbvieira@gmail.com")  //Parametro CITEL email de quem ira receber o email de erro ao gerar PC pelo motor de abastecimento.
+
+  
+  aNumPC := GetNumPC()
+
+  For nI := 1 To  Len(aNumPC)
+    
+    cQuery := ""
+    cQuery += " SELECT R_E_C_N_O_ AS RECNO ,  * " + CRLF
+    cQuery += " FROM " + RetSqlName("Z42")  + CRLF
+    cQuery += " WHERE  Z42_FILIAL = "+ValToSql(cFil)  + CRLF
+    cQuery += " AND D_E_L_E_T_  = '' "  + CRLF
+    cQuery += " AND  Z42_SYCSC7 = 'N' " + CRLF  
+    cQuery += " AND  Z42_NUM    = "+ValToSql(AllTrim(aNumPC[nI]))  + CRLF  
+    cQuery += " ORDER BY Z42_NUM , Z42_ITEM ASC "    + CRLF 
+
+    If Select("__TRZ") > 0
+      __TRZ->(dbCloseArea())
+    EndIf
+
+    TcQuery cQuery New Alias "__TRZ"
+    __TRZ->(dbGoTop())
+
+    
+    If (! __TRZ->(EoF()) )
+      
+      aCab    := {}
+      aIClone := {}
+      cNumPC  := AllTrim(__TRZ->Z42_NUM)
+
+      SC7->(DbSetOrder(1)) //C7_FILIAL, C7_NUM, C7_ITEM, C7_SEQUEN, R_E_C_N_O_, D_E_L_E_T_
+      
+      If SC7->(dbSeek(FWxFilial("SC7")+AllTrim(cNumPC)))
+
+        ConOut("*******************************************************************************") 
+        ConOut(" ") 
+        ConOut("O codigo " + AllTrim(cNumPC)+ " do pedido de compra ja existe na SC7  na Filial: "+cEmp+"/"+cFil) 
+        ConOut(" ") 
+        ConOut("*******************************************************************************") 
+
+        return .F.
+
+      EndIf
+
+      aAdd(aCab,	{"C7_NUM"       ,cNumPC      ,Nil}) // Numero do Pedido
+      aAdd(aCab,  {"C7_EMISSAO"	  ,dDataBase           ,Nil})
+      aAdd(aCab,  {"C7_FORNECE"	  ,__TRZ->Z42_FORNEC   ,NIL}) // Fornecedor
+      aAdd(aCab,  {"C7_LOJA"	    ,__TRZ->Z42_LOJA     ,NIL}) // Loja do Fornecedor
+      aAdd(aCab,  {"C7_COND"	    ,__TRZ->Z42_COND     ,NIL}) // Condicao de Pagamento   
+      aAdd(aCab,  {"C7_FILENT"	  ,__TRZ->Z42_FILENT   ,NIL}) // Filial de Entrega    
+      aAdd(aCab,	{"C7_YIDCITE"	  ,__TRZ->Z42_YIDCIT	 ,NIL}) // ID CITEL
+      
+      //Begin Transaction
+        While __TRZ->(!Eof())
+          
+          aItem := {}            
+          aAdd(aItem, {"C7_ITEM"        ,AllTrim(__TRZ->Z42_ITEM)                      ,NIL})
+          aAdd(aItem, {"C7_PRODUTO"     ,AllTrim(__TRZ->Z42_PRODUT)           ,NIL})
+          aAdd(aItem, {"C7_QUANT"	      ,__TRZ->Z42_QUANT                     ,NIL})
+          aAdd(aItem, {"C7_LOCAL"	      ,"01"                                 ,NIL})
+          aAdd(aItem, {"C7_PRECO"	      ,__TRZ->Z42_PRECO                     ,NIL})            
+          aAdd(aItem, {"C7_TOTAL"	      ,__TRZ->Z42_PRECO * __TRZ->Z42_QUANT  ,NIL})            
+          aAdd(aItem, {"C7_QTDSOL"	    ,__TRZ->Z42_QUANT                     ,NIL})
+          aAdd(aItem,	{"C7_TIPO"	      ,1                	                  ,NIL})
+          aAdd(aItem, {"C7_DATPRF"	    ,StoD(__TRZ->Z42_DATPRF)              ,NIL})
+          aAdd(aItem, {"C7_OPER"	      ,"01"			                            ,Nil})
+          aAdd(aItem, {"C7_YTIPCMP"     ,__TRZ->Z42_YTIPCMP		                ,Nil})                            
+          aAdd(aItem,	{"C7_YIDCITE"	    ,__TRZ->Z42_YIDCIT	                  ,NIL})
+
+        
+
+          If  nOpc == 3
+            MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,{aItem},nOpc,.F.)         	
+
+          Else
+
+            MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,{aItem},nOpc,.F.)
+
+          EndIf
+
+          If !lMsErroAuto
+
+            ConOut("Incluido com sucesso o PEDIDO: " + cNumPC )              	
+            If nOpc == 3
+              nOpc := 4	
+            EndIf		 
+
+            ErrorBlock(oError) 
+
+          Else                     	
+              
+              cError := MostraErro("/dirdoc", "error.log") // ARMAZENA A MENSAGEM DE ERRO
+              ConOut(PadC("Automatic routine ended with error", 80))
+              ConOut("Error: "+ cError)
+
+              cError :=  StrTran( EncodeUtf8(cError), Chr(13) + Chr(10), "<BR>" )
+              cHtml  += ' <html> '
+              cHtml  += ' <body> ' 
+              cHtml  += ' <h3>JOB EXECAUTO - Pedido de Compra CITEL - '+ cNumPC+'</h3><BR>' 
+              cHtml  += ' '+cError+'<BR> '  
+              cHtml  += ' </body> ' 
+              cHtml  += ' </html> '
+
+              if !Empty(cEmCitel)
+
+                U_EnvEmail(cEmCitel," Erro no motor de abastecimento CITEL: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
+
+              EndIf
+
+              return .T.
+
+          EndIf        
+
+          __TRZ->(DbSkip())
+
+        EndDo 
+
+      //End Transaction
+
+    EndIf 
+
+    If !lMsErroAuto
+
+      // Logica abaixo para ja alterar os PC para Liberado, PARA NÃO CONFLITAR COM REGRAS DE LIBERAÇÃO EXISTENTES 
+      If SC7->(dbSeek(FWxFilial("SC7")+cNumPC))  
+
+          While SC7->(!Eof()) .AND. FWxFilial("SC7")+cNumPC == SC7->C7_FILIAL+ SC7->C7_NUM               
+
+              SC7->(RecLock('SC7', .F.))
+                  SC7->C7_CONAPRO := 'L'                        
+              SC7->(MsUnlock())
+
+              SC7->(DbSkip())
+
+          EndDo   
+
+      EndIf 
+
+      // Logica abaixo para marcar o pedido sincronizado
+      __TRZ->(dbGoTop())                 
+      While __TRZ->(!Eof())
+
+        Z42->(dbGoTo(__TRZ->RECNO))
+
+        Z42->(RecLock('Z42', .F.))
+          Z42->Z42_SYCSC7 := 'S'                        
+        Z42->(MsUnlock())           
+
+        __TRZ->(DbSkip())
+
+      EndDo
+
+    EndIf  
+
+  Next nI
+
+Return .T.

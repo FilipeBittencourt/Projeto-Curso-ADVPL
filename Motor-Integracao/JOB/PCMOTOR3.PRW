@@ -8,7 +8,16 @@ Tipo		  : job
 Descrição	: função para pegar os dados na Z42  e incluir via ExecAUTO NA TABEA SC7
 Autor     : Filipe Bittencourt - Facile
 Retorno 	: .T.
-Obs.      : Z42_SYCSC7 -   N = Não integrado  ou  S = Integrado 
+Obs.      : Z42_SYCSC7 -    
+                        N = NÃO SINCRONIZADO COM A SC7                     
+                        S = SICRONIZADO COM A SC7
+                        
+           Z42_SYCELE -    
+                        N = Não Eliminado                        
+                        T = Eliminado residuo TOTAL 100% de todos os itens
+                        P = Eliminação DE 100%  de apenas um ÚNICO item do PC                        
+                        A = Alteração de quantidade de apenas um ÚNICO item do PC
+                        S = Item ou pedido 100% encerrado.
 ------------------------------------------------------------------------------------------------------------
 */
 
@@ -48,14 +57,14 @@ User Function  PCMOTOR3(xParam1,xParam2)
   EndIf
 
   PutExec()
-
-  //PutElim()
+ 
+  PutElim()
 
 
 Return .T.
   
 
-Static Function  PutExec() 
+Static Function  __PutExec() 
 
   Local aCab      := {}
   Local aItem     := {}		
@@ -63,19 +72,17 @@ Static Function  PutExec()
   Local cQuery    := ""   
   Local cError    := ""
   Local cHtml     := ""
+  Local nI        := 0
   Local oError    := ErrorBlock({|e| cError := e:Description})
   Local cEmCitel  := cEmCitel := SuperGetMv("MV_YCITEL3",.F., "fsbvieira@gmail.com")  //Parametro CITEL email de quem ira receber o email de erro ao gerar PC pelo motor de abastecimento.
-  Local cFilialX  := FWxFilial("SC7")
-
-  
+  Local cFilialX  := FWxFilial("SC7") 
 
 	Private lMsErroAuto := .F. 
 
   aNumPC := GetNumPC("A") // PEGO UMA LISTA DE PEDIDOS QUE  TIVERAM ITENS ALTERADOS em sua QUANTIDADE Z42_SYCELE = 'A' 
   
 
-  For nI := 1 To  Len(aNumPC)
-    
+  For nI := 1 To  Len(aNumPC) // PEGO os itens de cada pedido com  Z42_SYCELE = 'A'  
 
     cQuery  := ""
     cQuery  += " SELECT R_E_C_N_O_ AS RECNO ,  * " + CRLF
@@ -83,7 +90,8 @@ Static Function  PutExec()
     cQuery  += " WHERE  Z42_FILIAL = "+ValToSql(cFilialX)  + CRLF
     cQuery  += " AND D_E_L_E_T_  = '' "  + CRLF 
     cQuery  += " AND  Z42_NUM    = "+ValToSql(AllTrim(aNumPC[nI]))  + CRLF  
-    cQuery  += " AND  Z42_QTDNOV > 0  " + CRLF  
+    cQuery  += " AND  Z42_SYCELE = 'A' " + CRLF       
+    cQuery  += " AND  Z42_QTDNOV  > 0 " + CRLF    
     cQuery  += " ORDER BY Z42_NUM , Z42_ITEM ASC "    + CRLF 
 
     If Select("__TRZ") > 0
@@ -108,7 +116,7 @@ Static Function  PutExec()
       aAdd(aCab,  {"C7_COND"	    ,__TRZ->Z42_COND              ,NIL}) // Condicao de Pagamento   
       aAdd(aCab,  {"C7_FILENT"	  ,__TRZ->Z42_FILENT            ,NIL}) // Filial de Entrega          
       aAdd(aCab,	{"C7_YIDCITE"	  ,__TRZ->Z42_YIDCIT	          ,NIL}) // ID CITEL
-      //aAdd(aCab,	{"C7_CONAPRO"	  ,"L"               	          ,NIL})
+      aAdd(aCab,	{"C7_CONAPRO"	  ,"L"               	          ,NIL})
       
      
       SC7->(DbSetOrder(1))
@@ -127,14 +135,19 @@ Static Function  PutExec()
         aAdd(aItem, {"C7_TOTAL"	      ,__TRZ->Z42_PRECO * __TRZ->Z42_QTDNOV ,NIL})                   
         aAdd(aItem, {"C7_DATPRF"	    ,StoD(__TRZ->Z42_DATPRF)              ,NIL})
         aAdd(aItem, {"C7_OPER"	      ,"01"			                            ,Nil})
-        aAdd(aItem,	{"C7_TIPO"	      ,1                	                  ,NIL})
-       // aAdd(aItem, {"C7_TEST"	      ,"101"                               ,NIL})
-        //aAdd(aItem,	{"C7_CONAPRO"	    ,"L"               	                ,NIL})        
+        aAdd(aItem,	{"C7_TIPO"	      ,1                	                  ,NIL})      
+        aAdd(aItem,	{"C7_CONAPRO"	    ,"L"               	                  ,NIL})        
         aAdd(aItem, {"C7_YTIPCMP"     ,__TRZ->Z42_YTIPCMP		                ,Nil})                            
         aAdd(aItem,	{"C7_YIDCITE"	    ,__TRZ->Z42_YIDCIT	                  ,NIL})
         
         If SC7->(dbSeek(FWxFilial("SC7")+cNumPC+AllTrim(__TRZ->Z42_ITEM)))  
-          aAdd(aItem, {"C7_REC_WT"     ,SC7->(RECNO()) ,Nil})
+          
+          aAdd(aItem, {"C7_REC_WT"     ,SC7->(RECNO()) ,Nil})   
+
+          SC7->(RecLock('SC7', .F.))
+              SC7->C7_CONAPRO := 'B'                        
+          SC7->(MsUnlock())     
+
         EndIf
 
         aAdd(aIClone, AClone(aItem))       
@@ -144,7 +157,7 @@ Static Function  PutExec()
       EndDo 
 
     EndIf
-  
+    
     If Len(aCab) > 0 
 
       Begin Transaction
@@ -156,6 +169,21 @@ Static Function  PutExec()
         If !lMsErroAuto
 
           ConOut("Incluido com sucesso o PEDIDO: " + cNumPC )  
+               
+          //ATUALIZO A QUANTIDADE  DE ACORDO COM A ENVIADA e para o JOB não ficar rodando TODAS AS VEZES   
+          __TRZ->(dbGoTop())                 
+          While __TRZ->(!Eof())
+
+            Z42->(dbGoTo(__TRZ->RECNO))
+
+            Z42->(RecLock('Z42', .F.))
+              Z42->Z42_QUANT    := __TRZ->Z42_QTDNOV 
+              Z42->Z42_QTDNOV   :=  0                   
+            Z42->(MsUnlock())           
+
+            __TRZ->(DbSkip())
+
+          EndDo 
           
 
         Else                     	
@@ -189,11 +217,12 @@ Static Function  PutExec()
 
       ConOut("*******************************************************************************") 
       ConOut(" ") 
-      ConOut("Nao ha dados para serem processados pelo JOB EXECAUTO - Pedido de Compra CITEL ") 
+      ConOut("Nao ha dados para serem processados pelo JOB3 EXECAUTO - Pedido de Compra CITEL ") 
       ConOut(" ") 
       ConOut("*******************************************************************************") 
 
     EndIf 
+    
 
   Next nI
 
@@ -227,17 +256,20 @@ Static Function  PutElim()
   Local cFil	     := "" 
   Local cEmCitel   := SuperGetMv("MV_YCITEL3",.F., "fsbvieira@gmail.com")  //Parametro CITEL email de quem ira receber o email de erro ao gerar PC pelo motor de abastecimento.	
   Local cQuery     := ""
+  Local cFilialX  := FWxFilial("SC7") 
 
   aNumPC := GetNumPC("P") // PEGOS OS PEDIDOS COM ITENS QUE FORAM ZERADOS STATUTS P
 
+  // pegando apenas os itens de cada pedido com status P
   For nI := 1 To  Len(aNumPC)
     
     cQuery := ""
     cQuery += " SELECT R_E_C_N_O_ AS RECNO ,  * " + CRLF
     cQuery += " FROM " + RetSqlName("Z42")  + CRLF
-    cQuery += " WHERE  Z42_FILIAL = "+ValToSql(cFil)  + CRLF
+    cQuery += " WHERE  Z42_FILIAL = "+ValToSql(cFilialX)  + CRLF
     cQuery += " AND D_E_L_E_T_  = '' "  + CRLF 
     cQuery += " AND  Z42_NUM    = "+ValToSql(AllTrim(aNumPC[nI]))  + CRLF  
+    cQuery += " AND  Z42_SYCELE = 'P' " + CRLF  
     cQuery += " ORDER BY Z42_NUM , Z42_ITEM ASC "    + CRLF 
 
     If Select("__TRZ") > 0
@@ -248,17 +280,12 @@ Static Function  PutElim()
     __TRZ->(dbGoTop())
  
 
-    If (! __TRZ->(EoF()) )
+    If (! __TRZ->(EoF()) )      
 
-      While __TRZ->(!Eof())
-
-        cCodigoDe  := ALLTRIM(__TRZ->Z42_NUM) 
-        cCodigoAte := ALLTRIM(__TRZ->Z42_NUM) 
-        cProdDe    := ALLTRIM(__TRZ->Z42_PRODUT)  
-        cProdAte   := ALLTRIM(__TRZ->Z42_PRODUT) 
-        cFornDe    := ALLTRIM(__TRZ->Z42_FORNEC)  
-        cFornAte   := ALLTRIM(__TRZ->Z42_FORNEC)  
-      
+      While __TRZ->(!Eof())  
+    
+      cCodigoDe  := ALLTRIM(__TRZ->Z42_NUM) 
+      cCodigoAte := ALLTRIM(__TRZ->Z42_NUM) 
         /*
         No caso da eleminição de resíduos ficou decido da seguinte forma:
 
@@ -270,15 +297,30 @@ Static Function  PutElim()
               o informado pela CITEL. Caso a quantidade informada a ser eliminada forma maior que o atual será enviada uma mensagem de erro.           
         */
         SC7->(DbSetOrder(1)) //C7_FILIAL, C7_NUM, C7_ITEM, C7_SEQUEN, R_E_C_N_O_, D_E_L_E_T_
-        
-        If Z42->(dbSeek(FWxFilial("Z42")+cCodigoDe+AllTrim(Z42->Z42_ITEM))) 
           
-          If  SC7->C7_RESIDUO != 'S' 
+        If SC7->(dbSeek(FWxFilial("SC7")+cCodigoDe)) 
+          
+          aRecSC7    := {}
+          While SC7->(!Eof()) .AND. FWxFilial("SC7")+cCodigoDe == SC7->C7_FILIAL+SC7->C7_NUM
+              
+                SC7->(RecLock('SC7', .F.))
+                  SC7->C7_CONAPRO   :=  "L"   // certificando que oS itens foram liberados
+                SC7->(MsUnlock()) 
 
-            AADD(aRecSC7, SC7->(Recno()))
+              If  SC7->C7_RESIDUO != 'S'  .AND.  ALLTRIM(__TRZ->Z42_PRODUT) == ALLTRIM(SC7->C7_PRODUTO)
 
-          EndIf        
-               
+                AADD(aRecSC7, SC7->(Recno()))  //Pegando o recno do item para eliminar   
+            
+                cProdDe    := ALLTRIM(__TRZ->Z42_PRODUT)  
+                cProdAte   := ALLTRIM(__TRZ->Z42_PRODUT) 
+                cFornDe    := ALLTRIM(__TRZ->Z42_FORNEC)  
+                cFornAte   := ALLTRIM(__TRZ->Z42_FORNEC)  
+
+              EndIf
+
+              SC7->(DbSkip())
+
+          EndDo                 
           
           If Len(aRecSC7) > 0
 
@@ -287,24 +329,13 @@ Static Function  PutElim()
             ConOut("INICIO Eliminando residuo PC MA235PC" + cTime)
             Begin Transaction    
             
-                //Eliminando residuo
-                MA235PC(nPerc, cTipo, dEmisDe, dEmisAte, cCodigoDe, cCodigoAte, cProdDe, cProdAte, cFornDe, cFornAte, dDatprfde, dDatPrfAte, cItemDe, cItemAte, lConsEIC, aRecSC7)     
-                
-                //Atualizando status Z42_SYCELE para eliminado S=sim
-                Z42->(DbSetOrder(1)) //Z42_FILIAL, Z42_NUM, Z42_ITEM, R_E_C_N_O_, D_E_L_E_T_    
-                If Z42->(dbSeek(FWxFilial("Z42")+cCodigoDe+AllTrim(Z42->Z42_ITEM)))                 
+              //Eliminando residuo
+              MA235PC(nPerc, cTipo, dEmisDe, dEmisAte, cCodigoDe, cCodigoAte, cProdDe, cProdAte, cFornDe, cFornAte, dDatprfde, dDatPrfAte, cItemDe, cItemAte, lConsEIC, aRecSC7)     
 
-                    if  Z42->Z42_SYCELE <> 'S'  .AND.  Z42->Z42_SYCSC7 == 'S'   
-                    
-                        Z42->(RecLock('Z42', .F.))
-
-                          Z42->Z42_SYCELE   :=  "S" 
-                        
-                        Z42->(MsUnlock())
-                    
-                    EndIf            
-                  
-                EndIf
+              Z42->(dbGoTo(__TRZ->RECNO))
+              Z42->(RecLock('Z42', .F.))
+                Z42->Z42_SYCELE   :=  "S"                         
+              Z42->(MsUnlock()) 
             
             End Transaction
 
@@ -399,6 +430,13 @@ Static Function GetNumPC(cSYCELE)
   cQuery += " AND  Z42_SYCSC7 = 'S' " + CRLF
   cQuery += " AND  Z42_SYCELE = "+ValToSql(cSYCELE)  + CRLF
   
+   //para controle do JOB de alteração da QTD do item . Restorna o PC em que houve alguma alteração em um dos seus itens Z42_JOBALT = 'S' ou  'N' não retorna
+  if cSYCELE == "A"
+    cQuery  += " AND  Z42_JOBALT = 'S' " + CRLF     
+  EndIf
+  
+  
+  
 
   If Select("__TRX") > 0
     __TRX->(dbCloseArea())
@@ -420,5 +458,188 @@ Static Function GetNumPC(cSYCELE)
 
 Return aNumPC
 
+Static Function  PutExec() 
+ 
 
+  Local aCab      := {}
+  Local aItem     := {}		
+  Local aIClone   := {}    
+  Local cQuery    := ""   
+  Local cError    := ""
+  Local cHtml     := ""
+  Local nI        := 0
+  Local oError    := ErrorBlock({|e| cError := e:Description})
+  Local cEmCitel  := cEmCitel := SuperGetMv("MV_YCITEL3",.F., "fsbvieira@gmail.com")  //Parametro CITEL email de quem ira receber o email de erro ao gerar PC pelo motor de abastecimento.
+  Local cFilialX  := FWxFilial("SC7") 
 
+	Private lMsErroAuto := .F. 
+
+  aNumPC := GetNumPC("A") // PEGO UMA LISTA DE PEDIDOS QUE  TIVERAM ITENS ALTERADOS em sua QUANTIDADE Z42_SYCELE = 'A' 
+  
+
+  For nI := 1 To  Len(aNumPC) // PEGO os itens de cada pedido com  Z42_SYCELE = 'A'  
+
+    cQuery  := ""
+    cQuery  += " SELECT R_E_C_N_O_ AS RECNO ,  * " + CRLF
+    cQuery  += " FROM " + RetSqlName("Z42")  + CRLF
+    cQuery  += " WHERE  Z42_FILIAL = "+ValToSql(cFilialX)  + CRLF
+    cQuery  += " AND D_E_L_E_T_  = '' "  + CRLF 
+    cQuery  += " AND  Z42_NUM    = "+ValToSql(AllTrim(aNumPC[nI]))  + CRLF          
+    cQuery  += " ORDER BY Z42_NUM , Z42_ITEM ASC "    + CRLF 
+
+    If Select("__TRZ") > 0
+      __TRZ->(dbCloseArea())
+    EndIf
+
+    TcQuery cQuery New Alias "__TRZ"
+    __TRZ->(dbGoTop())
+
+    
+    If (! __TRZ->(EoF()) )
+      
+      aCab    := {}
+      aIClone := {}
+      cNumPC  := AllTrim(__TRZ->Z42_NUM) 
+      
+      aAdd(aCab,	{"C7_FILIAL"    ,AllTrim(__TRZ->Z42_FILIAL)   ,Nil}) // Numero do Pedido
+      aAdd(aCab,	{"C7_NUM"       ,cNumPC                       ,Nil}) // Numero do Pedido
+      aAdd(aCab,  {"C7_EMISSAO"	  ,StoD(__TRZ->Z42_EMISSA)      ,Nil})
+      aAdd(aCab,  {"C7_FORNECE"	  ,__TRZ->Z42_FORNEC            ,NIL}) // Fornecedor
+      aAdd(aCab,  {"C7_LOJA"	    ,__TRZ->Z42_LOJA              ,NIL}) // Loja do Fornecedor
+      aAdd(aCab,  {"C7_COND"	    ,__TRZ->Z42_COND              ,NIL}) // Condicao de Pagamento   
+      aAdd(aCab,  {"C7_FILENT"	  ,__TRZ->Z42_FILENT            ,NIL}) // Filial de Entrega          
+      aAdd(aCab,	{"C7_YIDCITE"	  ,__TRZ->Z42_YIDCIT	          ,NIL}) // ID CITEL
+      aAdd(aCab,	{"C7_CONAPRO"	  ,"L"               	          ,NIL})
+      
+     
+      SC7->(DbSetOrder(1))
+
+      While __TRZ->(!Eof())
+        
+        aItem := {}      
+        aAdd(aItem,	{"C7_FILIAL"    ,AllTrim(__TRZ->Z42_FILIAL)             ,Nil}) // Numero do Pedido
+        aAdd(aItem,	{"C7_NUM"       ,cNumPC                                 ,Nil}) // Numero do Pedido      
+        aAdd(aItem, {"C7_ITEM"        ,AllTrim(__TRZ->Z42_ITEM)             ,NIL})
+        aAdd(aItem, {"C7_PRODUTO"     ,AllTrim(__TRZ->Z42_PRODUT)           ,NIL})
+       // aAdd(aItem, {"C7_QUANT"	      ,__TRZ->Z42_QTDNOV                    ,NIL})                           
+        //aAdd(aItem, {"C7_QTDSOL"	    ,__TRZ->Z42_QTDNOV                    ,NIL})
+        aAdd(aItem, {"C7_LOCAL"	      ,"01"                                 ,NIL})
+        //aAdd(aItem, {"C7_PRECO"	      ,__TRZ->Z42_PRECO                     ,NIL})            
+        //aAdd(aItem, {"C7_TOTAL"	      ,__TRZ->Z42_PRECO * __TRZ->Z42_QTDNOV ,NIL})                   
+        aAdd(aItem, {"C7_DATPRF"	    ,StoD(__TRZ->Z42_DATPRF)              ,NIL})
+        aAdd(aItem, {"C7_OPER"	      ,"01"			                            ,Nil})
+        aAdd(aItem,	{"C7_TIPO"	      ,1                	                  ,NIL})      
+        aAdd(aItem,	{"C7_CONAPRO"	    ,"L"               	                  ,NIL})        
+        aAdd(aItem, {"C7_YTIPCMP"     ,__TRZ->Z42_YTIPCMP		                ,Nil})                            
+        aAdd(aItem,	{"C7_YIDCITE"	    ,__TRZ->Z42_YIDCIT	                  ,NIL})
+        
+        If SC7->(dbSeek(FWxFilial("SC7")+cNumPC+AllTrim(__TRZ->Z42_ITEM)))  
+          
+
+          If __TRZ->Z42_QTDNOV == 0
+
+            aAdd(aItem, {"C7_QUANT"	      ,SC7->C7_QUANT                ,NIL})                           
+            aAdd(aItem, {"C7_QTDSOL"	    ,SC7->C7_QTDSOL               ,NIL})
+            aAdd(aItem, {"C7_PRECO"	      ,SC7->C7_PRECO                ,NIL})            
+            aAdd(aItem, {"C7_TOTAL"	      ,SC7->C7_TOTAL                ,NIL}) 
+
+          Else
+
+            aAdd(aItem, {"C7_QUANT"	      ,__TRZ->Z42_QTDNOV                    ,NIL})                           
+            aAdd(aItem, {"C7_QTDSOL"	    ,__TRZ->Z42_QTDNOV                    ,NIL})
+            aAdd(aItem, {"C7_PRECO"	      ,__TRZ->Z42_PRECO                     ,NIL})            
+            aAdd(aItem, {"C7_TOTAL"	      ,__TRZ->Z42_PRECO * __TRZ->Z42_QTDNOV ,NIL})  
+
+          EndIf 
+
+          aAdd(aItem, {"C7_REC_WT"     ,SC7->(RECNO()) ,Nil})   
+          aAdd(aIClone, AClone(aItem))       
+
+        EndIf
+
+              
+        
+        __TRZ->(DbSkip())
+
+      EndDo 
+
+    EndIf
+  
+    If Len(aCab) > 0 
+
+      Begin Transaction
+                                  
+        ConOut("INICIO MsExecAuto Mata120")   
+        
+        MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,aIClone,4,.F.) // 3 - Inclusao, 4 - Alteracao, 5 - Excluso                   
+
+        If !lMsErroAuto
+
+          ConOut("Incluido com sucesso o PEDIDO: " + cNumPC )  
+               
+          //ATUALIZO A QUANTIDADE  DE ACORDO COM A ENVIADA e para o JOB não ficar rodando TODAS AS VEZES   
+          __TRZ->(dbGoTop())                 
+          While __TRZ->(!Eof())
+
+            Z42->(dbGoTo(__TRZ->RECNO))
+
+            If   Z42->Z42_SYCELE == 'A'
+
+              Z42->(RecLock('Z42', .F.))
+
+                Z42->Z42_QUANT    := __TRZ->Z42_QTDNOV 
+                Z42->Z42_QTDNOV   :=  0   
+                Z42->Z42_JOBALT   :=  "N"     
+                           
+              Z42->(MsUnlock()) 
+
+            EndIf          
+
+            __TRZ->(DbSkip())
+
+          EndDo 
+          
+
+        Else                     	
+            
+            ErrorBlock(oError) 
+            cError := MostraErro("/dirdoc", "error.log") // ARMAZENA A MENSAGEM DE ERRO
+            ConOut(PadC("Automatic routine ended with error", 80))
+            ConOut("Error: "+ cError)
+
+            cError :=  StrTran( EncodeUtf8(cError), Chr(13) + Chr(10), "<BR>" )
+            cHtml  += ' <html> '
+            cHtml  += ' <body> ' 
+            cHtml  += ' <h3>JOB EXECAUTO - Pedido de Compra CITEL - '+ cNumPC+'</h3><BR>' 
+            cHtml  += ' '+cError+'<BR> '  
+            cHtml  += ' </body> ' 
+            cHtml  += ' </html> '
+
+            if !Empty(cEmCitel)
+
+              U_EnvEmail(cEmCitel," Erro no motor de abastecimento CITEL: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
+
+            EndIf
+
+        EndIf       		
+
+      End Transaction
+      
+      ConOut("FIM MsExecAuto Mata120") 
+    
+    Else  
+
+      ConOut("*******************************************************************************") 
+      ConOut(" ") 
+      ConOut("Nao ha dados para serem processados pelo JOB3 EXECAUTO - Pedido de Compra CITEL ") 
+      ConOut(" ") 
+      ConOut("*******************************************************************************") 
+
+    EndIf 
+   
+
+  Next nI
+
+Return .T.
+  
+ 

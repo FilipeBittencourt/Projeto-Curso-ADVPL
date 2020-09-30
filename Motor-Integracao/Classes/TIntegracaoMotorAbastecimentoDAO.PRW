@@ -68,6 +68,7 @@ Method CreatePCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
                 Z42->Z42_YIDCIT   :=  oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]
                 Z42->Z42_SYCSC7   :=  "N" // INICIA COMO NÃO SINCRONIZADO, JOB
                 Z42->Z42_SYCELE   :=  "N" // INICIA COMO RESIDUO NÃO ELIMNADO,  JOB
+                Z42->Z42_JOBALT   :=  "N" // CONTROLER DE QTD DE JOB DE ALTERACAO
                 Z42->Z42_QTDNOV   :=  0   // CASO HAJA ALTERAÇÃO DA QUANTIDADE
                 
             Z42->(MsUnlock())   
@@ -226,15 +227,18 @@ METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
                             Z42->(RecLock('Z42', .F.))
 
                                 Z42->Z42_SYCELE   :=  "P" // Eliminação DE 100%  de apenas um ÚNICO item do PC
+                                Z42->Z42_QTDNOV   :=  oJson["itens"][nI]["quantidade"] // Nova quantidade
                             
                             Z42->(MsUnlock()) 
 
                         Else
 
                             Z42->(RecLock('Z42', .F.))
-
+                                
+                                Z42->Z42_JOBALT   :=  "S"
                                 Z42->Z42_SYCELE   :=  "A" // Alteração de quantidade de apenas um ÚNICO item do PC
                                 Z42->Z42_QTDNOV   :=  oJson["itens"][nI]["quantidade"] // Nova quantidade
+                                controle de alteracao
 
                             Z42->(MsUnlock()) 
 
@@ -288,115 +292,7 @@ METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
 
 Return oJSRet
 
-Method _BaixaParcialPC(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
-	
-    Local oJSRet    := JsonObject():New() 
-	Local aCab      := {}
-	Local aItem     := {}		
-    Local aIClone   := {}
-	Local cNumPC    := ""	 
-	Local nI        := 1  
-    Local nW        := 1  
-    
-    Local lError    := .F.    
-    Local aError    := {}
-    Local cError    := ""
-    Local oError    := ErrorBlock({|e| cError := e:Description})
 
-	Private lMsErroAuto := .F.
-
-    cNumPC := GetNumSC7()   
-    aAdd(aCab,	{"C7_NUM"       ,cNumPC                                      ,Nil}) // Numero do Pedido
-    aAdd(aCab,  {"C7_EMISSAO"	,oJSPC["pedidoCompra"]["cab"]["C7_EMISSAO"]  ,Nil})
-    aAdd(aCab,  {"C7_FORNECE"	,oJSPC["pedidoCompra"]["cab"]["C7_FORNECE"]  ,NIL}) // Fornecedor
-    aAdd(aCab,  {"C7_LOJA"	    ,oJSPC["pedidoCompra"]["cab"]["C7_LOJA"]     ,NIL}) // Loja do Fornecedor
-    aAdd(aCab,  {"C7_COND"	    ,oJSPC["pedidoCompra"]["cab"]["C7_COND"]     ,NIL}) // Condicao de Pagamento   
-    aAdd(aCab,  {"C7_FILENT"	,oJSPC["pedidoCompra"]["cab"]["C7_FILENT"]   ,NIL}) // Filial de Entrega
-    aAdd(aCab,  {"C7_CONAPRO"   ,oJSPC["pedidoCompra"]["cab"]["C7_CONAPRO"]  ,Nil})  // Pedido já caindo liberado
-    aAdd(aCab,	{"C7_YIDCITE"	,oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]	 ,NIL}) // ID CITEL
-    
- 
-    Begin Transaction
-
-        For nI := 1 To  Len(oJSPC["pedidoCompra"]["itens"])    
-             
-            aItem := {}
-            //aAdd(aItem,	{"C7_NUM"         ,cNumPC                                                     ,Nil}) // Numero do Pedido
-            //aAdd(aItem, {"C7_ITEM"        ,StrZero(nI, TamSX3('C7_ITEM')[01])                         ,NIL})
-            aAdd(aItem, {"C7_PRODUTO"     ,oJSPC["pedidoCompra"]["itens"][nI]["C7_PRODUTO"]           ,NIL})//U_NAOCOMPRAR()            
-            aAdd(aItem, {"C7_QUANT"	      ,oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]             ,NIL})
-            aAdd(aItem, {"C7_LOCAL"	      ,oJSPC["pedidoCompra"]["itens"][nI]["C7_LOCAL"]             ,Nil})	
-            aAdd(aItem, {"C7_PRECO"	      ,oJSPC["pedidoCompra"]["itens"][nI]["C7_PRECO"]             ,NIL})            
-            aAdd(aItem, {"C7_TOTAL"	      ,oJSPC["pedidoCompra"]["itens"][nI]["C7_PRECO"] * oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]             ,NIL})            
-            aAdd(aItem, {"C7_QTDSOL"	  ,oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]             ,NIL})
-            aAdd(aItem, {"C7_DATPRF"	  ,oJSPC["pedidoCompra"]["itens"][nI]["C7_DATPRF"]            ,NIL})  //Data de entrega
-            aAdd(aItem, {"C7_OPER"	      ,oJSPC["pedidoCompra"]["itens"][nI]["C7_OPER"]			  ,Nil})
-            aAdd(aItem, {"C7_YTIPCMP"     ,oJSPC["pedidoCompra"]["itens"][nI]["C7_YTIPCMP"]			  ,Nil})        
-            aAdd(aItem, {"C7_CONAPRO"     ,oJSPC["pedidoCompra"]["itens"][nI]["C7_CONAPRO"]		      ,Nil})  // Pedido já caindo liberado                  
-            aAdd(aItem,	{"C7_YIDCITE"	  ,oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]	              ,NIL})  // ID CITEL            
-            aAdd(aIClone, AClone(aItem))
-
-        Next nI                         
-        ConOut("INICIO MsExecAuto Mata120")
-        MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,aIClone,3,.F.) // 3 - Inclusao, 4 - Alteração, 5 - Exclusão                   
-
-        If !lMsErroAuto
-
-            ConOut("Incluido com sucesso o PEDIDO: " + cNumPC )
-            oJSRet["Status"]           := 200
-            oJSRet["numeroDocumento"]  := cNumPC             
-          
-
-            // Logica abaixo para ja alterar os PC para Liberado
-            SC7->(DbSetOrder(1)) //C7_FILIAL, C7_NUM, C7_ITEM, C7_SEQUEN, R_E_C_N_O_, D_E_L_E_T_
-
-            If SC7->(dbSeek(FWxFilial("SC7")+cNumPC))  
-
-                While SC7->(!Eof()) .AND. FWxFilial("SC7")+cNumPC == SC7->C7_FILIAL+ SC7->C7_NUM               
-
-                    SC7->(RecLock('SC7', .F.))
-                        SC7->C7_CONAPRO := 'L'
-                    SC7->(MsUnlock())
-
-                    SC7->(DbSkip())
-
-                EndDo   
-
-            EndIf 
-
-        Else                     	
-            
-            cError := MostraErro("/dirdoc", "error.log") // ARMAZENA A MENSAGEM DE ERRO
-            ConOut(PadC("Automatic routine ended with error", 80))
-            ConOut("Error: "+ cError)
-            AADD(aError,   JsonObject():New())            
-            aError[nw]["field"]          := ""
-            aError[nw]["rejectedValue"]  := ""
-            aError[nw]["defaultMessage"] := EncodeUtf8(cError)	                           
-            lError := .T.   
-            nW++         
-
-            ::EnviaError(oJSPC, cError, "POST - Pedido de Compra")
-
-            ErrorBlock(oError)      
-
-        EndIf
-       		
-
-    End Transaction
-
-    If lError
-        oJSRet           := JsonObject():New()
-        oJSRet["Status"] := 400
-        oJSRet["Erros"]  := aError       
-    Else
-        ConOut("FIM MsExecAuto Mata120")       
-    EndIf	
-    
-    FreeObj(oJSPC)
- 
-
-Return oJSRet
 
 
 /******************************************************************************************************************/
