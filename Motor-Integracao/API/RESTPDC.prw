@@ -185,3 +185,37 @@ WSMETHOD POST WSSERVICE gerajsontestepc
 Return .T.
 
 
+
+
+WsRestFul pedidovenda Description "Facile Sistemas Webservices - Motor de Integração"
+  WSMETHOD POST DESCRIPTION "Session Motor de Integração" WSSYNTAX "/pedidovenda"
+End WsRestFul
+
+WSMETHOD POST WSSERVICE pedidovenda
+ 
+  Local cBody    := "" 
+  Local oJson    := JsonObject():New() 
+  Local oIMAbast := TIntegracaoMotorAbastecimentoParse():New()  
+ 
+  ::SetContentType("application/json")   
+
+  //|Recupera os dados do body |  
+  cBody := ::GetContent()
+  conOut('pedidovenda - POST METHOD')  
+  oJson:FromJson(cBody)  // converte para JsonObject 
+  
+  nTotIten := Len(oJson["itens"])
+  
+  cTime := FwTimeStamp()
+  cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'+'__com_'+cvalToChar(nTotIten)+'Itens'
+  //memowrite("\data\TESTE-INI_" + cTime + ".txt", "")
+  
+  oJson := oIMAbast:PedidoVenda(oJson)
+  ::SetStatus(oJson["Status"])  
+  ::SetResponse(oJson:ToJson())
+
+  cTime := FwTimeStamp()
+  cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'+'__com_'+cvalToChar(nTotIten)+'Itens'
+  //memowrite("\data\TESTE-FIM_" + cTime + ".txt", oJson:ToJson())
+
+Return .T.

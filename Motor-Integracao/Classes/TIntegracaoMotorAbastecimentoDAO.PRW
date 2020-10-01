@@ -6,7 +6,7 @@ CLASS TIntegracaoMotorAbastecimentoDAO From LongClassName
 
     Method New() CONSTRUCTOR
     Method CreatePCompra(oJson)
-    Method ExecAutoPVenda(oJson)
+    Method CreatePVenda(oJson)
     Method BaixaTotalPC(oJson)
     Method BaixaParcialPC(oJson)
     
@@ -238,7 +238,7 @@ METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
                                 Z42->Z42_JOBALT   :=  "S"
                                 Z42->Z42_SYCELE   :=  "A" // Altera��o de quantidade de apenas um �NICO item do PC
                                 Z42->Z42_QTDNOV   :=  oJson["itens"][nI]["quantidade"] // Nova quantidade
-                                controle de alteracao
+                                
 
                             Z42->(MsUnlock()) 
 
@@ -293,16 +293,6 @@ METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
 Return oJSRet
 
 
-
-
-/******************************************************************************************************************/
-/*                                          METDODOS PARA PEDIDOS DE VENDA                                        */
-/******************************************************************************************************************/
-
-Method ExecAutoPVenda(oJson) Class TIntegracaoMotorAbastecimentoDAO
-Return ::oJson
-
-
 METHOD EnviaError(oJSPC,cError,cTitulo) CLASS TIntegracaoMotorAbastecimentoDAO
 	
   Local cHtml      := ""
@@ -329,3 +319,128 @@ METHOD EnviaError(oJSPC,cError,cTitulo) CLASS TIntegracaoMotorAbastecimentoDAO
   //FERASE("\data\"+cFilName+".json")
 
 Return
+
+
+/******************************************************************************************************************/
+/*                                          METDODOS PARA PEDIDOS DE VENDA                                        */
+/******************************************************************************************************************/
+
+ 
+Method CreatePVenda(oJson) Class TIntegracaoMotorAbastecimentoDAO
+
+	Local aC5CODLJ     := {}
+	Local cCodTes      := ""
+	Local cNumPed      := ""
+	Local cError       := ""
+	Local aCab         := {}
+	Local aItens       := {}
+	Local aDet         := {}
+	Local aOFacIN      := {}
+	Local nW					 := 0
+	Local nX					 := 0
+
+
+	/*
+		SFM - Tes Inteligente. O cadastro das regras de preenchimento do código do TES está 
+		vinculado com um código de tipo de 	movimentação (FM_TIPO), por exemplo: 
+		01 - Venda de Mercadorias,
+		02 - Simples Remessa de Material, 
+		03 - Venda para Consumidor Final
+	*/
+	Local cTipOper 	:= SuperGetMV("ZF_TIPOTES", .F., "03")
+
+	Private lMsErroAuto    := .F.
+	Private lAutoErrNoFile := .F.
+
+	aOFacIN := ::ListarFacIN("?Status=finalizado")
+
+	If !Empty(aOFacIN)
+
+		For nW := 1 To Len(aOFacIN:RESPONSE)
+			// Neste RDMAKE (Exemplo), o mesmo número do Pedido de Venda é utilizado para a Rotina Automática (Modelos INCLUSÃO / ALTERAÇÃO e EXCLUSÃO).
+
+			//****************************************************************
+			//* Inclusao - INÝCIO
+			//****************************************************************
+			aCab     := {}
+			aItens   := {}
+
+			aC5CODLJ := StrTokArr(AllTrim(aOFacIN:RESPONSE[nW]:CLIENTE:CodigoLegado),"-")
+			cNumPed := GetSXENum("SC5","C5_NUM")
+
+			aAdd(aCab,	{"C5_FILIAL" 	, xFilial("SC5")			,Nil})
+			aAdd(aCab,	{"C5_NUM"   	, cNumPed				,Nil})
+			aAdd(aCab,	{"C5_TIPO"   	, "N"						,Nil})
+			aAdd(aCab,	{"C5_CLIENTE"	, aC5CODLJ[1]				,Nil})
+			aAdd(aCab,	{"C5_LOJACLI"	, aC5CODLJ[2]				,Nil})
+			aAdd(aCab,	{"C5_EMISSAO"	, Date()					,Nil})
+			aAdd(aCab,	{"C5_VEND1"  	, AllTrim(aOFacIN:RESPONSE[nW]:Usuario:CodigoVendedor),Nil})
+			aAdd(aCab,	{"C5_DESPESA" 	, 0							,Nil})
+			aAdd(aCab,	{"C5_CONDPAG" 	, AllTrim(aOFacIN:RESPONSE[nW]:CondicaoPagamento:CodigoLegado)	,Nil})
+			aAdd(aCab,	{"C5_DESCONT" 	, aOFacIN:RESPONSE[nW]:ValorDesconto		,Nil})
+			aAdd(aCab,	{"C5_INDPRES" 	, "2"						,Nil}) 	//|2 - Significa venda não presencial -> internet |
+			aAdd(aCab,	{"C5_YFACIN" 	, aOFacIN:RESPONSE[nW]:Id	,Nil}) 	// Id do FacIN
+			aAdd(aCab,	{"C5_YFASYNC" 	, "N"	,Nil}) 	// Sincronizado?  (S)para sim <<APENAS QUANDO EXISTIR NF C5_NOTA>> ou (N) para não.
+
+
+			For nX := 1 To Len(aOFacIN:RESPONSE[nW]:ListPedidoVendaItem)
+				aDet     := {}
+				//--- Informando os dados do item do Pedido de Venda
+				AAdd(aDet,	{"C6_FILIAL" , xFilial("SC6")	,Nil})
+				AAdd(aDet,	{"C6_NUM"  	 , cNumPed			,Nil})
+				AAdd(aDet,	{"C6_ITEM"   , StrZero(nX,2)	,Nil})
+				AAdd(aDet,	{"C6_PRODUTO", AllTrim(aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:Produto:CodigoLegado)		,Nil})
+				AAdd(aDet,	{"C6_UM"     , AllTrim(aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:Produto:UnidadeMedida:CodigoLegado)		,Nil})
+				AAdd(aDet,	{"C6_QTDVEN" , aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:Quantidade	,Nil})
+				AAdd(aDet,	{"C6_PRCVEN" , aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:ValorUnitario			,Nil})
+				AAdd(aDet,	{"C6_PRUNIT" , aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:ValorUnitario			,Nil})
+
+				//|Procura a TES da Venda |
+				If !Empty(cTipOper)
+					cCodTes  :=  MaTesInt(02, cTipOper, aC5CODLJ[1], aC5CODLJ[2], "C", AllTrim(aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:Produto:CodigoLegado))
+				EndIf
+
+				If Empty(cCodTes)
+					dbSelectArea("SB1")
+					SB1->(dbSetOrder(1))//B1_FILIAL+B1_COD
+					SB1->(dbSeek(xFilial("SB1")+AllTrim(aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:Produto:CodigoLegado)))
+					cCodTes	:= SB1->B1_TS
+				EndIf
+
+				If Empty(cCodTes)
+					cCodTes	:=  "502"
+				EndIf
+				//|Fim Procura a TES da Venda |
+
+
+				AAdd(aDet,	{"C6_TES"   , cCodTes	,Nil})
+				AAdd(aDet,	{"C6_DESCRI" , AllTrim(aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:Produto:Descricao)		,Nil})
+				AAdd(aDet,	{"C6_LOCAL"  , "01"			,Nil})
+				//AAdd(aDet,	{"C6_VALOR"  , Round((aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:Quantidade*aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:ValorUnitario),TamSX3("C6_PRCVEN")[2]),Nil})
+				AAdd(aItens,AClone(aDet))
+
+			Next nX
+
+			Begin Transaction
+				MSExecAuto({|x,y,z|Mata410(x,y,z)},aCab,aItens,3)
+				If !lMsErroAuto
+					ConOut("Incluido com sucesso! " + cNumPed)
+					ConfirmSX8()
+					::EditarPVFacIN(aOFacIN:RESPONSE[nW], cNumPed)
+				Else
+					RollbackSx8()
+					cError := MostraErro("/dirdoc", "error.log") // ARMAZENA A MENSAGEM DE ERRO
+					ConOut(PadC("Automatic routine ended with error", 80))
+					ConOut("Error: "+ cError)
+					U_EmailFac("Erro ao inserir pedido de Venda - FacIN  >> Protheus", cError, "", "")
+				EndIf
+			End Transaction
+			lMsErroAuto    := .F.
+			//****************************************************************
+			//* Inclusao - FIM
+			//****************************************************************
+		Next nW
+
+	EndIf
+
+Return(.T.)

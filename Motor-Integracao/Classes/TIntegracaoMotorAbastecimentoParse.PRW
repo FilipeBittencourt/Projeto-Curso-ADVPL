@@ -15,7 +15,9 @@ CLASS TIntegracaoMotorAbastecimentoParse From LongClassName
     Method ParseFornecedor(oJson) 
     Method ParseCliete(oJson) 
     Method ParseProduto(oJson)
+
 	Method MontaPCompra(oJson)
+	Method MontaPVenda(oJson)
     
 
 ENDCLASS
@@ -134,9 +136,7 @@ METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
     
 Return oJSRet
   
-Method PedidoVenda(oJson) Class TIntegracaoMotorAbastecimentoParse
-	Local oJSon      := JsonObject():New()
-Return oJSon
+
 
 Method ParseEmpresa(oJson) Class TIntegracaoMotorAbastecimentoParse 
    
@@ -209,8 +209,42 @@ Method ParseFornecedor(oJson) Class TIntegracaoMotorAbastecimentoParse
 Return oJSFor
 
 Method ParseCliete(oJson) Class TIntegracaoMotorAbastecimentoParse
-	Local oJSon      := JsonObject():New()
-Return oJSon
+	    
+	Local cQuery     := "" 
+    Local oJSCli     := JsonObject():New()
+
+    cQuery += " SELECT                            " + CRLF
+    cQuery += "      A1_COD                       " + CRLF
+    cQuery += "     ,A1_LOJA                      " + CRLF
+    cQuery += "     ,A1_NOME                      " + CRLF
+    cQuery += "     ,A1_CGC                       " + CRLF
+	cQuery += "     ,A1_COND                      " + CRLF
+    cQuery += " FROM                              " + CRLF
+	cQuery += "  " + RetSqlName("SA1") + "        " + CRLF
+    cQuery += " WHERE D_E_L_E_T_ = ''             " + CRLF
+    cQuery += " AND A1_CGC = "+ValToSql(oJson["cliente"])+"   " + CRLF
+		
+
+  If Select("__TRZ") > 0
+    __TRZ->(dbCloseArea())
+  EndIf
+
+  TcQuery cQuery New Alias "__TRZ"
+  __TRZ->(dbGoTop())
+
+  If (! __TRZ->(EoF()) )
+
+    oJSCli["A1_COD"]  := __TRZ->A2_COD
+    oJSCli["A1_LOJA"] := __TRZ->A2_LOJA
+    oJSCli["A1_NOME"] := __TRZ->A2_NOME
+    oJSCli["A1_CGC"]  := __TRZ->A2_CGC   
+	oJSCli["A1_COND"] := __TRZ->A2_COND  
+
+  EndIf
+
+  __TRZ->(DbCloseArea())
+
+Return oJSCli
 
 Method ParseProduto(oJson) Class TIntegracaoMotorAbastecimentoParse
  
@@ -292,11 +326,13 @@ Method ParseProduto(oJson) Class TIntegracaoMotorAbastecimentoParse
 
 					if lErro == .F.
 
-						aJSPro[nI]["produto"]    := SB1->B1_COD
-						aJSPro[nI]["descricao"]  := SB1->B1_DESC
-						aJSPro[nI]["quantidade"] := oJson["itens"][nI]["quantidade"]
-						aJSPro[nI]["preco"]      := oJson["itens"][nI]["preco"]
-						aJSPro[nI]["erro"]       := ""
+						aJSPro[nI]["produto"]        := SB1->B1_COD
+						aJSPro[nI]["descricao"]      := SB1->B1_DESC
+						aJSPro[nI]["unidadeMedida"]  := SB1->B1_UM
+						aJSPro[nI]["precoCustoBR"]   := SB1->B1_YCUSTBR
+						aJSPro[nI]["quantidade"]     := oJson["itens"][nI]["quantidade"]
+						aJSPro[nI]["preco"]          := oJson["itens"][nI]["preco"]
+						aJSPro[nI]["erro"]           := ""
 
 					EndIf
 
@@ -503,3 +539,147 @@ METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 
 
 Return oJSRet
+
+/******************************************************************************************************************/
+/*                                          METDODOS PARA PEDIDOS DE VENDA                                        */
+/******************************************************************************************************************/
+
+METHOD PedidoVenda(oJson) CLASS TIntegracaoMotorAbastecimentoParse
+
+	Local oIMADAO := TIntegracaoMotorAbastecimentoDAO():New()
+	Local oJSPV   := JsonObject():New() 
+	Local oJSRet  := JsonObject():New()
+	Local aError  := {}
+	Local lError  := .F.
+	Local nI      := 0 	
+	Local nW      := 0 	
+	Local cMsg    := ""
+ 
+
+
+	oJSPV["empresa"]    := ::ParseEmpresa(oJson)
+	//Validando empresa enviada 
+	If Empty(oJSPV["empresa"]["empresaCnpj"])
+
+		lError := .T.
+		nI++
+		AADD(aError,   JsonObject():New())
+		aError[nI]["field"]          := "codigoEmpresa"
+		aError[nI]["rejectedValue"]  := oJson["codigoEmpresa"]
+		aError[nI]["defaultMessage"] := EncodeUtf8("O CNPJ da empresa informada não foi locaizado.")
+		
+	EndIf
+
+
+	If 	lError == .F.		
+
+	 
+		oJSPV["cliente"] := ::ParseCliente(oJson)
+		If Empty(oJSPV["cliente"]["A1_COD"])
+			lError := .T.
+			nI++
+			AADD(aError,   JsonObject():New())
+			aError[nI]["field"]          := "fornecedor"
+			aError[nI]["rejectedValue"]  := oJson["cliente"]
+			aError[nI]["defaultMessage"] := EncodeUtf8("O CNPJ do cliente informado não foi locaizado.")
+		EndIf
+ 
+		oJSPV["numeroAbastecimento"] := oJson["numeroAbastecimento"] // CRIAR campo na C7_YIDCITE
+		If Empty(oJSPV["numeroAbastecimento"])
+			lError := .T.
+			nI++
+			AADD(aError,   JsonObject():New())
+			aError[nI]["field"]          := "numeroAbastecimento"
+			aError[nI]["rejectedValue"]  := oJson["numeroAbastecimento"]
+			aError[nI]["defaultMessage"] := EncodeUtf8("O numero do Pedido MOTOR não foi informada corretamente.")
+		EndIf
+	
+
+		//Produtos
+		oJSPV["itens"]      := ::ParseProduto(oJson)						
+		For nW := 1 To Len(oJSPV["itens"]) 
+
+			If !Empty(oJSPV["itens"][nW]["erro"])
+
+				lError := .T.
+				nI++
+				AADD(aError,   JsonObject():New())
+				aError[nI]["field"]          := "itens["+cValToChar(nW)+"].produto"
+				aError[nI]["rejectedValue"]  := oJSPV["itens"][nW]["produto"]
+				aError[nI]["defaultMessage"] := EncodeUtf8(oJSPV["itens"][nW]["erro"])	
+
+			EndIf 
+
+		Next nI
+
+	EndIf
+
+  	oJSRet["Status"] := 200
+	
+	If lError //EXECUTAR VERIFICAÇÃO DOS RETORNOS DOS JSON ANTES  DO EXECAUTO TRATAR ERROS COMO NA DESC		
+
+		oJSRet["Status"] := 400
+		oJSRet["Erros"] := aError
+
+	Else
+		
+		oJSPV := ::MontaPVenda(oJSPV)				
+		oJSRet :=  oIMADAO:CreatePVenda(oJSPV)		 
+
+	EndIf
+		
+    
+Return oJSRet
+
+
+Method MontaPVenda(oJson) Class TIntegracaoMotorAbastecimentoParse
+ 
+	Local aJSPV      := {}
+	Local oJSPV      := JsonObject():New()	
+	Local cFil       := FWxFilial('SC5')
+	Local nI         := 1
+	Local cTes       :=	 ""
+	Local cOper	     := SuperGetMv("VT_TESINTS",.F.,"51")
+		                   
+ 
+
+	oJSPV["pedidoVenda"]                        := JsonObject():New()
+	oJSPV["pedidoVenda"]["cab"]                 := JsonObject():New()
+	//oJSPV["pedidoVenda"]["cab"]["C5_FILIAL" 	:=  xFilial("SC5")		
+	//oJSPV["pedidoVenda"]["cab"]["C5_NUM"   	:=  cNumPed				
+	oJSPV["pedidoVenda"]["cab"]["C5_TIPO"]   	:=  oJson["epecieDocumento"]
+	oJSPV["pedidoVenda"]["cab"]["C5_CLIENTE"]	:=  oJson["cliente"]["A1_COD"]	
+	oJSPV["pedidoVenda"]["cab"]["C5_LOJACLI"]	:=  oJson["cliente"]["A1_LOJA"]	
+	oJSPV["pedidoVenda"]["cab"]["C5_EMISSAO"]	:=  dDataBase
+	oJSPV["pedidoVenda"]["cab"]["C5_VEND1"]	    :=  "0001"
+	oJSPV["pedidoVenda"]["cab"]["C5_DESPESA"] 	:=  0	
+	oJSPV["pedidoVenda"]["cab"]["C5_CONDPAG"] 	:=  "999"
+	oJSPV["pedidoVenda"]["cab"]["C5_DESCONT"]	:=  0
+	oJSPV["pedidoVenda"]["cab"]["C5_INDPRES"] 	:=  "2"	//|2 - Significa venda nao presencial -> internet |	  
+ 
+
+	For nI := 1 To Len(oJson["itens"])
+
+		AADD(aJSPV,   JsonObject():New())	 
+ 
+		cTES := MaTesInt(2,cOper,oJson["cliente"]["A1_COD"], oJson["cliente"]["A1_LOJA"],"C", AllTrim(oJson["itens"][nI]["produto"]))
+		aJSPV[nI]["C6_ITEM"]	:= StrZero(nX,2)
+		aJSPV[nI]["C6_PRODUTO"]	:= AllTrim(oJson["itens"][nI]["produto"])
+		aJSPV[nI]["C6_LOCAL"]	:= "01"
+		aJSPV[nI]["C6_TES"]		:= cTES
+		aJSPV[nI]["C6_QTDVEN"]	:= Round(oJson["itens"][nI]["quantidade"],TamSx3("C6_QTDVEN")[2])
+		aJSPV[nI]["C6_QTDLIB"]	:= Round(oJson["itens"][nI]["quantidade"],TamSx3("C6_QTDVEN")[2])
+		aJSPV[nI]["C6_PRUNIT"]	:= Round(oJson["itens"][nI]["precoCustoBR"],TamSx3("C6_PRUNIT")[2])
+		aJSPV[nI]["C6_PRCVEN"]	:= Round(oJson["itens"][nI]["precoCustoBR"],TamSx3("C6_PRCVEN")[2])
+		aJSPV[nI]["C6_VALOR"]	:= Round( Round(oJson["itens"][nI]["quantidade"],TamSx3("C6_QTDVEN")[2]) * Round(oJson["itens"][nI]["precoCustoBR"],TamSx3("C6_PRCVEN")[2]), TamSx3("C6_VALOR")[2])
+		aJSPV[nI]["C6_ENTREG"]	:= aProdutos[i][6]
+		aJSPV[nI]["C6_VALDESC"]	:= 0
+		aJSPV[nI]["C6_DESCONT"]	:= 0
+
+	Next nI
+	
+	oJSPC["pedidoCompra"]["itens"] := JsonObject():New()
+	oJSPC["pedidoCompra"]["itens"] := aJSPC
+   
+
+Return oJSPC

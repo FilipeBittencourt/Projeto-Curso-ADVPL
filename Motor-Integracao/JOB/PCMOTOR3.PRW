@@ -64,7 +64,7 @@ User Function  PCMOTOR3(xParam1,xParam2)
 Return .T.
   
 
-Static Function  __PutExec() 
+Static Function  APutExec() 
 
   Local aCab      := {}
   Local aItem     := {}		
@@ -142,11 +142,7 @@ Static Function  __PutExec()
         
         If SC7->(dbSeek(FWxFilial("SC7")+cNumPC+AllTrim(__TRZ->Z42_ITEM)))  
           
-          aAdd(aItem, {"C7_REC_WT"     ,SC7->(RECNO()) ,Nil})   
-
-          SC7->(RecLock('SC7', .F.))
-              SC7->C7_CONAPRO := 'B'                        
-          SC7->(MsUnlock())     
+          aAdd(aItem, {"C7_REC_WT"     ,SC7->(RECNO()) ,Nil})           
 
         EndIf
 
@@ -303,9 +299,7 @@ Static Function  PutElim()
           aRecSC7    := {}
           While SC7->(!Eof()) .AND. FWxFilial("SC7")+cCodigoDe == SC7->C7_FILIAL+SC7->C7_NUM
               
-                SC7->(RecLock('SC7', .F.))
-                  SC7->C7_CONAPRO   :=  "L"   // certificando que oS itens foram liberados
-                SC7->(MsUnlock()) 
+           
 
               If  SC7->C7_RESIDUO != 'S'  .AND.  ALLTRIM(__TRZ->Z42_PRODUT) == ALLTRIM(SC7->C7_PRODUTO)
 
@@ -339,9 +333,11 @@ Static Function  PutElim()
             
             End Transaction
 
-          EndIf
+          EndIf          
 
         EndIf 
+
+
 
         ErrorBlock(oError) 
 
@@ -362,7 +358,7 @@ Static Function  PutElim()
 
               While SC7->(!Eof()) .AND. FWxFilial("SC7")+cCodigoDe == SC7->C7_FILIAL+SC7->C7_NUM               
                   
-                  If SC7->C7_RESIDUO != 'S'
+                  If SC7->C7_RESIDUO != 'S'  .AND.  ALLTRIM(__TRZ->Z42_PRODUT) == ALLTRIM(SC7->C7_PRODUTO)
 
                     lGetErro     := .T.                
                     cError += EncodeUtf8("O PEDIDO "+cCodigoDe+" com o item: "+SC7->C7_ITEM+"  não foi eliminado.<BR>" )
@@ -484,6 +480,7 @@ Static Function  PutExec()
     cQuery  += " FROM " + RetSqlName("Z42")  + CRLF
     cQuery  += " WHERE  Z42_FILIAL = "+ValToSql(cFilialX)  + CRLF
     cQuery  += " AND D_E_L_E_T_  = '' "  + CRLF 
+    //cQuery  += " AND Z42_QTDNOV > 0 "  + CRLF 
     cQuery  += " AND  Z42_NUM    = "+ValToSql(AllTrim(aNumPC[nI]))  + CRLF          
     cQuery  += " ORDER BY Z42_NUM , Z42_ITEM ASC "    + CRLF 
 
@@ -567,10 +564,25 @@ Static Function  PutExec()
   
     If Len(aCab) > 0 
 
+      // Logica abaixo para ja alterar os PC para Liberado, PARA NÃO CONFLITAR COM REGRAS DE LIBERAÇÃO EXISTENTES 
+      If SC7->(dbSeek(FWxFilial("SC7")+cNumPC))  
+
+          While SC7->(!Eof()) .AND. FWxFilial("SC7")+cNumPC == SC7->C7_FILIAL+ SC7->C7_NUM               
+
+              SC7->(RecLock('SC7', .F.))
+                  SC7->C7_CONAPRO := 'B'                        
+              SC7->(MsUnlock())
+
+              SC7->(DbSkip())
+
+          EndDo   
+
+      EndIf
+
       Begin Transaction
                                   
-        ConOut("INICIO MsExecAuto Mata120")   
-        
+        ConOut("INICIO MsExecAuto Mata120") 
+
         MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,aIClone,4,.F.) // 3 - Inclusao, 4 - Alteracao, 5 - Excluso                   
 
         If !lMsErroAuto
@@ -598,6 +610,21 @@ Static Function  PutExec()
             __TRZ->(DbSkip())
 
           EndDo 
+
+          // Logica abaixo para ja alterar os PC para Liberado, PARA NÃO CONFLITAR COM REGRAS DE LIBERAÇÃO EXISTENTES 
+          If SC7->(dbSeek(FWxFilial("SC7")+cNumPC))  
+
+              While SC7->(!Eof()) .AND. FWxFilial("SC7")+cNumPC == SC7->C7_FILIAL+ SC7->C7_NUM               
+
+                  SC7->(RecLock('SC7', .F.))
+                      SC7->C7_CONAPRO := 'L'                        
+                  SC7->(MsUnlock())
+
+                  SC7->(DbSkip())
+
+              EndDo   
+
+          EndIf
           
 
         Else                     	
