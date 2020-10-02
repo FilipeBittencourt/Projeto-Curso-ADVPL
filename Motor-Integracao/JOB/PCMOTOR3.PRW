@@ -56,7 +56,7 @@ User Function  PCMOTOR3(xParam1,xParam2)
     RPCSetEnv(cEmp, cFil, NIL, NIL, "COM", NIL, {"SB1","SF2","SC7"})	
   EndIf
 
-  PutExec()
+ PutExec()
  
   PutElim()
 
@@ -64,7 +64,7 @@ User Function  PCMOTOR3(xParam1,xParam2)
 Return .T.
   
 
-Static Function  APutExec() 
+Static Function  __APutExec() 
 
   Local aCab      := {}
   Local aItem     := {}		
@@ -227,7 +227,7 @@ Return .T.
 Static Function  PutElim()  
 
   Local nPerc      := 100 
-  Local cTipo      := 1 
+  Local cTipo      := 3 //1-Pedido, 2-Autor.Entrega, 3-Ambos
   Local dEmisDe    := MonthSub(dDataBase,12)
   Local dEmisAte   := MonthSum(dDataBase,12)
   Local cCodigoDe  := ""
@@ -276,13 +276,18 @@ Static Function  PutElim()
     __TRZ->(dbGoTop())
  
 
-    If (! __TRZ->(EoF()) )      
+    If (! __TRZ->(EoF()) )   
 
       While __TRZ->(!Eof())  
     
       cCodigoDe  := ALLTRIM(__TRZ->Z42_NUM) 
       cCodigoAte := ALLTRIM(__TRZ->Z42_NUM) 
+        
+ 
+
         /*
+
+
         No caso da eleminição de resíduos ficou decido da seguinte forma:
 
         1 - Usar a função MA235PC que se encontra no fonte padrão TOTVS MATA235;
@@ -294,25 +299,23 @@ Static Function  PutElim()
         */
         SC7->(DbSetOrder(1)) //C7_FILIAL, C7_NUM, C7_ITEM, C7_SEQUEN, R_E_C_N_O_, D_E_L_E_T_
           
-        If SC7->(dbSeek(FWxFilial("SC7")+cCodigoDe)) 
-          
+        If SC7->(dbSeek(FWxFilial("SC7")+cCodigoDe))    
+
           aRecSC7    := {}
-          While SC7->(!Eof()) .AND. FWxFilial("SC7")+cCodigoDe == SC7->C7_FILIAL+SC7->C7_NUM
-              
-           
-
-              If  SC7->C7_RESIDUO != 'S'  .AND.  ALLTRIM(__TRZ->Z42_PRODUT) == ALLTRIM(SC7->C7_PRODUTO)
-
-                AADD(aRecSC7, SC7->(Recno()))  //Pegando o recno do item para eliminar   
+          While SC7->(!Eof()) .AND. FWxFilial("SC7")+cCodigoDe == SC7->C7_FILIAL+SC7->C7_NUM            
             
-                cProdDe    := ALLTRIM(__TRZ->Z42_PRODUT)  
-                cProdAte   := ALLTRIM(__TRZ->Z42_PRODUT) 
-                cFornDe    := ALLTRIM(__TRZ->Z42_FORNEC)  
-                cFornAte   := ALLTRIM(__TRZ->Z42_FORNEC)  
 
-              EndIf
+            If  SC7->C7_RESIDUO != 'S'  .AND.  ALLTRIM(__TRZ->Z42_PRODUT) == ALLTRIM(SC7->C7_PRODUTO)                
+          
+              cProdDe    := ALLTRIM(__TRZ->Z42_PRODUT)  
+              cProdAte   := ALLTRIM(__TRZ->Z42_PRODUT) 
+              cFornDe    := ALLTRIM(__TRZ->Z42_FORNEC)  
+              cFornAte   := ALLTRIM(__TRZ->Z42_FORNEC)  
+              AADD(aRecSC7, SC7->(Recno()))  //Pegando o recno de todos para processamento
 
-              SC7->(DbSkip())
+            EndIf
+
+            SC7->(DbSkip())
 
           EndDo                 
           
@@ -333,7 +336,17 @@ Static Function  PutElim()
             
             End Transaction
 
-          EndIf          
+          EndIf
+
+            While SC7->(!Eof()) .AND. FWxFilial("SC7")+cCodigoDe == SC7->C7_FILIAL+ SC7->C7_NUM               
+
+              SC7->(RecLock('SC7', .F.))
+                  SC7->C7_CONAPRO := 'L'                        
+              SC7->(MsUnlock())
+
+              SC7->(DbSkip())
+
+          EndDo 
 
         EndIf 
 
@@ -480,7 +493,8 @@ Static Function  PutExec()
     cQuery  += " FROM " + RetSqlName("Z42")  + CRLF
     cQuery  += " WHERE  Z42_FILIAL = "+ValToSql(cFilialX)  + CRLF
     cQuery  += " AND D_E_L_E_T_  = '' "  + CRLF 
-    //cQuery  += " AND Z42_QTDNOV > 0 "  + CRLF 
+    cQuery  += " AND Z42_QTDNOV > 0 "  + CRLF 
+    cQuery  += " AND Z42_SYCELE  = 'A' "  + CRLF 
     cQuery  += " AND  Z42_NUM    = "+ValToSql(AllTrim(aNumPC[nI]))  + CRLF          
     cQuery  += " ORDER BY Z42_NUM , Z42_ITEM ASC "    + CRLF 
 
@@ -564,21 +578,6 @@ Static Function  PutExec()
   
     If Len(aCab) > 0 
 
-      // Logica abaixo para ja alterar os PC para Liberado, PARA NÃO CONFLITAR COM REGRAS DE LIBERAÇÃO EXISTENTES 
-      If SC7->(dbSeek(FWxFilial("SC7")+cNumPC))  
-
-          While SC7->(!Eof()) .AND. FWxFilial("SC7")+cNumPC == SC7->C7_FILIAL+ SC7->C7_NUM               
-
-              SC7->(RecLock('SC7', .F.))
-                  SC7->C7_CONAPRO := 'B'                        
-              SC7->(MsUnlock())
-
-              SC7->(DbSkip())
-
-          EndDo   
-
-      EndIf
-
       Begin Transaction
                                   
         ConOut("INICIO MsExecAuto Mata120") 
@@ -609,23 +608,9 @@ Static Function  PutExec()
 
             __TRZ->(DbSkip())
 
-          EndDo 
+          EndDo      
 
-          // Logica abaixo para ja alterar os PC para Liberado, PARA NÃO CONFLITAR COM REGRAS DE LIBERAÇÃO EXISTENTES 
-          If SC7->(dbSeek(FWxFilial("SC7")+cNumPC))  
-
-              While SC7->(!Eof()) .AND. FWxFilial("SC7")+cNumPC == SC7->C7_FILIAL+ SC7->C7_NUM               
-
-                  SC7->(RecLock('SC7', .F.))
-                      SC7->C7_CONAPRO := 'L'                        
-                  SC7->(MsUnlock())
-
-                  SC7->(DbSkip())
-
-              EndDo   
-
-          EndIf
-          
+  
 
         Else                     	
             
@@ -651,6 +636,16 @@ Static Function  PutExec()
         EndIf       		
 
       End Transaction
+
+      While SC7->(!Eof()) .AND. FWxFilial("SC7")+cNumPC == SC7->C7_FILIAL+ SC7->C7_NUM               
+
+        SC7->(RecLock('SC7', .F.))
+            SC7->C7_CONAPRO := 'L'                        
+        SC7->(MsUnlock())
+
+        SC7->(DbSkip())
+        
+      EndDo   
       
       ConOut("FIM MsExecAuto Mata120") 
     

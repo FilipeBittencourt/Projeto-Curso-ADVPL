@@ -153,6 +153,19 @@ User Function  PCMOTOR1(xParam1,xParam2)
 
               ConOut("Incluido com sucesso o PEDIDO: " + cNumPC )
 
+            /*SCR->(DbSetOrder(1)) //CR_FILIAL, CR_TIPO, CR_NUM, CR_NIVEL, R_E_C_N_O_, D_E_L_E_T_
+              
+            If SCR->(dbSeek(FWxFilial("SC7")+"PC"+cNumPC))
+
+              While SCR->(!Eof()) .AND. FWxFilial("SC7")+cNumPC == SCR->CR_FILIAL+ALLTRIM(SCR->CR_NUM)  
+
+                SCR->(dbDelete())       
+                SCR->(DbSkip())
+
+              EndDo  
+
+            EndIf*/
+
               // Logica abaixo para ja alterar os PC para Liberado, PARA NÃO CONFLITAR COM REGRAS DE LIBERAÇÃO EXISTENTES 
               If SC7->(dbSeek(FWxFilial("SC7")+cNumPC))  
 
