@@ -31,8 +31,6 @@ Method CreatePCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
 	
     Local oJSRet    := JsonObject():New() 
 	Local aCab      := {}
-	Local aItem     := {}		
-    Local aIClone   := {}
 	Local cNumPC    := ""	 
 	Local nI        := 1  
     Local nW        := 1    
@@ -306,13 +304,13 @@ METHOD EnviaError(oJSPC,cError,cTitulo) CLASS TIntegracaoMotorAbastecimentoDAO
   cHtml  += ' </body> ' 
   cHtml  += ' </html> '
 
-  U_EnvEmail("fsbvieira@gmail.com"," Erro no motor de abastecimento CITEL: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
+  U_EnvEmail("fsbvieira@gmail.com"," Erro no motor de abastecimento MOTOR: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
 
   //Local cTime      := FwTimeStamp()
   //Local cFilName  := ""
   //cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s' 	
   //oJSPC["pedidoCompra"]["itens"][nI]["C7_PRODUTO"]  := "XXXXX99"
-  //cFilName := "POST_PC_IDCITEL_"+oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]+"_"+cTime
+  //cFilName := "POST_PC_IDMOTOR_"+oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]+"_"+cTime
   //memowrite("\data\"+cFilName+".json", oJSPC:ToJson()) 
   //EnvEmail(cDestin,cAssunto,cMensagem,cAnexos,lUsaLogado)
   //U_EnvEmail("fsbvieira@gmail.com"," Error motor de abastecimento CITERL: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml, cFilName)
@@ -326,121 +324,131 @@ Return
 /******************************************************************************************************************/
 
  
-Method CreatePVenda(oJson) Class TIntegracaoMotorAbastecimentoDAO
+Method CreatePVenda(oJsonPV) Class TIntegracaoMotorAbastecimentoDAO
 
-	Local aC5CODLJ     := {}
-	Local cCodTes      := ""
-	Local cNumPed      := ""
-	Local cError       := ""
-	Local aCab         := {}
-	Local aItens       := {}
-	Local aDet         := {}
-	Local aOFacIN      := {}
-	Local nW					 := 0
-	Local nX					 := 0
+ 
+    Local oJSRet    := JsonObject():New() 
+	Local cNumPed   := ""	
+	Local aCab      := {}
+	Local aItens    := {}
+	Local aDet      := {}    
+	Local nX		:= 0 
 
+    Local aError    := {}
+    Local lError    := .F.
+    Local cError    := ""
+    Local cHtml     := ""
+    Local oError    := ErrorBlock({|e| cError := e:Description})
+    Local cEmMOTOR  := SuperGetMv("MV_YMOTOR3",.F., "fsbvieira@gmail.com")  //Parametro MOTOR email de quem ira receber o email de erro ao gerar PC pelo motor de abastecimento.
 
-	/*
-		SFM - Tes Inteligente. O cadastro das regras de preenchimento do código do TES está 
-		vinculado com um código de tipo de 	movimentação (FM_TIPO), por exemplo: 
-		01 - Venda de Mercadorias,
-		02 - Simples Remessa de Material, 
-		03 - Venda para Consumidor Final
-	*/
-	Local cTipOper 	:= SuperGetMV("ZF_TIPOTES", .F., "03")
+	Private lMsErroAuto    := .F. 
 
-	Private lMsErroAuto    := .F.
-	Private lAutoErrNoFile := .F.
+    cNumPed := GetSXENum("SC5","C5_NUM") 
+ 	
+    aAdd(aCab,	{"C5_FILIAL" 	,  oJsonPV["pedidoVenda"]["cab"]["C5_FILIAL"]     ,Nil})
+    aAdd(aCab,	{"C5_NUM"   	,  cNumPed				                          ,Nil})			
+	aAdd(aCab,	{"C5_TIPO"  	,  oJsonPV["pedidoVenda"]["cab"]["C5_TIPO"]       ,Nil})
+	aAdd(aCab,	{"C5_CLIENTE"	,  oJsonPV["pedidoVenda"]["cab"]["C5_CLIENTE"]    ,Nil})
+	aAdd(aCab,	{"C5_LOJACLI"	,  oJsonPV["pedidoVenda"]["cab"]["C5_LOJACLI"]    ,Nil})
+	aAdd(aCab,	{"C5_EMISSAO"	,  oJsonPV["pedidoVenda"]["cab"]["C5_EMISSAO"]    ,Nil})
+	aAdd(aCab,	{"C5_VEND1"	    ,  oJsonPV["pedidoVenda"]["cab"]["C5_VEND1"]      ,Nil})
+	aAdd(aCab,	{"C5_DESPESA" 	,  oJsonPV["pedidoVenda"]["cab"]["C5_DESPESA"]    ,Nil})
+	aAdd(aCab,	{"C5_CONDPAG" 	,  oJsonPV["pedidoVenda"]["cab"]["C5_CONDPAG"]    ,Nil})
+	aAdd(aCab,	{"C5_DESCONT"	,  oJsonPV["pedidoVenda"]["cab"]["C5_DESCONT"]    ,Nil})
+	aAdd(aCab,	{"C5_INDPRES" 	,  oJsonPV["pedidoVenda"]["cab"]["C5_INDPRES"]    ,Nil})//|2 - Significa venda nao presencial -> internet |	
 
-	aOFacIN := ::ListarFacIN("?Status=finalizado")
+    aAdd(aCab,	{"C5_YEMPFOR" 	,  oJsonPV["pedidoVenda"]["cab"]["C5_YEMPFOR"]    ,Nil})
+    aAdd(aCab,	{"C5_YSTATUS" 	,  oJsonPV["pedidoVenda"]["cab"]["C5_YSTATUS"]    ,Nil}) // LIBERADO PARA FATURAMENTO/LIBERA��O
+    aAdd(aCab,	{"C5_YHRINC" 	,  oJsonPV["pedidoVenda"]["cab"]["C5_YHRINC"]     ,Nil}) 
 
-	If !Empty(aOFacIN)
+    For nX := 1 To Len(oJsonPV["pedidoVenda"]["itens"])
+        
+        aDet     := {}
 
-		For nW := 1 To Len(aOFacIN:RESPONSE)
-			// Neste RDMAKE (Exemplo), o mesmo número do Pedido de Venda é utilizado para a Rotina Automática (Modelos INCLUSÃO / ALTERAÇÃO e EXCLUSÃO).
+        AAdd(aDet,	{"C6_ITEM"	     ,  oJsonPV["pedidoVenda"]["itens"][nX]["C6_ITEM"]          ,Nil})
+		AAdd(aDet,	{"C6_PRODUTO"	 ,  oJsonPV["pedidoVenda"]["itens"][nX]["C6_PRODUTO"]       ,Nil})
+		AAdd(aDet,	{"C6_LOCAL"	     ,  oJsonPV["pedidoVenda"]["itens"][nX]["C6_LOCAL"]         ,Nil})
+		AAdd(aDet,	{"C6_TES"		 ,  oJsonPV["pedidoVenda"]["itens"][nX]["C6_TES"]           ,Nil})
+		AAdd(aDet,	{"C6_QTDVEN"	 ,  oJsonPV["pedidoVenda"]["itens"][nX]["C6_QTDVEN"]        ,Nil})
+		AAdd(aDet,	{"C6_QTDLIB"	 ,  oJsonPV["pedidoVenda"]["itens"][nX]["C6_QTDLIB"]        ,Nil})
+		AAdd(aDet,	{"C6_PRUNIT"	 ,  oJsonPV["pedidoVenda"]["itens"][nX]["C6_PRUNIT"]        ,Nil})
+		AAdd(aDet,	{"C6_PRCVEN"	 ,  oJsonPV["pedidoVenda"]["itens"][nX]["C6_PRCVEN"]        ,Nil})
+		AAdd(aDet,	{"C6_VALOR"	     ,  oJsonPV["pedidoVenda"]["itens"][nX]["C6_VALOR"]         ,Nil})
+		AAdd(aDet,	{"C6_ENTREG"	 ,  oJsonPV["pedidoVenda"]["itens"][nX]["C6_ENTREG"]        ,Nil})
+		AAdd(aDet,	{"C6_SUGENTR"	 ,  oJsonPV["pedidoVenda"]["itens"][nX]["C6_SUGENTR"]       ,Nil})
+		AAdd(aDet,	{"C6_YDTRESI"	 ,  oJsonPV["pedidoVenda"]["itens"][nX]["C6_YDTRESI"]       ,Nil})
+		AAdd(aDet,	{"C6_VALDESC"	 ,  oJsonPV["pedidoVenda"]["itens"][nX]["C6_VALDESC"]       ,Nil})
+		AAdd(aDet,	{"C6_DESCONT"	 ,  oJsonPV["pedidoVenda"]["itens"][nX]["C6_DESCONT"]       ,Nil})
+		AAdd(aDet,	{"C6_NFORI"	     ,  oJsonPV["pedidoVenda"]["itens"][nX]["C6_NFORI"]         ,Nil})
+		AAdd(aDet,	{"C6_SERIORI"	 ,  oJsonPV["pedidoVenda"]["itens"][nX]["C6_SERIORI"]       ,Nil})
+		AAdd(aDet,	{"C6_ITEMORI"	 ,  oJsonPV["pedidoVenda"]["itens"][nX]["C6_ITEMORI"]       ,Nil})
+ 
 
-			//****************************************************************
-			//* Inclusao - INÝCIO
-			//****************************************************************
-			aCab     := {}
-			aItens   := {}
+        AAdd(aItens,AClone(aDet))
 
-			aC5CODLJ := StrTokArr(AllTrim(aOFacIN:RESPONSE[nW]:CLIENTE:CodigoLegado),"-")
-			cNumPed := GetSXENum("SC5","C5_NUM")
+    Next nX
 
-			aAdd(aCab,	{"C5_FILIAL" 	, xFilial("SC5")			,Nil})
-			aAdd(aCab,	{"C5_NUM"   	, cNumPed				,Nil})
-			aAdd(aCab,	{"C5_TIPO"   	, "N"						,Nil})
-			aAdd(aCab,	{"C5_CLIENTE"	, aC5CODLJ[1]				,Nil})
-			aAdd(aCab,	{"C5_LOJACLI"	, aC5CODLJ[2]				,Nil})
-			aAdd(aCab,	{"C5_EMISSAO"	, Date()					,Nil})
-			aAdd(aCab,	{"C5_VEND1"  	, AllTrim(aOFacIN:RESPONSE[nW]:Usuario:CodigoVendedor),Nil})
-			aAdd(aCab,	{"C5_DESPESA" 	, 0							,Nil})
-			aAdd(aCab,	{"C5_CONDPAG" 	, AllTrim(aOFacIN:RESPONSE[nW]:CondicaoPagamento:CodigoLegado)	,Nil})
-			aAdd(aCab,	{"C5_DESCONT" 	, aOFacIN:RESPONSE[nW]:ValorDesconto		,Nil})
-			aAdd(aCab,	{"C5_INDPRES" 	, "2"						,Nil}) 	//|2 - Significa venda não presencial -> internet |
-			aAdd(aCab,	{"C5_YFACIN" 	, aOFacIN:RESPONSE[nW]:Id	,Nil}) 	// Id do FacIN
-			aAdd(aCab,	{"C5_YFASYNC" 	, "N"	,Nil}) 	// Sincronizado?  (S)para sim <<APENAS QUANDO EXISTIR NF C5_NOTA>> ou (N) para não.
+    Begin Transaction
+    
+       ConOut("INICIO MsExecAuto MataMata410 - MOTOR de ABASTECIMENTO")
 
+        MSExecAuto({|x,y,z|Mata410(x,y,z)},aCab,aItens,3)
 
-			For nX := 1 To Len(aOFacIN:RESPONSE[nW]:ListPedidoVendaItem)
-				aDet     := {}
-				//--- Informando os dados do item do Pedido de Venda
-				AAdd(aDet,	{"C6_FILIAL" , xFilial("SC6")	,Nil})
-				AAdd(aDet,	{"C6_NUM"  	 , cNumPed			,Nil})
-				AAdd(aDet,	{"C6_ITEM"   , StrZero(nX,2)	,Nil})
-				AAdd(aDet,	{"C6_PRODUTO", AllTrim(aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:Produto:CodigoLegado)		,Nil})
-				AAdd(aDet,	{"C6_UM"     , AllTrim(aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:Produto:UnidadeMedida:CodigoLegado)		,Nil})
-				AAdd(aDet,	{"C6_QTDVEN" , aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:Quantidade	,Nil})
-				AAdd(aDet,	{"C6_PRCVEN" , aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:ValorUnitario			,Nil})
-				AAdd(aDet,	{"C6_PRUNIT" , aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:ValorUnitario			,Nil})
+        If !lMsErroAuto
 
-				//|Procura a TES da Venda |
-				If !Empty(cTipOper)
-					cCodTes  :=  MaTesInt(02, cTipOper, aC5CODLJ[1], aC5CODLJ[2], "C", AllTrim(aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:Produto:CodigoLegado))
-				EndIf
+            ConOut("Incluido com sucesso o PEDIDO: " + cNumPed )
+            oJSRet["Status"]           := 200
+            oJSRet["numeroDocumento"]  := cNumPed 
+           
+            ConfirmSX8()
+           
+        Else
 
-				If Empty(cCodTes)
-					dbSelectArea("SB1")
-					SB1->(dbSetOrder(1))//B1_FILIAL+B1_COD
-					SB1->(dbSeek(xFilial("SB1")+AllTrim(aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:Produto:CodigoLegado)))
-					cCodTes	:= SB1->B1_TS
-				EndIf
+            ErrorBlock(oError) 
 
-				If Empty(cCodTes)
-					cCodTes	:=  "502"
-				EndIf
-				//|Fim Procura a TES da Venda |
+            RollbackSx8()
+            cError := MostraErro("/dirdoc", "error.log") // ARMAZENA A MENSAGEM DE ERRO          
 
+             If !Empty(MostraErro("/dirdoc", "error.log")) 
+                cError := MostraErro("/dirdoc", "error.log") // ARMAZENA A MENSAGEM DE ERRO               
+            EndIf
+            
+            ConOut(PadC("Automatic routine ended with error", 80))
+            ConOut("Error: "+ cError)
+            
+            AADD(aError,   JsonObject():New())            
+            aError[nw]["field"]          := ""
+            aError[nw]["rejectedValue"]  := ""
+            aError[nw]["defaultMessage"] := EncodeUtf8(cError)	                           
+            lError := .T.   
+            nW++ 
 
-				AAdd(aDet,	{"C6_TES"   , cCodTes	,Nil})
-				AAdd(aDet,	{"C6_DESCRI" , AllTrim(aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:Produto:Descricao)		,Nil})
-				AAdd(aDet,	{"C6_LOCAL"  , "01"			,Nil})
-				//AAdd(aDet,	{"C6_VALOR"  , Round((aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:Quantidade*aOFacIN:RESPONSE[nW]:ListPedidoVendaItem[nX]:ValorUnitario),TamSX3("C6_PRCVEN")[2]),Nil})
-				AAdd(aItens,AClone(aDet))
+            cError :=  StrTran( EncodeUtf8(cError), Chr(13) + Chr(10), "<BR>" )
+            cHtml  += ' <html> '
+            cHtml  += ' <body> ' 
+            cHtml  += ' <h3>JOB EXECAUTO - Pedido de VENDA MOTOR - '+ cNumPed+'</h3><BR>' 
+            cHtml  += ' '+cError+'<BR> '  
+            cHtml  += ' </body> ' 
+            cHtml  += ' </html> '
 
-			Next nX
+            if !Empty(cEmMOTOR)
 
-			Begin Transaction
-				MSExecAuto({|x,y,z|Mata410(x,y,z)},aCab,aItens,3)
-				If !lMsErroAuto
-					ConOut("Incluido com sucesso! " + cNumPed)
-					ConfirmSX8()
-					::EditarPVFacIN(aOFacIN:RESPONSE[nW], cNumPed)
-				Else
-					RollbackSx8()
-					cError := MostraErro("/dirdoc", "error.log") // ARMAZENA A MENSAGEM DE ERRO
-					ConOut(PadC("Automatic routine ended with error", 80))
-					ConOut("Error: "+ cError)
-					U_EmailFac("Erro ao inserir pedido de Venda - FacIN  >> Protheus", cError, "", "")
-				EndIf
-			End Transaction
-			lMsErroAuto    := .F.
-			//****************************************************************
-			//* Inclusao - FIM
-			//****************************************************************
-		Next nW
+                U_EnvEmail(cEmMOTOR," Erro no motor de abastecimento MOTOR: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
 
-	EndIf
+            EndIf
 
-Return(.T.)
+        EndIf
+
+    End Transaction
+
+    If lError
+        oJSRet           := JsonObject():New()
+        oJSRet["Status"] := 400
+        oJSRet["Erros"]  := aError       
+    Else
+
+        ConOut("FIM MsExecAuto MataMata410 - MOTOR de ABASTECIMENTO")
+
+    EndIf	
+
+Return oJSRet

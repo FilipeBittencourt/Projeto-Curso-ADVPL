@@ -49,7 +49,7 @@ User Function  PCMOTOR2(xParam1,xParam2)
   Local cTime      := ""   
   Local cEmp	     := ""
   Local cFil	     := "" 
-  Local cEmCitel   := "" 	
+  Local cEmMOTOR   := "" 	
   Local cQuery     := ""
 
 
@@ -72,7 +72,7 @@ User Function  PCMOTOR2(xParam1,xParam2)
   EndIf
 
   
-  cEmCitel := SuperGetMv("MV_YCITEL3",.F., "fsbvieira@gmail.com")  //Parametro CITEL email de quem ira receber o email de erro ao gerar PC pelo motor de abastecimento.
+  cEmMOTOR := SuperGetMv("MV_YMOTOR3",.F., "fsbvieira@gmail.com")  //Parametro MOTOR email de quem ira receber o email de erro ao gerar PC pelo motor de abastecimento.
 
   dEmisDe    := MonthSub(dDataBase,12)
   dEmisAte   := MonthSum(dDataBase,12)
@@ -113,7 +113,7 @@ User Function  PCMOTOR2(xParam1,xParam2)
       2 - Na eleminição parcial dos itens do pedido de compra ficou da forma:
           a) Se for informado a quantidade igual a ZERO de algum item do PC o mesmo tera o residuo eliminido pela rotina acima
           b) Se for informado a quantidade diferente de ZERO o item será alterado(ExecAuto)apenas em sua quantidade de acordo com
-            o informado pela CITEL. Caso a quantidade informada a ser eliminada forma maior que o atual será enviada uma mensagem de erro.           
+            o informado pela MOTOR. Caso a quantidade informada a ser eliminada forma maior que o atual será enviada uma mensagem de erro.           
       */
       SC7->(DbSetOrder(1)) //C7_FILIAL, C7_NUM, C7_ITEM, C7_SEQUEN, R_E_C_N_O_, D_E_L_E_T_
       
@@ -215,9 +215,9 @@ User Function  PCMOTOR2(xParam1,xParam2)
       cHtml  += ' </body> ' 
       cHtml  += ' </html> '
 
-      if !Empty(cEmCitel)
+      if !Empty(cEmMOTOR)
 
-        U_EnvEmail(cEmCitel," Erro no motor de abastecimento CITEL: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
+        U_EnvEmail(cEmMOTOR," Erro no motor de abastecimento MOTOR: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
 
       EndIf
 

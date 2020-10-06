@@ -61,168 +61,8 @@ User Function  PCMOTOR3(xParam1,xParam2)
   PutElim()
 
 
-Return .T.
-  
+Return .T. 
 
-Static Function  __APutExec() 
-
-  Local aCab      := {}
-  Local aItem     := {}		
-  Local aIClone   := {}    
-  Local cQuery    := ""   
-  Local cError    := ""
-  Local cHtml     := ""
-  Local nI        := 0
-  Local oError    := ErrorBlock({|e| cError := e:Description})
-  Local cEmCitel  := cEmCitel := SuperGetMv("MV_YCITEL3",.F., "fsbvieira@gmail.com")  //Parametro CITEL email de quem ira receber o email de erro ao gerar PC pelo motor de abastecimento.
-  Local cFilialX  := FWxFilial("SC7") 
-
-	Private lMsErroAuto := .F. 
-
-  aNumPC := GetNumPC("A") // PEGO UMA LISTA DE PEDIDOS QUE  TIVERAM ITENS ALTERADOS em sua QUANTIDADE Z42_SYCELE = 'A' 
-  
-
-  For nI := 1 To  Len(aNumPC) // PEGO os itens de cada pedido com  Z42_SYCELE = 'A'  
-
-    cQuery  := ""
-    cQuery  += " SELECT R_E_C_N_O_ AS RECNO ,  * " + CRLF
-    cQuery  += " FROM " + RetSqlName("Z42")  + CRLF
-    cQuery  += " WHERE  Z42_FILIAL = "+ValToSql(cFilialX)  + CRLF
-    cQuery  += " AND D_E_L_E_T_  = '' "  + CRLF 
-    cQuery  += " AND  Z42_NUM    = "+ValToSql(AllTrim(aNumPC[nI]))  + CRLF  
-    cQuery  += " AND  Z42_SYCELE = 'A' " + CRLF       
-    cQuery  += " AND  Z42_QTDNOV  > 0 " + CRLF    
-    cQuery  += " ORDER BY Z42_NUM , Z42_ITEM ASC "    + CRLF 
-
-    If Select("__TRZ") > 0
-      __TRZ->(dbCloseArea())
-    EndIf
-
-    TcQuery cQuery New Alias "__TRZ"
-    __TRZ->(dbGoTop())
-
-    
-    If (! __TRZ->(EoF()) )
-      
-      aCab    := {}
-      aIClone := {}
-      cNumPC  := AllTrim(__TRZ->Z42_NUM) 
-      
-      aAdd(aCab,	{"C7_FILIAL"    ,AllTrim(__TRZ->Z42_FILIAL)   ,Nil}) // Numero do Pedido
-      aAdd(aCab,	{"C7_NUM"       ,cNumPC                       ,Nil}) // Numero do Pedido
-      aAdd(aCab,  {"C7_EMISSAO"	  ,StoD(__TRZ->Z42_EMISSA)      ,Nil})
-      aAdd(aCab,  {"C7_FORNECE"	  ,__TRZ->Z42_FORNEC            ,NIL}) // Fornecedor
-      aAdd(aCab,  {"C7_LOJA"	    ,__TRZ->Z42_LOJA              ,NIL}) // Loja do Fornecedor
-      aAdd(aCab,  {"C7_COND"	    ,__TRZ->Z42_COND              ,NIL}) // Condicao de Pagamento   
-      aAdd(aCab,  {"C7_FILENT"	  ,__TRZ->Z42_FILENT            ,NIL}) // Filial de Entrega          
-      aAdd(aCab,	{"C7_YIDCITE"	  ,__TRZ->Z42_YIDCIT	          ,NIL}) // ID CITEL
-      aAdd(aCab,	{"C7_CONAPRO"	  ,"L"               	          ,NIL})
-      
-     
-      SC7->(DbSetOrder(1))
-
-      While __TRZ->(!Eof())
-        
-        aItem := {}      
-        aAdd(aItem,	{"C7_FILIAL"    ,AllTrim(__TRZ->Z42_FILIAL)             ,Nil}) // Numero do Pedido
-        aAdd(aItem,	{"C7_NUM"       ,cNumPC                                 ,Nil}) // Numero do Pedido      
-        aAdd(aItem, {"C7_ITEM"        ,AllTrim(__TRZ->Z42_ITEM)             ,NIL})
-        aAdd(aItem, {"C7_PRODUTO"     ,AllTrim(__TRZ->Z42_PRODUT)           ,NIL})
-        aAdd(aItem, {"C7_QUANT"	      ,__TRZ->Z42_QTDNOV                    ,NIL})                           
-        aAdd(aItem, {"C7_QTDSOL"	    ,__TRZ->Z42_QTDNOV                    ,NIL})
-        aAdd(aItem, {"C7_LOCAL"	      ,"01"                                 ,NIL})
-        aAdd(aItem, {"C7_PRECO"	      ,__TRZ->Z42_PRECO                     ,NIL})            
-        aAdd(aItem, {"C7_TOTAL"	      ,__TRZ->Z42_PRECO * __TRZ->Z42_QTDNOV ,NIL})                   
-        aAdd(aItem, {"C7_DATPRF"	    ,StoD(__TRZ->Z42_DATPRF)              ,NIL})
-        aAdd(aItem, {"C7_OPER"	      ,"01"			                            ,Nil})
-        aAdd(aItem,	{"C7_TIPO"	      ,1                	                  ,NIL})      
-        aAdd(aItem,	{"C7_CONAPRO"	    ,"L"               	                  ,NIL})        
-        aAdd(aItem, {"C7_YTIPCMP"     ,__TRZ->Z42_YTIPCMP		                ,Nil})                            
-        aAdd(aItem,	{"C7_YIDCITE"	    ,__TRZ->Z42_YIDCIT	                  ,NIL})
-        
-        If SC7->(dbSeek(FWxFilial("SC7")+cNumPC+AllTrim(__TRZ->Z42_ITEM)))  
-          
-          aAdd(aItem, {"C7_REC_WT"     ,SC7->(RECNO()) ,Nil})           
-
-        EndIf
-
-        aAdd(aIClone, AClone(aItem))       
-        
-        __TRZ->(DbSkip())
-
-      EndDo 
-
-    EndIf
-    
-    If Len(aCab) > 0 
-
-      Begin Transaction
-                                  
-        ConOut("INICIO MsExecAuto Mata120")   
-        
-        MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,aIClone,4,.F.) // 3 - Inclusao, 4 - Alteracao, 5 - Excluso                   
-
-        If !lMsErroAuto
-
-          ConOut("Incluido com sucesso o PEDIDO: " + cNumPC )  
-               
-          //ATUALIZO A QUANTIDADE  DE ACORDO COM A ENVIADA e para o JOB não ficar rodando TODAS AS VEZES   
-          __TRZ->(dbGoTop())                 
-          While __TRZ->(!Eof())
-
-            Z42->(dbGoTo(__TRZ->RECNO))
-
-            Z42->(RecLock('Z42', .F.))
-              Z42->Z42_QUANT    := __TRZ->Z42_QTDNOV 
-              Z42->Z42_QTDNOV   :=  0                   
-            Z42->(MsUnlock())           
-
-            __TRZ->(DbSkip())
-
-          EndDo 
-          
-
-        Else                     	
-            
-            ErrorBlock(oError) 
-            cError := MostraErro("/dirdoc", "error.log") // ARMAZENA A MENSAGEM DE ERRO
-            ConOut(PadC("Automatic routine ended with error", 80))
-            ConOut("Error: "+ cError)
-
-            cError :=  StrTran( EncodeUtf8(cError), Chr(13) + Chr(10), "<BR>" )
-            cHtml  += ' <html> '
-            cHtml  += ' <body> ' 
-            cHtml  += ' <h3>JOB EXECAUTO - Pedido de Compra CITEL - '+ cNumPC+'</h3><BR>' 
-            cHtml  += ' '+cError+'<BR> '  
-            cHtml  += ' </body> ' 
-            cHtml  += ' </html> '
-
-            if !Empty(cEmCitel)
-
-              U_EnvEmail(cEmCitel," Erro no motor de abastecimento CITEL: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
-
-            EndIf
-
-        EndIf       		
-
-      End Transaction
-      
-      ConOut("FIM MsExecAuto Mata120") 
-    
-    Else  
-
-      ConOut("*******************************************************************************") 
-      ConOut(" ") 
-      ConOut("Nao ha dados para serem processados pelo JOB3 EXECAUTO - Pedido de Compra CITEL ") 
-      ConOut(" ") 
-      ConOut("*******************************************************************************") 
-
-    EndIf 
-    
-
-  Next nI
-
-Return .T.
 
 Static Function  PutElim()  
 
@@ -250,7 +90,7 @@ Static Function  PutElim()
   Local cTime      := ""   
   Local cEmp	     := ""
   Local cFil	     := "" 
-  Local cEmCitel   := SuperGetMv("MV_YCITEL3",.F., "fsbvieira@gmail.com")  //Parametro CITEL email de quem ira receber o email de erro ao gerar PC pelo motor de abastecimento.	
+  Local cEmMOTOR   := SuperGetMv("MV_YMOTOR3",.F., "fsbvieira@gmail.com")  //Parametro MOTOR email de quem ira receber o email de erro ao gerar PC pelo motor de abastecimento.	
   Local cQuery     := ""
   Local cFilialX  := FWxFilial("SC7") 
 
@@ -295,7 +135,7 @@ Static Function  PutElim()
         2 - Na eleminição parcial dos itens do pedido de compra ficou da forma:
             a) Se for informado a quantidade igual a ZERO de algum item do PC o mesmo tera o residuo eliminido pela rotina acima
             b) Se for informado a quantidade diferente de ZERO o item será alterado(ExecAuto)apenas em sua quantidade de acordo com
-              o informado pela CITEL. Caso a quantidade informada a ser eliminada forma maior que o atual será enviada uma mensagem de erro.           
+              o informado pela MOTOR. Caso a quantidade informada a ser eliminada forma maior que o atual será enviada uma mensagem de erro.           
         */
         SC7->(DbSetOrder(1)) //C7_FILIAL, C7_NUM, C7_ITEM, C7_SEQUEN, R_E_C_N_O_, D_E_L_E_T_
           
@@ -408,9 +248,9 @@ Static Function  PutElim()
     cHtml  += ' </body> ' 
     cHtml  += ' </html> '
 
-    if !Empty(cEmCitel)
+    if !Empty(cEmMOTOR)
 
-      U_EnvEmail(cEmCitel," Erro no motor de abastecimento CITEL: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
+      U_EnvEmail(cEmMOTOR," Erro no motor de abastecimento MOTOR: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
 
     EndIf
 
@@ -478,7 +318,7 @@ Static Function  PutExec()
   Local cHtml     := ""
   Local nI        := 0
   Local oError    := ErrorBlock({|e| cError := e:Description})
-  Local cEmCitel  := cEmCitel := SuperGetMv("MV_YCITEL3",.F., "fsbvieira@gmail.com")  //Parametro CITEL email de quem ira receber o email de erro ao gerar PC pelo motor de abastecimento.
+  Local cEmMOTOR  := cEmMOTOR := SuperGetMv("MV_YMOTOR3",.F., "fsbvieira@gmail.com")  //Parametro MOTOR email de quem ira receber o email de erro ao gerar PC pelo motor de abastecimento.
   Local cFilialX  := FWxFilial("SC7") 
 
 	Private lMsErroAuto := .F. 
@@ -519,7 +359,7 @@ Static Function  PutExec()
       aAdd(aCab,  {"C7_LOJA"	    ,__TRZ->Z42_LOJA              ,NIL}) // Loja do Fornecedor
       aAdd(aCab,  {"C7_COND"	    ,__TRZ->Z42_COND              ,NIL}) // Condicao de Pagamento   
       aAdd(aCab,  {"C7_FILENT"	  ,__TRZ->Z42_FILENT            ,NIL}) // Filial de Entrega          
-      aAdd(aCab,	{"C7_YIDCITE"	  ,__TRZ->Z42_YIDCIT	          ,NIL}) // ID CITEL
+      aAdd(aCab,	{"C7_YIDCITE"	  ,__TRZ->Z42_YIDCIT	          ,NIL}) // ID MOTOR
       aAdd(aCab,	{"C7_CONAPRO"	  ,"L"               	          ,NIL})
       
      
@@ -622,14 +462,14 @@ Static Function  PutExec()
             cError :=  StrTran( EncodeUtf8(cError), Chr(13) + Chr(10), "<BR>" )
             cHtml  += ' <html> '
             cHtml  += ' <body> ' 
-            cHtml  += ' <h3>JOB EXECAUTO - Pedido de Compra CITEL - '+ cNumPC+'</h3><BR>' 
+            cHtml  += ' <h3>JOB EXECAUTO - Pedido de Compra MOTOR - '+ cNumPC+'</h3><BR>' 
             cHtml  += ' '+cError+'<BR> '  
             cHtml  += ' </body> ' 
             cHtml  += ' </html> '
 
-            if !Empty(cEmCitel)
+            if !Empty(cEmMOTOR)
 
-              U_EnvEmail(cEmCitel," Erro no motor de abastecimento CITEL: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
+              U_EnvEmail(cEmMOTOR," Erro no motor de abastecimento MOTOR: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
 
             EndIf
 
@@ -653,7 +493,7 @@ Static Function  PutExec()
 
       ConOut("*******************************************************************************") 
       ConOut(" ") 
-      ConOut("Nao ha dados para serem processados pelo JOB3 EXECAUTO - Pedido de Compra CITEL ") 
+      ConOut("Nao ha dados para serem processados pelo JOB3 EXECAUTO - Pedido de Compra MOTOR ") 
       ConOut(" ") 
       ConOut("*******************************************************************************") 
 

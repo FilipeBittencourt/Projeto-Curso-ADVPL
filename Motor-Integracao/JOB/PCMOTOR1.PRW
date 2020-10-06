@@ -37,7 +37,7 @@ User Function  PCMOTOR1(xParam1,xParam2)
   Local cError    := ""
   Local cHtml     := ""
   Local oError    := ErrorBlock({|e| cError := e:Description})
-  Local cEmCitel  :=  ""
+  Local cEmMOTOR  :=  ""
  
   Local cEmp		:= ""
 	Local cFil		:= "" 	
@@ -59,12 +59,13 @@ User Function  PCMOTOR1(xParam1,xParam2)
 
 	Private lMsErroAuto := .F.
    
-  If Select("SX6") <= 0	
+  /*If Select("SX6") <= 0	
     RPCSetEnv(cEmp, cFil, NIL, NIL, "COM", NIL, {"SB1","SF2","Z42"})	
   EndIf
+  */
 
   
-  cEmCitel := SuperGetMv("MV_YCITEL3",.F., "fsbvieira@gmail.com")  //Parametro CITEL email de quem ira receber o email de erro ao gerar PC pelo motor de abastecimento.
+  cEmMOTOR := SuperGetMv("MV_YMOTOR3",.F., "fsbvieira@gmail.com")  //Parametro MOTOR email de quem ira receber o email de erro ao gerar PC pelo motor de abastecimento.
 
   
   aNumPC := GetNumPC()
@@ -100,7 +101,7 @@ User Function  PCMOTOR1(xParam1,xParam2)
       aAdd(aCab,  {"C7_LOJA"	    ,__TRZ->Z42_LOJA     ,NIL}) // Loja do Fornecedor
       aAdd(aCab,  {"C7_COND"	    ,__TRZ->Z42_COND     ,NIL}) // Condicao de Pagamento   
       aAdd(aCab,  {"C7_FILENT"	  ,__TRZ->Z42_FILENT   ,NIL}) // Filial de Entrega    
-      aAdd(aCab,	{"C7_YIDCITE"	  ,__TRZ->Z42_YIDCIT	 ,NIL}) // ID CITEL
+      aAdd(aCab,	{"C7_YIDCITE"	  ,__TRZ->Z42_YIDCIT	 ,NIL}) // ID MOTOR
       
       While __TRZ->(!Eof())
         
@@ -206,14 +207,14 @@ User Function  PCMOTOR1(xParam1,xParam2)
               cError :=  StrTran( EncodeUtf8(cError), Chr(13) + Chr(10), "<BR>" )
               cHtml  += ' <html> '
               cHtml  += ' <body> ' 
-              cHtml  += ' <h3>JOB EXECAUTO - Pedido de Compra CITEL - '+ cNumPC+'</h3><BR>' 
+              cHtml  += ' <h3>JOB EXECAUTO - Pedido de Compra MOTOR - '+ cNumPC+'</h3><BR>' 
               cHtml  += ' '+cError+'<BR> '  
               cHtml  += ' </body> ' 
               cHtml  += ' </html> '
 
-              if !Empty(cEmCitel)
+              if !Empty(cEmMOTOR)
 
-                U_EnvEmail(cEmCitel," Erro no motor de abastecimento CITEL: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
+                U_EnvEmail(cEmMOTOR," Erro no motor de abastecimento MOTOR: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
 
               EndIf
 
@@ -227,7 +228,7 @@ User Function  PCMOTOR1(xParam1,xParam2)
 
       ConOut("*******************************************************************************") 
       ConOut(" ") 
-      ConOut("Nao ha dados para serem processados pelo JOB EXECAUTO - Pedido de Compra CITEL ") 
+      ConOut("Nao ha dados para serem processados pelo JOB EXECAUTO - Pedido de Compra MOTOR ") 
       ConOut(" ") 
       ConOut("*******************************************************************************") 
 
@@ -283,7 +284,7 @@ User Function  ____PCMOTOR1(xParam1,xParam2)
   Local cError    := ""
   Local cHtml     := ""
   Local oError    := ErrorBlock({|e| cError := e:Description})
-  Local cEmCitel  :=  ""
+  Local cEmMOTOR  :=  ""
   Local nI        :=  0
  
   Local cEmp		:= ""
@@ -313,7 +314,7 @@ User Function  ____PCMOTOR1(xParam1,xParam2)
   EndIf
 
   
-  cEmCitel := SuperGetMv("MV_YCITEL3",.F., "fsbvieira@gmail.com")  //Parametro CITEL email de quem ira receber o email de erro ao gerar PC pelo motor de abastecimento.
+  cEmMOTOR := SuperGetMv("MV_YMOTOR3",.F., "fsbvieira@gmail.com")  //Parametro MOTOR email de quem ira receber o email de erro ao gerar PC pelo motor de abastecimento.
 
   
   aNumPC := GetNumPC()
@@ -363,7 +364,7 @@ User Function  ____PCMOTOR1(xParam1,xParam2)
       aAdd(aCab,  {"C7_LOJA"	    ,__TRZ->Z42_LOJA     ,NIL}) // Loja do Fornecedor
       aAdd(aCab,  {"C7_COND"	    ,__TRZ->Z42_COND     ,NIL}) // Condicao de Pagamento   
       aAdd(aCab,  {"C7_FILENT"	  ,__TRZ->Z42_FILENT   ,NIL}) // Filial de Entrega    
-      aAdd(aCab,	{"C7_YIDCITE"	  ,__TRZ->Z42_YIDCIT	 ,NIL}) // ID CITEL
+      aAdd(aCab,	{"C7_YIDCITE"	  ,__TRZ->Z42_YIDCIT	 ,NIL}) // ID MOTOR
       
       //Begin Transaction
         While __TRZ->(!Eof())
@@ -411,14 +412,14 @@ User Function  ____PCMOTOR1(xParam1,xParam2)
               cError :=  StrTran( EncodeUtf8(cError), Chr(13) + Chr(10), "<BR>" )
               cHtml  += ' <html> '
               cHtml  += ' <body> ' 
-              cHtml  += ' <h3>JOB EXECAUTO - Pedido de Compra CITEL - '+ cNumPC+'</h3><BR>' 
+              cHtml  += ' <h3>JOB EXECAUTO - Pedido de Compra MOTOR - '+ cNumPC+'</h3><BR>' 
               cHtml  += ' '+cError+'<BR> '  
               cHtml  += ' </body> ' 
               cHtml  += ' </html> '
 
-              if !Empty(cEmCitel)
+              if !Empty(cEmMOTOR)
 
-                U_EnvEmail(cEmCitel," Erro no motor de abastecimento CITEL: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
+                U_EnvEmail(cEmMOTOR," Erro no motor de abastecimento MOTOR: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
 
               EndIf
 

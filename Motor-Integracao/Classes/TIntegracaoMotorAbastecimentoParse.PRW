@@ -13,7 +13,7 @@ CLASS TIntegracaoMotorAbastecimentoParse From LongClassName
 
 	Method ParseEmpresa(oJson)
     Method ParseFornecedor(oJson) 
-    Method ParseCliete(oJson) 
+    Method ParseCliente(oJson) 
     Method ParseProduto(oJson)
 
 	Method MontaPCompra(oJson)
@@ -38,8 +38,8 @@ METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 	Local cMsg    := ""
  
 
-
-	oJSPC["empresa"]    := ::ParseEmpresa(oJson)
+    oJson["origem"]   := "SC7"
+	oJSPC["empresa"]  := ::ParseEmpresa(oJson)
 	//Validando empresa enviada 
 	If Empty(oJSPC["empresa"]["empresaCnpj"])
 
@@ -88,7 +88,7 @@ METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 			aError[nI]["defaultMessage"] := EncodeUtf8("A data do Faturamento não foi informada corretamente.")
 		EndIf	
 
-		// Pedido de compra da CITEL
+		// Pedido de compra da MOTOR
 		oJSPC["numeroPedido"] := oJson["numeroPedido"] // CRIAR campo na C7_YIDCITE
 		If Empty(oJSPC["numeroPedido"])
 			lError := .T.
@@ -96,11 +96,11 @@ METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 			AADD(aError,   JsonObject():New())
 			aError[nI]["field"]          := "numeroPedido"
 			aError[nI]["rejectedValue"]  := oJson["numeroPedido"]
-			aError[nI]["defaultMessage"] := EncodeUtf8("O numero do Pedido CITEL não foi informada corretamente.")
+			aError[nI]["defaultMessage"] := EncodeUtf8("O numero do Pedido MOTOR não foi informada corretamente.")
 		EndIf
 	
 
-		//Produtos
+		//Produtos		
 		oJSPC["itens"]      := ::ParseProduto(oJson)						
 		For nW := 1 To Len(oJSPC["itens"]) 
 
@@ -137,6 +137,9 @@ METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 Return oJSRet
   
 
+/******************************************************************************************************************/
+/*                                         INICIO METDODOS PARA PARSES                                            */
+/******************************************************************************************************************/
 
 Method ParseEmpresa(oJson) Class TIntegracaoMotorAbastecimentoParse 
    
@@ -208,7 +211,7 @@ Method ParseFornecedor(oJson) Class TIntegracaoMotorAbastecimentoParse
 
 Return oJSFor
 
-Method ParseCliete(oJson) Class TIntegracaoMotorAbastecimentoParse
+Method ParseCliente(oJson) Class TIntegracaoMotorAbastecimentoParse
 	    
 	Local cQuery     := "" 
     Local oJSCli     := JsonObject():New()
@@ -234,11 +237,11 @@ Method ParseCliete(oJson) Class TIntegracaoMotorAbastecimentoParse
 
   If (! __TRZ->(EoF()) )
 
-    oJSCli["A1_COD"]  := __TRZ->A2_COD
-    oJSCli["A1_LOJA"] := __TRZ->A2_LOJA
-    oJSCli["A1_NOME"] := __TRZ->A2_NOME
-    oJSCli["A1_CGC"]  := __TRZ->A2_CGC   
-	oJSCli["A1_COND"] := __TRZ->A2_COND  
+    oJSCli["A1_COD"]  := __TRZ->A1_COD
+    oJSCli["A1_LOJA"] := __TRZ->A1_LOJA
+    oJSCli["A1_NOME"] := __TRZ->A1_NOME
+    oJSCli["A1_CGC"]  := __TRZ->A1_CGC   
+	oJSCli["A1_COND"] := __TRZ->A1_COND  
 
   EndIf
 
@@ -248,7 +251,7 @@ Return oJSCli
 
 Method ParseProduto(oJson) Class TIntegracaoMotorAbastecimentoParse
  
-    Local aDuplic	:= {}
+    
 	Local aJSPro   := {}
 	Local nI       := 1
 	Local nW       := 1
@@ -298,6 +301,8 @@ Method ParseProduto(oJson) Class TIntegracaoMotorAbastecimentoParse
 
 					//If cEmpAnt == "08" .and. cFilAnt == "01"
 
+					IF oJson["origem"] == "SC7"
+
 						If ALLTRIM(SB1->B1_YCOMPRA) == "2"
 							aJSPro[nI]["erro"]  := "PRODUTO BLOQUEADO (B1_YCOMPRA) == '2') PARA COMPRAS (LINHA COMPRAR NAO)."					
 							lErro := .T.	
@@ -308,7 +313,13 @@ Method ParseProduto(oJson) Class TIntegracaoMotorAbastecimentoParse
 							aJSPro[nI]["erro"]  := "PRODUTO BLOQUEADO (B1_YCOMPRA) == '3') FORA DE LINHA."					
 							lErro := .T.
 							loop										
-						EndIf				 
+						EndIf	
+
+						If !Mod(oJson["itens"][nI]["quantidade"],IF(SB1->B1_QE=0,1,SB1->B1_QE)) == 0 
+							aJSPro[nI]["erro"]       := "QUANTIDADE BLOQUEADA LOGICA função 'u_AnaliQE' "	
+							lErro := .T.
+							loop
+						EndIf			 
 
 						If ALLTRIM(SB1->B1_MSBLQL) == "1"					 
 							aJSPro[nI]["erro"]       := "PRODUTO BLOQUEADO (B1_MSBLQL == '1') PARA COMPRAS"	
@@ -316,11 +327,9 @@ Method ParseProduto(oJson) Class TIntegracaoMotorAbastecimentoParse
 							loop				
 						EndIf
 
-						If !Mod(oJson["itens"][nI]["quantidade"],IF(SB1->B1_QE=0,1,SB1->B1_QE)) == 0 
-							aJSPro[nI]["erro"]       := "QUANTIDADE BLOQUEADA LOGICA função 'u_AnaliQE' "	
-							lErro := .T.
-							loop
-						EndIf
+					EndIf
+
+						
 
 					//EndIf
 
@@ -350,6 +359,11 @@ Method ParseProduto(oJson) Class TIntegracaoMotorAbastecimentoParse
 
 Return aJSPro
 
+/******************************************************************************************************************/
+/*                                         FIM METDODOS PARA PARSES                                               */
+/******************************************************************************************************************/
+
+
 Method MontaPCompra(oJson) Class TIntegracaoMotorAbastecimentoParse
  
 	Local aJSPC      := {}
@@ -366,7 +380,7 @@ Method MontaPCompra(oJson) Class TIntegracaoMotorAbastecimentoParse
 	oJSPC["pedidoCompra"]["cab"]["C7_COND"]    :=  oJson["fornecedor"]["A2_COND"]    // Condicao de Pagamento
 	oJSPC["pedidoCompra"]["cab"]["C7_FILENT"]  :=  cFil         	                 // Filial de Entrega
 	oJSPC["pedidoCompra"]["cab"]["C7_FILCEN"]  :=  cFil	                             // Filial de Entrega 	
-	oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"] :=  oJson["numeroPedido"]             // ID pedido da CITEL 
+	oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"] :=  oJson["numeroPedido"]             // ID pedido da MOTOR 
 
 	For nI := 1 To Len(oJson["itens"])
 
@@ -382,7 +396,7 @@ Method MontaPCompra(oJson) Class TIntegracaoMotorAbastecimentoParse
 		aJSPC[nI]["C7_OPER"]    := "01"	                      
 		aJSPC[nI]["C7_YTIPCMP"] := "MT"                       
 		aJSPC[nI]["C7_CONAPRO"] := "L"   
-		aJSPC[nI]["C7_YIDCITE"] :=  oJson["numeroPedido"]             // ID pedido da CITEL 
+		aJSPC[nI]["C7_YIDCITE"] :=  oJson["numeroPedido"]             // ID pedido da MOTOR 
 
 	Next nI
 	
@@ -556,8 +570,8 @@ METHOD PedidoVenda(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 	Local cMsg    := ""
  
 
-
-	oJSPV["empresa"]    := ::ParseEmpresa(oJson)
+	oJson["origem"]   := "SC5"
+	oJSPV["empresa"]  := ::ParseEmpresa(oJson)
 	//Validando empresa enviada 
 	If Empty(oJSPV["empresa"]["empresaCnpj"])
 
@@ -623,8 +637,8 @@ METHOD PedidoVenda(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 
 	Else
 		
-		oJSPV := ::MontaPVenda(oJSPV)				
-		oJSRet :=  oIMADAO:CreatePVenda(oJSPV)		 
+		oJSPV  := ::MontaPVenda(oJSPV)				
+		oJSRet := oIMADAO:CreatePVenda(oJSPV)		 
 
 	EndIf
 		
@@ -638,16 +652,15 @@ Method MontaPVenda(oJson) Class TIntegracaoMotorAbastecimentoParse
 	Local oJSPV      := JsonObject():New()	
 	Local cFil       := FWxFilial('SC5')
 	Local nI         := 1
-	Local cTes       :=	 ""
-	Local cOper	     := SuperGetMv("VT_TESINTS",.F.,"51")
-		                   
- 
+	Local cTES       :=	 ""
+	Local cOper	     := PadR(u_FnParam("MV_YOPVEND",""),2)
+	Local dDataSol   := iif(substr(time(),1,4) > "18:00",dDatabase+1,dDatabase)		                   
+ 						
 
 	oJSPV["pedidoVenda"]                        := JsonObject():New()
 	oJSPV["pedidoVenda"]["cab"]                 := JsonObject():New()
-	//oJSPV["pedidoVenda"]["cab"]["C5_FILIAL" 	:=  xFilial("SC5")		
-	//oJSPV["pedidoVenda"]["cab"]["C5_NUM"   	:=  cNumPed				
-	oJSPV["pedidoVenda"]["cab"]["C5_TIPO"]   	:=  oJson["epecieDocumento"]
+	oJSPV["pedidoVenda"]["cab"]["C5_FILIAL"] 	:=  cFil				
+	oJSPV["pedidoVenda"]["cab"]["C5_TIPO"]   	:=  "N"
 	oJSPV["pedidoVenda"]["cab"]["C5_CLIENTE"]	:=  oJson["cliente"]["A1_COD"]	
 	oJSPV["pedidoVenda"]["cab"]["C5_LOJACLI"]	:=  oJson["cliente"]["A1_LOJA"]	
 	oJSPV["pedidoVenda"]["cab"]["C5_EMISSAO"]	:=  dDataBase
@@ -655,15 +668,30 @@ Method MontaPVenda(oJson) Class TIntegracaoMotorAbastecimentoParse
 	oJSPV["pedidoVenda"]["cab"]["C5_DESPESA"] 	:=  0	
 	oJSPV["pedidoVenda"]["cab"]["C5_CONDPAG"] 	:=  "999"
 	oJSPV["pedidoVenda"]["cab"]["C5_DESCONT"]	:=  0
-	oJSPV["pedidoVenda"]["cab"]["C5_INDPRES"] 	:=  "2"	//|2 - Significa venda nao presencial -> internet |	  
- 
+	oJSPV["pedidoVenda"]["cab"]["C5_INDPRES"] 	:=  "2"	//|2 - Significa venda nao presencial -> internet |	  	
+ 	oJSPV["pedidoVenda"]["cab"]["C5_YEMPFOR"]   := EmpFilArmaz(AllTrim(oJson["itens"][1]["produto"])) //Obtem a empresa e filial do armazem físico
+
+
+	If SC5->(FieldPos("C5_YEMPFOR"))
+		oJSPV["pedidoVenda"]["cab"]["C5_YEMPFOR"]  := EmpFilArmaz(AllTrim(oJson["itens"][1]["produto"])) //Obtem a empresa e filial do armazem físico
+	EndIf
+
+	If SC5->(FieldPos("C5_YSTATUS")) > 0		
+		oJSPV["pedidoVenda"]["cab"]["C5_YSTATUS"]  := "1" // LIBERADO PARA FATURAMENTO/LIBERAÇÃO
+	EndIf
+
+	If SC5->(FieldPos("C5_YHRINC")) > 0
+		oJSPV["pedidoVenda"]["cab"]["C5_YHRINC"]   := TIME()		
+	EndIf
+
 
 	For nI := 1 To Len(oJson["itens"])
 
-		AADD(aJSPV,   JsonObject():New())	 
+		AADD(aJSPV,   JsonObject():New())			
  
 		cTES := MaTesInt(2,cOper,oJson["cliente"]["A1_COD"], oJson["cliente"]["A1_LOJA"],"C", AllTrim(oJson["itens"][nI]["produto"]))
-		aJSPV[nI]["C6_ITEM"]	:= StrZero(nX,2)
+
+		aJSPV[nI]["C6_ITEM"]	:= StrZero(nI,2)
 		aJSPV[nI]["C6_PRODUTO"]	:= AllTrim(oJson["itens"][nI]["produto"])
 		aJSPV[nI]["C6_LOCAL"]	:= "01"
 		aJSPV[nI]["C6_TES"]		:= cTES
@@ -672,14 +700,130 @@ Method MontaPVenda(oJson) Class TIntegracaoMotorAbastecimentoParse
 		aJSPV[nI]["C6_PRUNIT"]	:= Round(oJson["itens"][nI]["precoCustoBR"],TamSx3("C6_PRUNIT")[2])
 		aJSPV[nI]["C6_PRCVEN"]	:= Round(oJson["itens"][nI]["precoCustoBR"],TamSx3("C6_PRCVEN")[2])
 		aJSPV[nI]["C6_VALOR"]	:= Round( Round(oJson["itens"][nI]["quantidade"],TamSx3("C6_QTDVEN")[2]) * Round(oJson["itens"][nI]["precoCustoBR"],TamSx3("C6_PRCVEN")[2]), TamSx3("C6_VALOR")[2])
-		aJSPV[nI]["C6_ENTREG"]	:= aProdutos[i][6]
+		aJSPV[nI]["C6_ENTREG"]	:= dDataSol
+		aJSPV[nI]["C6_SUGENTR"]	:= dDataSol
+		aJSPV[nI]["C6_YDTRESI"]	:= CTOD('  /  /    ')
 		aJSPV[nI]["C6_VALDESC"]	:= 0
 		aJSPV[nI]["C6_DESCONT"]	:= 0
-
+		aJSPV[nI]["C6_NFORI"]	:= ""
+		aJSPV[nI]["C6_SERIORI"]	:= ""
+		aJSPV[nI]["C6_ITEMORI"]	:= "" 
+ 
+ 
 	Next nI
 	
-	oJSPC["pedidoCompra"]["itens"] := JsonObject():New()
-	oJSPC["pedidoCompra"]["itens"] := aJSPC
+	oJSPV["pedidoVenda"]["itens"] := JsonObject():New()
+	oJSPV["pedidoVenda"]["itens"] := aJSPV
    
 
-Return oJSPC
+Return oJSPV
+
+
+/*/{Protheus.doc} EmpFilArmaz
+(long_description)
+@author henrique
+@since 29/06/2017
+@version 1.0
+@return ${return}, ${return_description}
+@example
+(examples)
+@see (links_or_references)
+/*/
+
+Static Function EmpFilArmaz(cProduto)
+
+	Local aArea 		:= GetArea()
+	Local aAreaSB1	    := SB1->(GetArea())
+	Local aAreaZZL	    := ZZL->(GetArea())
+	Local cEmpEst		:= ''
+	Local cFilEst		:= ''
+	Local cTabela		:= ''
+
+	cTabela := RetSqlName('ZZL')
+
+	If ! Empty(cTabela) .AND. TCCanOpen(cTabela) //Analisa se a tabela existe
+
+		//Verifica o cadastro de produto
+		SB1->(dbSetOrder(1))
+		If SB1->(dbSeek(xFilial("SB1")+cProduto))
+			ZZL->(dbSetOrder(1))
+			If ( ZZL->(dbSeek(xFilial("ZZL")+SB1->B1_FABRIC)) .and. ZZL->ZZL_EMPFOR+ZZL->ZZL_FILFOR <> cEmpAnt+cFilAnt )
+				cEmpEst := ZZL->ZZL_EMPFOR
+				cFilEst := ZZL->ZZL_FILFOR
+			EndIf
+
+		EndIf
+	EndIf
+
+	If Empty(cEmpEst)
+		cEmpEst := '08'
+		cFilEst := '01'
+
+	EndIf
+
+	RestArea(aAreaZZL)
+	RestArea(aAreaSB1)
+	RestArea(aArea)
+
+Return cEmpEst + cFilEst
+
+
+/*/
+@Title   : Função para recuperar o modulo de acordo com o endereço do produto
+@Type    : Função
+@Name    : VA039GetModulo
+@Author  : Ihorran Milholi
+@Date    : 14/11/2016
+/*/
+/*
+Static Function VA039GetModulo(cLocal,cEnder,cFabric,cTipCarga)
+
+	Local cModulo := Space(TamSx3("ZZA_MODULO")[1])
+	Local cAlias	:= GetNextAlias()
+
+	//posiciona no endereço correspondente
+	SBE->(dbSetOrder(1))
+	If SBE->(dbSeek(xFilial("SBE")+cLocal+cEnder))
+
+		//query para recuperar o modulo
+		BeginSql Alias cAlias
+
+			SELECT TOP 1 ZZA.ZZA_MODULO
+
+			FROM	%table:ZZA% ZZA
+
+			WHERE	ZZA.%NotDel%
+			AND	ZZA.ZZA_FILIAL= %xFilial:ZZA%
+			AND	ZZA.ZZA_LOCAL	= %Exp:SBE->BE_LOCAL%
+
+			AND	%Exp:SBE->BE_LOCALIZ% 	BETWEEN ZZA.ZZA_ENDINI AND ZZA.ZZA_ENDFIN
+			AND	%Exp:SBE->BE_ESTFIS%	BETWEEN ZZA.ZZA_ESTINI AND ZZA.ZZA_ESTFIN
+			AND	%Exp:cTipCarga%			BETWEEN ZZA.ZZA_TIPCIN AND ZZA.ZZA_TIPCFI
+
+			ORDER BY ZZA.ZZA_MODULO
+
+		EndSql
+
+		(cAlias)->(dbGoTop())
+		If (cAlias)->(!Eof()) .and. (cAlias)->(!Bof())
+
+			cModulo := (cAlias)->ZZA_MODULO
+
+		EndIf
+		(cAlias)->(dbCloseArea())
+
+	EndIf
+
+	If Empty(cModulo) .and. cEmpAnt == "08"
+
+		ZZL->(dbSetOrder(1))
+		If ZZL->(dbSeek(xFilial("ZZL")+cFabric))
+
+			cModulo := SubStr("EMTERCEIRO",1,TamSx3("ZZA_MODULO")[1])
+
+		EndIf
+
+	EndIf
+
+Return cModulo
+*/
