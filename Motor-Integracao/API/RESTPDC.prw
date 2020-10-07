@@ -16,24 +16,16 @@ WSMETHOD POST WSSERVICE pedidocompra
  
   ::SetContentType("application/json")   
 
-  //|Recupera os dados do body |  
-  cBody := ::GetContent()
+  cBody := ::GetContent() //|Recupera os dados do body |  
   conOut('pedidocompra - POST METHOD')  
   oJson:FromJson(cBody)  // converte para JsonObject 
-  
-  nTotIten := Len(oJson["itens"])
-  
-  cTime := FwTimeStamp()
-  cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'+'__com_'+cvalToChar(nTotIten)+'Itens'
-  //memowrite("\data\TESTE-INI_" + cTime + ".txt", "")
+
   
   oJson := oIMAbast:PedidoCompra(oJson)
   ::SetStatus(oJson["Status"])  
   ::SetResponse(oJson:ToJson())
 
-  cTime := FwTimeStamp()
-  cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'+'__com_'+cvalToChar(nTotIten)+'Itens'
-  //memowrite("\data\TESTE-FIM_" + cTime + ".txt", oJson:ToJson())
+  FreeObj(oJson)  
 
 Return .T.
 
@@ -47,28 +39,17 @@ WSMETHOD POST WSSERVICE pedidocomprabaixatotal
  
   Local cBody    := "" 
   Local oJson    := JsonObject():New() 
-  Local oIMAbast := TIntegracaoMotorAbastecimentoParse():New()  
-  Local cTime    := ""
- 
+  Local oIMAbast := TIntegracaoMotorAbastecimentoParse():New()    
   
   ::SetContentType("application/json")   
 
-  //|Recupera os dados do body |  
-  cBody := ::GetContent()
+  cBody := ::GetContent() //|Recupera os dados do body |  
   conOut('pedidocomprabaixatotal - POST METHOD')  
   oJson:FromJson(cBody)  // converte para JsonObject 
-
-  cTime := FwTimeStamp()
-  cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'
-  //memowrite("\data\TESTE-INI-ELIMINIATOTAL_" + cTime + ".txt", "")
 
   oJson := oIMAbast:BaixaTotalPC(oJson)
   ::SetStatus(oJson["Status"])  
   ::SetResponse(oJson:ToJson())
-  
-  cTime := FwTimeStamp()
-  cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'
-  //memowrite("\data\TESTE-FIM-ELIMINIATOTAL_" + cTime + ".txt", "")
 
   FreeObj(oJson)   
 
@@ -84,30 +65,43 @@ WSMETHOD POST WSSERVICE pedidocomprabaixaparcial
  
   Local cBody    := "" 
   Local oJson    := JsonObject():New() 
-  Local oIMAbast := TIntegracaoMotorAbastecimentoParse():New()  
-  Local cTime    := ""
- 
+  Local oIMAbast := TIntegracaoMotorAbastecimentoParse():New()   
   
-  ::SetContentType("application/json")   
-
-  //|Recupera os dados do body |  
-  cBody := ::GetContent()
+  ::SetContentType("application/json")  
+    
+  cBody := ::GetContent() //|Recupera os dados do body |
   conOut('pedidocomprabaixaparcial - POST METHOD')  
   oJson:FromJson(cBody)  // converte para JsonObject 
-
-  cTime := FwTimeStamp()
-  cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'
-  //memowrite("\data\TESTE-INI-ELIMINIATOTAL_" + cTime + ".txt", "")
 
   oJson := oIMAbast:BaixaParcialPC(oJson)
   ::SetStatus(oJson["Status"])  
   ::SetResponse(oJson:ToJson())
-  
-  cTime := FwTimeStamp()
-  cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'
-  //memowrite("\data\TESTE-FIM-ELIMINIATOTAL_" + cTime + ".txt", "")
 
   FreeObj(oJson)   
+
+Return .T.
+
+
+
+WsRestFul pedidovenda Description "Facile Sistemas Webservices - Motor de Integração"
+  WSMETHOD POST DESCRIPTION "Session Motor de Integração" WSSYNTAX "/pedidovenda"
+End WsRestFul
+
+WSMETHOD POST WSSERVICE pedidovenda
+ 
+  Local cBody    := "" 
+  Local oJson    := JsonObject():New() 
+  Local oIMAbast := TIntegracaoMotorAbastecimentoParse():New()  
+ 
+  ::SetContentType("application/json")   
+  
+  cBody := ::GetContent() //|Recupera os dados do body |  
+  conOut('pedidovenda - POST METHOD')  
+  oJson:FromJson(cBody)  // converte para JsonObject   
+  
+  oJson := oIMAbast:PedidoVenda(oJson)
+  ::SetStatus(oJson["Status"])  
+  ::SetResponse(oJson:ToJson())  
 
 Return .T.
 
@@ -181,41 +175,5 @@ WSMETHOD POST WSSERVICE gerajsontestepc
 
   ::SetStatus(200)  
   ::SetResponse(oJSTest:ToJson())
-
-Return .T.
-
-
-
-
-WsRestFul pedidovenda Description "Facile Sistemas Webservices - Motor de Integração"
-  WSMETHOD POST DESCRIPTION "Session Motor de Integração" WSSYNTAX "/pedidovenda"
-End WsRestFul
-
-WSMETHOD POST WSSERVICE pedidovenda
- 
-  Local cBody    := "" 
-  Local oJson    := JsonObject():New() 
-  Local oIMAbast := TIntegracaoMotorAbastecimentoParse():New()  
- 
-  ::SetContentType("application/json")   
-
-  //|Recupera os dados do body |  
-  cBody := ::GetContent()
-  conOut('pedidovenda - POST METHOD')  
-  oJson:FromJson(cBody)  // converte para JsonObject 
-  
-  nTotIten := Len(oJson["itens"])
-  
-  cTime := FwTimeStamp()
-  cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'+'__com_'+cvalToChar(nTotIten)+'Itens'
-  //memowrite("\data\TESTE-INI_" + cTime + ".txt", "")
-  
-  oJson := oIMAbast:PedidoVenda(oJson)
-  ::SetStatus(oJson["Status"])  
-  ::SetResponse(oJson:ToJson())
-
-  cTime := FwTimeStamp()
-  cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'+'__com_'+cvalToChar(nTotIten)+'Itens'
-  //memowrite("\data\TESTE-FIM_" + cTime + ".txt", oJson:ToJson())
 
 Return .T.

@@ -30,31 +30,29 @@ User Function  PCMOTOR3(xParam1,xParam2)
   Local cEmp		:= ""
   Local cFil		:= "" 	
 
-  If ValType(xParam1) == "A"
 
-    cEmp 		:= xParam1[1]
-    cFil 		:= xParam1[2]
+	If ValType(xParam1) == "A"
+		cEmp 		:= xParam1[1]
+		cFil 		:= xParam1[2]
+	ElseIf ValType(xParam1) == "C"
+		cEmp 		:= xParam1
+		cFil 		:= xParam2
+	Else
+		ConOut('## ERROR - NÃO FOI INFORMADO EMPRESA E FILIAL ##')
+		ConOut('## ERROR - FIM DO JOB ##')
+	  //Return
+	EndIf
 
-  ElseIf ValType(xParam1) == "C"
-
-    cEmp 		:= xParam1
-    cFil 		:= xParam2
-
-  Else
-
-    ConOut('## ERROR - NÃO FOI INFORMADO EMPRESA E FILIAL ##')
-    ConOut('## ERROR - FIM DO JOB ##')
-    //Return
+  If Empty(cEmp) .OR.  Empty(cEmp)
     cEmp 		:= "08"
-    cFil 		:= "01"
-
+    cFil 		:= "01" 
   EndIf
-
 
    
   If Select("SX6") <= 0	
     RPCSetEnv(cEmp, cFil, NIL, NIL, "COM", NIL, {"SB1","SF2","SC7"})	
   EndIf
+    ConOut("INICIO do JOB PCMOTOR3")
 
  PutExec()
  
@@ -126,8 +124,6 @@ Static Function  PutElim()
  
 
         /*
-
-
         No caso da eleminição de resíduos ficou decido da seguinte forma:
 
         1 - Usar a função MA235PC que se encontra no fonte padrão TOTVS MATA235;
@@ -137,6 +133,7 @@ Static Function  PutElim()
             b) Se for informado a quantidade diferente de ZERO o item será alterado(ExecAuto)apenas em sua quantidade de acordo com
               o informado pela MOTOR. Caso a quantidade informada a ser eliminada forma maior que o atual será enviada uma mensagem de erro.           
         */
+
         SC7->(DbSetOrder(1)) //C7_FILIAL, C7_NUM, C7_ITEM, C7_SEQUEN, R_E_C_N_O_, D_E_L_E_T_
           
         If SC7->(dbSeek(FWxFilial("SC7")+cCodigoDe))    
@@ -196,12 +193,7 @@ Static Function  PutElim()
 
         If !Empty(cError)        
             
-            lGetErro     := .T.      
-
-        ElseIf Len(aRecSC7) == 0
-          
-            lGetErro     := .T.       
-            cError += EncodeUtf8("O pedido "+cCodigoDe+" não tem residuo para ser eliminado.")
+            lGetErro     := .T.          
 
         Else
 
@@ -253,14 +245,7 @@ Static Function  PutElim()
       U_EnvEmail(cEmMOTOR," Erro no motor de abastecimento MOTOR: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
 
     EndIf
-
-  Else
-
-    ConOut("Reisudo eliminado PC MA235PC" + cTime)   
-    cTime := FwTimeStamp()
-    cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s
-    ConOut("FIM Eliminando residuo PC MA235PC" + cTime) 
-
+    
   EndIf 
   
 Return .T.
@@ -368,15 +353,11 @@ Static Function  PutExec()
       While __TRZ->(!Eof())
         
         aItem := {}      
-        aAdd(aItem,	{"C7_FILIAL"    ,AllTrim(__TRZ->Z42_FILIAL)             ,Nil}) // Numero do Pedido
-        aAdd(aItem,	{"C7_NUM"       ,cNumPC                                 ,Nil}) // Numero do Pedido      
+        aAdd(aItem,	{"C7_FILIAL"      ,AllTrim(__TRZ->Z42_FILIAL)           ,Nil}) // Numero do Pedido
+        aAdd(aItem,	{"C7_NUM"         ,cNumPC                               ,Nil}) // Numero do Pedido      
         aAdd(aItem, {"C7_ITEM"        ,AllTrim(__TRZ->Z42_ITEM)             ,NIL})
         aAdd(aItem, {"C7_PRODUTO"     ,AllTrim(__TRZ->Z42_PRODUT)           ,NIL})
-       // aAdd(aItem, {"C7_QUANT"	      ,__TRZ->Z42_QTDNOV                    ,NIL})                           
-        //aAdd(aItem, {"C7_QTDSOL"	    ,__TRZ->Z42_QTDNOV                    ,NIL})
         aAdd(aItem, {"C7_LOCAL"	      ,"01"                                 ,NIL})
-        //aAdd(aItem, {"C7_PRECO"	      ,__TRZ->Z42_PRECO                     ,NIL})            
-        //aAdd(aItem, {"C7_TOTAL"	      ,__TRZ->Z42_PRECO * __TRZ->Z42_QTDNOV ,NIL})                   
         aAdd(aItem, {"C7_DATPRF"	    ,StoD(__TRZ->Z42_DATPRF)              ,NIL})
         aAdd(aItem, {"C7_OPER"	      ,"01"			                            ,Nil})
         aAdd(aItem,	{"C7_TIPO"	      ,1                	                  ,NIL})      
@@ -504,4 +485,3 @@ Static Function  PutExec()
 
 Return .T.
   
- 

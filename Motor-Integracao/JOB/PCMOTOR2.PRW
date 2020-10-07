@@ -63,6 +63,10 @@ User Function  PCMOTOR2(xParam1,xParam2)
       ConOut('## ERROR - NÃO FOI INFORMADO EMPRESA E FILIAL ##')
       ConOut('## ERROR - FIM DO JOB ##')
       //Return
+
+  EndIf
+
+  If Empty(cEmp) .OR.  Empty(cEmp)
       cEmp 		:= "08"
       cFil 		:= "01" 
   EndIf
@@ -71,7 +75,7 @@ User Function  PCMOTOR2(xParam1,xParam2)
       RPCSetEnv(cEmp, cFil, NIL, NIL, "COM", NIL, {"SB1","SF2","Z42"})	
   EndIf
 
-  
+  ConOut("INICIO do JOB PCMOTOR2")
   cEmMOTOR := SuperGetMv("MV_YMOTOR3",.F., "fsbvieira@gmail.com")  //Parametro MOTOR email de quem ira receber o email de erro ao gerar PC pelo motor de abastecimento.
 
   dEmisDe    := MonthSub(dDataBase,12)
@@ -104,17 +108,7 @@ User Function  PCMOTOR2(xParam1,xParam2)
 
       cCodigoDe  := AllTrim(__TRZ->Z42_NUM)
       cCodigoAte := AllTrim(__TRZ->Z42_NUM)   
-      
-      /*
-      No caso da eleminição de resíduos ficou decido da seguinte forma:
 
-      1 - Usar a função MA235PC que se encontra no fonte padrão TOTVS MATA235;
-
-      2 - Na eleminição parcial dos itens do pedido de compra ficou da forma:
-          a) Se for informado a quantidade igual a ZERO de algum item do PC o mesmo tera o residuo eliminido pela rotina acima
-          b) Se for informado a quantidade diferente de ZERO o item será alterado(ExecAuto)apenas em sua quantidade de acordo com
-            o informado pela MOTOR. Caso a quantidade informada a ser eliminada forma maior que o atual será enviada uma mensagem de erro.           
-      */
       SC7->(DbSetOrder(1)) //C7_FILIAL, C7_NUM, C7_ITEM, C7_SEQUEN, R_E_C_N_O_, D_E_L_E_T_
       
       If SC7->(dbSeek(FWxFilial("SC7")+cCodigoDe)) 
@@ -169,11 +163,6 @@ User Function  PCMOTOR2(xParam1,xParam2)
           
           lGetErro     := .T.      
 
-      ElseIf Len(aRecSC7) == 0
-        
-          lGetErro     := .T.       
-          cError += EncodeUtf8("O pedido "+cCodigoDe+" não tem residuo para ser eliminado.")
-
       Else
 
           // VERIFICO SE O RESIUDO FOI ELIMINADO de fato, PARA NÃO CORRER O RISCO DE NÃO ESTAR POSICIONADO  o registro
@@ -221,16 +210,8 @@ User Function  PCMOTOR2(xParam1,xParam2)
 
       EndIf
 
-    Else
-
-      ConOut("Reisudo eliminado PC MA235PC" + cTime)
-
     EndIf  
-   
-    cTime := FwTimeStamp()
-    cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s
-    ConOut("FIM Eliminando residuo PC MA235PC" + cTime) 
-
+    
   EndIf 
   
 Return .T.

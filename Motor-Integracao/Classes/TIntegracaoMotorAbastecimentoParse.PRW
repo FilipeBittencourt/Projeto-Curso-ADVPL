@@ -282,7 +282,6 @@ Method ParseProduto(oJson) Class TIntegracaoMotorAbastecimentoParse
 		Next nI
 
 
-
 		If lErro == .F.
 
 			nI := 1 
@@ -297,9 +296,7 @@ Method ParseProduto(oJson) Class TIntegracaoMotorAbastecimentoParse
 				aJSPro[nI]["erro"]       := ""			
 
 				SB1->(DbSetOrder(1))
-				If SB1->(dbSeek(FWxFilial("SB1")+oJson["itens"][nI]["produto"] )) 			
-
-					//If cEmpAnt == "08" .and. cFilAnt == "01"
+				If SB1->(dbSeek(FWxFilial("SB1")+oJson["itens"][nI]["produto"] ))					
 
 					IF oJson["origem"] == "SC7"
 
@@ -327,11 +324,7 @@ Method ParseProduto(oJson) Class TIntegracaoMotorAbastecimentoParse
 							loop				
 						EndIf
 
-					EndIf
-
-						
-
-					//EndIf
+					EndIf				 
 
 					if lErro == .F.
 
@@ -360,7 +353,7 @@ Method ParseProduto(oJson) Class TIntegracaoMotorAbastecimentoParse
 Return aJSPro
 
 /******************************************************************************************************************/
-/*                                         FIM METDODOS PARA PARSES                                               */
+/*                                         FIM METODOS PARA PARSES                                                */
 /******************************************************************************************************************/
 
 
@@ -670,6 +663,8 @@ Method MontaPVenda(oJson) Class TIntegracaoMotorAbastecimentoParse
 	oJSPV["pedidoVenda"]["cab"]["C5_DESCONT"]	:=  0
 	oJSPV["pedidoVenda"]["cab"]["C5_INDPRES"] 	:=  "2"	//|2 - Significa venda nao presencial -> internet |	  	
  	oJSPV["pedidoVenda"]["cab"]["C5_YEMPFOR"]   := EmpFilArmaz(AllTrim(oJson["itens"][1]["produto"])) //Obtem a empresa e filial do armazem físico
+	oJSPV["pedidoVenda"]["cab"]["C5_YIDCITE"]	:=  oJson["numeroAbastecimento"] // Id do motor de abastecimento
+	 
 
 
 	If SC5->(FieldPos("C5_YEMPFOR"))

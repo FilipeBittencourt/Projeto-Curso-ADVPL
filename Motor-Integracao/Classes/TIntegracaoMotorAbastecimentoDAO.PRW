@@ -8,13 +8,8 @@ CLASS TIntegracaoMotorAbastecimentoDAO From LongClassName
     Method CreatePCompra(oJson)
     Method CreatePVenda(oJson)
     Method BaixaTotalPC(oJson)
-    Method BaixaParcialPC(oJson)
-    
+    Method BaixaParcialPC(oJson)    
     Method EnviaError(oJson)
-    
-
-Method _BaixaParcialPC(oJson)
-
 
 ENDCLASS
 
@@ -306,16 +301,6 @@ METHOD EnviaError(oJSPC,cError,cTitulo) CLASS TIntegracaoMotorAbastecimentoDAO
 
   U_EnvEmail("fsbvieira@gmail.com"," Erro no motor de abastecimento MOTOR: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
 
-  //Local cTime      := FwTimeStamp()
-  //Local cFilName  := ""
-  //cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s' 	
-  //oJSPC["pedidoCompra"]["itens"][nI]["C7_PRODUTO"]  := "XXXXX99"
-  //cFilName := "POST_PC_IDMOTOR_"+oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]+"_"+cTime
-  //memowrite("\data\"+cFilName+".json", oJSPC:ToJson()) 
-  //EnvEmail(cDestin,cAssunto,cMensagem,cAnexos,lUsaLogado)
-  //U_EnvEmail("fsbvieira@gmail.com"," Error motor de abastecimento CITERL: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml, cFilName)
-  //FERASE("\data\"+cFilName+".json")
-
 Return
 
 
@@ -360,6 +345,7 @@ Method CreatePVenda(oJsonPV) Class TIntegracaoMotorAbastecimentoDAO
     aAdd(aCab,	{"C5_YEMPFOR" 	,  oJsonPV["pedidoVenda"]["cab"]["C5_YEMPFOR"]    ,Nil})
     aAdd(aCab,	{"C5_YSTATUS" 	,  oJsonPV["pedidoVenda"]["cab"]["C5_YSTATUS"]    ,Nil}) // LIBERADO PARA FATURAMENTO/LIBERAÇÃO
     aAdd(aCab,	{"C5_YHRINC" 	,  oJsonPV["pedidoVenda"]["cab"]["C5_YHRINC"]     ,Nil}) 
+    aAdd(aCab,	{"C5_YIDCITE" 	,  oJsonPV["pedidoVenda"]["cab"]["C5_YIDCITE"]    ,Nil}) 
 
     For nX := 1 To Len(oJsonPV["pedidoVenda"]["itens"])
         
