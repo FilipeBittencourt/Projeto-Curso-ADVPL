@@ -174,8 +174,9 @@ Static Function  PutElim()
             End Transaction
 
           EndIf
-
-            While SC7->(!Eof()) .AND. FWxFilial("SC7")+cCodigoDe == SC7->C7_FILIAL+ SC7->C7_NUM               
+          
+          SC7->(dbGoTo())
+          While SC7->(!Eof()) .AND. FWxFilial("SC7")+cCodigoDe == SC7->C7_FILIAL+SC7->C7_NUM              
 
               SC7->(RecLock('SC7', .F.))
                   SC7->C7_CONAPRO := 'L'                        
@@ -184,6 +185,22 @@ Static Function  PutElim()
               SC7->(DbSkip())
 
           EndDo 
+
+
+          SC7->(dbGoTop())      
+          If SC7->(dbSeek(FWxFilial("SC7")+cCodigoDe))
+
+            While SC7->(!Eof()) .AND. FWxFilial("SC7")+cCodigoDe == SC7->C7_FILIAL+SC7->C7_NUM               
+
+              SC7->(RecLock('SC7', .F.))
+                  SC7->C7_CONAPRO := 'L'                        
+              SC7->(MsUnlock())
+
+              SC7->(DbSkip())
+              
+            EndDo 
+
+          EndIf  
 
         EndIf 
 
@@ -458,15 +475,21 @@ Static Function  PutExec()
 
       End Transaction
 
-      While SC7->(!Eof()) .AND. FWxFilial("SC7")+cNumPC == SC7->C7_FILIAL+ SC7->C7_NUM               
+      SC7->(dbGoTop())
 
-        SC7->(RecLock('SC7', .F.))
-            SC7->C7_CONAPRO := 'L'                        
-        SC7->(MsUnlock())
+      If SC7->(dbSeek(FWxFilial("SC7")+cNumPC))
 
-        SC7->(DbSkip())
-        
-      EndDo   
+        While SC7->(!Eof()) .AND. FWxFilial("SC7")+cNumPC == SC7->C7_FILIAL+SC7->C7_NUM               
+
+          SC7->(RecLock('SC7', .F.))
+              SC7->C7_CONAPRO := 'L'                        
+          SC7->(MsUnlock())
+
+          SC7->(DbSkip())
+          
+        EndDo 
+
+      EndIf  
       
       ConOut("FIM MsExecAuto Mata120") 
     

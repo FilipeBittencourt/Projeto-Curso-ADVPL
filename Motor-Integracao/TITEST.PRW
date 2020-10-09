@@ -20,7 +20,9 @@ User Function TITEST1()
     RPCSetEnv("08", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2","Z42"})	
   EndIf
 
-  cQuery += " SELECT * from Z42080  "
+  //cQuery += " SELECT * from Z42080  "
+  cQuery += " SELECT * from SC5080  "
+  //cQuery += " SELECT * from SC7080  "
    
  
 
@@ -152,13 +154,13 @@ User Function  TITEST3()
     Begin Transaction
                                  
         ConOut("INICIO MsExecAuto Mata120")
-        MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,aIClone,3,.F.) // 3 - Inclusao, 4 - Alterao, 5 - Excluso                   
+        MsExecAuto({|x,y,z,w,k| Mata120(x,y,z,w,k)},1,aCab,aIClone,3,.F.) // 3 - Inclusao, 4 - Alteraï¿½ï¿½o, 5 - Exclusï¿½o                   
 
         If !lMsErroAuto
 
             ConOut("Incluido com sucesso o PEDIDO: " + cNumPC )
 
-            // Logica abaixo para ja alterar os PC para Liberado, PARA NÃO CONFLITAR COM REGRAS DE LIBERAÇÃO EXISTENTES 
+            // Logica abaixo para ja alterar os PC para Liberado, PARA Nï¿½O CONFLITAR COM REGRAS DE LIBERAï¿½ï¿½O EXISTENTES 
 
             If SC7->(dbSeek(FWxFilial("SC7")+cNumPC))  
 
