@@ -11,16 +11,30 @@ PE que Valida o registro do PC e retorna andamento do processo. Apos o usuario c
 
 User Function MT120ALT()
 
-	Local lExecuta := .T.	
-    Local lMOTOR   :=  SuperGetMv("MV_YMOTOR1",.F.,.F.)  //Parametro MOTOR ON/OFF inserir, edicao, exclusao  do pedido de compra gerados pelo motor de abastecimento via WS 
-    
+	Local lExecuta := .T.
+    Local lBlind   := IsBlind()
+    Local nOpc     := Paramixb[1] == 4
+
+    lExecuta := MTALT001(lBlind, nOpc)
+
+return lExecuta
+
+
+Static Function MTALT001(lBlind, nOpc)
+
+	Local lRet := .T.	
+    Local lMOTOR   :=  SuperGetMv("MV_YMOTOR1",.F.,.F.)  //Parametro MOTOR ON/OFF inserir, edicao, exclusao  do pedido de compra gerados pelo motor de abastecimento via WS  
+
 	//INICIO - Condição para pedidos feitos pelo motor de abastecimento MOTOR em TELA    
-    If !IsBlind() .AND. lMOTOR .AND. Paramixb[1] == 4
+    If !lBlind .AND. lMOTOR .AND. nOpc == 4
 		If !Empty(SC7->C7_YIDCITE)
             FwAlertWarning('Não é possivel modificar pedido de compra criado pelo motor de abastecimento MOTOR.','ATENÇÃO - MT120ALT')
-            return lExecuta := .F.
+            return lRet := .F.
         Endif
     Endif
     //FIM  -  Condição para pedidos feitos pelo motor de abastecimento MOTOR em TELA
 
-return lExecuta
+return lRet
+
+
+

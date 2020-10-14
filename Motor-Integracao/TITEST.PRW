@@ -216,3 +216,43 @@ User Function  TITEST3()
   EndIf 
 
 Return .T.
+
+
+
+User Function  TITEST4() 
+ 
+  Local cCampo := ""
+   
+  If Select("SX6") <= 0	
+    RPCSetEnv("08", "01", NIL, NIL, "COM", NIL, {"SB1","SF2","Z42"})	
+  EndIf
+
+
+  SX3->(dbSetOrder(1))
+
+  If SX3->(dbSeek("Z42"))  
+
+    While SX3->(!Eof()) .AND. SX3->X3_ARQUIVO == "Z42"
+      
+      cCampo += "Campo: "+SX3->X3_CAMPO+"" + CRLF
+      cCampo += "Tipo:  "+SX3->X3_TIPO+""+ CRLF
+      cCampo += "Tamanho: "+CVALTOCHAR(SX3->X3_TAMANHO)+""+ CRLF
+      cCampo += "Formato:  "+SX3->X3_PICTURE+""+ CRLF
+      cCampo += "Propriedade: Vizualiar" + CRLF
+      cCampo += "Contexto: Real" + CRLF
+      cCampo += "Propriedade: Visualizar" + CRLF+ CRLF
+
+      cCampo += "Titulo:    "+SX3->X3_TITULO+"" + CRLF
+      cCampo += "Descricao: "+SX3->X3_DESCRIC+"" + CRLF+ CRLF
+
+      cCampo += ""+CRLF
+      cCampo += "-------------------------------------------------------"
+      cCampo += ""+CRLF
+      SX3->(DbSkip())
+
+    EndDo
+
+  EndIf
+ 
+
+Return .T.
