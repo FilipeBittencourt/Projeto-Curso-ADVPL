@@ -21,7 +21,6 @@ User Function MT500ANT()
 Return lExecuta
 
 
-
 Static Function MT500001(lBlind)
 
 	Local lExecuta := .T.	
@@ -35,5 +34,5 @@ Static Function MT500001(lBlind)
         Endif
     Endif
     //FIM  -  Condição para pedidos feitos pelo motor de abastecimento MOTOR em TELA
-    
+
 Return lExecuta
