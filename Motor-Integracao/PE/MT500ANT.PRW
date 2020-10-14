@@ -20,7 +20,6 @@ User Function MT500ANT()
 
 Return lExecuta
 
-
 Static Function MT500001(lBlind)
 
 	Local lExecuta := .T.	
