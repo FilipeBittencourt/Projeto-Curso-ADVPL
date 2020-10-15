@@ -3,7 +3,7 @@
 
 /*
 ------------------------------------------------------------------------------------------------------------
-Função   	: PCMOTOR1
+Função   	: PCMOTOR3
 Tipo		  : job
 Descrição	: função para pegar os dados na Z42  e incluir via ExecAUTO NA TABEA SC7
 Autor     : Filipe Bittencourt - Facile
@@ -174,18 +174,7 @@ Static Function  PutElim()
             End Transaction
 
           EndIf
-          
-          SC7->(dbGoTo())
-          While SC7->(!Eof()) .AND. FWxFilial("SC7")+cCodigoDe == SC7->C7_FILIAL+SC7->C7_NUM              
-
-              SC7->(RecLock('SC7', .F.))
-                  SC7->C7_CONAPRO := 'L'                        
-              SC7->(MsUnlock())
-
-              SC7->(DbSkip())
-
-          EndDo 
-
+ 
 
           SC7->(dbGoTop())      
           If SC7->(dbSeek(FWxFilial("SC7")+cCodigoDe))
@@ -203,7 +192,6 @@ Static Function  PutElim()
           EndIf  
 
         EndIf 
-
 
 
         ErrorBlock(oError) 

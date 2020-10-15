@@ -20,8 +20,15 @@ User Function TITEST1()
     RPCSetEnv("08", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2","Z42"})	
   EndIf
 
+
+  //X31UPDTABLE("SC5")
+  //X31UPDTABLE('SC7')
+
+  DbSelectArea("Z42")
+  DbSelectArea("SC5")
+  DbSelectArea("SC7")
   //cQuery += " SELECT * from Z42080  "
-  cQuery += " SELECT * from SC5080  "
+  cQuery += " SELECT 10 * from SC5080  "
   //cQuery += " SELECT * from SC7080  "
    
  

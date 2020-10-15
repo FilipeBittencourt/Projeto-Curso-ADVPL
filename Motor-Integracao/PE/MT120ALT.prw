@@ -13,7 +13,7 @@ User Function MT120ALT()
 
 	Local lExecuta := .T.
     Local lBlind   := IsBlind()
-    Local nOpc     := Paramixb[1] == 4
+    Local nOpc     := Paramixb[1]
 
     lExecuta := MTALT001(lBlind, nOpc)
 
