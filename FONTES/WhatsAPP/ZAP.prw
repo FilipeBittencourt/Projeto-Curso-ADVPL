@@ -4,7 +4,7 @@
 #INCLUDE 'COLORS.CH'
 #Include "TopConn.ch"
 
-User Function PESQSATS
+User Function ZAP
 
   /*ÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
   ±± Declaração de cVariable dos componentes                                 ±±
@@ -45,7 +45,7 @@ User Function PESQSATS
   ±± Declaração de Variaveis Private dos Objetos                             ±±
   Ù±±ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ*/
   SetPrvt("oDlg1","oGrp1","oSay1","oSay2","oSay3","oSay4","oSay5","oSay6","oSay7","oSay8","oSay8","oGet1","oGet2")
-  SetPrvt("oGet4","oGet5","oGet6","oGet7","oGet8","oGet9","oBtn1","oBtn2","oBtn3","oBtn4","oBrw1")
+  SetPrvt("oGet4","oGet5","oGet6","oGet7","oGet8","oGet9","oBtn1","oBtn2","oBtn3","oBtn4","oBtn5","oBrw1")
 
 
   /*ÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
@@ -75,7 +75,10 @@ User Function PESQSATS
   oBtn1      := TButton():New( 010,450,"Filtrar",oGrp1,{||fFiltra()},040,015,,,,.T.,,"",,,,.F. )
   oBtn2      := TButton():New( 030,450,"Sair",oGrp1,{||fFechar()},040,015,,,,.T.,,"",,,,.F. )
   oBtn3      := TButton():New( 050,450,"Legenda",oGrp1,{||Legenda()},040,015,,,,.T.,,"",,,,.F. )
-  oBtn4      := TButton():New( 045,325,"Sincronizar Tudo",oGrp1,{|| fSincAll() },080,015,,,,.T.,,"",,,,.F. )
+  oBtn4      := TButton():New( 050,325,"Sincronizar Tudo",oGrp1,{|| fSincAll() },080,015,,,,.T.,,"",,,,.F. )
+
+  oBtn5      := TButton():New( 030,325,"Exportar para excel",oGrp1,{|| ExpExcel() },080,015,,,,.T.,,"",,,,.F. )
+  
   
          
 
@@ -308,12 +311,14 @@ Static Function DbClick(nNumPos)
 
   Local oDlgInfo := Nil
   Local cNomeCli := SPACE(50)
-  Local cYTELZAP  := SPACE(19)
+  Local cYTELZAP := SPACE(19)
   Local cFilialx := ""
   Local cDoc     := ""
   Local cSerie   := ""
   Local aCols    := {}
-
+  Local cCodUser :=  RetCodUsr()
+  Local cNomUser :=  UsrRetName(cCodUser)
+  Local cUsers   :=  SuperGetMv("MV_YUPQSAT",.F.,"") // usuarios que podem excluir pesquisa
 
   If  Len(oBrw1:Acols) > 0 .AND. !Empty(oBrw1:Acols[1,2])
 
@@ -348,7 +353,7 @@ Static Function DbClick(nNumPos)
     TSay():New( 0100,015,{||"OBS PV:"},oDlgInfo,,,.F.,.F.,.F.,.T.,CLR_BLACK,CLR_WHITE,0120,008)
     TMultiget():new( 098, 050, {| u | aCols[1,8]/*C5_YOBS*/ }, oDlgInfo, 0120,050, , , , , , .T., , , , , , .T. )
 
-    If aCols[1,9] $ "P/S/R/N"   /* YSTAZAP */
+    If aCols[1,9] $ "P/S/R/N" .AND. cNomUser $ cUsers  /* YSTAZAP */
       TButton():New( 160,050,"Exlcuir pesquisa",oDlgInfo,{|| fCancela(cFilialx,cDoc, cSerie, aCols[1,2]/* YIDZAP */, aCols[1,10]/*ROTIGEM*/, cNomeCli, cYTELZAP, oDlgInfo) },050,015,,,,.T.,,"",,,,.F. )
     EndIf
 
@@ -1062,3 +1067,41 @@ Static Function FindPesq(cFILIALx, cDOC, cSERIE,  cNomeCli, cTelCli )
   __TRW->(DbCloseArea())
 
 Return aDados
+
+
+Static Function ExpExcel()
+
+  Local   aCab    := aHeader // aHeader é private
+  Local   alinha  := GetaCols()
+  Local   nI      := 1
+
+  If alinha != Nil
+    If Len(alinha) > 0
+
+      For nI := 1 To Len(alinha)
+
+        If alinha[nI][1]:CNAME == "BR_VERMELHO"
+          alinha[nI][1]  := "Não enviados"
+        ElseIf alinha[nI][1]:CNAME == "BR_AZUL"
+          alinha[nI][1]  := "Um envio sem resposta"
+        ElseIf alinha[nI][1]:CNAME == "BR_AMARELO"
+          alinha[nI][1]  := "Dois envios sem resposta"
+        ElseIf alinha[nI][1]:CNAME == "BR_VERDE"
+          alinha[nI][1]  := "Resposta enviada"
+        Else
+          alinha[nI][1]  := "Fechada sem resposta"
+        EndIf
+
+      Next nI
+
+      MsgRun("Favor Aguardar.....", "Exportando os Registros para o Excel",;
+        {||DlgToExcel({{"GETDADOS",;
+        "Pesquisa de satisfação",;
+        aCab,alinha}})})
+    Else
+      FwAlertWarning('Não há dados para ser exportado0','Warning')
+    EndIf
+  EndIf
+
+
+Return .T.
