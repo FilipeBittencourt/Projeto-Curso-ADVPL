@@ -181,3 +181,36 @@ USER FUNCTION STRUCTS4()
  
 Return oJSI
 
+ // bulbe sorts
+            //int[] vet = new int[10] {2,1,8,7,6,4,5,9,-1,3};
+
+
+            //for (Int32 i = 0; i < vet.Length; i++)
+            //{
+            //    int m = i;
+            //    for (Int32 k = i; k < vet.Length; k++)
+            //    {
+            //        if (vet[k] < vet[m])
+            //        {
+            //            m = k;
+            //        }
+            //    }
+
+            //    int aux = vet[m];
+            //    vet[m] = vet[i];
+            //    vet[i] = aux;
+            //}
+
+
+            //for (Int32 i = 0; i < vet.Length; i++)
+            //{                 
+            //    for (Int32 k = i+1; k < vet.Length; k++)
+            //    {
+            //        if (vet[k] < vet[i])
+            //        {
+            //            int aux = vet[i];
+            //            vet[i] = vet[k];
+            //            vet[k] = aux;
+            //        }
+            //    }
+            //}

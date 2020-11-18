@@ -13,7 +13,7 @@ User Function BANCO001()
 	IF (SB1->(DBSeek(FWXFilial("SB1")+"000002")))
 		Alert(SB1->B1_DESC)
 	ELSE
-		MsgInfo("Não existe registro para esse codigo")
+		MsgInfo("Naoo existe registro para esse codigo")
 	ENDIF
 	RestArea(aArea) //FECHA a CONEXAO
 
