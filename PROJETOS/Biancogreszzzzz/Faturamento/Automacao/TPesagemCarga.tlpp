@@ -1,0 +1,558 @@
+#Include "TOTVS.CH"
+#Include "Protheus.CH"
+#Include "TOPCONN.CH"
+
+Class TPesagemCarga From LongClassName
+	
+	//atributos publico
+
+	Public Data cId					as character
+	Public Data cNumTicket				as character
+	Public Data cNumExTicket			as character
+	Public Data cNumCarga				as character
+	Public Data cDataIni 				as character
+	Public Data cPlaca 				as character
+	Public Data cMotorista 			as character
+	Public Data cObsTicket 			as character
+	Public Data cGuardian 				as character
+	Public Data nPesoBalanca 			as numeric
+	Public Data nPesoBruto 			as numeric
+	Public Data nPesoFat				as numeric
+	Public Data nPesoEcosis 			as numeric
+	Public Data nCapVeiculo			as numeric
+	Public Data nPesoVeiculo			as numeric
+	Public Data nPesoAdCarroceria		as numeric
+	Public Data cConferido				as character
+	Public Data cPreAutorizado			as character
+	Public Data nIcmFreLM				as numeric
+	Public Data nIcmFreBia				as numeric
+		
+	Public Data nDiverCapacidade		as numeric
+	Public Data nDiverPeso				as numeric
+	Public Data cTipoDivergencia		as character
+	
+	Public Data cEmailWorkflow			as cEmailWorkflow 
+		
+	//atributos privado
+	
+	//metodos publicos	
+	Public Method New() Constructor
+	Public Method BancoEmp()
+	Public Method ProcDadosCarga()
+	
+	Public Method CalcDiverVeiculo()
+	Public Method CalcDiverFatEcoBal()
+	Public Method DivergenciaValidas()
+	
+	Public Method GetPesoFat()
+	Public Method GetPesoEco()
+	Public Method GetICMSFreteAuto(_cCarga, lLm)
+	
+	Public Method ChkPesoCarga()
+	Public Method Conferir()
+	Public Method EnviarWF()
+	 
+	//metodos privados
+	
+EndClass
+
+Method New (_cNumCarga, _cNumTicket) Class TPesagemCarga
+	
+	::cNumTicket			:= _cNumTicket
+	::cNumCarga				:= _cNumCarga
+	::cId					:= ""
+	::cDataIni 				:= ""
+	::cPlaca 				:= ""
+	::cMotorista 			:= ""
+	::cObsTicket 			:= ""
+	::cGuardian 			:= ""
+	::nPesoBalanca 			:= 0
+	::nPesoBruto 			:= 0
+	::nPesoFat				:= 0
+	::nPesoEcosis 			:= 0
+	::nCapVeiculo 			:= 0
+	::nPesoVeiculo			:= 0
+	::nDiverCapacidade		:= 0
+	::nDiverPeso			:= 0
+	::nPesoAdCarroceria		:= 0
+	::cEmailWorkflow		:= ""
+	::cConferido			:= ""
+	::cPreAutorizado		:= ""
+	::nIcmFreLM				:= 0
+	::nIcmFreBia			:= 0
+	::cNumExTicket			:= ""
+	
+	::ProcDadosCarga()
+	::CalcDiverVeiculo()
+	::CalcDiverFatEcoBal()
+	
+Return 
+
+Method DivergenciaValidas() Class TPesagemCarga
+	
+	Local lOk			:= .T.	
+	Local cAcesso		:= ''
+	Local nPercDiver	:= SUPERGETMV("MV_YPDPC", .F., 2)
+	Local nPercDivPe	:= SUPERGETMV("MV_YPDPP", .F., 2)
+	Local cDescDiver	:= ""	
+	Local cDescFaixa	:= ""
+	Local cListaEmail	:= ""
+	
+	If (::nPesoBruto == 0 .Or. ::nCapVeiculo == 0)
+		lOk 		:= .F.
+		cDescDiver	:= "Peso Inválido: Peso Bruto ou PBT Capacidade igual 0."+CRLF
+	ElseIf (::nPesoFat == 0 .Or. ::nPesoBalanca == 0)
+		lOk 		:= .F.
+		cDescDiver	:= "Peso Inválido: Faturamento ou Balança igual 0."+CRLF
+	ElseIf (::nPesoEcosis == 0 .And. ::nPesoFat == 0)
+		lOk 		:= .F.
+		cDescDiver	:= "Peso Inválido: Faturamento ou Ecosis igual 0."+CRLF	
+	EndIf
+	
+	
+	//diveregencia de capacidade
+	If (lOk)
+		
+		If oPesaCarga:nDiverCapacidade > nPercDivPe
+
+			If (oPesaCarga:nDiverCapacidade > 0 .And. oPesaCarga:nDiverCapacidade <= 2)
+			
+				lOk 		:= .F.
+				cAcesso		:= 'C04'
+				cDescFaixa	:= "'Faixa maior que 0% e menor ou igual a 2% '"+CRLF
+				cListaEmail := U_EmailWF('PCARGAA04',cEmpAnt) 
+			
+			ElseIf (oPesaCarga:nDiverCapacidade > 2 .And. oPesaCarga:nDiverCapacidade <= 3)
+			
+				lOk 		:= .F.
+				cAcesso		:= 'C01'
+				cDescFaixa	:= "'Faixa maior que 2% e menor ou igual a 3% '"+CRLF
+				cListaEmail := U_EmailWF('PCARGAA01',cEmpAnt) 
+					
+			ElseIf (oPesaCarga:nDiverCapacidade > 3 .And. oPesaCarga:nDiverCapacidade <= 4)
+			
+				lOk 		:= .F.
+				cAcesso		:= 'C02'
+				cDescFaixa	:= "'Faixa maior que 3% e menor ou igual a 4% '"+CRLF	
+				cListaEmail := U_EmailWF('PCARGAA02', cEmpAnt) 
+					
+			EndIf
+			
+			
+			If !lOk .And. !U_VALOPER(cAcesso,.F.)
+			
+				cDescDiver 			:= "Usuário não tem acesso para confirmação da carga (Divergência de capacidade): "+cDescFaixa+" ."+CRLF	
+				::cTipoDivergencia	:= 'C'
+				
+				::cEmailWorkflow	:= cListaEmail
+				::EnviarWF()
+				
+			ElseIf oPesaCarga:nDiverCapacidade > 4
+				cDescDiver := "Divergência de capacidade superior a 4%! Não é possivel realizar confirmação da carga."+CRLF	
+			Else
+				lOk 	:= .T.
+			EndIf
+
+		EndIf
+		
+	EndIf
+	
+	//diveregencia de peso
+	If (lOk)
+		
+		If (oPesaCarga:nDiverPeso > nPercDiver .Or. oPesaCarga:nDiverPeso < (nPercDiver * -1))
+		
+			cAcesso		:= 'C03'
+			lOk 		:= .F.
+			cListaEmail	:= U_EmailWF('PCARGAA03',cEmpAnt)
+			
+		EndIf
+			
+		
+		If !lOk .And. !U_VALOPER(cAcesso,.F.)
+			
+			cDescDiver 	+= "Usuário não tem acesso para confirmação da carga (Divergência de Peso 'Faturamento X Ecosis X Balança')."+CRLF	
+			::cTipoDivergencia	:= 'P'
+		
+			::cEmailWorkflow	:= cListaEmail
+			::EnviarWF()
+			
+		Else
+			lOk 	:= .T.
+		EndIf
+		
+	EndIf
+	
+		
+Return {lOk, cDescDiver}
+
+
+Method Conferir(_cConf, _cObs) Class TPesagemCarga
+	
+	Local aArea	:= GetArea()
+	
+	If (!Empty(::cNumCarga))
+
+		DbSelectArea("ZZV")
+		ZZV->(dbSetOrder(1))
+		
+		If ZZV->(DbSeek(xFilial("ZZV")+::cNumCarga))
+			
+			Reclock("ZZV", .F.)
+				ZZV->ZZV_CONF	:= _cConf
+				ZZV->ZZV_DTCONF	:= dDataBase
+				ZZV->ZZV_HRCONF	:= Substr(Time(), 1, 5)
+				ZZV->ZZV_USCONF := __cUserID
+			ZZV->(MsUnLock())	
+			
+		EndIf
+		
+	EndIf
+	
+	If !(Empty(::cNumTicket))
+		
+		DbSelectArea("Z11")
+		Z11->(DbSetOrder(1))
+		
+		If Z11->(DbSeek(xFilial("Z11")+::cNumTicket))
+		
+			RecLock("Z11",.F.)
+				Z11->Z11_OBSER := Alltrim(_cObs)
+			Z11->(MsUnLock())
+		
+		EndIf
+		
+	EndIf
+	
+	RestArea(aArea)	
+	
+Return
+
+Method EnviarWF() Class TPesagemCarga
+	
+	Local oAprovacaoCargaEmail 		:= TAprovacaoCargaEmail():New()
+		
+	oAprovacaoCargaEmail:oPesagemCarga		:= SELF	
+	oAprovacaoCargaEmail:cEmp				:= cEmpAnt	
+	oAprovacaoCargaEmail:cFil				:= cFilAnt
+	oAprovacaoCargaEmail:cTabela			:= RetSQLName("ZZV")
+	oAprovacaoCargaEmail:cProcesso			:= "APCARGA"
+	oAprovacaoCargaEmail:cEmail				:= ::cEmailWorkflow
+	oAprovacaoCargaEmail:cId				:= ::cId
+
+	oAprovacaoCargaEmail:Enviar()
+
+Return
+
+Method BancoEmp(_cEmp) Class TPesagemCarga
+	
+	Local cBanco := "01"
+	
+	If AllTrim(_cEmp) == "01"
+		cBanco	:= "DADOSEOS"
+	ElseIf AllTrim(_cEmp) == "05"
+		cBanco	:= "DADOS_05_EOS"
+	ElseIf AllTrim(_cEmp) == "13"
+		cBanco	:= "DADOS_13_EOS"
+	EndIf
+	
+Return cBanco
+
+Method CalcDiverVeiculo() Class TPesagemCarga
+	
+	Local nValor := 0
+	//regra capacidade veiculo
+	::nDiverCapacidade := ((::nPesoBruto + ::nPesoAdCarroceria) / ::nCapVeiculo)
+	
+	::nDiverCapacidade := (::nDiverCapacidade -1 ) * 100
+		
+	//If ((::nPesoBruto + ::nPesoAdCarroceria) < ::nCapVeiculo)
+	//	::nDiverCapacidade := ::nDiverCapacidade * -1
+	//EndIf
+	
+Return 
+
+Method CalcDiverFatEcoBal() Class TPesagemCarga
+
+	//peso faturamento diferente do ecosis
+	//If (::nPesoFat > ::nPesoEcosis)
+		
+	//	::nDiverPeso := (::nPesoFat - ::nPesoEcosis) / ::nPesoFat * 100
+		
+	//ElseIf (::nPesoEcosis > ::nPesoFat)
+		
+	//	::nDiverPeso := (::nPesoEcosis - ::nPesoFat) / ::nPesoEcosis * 100
+		
+	//EndIf
+	
+	//peso faturamento diferente do da balanca
+	//If (::nPesoFat > ::nPesoBalanca)
+	
+	//	::nDiverPeso := (::nPesoFat - ::nPesoBalanca) / ::nPesoFat * 100
+	
+	//ElseIf (::nPesoBalanca > ::nPesoFat)
+		
+		::nDiverPeso := (::nPesoBalanca - ::nPesoFat) / ::nPesoBalanca * 100
+		
+	//EndIf
+
+Return
+
+
+Method ProcDadosCarga() Class TPesagemCarga
+	
+	Local cQuery		:= ""
+	Local cAliasTemp	:= GetNextAlias()
+	Local aArea			:= GetArea()
+	
+	cQuery := " SELECT ID=R_E_C_N_O_, ZZV_CARGA, ZZV_TICKET, ZZV_DATINC, 					" + CRLF
+	cQuery += " ZZV_PLACA, ZZV_MOTOR, ZZV_CONF,	ZZV_PREAUT,	ZZV_TICKEX,						" + CRLF
+	cQuery += " ( 																			" + CRLF
+	cQuery += " 	SELECT SUM(F2_PBRUTO) 													" + CRLF
+	cQuery += "   FROM " + RetSQLName("SF2")+"												" + CRLF
+	cQuery += " 	WHERE F2_FILIAL = " + ValToSQL(xFilial("SF2"))+"						" + CRLF
+	cQuery += " 	AND SUBSTRING(F2_YAGREG, 5, 4) = ZZV_CARGA 								" + CRLF
+	cQuery += " ) AS PES_FAT, 																" + CRLF
+	cQuery += " ( 																			" + CRLF
+	cQuery += "   SELECT SUM(iord_peso) 													" + CRLF
+	cQuery += "   FROM "+::BancoEmp(cEmpAnt)+".dbo.fat_ordem_faturamento ORDEM 				" + CRLF
+	cQuery += "   INNER JOIN "+::BancoEmp(cEmpAnt)+".dbo.fat_itens_ordem ITENS				" + CRLF
+	cQuery += "   ON ITENS.ford_numero = ORDEM.ford_numero 									" + CRLF
+	cQuery += "   WHERE ORDEM.ford_num_carga COLLATE Latin1_General_BIN = ZZV_CARGA 		" + CRLF
+	cQuery += " ) AS PES_ECO, 																" + CRLF
+	cQuery += " ( 																			" + CRLF
+	cQuery += "		SELECT SUM(Z11_PESLIQ) 													" + CRLF
+	cQuery += "   FROM " + RetSQLName("Z11")+"												" + CRLF
+	cQuery += "   WHERE Z11_FILIAL = " + ValToSQL(xFilial("Z11"))+"							" + CRLF
+	cQuery += "   AND Z11_PESAGE = CASE WHEN ZZV_TICKEX = '' THEN ZZV_TICKET ELSE ZZV_TICKEX END	 	" + CRLF
+	cQuery += "   AND D_E_L_E_T_ = '' 														" + CRLF
+	cQuery += " ) AS PES_BAL, 																" + CRLF
+	cQuery += " ( 																			" + CRLF
+	cQuery += "		SELECT SUM(Z11_PESOSA) 													" + CRLF
+	cQuery += "   FROM " + RetSQLName("Z11")+"												" + CRLF
+	cQuery += "   WHERE Z11_FILIAL = " + ValToSQL(xFilial("Z11"))+"							" + CRLF						
+	cQuery += "   AND Z11_PESAGE = CASE WHEN ZZV_TICKEX = '' THEN ZZV_TICKET ELSE ZZV_TICKEX END	 	" + CRLF
+	cQuery += "   AND D_E_L_E_T_ = '' 														" + CRLF
+	cQuery += " ) AS PES_BRU, 																" + CRLF
+	cQuery += " ( 																			" + CRLF
+	cQuery += "		SELECT TOP 1 Z11_OBSER 													" + CRLF
+	cQuery += "   FROM " + RetSQLName("Z11")+"												" + CRLF		
+	cQuery += "   WHERE Z11_FILIAL = " + ValToSQL(xFilial("Z11"))+"							" + CRLF									
+	cQuery += " 	AND Z11_PESAGE = CASE WHEN ZZV_TICKEX = '' THEN ZZV_TICKET ELSE ZZV_TICKEX END	 	" + CRLF
+	cQuery += "   AND D_E_L_E_T_ = '' 														" + CRLF
+	cQuery += " ) AS OBS_TICKT, 															" + CRLF
+	cQuery += " ( 																			" + CRLF
+	cQuery += "		SELECT TOP 1 Z11_GUARDI 												" + CRLF
+	cQuery += "   FROM " + RetSQLName("Z11")+"												" + CRLF
+	cQuery += "   WHERE Z11_FILIAL = " + ValToSQL(xFilial("Z11"))+"							" + CRLF			
+	cQuery += "   AND Z11_PESAGE = CASE WHEN ZZV_TICKEX = '' THEN ZZV_TICKET ELSE ZZV_TICKEX END		" + CRLF
+	cQuery += "   AND D_E_L_E_T_ = '' 														" + CRLF
+	cQuery += " ) AS GUARDIAN 																" + CRLF
+	cQuery += "	FROM " + RetSqlName("ZZV")+"	ZZV											" + CRLF		
+	cQuery += " WHERE ZZV_FILIAL = " + ValToSQL(xFilial("ZZV"))+"							" + CRLF		
+	cQuery += " AND D_E_L_E_T_ = '' 														" + CRLF
+	
+	If !Empty(::cNumTicket)
+		cQuery += " AND (ZZV_CARGA = " + ValToSQL(::cNumCarga) + " OR ZZV_TICKET = " + ValToSQL(::cNumTicket) + ") "
+	Else
+		cQuery += " AND ZZV_CARGA = " + ValToSQL(::cNumCarga)
+	EndIf
+
+	TcQuery cQuery New Alias (cAliasTemp)
+
+
+	If !Empty((cAliasTemp)->ZZV_CARGA)
+
+		::cId				:= cValToChar((cAliasTemp)->ID)
+		::cNumTicket		:= (cAliasTemp)->ZZV_TICKET
+		::cNumCarga			:= (cAliasTemp)->ZZV_CARGA
+		::cDataIni 			:= dtoc(stod((cAliasTemp)->ZZV_DATINC))   
+		::cPlaca 			:= (cAliasTemp)->ZZV_PLACA
+		::cMotorista 		:= (cAliasTemp)->ZZV_MOTOR
+		::cObsTicket 		:= (cAliasTemp)->OBS_TICKT
+		::cGuardian 		:= Alltrim((cAliasTemp)->GUARDIAN)
+		::nPesoBalanca 		:= (cAliasTemp)->PES_BAL
+		::nPesoBruto 		:= (cAliasTemp)->PES_BRU
+		::cConferido 		:= (cAliasTemp)->ZZV_CONF
+		::cPreAutorizado	:= (cAliasTemp)->ZZV_PREAUT
+		::nIcmFreLM			:= ::GetICMSFreteAuto((cAliasTemp)->ZZV_CARGA, .T.)
+		::nIcmFreBia		:= ::GetICMSFreteAuto((cAliasTemp)->ZZV_CARGA)
+		::cNumExTicket		:= (cAliasTemp)->ZZV_TICKEX
+		
+		If Empty(::cNumTicket)
+		
+			::nPesoFat		:= (cAliasTemp)->PES_FAT
+			::nPesoEcosis 	:= (cAliasTemp)->PES_ECO
+			
+		Else
+
+			::nPesoFat 		:= ::GetPesoFat(::cNumTicket)
+			::nPesoEcosis 	:= ::GetPesoEco(::cNumTicket)
+		
+		EndIf
+	
+		//buasca dados do veiculo
+		DbSelectArea("DA3")
+		DA3->(dbSetOrder(3))
+		
+		If DA3->(DbSeek(xFilial("DA3")+(cAliasTemp)->ZZV_PLACA))
+			::nCapVeiculo 			:= DA3->DA3_CAPACN //- DA3->DA3_YPSAD
+			::nPesoAdCarroceria		:= DA3->DA3_YPSAD
+			::nPesoVeiculo			:= DA3->DA3_TARA
+		EndIf
+		
+
+		//problemas pesagem entrada
+		//If (::nPesoBruto == 0 .And. ::nPesoBruto > 0)
+		//	::nPesoBruto := ::nPesoVeiculo - ::nPesoBruto  
+		//EndIf
+		
+	EndIf
+	
+	(cAliasTemp)->(dbCloseArea())
+	
+	RestArea(aArea)
+Return
+
+Method GetPesoFat(_cTicket)	Class TPesagemCarga
+
+	Local nPeso 		:= 0
+	Local cQuery		:= ""
+	Local cAliasTemp	:= GetNextAlias()
+
+	cQuery := " SELECT ISNULL(SUM(F2_PBRUTO), 0) AS PESO 		"
+	cQuery += " FROM VW_ZZV_EMP 								"
+	cQuery += " INNER JOIN VW_SF2_EMP 							"
+	cQuery += " ON EMPR = F2_EMP 								"
+	cQuery += " AND ZZV_CARGA = SUBSTRING(F2_YAGREG, 5, 4) 		"
+	cQuery += " WHERE ZZV_TICKET = " + ValToSQL(_cTicket)+"		"
+
+	TcQuery cQuery New Alias (cAliasTemp)
+
+	If (!(cAliasTemp)->(Eof()))
+		nPeso := (cAliasTemp)->PESO
+	EndIf
+		
+	(cAliasTemp)->(DbCloseArea())
+	
+Return(nPeso)
+
+/*
+Method GetPesoFat(_cTicket)	Class TPesagemCarga
+
+	Local nPeso 		:= 0
+	Local cQuery		:= ""
+	Local cAliasTemp	:= GetNextAlias()
+
+	cQuery := " SELECT ISNULL(SUM(F2_PBRUTO), 0) AS PESO 		"
+	cQuery += " FROM VW_ZZV_EMP 								"
+	cQuery += " INNER JOIN VW_SF2_EMP 							"
+	cQuery += " ON EMPR = F2_EMP 								"
+	cQuery += " AND ZZV_CARGA = SUBSTRING(F2_YAGREG, 5, 4) 		"
+	cQuery += " WHERE ZZV_TICKET = " + ValToSQL(_cTicket)+"		"
+
+	TcQuery cQuery New Alias (cAliasTemp)
+
+	If (!(cAliasTemp)->(Eof()))
+		nPeso := (cAliasTemp)->PESO
+	EndIf
+		
+	(cAliasTemp)->(DbCloseArea())
+	
+Return(nPeso)
+*/
+
+Method GetPesoEco(_cTicket) Class TPesagemCarga
+
+	Local nPeso 		:= 0
+	Local cQuery		:= ""
+	Local cAliasTemp	:= GetNextAlias()
+	Local cAliasEcos	:= Nil
+
+	cQuery := " SELECT EMPR AS EMP, ZZV_CARGA AS CARGA 		"
+	cQuery += " FROM VW_ZZV_EMP 							"
+	cQuery += " WHERE ZZV_TICKET = " + ValToSQL(_cTicket)+"	"	
+
+	TcQuery cQuery New Alias (cAliasTemp)
+
+	While !(cAliasTemp)->(Eof())
+		
+		If (AllTrim((cAliasTemp)->EMP) <> '14')
+		
+			cQuery := " SELECT ISNULL(SUM(iord_peso), 0) AS PESO 																	"
+			cQuery += " FROM " + ::BancoEmp((cAliasTemp)->EMP) + ".dbo.fat_ordem_faturamento ORDEM 									"
+			cQuery += " INNER JOIN " + ::BancoEmp((cAliasTemp)->EMP) + ".dbo.fat_itens_ordem ITENS 									"
+			cQuery += " ON ITENS.ford_numero = ORDEM.ford_numero 																	"
+			cQuery += " WHERE ORDEM.ford_num_carga COLLATE Latin1_General_BIN = " + ValToSQL((cAliasTemp)->CARGA)+"					"			
+	
+			cAliasEcos := GetNextAlias()
+			
+			TcQuery cQuery New Alias (cAliasEcos)
+			
+			If !(cAliasEcos)->(Eof())
+				nPeso += (cAliasEcos)->PESO
+			EndIf
+			
+			(cAliasEcos)->(DbCloseArea())
+			
+		EndIf
+		
+		(cAliasTemp)->(DbSkip())
+		
+	EndDo
+		
+	(cAliasTemp)->(DbCloseArea())
+		
+Return(nPeso)
+
+Method GetICMSFreteAuto(_cCarga, lLm)Class TPesagemCarga
+
+	Local nValor 		:= 0
+	Local cQuery		:= ""
+	Local cAliasTemp	:= GetNextAlias()
+	
+	Default lLm			:= .F.
+	
+	If lLm
+		
+		cQuery := " SELECT ICMS_AUTO = ISNULL(																						"
+		cQuery += " (                                                                                                           	"
+		cQuery += " 	select ICMS_AUTO = SUM(F2_ICMAUTO) from SF2070 SF2                                                      	"
+		cQuery += " 	join                                                                                                    	"
+		cQuery += " 	(                                                                                                       	"
+		cQuery += " 	select distinct  DOC = C97.C9_NFISCAL, SERIE = C97.C9_SERIENF                                           	"
+		cQuery += " 	from SC9010 C9                                                                                          	"
+		cQuery += " 	join SC9070 C97 on C97.C9_BLINF = ('01'+C9.C9_NFISCAL+C9.C9_SERIENF+C9.C9_PEDIDO+C9.C9_ITEM+C9.C9_SEQUEN)	"
+		cQuery += " 	where C9.C9_AGREG = " + ValToSQL(_cCarga)+"                                                                	"
+		cQuery += " 	and C9.C9_CLIENTE = '010064'                                                                            	"
+		cQuery += " 	and C9.D_E_L_E_T_ = ''                                                                                  	"
+		cQuery += " 	and C97.D_E_L_E_T_ = ''                                                                                 	"
+		cQuery += " 	) SF27 ON SF27.DOC = SF2.F2_DOC AND SF27.SERIE = SF2.F2_SERIE                                           	"
+		cQuery += " 	WHERE SF2.D_E_L_E_T_ = ''           		                                                               	"
+		cQuery += " )                                                                                                           	"
+		cQuery += " , 0 )                                                                                                        	"
+	
+	Else
+	
+		cQuery := " SELECT ICMS_AUTO = ISNULL(             		                                                                  	"
+		cQuery += " (                                                                                                           	"
+		cQuery += " 	select ICMS_AUTO = SUM(F2_ICMAUTO) from SF2010                                                          	"
+		cQuery += " 	where SUBSTRING(F2_YAGREG, 5, 4) = " + ValToSQL(_cCarga)+"                                                	"
+		cQuery += " 	and F2_CLIENTE <> '010064'                                                                              	"	
+		cQuery += " 	and D_E_L_E_T_ = ''           		                                                                      	"
+		cQuery += " )                                                                                                           	"
+		cQuery += " , 0 )                                                                                                        	"
+
+	EndIf
+	
+	TcQuery cQuery New Alias (cAliasTemp)
+
+	If (!(cAliasTemp)->(Eof()))
+	
+		nValor := (cAliasTemp)->ICMS_AUTO
+		
+	EndIf
+		
+	(cAliasTemp)->(DbCloseArea())
+	
+Return(nValor)

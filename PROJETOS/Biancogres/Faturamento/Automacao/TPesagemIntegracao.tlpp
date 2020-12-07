@@ -35,6 +35,7 @@ Method New (_cEmp, _cFil) Class TPesagemIntegracao
 
 Return 
 
+
 Method GetTicketPlaca(_cPlaca) Class TPesagemIntegracao
 
 	Local cQuery 		:= ""
@@ -288,7 +289,7 @@ Method ProcessaGuardiam() Class TPesagemIntegracao
 	cQuery += " where                                                                                                                                                                                                               " + CRLF
 	cQuery += " ZLW.ZLW_TPOPER = '2'  AND ZLW_FLUXO = 'EXPEDICAO'                                                                                                                                                                   " + CRLF
 	cQuery += " AND ZLW.D_E_L_E_T_ = ''                                                                                                                                                                                             " + CRLF
-	cQuery += " AND Convert(Date, ZLW.ZLW_DATA ) BETWEEN  Convert(Date, GETDATE()) AND Convert(Date, GETDATE())                                                                                                                  " + CRLF
+	cQuery += " AND Convert(Date, ZLW.ZLW_DATA ) BETWEEN  Convert(Date, GETDATE()-2) AND Convert(Date, GETDATE())                                                                                                                  " + CRLF
 	cQuery += " AND	NOT EXISTS (																													                                                                                " + CRLF
 	cQuery += " 		SELECT 1 																										                                                                                            " + CRLF
 	cQuery += " 		FROM Z11010	(NOLOCK)																							                                                                                            " + CRLF
@@ -314,6 +315,7 @@ Method ProcessaGuardiam() Class TPesagemIntegracao
 	cQuery += " 		AND Z11_PESOIN = 0.01	
 	cQuery += " 		AND Z11_PESOSA = 0.01																								                                                                                        " + CRLF
 	cQuery += " 		AND D_E_L_E_T_ = ''																								                                                                                            " + CRLF
+	cQuery += " 		AND Z11_MERCAD = '2'
 	cQuery += " 		)	
 	
 	cQuery += " 		                                                                                                                                                                                                            " + CRLF
@@ -359,7 +361,7 @@ Method ProcessaGuardiam() Class TPesagemIntegracao
 	cQuery += " ZLW.ZLW_TPOPER = '2'  AND ZLW_FLUXO = 'RECEBIMENTO'                                                                                                                                                                 " + CRLF
 
 	cQuery += " AND ZLW.D_E_L_E_T_ = ''                                                                                                                                                                                             " + CRLF
-	cQuery += " AND Convert(Date, ZLW.ZLW_DATA ) BETWEEN  Convert(Date, GETDATE()) AND Convert(Date, GETDATE())                                                                                                                  " + CRLF
+	cQuery += " AND Convert(Date, ZLW.ZLW_DATA ) BETWEEN  Convert(Date, GETDATE()-2) AND Convert(Date, GETDATE())                                                                                                                  " + CRLF
 	cQuery += " AND	NOT EXISTS (																													                                                                                " + CRLF
 	cQuery += " 		SELECT 1 																										                                                                                            " + CRLF
 	cQuery += " 		FROM Z11010	(NOLOCK)																							                                                                                            " + CRLF
@@ -377,7 +379,8 @@ Method ProcessaGuardiam() Class TPesagemIntegracao
 	cQuery += " 		AND Z11_SITUAC = 'C'																								                                                                                        " + CRLF
 	cQuery += " 		AND D_E_L_E_T_ = ''																								                                                                                            " + CRLF
 	cQuery += " 		)	
-	cQuery += " AND	NOT EXISTS (																													                                                                                " + CRLF
+	
+	/*cQuery += " AND	NOT EXISTS (																													                                                                                " + CRLF
 	cQuery += " 		SELECT 1 																										                                                                                            " + CRLF
 	cQuery += " 		FROM Z11010	(NOLOCK)																							                                                                                            " + CRLF
 	cQuery += " 		WHERE Z11_FILIAL = '  '																							                                                                                            " + CRLF
@@ -386,13 +389,11 @@ Method ProcessaGuardiam() Class TPesagemIntegracao
 	cQuery += " 		AND Z11_PESOSA = 0.01																								                                                                                        " + CRLF
 	cQuery += " 		AND D_E_L_E_T_ = ''																								                                                                                            " + CRLF
 	cQuery += " 		)	
-                                                                                                                                                                                     " + CRLF
-	
+    */
+    
 	cQuery += " 		                                                                                                                                                                                                            " + CRLF
 	cQuery += " ) A                                                                                                                                                                                                                 " + CRLF
-         
-	
-	
+     
 	
 	conout('Processando pesagem')
 	conout(cQuery)

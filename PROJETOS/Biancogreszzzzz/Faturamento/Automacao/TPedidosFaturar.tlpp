@@ -1,0 +1,87 @@
+#Include "TOTVS.CH"
+#Include "Protheus.CH"
+
+Class TPedidosFaturar From LongClassName
+
+	Public Data cFilPed
+	Public Data cNumPed
+	Public Data cMarca
+	Public Data cEmpresa
+	Public Data cCliente
+	Public Data cSerie
+	Public Data cNota
+	Public Data cTransport
+	Public Data nTipoFrete
+	Public Data nVlFreteSt
+	Public Data aItensFaturar
+		
+
+	Public Method New() Constructor
+	Public Method GetSerie() 
+	
+EndClass
+
+Method New() Class TPedidosFaturar
+
+	::cFilPed	:=	""
+	::cNumPed	:=	""
+	::cMarca	:=	""
+	::cEmpresa	:=	""
+	::cCliente	:=	""
+	::cSerie	:=	""
+	::cNota		:=	""
+	::cTransport:=	""
+	::nTipoFrete:=	0
+	::nVlFreteSt:=	0
+	::aItensFaturar	:=	{}
+	
+Return
+
+Method GetSerie() Class TPedidosFaturar
+
+	If cEmpAnt == "01" //Biancogres
+	
+		If Alltrim(::cEmpresa) == "0101" .Or. (::cCliente) == "004536" 
+			::cSerie := "1  "		
+		ElseIf Alltrim(::cEmpresa) == "0501"
+			::cSerie := "2  "
+		ElseIf Alltrim(::cEmpresa) == "0599"
+			::cSerie := "3  "
+		ElseIf AllTrim(::cEmpresa) == '0199'
+			::cSerie := "4  "
+		EndIf
+		
+		
+	ElseIf cEmpAnt == "05" //Incesa
+	
+		If Alltrim(::cEmpresa) $ "0101_0501"
+			::cSerie := "1  "
+		ElseIf Alltrim(::cEmpresa) == "0599"
+			::cSerie := "2  "
+		EndIf	
+		
+	ElseIf cEmpAnt == "07" //LM
+	
+		If Alltrim(::cEmpresa) == "0101"
+			::cSerie := "1  "
+		ElseIf Alltrim(::cEmpresa) == "0501"
+			::cSerie := "2  "
+		ElseIf Alltrim(::cEmpresa) == "0599"
+			::cSerie := "3  "
+		ElseIf Alltrim(::cEmpresa) == "1399"
+			::cSerie := "4  "
+		ElseIf AllTrim(::cEmpresa) == '0199'
+			::cSerie := "6  "
+		EndIf
+		
+	ElseIf cEmpAnt == "13" //Mundi
+
+		If Alltrim(::cEmpresa) == "1301"
+			::cSerie := "1  "
+		ElseIf Alltrim(::cEmpresa) == "1302"
+			::cSerie := "2  "
+		EndIf
+
+	EndIf
+
+Return()

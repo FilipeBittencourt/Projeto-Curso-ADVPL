@@ -32,14 +32,20 @@ User Function BIAF140(nOpc)
 			
 		EndIf
 
-		If !Empty(Alltrim(SA2->A2_COD)) .And. SUBSTR(SA2->A2_COD, 1, 1) $ '1234567890'
-			If Substr(AllTrim(SA2->A2_CONTA), 9, 6) <> AllTrim(SA2->A2_COD) .And. cEmpAnt <> "02"  
-				
-				SA2->A2_CONTA := Substr(SA2->A2_CONTA, 1, 8) + AllTrim(SA2->A2_COD)
-				
-				MsgInfo("Conta contabil informada incorretamente! O sistema realizara a correção automaticamente", "BIAF140", "INFO")
-				
-			EndIf
+		If Substr(SA2->A2_COD, 1, 1) $ '1234567890'
+		
+			If cEmpAnt <> "02" 
+		
+				If  AllTrim(SA2->A2_CONTA) <> '21102001' + AllTrim(SA2->A2_COD)
+					
+					SA2->A2_CONTA := '21102001' + AllTrim(SA2->A2_COD)
+					
+					MsgInfo("Conta contabil informada incorretamente! O sistema realizara a correção automaticamente", "BIAF140", "INFO")
+					
+				EndIf
+			
+			EndIf 
+		
 		EndIf
 
 	

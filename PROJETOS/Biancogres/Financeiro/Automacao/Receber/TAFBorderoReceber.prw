@@ -91,6 +91,7 @@ Local bKey := {|nCol| ::oLst:GetItem(nCol):cBanco + ::oLst:GetItem(nCol):cAgenci
 						If (Len(AllTrim(::oLst:GetItem(nCount):cNumBco)) == 8)//nosso numero banestes 8 caracteres e sem digito
 							_oOBjDVNN		:= TCalculoDVNossoNumero():new()
 							SE1->E1_NUMBCO	:= AllTrim(::oLst:GetItem(nCount):cNumBco)+''+_oOBjDVNN:GetDVBanestes(AllTrim(::oLst:GetItem(nCount):cNumBco))
+							::oLst:GetItem(nCount):cNumBco := AllTrim(::oLst:GetItem(nCount):cNumBco)+''+_oOBjDVNN:GetDVBanestes(AllTrim(::oLst:GetItem(nCount):cNumBco))
 						EndIf
 					EndIf
 										

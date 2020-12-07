@@ -1,0 +1,126 @@
+#Include "TOTVS.CH"
+#Include "Protheus.CH"
+#Include "TOPCONN.CH"
+#Include "rwmake.ch"
+
+/*/{Protheus.doc} TPedidoAprovador
+@description Projeto Ciclo do Pedido => 
+@author Pedro Henrique / Facile Sistemas
+@since 09/07/2019
+@version 1.0
+@type class
+/*/
+
+Class TPedidoAprovador From LongClassName
+	
+	Public Data cNumPed	
+	
+	//metodos publicos	
+	Public Method New() Constructor
+	Public Method CancelarAprov()
+	Public Method GetIdAprov()
+	Public Method AtualizarAprov()
+	Public Method GravarAprov()
+	
+EndClass
+
+Method New (_cNumPed) Class TPedidoAprovador
+
+	::cNumPed := _cNumPed
+	
+Return 
+
+
+Method GravarAprov(aRegras) Class TPedidoAprovador
+
+
+Return
+
+Method AtualizarAprov(_cCodAprov, _cOrigem, _cObs, _cAcao) Class TPedidoAprovador
+
+	Local cIdZKL := ::GetIdAprov()
+	
+	If !(Empty(cIdZKL))
+	
+		DbSelectArea("ZKL")
+		ZKL->(DbGoto(cIdZKL))
+		
+		Reclock("ZKL", .F.)
+		
+			ZKL->ZKL_DATA		:= Date()
+			ZKL->ZKL_HORA		:= SubStr(Time(), 1, 5)
+			ZKL->ZKL_APROV		:= _cCodAprov
+			ZKL->ZKL_ORIGEM		:= _cOrigem
+			ZKL->ZKL_OBS		:= _cObs
+			ZKL->ZKL_ACAO		:= _cAcao
+			ZKL->ZKL_STATUS		:= '2'
+			
+		ZKL->(MsUnlock())
+	
+	EndIf
+
+Return 
+
+
+Method GetIdAprov() Class TPedidoAprovador
+
+	Local aArea		:= GetArea()
+	Local cQuery 	:= ""
+	Local cAliasTmp := GetNextAlias()
+	Local cId	:= ""
+	
+	cQuery += " SELECT TOP 1 R_E_C_N_O_								"
+	cQuery += "  FROM "+ RetSqlName("ZKL")+"						"
+	cQuery += " WHERE 												"
+	cQuery += " D_E_L_E_T_ 			= ''							"
+	cQuery += "	AND ZKL_PEDIDO		= '"+::cNumPed+"'				"
+	cQuery += "	AND ZKL_FILIAL		= '"+xFilial('ZKL')+"'			"
+	cQuery += "	AND ZKL_STATUS		= '1'							"
+	cQuery += "	ORDER BY R_E_C_N_O_									"
+	
+	TcQuery cQuery New Alias (cAliasTmp)
+	
+	If (!(cAliasTmp)->(Eof()))
+		cId := (cAliasTmp)->R_E_C_N_O_ 
+	EndIf
+	
+	(cAliasTmp)->(DbCloseArea())
+	
+	RestArea(aArea)
+
+Return cId
+
+Method CancelarAprov() Class TPedidoAprovador
+	
+	Local cQuery 	:= ""
+	Local cAliasTmp := GetNextAlias()
+	Local cId		:= ""
+	
+	cQuery += " SELECT R_E_C_N_O_									"
+	cQuery += "  FROM "+ RetSqlName("ZKL")+"						"
+	cQuery += " WHERE 												"
+	cQuery += " D_E_L_E_T_ 			= ''							"
+	cQuery += "	AND ZKL_PEDIDO		= '"+::cNumPed+"'				"
+	cQuery += "	AND ZKL_FILIAL		= '"+xFilial('ZKL')+"'			"
+	cQuery += "	AND ZKL_STATUS		= '1'							"
+	
+	TcQuery cQuery New Alias (cAliasTmp)
+	
+	While !(cAliasTmp)->(Eof()) 
+		
+		cId := (cAliasTmp)->R_E_C_N_O_
+		
+		DbSelectArea("ZKL")
+		ZKL->(DbGoto(cId))
+		
+		Reclock("ZKL", .F.)
+			ZKL->ZKL_STATUS	:= '3'
+		ZKL->(MsUnlock())
+		
+		(cAliasTmp)->(DbSkip())
+	
+	EndDo()   
+
+	(cAliasTmp)->(DbCloseArea())
+		
+Return 

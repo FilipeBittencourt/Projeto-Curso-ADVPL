@@ -11,16 +11,16 @@
 
 User Function BIA594()
 
-	Local _aSize 		:= {} 
+	Local _aSize 		:= {}
 	Local _aObjects		:= {}
 	Local _aInfo		:= {}
 	Local _aPosObj		:= {}
 
-	Local _aHeader		:= {}          
+	Local _aHeader		:= {}
 	Local _aCols		:= {}
 
 	Local cSeek	        := xFilial("ZBZ") + SPACE(TAMSX3("ZBZ_VERSAO")[1]) + SPACE(TAMSX3("ZBZ_REVISA")[1]) + SPACE(TAMSX3("ZBZ_ANOREF")[1])
-	Local bWhile	    := {|| ZBZ_FILIAL + ZBZ_VERSAO + ZBZ_REVISA + ZBZ_ANOREF }   
+	Local bWhile	    := {|| ZBZ_FILIAL + ZBZ_VERSAO + ZBZ_REVISA + ZBZ_ANOREF }
 
 	Local aNoFields     := {"ZBZ_VERSAO", "ZBZ_REVISA", "ZBZ_ANOREF", "ZBZ_ORIPRC", "ZBZ_LOTE", "ZBZ_SBLOTE"}
 
@@ -29,8 +29,8 @@ User Function BIA594()
 	Local _aButtons	    := {}
 
 	Private _oDlg
-	Private _oGetDados	:= Nil    
-	Private _aColsBkp	:= {}
+	Private _oGetDados	:= Nil
+
 	Private _cVersao	:= SPACE(TAMSX3("ZBZ_VERSAO")[1])
 	Private _oGVersao
 	Private _cRevisa	:= SPACE(TAMSX3("ZBZ_REVISA")[1])
@@ -49,21 +49,20 @@ User Function BIA594()
 		Return()
 
 	EndIf
-	
+
 	aAdd(_aButtons,{"PRODUTO" ,{|| U_BIA393("E")}, "Layout Integração" , "Layout Integração"})
 	aAdd(_aButtons,{"PEDIDO"  ,{|| U_B594IEXC() }, "Importa Arquivo"   , "Importa Arquivo"})
 
-	_aSize := MsAdvSize(.T.)                      
+	_aSize := MsAdvSize(.T.)
 
 	AAdd(_aObjects, {100, 10, .T. , .T. })
 	AAdd(_aObjects, {100, 90, .T. , .T. })
 
-	_aInfo   := {_aSize[1], _aSize[2], _aSize[3], _aSize[4], 5, 5}	
+	_aInfo   := {_aSize[1], _aSize[2], _aSize[3], _aSize[4], 5, 5}
 
 	_aPosObj := MsObjSize(_aInfo, _aObjects, .T. )
 
 	FillGetDados(4,"ZBZ",1,cSeek,bWhile,,aNoFields,,,,,,@_aHeader,@_aCols)
-	_aColsBkp	:=	aClone(_aCols)
 
 	Define MsDialog _oDlg Title "Lançamentos Contábeis p/ Orçamento" From _aSize[7],0 To _aSize[6],_aSize[5] Of oMainWnd Pixel
 
@@ -84,7 +83,7 @@ User Function BIA594()
 
 	_oGetDados := MsNewGetDados():New(_aPosObj[2,1], _aPosObj[2,2], _aPosObj[2,3], _aPosObj[2,4], 7, "U_B594LOK()" /*[ cLinhaOk]*/, /*[ cTudoOk]*/, "+++ZBZ_LINHA" /*[ cIniCpos]*/, /*Acpos*/, /*[ nFreeze]*/, 99999 /*[ nMax]*/, "U_B594FOK()" /*cFieldOK*/, /*[ cSuperDel]*/,"U_B594DOK()" /*[ cDelOk]*/, _oDlg, _aHeader, _aCols)
 
-	ACTIVATE DIALOG _oDlg CENTERED on Init EnchoiceBar(_oDlg, {||_nOpcA := 1, If(_oGetDados:TudoOk(),fGrvDados(),_nOpcA := 0)}, {|| _oDlg:End()},,_aButtons) 
+	ACTIVATE DIALOG _oDlg CENTERED on Init EnchoiceBar(_oDlg, {||_nOpcA := 1, If(_oGetDados:TudoOk(),fGrvDados(),_nOpcA := 0)}, {|| _oDlg:End()},,_aButtons)
 
 Return
 
@@ -194,10 +193,8 @@ Static Function fBIA594F()
 		MsgALERT("A versão informada não está ativa para execução deste processo." + msrhEnter + msrhEnter + "Favor verificar o preenchimento dos campos no tabela de controle de versão conforme abaixo:" + msrhEnter + msrhEnter + xfMensCompl + msrhEnter + msrhEnter + "Favor verificar com o responsável pelo processo Orçamentário!!!")
 		(M001)->(dbCloseArea())
 		Return .F.
-	EndIf	
+	EndIf
 	(M001)->(dbCloseArea())
-
-	_oGetDados:aCols	:=	{}
 
 	// Quando DataRef for vazia
 	If Empty(_cDataRef)
@@ -321,16 +318,21 @@ Static Function fBIA594F()
 	EndIf
 
 	xtrTot :=  (_cAlias)->(NUMREG)
+
 	ProcRegua(xtrTot)
 
 	(_cAlias)->(dbGoTop())
+
+	_oGetDados:aCols :=	{}
+
 	If (_cAlias)->(!Eof())
 
 		While (_cAlias)->(!Eof())
 
 			IncProc("Carregando dados " + AllTrim(Str((_cAlias)->(Recno()))) + " de " + AllTrim(Str(xtrTot)))
 
-			AADD(_oGetDados:aCols, Array(Len(_oGetDados:aHeader)+1) )
+			_oGetDados:AddLine(.F., .F.)
+
 			For _msc := 1 to Len(_oGetDados:aHeader)
 				If Alltrim(_oGetDados:aHeader[_msc][2]) == "ZBZ_ALI_WT"
 					_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := "ZBZ"
@@ -359,9 +361,9 @@ Static Function fBIA594F()
 				Else
 					_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := &(Alltrim(_oGetDados:aHeader[_msc][2]))
 
-				EndIf			
+				EndIf
 			Next _msc
-			_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := .F.	
+			_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := .F.
 
 			(_cAlias)->(dbSkip())
 
@@ -371,15 +373,11 @@ Static Function fBIA594F()
 
 	Else
 
-		_oGetDados:aCols	:=	aClone(_aColsBkp)
-		For _msc := 1 to Len(_oGetDados:aHeader)
-			If Alltrim(_oGetDados:aHeader[_msc][2]) == "ZBZ_LINHA"
-				_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := "001"
-				Exit
-			EndIf			
-		Next _msc
+		_oGetDados:aCols :=	{}
 
-	EndIf	
+		_oGetDados:AddLine(.F., .F.)
+
+	EndIf
 
 	_oGetDados:Refresh()
 
@@ -392,9 +390,10 @@ Static Function fGrvDados()
 
 	Local nPosRec := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZBZ_REC_WT"})
 
-	Local nPosDel	:=	Len(_oGetDados:aHeader) + 1	
+	Local nPosDel	:=	Len(_oGetDados:aHeader) + 1
 
 	dbSelectArea('ZBZ')
+
 	For _nI	:=	1 to Len(_oGetDados:aCols)
 
 		If _oGetDados:aCols[_nI,nPosRec] > 0
@@ -405,7 +404,7 @@ Static Function fGrvDados()
 
 				For _msc := 1 to Len(_oGetDados:aHeader)
 
-					If _oGetDados:aHeader[_msc][10] == "R" .and. _oGetDados:aHeader[_msc][8] <> "D" 
+					If _oGetDados:aHeader[_msc][10] == "R" .and. _oGetDados:aHeader[_msc][8] <> "D"
 
 						nPosColG := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == Alltrim(_oGetDados:aHeader[_msc][2])})
 						&("ZBZ->" + Alltrim(_oGetDados:aHeader[_msc][2])) := _oGetDados:aCols[_nI, nPosColG]
@@ -467,10 +466,16 @@ Static Function fGrvDados()
 	_cVersao        := SPACE(TAMSX3("ZBZ_VERSAO")[1])
 	_cRevisa        := SPACE(TAMSX3("ZBZ_REVISA")[1])
 	_cAnoRef        := SPACE(TAMSX3("ZBZ_ANOREF")[1])
-	_oGetDados:aCols	:=	aClone(_aColsBkp)
+
+	_oGetDados:aCols :=	{}
+
+	_oGetDados:AddLine(.F., .F.)
+
+	_oGetDados:Refresh()
+
 	_oGVersao:SetFocus()
 	_oGVersao:Refresh()
-	_oGetDados:Refresh()
+
 	_oDlg:Refresh()
 
 	MsgInfo("Registro Incluído com Sucesso!")
@@ -496,7 +501,7 @@ User Function B594FOK()
 
 		Do Case
 
-			Case Alltrim(cMenVar) == "M->ZBZ_DC"
+		Case Alltrim(cMenVar) == "M->ZBZ_DC"
 			isDC       := M->ZBZ_DC
 			isDEBITO   := GdFieldGet("ZBZ_DEBITO",_nAt)
 			isCREDIT   := GdFieldGet("ZBZ_CREDIT",_nAt)
@@ -506,11 +511,11 @@ User Function B594FOK()
 			isITEMC    := GdFieldGet("ZBZ_ITEMC",_nAt)
 			If !isDC $ "1/2/3"
 				MsgINFO("Somente são permitidos os valores 1=Débito; 2=Crédito; 3=Partida Dobrada")
-				Return .F. 
-			EndIf 
+				Return .F.
+			EndIf
 			GdFieldPut("ZBZ_ORGLAN" , IIF(isDC == "1", "D", IIF(isDC == "2", "C", IIF(isDC == "3", "P", ""))) , _nAt)
 
-			Case Alltrim(cMenVar) == "M->ZBZ_DEBITO"
+		Case Alltrim(cMenVar) == "M->ZBZ_DEBITO"
 			isDC       := GdFieldGet("ZBZ_DC",_nAt)
 			isDEBITO   := M->ZBZ_DEBITO
 			isCREDIT   := GdFieldGet("ZBZ_CREDIT",_nAt)
@@ -525,7 +530,7 @@ User Function B594FOK()
 			EndIf
 			GdFieldPut("ZBZ_DDEB"     , Posicione("CT1", 1, xFilial("CT1") + isDEBITO, "CT1_DESC01") , _nAt)
 
-			Case Alltrim(cMenVar) == "M->ZBZ_CREDIT"
+		Case Alltrim(cMenVar) == "M->ZBZ_CREDIT"
 			isDC       := GdFieldGet("ZBZ_DC",_nAt)
 			isDEBITO   := GdFieldGet("ZBZ_DEBITO",_nAt)
 			isCREDIT   := M->ZBZ_CREDIT
@@ -540,7 +545,7 @@ User Function B594FOK()
 			EndIf
 			GdFieldPut("ZBZ_DCRD"     , Posicione("CT1", 1, xFilial("CT1") + isCREDIT, "CT1_DESC01") , _nAt)
 
-			Case Alltrim(cMenVar) == "M->ZBZ_CLVLDB"
+		Case Alltrim(cMenVar) == "M->ZBZ_CLVLDB"
 			isDC       := GdFieldGet("ZBZ_DC",_nAt)
 			isDEBITO   := GdFieldGet("ZBZ_DEBITO",_nAt)
 			isCREDIT   := GdFieldGet("ZBZ_CREDIT",_nAt)
@@ -559,7 +564,7 @@ User Function B594FOK()
 			EndIf
 			GdFieldPut("ZBZ_DCVDB"    , Posicione("CTH", 1, xFilial("CTH") + isCLVLDB, "CTH_DESC01") , _nAt)
 
-			Case Alltrim(cMenVar) == "M->ZBZ_CLVLCR"
+		Case Alltrim(cMenVar) == "M->ZBZ_CLVLCR"
 			isDC       := GdFieldGet("ZBZ_DC",_nAt)
 			isDEBITO   := GdFieldGet("ZBZ_DEBITO",_nAt)
 			isCREDIT   := GdFieldGet("ZBZ_CREDIT",_nAt)
@@ -578,7 +583,7 @@ User Function B594FOK()
 			EndIf
 			GdFieldPut("ZBZ_DCVCR"    , Posicione("CTH", 1, xFilial("CTH") + isCLVLCR, "CTH_DESC01") , _nAt)
 
-			Case Alltrim(cMenVar) == "M->ZBZ_ITEMD"
+		Case Alltrim(cMenVar) == "M->ZBZ_ITEMD"
 			isDC       := GdFieldGet("ZBZ_DC",_nAt)
 			isDEBITO   := GdFieldGet("ZBZ_DEBITO",_nAt)
 			isCREDIT   := GdFieldGet("ZBZ_CREDIT",_nAt)
@@ -590,7 +595,7 @@ User Function B594FOK()
 				Return .F.
 			EndIf
 
-			Case Alltrim(cMenVar) == "M->ZBZ_ITEMC"
+		Case Alltrim(cMenVar) == "M->ZBZ_ITEMC"
 			isDC       := GdFieldGet("ZBZ_DC",_nAt)
 			isDEBITO   := GdFieldGet("ZBZ_DEBITO",_nAt)
 			isCREDIT   := GdFieldGet("ZBZ_CREDIT",_nAt)
@@ -716,7 +721,7 @@ User Function B594IEXC()
 			MsgStop('Informe o arquivo valido para importação!')
 		EndIf
 
-	EndIf	
+	EndIf
 
 Return
 
@@ -730,7 +735,7 @@ Static Function fPergunte()
 
 	aAdd( aPergs ,{6,"Arquivo para Importação: " 	,cArquivo  ,"","","", 75 ,.T.,"Arquivo * |*",,GETF_LOCALHARD+GETF_NETWORKDRIVE} )		
 
-	If ParamBox(aPergs ,"Importar Arquivo",,,,,,,,cLoad,.T.,.T.)      
+	If ParamBox(aPergs ,"Importar Arquivo",,,,,,,,cLoad,.T.,.T.)
 		cArquivo  := ParamLoad(cFileName,,1,cArquivo) 
 	Endif
 
@@ -784,7 +789,7 @@ Static Function fProcImport()
 	msHrProc  := Time()
 	msTmpRead := Alltrim(ElapTime(msTmpINI, msHrProc))
 
-	If Len(aArquivo) > 0 
+	If Len(aArquivo) > 0
 
 		msTpLin   := Alltrim( Str( ( ( Val( Substr(msTmpRead,1,2)) * 3600 ) + ( Val(Substr(msTmpRead,4,2)) * 360 ) + ( Val(Substr(msTmpRead,7,2)) ) ) / Len(aArquivo[1]) ) )
 
@@ -793,7 +798,7 @@ Static Function fProcImport()
 
 		ProcRegua(nTotLin)
 
-		For nx := 1 to len(aWorksheet) 
+		For nx := 1 to len(aWorksheet)
 
 			IncProc("Tmp Leit:(" + msTmpRead + ") Proc: " + StrZero(nx,6) + "/" + StrZero(nTotLin,6) )	
 
@@ -817,12 +822,18 @@ Static Function fProcImport()
 				If nPosRec <> 0
 
 					nLinReg := aScan(vtRecGrd,{|x| x == Val(Alltrim(aLinha[nPosRec]))})
+
 					If nLinReg == 0 .or. Val(Alltrim(aLinha[nPosRec])) == 0
 
-						AADD(_oGetDados:aCols, Array(Len(_oGetDados:aHeader)+1) )
+						_oGetDados:aCols :=	{}
+
+						_oGetDados:AddLine(.F., .F.)
+
+						_oGetDados:Refresh()
+
 						nLinReg := Len(_oGetDados:aCols)
 
-					EndIf				
+					EndIf
 
 					For _msc := 1 to Len(aCampos)
 
@@ -854,14 +865,17 @@ Static Function fProcImport()
 
 	EndIf
 
-	If nImport > 0 
+	If nImport > 0
 
 		MsgInfo("Registros importados com sucesso")
 
 	Else
 
 		MsgStop("Falha na importação dos registros")
-		_oGetDados:aCols	:=	aClone(_aColsBkp)
+
+        _oGetDados:aCols :=	{}
+
+        _oGetDados:Refresh()
 
 	EndIf
 

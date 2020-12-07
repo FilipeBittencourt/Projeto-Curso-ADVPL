@@ -1,4 +1,5 @@
 #Include 'TOTVS.CH'
+#Include "TopConn.ch"
 
 User Function ParBox()
 
@@ -15,7 +16,7 @@ User Function ParBox()
   Private lMsErroAuto    := .F.
 
   If Select("SX6") <= 0
-    RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+    RPCSetEnv("99", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
   EndIf
 
   if U_UDiaUtil()
@@ -105,3 +106,80 @@ User Function ParBox()
     FreeObj(oJSObj)
 
   EndIf
+
+RETURN
+
+
+
+//U_ParBox2
+User Function ParBox2()
+
+
+  Local oJSObj    := JsonObject():New()
+  Local aRet      := {}
+  Private cTT     := ""
+  Private aParamBox := {}
+
+  If Select("SX6") <= 0
+    RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+  EndIf
+
+  aAdd(aParamBox,{1,"Cod Vend.",SPACE(TamSX3("A3_COD")[01]),"","U_TPARBOX2('01')","SA3","",0,.T.}) // Tipo caractere
+  aAdd(aParamBox,{1,"CGC Vend",SPACE(TamSX3("A3_CGC")[01]),"","","",".F.",0,.T.}) // Tipo caractere
+  //aAdd(aParamBox,{1,"Conta",SPACE(10),"","","",".F.",0,.T.}) // Tipo caractere
+  //aAdd(aParamBox,{1,"Data Inicio"  ,Ctod(Space(8)),"","","","",50,.T.}) // Tipo data
+  //aAdd(aParamBox,{1,"Data Fim"  ,Ctod(Space(8)),"","","","",50,.T.}) // Tipo data
+  //aAdd(::aParam, {1, "Natureza", ::cNatureza, "@!", "U_BAF031A('06')", "SED", ".T.", 50, .T.})
+  If ParamBox(aParamBox,"Dados para criar tarifas manuais",@aRet)
+
+    oJSObj["Banco"]    := AllTrim(aRet[1])
+    oJSObj["Agencia"]  := AllTrim(aRet[2])
+    oJSObj["Conta"]    := AllTrim(aRet[3])
+    //oJSObj["DtInicio"] := AllTrim(DTOS(aRet[4]))
+    //oJSObj["DtFim"]    := AllTrim(DTOS(aRet[5]))
+  ENDIF
+
+Return
+
+User Function TPARBOX2(cPar)
+
+  Local lRet    := .T.
+  &("MV_PAR02") := "0123456"
+
+RETURN lRet
+
+
+
+
+
+User Function ParBox2()
+
+  Local oJSObj    := JsonObject():New()
+  Local aRet      := {}
+  Private cTT     := ""
+  Private aParamBox := {}
+
+  If Select("SX6") <= 0
+    RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+  EndIf
+
+  aAdd(aParamBox,{1,"Cod Vend.",SPACE(TamSX3("A3_COD")[01]),"","U_TPARBOX2('01')","SA3","",0,.T.}) // Tipo caractere
+  aAdd(aParamBox,{1,"CGC Vend",SPACE(TamSX3("A3_CGC")[01]),"","","",".F.",0,.T.}) // Tipo caractere
+
+  If ParamBox(aParamBox,"Dados para criar tarifas manuais",@aRet)
+
+    oJSObj["CodVend"]  := AllTrim(aRet[1])
+    oJSObj["CGCVend"]  := AllTrim(aRet[2])
+
+  ENDIF
+
+Return
+
+User Function TPARBOX2(cPar)
+
+  Local lRet    := .T.
+  &("MV_PAR02") := "0123456"
+
+RETURN lRet
+
+

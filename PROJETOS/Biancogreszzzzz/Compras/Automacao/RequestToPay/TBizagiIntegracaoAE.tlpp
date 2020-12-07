@@ -1,0 +1,157 @@
+#Include "TOTVS.CH"
+#Include "Protheus.CH"
+#Include "topconn.ch"
+
+Class TBizagiIntegracaoAE from LongClassName
+	
+	Public Data nPreco
+	Public Data cTipo
+	
+	
+	Public Method New() Constructor
+	Public Method Get()
+	Public Method PrecoItem()	
+	Public Method ConfirmReg()	
+	
+EndClass
+
+
+Method New() Class TBizagiIntegracaoAE
+	::nPreco := 0
+	::cTipo  := ""	
+Return
+
+
+Method ConfirmReg(cID, cUsuario) Class TBizagiIntegracaoAE
+	
+	Local cQuery 		:= ""
+	Local nStatus		:= 0
+	Local lRet			:= .T.
+	
+	Default cUsuario	:= 'JOB'
+	
+	cQuery := "update BZINTEGRACAO_PREAE SET DATA_HORA_PROTHEUS = GETDATE(), USUARIO_PROTHEUS = '"+cUsuario+"'  WHERE ID = '"+cID+"'"
+	nStatus := TCSqlExec(cQuery)
+   
+	If (nStatus < 0)
+		lRet	:= .F.
+	EndIf
+	
+Return lRet
+
+
+Method PrecoItem(cContrato, cItem, nQuant) Class TBizagiIntegracaoAE
+	
+	Local cAliasTrab		:= GetNextAlias()
+	Local cQuery			:= ""
+	
+	cQuery	+= " select * from " + RetSQLName("ZG3")+"	 											"
+	cQuery	+= " where ZG3_FILIAL 		= '"+xFilial('ZG3')+"'										"
+	cQuery	+= " AND ZG3_NUMERO 		= '"+cContrato+"'											"
+	cQuery	+= " AND ZG3_ITEM	 		= '"+cItem+"'												"
+	cQuery	+= " AND "+cvaltochar(nQuant)+" BETWEEN  ZG3_VLINI AND ZG3_VLFIN						"
+	cQuery	+= " AND D_E_L_E_T_ 		= ''														"
+	
+	TcQuery cQuery New Alias (cAliasTrab)
+	
+	If (!(cAliasTrab)->(EoF()))
+		
+		::cTipo 	:= (cAliasTrab)->ZG3_TIPO
+		::nPreco 	:= (cAliasTrab)->ZG3_VALOR
+				
+	EndIf
+	
+	(cAliasTrab)->(DbCloseArea())
+Return 
+
+
+Method Get() Class TBizagiIntegracaoAE
+	
+	Local cAliasTemp		:= GetNextAlias()
+	Local cQuery			:= ""
+	Local oAEStruct			:= Nil
+	Local oList				:= ArrayList():New()
+	
+	cQuery	+= " select * from BZINTEGRACAO_PREAE 										"
+	cQuery	+= " where STATUS = 0 AND DATA_HORA_PROTHEUS IS NULL						"
+	
+	TcQuery cQuery New Alias (cAliasTemp)
+	
+	While (!(cAliasTemp)->(EoF()))
+		
+		DbSelectArea("SC3")
+		SC3->(DbSetOrder(1))
+		
+		If SC3->(DbSeek(xFilial('SC3')+PADR(AllTrim((cAliasTemp)->CONTRATO), TamSx3("C3_NUM")[1])))
+			
+			oAEStruct				:= TAEStruct():New()
+			oAEStruct:cContrato		:= SC3->C3_NUM
+			oAEStruct:cFornece		:= SC3->C3_FORNECE
+			oAEStruct:cLoja			:= SC3->C3_LOJA
+			oAEStruct:cCond			:= SC3->C3_COND
+			oAEStruct:cContato		:= (cAliasTemp)->CONTATO
+			oAEStruct:cTipoFrete	:= SC3->C3_TPFRETE
+			oAEStruct:cMoeda		:= SC3->C3_MOEDA
+			oAEStruct:cEmp			:= (cAliasTemp)->EMPRESA
+			oAEStruct:cFil			:= (cAliasTemp)->FILIAL
+			
+			
+			While (!(cAliasTemp)->(EoF())  .And. AllTrim((cAliasTemp)->CONTRATO) == AllTrim(SC3->C3_NUM))
+			
+				DbSelectArea("SC3")
+				SC3->(DbSetOrder(1))
+				
+				cChave := xFilial('SC3')
+				cChave += PADR(AllTrim((cAliasTemp)->CONTRATO)	, TamSx3("C3_NUM")[1])
+				cChave += PADR(AllTrim((cAliasTemp)->ITEM)		, TamSx3("C3_ITEM")[1])
+				
+				If SC3->(DbSeek(cChave))
+					
+					DbSelectArea("SB1")
+					SB1->(DbSetOrder(1))
+					SB1->(DbSeek(xFilial("SB1")+SC3->C3_PRODUTO))		
+					
+					oAEItemStruct	 			:= TAEItemStruct():New()
+				
+					oAEItemStruct:cIDIntegracao	:= (cAliasTemp)->ID
+					oAEItemStruct:cNumSc        := SC3->C3_NUM
+					oAEItemStruct:cItemSc       := SC3->C3_ITEM
+					oAEItemStruct:nQuantSc		:= 0
+
+					oAEItemStruct:cCodTab       := ''
+					
+					oAEItemStruct:cCodProd      := SC3->C3_PRODUTO
+					oAEItemStruct:cLocal        := SC3->C3_LOCAL
+					
+					oAEItemStruct:cDescProd     := SB1->B1_DESC	
+					
+					::PrecoItem(SC3->C3_NUM, SC3->C3_ITEM, (cAliasTemp)->QUANT)
+					//TODO VERIFICAR QUANTIDADE
+					If (::cTipo == '1')//valor fixo
+						oAEItemStruct:nQuant		:= 1
+						oAEItemStruct:nPreco	 	:= ::nPreco
+					ElseIf (::cTipo == '2')//valor por quantidade
+						oAEItemStruct:nQuant		:= 1
+						oAEItemStruct:nPreco	 	:= ::nPreco * (cAliasTemp)->QUANT
+					EndIf
+		
+					oAEItemStruct:nTotal	 	:= oAEItemStruct:nQuant * oAEItemStruct:nPreco
+					oAEItemStruct:cTES          := ''	
+					oAEItemStruct:cTransp		:= ''
+						
+					oAEStruct:oItens:Add(oAEItemStruct)
+					
+				EndIf				
+			
+				(cAliasTemp)->(DbSkip())
+			EndDo
+			
+			oList:Add(oAEStruct)
+		
+		EndIf
+				
+	EndDo
+	
+	(cAliasTemp)->(DbCloseArea())
+	
+Return(oList)

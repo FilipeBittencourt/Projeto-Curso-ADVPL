@@ -82,7 +82,7 @@ User Function BIA389()
 	@ 048,475 MSGET _oGCodUser VAR _cCodUser F3("USR") SIZE 50, 11 OF _oDlg PIXEL VALID fBIA389D()
 	@ 050,535 SAY _mNomeUsr SIZE 250, 11 OF _oDlg PIXEL FONT oFont
 
-	_oGetDados := MsNewGetDados():New(_aPosObj[2,1], _aPosObj[2,2], _aPosObj[2,3], _aPosObj[2,4], 7, /*[ cLinhaOk]*/, /*[ cTudoOk]*/, /*"+++ZZ2_COD"/*[ cIniCpos]*/, /*Acpos*/, /*[ nFreeze]*/, /*[ nMax]*/, "U_B389FOK()" /*cFieldOK*/, /*[ cSuperDel]*/,"U_B389DOK()" /*[ cDelOk]*/, _oDlg, _aHeader, _aCols)
+	_oGetDados := MsNewGetDados():New(_aPosObj[2,1], _aPosObj[2,2], _aPosObj[2,3], _aPosObj[2,4], 7, /*[ cLinhaOk]*/, /*[ cTudoOk]*/, /*"+++ZZ2_COD"/*[ cIniCpos]*/, /*Acpos*/, /*[ nFreeze]*/, 999/*[ nMax]*/, "U_B389FOK()" /*cFieldOK*/, /*[ cSuperDel]*/,"U_B389DOK()" /*[ cDelOk]*/, _oDlg, _aHeader, _aCols)
 
 	ACTIVATE DIALOG _oDlg CENTERED on Init EnchoiceBar(_oDlg, {||_nOpcA := 1, If(_oGetDados:TudoOk(),fGrvDados(),_nOpcA := 0)}, {|| _oDlg:End()},,_aButtons) 
 
@@ -133,20 +133,6 @@ Static Function fBIA389E()
 
 	If Empty(_cComboBox1)
 		MsgInfo("O preenchimento do campo Tipo Orçamento é Obrigatório!!!")
-		Return .F.
-	EndIf
-	If !Empty(_cVersao) .and. !Empty(_cRevisa) .and. !Empty(_cAnoRef) .and. !Empty(_cCodUser) .And. !Empty(_cComboBox1)
-		_oGetDados:oBrowse:SetFocus()
-		Processa({ || fBIA389D() }, "Aguarde...", "Carregando dados...",.F.)
-	EndIf
-
-Return .T.
-
-
-Static Function fBIA389F()
-
-	If Empty(_cCodUser)
-		MsgInfo("O preenchimento do campo Usuário é Obrigatório!!!")
 		Return .F.
 	EndIf
 	If !Empty(_cVersao) .and. !Empty(_cRevisa) .and. !Empty(_cAnoRef) .and. !Empty(_cCodUser) .And. !Empty(_cComboBox1)
@@ -330,8 +316,6 @@ Return
 User Function B389FOK()
 
 	Local cMenVar   := ReadVar()
-	Local vfArea    := GetArea()
-	Local _cAlias
 	Local _nAt		:=	_oGetDados:nAt
 	Local _nI
 	Local _zpCLVL   := ""

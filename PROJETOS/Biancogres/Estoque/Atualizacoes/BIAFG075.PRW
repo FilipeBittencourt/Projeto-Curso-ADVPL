@@ -549,7 +549,7 @@ Static Function fChgTr()
 
 	_nEstMin	:=	fCalcEMin(oGdTrans:aCols[_nAt,_nPosPrd],oGdTrans:aCols[_nAt,_nPosLOri])	
 		
-	cSyDsSald	:=	"ARMAZÉM ORIGEM: " + oGdTrans:aCols[oGdTrans:nAt,_nPosLOri] +" - SALDO: "+ Alltrim(Str(_nSaldo)) + " / ARMAZÉM DEST.: " + oGdTrans:aCols[oGdTrans:nAt,_nPosLDes] + " - SALDO: " + Alltrim(Str(_nSalDest))
+	cSyDsSald	:=	"ARMAZÉM ORIGEM: " + oGdTrans:aCols[oGdTrans:nAt,_nPosLOri] +" - SALDO: "+ Alltrim(Str(_nSaldo - _nEstMin)) + " / ARMAZÉM DEST.: " + oGdTrans:aCols[oGdTrans:nAt,_nPosLDes] + " - SALDO: " + Alltrim(Str(_nSalDest))
 	
 	oSyDsSald:Refresh()
 

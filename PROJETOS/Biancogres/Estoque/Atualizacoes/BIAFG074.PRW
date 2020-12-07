@@ -25,14 +25,19 @@ Static Function ValidPerg()
 	local cFileName := RetCodUsr() +"_"+ cLoad
 	local lRet		:= .F.
 	Local aPergs	:=	{}
-
+	local aOpcs 	:= {"01","20"}
+	
 	MV_PAR01 := SPACE(TAMSX3("B1_COD")[1])
 	MV_PAR02 := SPACE(TAMSX3("B1_COD")[1])
 	MV_PAR03 := " "
+	MV_PAR04 := "01"
+	MV_PAR05 := "20"
 
 	aAdd( aPergs ,{1,"Produto De " 	   			,MV_PAR01 ,""  ,"",'SB1'  ,'.T.',50,.F.})	
-	aAdd( aPergs ,{1,"Produto Até " 	   		,MV_PAR02 ,""  ,"NAOVAZIO()",'SB1'  ,'.T.',50,.F.})
+	aAdd( aPergs ,{1,"Produto Até " 	   		,MV_PAR02 ,""  ,"NAOVAZIO()",'SB1'  ,'.T.',50,.T.})
 	aAdd( aPergs ,{1,"Política " 	   			,MV_PAR03 ,""  ,"NAOVAZIO()",'Y8'  ,'.T.',50,.F.})
+	aAdd( aPergs ,{2,"Almox. Ori. " ,MV_PAR04 ,aOpcs,60,'.T.',.T.})	
+	aAdd( aPergs ,{2,"Almox. Dest. " ,MV_PAR05 ,aOpcs,60,'.T.',.T.})
 
 	If ParamBox(aPergs ,"Processamento de Pré-Transferências",,,,,,,,cLoad,.T.,.T.)
 
@@ -40,6 +45,8 @@ Static Function ValidPerg()
 		MV_PAR01 := ParamLoad(cFileName,,1,MV_PAR01) 
 		MV_PAR02 := ParamLoad(cFileName,,2,MV_PAR02)
 		MV_PAR03 := ParamLoad(cFileName,,3,MV_PAR03)
+		MV_PAR04 := ParamLoad(cFileName,,4,MV_PAR04)
+		MV_PAR05 := ParamLoad(cFileName,,5,MV_PAR05)
 
 	EndIf
 
@@ -72,11 +79,11 @@ Static Function fProcessa()
 			AND ZCP.%NotDel%	
 			JOIN %TABLE:SBZ% SBZ ON SBZ.BZ_FILIAL = %XFILIAL:SBZ%
 			AND SBZ.BZ_COD = SB1.B1_COD
-			AND SBZ.BZ_YPOLIT = %EXP:MV_PAR03%
 			AND SBZ.%NotDel%
 			JOIN %TABLE:ZCN% ZCN ON ZCP.ZCP_COD = ZCN.ZCN_COD
 			AND ZCP.ZCP_LOCAL = ZCN.ZCN_LOCAL
-			AND ZCN.ZCN_SEQUEN = '2'
+			AND ZCN.ZCN_LOCAL = %Exp:MV_PAR05%
+			AND ZCN.ZCN_POLIT = %EXP:MV_PAR03%
 			AND ZCN.%NotDel%
 		EndSql	
 
@@ -110,13 +117,13 @@ Static Function fProcessa()
 
 			_nSaldo += fCalcTrans((_cAlias)->ZCP_COD,(_cAlias)->ZCP_LOCAL) 
 
-			_nSalOri	:=	fSalOri( (_cAlias)->ZCP_COD, '01')
+			_nSalOri	:=	fSalOri( (_cAlias)->ZCP_COD, MV_PAR04)
 
 			If _nMedia - _nSaldo > 0 .And. _nSalOri >= _nMedia - _nSaldo
 
 				_nSaldo	:=	Min(_nSaldo,_nSalOri)
 
-				_lRet :=	fCriaTrans((_cAlias)->ZCP_COD,(_cAlias)->ZCP_LOCAL,_nMedia - _nSaldo, _cDoc)
+				_lRet :=	fCriaTrans((_cAlias)->ZCP_COD,(_cAlias)->ZCP_LOCAL,_nMedia - _nSaldo, _cDoc,MV_PAR04)
 
 				If _lRet 
 					_lSZI	:=	.T.
@@ -153,22 +160,9 @@ Static Function fProcessa()
 
 Return
 
-Static Function fCriaTrans(_cCod,_cLocal,_nQtd,_cDoc)
+Static Function fCriaTrans(_cCod,_cLocal,_nQtd,_cDoc,_cLocOri)
 
-	Local _cLocori
-	Local _lRet	:=	.F.
-
-	DbSelectArea("ZCN")
-	ZCN->(DbSetOrder(1))
-
-	If ZCN->(DbSeek(xFilial("ZCN")+_cCod+"1"))
-		_cLocOri	:=	ZCN->ZCN_LOCAL
-		_lRet	:=	.T.
-	Else
-		MsgInfo("Não existe Almoxarifado primário cadastrado para o produto " + _cCod + ". O mesmo não será incluído na transferência!")
-		Return _lRet
-	EndIf
-
+	Local _lRet	:=	.T.
 
 	DbSelectArea("SZJ")
 	RecLock("SZJ",.T.)

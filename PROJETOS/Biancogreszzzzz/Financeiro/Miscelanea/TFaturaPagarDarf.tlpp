@@ -1,0 +1,410 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "APWIZARD.CH"
+#INCLUDE "FILEIO.CH"
+#INCLUDE "RPTDEF.CH"
+#INCLUDE "FWPrintSetup.ch"
+#INCLUDE "TOTVS.CH"
+#INCLUDE "PARMTYPE.CH"
+#INCLUDE "TOPCONN.CH"
+
+/*/{Protheus.doc} TFaturaPagarDarf
+@author Wlysses Cerqueira (Facile)
+@since 05/02/2020  
+@project 
+@version 1.0
+@description 
+@type function
+/*/
+
+Class TFaturaPagarDarf From LongClassName
+
+	Public Method New() Constructor
+	Public Method IncluirFatura(aInfo)
+	Public Method CancelarFatura(aInfo)
+	Public Method Cancelar(cIdDarf, aDarf)
+
+EndClass
+
+Method New(lJob) Class TFaturaPagarDarf
+
+Return(Self)
+
+Method IncluirFatura(aInfo, lImprime) Class TFaturaPagarDarf
+
+	Local cQry		:= GetNextAlias()
+	Local cSQL		:= ""
+	Local cMsg 		:= ""
+	Local aDarf	 	:= {}
+	Local nPos		:= 0
+	Local nW		:= 0
+	Local nX		:= 0
+	Local lAchou	:= .F.
+	Local aAreaSE2	:= SE2->(GetArea())
+	Local aPerg		:= {}
+	Local cIdDarf	:= U_XXSRFQRY()
+
+	Local oFatPagStruct		:= Nil
+	Local oFatPagItemStruct := Nil
+
+	Default lImprime := .T.
+
+	If Empty(cIdDarf)
+
+		cIdDarf := "XXX"
+
+	EndIf
+
+	cSQL := " SELECT E2_IDDARF, E2_SALDO, R_E_C_N_O_ RECNO "
+	cSQL += " FROM " + RetSqlName("SE2") + " SE2 "
+	cSQL += " WHERE "
+	cSQL += " E2_FILIAL = " + ValToSql(xFilial("SE2")) + " AND "
+
+	If lImprime
+
+		cSQL += " E2_IDDARF BETWEEN " + ValToSql(MV_PAR03) + " AND " + ValToSql(MV_PAR04) + " AND "
+
+	Else
+
+		cSQL += " E2_IDDARF > " + ValToSql(cIdDarf) + " AND "
+	
+	EndIf
+
+	cSQL += " SE2.D_E_L_E_T_ = '' "
+	cSQL += " ORDER BY E2_IDDARF "
+
+	TcQuery cSQL New Alias (cQry)
+
+	Begin Transaction
+
+		While !(cQry)->(EOF())
+
+			nPos := aScan(aDarf, {|x| x[1] == (cQry)->E2_IDDARF })
+
+			If nPos == 0
+
+				aAdd(aDarf, {(cQry)->E2_IDDARF, (cQry)->E2_SALDO, .T.})
+
+				aAdd(aDarf[Len(aDarf)], (cQry)->RECNO)
+
+			Else
+
+				aDarf[nPos][2] += (cQry)->E2_SALDO
+
+				aAdd(aDarf[nPos], (cQry)->RECNO)
+
+			EndIf
+
+			(cQry)->(DbSkip())
+
+		EndDo
+
+		(cQry)->(DbCloseArea())
+
+		DbSelectArea("SE2")
+		DbSelectArea("FI8")
+		DbSelectArea("FI9")
+
+		For nW := 1 To Len(aDarf)
+
+			If aDarf[nW][2] == aInfo[nW][7]
+
+				oFatPagStruct := TFaturaPagarStruct():New()
+
+				SE2->(DbSetOrder(0))
+
+				aPerg := {}
+
+				For nX := 4 To Len(aDarf[nW])
+
+					SE2->(DbGoTo(aDarf[nW][nX]))
+
+					RecLock("SE2", .F.)
+					SE2->E2_IDDARF := ""
+					SE2->(MSUnLock())
+
+					oFatPagItemStruct 				:= TFaturaPagarItemStruct():New()
+					oFatPagItemStruct:nId			:= aDarf[nW][nX]
+					oFatPagItemStruct:nValorDesc	:= 0
+
+					oFatPagStruct:oFatPagItens:Add(oFatPagItemStruct)
+
+					lAchou := .T.
+
+				Next nX
+
+				oFatPagStruct:cPrefixo 			:= "1"
+				oFatPagStruct:cTipo				:= "FT"
+				oFatPagStruct:lLoadDados		:= .T.
+
+				FI9->(DbSetOrder(1)) // FI9_FILIAL, FI9_IDDARF, FI9_STATUS, R_E_C_N_O_, D_E_L_E_T_
+
+				If FI9->(DBSeek(xFilial("FI9") + aDarf[nW][1]))
+
+					oFatPagStruct:dDataRecebimento := FI9->FI9_VENCIM
+
+				EndIf
+
+				oFaturaPagar := TFaturaPagar():New(oFatPagStruct)
+
+				SE2->(DbSetOrder(1))
+
+				Pergunte("AFI290", .F.,,,,, @aPerg)
+
+				MV_PAR01 := 2 // Considera Lojas ?
+				MV_PAR02 := 2 // Mostra Lancto Contabil ?
+				MV_PAR03 := 1 // Contabiliza Baixa on-line ?
+				MV_PAR04 := 1 // Contab.Canc.da Baixa on-line ?
+				MV_PAR05 := 1 // Marcar Titulos Aut. ?
+				MV_PAR06 := 2 // Seleciona filiais ?
+
+				__SaveParam("AFI290", aPerg)
+
+				oResult := oFaturaPagar:Incluir(.F., .T.)
+
+				If oResult:Ok .And. !Empty(SE2->E2_FATURA)
+
+					cMsg += "ID Darf: " + aDarf[nW][1] + CRLF
+
+					cMsg += "Fatura gerada: " + SE2->E2_FATURA + CRLF + CRLF
+
+				ElseIf oResult:Ok .And. Empty(SE2->E2_FATURA)
+
+					cMsg += "ID Darf: " + aDarf[nW][1] + CRLF
+
+					cMsg += "Fatura não gerada! " + CRLF + CRLF
+
+				ElseIf !oResult:Ok
+
+					DisarmTransaction()
+
+					cMsg += "ID Darf: " + aDarf[nW][1] + CRLF
+
+					cMsg += oResult:Mensagem + CRLF + CRLF
+
+					Exit
+
+				EndIf
+
+			ElseIf aDarf[nW][2] > 0
+
+				cMsg += "ID Darf: " + aDarf[nW][1] + CRLF + " Total DARF: " + cValToChar(aDarf[nW][2]) + CRLF + " Total titulos Financeiro: " + cValToChar(aInfo[nW][7]) + CRLF
+
+			EndIf
+
+		Next nW
+
+		If lAchou
+
+			For nW := 1 To Len(aDarf)
+
+				For nX := 4 To Len(aDarf[nW])
+
+					SE2->(DbGoTo(aDarf[nW][nX]))
+
+					RecLock("SE2", .F.)
+					SE2->E2_IDDARF := aDarf[nW][1]
+					SE2->(MSUnLock())
+
+				Next nX
+
+			Next nW
+
+		EndIf
+
+	End Transaction
+
+	If !Empty(cMsg)
+
+		Aviso("ATENCAO", cMsg, {"Ok"}, 3)
+
+	EndIf
+
+	RestArea(aAreaSE2)
+
+Return()
+
+Method CancelarFatura(aInfo) Class TFaturaPagarDarf
+
+	Local aSize := {}
+	Local oDlg
+	Local cIdDarf := PADR("", TamSX3("FI9_IDDARF")[1])
+	Local cTitulo := "DARF - Cancelamento"
+	Local aButtons := {}
+	Local cQry		:= GetNextAlias()
+	Local cSQL		:= ""
+	Local aDarf	 	:= {}
+	Local nPos		:= 0
+	Local nOpca		:= 0
+	Local lRet		:= .F.
+
+	Private oGet
+	Private oSayFor
+	Private oValTot	:= 0
+	Private aHeader	:= {}
+	Private aCols		:= {}
+	Private nValTot  := 0
+
+	AADD(aButtons,{"PMSCOLOR", {|| Fa373Legen(FI9->(RECNO()))}, "Legenda" ,"Legenda" })
+
+	aSize := MsAdvSize(,.F.,400)
+
+	DEFINE MSDIALOG oDlg TITLE cTitulo From aSize[7],0 to aSize[6],aSize[5] of oMainWnd PIXEL
+
+	oDLg:lMaximized := .T.
+
+	oPanel1 := TPanel():New(0,0,'',oDlg, oDlg:oFont,.T.,,,,,45,.T.,.T. )  // altura 45
+
+	oPanel1:Align := CONTROL_ALIGN_TOP
+
+	oPanel2 := TPanel():New(0,0,'',oDlg, oDlg:oFont, .T., .T.,, ,20,20,.T.,.T. )
+	oPanel2:Align := CONTROL_ALIGN_ALLCLIENT
+
+	@	003,010 TO 040,145 OF oPanel1 Pixel
+	@	003,147 TO 040,500 OF oPanel1 Pixel
+
+	@	015,015 Say "DARF" Of oPanel1 Pixel
+
+	@   015,038	MSGET oGet1 VAR cIdDarf SIZE 68,10 Picture "@!" OF oPanel1 PIXEL
+
+	DEFINE SBUTTON FROM 015,110	TYPE 1 ACTION (If(!Empty(cIdDarf), nOpca:=F73SlDarf(oDlg,1,@cIdDarf,oPanel1,oPanel2), nOpca:=0)) ENABLE OF oPanel1
+
+	ACTIVATE MSDIALOG oDlg ON INIT EnchoiceBar(oDlg,{||nOpca := 1, oDlg:End()}, {||oDlg:End()},,aButtons)
+
+	If nOpca == 0
+
+		//oDlg:End()
+
+	ElseIf nOpca == 1
+
+		If ValType(oget) == "O" .And. oGet:TudoOk() .And. Len(aCols) > 0
+
+			cSQL := " SELECT E2_FILIAL, E2_FORNECE, E2_LOJA, E2_FATPREF, E2_FATURA, E2_TIPOFAT, E2_IDDARF, E2_SALDO, R_E_C_N_O_ RECNO "
+			cSQL += " FROM " + RetSqlName("SE2") + " SE2 "
+			cSQL += " WHERE "
+			cSQL += " E2_FILIAL = " + ValToSql(xFilial("SE2")) + " AND "
+			cSQL += " E2_IDDARF = " + ValToSql(cIdDarf) + " AND "
+			cSQL += " E2_FATURA <> '' AND "
+			cSQL += " SE2.D_E_L_E_T_ = '' "
+
+			TcQuery cSQL New Alias (cQry)
+
+			While !(cQry)->(EOF())
+
+				nPos := aScan(aDarf, {|x| x[1] + x[2] == (cQry)->E2_FATURA + (cQry)->E2_FATPREF })
+
+				If nPos == 0
+
+					aAdd(aDarf, {(cQry)->E2_FATURA, (cQry)->E2_FATPREF, (cQry)->E2_SALDO, .T.})
+
+					aAdd(aDarf[Len(aDarf)], (cQry)->RECNO)
+
+				Else
+
+					aDarf[nPos][3] += (cQry)->E2_SALDO
+
+					aAdd(aDarf[nPos], (cQry)->RECNO)
+
+				EndIf
+
+
+				(cQry)->(DbSkip())
+
+			EndDo
+
+			(cQry)->(DbCloseArea())
+
+			Begin Transaction
+
+				If FA373Del(cIdDarf)
+
+					If Len(aDarf) > 0 // Se eesta em fatura
+
+						If ::Cancelar(cIdDarf, aDarf)
+
+							lRet := .T.
+
+							//oDlg:End()
+						
+						Else
+
+							DisarmTransaction()
+
+						EndIf
+
+					EndIf
+
+				EndIf
+
+			End Transaction
+
+		EndIf
+
+	EndIf
+
+Return(lRet)
+
+Method Cancelar(cIdDarf, aDarf) Class TFaturaPagarDarf
+
+	Local cMsg 		:= ""
+	Local nW		:= 0
+	Local nX		:= 0
+	Local lAchou	:= .F.
+	Local aAreaSE2	:= SE2->(GetArea())
+
+	Local oFatPagStruct		:= oFatPagStruct := TFaturaPagarStruct():New()
+	Local oFatPagItemStruct := Nil
+
+	Default aDarf := {}
+
+	For nW := 1 To Len(aDarf)
+
+		oFatPagStruct := TFaturaPagarStruct():New()
+
+		For nX := 5 To Len(aDarf[nW])
+
+			SE2->(DbGoTo(aDarf[nW][nX]))
+
+			oFatPagItemStruct 				:= TFaturaPagarItemStruct():New()
+			oFatPagItemStruct:nId			:= aDarf[nW][nX]
+			oFatPagItemStruct:nValorDesc	:= 0
+
+			oFatPagStruct:oFatPagItens:Add(oFatPagItemStruct)
+
+			lAchou := .T.
+
+		Next nX
+
+		oFatPagStruct:cNumero			:= aDarf[nW][1]
+		oFatPagStruct:cPrefixo 			:= aDarf[nW][2]
+		oFatPagStruct:cTipo				:= "FT"
+		oFatPagStruct:lLoadDados		:= .T.
+
+		oFaturaPagar := TFaturaPagar():New(oFatPagStruct)
+
+		oResult := oFaturaPagar:Cancelar()
+
+		If oResult:Ok
+
+			cMsg += "Fatura cancelada: " + aDarf[nW][1] + "/" + aDarf[nW][2] + CRLF + CRLF
+
+		ElseIf !oResult:Ok
+
+			cMsg += "Fatura " + aDarf[nW][1] + "/" + aDarf[nW][2] + " não cancelada! " + CRLF + CRLF
+			
+			//DisarmTransaction()
+		
+			Exit
+
+		EndIf
+
+	Next nW
+
+	If !Empty(cMsg)
+
+		Aviso("ATENCAO", cMsg, {"Ok"}, 3)
+
+	EndIf
+
+	RestArea(aAreaSE2)
+
+Return(oResult:Ok)

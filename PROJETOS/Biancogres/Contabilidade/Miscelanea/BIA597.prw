@@ -31,7 +31,7 @@ User Function BIA597()
 
 	Private _oDlg
 	Private _oGetDados	:= Nil
-	Private _aColsBkp	:= {}
+
 	Private _cVersao	:= SPACE(TAMSX3("ZO2_VERSAO")[1])
 	Private _oGVersao
 	Private _cRevisa	:= SPACE(TAMSX3("ZO2_REVISA")[1])
@@ -59,8 +59,6 @@ User Function BIA597()
 	_aPosObj := MsObjSize(_aInfo, _aObjects, .T. )
 
 	FillGetDados(4,"ZO2",1,cSeek,bWhile,,aNoFields,,,,,,@_aHeader,@_aCols)
-
-	_aColsBkp	:=	aClone(_aCols)
 
 	Define MsDialog _oDlg Title "Lançamentos Contábeis p/ Orçamento - Receitas Prestadoras" From _aSize[7],0 To _aSize[6],_aSize[5] Of oMainWnd Pixel
 
@@ -200,8 +198,6 @@ Static Function fBIA597F()
 
 	(M001)->(dbCloseArea())
 
-	_oGetDados:aCols :=	{}
-
 	BeginSql Alias _cAlias
 
         SELECT *,
@@ -236,6 +232,8 @@ Static Function fBIA597F()
 	ProcRegua(xtrTot)
 
 	(_cAlias)->(dbGoTop())
+
+	_oGetDados:aCols :=	{}
 
 	If (_cAlias)->(!Eof())
 
@@ -289,16 +287,9 @@ Static Function fBIA597F()
 
 	Else
 
-		_oGetDados:aCols :=	aClone(_aColsBkp)
+		_oGetDados:aCols :=	{}
 
-		For _msc := 1 To Len(_oGetDados:aHeader)
-
-			If Alltrim(_oGetDados:aHeader[_msc][2]) == "ZO2_LINHA"
-				_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := "001"
-				Exit
-			EndIf
-
-		Next _msc
+		_oGetDados:AddLine(.F., .F.)
 
 	EndIf
 
@@ -395,7 +386,9 @@ Static Function fGrvDados()
 	_cRevisa := SPACE(TAMSX3("ZO2_REVISA")[1])
 	_cAnoRef := SPACE(TAMSX3("ZO2_ANOREF")[1])
 
-	_oGetDados:aCols	:=	aClone(_aColsBkp)
+	_oGetDados:aCols :=	{}
+
+	_oGetDados:AddLine(.F., .F.)
 
 	_oGVersao:SetFocus()
 	_oGVersao:Refresh()
@@ -656,9 +649,7 @@ User Function B597IPC()
 
 	TcQuery cSQL New Alias (cQry)
 
-	_oGetDados:SetArray({})
-
-	_oGetDados:Refresh()
+	_oGetDados:aCols := {}
 
 	While !(cQry)->(EOF())
 
@@ -843,8 +834,6 @@ User Function B597PRO()
 
 				For _nX := 1 To 2 // PIS / COFINS
 
-					Reclock("ZBZ",.T.)
-
 					IF EmpOpenFile(cZBZ, "ZBZ", 1, .T., "01", @cModo)
 
 						Reclock(cZBZ,.T.)
@@ -853,7 +842,7 @@ User Function B597PRO()
 						(cZBZ)->ZBZ_REVISA := (cQry)->ZO2_REVISA
 						(cZBZ)->ZBZ_ANOREF := (cQry)->ZO2_ANOREF
 						(cZBZ)->ZBZ_LINHA  := StrZero(_nTot, TAMSX3("ZBZ_LINHA")[1])
-						(cZBZ)->ZBZ_DATA	:= LastDay(CToD("01" + "/" + StrZero(_nW) + "/" + (cQry)->ZO2_ANOREF))
+						(cZBZ)->ZBZ_DATA	:= LastDay(CToD("01" + "/" + StrZero(_nW, 2) + "/" + (cQry)->ZO2_ANOREF))
 						(cZBZ)->ZBZ_DC     := (cQry)->TIPOCTA
 
 						If _nX == 1 // PIS
@@ -1081,7 +1070,12 @@ Static Function fProcImport()
 					nLinReg := aScan(vtRecGrd,{|x| x == Val(Alltrim(aLinha[nPosRec]))})
 					If nLinReg == 0 .or. Val(Alltrim(aLinha[nPosRec])) == 0
 
-						AADD(_oGetDados:aCols, Array(Len(_oGetDados:aHeader)+1) )
+						_oGetDados:aCols :=	{}
+
+						_oGetDados:AddLine(.F., .F.)
+
+						_oGetDados:Refresh()
+
 						nLinReg := Len(_oGetDados:aCols)
 
 					EndIf
@@ -1123,7 +1117,12 @@ Static Function fProcImport()
 	Else
 
 		MsgStop("Falha na importação dos registros")
-		_oGetDados:aCols	:=	aClone(_aColsBkp)
+
+		_oGetDados:aCols := {}
+
+		_oGetDados:AddLine(.F., .F.)
+
+		_oGetDados:Refresh()
 
 	EndIf
 

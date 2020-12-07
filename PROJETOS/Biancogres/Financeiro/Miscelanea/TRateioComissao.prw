@@ -494,7 +494,7 @@ Method Processa() Class TRateioComissao
 
                                     If (cQry)->E3_PORC > 0 // Utilizo o campo E3_PORC porque existe outro processo que incrementa percentual de comissao (tabela PZ8).
 
-                                        If (cQry)->E3_EMISSAO >= PZ9->PZ9_PERINI .And. (cQry)->E3_EMISSAO <= PZ9->PZ9_PERFIM
+                                        If STOD((cQry)->E3_EMISSAO) >= PZ9->PZ9_PERINI .And. STOD((cQry)->E3_EMISSAO) <= PZ9->PZ9_PERFIM
 
                                             aAdd(aVendRat, {PZ9->PZ9_VEND, PZ9->PZ9_PERCEN, (cQry)->E3_PORC, 0, (cQry)->E3_BASE, PZ9->PZ9_VENDPA })
 
@@ -670,10 +670,16 @@ Return(lRet)
 
 User Function RATCOMIS()
 
-    Local oObj := TRateioComissao():New("3")
+    Local oObj := Nil
 
     Private cTitulo := "Rateio de comissões"
 
+    //RpcSetEnv("07", "01")
+
+    oObj := TRateioComissao():New("3")
+
     oObj:Rateio()
 
+    //RpcClearEnv()
+    
 Return()

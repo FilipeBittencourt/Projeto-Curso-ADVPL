@@ -95,6 +95,10 @@ User Function FPAT03EX
 	Private cVendCod	:= ""
 	Private dDatEst		:= CTOD(" ")
 
+	If Select("SX6") <= 0
+		RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+	EndIf
+
 	fPergunte()
 
 	if Empty(dDatEst) .Or. Empty(cPCliente) .Or. Len(cPLoja) <> 2
@@ -151,8 +155,8 @@ Static Function fPergunte()
 	aAdd( aPergs ,{6, "Arquivo para Importação: " 	,cArquivo  ,"","","", 90 ,.T.,"Arquivo * |*",,GETF_LOCALHARD+GETF_NETWORKDRIVE} )
 	aAdd( aPergs ,{1, "CLIENTE", SPACE(TamSX3("A1_COD")[01]), , ".T.", "SA1" ,".T.", 4, .T.})
 	aAdd( aPergs ,{1, "LOJA", SPACE(TamSX3("A1_LOJA")[01]),"","","","",0,.T.}) // Tipo caractere
-	aAdd( aPergs ,{1, "VENDEDOR", cVenCod, , ".T.", "SA3BIA" ,cRepre, 4, .F.})
-	aAdd( aPergs ,{1, "CPNJ VENDEDOR",cVenCNPJ,"","","",cRepre,0,.F.}) // Tipo caractere
+	aAdd( aPergs ,{1, "VENDEDOR", cVenCod,"", "U_VENDGET()", "SA3BIA" ,cRepre, 4, .F.})
+	aAdd( aPergs ,{1, "CPNJ VENDEDOR",cVenCNPJ,"","","",".F.",0,.T.}) // Tipo caractere
 	aAdd( aPergs ,{1, "DATA ESTOQUE", ctod("  /  /  "), , ".T.", ,".T.", 8, .T.})
 
 	If ParamBox(aPergs ,"Importar Arquivo",@aRet,,,,,,,cLoad,.T.,.T.)
@@ -166,6 +170,20 @@ Static Function fPergunte()
 	Endif
 
 Return
+
+
+User Function VENDGET()
+
+	Local lRet    := .T.
+
+	SA3->(DbSetOrder(1))//A3_FILIAL, A3_COD, R_E_C_N_O_, D_E_L_E_T_
+	If SA3->(DbSeek(XFilial("SA3")+MV_PAR04))
+		&("MV_PAR05") := SA3->A3_CGC
+	else
+		&("MV_PAR05") := ""
+	EndIf
+
+RETURN lRet
 
 //Processa importação
 Static Function fProcImport()
@@ -359,7 +377,7 @@ User Function FPAT03DE()
 
 	Local _cCodLojCli		:= ZAI->ZAI_CODCLI+ZAI->ZAI_LOJCLI
 	Local _dDATA		  	:= ZAI->ZAI_DATA
-	Local _cVendCGC			:= ""
+	Local _cVendCGC			:= ZAI->ZAI_CGCVEN
 	Local _nCont			:= 0
 	Local cChaveI    	:= XFilial("ZAI")+_cCodLojCli+DTOS(_dDATA)
 
@@ -367,9 +385,10 @@ User Function FPAT03DE()
 	//Quando for representante
 	If Type("CREPATU") <> "U" .And. !Empty(CREPATU)
 
-		SA3->(DbSetOrder(1))
-		If SA3->(DbSeek(XFilial("SA3")+CREPATU))
-			_cVendCGC := SA3->A3_CGC
+		If EMPTY(_cVendCGC)
+
+			_cVendCGC := "" //Apenas para tratamento da variavel  caso ocorra algum conflito na hora do DBSeek com Nil
+
 		EndIf
 
 	EndIf

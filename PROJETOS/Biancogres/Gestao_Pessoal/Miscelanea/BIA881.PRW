@@ -697,15 +697,16 @@ Static Function BIA881A()
 		UP009 += Alltrim("                             ELSE 0                                                                                                                                         ") + msrhEnter
 		UP009 += Alltrim("                         END,                                                                                                                                               ") + msrhEnter
 		UP009 += Alltrim("                 (12 - " + Alltrim(Str(Val(Substr(MV_PAR02,5,2)))) + ") * 2.5 RESTYEAR,                                                                                     ") + msrhEnter
-		UP009 += Alltrim("                 DATINI = CONVERT(VARCHAR,                                                                                                                                  ") + msrhEnter
+		UP009 += Alltrim("                 DATINI = ISNULL(CONVERT(VARCHAR,                                                                                                                           ") + msrhEnter
 		UP009 += Alltrim("          (                                                                                                                                                                 ") + msrhEnter
 		UP009 += Alltrim("              SELECT MIN(prgdat)                                                                                                                                            ") + msrhEnter
 		UP009 += Alltrim("              FROM VETORH.dbo.r040prg r                                                                                                                                     ") + msrhEnter
 		UP009 += Alltrim("              WHERE r.numemp = a.numemp                                                                                                                                     ") + msrhEnter
 		UP009 += Alltrim("                    AND r.tipcol = a.tipcol                                                                                                                                 ") + msrhEnter
 		UP009 += Alltrim("                    AND r.numcad = a.numcad                                                                                                                                 ") + msrhEnter
-		UP009 += Alltrim("          ), 112),                                                                                                                                                          ") + msrhEnter
-		UP009 += Alltrim("                 DATFIM = CONVERT(VARCHAR,                                                                                                                                  ") + msrhEnter
+		UP009 += Alltrim("                    AND r.prgdat > '" + xdtIni + "'                                                                                                                         ") + msrhEnter
+		UP009 += Alltrim("          ), 112), ''),                                                                                                                                                     ") + msrhEnter
+		UP009 += Alltrim("                 DATFIM = ISNULL(CONVERT(VARCHAR,                                                                                                                           ") + msrhEnter
 		UP009 += Alltrim("          (                                                                                                                                                                 ") + msrhEnter
 		UP009 += Alltrim("              SELECT MIN(fimper)                                                                                                                                            ") + msrhEnter
 		UP009 += Alltrim("              FROM VETORH.dbo.r040per r                                                                                                                                     ") + msrhEnter
@@ -714,7 +715,7 @@ Static Function BIA881A()
 		UP009 += Alltrim("                    AND r.numcad = a.numcad                                                                                                                                 ") + msrhEnter
 		UP009 += Alltrim("                    AND sitper <> 1                                                                                                                                         ") + msrhEnter
 		UP009 += Alltrim("                    AND qtdsld <> 0                                                                                                                                         ") + msrhEnter
-		UP009 += Alltrim("          ), 112)                                                                                                                                                           ") + msrhEnter
+		UP009 += Alltrim("          ), 112), '')                                                                                                                                                      ") + msrhEnter
 		UP009 += Alltrim("          FROM VETORH.dbo.r040per a                                                                                                                                         ") + msrhEnter
 		UP009 += Alltrim("          WHERE tipcol = 1                                                                                                                                                  ") + msrhEnter
 		UP009 += Alltrim("                AND numemp = " + cEmpAnt + "                                                                                                                                ") + msrhEnter
