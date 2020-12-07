@@ -359,7 +359,7 @@ User Function FPAT03DE()
 
 	Local _cCodLojCli		:= ZAI->ZAI_CODCLI+ZAI->ZAI_LOJCLI
 	Local _dDATA		  	:= ZAI->ZAI_DATA
-	Local _cVendCGC			:= ZAI->ZAI_CGCVEN
+	Local _cVendCGC			:= ""
 	Local _nCont			:= 0
 	Local cChaveI    	:= XFilial("ZAI")+_cCodLojCli+DTOS(_dDATA)
 
@@ -367,10 +367,9 @@ User Function FPAT03DE()
 	//Quando for representante
 	If Type("CREPATU") <> "U" .And. !Empty(CREPATU)
 
-		If EMPTY(_cVendCGC)
-
-			_cVendCGC := "" //Apenas para tratamento da variavel  caso ocorra algum conflito na hora do DBSeek com Nil
-
+		SA3->(DbSetOrder(1))
+		If SA3->(DbSeek(XFilial("SA3")+CREPATU))
+			_cVendCGC := SA3->A3_CGC
 		EndIf
 
 	EndIf
