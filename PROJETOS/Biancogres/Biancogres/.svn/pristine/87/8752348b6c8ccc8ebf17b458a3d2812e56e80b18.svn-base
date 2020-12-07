@@ -1,9 +1,0 @@
-#INCLUDE 'PROTHEUS.CH'
-#INCLUDE "TOPCONN.CH"
-#INCLUDE "XMLXFUN.CH"
-#include "RWMAKE.CH"
-
-User Function BIARO007()
-
-Return()
-
