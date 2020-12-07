@@ -1,0 +1,259 @@
+#INCLUDE "TOTVS.CH"
+#INCLUDE "TOPCONN.CH"
+
+/*/{Protheus.doc} TAutomacaoWorkFlow
+@author Fernando Rocha
+@since 17/06/2019
+@project Automação
+@version 1.0
+@description Classe para tratamento de workflow (Html)
+@type class
+/*/
+
+Class TAutomacaoWorkFlow From LongClassName
+
+Public Data cIDProc // Identificador do processo	
+Public Data cDate // Data 
+Public Data cTime // Hora
+Public Data cType // Tipo - campo ZK2_OPERAC
+Public Data cDscType // Descricao do Tipo
+Public Data cMethod // Method executado
+Public Data cEmp // Empresa
+Public Data cFil // Filial
+Public Data oLst // Lista de campos e registros do workflow
+Public Data oLstMsg // Lista de campos de mensagens e registros do workflow	
+Public Data cMenRet //Mensagem de retorno sobre o processo
+
+Public Data cTo // E-mail dos usuarios que receberao o workflow
+Public Data cSubject // Tituto do workflow
+Public Data cHtml // Codigo Html do workflow: Header + Body + Footer
+Public Data oMail // Objeto para envio de e-mail	
+
+Public Method New() Constructor
+Public Method GetHtml()
+Public Method GetHeader()
+Public Method GetBody()
+Public Method GetcFooter()
+Public Method Send()
+Public Method SetConsoleLog()
+Public Method AddMensagem()
+
+
+EndClass
+
+
+Method New() Class TAutomacaoWorkFlow
+
+	::cIDProc 	:= ""	
+	::cDate 	:= "" 
+	::cTime 	:= ""
+	::cType 	:= "" 
+	::cMethod	:= ""
+	::cEmp 		:= ""
+	::cFil 		:= ""
+	::oLst 		:= ArrayList():New()	
+	::oLstMsg	:= ArrayList():New()	
+	::cMenRet	:= ""
+
+	::cTo 		:= ""
+	::cSubject	:= ""
+	::cHtml 	:= ""	
+	::oMail 	:= TAFMail():New()
+
+Return()
+
+
+Method GetHtml() Class TAutomacaoWorkFlow
+
+	::cHtml := ""
+
+	::cHtml	:= ::GetHeader()
+	::cHtml	+= ::GetBody()
+	::cHtml	+= ::GetcFooter()
+
+Return(::cHtml)
+
+
+Method GetHeader() Class TAutomacaoWorkFlow
+
+	Local cRet	:= ""
+	Local nI	:= 0
+	Local oObj	:= Nil	
+
+	cRet := ' <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> '
+	cRet += ' <html xmlns="http://www.w3.org/1999/xhtml"> '
+	cRet += ' <head> '
+	cRet += '     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" /> '
+	cRet += '     <title>Workflow</title> '
+	cRet += '     <style type="text/css"> '
+	cRet += '         <!-- ' 
+	cRet += ' 		.style_table{ '
+	cRet += ' 			border:0; '
+	cRet += ' 			cellpadding:0; '
+	cRet += ' 			cellspacing:0; '
+	cRet += ' 			width:100%; '
+	cRet += ' 		} '
+	cRet += '     .style_table_Header{ '
+	cRet += ' 				color: #000; '
+	cRet += ' 				font: 12px Arial, Helvetica, sans-serif; '
+	cRet += ' 				padding: 0px; '
+	cRet += ' 		} '    		
+	cRet += '     .style_column_header{ '
+	cRet += '         background: #0c2c65; '
+	cRet += '         color: #ffffff; '
+	cRet += '         font: 12px Arial, Helvetica, sans-serif; '
+	cRet += ' 				font-weight: bold; '
+	cRet += ' 				padding: 0px; '
+	cRet += '     } '
+	cRet += ' 		.style_column_rows{ '
+	cRet += '         color: #000; '
+	cRet += '         font: 12px Arial, Helvetica, sans-serif; '
+	cRet += ' 				padding: 0px; '
+	cRet += '     } '
+	cRet += '         --> '
+	cRet += '     </style> '
+	cRet += ' </head> '
+	cRet += ' <body> '
+	cRet += '     <table class="style_table" align="left"> '	
+	cRet += ' 			<tr> '
+	cRet += ' 			<td class="style_table_Header" colspan="' + cValToChar(::oLst:GetCount()) + '"> '
+	cRet += ' 				<table class="style_table"> '
+	cRet += ' 					<tr> '
+	cRet += ' 						<td style="text-align:left;"><span style="font-weight:bold;">Processo: </span>' + ::cIDProc + ' </td> '
+	cRet += ' 						<td style="text-align:right;"><span style="font-weight:bold;">Data/Hora: </span>' + ::cDate + ' / ' + ::cTime +' </td> '
+	cRet += ' 					</tr> '
+	cRet += ' 					<tr> '
+	cRet += ' 						<td style="text-align:left;"><span style="font-weight:bold;">Metodo: </span>' + ::cMethod +' </td> '
+	cRet += ' 					</tr>	'
+	cRet += ' 					<tr> '
+	cRet += ' 						<td style="text-align:left;"><span style="font-weight:bold;">Empresa/Filial: </span>' + ::cEmp +' / ' + ::cFil +' </td> '
+	cRet += ' 					</tr>	'
+
+	If (!Empty(::cMenRet))
+		cRet += ' 					<tr> '
+		cRet += ' 						<td style="text-align:left;"><span style="font-weight:bold;">Mensagem Retorno: </span>' + ::cMenRet +' </td> '
+		cRet += ' 					</tr>	'
+	EndIF
+
+	For nI:=1 To ::oLstMsg:GetCount()
+		
+		oObj := ::oLstMsg:GetItem(nI)
+		
+		cRet += ' 					<tr> '
+		cRet += ' 						<td style="text-align:left;"><span style="font-weight:bold;">'+oObj:Titulo+': </span>' + oObj:Descricao +' </td> '
+		cRet += ' 					</tr>	'
+		
+	Next nI
+	
+
+	cRet += ' 				</table> '
+	cRet += ' 			</td> '
+	cRet += ' 			</tr> '
+
+Return(cRet)
+
+
+Method GetBody() Class TAutomacaoWorkFlow
+	Local cRet := ""
+	Local nColumn := 0
+	Local nRow := 0
+
+	If (::oLst:GetCount() > 0)
+
+		cRet := ' <tr align=center> '
+	
+		For nColumn := 1 To ::oLst:GetCount()		 
+	
+			cRet += ' <th class="style_column_header" width="' + cValToChar(::oLst:GetItem(nColumn):nWidth) + '"> ' + ::oLst:GetItem(nColumn):cTitle + ' </th> '
+	
+		Next
+	
+		cRet += ' </tr> '
+	
+		For nRow := 1 To ::oLst:GetItem(1):oRow:GetCount()
+	
+			cRet += ' <tr align=center> '
+	
+			For nColumn := 1 To ::oLst:GetCount()
+	
+				cRet += ' <th class="style_column_rows" width="' + cValToChar(::oLst:GetItem(nColumn):nWidth) + '"> ' + ::oLst:GetItem(nColumn):oRow:GetItem(nRow) + ' </th> '
+	
+			Next
+	
+			cRet += ' <tr> ' 
+			cRet += ' <td style="border-bottom:1px solid #0c2c65;" colspan="' + cValToChar(::oLst:GetCount()) + '"></td> '
+			cRet += ' </tr> '
+	
+			cRet += ' </tr> '
+	
+		Next	
+		
+	EndIf
+
+Return(cRet)
+
+
+Method GetcFooter() Class TAutomacaoWorkFlow
+	Local cRet := ""
+
+	cRet += ' </table> '
+	cRet += ' </body> '
+	cRet += ' </html> '
+
+Return(cRet)
+
+
+Method Send() Class TAutomacaoWorkFlow
+
+	::oMail:cTo := ::cTo
+	::oMail:cSubject := ::cSubject
+	::oMail:cBody := ::GetHtml()
+
+	If ::oMail:Send()
+
+		::SetConsoleLog()
+
+	EndIf
+
+Return()
+
+
+Method SetConsoleLog() Class TAutomacaoWorkFlow
+	Local cLog := ""
+
+	cLog := Replicate("-", 120) + Chr(13)
+	cLog += "[" + Dtoc(Date()) + Space(1) + Time() + "] -- TAutomacaoWorkFlow -- Envio de Workflow" + Chr(13)
+	cLog += "[Thread: " + AllTrim(cValToChar(ThreadId())) + "]" + Chr(13)
+	cLog += "[Empresa: " + cEmpAnt + "]" + Chr(13)
+	cLog += "[Filial: " + cFilAnt + "]" + Chr(13)	
+	cLog += "[Processo: " + ::cIDProc + "]" + Chr(13)
+	cLog += "[Operacao: " + AllTrim(::cDscType) + "]" + Chr(13)
+	cLog += "[Metodo: " + AllTrim(::cMethod) + "]" + Chr(13)
+	cLog += "[Email: " + AllTrim(::cTo) + "]" + Chr(13)
+	cLog += Replicate("-", 120)
+
+	ConOut(Chr(13) + cLog)
+
+Return()
+
+
+Method AddMensagem(cTitulo, cMensagem) Class TAutomacaoWorkFlow
+	
+	Local oObj := TWorkFlowMensagem():New(cTitulo, cMensagem)
+	::oLstMsg:Add(oObj)
+
+Return()
+
+Class TWorkFlowMensagem From LongClassName
+
+Public Data Titulo 	// Titulo	
+Public Data Descricao	// Descricao 
+
+Public Method New() Constructor
+
+EndClass
+
+Method New (cTitulo, cDescricao) Class TWorkFlowMensagem
+	::Titulo 	:= cTitulo
+	::Descricao	:= cDescricao
+Return()

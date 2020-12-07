@@ -1,0 +1,1024 @@
+#INCLUDE "TOTVS.CH"
+#INCLUDE "TOPCONN.CH"
+
+/*/{Protheus.doc} TWPCORateioLanc
+@author Wlysses Cerqueira (Facile)
+@since 27/10/2020
+@version 1.0
+@Projet A-35
+@description Consolidação empresas grupo para filial 90. 
+@type class
+/*/
+
+// IDENTIFICADORES DE LINHA
+#DEFINE LIN "LIN"
+
+// PERCENTUAL DAS LINHAS
+#DEFINE PER_LIN 100
+
+// IDENTIFICADORES DE COLUNA
+#DEFINE COL "COL"
+
+// PERCENTUAL DAS COLUNAS POR LINHA
+#DEFINE PER_COL 100
+
+// IDENTIFICADORES DE JANELA
+#DEFINE WND "WND"
+
+// TITULOS DAS JANELAS
+#DEFINE TIT_MAIN_WND "Rateio Plano Orcamentario Grupo"
+#DEFINE TIT_WND1 "Empresa Origem"
+#DEFINE TIT_WND2 "Empresa Destino"
+
+Class TWPCORateioLanc From LongClassName
+
+	Public Data cLote
+	Public Data cSubLote
+	Public Data cDoc
+
+	Public Data cRetMsg
+
+	Public Data oArquivo
+	Public Data aArquivo
+
+	Public Data cMesAno
+	Public Data dDtIni
+	Public Data dDtFim
+
+	Public Data cVersao
+	Public Data cRevisa
+	Public Data cAnoRef
+
+	Public Data oWindow // Janela principal - FWDialogModal
+	Public Data oContainer	// Divisor de janelas - FWFormContainer
+	Public Data cHeaderBox // Identificador do cabecalho da janela
+	Public Data cFilhoBox // Identificador dos Filho da janela
+
+	Public Data oFieldPai
+	Public Data oPnlPai
+	Public Data oGridPai
+	Public Data aColsPai
+	Public Data aHeaderPai
+	Public Data aEditPai
+
+	Public Data oPnlFilho
+	Public Data oGridFilho
+	Public Data oField
+	Public Data aColsFilho
+	Public Data aHeaderFilho
+	Public Data aEditFilho
+
+	Public Method New() ConStructor
+	Public Method Processa()
+
+	Public Method LoadInterface()
+	Public Method LoadWindow()
+	Public Method LoadContainer()
+	Public Method Activate()
+
+	Public Method GDData()
+	Public Method GDField()
+
+	Public Method LoadPai()
+	Public Method GDEdiTabPai()
+
+	Public Method LoadFilho()
+	Public Method GDEdiTabFilho()
+
+	Public Method Valid()
+	Public Method Confirm()
+	Public Method GdSeek()
+	Public Method Load()
+	Public Method OrdenarGrid(nCol, oGrid)
+
+EndClass
+
+Method New() Class TWPCORateioLanc
+
+	::cMesAno := Space(6)
+	::dDtIni := STOD("  / /    ")
+	::dDtFim := STOD("  / /    ")
+
+	::cVersao := SPACE(TAMSX3("ZBZ_VERSAO")[1])
+	::cRevisa := SPACE(TAMSX3("ZBZ_REVISA")[1])
+	::cAnoRef := SPACE(TAMSX3("ZBZ_ANOREF")[1])
+
+	::oArquivo := TBiaArquivo():New()
+
+	::oWindow := Nil
+	::oContainer := Nil
+	::cHeaderBox := ""
+	::cFilhoBox := ""
+
+	::oPnlPai 	:= Nil
+	::oGridPai 	:= Nil
+	::oFieldPai 	:= TGDField():New()
+	::aColsPai	:= {}
+	::aHeaderPai	:= {}
+	::aEditPai	:= {}
+
+	::oPnlFilho 	:= Nil
+	::oGridFilho 	:= Nil
+	::oField 		:= TGDField():New()
+	::aColsFilho	:= {}
+	::aHeaderFilho	:= {}
+	::aEditFilho	:= {}
+
+	::cLote 	:= "009003"
+	::cSubLote	:= "001"
+	::cDoc		:= ""
+	::cRetMsg	:= ""
+
+Return()
+
+Method LoadInterface() Class TWPCORateioLanc
+
+	::LoadWindow()
+
+	::LoadContainer()
+
+	::LoadPai()
+
+	::LoadFilho()
+
+	::Load()
+
+Return()
+
+Method LoadWindow() Class TWPCORateioLanc
+
+	Local aCoors := MsAdvSize()
+
+	::oWindow := FWDialogModal():New()
+
+	::oWindow:SetBackground(.T.)
+	::oWindow:SetTitle(TIT_MAIN_WND)
+	::oWindow:SetEscClose(.T.)
+	::oWindow:SetSize(aCoors[4], aCoors[3])
+	::oWindow:EnableFormBar(.T.)
+	::oWindow:CreateDialog()
+	::oWindow:CreateFormBar()
+
+	::oWindow:AddOKButton({|| ::Confirm() })
+
+	::oWindow:AddCloseButton()
+
+	::oWindow:AddButton("Carregar", {|| ::Load() },,, .T., .F., .T.)
+
+	::oWindow:AddButton("Pesquisar", {|| ::GdSeek() },,, .T., .F., .T.)
+
+Return()
+
+Method GdSeek() Class TWPCORateioLanc
+
+	GdSeek(::oGridFilho,,,,.F.)
+
+Return()
+
+Method LoadContainer() Class TWPCORateioLanc
+
+	::oContainer := FWFormContainer():New()
+
+	::cHeaderBox := ::oContainer:CreateHorizontalBox(50)
+
+	::cFilhoBox := ::oContainer:CreateHorizontalBox(50)
+
+	::oContainer:Activate(::oWindow:GetPanelMain(), .T.)
+
+Return()
+
+Method LoadPai() Class TWPCORateioLanc
+
+	Local cVldDef := "AllwayStrue"
+
+	::oPnlPai := ::oContainer:GetPanel(::cHeaderBox)
+
+	// Layer
+	oLayer := FWLayer():New()
+	oLayer:Init(::oPnlPai, .F., .T.)
+
+	// Adiciona linha ao Layer
+	oLayer:AddLine(LIN, 100, .F.)
+
+	// Adiciona coluna ao Layer
+	oLayer:AddCollumn(COL, PER_COL, .T., LIN)
+
+	// Adiciona janela ao Layer
+	oLayer:AddWindow(COL, WND, TIT_WND1, 100, .F. ,.T.,, LIN, { || })
+
+	oLayer:SetWinTitle(COL, WND, TIT_WND1, LIN)
+
+	// Retorna paimel da janela do Layer
+	oPnl := oLayer:GetWinPanel(COL, WND, LIN)
+
+	::aEditPai := ::GDEdiTabPai()
+
+	::aHeaderPai := ::GDField()
+
+	::oGridPai := MsNewGetDados():New(0, 0, 0, 0, GD_UPDATE, cVldDef, cVldDef, "", @::aEditPai,,, cVldDef,, cVldDef, oPnl, @::aHeaderPai, @::aColsPai)
+
+	::oGridPai:oBrowse:Align := CONTROL_ALIGN_ALLCLIENT
+	//::oGridPai:oBrowse:bHeaderClick := {|oGrid, nCol| ::OrdenarGrid(nCol, @::oGridPai)} // Nao usar
+	::oGridPai:oBrowse:lVScroll := .T.
+	::oGridPai:oBrowse:lHScroll := .T.
+
+	::oGridPai:SetArray(::aColsPai, .F.)
+
+	::oGridPai:oBrowse:Refresh()
+
+	::oGridPai:Refresh()
+
+Return()
+
+Method LoadFilho() Class TWPCORateioLanc
+
+	Local cVldDef := "AllwayStrue"
+
+	::oPnlFilho := ::oContainer:GetPanel(::cFilhoBox)
+
+	// Layer
+	oLayer := FWLayer():New()
+	oLayer:Init(::oPnlFilho, .F., .T.)
+
+	// Adiciona linha ao Layer
+	oLayer:AddLine(LIN, 100, .F.)
+
+	// Adiciona coluna ao Layer
+	oLayer:AddCollumn(COL, PER_COL, .T., LIN)
+
+	// Adiciona janela ao Layer
+	oLayer:AddWindow(COL, WND, TIT_WND2, 100, .F. ,.T.,, LIN, { || })
+
+	oLayer:SetWinTitle(COL, WND, TIT_WND2, LIN)
+
+	// Retorna paimel da janela do Layer
+	oPnl := oLayer:GetWinPanel(COL, WND, LIN)
+
+	::aEditFilho := ::GDEdiTabFilho()
+
+	::aHeaderFilho := ::GDField()
+
+	::oGridFilho := MsNewGetDados():New(0, 0, 0, 0, GD_UPDATE, cVldDef, cVldDef, "", @::aEditFilho,,, cVldDef,, cVldDef, oPnl, @::aHeaderFilho, @::aColsFilho)
+
+	::oGridFilho:oBrowse:Align := CONTROL_ALIGN_ALLCLIENT
+	//::oGridFilho:oBrowse:bHeaderClick := {|oGrid, nCol| ::OrdenarGrid(nCol, @::oGridFilho)} // Nao usar
+	::oGridFilho:oBrowse:lVScroll := .T.
+	::oGridFilho:oBrowse:lHScroll := .T.
+
+	::oGridFilho:SetArray(::aColsFilho, .F.)
+
+	::oGridFilho:oBrowse:Refresh()
+
+	::oGridFilho:Refresh()
+
+Return()
+
+Method OrdenarGrid(nCol, oGrid) Class TWPCORateioLanc
+
+	oGrid:aColsPai := aSort( oGrid:aColsPai,,,{|x,y| x[nCol] < y[nCol]} )
+
+	oGrid:SetArray(oGrid:aColsPai, .F.)
+
+	oGrid:oBrowse:Refresh()
+
+	oGrid:Refresh()
+
+Return()
+
+Method Load() Class TWPCORateioLanc
+
+	Local oPerg := TWPCOFiltroPeriodo():New()
+
+	DBSelectArea("ZO1")
+	ZO1->(DBSetOrder(1)) // ZO1_FILIAL, ZO1_MESANO, ZO1_VERSAO, ZO1_REVISA, ZO1_ANOREF, ZO1_CNTPON
+
+	If oPerg:Pergunte(.T.)
+
+		::cMesAno := oPerg:cMesAno
+		::cVersao := oPerg:cVersao
+		::cRevisa := oPerg:cRevisa
+		::cAnoRef := oPerg:cAnoRef
+
+		::dDtIni  := CTOD("01/" + SubStr(::cMesAno, 1, 2) + "/" + SubStr(::cMesAno, 3, 4))
+		::dDtFim  := LastDay(::dDtIni)
+
+		If ZO1->(DBSeek(xFilial("ZO1") + ::cMesAno + ::cVersao + ::cRevisa + ::cAnoRef ))
+
+			If ZO1->ZO1_EMPFIR == cEmpAnt + cFilAnt
+
+				FWMsgRun(, {|| ::GDData() }, "Processando", "Carregando dados...")
+
+			Else
+
+				MsgStop("Obrigatório acessar a empresa de origem [" + ZO1->ZO1_EMPFIR + "] para processamento!")
+
+			EndIf
+
+		Else
+
+			MsgStop("Não foi encontrado o periodo referencia informada!")
+
+		EndIf
+
+	EndIf
+
+Return()
+
+Method GDData() Class TWPCORateioLanc
+
+	Local cSQL1 := ""
+	Local cQry1 := GetNextAlias()
+
+	Local nPos := 0
+	Local aLinha := {}
+	Local cLinha:= ""
+
+	::aColsPai := {}
+
+	::aColsFilho := {}
+
+	cSQL1 += "SELECT "
+	cSQL1 += "         ZO1_EMPFIL, "
+	cSQL1 += "         MESANO, "
+	cSQL1 += "         VERSAO, "
+	cSQL1 += "         ANOREF, "
+	cSQL1 += "         REVISA, "
+	cSQL1 += "         LOTE, "
+	cSQL1 += "         SBLOTE, "
+	cSQL1 += "         ZO1_PERCEN, "
+	cSQL1 += "         ZO1_CNTPON, "
+	cSQL1 += "         ZO1_CNTPOR, "
+	cSQL1 += "         ZO1_EMPFIR, "
+	cSQL1 += "         CT1_YPNTDB, "
+	cSQL1 += "         CT1_YPNTCR, "
+	cSQL1 += "         CTH_YPNTDB, "
+	cSQL1 += "         ( "
+	cSQL1 += "   	      SELECT TOP 1 "
+	cSQL1 += "     	           XXX.CTH_CLVL "
+	cSQL1 += "    	      FROM " + RetSqlName("CTH") + " XXX "
+	cSQL1 += "      	  WHERE "
+	cSQL1 += "      	          XXX.CTH_YPNTDB     = TAB3.CTH_YPNTCR "
+	cSQL1 += "      	          AND XXX.CTH_YEMPFL = ZO1_EMPFIL "
+	cSQL1 += "      	          AND XXX.D_E_L_E_T_ = ' ' "
+	cSQL1 += "     		) NEWCVDB, "
+	cSQL1 += "         CTH_YPNTCR, "
+	cSQL1 += "         (SUM(SALDO) * ZO1_PERCEN) / 100 SALDO, "
+	cSQL1 += "         ZBZ_ORIPRC, "
+	cSQL1 += "         ZBZ_ORGLAN, "
+	cSQL1 += "         ZBZ_DATA  , " 
+	cSQL1 += "         ZBZ_DOC   , "
+	cSQL1 += "         ZBZ_LINHA , "
+	cSQL1 += "         ZBZ_DC    , "
+	cSQL1 += "         ZBZ_CREDIT, "  
+	cSQL1 += "         ZBZ_HIST  , "
+	cSQL1 += "         ZBZ_YHIST , "
+	cSQL1 += "         ZBZ_SI    , "
+	cSQL1 += "         ZBZ_YDELTA, "
+	cSQL1 += "         ZBZ_ITEMD , "
+	cSQL1 += "         ZBZ_ITEMC   "
+	cSQL1 += "FROM "
+	cSQL1 += "         ( "
+	cSQL1 += "             SELECT "
+	cSQL1 += "                 MESANO, "
+	cSQL1 += "                 VERSAO, "
+	cSQL1 += "                 ANOREF, "
+	cSQL1 += "                 REVISA, "
+	cSQL1 += "                 LOTE, "
+	cSQL1 += "                 SBLOTE, "
+	cSQL1 += "                 CT1_YPNTDB, "
+	cSQL1 += "                 CTH_YPNTDB, "
+	cSQL1 += "                 CT1_YPNTCR, "
+	cSQL1 += "                 CTH_YPNTCR, "
+	cSQL1 += "                 SUM(SALDO) SALDO, "
+	cSQL1 += "                 ZBZ_ORIPRC, "
+	cSQL1 += "                 ZBZ_ORGLAN, "
+	cSQL1 += "                 ZBZ_DATA  , " 
+	cSQL1 += "                 ZBZ_DOC   , "
+	cSQL1 += "                 ZBZ_LINHA , "
+	cSQL1 += "                 ZBZ_DC    , "
+	cSQL1 += "                 ZBZ_CREDIT, "  
+	cSQL1 += "                 ZBZ_HIST  , "
+	cSQL1 += "                 ZBZ_YHIST , "
+	cSQL1 += "                 ZBZ_SI    , "
+	cSQL1 += "                 ZBZ_YDELTA, "
+	cSQL1 += " 			       ZBZ_ITEMD , "
+	cSQL1 += "         		   ZBZ_ITEMC   "
+	cSQL1 += "             FROM "
+	cSQL1 += "                 ( "
+	cSQL1 += "                     SELECT "
+	cSQL1 += "                                    TAB2.*, "
+	cSQL1 += "                                    CT1_YPNTDB, "
+	cSQL1 += "                                    CTH_YPNTDB, "
+	cSQL1 += "                                    CT1_YPNTCR, "
+	cSQL1 += "                                    CTH_YPNTCR "
+	cSQL1 += "                     FROM "
+	cSQL1 += "                                    ( "
+	cSQL1 += "                                        SELECT "
+	cSQL1 += "                                            MESANO, "
+	cSQL1 += "                                            VERSAO, "
+	cSQL1 += "                                            REVISA, "
+	cSQL1 += "                                            ANOREF, "
+	cSQL1 += "                                            LOTE, "
+	cSQL1 += "                                            SBLOTE, "
+	cSQL1 += "                                            CONTA, "
+	cSQL1 += "                                            CLVL, "
+	cSQL1 += "                                            SUM(VALOR) SALDO, "
+	cSQL1 += "                                            ZBZ_ORIPRC, "
+	cSQL1 += "                                            ZBZ_ORGLAN, "
+	cSQL1 += "                                            ZBZ_DATA  , " 
+	cSQL1 += "                                            ZBZ_DOC   , "
+	cSQL1 += "                                            ZBZ_LINHA , "
+	cSQL1 += "                                            ZBZ_DC    , "
+	cSQL1 += "                                            ZBZ_CREDIT, "  
+	cSQL1 += "                                            ZBZ_HIST  , "
+	cSQL1 += "                                            ZBZ_YHIST , "
+	cSQL1 += "                                            ZBZ_SI    , "
+	cSQL1 += "                                            ZBZ_YDELTA, "
+	cSQL1 += " 			       							  ZBZ_ITEMD , "
+	cSQL1 += "         		   							  ZBZ_ITEMC   "
+	cSQL1 += "                                        FROM "
+	cSQL1 += "                                            ( "
+	cSQL1 += "                                                SELECT "
+	cSQL1 += "                                                    SUBSTRING(ZBZ_DATA, 5, 2) + SUBSTRING(ZBZ_DATA, 1, 4) MESANO, "
+	cSQL1 += "                                                    ZBZ_VERSAO 											VERSAO, "
+	cSQL1 += "                                                    ZBZ_REVISA 											REVISA, "
+	cSQL1 += "                                                    ZBZ_ANOREF 											ANOREF, "
+	cSQL1 += "         											  ZBZ_LOTE												LOTE, "
+	cSQL1 += "         											  ZBZ_SBLOTE											SBLOTE, "
+	cSQL1 += "                                                    ZBZ_DEBITO                                            CONTA, "
+	cSQL1 += "                                                    ZBZ_CLVLDB                                            CLVL, "
+	cSQL1 += "                                                    ZBZ_VALOR                                             VALOR, "
+	cSQL1 += "                                                    ZBZ_ORIPRC, "
+	cSQL1 += "                                                    ZBZ_ORGLAN, "
+	cSQL1 += "                                                    ZBZ_DATA  , " 
+	cSQL1 += "                                                    ZBZ_DOC   , "
+	cSQL1 += "                                                    ZBZ_LINHA , "
+	cSQL1 += "                                                    ZBZ_DC    , "
+	cSQL1 += "                                                    ZBZ_CREDIT, "  
+	cSQL1 += "                                                    ZBZ_HIST  , "
+	cSQL1 += "                                                    ZBZ_YHIST , "
+	cSQL1 += "                                                    ZBZ_SI    , "
+	cSQL1 += "                                                    ZBZ_YDELTA, "
+	cSQL1 += " 			       									  ZBZ_ITEMD , "
+	cSQL1 += "         		   									  ZBZ_ITEMC   "
+	cSQL1 += "                                                FROM "
+	cSQL1 += "                                                    " + RetSqlName("ZBZ") + " ZBZ (NOLOCK) "
+	cSQL1 += "                                                WHERE "
+	cSQL1 += "                                                    ZBZ_DATA "
+	cSQL1 += "                                                    BETWEEN " + ValToSql(::dDtIni) + " AND " + ValToSql(::dDtFim) + " "
+	cSQL1 += "                                                    AND ZBZ_DEBITO     <> '' "
+	cSQL1 += "                                                    AND ZBZ_CLVLDB     <> '' "
+	cSQL1 += "                                                    AND ZBZ_VERSAO     = " + ValToSql(::cVersao)
+	cSQL1 += "                                                    AND ZBZ_REVISA     = " + ValToSql(::cRevisa)
+	cSQL1 += "                                                    AND ZBZ_ANOREF     = " + ValToSql(::cAnoRef)
+	cSQL1 += "                                                    AND ZBZ.D_E_L_E_T_ = ' ' "
+	cSQL1 += "                                                UNION ALL "
+	cSQL1 += "                                                SELECT "
+	cSQL1 += "                                                    SUBSTRING(ZBZ_DATA, 5, 2) + SUBSTRING(ZBZ_DATA, 1, 4) MESANO, "
+	cSQL1 += "                                                    ZBZ_VERSAO 											VERSAO, "
+	cSQL1 += "                                                    ZBZ_REVISA 											REVISA, "
+	cSQL1 += "                                                    ZBZ_ANOREF 											ANOREF, "
+	cSQL1 += "         											  ZBZ_LOTE												LOTE, "
+	cSQL1 += "         											  ZBZ_SBLOTE											SBLOTE, "
+	cSQL1 += "                                                    ZBZ_CREDIT                                            CONTA, "
+	cSQL1 += "                                                    ZBZ_CLVLCR                                            CLVL, "
+	cSQL1 += "                                                    ZBZ_VALOR * (-1)                                      VALOR, "
+	cSQL1 += "                                                    ZBZ_ORIPRC, "
+	cSQL1 += "                                                    ZBZ_ORGLAN, "
+	cSQL1 += "                                                    ZBZ_DATA  , " 
+	cSQL1 += "                                                    ZBZ_DOC   , "
+	cSQL1 += "                                                    ZBZ_LINHA , "
+	cSQL1 += "                                                    ZBZ_DC    , "
+	cSQL1 += "                                                    ZBZ_CREDIT, "  
+	cSQL1 += "                                                    ZBZ_HIST  , "
+	cSQL1 += "                                                    ZBZ_YHIST , "
+	cSQL1 += "                                                    ZBZ_SI    , "
+	cSQL1 += "                                                    ZBZ_YDELTA, "
+	cSQL1 += " 			       									  ZBZ_ITEMD , "
+	cSQL1 += "         		   									  ZBZ_ITEMC   "
+	cSQL1 += "                                                FROM "
+	cSQL1 += "                                                    " + RetSqlName("ZBZ") + " ZBZ (NOLOCK) "
+	cSQL1 += "                                                WHERE "
+	cSQL1 += "                                                    ZBZ_DATA "
+	cSQL1 += "                                                    BETWEEN " + ValToSql(::dDtIni) + " AND " + ValToSql(::dDtFim) + " "
+	cSQL1 += "                                                    AND ZBZ_CREDIT     <> '' "
+	cSQL1 += "                                                    AND ZBZ_CLVLCR     <> '' "
+	cSQL1 += "                                                    AND ZBZ_VERSAO     = " + ValToSql(::cVersao)
+	cSQL1 += "                                                    AND ZBZ_REVISA     = " + ValToSql(::cRevisa)
+	cSQL1 += "                                                    AND ZBZ_ANOREF     = " + ValToSql(::cAnoRef)
+	cSQL1 += "                                                    AND ZBZ.D_E_L_E_T_ = ' ' "
+	cSQL1 += "                                            ) TAB1 "
+	//cSQL1 += "             									WHERE CONTA = '31302003' " // TESTE
+	cSQL1 += "                                        GROUP BY "
+	cSQL1 += "                                            MESANO, "
+	cSQL1 += "                                            VERSAO, "
+	cSQL1 += "                                            REVISA, "
+	cSQL1 += "                                            ANOREF, "
+	cSQL1 += "                                            LOTE, "
+	cSQL1 += "                                            SBLOTE, "
+	cSQL1 += "                                            CONTA, "
+	cSQL1 += "                                            CLVL, "
+	cSQL1 += "                                            ZBZ_ORIPRC, "
+	cSQL1 += "                                            ZBZ_ORGLAN, "
+	cSQL1 += "                                            ZBZ_DATA  , " 
+	cSQL1 += "                                            ZBZ_DOC   , "
+	cSQL1 += "                                            ZBZ_LINHA , "
+	cSQL1 += "                                            ZBZ_DC    , "
+	cSQL1 += "                                            ZBZ_CREDIT, "  
+	cSQL1 += "                                            ZBZ_HIST  , "
+	cSQL1 += "                                            ZBZ_YHIST , "
+	cSQL1 += "                                            ZBZ_SI    , "
+	cSQL1 += "                                            ZBZ_YDELTA, "
+	cSQL1 += " 			       							  ZBZ_ITEMD , "
+	cSQL1 += "         		   							  ZBZ_ITEMC   "
+	cSQL1 += "                                    )      TAB2 "
+	cSQL1 += "                         INNER JOIN " + RetSqlName("CT1") + " CT1 ON ( "
+	cSQL1 += "                                                      CT1_FILIAL         = " + ValToSql(xFilial("CT1"))
+	cSQL1 += "                                                      AND CT1_CONTA      = CONTA "
+	cSQL1 += "                                                      AND CT1_YRAT       = 'S' "
+	cSQL1 += "                                                      AND CT1.D_E_L_E_T_ = ' ' "
+	cSQL1 += "                                                  ) "
+	cSQL1 += "                         INNER JOIN " + RetSqlName("CTH") + " CTH ON ( "
+	cSQL1 += "                                                      CTH_FILIAL         = " + ValToSql(xFilial("CTH"))
+	cSQL1 += "                                                      AND CTH_CLVL       = CLVL "
+	cSQL1 += "                                                      AND CTH_YRAT       = 'S' "
+	cSQL1 += "                                                      AND CTH.D_E_L_E_T_ = ' ' "
+	cSQL1 += "                                                  ) "
+	cSQL1 += "                 ) TAB2 "
+	cSQL1 += "             GROUP BY "
+	cSQL1 += "                 MESANO, "
+	cSQL1 += "       		   VERSAO, "
+	cSQL1 += "       		   REVISA, "
+	cSQL1 += "       		   ANOREF, "
+	cSQL1 += "                 LOTE, "
+	cSQL1 += "                 SBLOTE, "
+	cSQL1 += "                 CT1_YPNTDB, "
+	cSQL1 += "                 CTH_YPNTDB, "
+	cSQL1 += "                 CT1_YPNTCR, "
+	cSQL1 += "                 CTH_YPNTCR, "
+	cSQL1 += "                 ZBZ_ORIPRC, "
+	cSQL1 += "                 ZBZ_ORGLAN, "
+	cSQL1 += "                 ZBZ_DATA  , " 
+	cSQL1 += "                 ZBZ_DOC   , "
+	cSQL1 += "                 ZBZ_LINHA , "
+	cSQL1 += "                 ZBZ_DC    , "
+	cSQL1 += "                 ZBZ_CREDIT, "  
+	cSQL1 += "                 ZBZ_HIST  , "
+	cSQL1 += "                 ZBZ_YHIST , "
+	cSQL1 += "                 ZBZ_SI    , "
+	cSQL1 += "                 ZBZ_YDELTA, "
+	cSQL1 += " 			       ZBZ_ITEMD , "
+	cSQL1 += "         		   ZBZ_ITEMC   "
+	cSQL1 += "         ) TAB3 "
+	cSQL1 += "    JOIN " + RetSqlName("ZO1") + " ZO1 (NOLOCK) ON ( "
+	cSQL1 += "                                        ZO1.ZO1_FILIAL = " + ValToSql(xFilial("CT1"))
+	cSQL1 += "                                        AND ZO1.ZO1_EMPFIR = " + ValToSql(cEmpAnt + cFilAnt)
+	cSQL1 += "                                        AND ZO1.ZO1_MESANO = MESANO "
+	cSQL1 += "                                        AND ZO1.ZO1_VERSAO = VERSAO "
+	cSQL1 += "                                        AND ZO1.ZO1_REVISA = REVISA "
+	cSQL1 += "                                        AND ZO1.ZO1_ANOREF = ANOREF "
+	cSQL1 += "                                        AND ZO1.D_E_L_E_T_ = '' "
+	cSQL1 += "                                    ) "
+	cSQL1 += "GROUP BY "
+	cSQL1 += "         ZO1_EMPFIL, "
+	cSQL1 += "         MESANO,	   "
+	cSQL1 += "         VERSAO, 	   "
+	cSQL1 += "         REVISA,     "
+	cSQL1 += "         ANOREF,     "
+	cSQL1 += "         LOTE,       "
+	cSQL1 += "         SBLOTE,     "
+	cSQL1 += "         ZO1_PERCEN, "
+	cSQL1 += "         ZO1_CNTPON, "
+	cSQL1 += "         ZO1_CNTPOR, "
+	cSQL1 += "         ZO1_EMPFIR, "
+	cSQL1 += "         CT1_YPNTDB, "
+	cSQL1 += "         CT1_YPNTCR, "
+	cSQL1 += "         CTH_YPNTDB, "
+	cSQL1 += "         CTH_YPNTCR, "
+	cSQL1 += "         ZBZ_ORIPRC, "
+	cSQL1 += "         ZBZ_ORGLAN, "
+	cSQL1 += "         ZBZ_DATA	 , "
+	cSQL1 += "         ZBZ_DOC	 , "
+	cSQL1 += "         ZBZ_LINHA , "
+	cSQL1 += "         ZBZ_DC	 , "
+	cSQL1 += "         ZBZ_CREDIT, "
+	cSQL1 += "         ZBZ_HIST	 , "
+	cSQL1 += "         ZBZ_YHIST , "
+	cSQL1 += "         ZBZ_SI	 , "
+	cSQL1 += "         ZBZ_YDELTA, "
+	cSQL1 += "         ZBZ_ITEMD , "
+	cSQL1 += "         ZBZ_ITEMC   "
+
+	TcQuery cSQL1 New Alias (cQry1)
+
+	While !(cQry1)->(EOF())
+
+		nPos := 0
+
+		nPos := aScan(aLinha, {|x| x[1] + x[2] + x[3] == (cQry1)->ZO1_EMPFIR + (cQry1)->LOTE + (cQry1)->SBLOTE})
+
+		If nPos > 0
+
+			cLinha := aLinha[nPos][4]
+
+			cLinha := Soma1(cLinha, TamSx3("CT2_LINHA")[1])
+
+			aLinha[nPos][4] := cLinha
+
+		Else
+
+			aAdd(aLinha, {(cQry1)->ZO1_EMPFIR, (cQry1)->LOTE, (cQry1)->SBLOTE, ""})
+
+			nPos := Len(aLinha)
+
+			cLinha := Soma1(StrZero(0, TamSx3("CT2_LINHA")[1]))
+
+			aLinha[nPos][4] := cLinha
+
+		EndIf
+
+		aAdd(::aColsPai,;
+		{;
+		(cQry1)->ZO1_EMPFIR,;
+		(cQry1)->VERSAO,;
+		(cQry1)->REVISA,;
+		(cQry1)->ANOREF,;
+		(cQry1)->ZBZ_ORIPRC,;
+		(cQry1)->ZBZ_ORGLAN,;
+		(cQry1)->ZBZ_DATA,;
+		(cQry1)->LOTE,;
+		(cQry1)->SBLOTE,;
+		(cQry1)->ZBZ_DOC,;
+		cLinha,;
+		"3",;																// CT2_DC
+		If((cQry1)->SALDO > 0, (cQry1)->ZO1_CNTPON, (cQry1)->CT1_YPNTCR),;	// CT2_DEBITO
+		If((cQry1)->SALDO > 0, (cQry1)->CT1_YPNTCR, (cQry1)->ZO1_CNTPON),;	// CT2_CREDIT
+		Abs((cQry1)->SALDO),;												// CT2_VALOR
+		If((cQry1)->SALDO > 0, "", (cQry1)->CTH_YPNTCR),;					// CT2_CLVLDB
+		If((cQry1)->SALDO > 0, (cQry1)->CTH_YPNTCR, ""),;					// CT2_CLVLCR
+		(cQry1)->ZBZ_ITEMD,;
+		(cQry1)->ZBZ_ITEMC,;
+		(cQry1)->ZBZ_HIST,;
+		(cQry1)->ZBZ_YHIST,;
+		(cQry1)->ZBZ_SI,;
+		(cQry1)->ZBZ_YDELTA,;
+		.F.})
+
+
+		nPos := 0
+
+		nPos := aScan(aLinha, {|x| x[1] + x[2] + x[3] == (cQry1)->ZO1_EMPFIL + (cQry1)->LOTE + (cQry1)->SBLOTE})
+
+		If nPos > 0
+
+			cLinha := aLinha[nPos][4]
+
+			cLinha := Soma1(cLinha, TamSx3("CT2_LINHA")[1])
+
+			aLinha[nPos][4] := cLinha
+
+		Else
+
+			aAdd(aLinha, {(cQry1)->ZO1_EMPFIL, (cQry1)->LOTE, (cQry1)->SBLOTE, ""})
+
+			nPos := Len(aLinha)
+
+			cLinha := Soma1(StrZero(0, TamSx3("CT2_LINHA")[1]))
+
+			aLinha[nPos][4] := cLinha
+
+		EndIf
+
+		aAdd(::aColsFilho,;
+		{;
+		(cQry1)->ZO1_EMPFIL,;
+		(cQry1)->VERSAO,;
+		(cQry1)->REVISA,;
+		(cQry1)->ANOREF,;
+		(cQry1)->ZBZ_ORIPRC,;
+		(cQry1)->ZBZ_ORGLAN,;
+		(cQry1)->ZBZ_DATA,;
+		(cQry1)->LOTE,;
+		(cQry1)->SBLOTE,;
+		(cQry1)->ZBZ_DOC,;
+		cLinha,;
+		"3",;																// CT2_DC
+		If((cQry1)->SALDO > 0, (cQry1)->CT1_YPNTDB, (cQry1)->ZO1_CNTPOR),;	// CT2_DEBITO
+		If((cQry1)->SALDO > 0, (cQry1)->ZO1_CNTPOR, (cQry1)->CT1_YPNTDB),;	// CT2_CREDIT
+		Abs((cQry1)->SALDO),;												// CT2_VALOR
+		If((cQry1)->SALDO > 0, (cQry1)->NEWCVDB, ""),;						// CT2_CLVLDB
+		If((cQry1)->SALDO > 0, "", (cQry1)->NEWCVDB),;						// CT2_CLVLCR
+		(cQry1)->ZBZ_ITEMD,;
+		(cQry1)->ZBZ_ITEMC,;
+		(cQry1)->ZBZ_HIST,;
+		(cQry1)->ZBZ_YHIST,;
+		(cQry1)->ZBZ_SI,;
+		(cQry1)->ZBZ_YDELTA,;
+		.F.;
+		})
+
+		(cQry1)->(DbSkip())
+
+	EndDo
+
+	(cQry1)->(DbCloseArea())
+
+	::oGridFilho:SetArray(::aColsFilho, .F.)
+
+	::oGridFilho:oBrowse:Refresh()
+
+	::oGridFilho:Refresh()
+
+	::oGridPai:SetArray(::aColsPai, .F.)
+
+	::oGridPai:oBrowse:Refresh()
+
+	::oGridPai:Refresh()
+
+Return()
+
+Method Activate() Class TWPCORateioLanc
+
+	::LoadInterface()
+
+	::oWindow:Activate()
+
+Return()
+
+Method GDEdiTabPai() Class TWPCORateioLanc
+
+	Local aRet := {}
+
+	aRet := {}
+
+Return(aRet)
+
+Method GDEdiTabFilho() Class TWPCORateioLanc
+
+	Local aRet := {}
+
+	aRet := {}
+
+Return(aRet)
+
+Method GDField() Class TWPCORateioLanc
+
+	Local aRet := {}
+
+	::oField:Clear()
+
+	::oField:AddField("ZO1_EMPFIL")
+	::oField:AddField("ZBZ_VERSAO")
+	::oField:AddField("ZBZ_REVISA")
+	::oField:AddField("ZBZ_ANOREF")
+	::oField:AddField("ZBZ_ORIPRC")
+	::oField:AddField("ZBZ_ORGLAN")
+	::oField:AddField("ZBZ_DATA")
+	::oField:AddField("ZBZ_LOTE")
+	::oField:AddField("ZBZ_SBLOTE")
+	::oField:AddField("ZBZ_DOC")
+	::oField:AddField("ZBZ_LINHA")
+	::oField:AddField("ZBZ_DC")
+	::oField:AddField("ZBZ_DEBITO")
+	::oField:AddField("ZBZ_CREDIT")
+	::oField:AddField("ZBZ_VALOR")
+
+	::oField:AddField("ZBZ_CLVLDB")
+	::oField:FieldName("ZBZ_CLVLDB"):cVldUser := ""
+
+	::oField:AddField("ZBZ_CLVLCR")
+	::oField:FieldName("ZBZ_CLVLCR"):cVldUser := ""
+
+	::oField:AddField("ZBZ_ITEMD")
+	::oField:AddField("ZBZ_ITEMC")
+	::oField:AddField("ZBZ_HIST")
+	::oField:AddField("ZBZ_YHIST")
+	::oField:AddField("ZBZ_SI"	)
+	::oField:AddField("ZBZ_YDELTA")
+
+	aRet := ::oField:GetHeader()
+
+
+Return(aRet)
+
+Method Valid() Class TWPCORateioLanc
+
+	Local lRet		:= .T.
+
+Return(lRet)
+
+Method Confirm() Class TWPCORateioLanc
+
+	Local lRet := .T.
+
+	If ::Valid()
+
+		If MsgYesNo("Confirma importação?")
+
+			::cRetMsg := "Processado com sucesso!"
+
+			FWMsgRun(, {|| lRet := ::Processa(::oGridPai:aCols, ::oGridPai:aHeader	)}, "Aguarde!", "Gerando lançamentos ...")
+
+		EndIf
+
+	EndIf
+
+	Aviso("ATENCAO", ::cRetMsg, {"Ok"}, 3)
+
+Return()
+
+Method Processa() Class TWPCORateioLanc
+
+	Local aAreaSE1	:= SE1->(GetArea())
+	Local aAreaSE2	:= SE2->(GetArea())
+	Local aAreaSM0	:= SM0->(GetArea())
+	Local aAreaZBZ	:= ZBZ->(GetArea())
+
+	Local nW		:= 0
+	Local lRet		:= .F.
+	Local cModo 	//Modo de acesso do arquivo aberto //"E" ou "C"
+	Local cZBZ 		:= GetNextAlias()
+
+	Local cCodEmp	:= ""
+	Local cCodFil	:= ""
+	
+	Local cEmpBckp := cEmpAnt
+	Local cFilBckp := cFilAnt
+
+	BEGIN TRANSACTION
+
+		For nW := 1 To Len(::oGridPai:aCols)
+
+			If !GDdeleted(nW, ::oGridPai:aHeader, ::oGridPai:aCols)
+
+				Reclock("ZBZ",.T.)
+				ZBZ->ZBZ_FILIAL := xFilial("ZBZ") // cFilAnt
+				ZBZ->ZBZ_VERSAO := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_VERSAO"		}) ]
+				ZBZ->ZBZ_REVISA := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_REVISA"		}) ]
+				ZBZ->ZBZ_ANOREF := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_ANOREF"		}) ]
+				ZBZ->ZBZ_ORIPRC := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_ORIPRC"		}) ]
+				ZBZ->ZBZ_ORGLAN := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_ORGLAN"		}) ]
+				ZBZ->ZBZ_DATA   := STOD(::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_DATA"	}) ])
+				ZBZ->ZBZ_LOTE   := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_LOTE"			}) ]
+				ZBZ->ZBZ_SBLOTE := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_SBLOTE"		}) ]
+				ZBZ->ZBZ_DOC    := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_DOC"			}) ]
+				ZBZ->ZBZ_LINHA  := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_LINHA"		}) ]
+				ZBZ->ZBZ_DC     := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_DC"			}) ]
+				ZBZ->ZBZ_DEBITO := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_DEBITO"		}) ]
+				ZBZ->ZBZ_CREDIT := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_CREDIT"		}) ]
+				ZBZ->ZBZ_CLVLDB := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_CLVLDB"		}) ]
+				ZBZ->ZBZ_CLVLCR := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_CLVLCR"		}) ]
+				ZBZ->ZBZ_ITEMD  := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_ITEMD"		}) ]
+				ZBZ->ZBZ_ITEMC  := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_ITEMC"		}) ]
+				ZBZ->ZBZ_VALOR  := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_VALOR"		}) ]
+				ZBZ->ZBZ_HIST   := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_HIST"			}) ]
+				ZBZ->ZBZ_YHIST  := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_YHIST"		}) ]
+				ZBZ->ZBZ_SI     := ::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_SI"			}) ]
+				ZBZ->ZBZ_YDELTA := STOD(::oGridPai:aCols[nW][ aScan(::oGridPai:aHeader, {|x| AllTrim(x[2]) == "ZBZ_YDELTA"	}) ])
+				ZBZ->(MsUnlock())
+
+				lRet := .T.	
+
+			EndIf
+
+		Next nW
+
+		If lRet
+
+			ZBZ->(DbCloseArea())
+
+			DBSelectArea("SM0")
+			SM0->(DBSetOrder(1))
+			SM0->(DBGoTop())
+
+			For nW := 1 To Len(::oGridFilho:aCols)
+
+				If !GDdeleted(nW, ::oGridFilho:aHeader, ::oGridFilho:aCols)
+
+					cCodEmp := SubStr(::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZO1_EMPFIL"}) ], 1, 2)
+					cCodFil := SubStr(::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZO1_EMPFIL"}) ], 3, 4)
+
+					If SM0->(DbSeek(cCodEmp + cCodFil))
+
+						IF EmpOpenFile(cZBZ, "ZBZ", 1, .T., cCodEmp, @cModo)
+
+							Reclock(cZBZ,.T.)
+							(cZBZ)->ZBZ_FILIAL := cCodFil
+							(cZBZ)->ZBZ_VERSAO := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_VERSAO"		}) ]
+							(cZBZ)->ZBZ_REVISA := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_REVISA"		}) ]
+							(cZBZ)->ZBZ_ANOREF := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_ANOREF"		}) ]
+							(cZBZ)->ZBZ_ORIPRC := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_ORIPRC"		}) ]
+							(cZBZ)->ZBZ_ORGLAN := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_ORGLAN"		}) ]
+							(cZBZ)->ZBZ_DATA   := STOD(::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_DATA"		}) ])
+							(cZBZ)->ZBZ_LOTE   := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_LOTE"			}) ]
+							(cZBZ)->ZBZ_SBLOTE := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_SBLOTE"		}) ]
+							(cZBZ)->ZBZ_DOC    := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_DOC"			}) ]
+							(cZBZ)->ZBZ_LINHA  := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_LINHA"			}) ]
+							(cZBZ)->ZBZ_DC     := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_DC"			}) ]
+							(cZBZ)->ZBZ_DEBITO := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_DEBITO"		}) ]
+							(cZBZ)->ZBZ_CREDIT := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_CREDIT"		}) ]
+							(cZBZ)->ZBZ_CLVLDB := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_CLVLDB"		}) ]
+							(cZBZ)->ZBZ_CLVLCR := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_CLVLCR"		}) ]
+							(cZBZ)->ZBZ_ITEMD  := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_ITEMD"			}) ]
+							(cZBZ)->ZBZ_ITEMC  := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_ITEMC"			}) ]
+							(cZBZ)->ZBZ_VALOR  := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_VALOR"			}) ]
+							(cZBZ)->ZBZ_HIST   := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_HIST"			}) ]
+							(cZBZ)->ZBZ_YHIST  := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_YHIST"			}) ]
+							(cZBZ)->ZBZ_SI     := ::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_SI"			}) ]
+							(cZBZ)->ZBZ_YDELTA := STOD(::oGridFilho:aCols[nW][ aScan(::oGridFilho:aHeader, {|x| AllTrim(x[2]) == "ZBZ_YDELTA"	}) ])
+							(cZBZ)->(MsUnlock())
+						
+						Else
+
+							lRet := .F.
+
+							::cRetMsg := "Não conseguiu acessar a empresa " + cEmpAnt + cFilAnt
+
+							Exit
+
+						EndIF
+
+					Else
+
+						lRet := .F.
+
+						::cRetMsg := "Empresa/filial não encontrada!"
+
+						Exit
+
+					EndIf
+
+				EndIf
+
+			Next nW
+
+		EndIf
+
+		If !lRet
+
+			DisarmTransaction()
+
+		EndIf
+
+	END TRANSACTION
+
+	cEmpAnt := cEmpBckp
+	cFilAnt := cFilBckp
+
+	ZBZ->(DbCloseArea())
+
+	If Select(cZBZ)
+
+		TcRefresh(cZBZ)
+
+		(cZBZ)->(DbCloseArea())
+
+	EndIf
+
+	ChkFile("ZBZ")
+
+	RestArea(aAreaSE1)
+	RestArea(aAreaSE2)
+	RestArea(aAreaSM0)
+	RestArea(aAreaZBZ)
+
+Return(lRet)
+
+User Function INTRATORC()
+
+	Local oObj := TWPCORateioLanc():New()
+	Local aRotBkp := {}
+
+	Private cCadastro := TIT_MAIN_WND
+
+	If Type("aRotina") == "A"
+
+		aRotBkp := aClone(aRotina)
+
+	EndIf
+
+	Private aRotina := {}
+
+	aRotina := { {"Pesquisar" ,"AxPesqui"  , 0 , 1,,.F.},; 	// "Pesquisar"
+	{"Visualizar" ,"Ctba102Cal", 0 , 2},; 		// "Visualizar"
+	{"Incluir" ,"Ctba102Cal", 0 , 3},; 		// "Incluir"
+	{"Alterar" ,"Ctba102Cal", 0 , 4},; 		// "Alterar"
+	{"Excluir" ,"Ctba102Cal", 0 , 5},;  		// "Excluir"
+	{"Estornar","Ctba102Cal" , 0 , 4} ,;  		//"Estornar"
+	{"Copiar","Ctba102Cal" , 0 , 3} ,;  		//"Copiar"
+	{"Rastrear","CtbC010Rot" , 0 , 2} ,;  		// "Rastrear"
+	{"Cópia Filial","Ctba102Cop"	, 0 , 4} }  // "Cópia Filial"
+
+	If cEmpAnt == "01"
+
+		oObj:Activate()
+
+	Else	
+
+		Alert("Rotina exclusiva para empresa 01!")
+
+	EndIf
+
+	aRotina := aRotBkp
+
+Return()

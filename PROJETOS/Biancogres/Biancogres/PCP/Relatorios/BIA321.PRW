@@ -1,0 +1,262 @@
+#INCLUDE "PROTHEUS.CH"
+#include "topconn.ch"
+#INCLUDE "TBICONN.CH"
+#include "TOTVS.CH"
+
+/*/{Protheus.doc} BIA321
+@author Marcos Alberto Soprani
+@since 02/10/13
+@version 1.0
+@description Relatório de conferência eForms
+@obs Projeto eForms
+@type function
+/*/
+
+User Function BIA321()
+
+	Private msrhEnter   := CHR(13) + CHR(10)
+
+	fPerg := "BIA321"
+	fTamX1 := IIF(Alltrim(oApp:cVersion) == "MP8.11", 6, 10)
+	fValidPerg()
+	If !Pergunte(fPerg,.T.)
+		Return
+	EndIf	
+
+	Processa({|| Rpt321Det() }, "Processando...", , .F.)
+
+Return
+
+Static Function Rpt321Det()
+
+	Local Ni
+	Local nContItens := 0
+	Local nTotItens  := 0
+	Local msVetCamp  := {}
+	Local msColPivot := ""
+	Local msVetTrans := {}
+
+	Local msQtdCamp  := 6 // número inicial para o formulário 4
+	Local msDtIni    := Substr(dtos(MV_PAR01), 1, 4) + "-" + Substr(dtos(MV_PAR01), 5, 2) + "-" + Substr(dtos(MV_PAR01), 7, 2)
+	Local msDtFim    := Substr(dtos(MV_PAR02), 1, 4) + "-" + Substr(dtos(MV_PAR02), 5, 2) + "-" + Substr(dtos(MV_PAR02), 7, 2)
+
+	Local msStaExcQy := 0
+	Local lOk        := .T.
+	Local msGravaErr := ""
+	Local msTmpQry   := "##TMPBIA321_" + __cUserID +"_"+ dtos(Date()) + StrTran(Time(), ":", "")
+
+	ProcRegua(0)
+
+	oExcel := FWMSEXCEL():New()
+
+	nxPlan := "Inspeção - Prensa"
+	nxTabl := "Registros"
+
+	oExcel:AddworkSheet(nxPlan)
+	oExcel:AddTable (nxPlan, nxTabl)
+
+	oExcel:AddColumn(nxPlan, nxTabl, "FormID"   , 1, 1)
+	oExcel:AddColumn(nxPlan, nxTabl, "FormCod"  , 1, 1)
+	oExcel:AddColumn(nxPlan, nxTabl, "FormNam"  , 1, 1)
+	oExcel:AddColumn(nxPlan, nxTabl, "ENSAIO"   , 1, 1)
+	oExcel:AddColumn(nxPlan, nxTabl, "DTENSAIO" , 2, 4)
+	oExcel:AddColumn(nxPlan, nxTabl, "HRENSAIO" , 1, 1)
+
+	aadd(msVetCamp, { "FormID"   , "FormID"   , 1} )
+	aadd(msVetCamp, { "FormCod"  , "FormCod"  , 1} )
+	aadd(msVetCamp, { "FormNam"  , "FormNam"  , 1} )
+	aadd(msVetCamp, { "ENSAIO"   , "ENSAIO"   , 1} )
+	aadd(msVetCamp, { "DTENSAIO" , "DTENSAIO" , 1} )
+	aadd(msVetCamp, { "HRENSAIO" , "HRENSAIO" , 1} )
+
+	RT007 := " WITH XCAMPOS "
+	RT007 += "      AS (SELECT CCAMPO = CONVERT(VARCHAR(7), CCAMPO) COLLATE Latin1_General_BIN, "
+	RT007 += "                 DESCR = CONVERT(VARCHAR(75), DESCR) COLLATE Latin1_General_BIN, "
+	RT007 += "                 TIPO, "
+	RT007 += "                 ROW_NUMBER() OVER( "
+	RT007 += "                 ORDER BY DESCR) SEQ "
+	RT007 += "          FROM "
+	RT007 += "          ( "
+	RT007 += "              SELECT DISTINCT "
+	RT007 += "                     'C' + RIGHT('000000' + RTRIM(CONVERT(VARCHAR, CAMPO.[ID])), 6) CCAMPO, "
+	RT007 += "                     'C' + RIGHT('000000' + RTRIM(CONVERT(VARCHAR, CAMPO.[ID])), 6) + '-' + CAMPO.[Name] DESCR, "
+	RT007 += "                     CAMPO.[Type] TIPO "
+	RT007 += "              FROM [EFORMS].[dbo].[DataField] DADOS(NOLOCK) "
+	RT007 += "                   INNER JOIN [EFORMS].[dbo].[Field] CAMPO(NOLOCK) ON CAMPO.[ID] = DADOS.[FieldID] "
+	RT007 += "                   INNER JOIN [EFORMS].[dbo].[DataForm] LINKFORM(NOLOCK) ON LINKFORM.[ID] = DADOS.[DataFormID] "
+	RT007 += "                   INNER JOIN [EFORMS].[dbo].[Form] FORMULARIO(NOLOCK) ON FORMULARIO.[ID] = LINKFORM.[FormID] "
+	RT007 += "                                                                          AND LINKFORM.[FormID] = 4 "
+	RT007 += "          ) AS TEMP1) "
+	RT007 += "      SELECT CCAMPO, "
+	RT007 += "             DESCRICAO = RTRIM(DESCR), "
+	RT007 += "             TIPO, "
+	RT007 += "             SEQ, "
+	RT007 += "      ( "
+	RT007 += "          SELECT MAX(SEQ) "
+	RT007 += "          FROM XCAMPOS "
+	RT007 += "      ) NUMREQ "
+	RT007 += "      FROM XCAMPOS "
+	RTcIndex := CriaTrab(Nil,.f.)
+	dbUseArea(.T.,"TOPCONN",TcGenQry(,,RT007),'RT07',.F.,.T.)
+	dbSelectArea("RT07")
+	dbGoTop()
+	nTotItens := RT07->NUMREQ
+	ProcRegua(nTotItens)
+	While !Eof()
+
+		nContItens++
+		IncProc("Montando Cabeçalho...  - Status: " + IIF((nContItens/nTotItens)*100 <= 99, StrZero((nContItens/nTotItens)*100,2), STRZERO(99,2)) + "%")
+
+		msProp1 := 1
+		msProp2 := 1
+		If RT07->TIPO = 3 // Data
+			msProp1 := 2
+			msProp2 := 4
+		ElseIf RT07->TIPO = 2 // Numerico
+			msProp1 := 3
+			msProp2 := 2
+		EndIf
+
+		aadd(msVetCamp, { RT07->CCAMPO, RT07->DESCRICAO, RT07->TIPO } )
+
+		msColPivot += IIF(!Empty(msColPivot), ",", "") 
+		msColPivot += "[" + RT07->CCAMPO + "]"
+
+		msQtdCamp  ++
+		oExcel:AddColumn(nxPlan, nxTabl, Alltrim(RT07->DESCRICAO), msProp1, msProp2)
+
+		dbSelectArea("RT07")
+		dbSkip()
+
+	End
+
+	ProcRegua(0)
+	nContItens := 0
+	IncProc()
+	RL005 := " SELECT FormID = CONVERT(VARCHAR(6), LINKFORM.[FormID]) COLLATE Latin1_General_BIN, "
+	RL005 += "        FormCod = CONVERT(VARCHAR(7), FORMULARIO.[Code]) COLLATE Latin1_General_BIN, "
+	RL005 += "        FormNam = CONVERT(VARCHAR(75), FORMULARIO.[Name]) COLLATE Latin1_General_BIN, "
+	RL005 += "        ENSAIO = CONVERT(VARCHAR(7), LINKFORM.[ID]) COLLATE Latin1_General_BIN, "
+	RL005 += "        DTENSAIO = CONVERT(VARCHAR(10), LINKFORM.[InsertDateTime],103) COLLATE Latin1_General_BIN, "
+	RL005 += "        HRENSAIO = SUBSTRING(CONVERT(VARCHAR, LINKFORM.[InsertDateTime]), 12, 8), "
+	RL005 += "        CCAMPO = 'C' + RIGHT('000000' + RTRIM(CONVERT(VARCHAR(6), CAMPO.[ID])), 6) COLLATE Latin1_General_BIN, "
+	RL005 += "        CONTEUDO = CONVERT(VARCHAR(75), DADOS.[Content]) COLLATE Latin1_General_BIN "
+	RL005 += "  INTO " + msTmpQry + " "
+	RL005 += "  FROM [EFORMS].[dbo].[DataField] DADOS(NOLOCK) "
+	RL005 += "       INNER JOIN [EFORMS].[dbo].[Field] CAMPO(NOLOCK) ON CAMPO.[ID] = DADOS.[FieldID] "
+	RL005 += "       INNER JOIN [EFORMS].[dbo].[DataForm] LINKFORM(NOLOCK) ON LINKFORM.[ID] = DADOS.[DataFormID] "
+	RL005 += "       INNER JOIN [EFORMS].[dbo].[Form] FORMULARIO(NOLOCK) ON FORMULARIO.[ID] = LINKFORM.[FormID] "
+	RL005 += "                                                              AND LINKFORM.[FormID] = 4 "
+	RL005 += "  WHERE LINKFORM.[InsertDateTime] BETWEEN '" + msDtIni + " 06:00:00.0000000' AND '" + msDtFim + " 05:59:59.9999999' "
+	U_BIAMsgRun("Aguarde... Gerando area de trabalho... ",,{|| msStaExcQy := TcSQLExec(RL005) })
+	If msStaExcQy < 0
+		lOk := .F.
+	EndIf
+
+	If lOk
+
+		RL005 := " SELECT * "
+		RL005 += "  FROM " + msTmpQry + " PIVOT(MIN(CONTEUDO) FOR CCAMPO IN(" + msColPivot + ")) em_colunas "
+		RL005 += " ORDER BY 1 "
+		RLcIndex := CriaTrab(Nil,.f.)
+		dbUseArea(.T.,"TOPCONN",TcGenQry(,,RL005),'RL05',.F.,.T.)
+		dbSelectArea("RL05")
+		nTotItens := 100
+		dbGoTop()
+		ProcRegua(nTotItens)
+		While !Eof()
+
+			nContItens++
+			IncProc("Atribuindo Registros...  - Status: " + IIF((nContItens/nTotItens)*100 <= 99, StrZero((nContItens/nTotItens)*100,2), STRZERO(99,2)) + "%")
+
+			aadd(msVetTrans, Array(msQtdCamp))
+
+			For nI := 1 to Len(msVetCamp)
+
+				If msVetCamp[nI][3] == 2
+					msVetTrans[Len(msVetTrans)][nI] := Val(StrTran(StrTran(Alltrim( &( "RL05->" + msVetCamp[nI][1]) ),".",""),",","."))
+				Else 
+					msVetTrans[Len(msVetTrans)][nI] := Alltrim( &( "RL05->" + msVetCamp[nI][1] ) )
+				EndIf
+
+			Next nI
+
+			oExcel:AddRow(nxPlan, nxTabl, msVetTrans[1] )
+			msVetTrans := {}
+
+			dbSelectArea("Rl05")
+			dbSkip()
+
+		End
+
+		RL05->(dbCloseArea())
+		Ferase(RLcIndex+GetDBExtension())     //arquivo de trabalho
+		Ferase(RLcIndex+OrdBagExt())          //indice gerado
+
+		RT07->(dbCloseArea())
+		Ferase(RTcIndex+GetDBExtension())     //arquivo de trabalho
+		Ferase(RTcIndex+OrdBagExt())          //indice gerado
+
+		xArqTemp := "BIA321_" + ALLTrim( DTOS(DATE()) + "_"+StrTran( time(),':',''))
+
+		If File("C:\TEMP\"+xArqTemp+".xml")
+			If fErase("C:\TEMP\"+xArqTemp+".xml") == -1
+				Aviso('Arquivo em uso', 'Favor fechar o arquivo: ' + 'C:\TEMP\'+xArqTemp+'.xml' + ' antes de prosseguir!!!',{'Ok'})
+			EndIf
+		EndIf
+
+		oExcel:Activate()
+		oExcel:GetXMLFile("C:\TEMP\"+xArqTemp+".xml")
+
+		cCrLf := Chr(13) + Chr(10)
+		If ! ApOleClient( 'MsExcel' )
+			MsgAlert( "MsExcel nao instalado!"+cCrLf+cCrLf+"Você poderá recuperar este arquivo em: "+"C:\TEMP\"+xArqTemp+".xml" )
+		Else
+			oExcel:= MsExcel():New()
+			oExcel:WorkBooks:Open( "C:\TEMP\"+xArqTemp+".xml" ) // Abre uma planilha
+			oExcel:SetVisible(.T.)
+		EndIf
+
+	Else
+
+		msGravaErr := TCSQLError()
+		Aviso('Problema de Processamento', "Erro na execução do processamento: " + msrhEnter + msrhEnter + msrhEnter + msGravaErr + msrhEnter + msrhEnter + msrhEnter + msrhEnter + "Processo Cancelado!!!" + msrhEnter + msrhEnter + msrhEnter, {'Fecha'}, 3 )
+
+	EndIf
+
+Return
+
+/*___________________________________________________________________________
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦Função    ¦ fValidPerg ¦ Autor ¦ Marcos Alberto S    ¦ Data ¦ 18/09/12 ¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
+Static Function fValidPerg()
+
+	local i,j
+	_sAlias := Alias()
+	dbSelectArea("SX1")
+	dbSetOrder(1)
+	cPerg := PADR(fPerg,fTamX1)
+	aRegs:={}
+
+	// Grupo/Ordem/Pergunta/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid/Var01/Def01/Cnt01/Var02/Def02/Cnt02/Var03/Def03/Cnt03/Var04/Def04/Cnt04/Var05/Def05/Cnt05/F3
+	aAdd(aRegs,{cPerg,"01","De Data                  ?","","","mv_ch1","D",08,0,0,"G","","mv_par01","","","","","","","","","","","","","","","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"02","Até Data                 ?","","","mv_ch2","D",08,0,0,"G","","mv_par02","","","","","","","","","","","","","","","","","","","","","","","","",""})
+	For i := 1 to Len(aRegs)
+		if !dbSeek(cPerg + aRegs[i,2])
+			RecLock("SX1",.t.)
+			For j:=1 to FCount()
+				If j <= Len(aRegs[i])
+					FieldPut(j,aRegs[i,j])
+				Endif
+			Next
+			MsUnlock()
+		Endif
+	Next
+
+	dbSelectArea(_sAlias)
+
+Return

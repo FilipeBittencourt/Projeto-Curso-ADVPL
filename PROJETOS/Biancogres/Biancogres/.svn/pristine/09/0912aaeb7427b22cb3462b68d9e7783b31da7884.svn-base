@@ -1,0 +1,360 @@
+#include "rwMake.ch"
+#include "Topconn.ch"
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
+±±ºPrograma  ³ BLO_PRODUTO    ºAutor  ³ BRUNO MADALENO     º Data ³  29/09/08   º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºDesc.     ³ VERIFICA SE O USUARIO DIGITOU UM PRECO DE COMPRA MENOR QUE A     º±±
+±±º          ³ TABELA DE PRECO                                                  º±±
+±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
+±±ºUso       ³ MP8 - R4                                                         º±±
+±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+*/
+
+USER FUNCTION BLO_PRODUTO()
+
+	LOCAL CSQL := ""
+	LOCAL SPOS := ""
+
+	LOCAL SPRODUTO := ""
+	LOCAL NPRECO := ""
+	LOCAL NTABELA := ""
+	LOCAL LRET := 0
+	LOCAL DESC_PRIMEIRACOMPRA := 0
+	PRIVATE ENTER	:= CHR(13)+CHR(10)
+
+	If IsInCallStack("MATA140") .Or. IsInCallStack("U_TACLNFJB") .Or. IsInCallStack("U_BACP0012")  .Or. IsInCallStack("U_PNFM0002") .Or. IsInCallStack("U_PNFM0005") .Or. IsInCallStack("U_JOBFATPARTE")
+
+		SPOS := ASCAN(AHEADER,{|X| X[2]=="D1_VUNIT  "})
+		NPRECO := ACOLS[N,SPOS]
+
+		Return NPRECO
+
+	EndIf
+
+	//CONOUT('-> BLO_PRODUTO - '+ Alltrim(FunName()))
+	If Alltrim(FunName()) $ "COMXCOL/SCHEDCOMCOL/MATA140I/EICDI154"
+
+		SPOS := ASCAN(AHEADER,{|X| X[2]=="D1_VUNIT  "})
+		NPRECO := ACOLS[N,SPOS]
+
+		Return NPRECO
+
+	EndIf
+
+	If Alltrim(FunName()) $ "EICPO400"
+		SPOS := ASCAN(AHEADER,{|X| X[2]=="C7_PRECO  "})
+		nPreco := ACOLS[N,SPOS]
+		Return(nPreco)
+	EndIf
+
+	DO CASE
+		// BLOQUEANDO A ALTERACAO DO PRECO NO PEDIDO DE COMPRA E AUTORIZACAO DE ENTREGA
+	CASE UPPER(ALLTRIM(FUNNAME())) == "MATA121" .OR. UPPER(ALLTRIM(FUNNAME())) == "MATA122"
+
+		If cEmpAnt == "01" .and. CA120FORN == "002912"
+			SPOS := ASCAN(AHEADER,{|X| X[2]=="C7_PRECO  "})
+			nPreco := ACOLS[N,SPOS]
+			Return(nPreco)
+		ElseIf cEmpAnt == "05" .and. CA120FORN == "000534"
+			SPOS := ASCAN(AHEADER,{|X| X[2]=="C7_PRECO  "})
+			nPreco := ACOLS[N,SPOS]
+			Return(nPreco)
+		EndIf
+
+		SPOS := ASCAN(AHEADER,{|X| X[2]=="C7_PRODUTO"})
+		SPRODUTO := ACOLS[N,SPOS]
+		SPOS := ASCAN(AHEADER,{|X| X[2]=="C7_PRECO  "})
+		NPRECO := ACOLS[N,SPOS]
+		SPOS := ASCAN(AHEADER,{|X| X[2]=="C7_CODTAB "})
+		NTABELA := ACOLS[N,SPOS]
+
+		DbSelectArea("SB1")
+		DbSetOrder(1)
+		DbSeek(xFilial("SB1")+SPRODUTO,.F.)
+
+		IF CA120FORN == '003721' .AND. SUBSTR(SB1->B1_GRUPO,1,3) $ '104/107/306'
+			SPOS := ASCAN(AHEADER,{|X| X[2]=="C7_PRECO  "})
+			nPreco := ACOLS[N,SPOS]
+			Return(nPreco)
+		ENDIF
+
+		IF SUBSTR(SB1->B1_GRUPO,1,1) $ "1_P" //.OR.SUBSTR(SB1->B1_GRUPO,1,3)$"401_405"
+
+			CSQL := "SELECT AIB.AIB_PRCCOM " + ENTER
+			CSQL += "FROM "+RETSQLNAME("AIA")+" AIA, "+RETSQLNAME("AIB")+" AIB " + ENTER
+			CSQL += "WHERE	AIA.AIA_CODFOR	=  AIB.AIB_CODFOR AND " + ENTER
+			CSQL += "		AIA.AIA_LOJFOR	=  AIB.AIB_LOJFOR AND " + ENTER
+			CSQL += "		AIA.AIA_CODTAB	=  AIB.AIB_CODTAB AND " + ENTER
+
+			CSQL += "		AIA.AIA_DATDE	<= '"+DTOS(DDATABASE)+"' AND " + ENTER
+			CSQL += "		AIA.AIA_DATATE	>= '"+DTOS(DDATABASE)+"' AND " + ENTER
+			CSQL += "		AIA.AIA_CODFOR	= '"+CA120FORN+"' AND " + ENTER
+			CSQL += "		AIA.AIA_LOJFOR = '"+CA120LOJ+"' AND " + ENTER
+			//CSQL += "		AIA.AIA_CODTAB	= '"+NTABELA+"' AND " + ENTER
+			CSQL += "		AIB.AIB_CODPRO = '"+SPRODUTO+"' AND " + ENTER
+			CSQL += "		AIA.D_E_L_E_T_ = '' AND " + ENTER
+			CSQL += "		AIB.D_E_L_E_T_ = '' " + ENTER
+
+			IF CHKFILE("_TABELA")
+				DBSELECTAREA("_TABELA")
+				DBCLOSEAREA()
+			ENDIF
+			TCQUERY CSQL ALIAS "_TABELA" NEW
+
+
+			IF ! _TABELA->(EOF())
+				//VERIFICANDO SE E A PRIMEIRA COMPRA PARA APLICAR O PERCENTUAL DE DESCONTO
+				CSQL := "SELECT COUNT(D1_COD) AS QUANT FROM "+RETSQLNAME("SD1")+" " + ENTER
+				CSQL += "WHERE	D1_FORNECE = '"+CA120FORN+"' AND " + ENTER
+				CSQL += "		D_E_L_E_T_ = '' " + ENTER
+
+				IF CHKFILE("_DESC")
+					DBSELECTAREA("_DESC")
+					DBCLOSEAREA()
+				ENDIF
+				TCQUERY CSQL ALIAS "_DESC" NEW
+				IF _DESC->QUANT <> 0
+					DESC_PRIMEIRACOMPRA := 0
+				ELSE
+					DESC_PRIMEIRACOMPRA := (_TABELA->AIB_PRCCOM/100) * GETMV('MV_YPRICOM')
+				END IF
+
+
+				// PRECO INFORMADO      > PRECO DA TABELA
+				IF NPRECO 				> ( _TABELA->AIB_PRCCOM  - DESC_PRIMEIRACOMPRA )
+					IF DESC_PRIMEIRACOMPRA <> 0
+						MSGBOX("ATENÇÃO PRIMEIRA COMPRA DO FORNECEDOR SERA APLICADO UM DEWSCONTO NO PERCENTUAL DE: " + ALLTRIM(STR(GETMV('MV_YPRICOM'))) + "%")
+					END IF
+					LRET := _TABELA->AIB_PRCCOM - DESC_PRIMEIRACOMPRA//
+				ELSE
+					LRET := NPRECO //
+				END IF
+
+				SPOS := ASCAN(AHEADER,{|X| X[2]=="C7_PRECO  "})
+				ACOLS[N,SPOS] :=  LRET
+
+			END IF
+		ELSE
+			RETURN(NPRECO)
+		END IF
+
+		// BLOQUEANDO A ALTERACAO DO PRECO NO DOCUMENTO DE ENTRADA
+	CASE UPPER(ALLTRIM(FUNNAME())) == "MATA103" .OR. UPPER(ALLTRIM(FUNNAME())) == "U_GATI001"
+
+		If cEmpAnt == "01" .and. CA100FOR == "002912"
+			SPOS := ASCAN(AHEADER,{|X| X[2]=="D1_VUNIT  "})
+			nPreco := ACOLS[N,SPOS]
+			Return(nPreco)
+		ElseIf cEmpAnt == "05" .and. CA100FOR == "000534"
+			SPOS := ASCAN(AHEADER,{|X| X[2]=="D1_VUNIT  "})
+			nPreco := ACOLS[N,SPOS]
+			Return(nPreco)
+		EndIf
+
+		//Alterado por Wanisay no dia 20/02/09
+		SPOS  := ASCAN(AHEADER,{|X| X[2]=="D1_TES    "})
+		STES := ACOLS[N,SPOS]
+		DbSelectArea("SF4")
+		DbSeek(xFilial("SF4")+STES)
+
+		IF SUBSTR(SF4->F4_CF,2,3) $ '101_124'
+			SPOS := ASCAN(AHEADER,{|X| X[2]=="D1_COD    "})
+			SPRODUTO := ACOLS[N,SPOS]
+			SPOS := ASCAN(AHEADER,{|X| X[2]=="D1_VUNIT  "})
+			NPRECO := ACOLS[N,SPOS]
+			SPOS := ASCAN(AHEADER,{|X| X[2]=="D1_PEDIDO "})
+			SPEDIDO := ACOLS[N,SPOS]
+			SPOS := ASCAN(AHEADER,{|X| X[2]=="D1_ITEM   "})
+			SITEM := ACOLS[N,SPOS]
+
+			CSQL := "SELECT AIB.AIB_PRCCOM " + ENTER
+			CSQL += "FROM "+RETSQLNAME("AIA")+" AIA, "+RETSQLNAME("AIB")+" AIB " + ENTER
+			CSQL += "WHERE	AIA.AIA_CODFOR	=  AIB.AIB_CODFOR AND " + ENTER
+			CSQL += "		AIA.AIA_LOJFOR	=  AIB.AIB_LOJFOR AND " + ENTER
+			CSQL += "		AIA.AIA_CODTAB	=  AIB.AIB_CODTAB AND " + ENTER
+
+			CSQL += "		AIA.AIA_DATDE	<= '"+DTOS(DDATABASE)+"' AND " + ENTER
+			CSQL += "		AIA.AIA_DATATE	>= '"+DTOS(DDATABASE)+"' AND " + ENTER
+			CSQL += "		AIA.AIA_CODFOR	= '"+CA100FOR+"' AND " + ENTER
+			CSQL += "		AIA.AIA_LOJFOR = '"+CLOJA+"' AND " + ENTER
+			//CSQL += "		AIA.AIA_CODTAB	= '"+NTABELA+"' AND " + ENTER
+			CSQL += "		AIB.AIB_CODPRO = '"+SPRODUTO+"' AND " + ENTER
+			CSQL += "		AIA.D_E_L_E_T_ = '' AND " + ENTER
+			CSQL += "		AIB.D_E_L_E_T_ = '' " + ENTER
+
+			IF CHKFILE("_TABELA")
+				DBSELECTAREA("_TABELA")
+				DBCLOSEAREA()
+			ENDIF
+			TCQUERY CSQL ALIAS "_TABELA" NEW
+			PRECO__TABELA := 0
+
+			IF ! _TABELA->(EOF())
+				PRECO__TABELA := _TABELA->AIB_PRCCOM
+
+				// VERIFICANDO SE O PEDIDO E EM DOLAR
+				CSQL := "SELECT C7_MOEDA, C7_DATPRF, * FROM "+RETSQLNAME("SC7")+" " + ENTER
+				CSQL += "WHERE	C7_NUM = '"+SPEDIDO+"' AND " + ENTER
+				//CSQL += "		C7_ITEM = '"+SITEM+"' AND " + ENTER
+				CSQL += "		D_E_L_E_T_ = ''		 " + ENTER
+				IF CHKFILE("_MOEDATABELA")
+					DBSELECTAREA("_MOEDATABELA")
+					DBCLOSEAREA()
+				ENDIF
+				TCQUERY CSQL ALIAS "_MOEDATABELA" NEW
+				CCMOEDA := 1
+				IF ! _MOEDATABELA->(EOF())
+					CCMOEDA := _MOEDATABELA->C7_MOEDA
+					IF CCMOEDA = 2 .OR. CCMOEDA = 5
+						//PRECO__TABELA := PRECO__TABELA * RECMOEDA(STOD(_MOEDATABELA->C7_DATPRF), 2)
+						PRECO__TABELA := Round(PRECO__TABELA * RECMOEDA(DDEMISSAO-1, CCMOEDA),3) // solicitado por diogo martinez para arredondar o valor para 3 casas decimais
+						PRECO__TABELA := Round(PRECO__TABELA,3)
+					END IF
+				END IF
+
+				//VERIFICANDO SE E A PRIMEIRA COMPRA PARA APLICAR O PERCENTUAL DE DESCONTO
+				CSQL := "SELECT COUNT(D1_COD) AS QUANT FROM "+RETSQLNAME("SD1")+" " + ENTER
+				CSQL += "WHERE	D1_FORNECE = '"+CA100FOR+"' AND " + ENTER
+				CSQL += "		D_E_L_E_T_ = '' " + ENTER
+
+				IF CHKFILE("_DESC")
+					DBSELECTAREA("_DESC")
+					DBCLOSEAREA()
+				ENDIF
+				TCQUERY CSQL ALIAS "_DESC" NEW
+				IF _DESC->QUANT <> 0
+					DESC_PRIMEIRACOMPRA := 0
+				ELSE
+					DESC_PRIMEIRACOMPRA := (PRECO__TABELA/100) * GETMV('MV_YPRICOM')
+				END IF
+
+				// PRECO INFORMADO      > PRECO DA TABELA
+				IF NPRECO 				> (PRECO__TABELA - DESC_PRIMEIRACOMPRA) .OR. NPRECO = 0
+					IF DESC_PRIMEIRACOMPRA <> 0
+						MSGBOX("ATENÇÃO PRIMEIRA COMPRA DO FORNECEDOR SERA APLICADO UM DESCONTO NO PERCENTUAL DE: " + ALLTRIM(STR(GETMV('MV_YPRICOM'))) + "%")
+					END IF
+					LRET := PRECO__TABELA - DESC_PRIMEIRACOMPRA
+				ELSE
+					IF CCMOEDA = 2
+						IF ALLTRIM(__READVAR) = "M->D1_COD"
+							LRET := PRECO__TABELA - DESC_PRIMEIRACOMPRA
+						ELSE
+							LRET := NPRECO //
+						END IF
+					ELSE
+						LRET := NPRECO //
+					END IF
+				END IF
+
+				SPOS := ASCAN(AHEADER,{|X| X[2]=="D1_VUNIT  "})
+				ACOLS[N,SPOS] :=  LRET
+
+				SPOS := ASCAN(AHEADER,{|X| X[2]=="D1_TOTAL  "})
+				ACOLS[N,SPOS] := LRET * 	ACOLS[N, ASCAN(AHEADER,{|X| X[2]=="D1_QUANT  "}) ]
+			END IF
+		ELSE
+			SPOS := ASCAN(AHEADER,{|X| X[2]=="D1_VUNIT  "})
+			LRET := ACOLS[N,SPOS]
+		END IF
+
+		// BLOQUEANDO A ALTERACAO DO PRECO NO CONTRATO DE PARCERIA
+	CASE UPPER(ALLTRIM(FUNNAME())) == "MATA125" .OR. UPPER(ALLTRIM(FUNNAME())) == "CONT_PV"
+
+		If cEmpAnt == "01" .and. CA125FORN == "002912"
+			SPOS := ASCAN(AHEADER,{|X| X[2]=="C7_PRECO  "})
+			nPreco := ACOLS[N,SPOS]
+			Return(nPreco)
+		ElseIf cEmpAnt == "05" .and. CA125FORN == "000534"
+			SPOS := ASCAN(AHEADER,{|X| X[2]=="C7_PRECO  "})
+			nPreco := ACOLS[N,SPOS]
+			Return(nPreco)
+		EndIf
+
+		SPOS := ASCAN(AHEADER,{|X| X[2]=="C3_PRODUTO"})
+		SPRODUTO := ACOLS[N,SPOS]
+		SPOS := ASCAN(AHEADER,{|X| X[2]=="C3_PRECO  "})
+		NPRECO := ACOLS[N,SPOS]
+
+		DbSelectArea("SB1")
+		DbSetOrder(1)
+		DbSeek(xFilial("SB1")+SPRODUTO,.F.)
+
+		IF SUBSTR(SB1->B1_GRUPO,1,1) $ "1_P"//.OR.SUBSTR(SB1->B1_GRUPO,1,3)$"401_405"
+
+			CSQL := "SELECT AIB.AIB_PRCCOM " + ENTER
+			CSQL += "FROM "+RETSQLNAME("AIA")+" AIA, "+RETSQLNAME("AIB")+" AIB " + ENTER
+			CSQL += "WHERE	AIA.AIA_CODFOR	=  AIB.AIB_CODFOR AND " + ENTER
+			CSQL += "		AIA.AIA_LOJFOR	=  AIB.AIB_LOJFOR AND " + ENTER
+			CSQL += "		AIA.AIA_CODTAB	=  AIB.AIB_CODTAB AND " + ENTER
+
+			CSQL += "		AIA.AIA_DATDE	<= '"+DTOS(DDATABASE)+"' AND " + ENTER
+			CSQL += "		AIA.AIA_DATATE	>= '"+DTOS(DDATABASE)+"' AND " + ENTER
+			CSQL += "		AIA.AIA_CODFOR	= '"+CA125FORN+"' AND " + ENTER
+			CSQL += "		AIA.AIA_LOJFOR = '"+CA125LOJ+"' AND " + ENTER
+			//CSQL += "		AIA.AIA_CODTAB	= '"+NTABELA+"' AND " + ENTER
+			CSQL += "		AIB.AIB_CODPRO = '"+SPRODUTO+"' AND " + ENTER
+			CSQL += "		AIA.D_E_L_E_T_ = '' AND " + ENTER
+			CSQL += "		AIB.D_E_L_E_T_ = '' " + ENTER
+
+			IF CHKFILE("_TABELA")
+				DBSELECTAREA("_TABELA")
+				DBCLOSEAREA()
+			ENDIF
+			TCQUERY CSQL ALIAS "_TABELA" NEW
+
+
+			IF ! _TABELA->(EOF())
+				//VERIFICANDO SE E A PRIMEIRA COMPRA PARA APLICAR O PERCENTUAL DE DESCONTO
+				CSQL := "SELECT COUNT(D1_COD) AS QUANT FROM "+RETSQLNAME("SD1")+" " + ENTER
+				CSQL += "WHERE	D1_FORNECE = '"+CA125FORN+"' AND " + ENTER
+				CSQL += "		D_E_L_E_T_ = '' " + ENTER
+
+				IF CHKFILE("_DESC")
+					DBSELECTAREA("_DESC")
+					DBCLOSEAREA()
+				ENDIF
+				TCQUERY CSQL ALIAS "_DESC" NEW
+				IF _DESC->QUANT <> 0
+					DESC_PRIMEIRACOMPRA := 0
+				ELSE
+					DESC_PRIMEIRACOMPRA := (_TABELA->AIB_PRCCOM/100) * GETMV('MV_YPRICOM')
+				END IF
+
+
+				// PRECO INFORMADO      > PRECO DA TABELA
+				IF NPRECO 				> (_TABELA->AIB_PRCCOM - DESC_PRIMEIRACOMPRA)
+					IF DESC_PRIMEIRACOMPRA <> 0
+						MSGBOX("ATENÇÃO PRIMEIRA COMPRA DO FORNECEDOR SERá APLICADO UM DESCONTO NO PERCENTUAL DE: " + ALLTRIM(STR(GETMV('MV_YPRICOM'))) + "%")
+					END IF
+					LRET := _TABELA->AIB_PRCCOM  - DESC_PRIMEIRACOMPRA //
+				ELSE
+
+					IF ALLTRIM(__READVAR) = "M->C3_PRODUTO" .OR. ALLTRIM(__READVAR) = "M->C3_QUANT"
+						LRET := (_TABELA->AIB_PRCCOM - DESC_PRIMEIRACOMPRA)
+					ELSE
+						LRET := NPRECO
+					END IF
+
+				END IF
+				M->C3_PRECO := LRET
+				SPOS := ASCAN(AHEADER,{|X| X[2]=="C3_PRECO  "})
+				ACOLS[N,SPOS] := LRET
+
+				SPOS := ASCAN(AHEADER,{|X| X[2]=="C3_TOTAL  "})
+				ACOLS[N,SPOS] := LRET * 	ACOLS[N, ASCAN(AHEADER,{|X| X[2]=="C3_QUANT  "}) ]
+
+			END IF
+
+
+		ELSE
+			RETURN(NPRECO)
+		END IF
+
+	ENDCASE
+
+RETURN(LRET)

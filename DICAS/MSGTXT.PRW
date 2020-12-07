@@ -36,7 +36,7 @@ User Function MSGTXT(cMensagem,cTitulo)
 
 	DEFINE MSDIALOG oDlg Title cTitulo From 000,000	To 350,400 Pixel
 
-		@ 005,005 Get oGet VAR cTexto MEMO SIZE 193,150 Of oDlg Pixel
+		@ 005,005 Get oGet VAR cTexto MEMO SIZE 193,150 Of oDlg Pixel READONLY
 		oGet:bRClicked := {||AllwaysTrue()}
 		
 		//oBtn1     := TButton():New( 020,160,"Cancelar",oDlg,{|| oDlg:End()},040,012,,,,.T.,,"",,,,.F. )

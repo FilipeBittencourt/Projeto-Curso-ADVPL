@@ -1,0 +1,725 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "TBICONN.CH"
+#INCLUDE "TOPCONN.CH"
+#INCLUDE "RWMAKE.CH"
+
+/*
+##############################################################################################################
+# CLASSE.....: TGnreTransmissao
+# AUTOR......: WLYSSES CERQUEIRA (FACILE)
+# DATA.......: 12/09/2019
+# DESCRICAO..:
+##############################################################################################################
+# ALTERACAO..:
+# AUTOR......:
+# MOTIVO.....:
+#
+##############################################################################################################
+*/
+
+User Function JOBGNRE(aParam)
+
+	Local oBj
+
+	oBj := TGnreTransmissao():New(.F.)
+
+	oBj:PercorreFiliais()
+
+	FreeObj(oBj)
+
+Return()
+
+User Function EJOBGNRE(aParam)
+
+	Local oBj_ := Nil
+
+	Private cUF			:= ""
+	Private cIdEnt		:= ""
+	Private cAmbiente	:= ""
+	Private cUrl		:= ""
+
+	RPCSetType(3)
+
+	RpcSetEnv(aParam[1], aParam[2],,,"FAT")
+	
+	If (U_GETBIAPAR("BIA_FATAUTO", .T. , aParam[1], aParam[2]))
+		
+		PTInternal(1,"U_EJOBGNRE|"+aParam[1]+"|"+aParam[2]+"|")
+
+		oBj_ := TGnreTransmissao():New(.T.)
+	
+		oBj_:Processa()
+	
+		FreeObj(oBj_)
+	
+		//U_BAF021()
+
+	Else
+		ConOut("EJOBGNRE ==> Cancelado/Desligado[BIA_FATAUTO] - " + Time()+" => Empresa: "+aParam[1]+" Filial: "+aParam[2])
+	EndIf
+
+	RpcClearEnv()
+
+Return()
+
+Class TGnreTransmissao From LongClassName
+
+Public Data lEnabled
+Public Data aFiliais
+Public Data cProdGNRE
+Public Data cDetRec
+Public Data cIdEnt
+Public Data cUrl
+Public Data cUFSubTrib
+Public Data cUFWSOn
+Public Data cDoc
+Public Data lRejeita
+
+Public Method New(lJob) Constructor // Metodo construtor
+Public Method Load() // Carrega as variaveis de controle
+Public Method LoadFiliais() // Carrega as filiais do sigamat
+Public Method PercorreFiliais() // Coloque neste metodo todas suas startJobs
+
+Public Method Processa() // Metodo que chama todos metodos secundarios
+Public Method Processa_Guia() // Transmissao da guia, gera SPED201 e atualiza as guias com data D-1
+Public Method Envia_Atualiza_Guia(cNota, cSerie, cNumeroDe, cNumeroAte, cEst, cBar)
+Public Method Transmite_Guia(cDocIni, cDocFim, cEst, cCodBar, cAviso) // Envia a guia para SPED201
+
+Public Method ExisteFuncaoEmProcessamento(cFuncProc, cEmp, cFil) // Verifica se as user functions da gnre ja estao rodando
+
+Public Method MonitoraNFe(cSerie, cNota, cEst, cNumDe) // Monitora a NF-e para que preencha a chave da nota
+Public Method IsUFWS(cEmp, cFil, cUFDest)
+Public Method IsUFSubTrib(cEmp, cFil, cUFDest)
+Public Method MonitoraGNRe(cDocIni, cDocFim, cEst, cAviso, cDoc, cSerie, lRetMsg) // Monitora a GNR-e
+Public Method LimpaSF6(nRecnoSF6) // Limpa os campos da SF6 de retorno do WS para reenvio devido D-1
+
+Public Method LoadParGnre(cEmp, cFil)
+
+Public Method ApagaGNReSPED201() // Apaga o registro da SPED201 quando for nescessario reenviar uma guia (D-1)
+Public Method RejeitaGNReSPED201()
+Public Method LogConsole(cNota, cSerie, cNumIcm, cTimeIni, cTimeFim, cMethod, cTexto)
+
+EndClass
+
+Method New(lJob) Class TGnreTransmissao
+
+	Default lJob := .F.
+
+	::Load(lJob)
+
+Return(Self)
+
+Method Load(lJob) Class TGnreTransmissao
+
+	Local aFilAux	:= {}
+	Local nW		:= 0
+
+	Default lJob := .F.
+
+	::aFiliais := {}
+
+	If !lJob
+
+		aFilAux := ::LoadFiliais()
+
+		For nW := 1 To Len(aFilAux)
+
+			If ::ExisteFuncaoEmProcessamento("U_EJOBGNRE", aFilAux[nW, 1], aFilAux[nW, 2])
+
+				aAdd(::aFiliais, {aFilAux[nW, 1], aFilAux[nW, 2]})
+
+			EndIf
+
+		Next nW
+
+	Else
+
+		cUF				:= ""
+		cIdEnt    		:= FSA095IDEnt()
+		cAmbiente		:= AllTrim(GetNewPar("MV_AMBGNRE", "2"))
+		cUrl			:= GetNewPar("MV_SPEDURL","")
+
+		::cIdEnt 		:= cIdEnt
+		::cUrl	 		:= cUrl
+		::lRejeita		:= GetNewPar("MV_YREJGNR", .F.)
+
+		::cProdGNRE		:= GetNewPar("MV_GNREPRO", "20")
+		::cDetRec		:= Padr(GetNewPar("MV_DETGNRE", "000055"), 250)
+
+		::cUFSubTrib	:= ""
+		::cUFWSOn		:= ""
+
+		::LoadParGnre() // Alterei por questao de performance em outras chamadas de tela
+
+		//CONOUT(cEmpAnt + cFilAnt + " - MV_UFGNWS: [" + ::cUFWSOn + "]" + " - SUBST: [" + ::cUFSubTrib + "]" )
+
+		//::cDoc			:= "% F2_DOC IN (" + FormatIn("000141268", "/") + ") %"
+		::cDoc			:= "% 1 = 1 %"
+
+	EndIf
+
+Return()
+
+Method LoadFiliais() Class TGnreTransmissao
+
+	Local aFil := {}
+
+	aAdd( aFil , { "01", "01" } )
+	aAdd( aFil , { "05", "01" } )
+	aAdd( aFil , { "07", "01" } )
+
+Return(aFil)
+
+Method PercorreFiliais() Class TGnreTransmissao
+
+	Local nI			:= 0
+
+	For nI := 1 To Len(::aFiliais)
+
+		// Coloque aqui todas suas StartJobs
+		//StartJob( "U_EJOBGNRE", GetEnvServer(), .F., {::aFiliais[nI, 1], ::aFiliais[nI, 2]} )
+
+		U_EJOBGNRE({::aFiliais[nI, 1], ::aFiliais[nI, 2]})
+
+	Next nI
+
+Return()
+
+Method Processa() Class TGnreTransmissao
+
+	Local cTime := Time()
+
+	::LogConsole(, , , cTime, , "Processa", "Iniciando...")
+
+	::Processa_Guia()
+
+	::LogConsole(, , , cTime, , "Processa", "Terminando...")
+
+Return()
+
+Method ExisteFuncaoEmProcessamento(cFuncProc, cEmp, cFil) Class TGnreTransmissao
+
+	Local aThreads	:= GetUserInfoArray()
+	Local nW		:= 0
+	Local lRet		:= .T.
+
+	For nW := 1 To Len(aThreads)
+
+		If aThreads[nW, 5] $ cFuncProc .And. aThreads[nW, 3] <> ThreadId()
+
+			If Empty(aThreads[nW, 11])
+
+				lRet := .F.
+
+				Exit
+
+			ElseIf cFuncProc+"|"+cEmp+"|"+cFil+"|" $ aThreads[nW, 11]
+
+				lRet := .F.
+
+				Exit
+
+			EndIf
+
+		EndIf
+
+	Next nW
+
+Return(lRet)
+
+Method Processa_Guia() Class TGnreTransmissao
+
+	Local cAviso 		:= ""
+	Local cAlias 		:= Nil
+	Local cCodBarras	:= ""
+	Local nX			:= 0
+	Local cTime			:= Time()
+	Local nTotReg		:= 0
+	Local nRegAtu		:= 0
+	Local cStatusTSS	:= ""
+	Local dDataRef		:= dDataBase
+	Local cAliasZZV
+	Local _cTabZZV
+	Local _cTabSC9
+
+	PTInternal(1,"U_EJOBGNRE|"+cEmpAnt+"|"+cFilAnt+"|Processa_Guia")
+
+	cAlias := GetNextAlias()
+
+	BeginSql alias cAlias
+		%NoParser%
+
+		SELECT  SF6.*,
+		EMPORI = (
+		select top 1 C5_YEMPPED
+		from %table:SC5% SC5 ( NOLOCK )
+		join %table:SC9% SC9 ( NOLOCK ) on C9_FILIAL = C5_FILIAL and C9_PEDIDO = C5_NUM
+		where
+		SC5.C5_FILIAL = '01'
+		AND SC9.C9_NFISCAL = SF6.F6_DOC
+		AND SC9.C9_SERIENF = SF6.F6_SERIE
+		AND SC5.D_E_L_E_T_=''
+		AND SC9.D_E_L_E_T_=''		
+		)
+
+		FROM    %table:SF6% SF6 ( NOLOCK )
+
+		WHERE   SF6.F6_FILIAL = %Exp:xFilial("SF6")%
+		AND SF6.F6_GNREWS 	IN ( '', 'S', 'T', 'N' )
+		AND SF6.F6_EST 		NOT IN %Exp:Self:cUFSubTrib%
+		AND SF6.F6_EST 		IN %Exp:Self:cUFWSOn%
+		AND SF6.F6_DTPAGTO	>= %Exp:DToS( dDataRef - 60 )%
+		AND %Exp:Self:cDoc%
+		AND SF6.%notDel%
+
+		AND EXISTS (
+		SELECT *
+		FROM %table:SE2% SE2 ( NOLOCK )
+		WHERE SE2.E2_FILIAL = SF6.F6_FILIAL
+		AND SE2.E2_NUM		= SUBSTRING(SF6.F6_NUMERO, 4, 9)
+		AND SE2.E2_PREFIXO	= SUBSTRING(SF6.F6_NUMERO, 1, 3)
+		AND SE2.E2_TIPO 	= 'TX'
+		AND SE2.E2_SALDO	> 0
+		
+		AND 
+		(
+			(
+				SE2.E2_CODBAR 		= '' 
+				AND SE2.E2_YLINDIG 	= '' 
+				AND SE2.E2_LINDIG 	= '' 
+				AND SE2.E2_NUMBOR 	= '' 
+			)
+			OR
+			(
+				SE2.E2_NUMBOR = '' AND
+				(
+					  SUBSTRING(SE2.E2_CODBAR, 1, 10) 	= REPLICATE('0', 10) 
+			       OR SUBSTRING(SE2.E2_YLINDIG, 1, 10) 	= REPLICATE('0', 10) 
+			       OR SUBSTRING(SE2.E2_LINDIG, 1, 10) 	= REPLICATE('0', 10) 
+			    )
+			)
+		)
+		
+		AND SE2.E2_NUMBOR	= ''
+		AND SE2.%notDel%
+		)
+
+		AND EXISTS (
+		SELECT *
+		FROM %table:SF2% SF2 ( NOLOCK )
+		WHERE SF2.F2_FILIAL = SF6.F6_FILIAL
+		AND SF2.F2_DOC 		= SF6.F6_DOC
+		AND SF2.F2_SERIE 	= SF6.F6_SERIE
+		AND SF2.F2_CLIENTE 	= SF6.F6_CLIFOR
+		AND SF6.F6_LOJA 	= SF2.F2_LOJA
+		AND SF2.F2_TIPO 	= SF6.F6_TIPODOC
+		AND SF2.%notDel%
+		)
+
+		ORDER BY F6_EST, F6_DTARREC
+
+	EndSql
+
+	//::LogConsole(, , , , , "Processa_Guia", GetLastQuery()[2])
+
+	(cAlias)->(dbGoTop())
+
+	Count To nTotReg
+
+	nRegAtu := 0
+
+	(cAlias)->(DBGoTop())
+
+	While (cAlias)->(!Eof())
+
+
+		//SKIPAR Registros de CARGAS que NÃO foram iniciadas AUTOMATICO
+		__cF6DOC := (cAlias)->F6_DOC
+		__cF6SER := (cAlias)->F6_SERIE
+
+		If !Empty((cAlias)->EMPORI) .And. AllTrim((cAlias)->EMPORI) <> AllTrim(CEMPANT)
+			_cTabZZV := "% ZZV"+AllTrim((cAlias)->EMPORI)+"0 %"
+			
+			//_cTabSC9 := "% SC9"+AllTrim((cAlias)->EMPORI)+"0 %"			
+			_cTabSC9 := "% SC9"+AllTrim(CEMPANT)+"0 %"
+			
+		Else
+			_cTabZZV := "% ZZV"+AllTrim(CEMPANT)+"0 %"
+			_cTabSC9 := "% SC9"+AllTrim(CEMPANT)+"0 %"
+		EndIf
+
+		cAliasZZV := GetNextAlias()
+		BeginSql Alias cAliasZZV
+			%NoParser%
+
+			SELECT 1
+			FROM %Exp:_cTabSC9% SC9 ( NOLOCK )
+			JOIN %Exp:_cTabZZV% ZZV ( NOLOCK ) ON
+			ZZV_FILIAL = C9_FILIAL
+			AND ZZV_CARGA = C9_AGREG
+			AND ZZV.ZZV_FIMP <> ''
+			AND ZZV.%NotDel%
+
+			WHERE
+
+			SC9.C9_FILIAL = %XFILIAL:SC9%
+			AND SC9.C9_NFISCAL = %Exp:__cF6DOC%
+			AND SC9.C9_SERIENF = %Exp:__cF6SER%		
+			AND SC9.%NotDel%
+
+		EndSql
+
+		(cAliasZZV)->(DbGoTop())
+		If (cAliasZZV)->(Eof())
+
+			(cAlias)->(dbSkip())
+			loop
+
+		EndIf
+		//FIM >>>SKIPAR
+
+
+		cTime := Time()
+		nRegAtu++
+		cStatusTSS := ""
+
+		//::LogConsole((cAlias)->F6_DOC, (cAlias)->F6_SERIE, (cAlias)->F6_NUMERO, , , "Processa_Guia",)
+
+		If ::MonitoraNFe((cAlias)->F6_SERIE, (cAlias)->F6_DOC, (cAlias)->F6_EST, (cAlias)->F6_NUMERO)
+
+			If Empty((cAlias)->F6_IDTSS)
+
+				cStatusTSS := ::Envia_Atualiza_Guia((cAlias)->F6_DOC, (cAlias)->F6_SERIE, (cAlias)->F6_NUMERO, (cAlias)->F6_NUMERO, (cAlias)->F6_EST, (cAlias)->F6_CDBARRA)
+
+			Else
+
+				aRetGNRE := ::MonitoraGNRe((cAlias)->F6_NUMERO, (cAlias)->F6_NUMERO, (cAlias)->F6_EST, @cAviso)
+
+				If Empty(aRetGNRE[1][2]) .Or. "Rejei" $ aRetGNRE[1][5]
+
+					::LimpaSF6((cAlias)->R_E_C_N_O_)
+
+					cStatusTSS := ::Envia_Atualiza_Guia((cAlias)->F6_DOC, (cAlias)->F6_SERIE, (cAlias)->F6_NUMERO, (cAlias)->F6_NUMERO, (cAlias)->F6_EST, (cAlias)->F6_CDBARRA)
+
+				ElseIf aRetGNRE[1][5] $ "Autorizado"
+
+					cStatusTSS := aRetGNRE[1][5]
+
+				EndIf
+
+			EndIf
+
+			::LogConsole((cAlias)->F6_DOC, (cAlias)->F6_SERIE, (cAlias)->F6_EST + (cAlias)->F6_NUMERO, cTime, ,"Processa_Guia", PadR(If(Empty(cStatusTSS), "Retorno desconhecido", cStatusTSS), 24, ".") + AllTrim(cValToChar(nRegAtu)) + "/" + AllTrim(cValToChar(nTotReg)))
+
+		EndIf
+
+		(cAlias)->(dbSkip())
+
+	EndDo
+
+	(cAlias)->(DBcloseArea())
+
+Return()
+
+Method Envia_Atualiza_Guia(cNota, cSerie, cNumeroDe, cNumeroAte, cEst, cBar) Class TGnreTransmissao
+
+	Local cRetGNRE		:= ""
+	Local aRetGNRE		:= {}
+	Local nX			:= 0
+	Local cAviso		:= ""
+	Local cStatusTSS	:= ""
+	Local cTime			:= Time()
+
+	cRetGNRE := ::Transmite_Guia(cNumeroDe, cNumeroAte, cEst, cBar, @cAviso)
+
+	aRetGNRE := ::MonitoraGNRe(cNumeroDe, cNumeroAte, cEst, @cAviso)
+
+	If ValType(aRetGNRE) == "A"
+
+		cStatusTSS := aRetGNRE[1][5]
+
+	EndIf
+
+	If !Empty(@cAviso)
+
+		::LogConsole(cNota, cSerie, cEst + cNumeroDe, , , "Envia_Atualiza_Guia", "@cAviso - " + @cAviso)
+
+	EndIf
+
+Return(cStatusTSS)
+
+Method MonitoraNFe(cSerie, cNota, cEst, cNumDe) Class TGnreTransmissao
+
+	Local aNotas 	:= { cSerie, cNota, cNota }
+	Local aRetorno	:= {}
+	Local cAviso 	:= ""
+	Local lRet		:= .F.
+	
+	Default cEst	:= ""
+	Default cNumDe	:= ""
+	
+	aRetorno := ProcMonitorDoc(::cIdEnt, ::cUrl, aNotas, 1, "", .F., @cAviso)
+
+	If Len(aRetorno) == 0
+
+		::LogConsole(cNota, cSerie, cEst + cNumDe, , , "MonitoraNFe", "Nota ainda nao esta autorizada!")
+
+	ElseIf !(aRetorno[1, 5] $ "100")
+
+		::LogConsole(cNota, cSerie, cEst + cNumDe, , , "MonitoraNFe", aRetorno[1, 9])
+
+	Elseif aRetorno[1, 5] $ "100"
+
+		lRet := .T.
+
+	EndIf
+
+Return(lRet)
+
+Method LimpaSF6(nRecnoSF6) Class TGnreTransmissao
+
+	Local cIDTSS		:= ""
+
+	Default nRecnoSF6	:= 0
+
+	DBSelectArea("SF6")
+	SF6->(DBSetOrder(1))
+
+	SF6->(DBGoto(nRecnoSF6))
+
+	If SF6->(Recno()) == nRecnoSF6
+
+		cIDTSS := SF6->F6_IDTSS
+
+		RecLock("SF6", .F.)
+		SF6->F6_GNREWS	:= ""
+		SF6->F6_CDBARRA := ""
+		SF6->F6_IDTSS 	:= ""
+		SF6->F6_RECIBO 	:= ""
+		SF6->F6_NUMCTRL := ""
+		SF6->F6_DTPAGTO := dDataBase
+		SF6->F6_DTVENC 	:= dDataBase
+		SF6->(MsUnLock())
+
+		If ::lRejeita
+
+			::RejeitaGNReSPED201(cIDTSS)
+
+		Else
+
+			::ApagaGNReSPED201(cIDTSS)
+
+		EndIf
+
+	Else
+
+		::LogConsole(, , , , , "LimpaSF6", "Não encontrei o SF6 RECNO = " + cValToChar(nRecnoSF6))
+
+	EndIf
+
+Return()
+
+Method ApagaGNReSPED201(cIDTSS) Class TGnreTransmissao
+
+	Local nRetorno	:= 0
+	Local cQuery		:= ""
+	Local cBanco_		:= GetNewPar("MV_YBDGNRE", "DADOSFACILE")
+
+	Default cIDTSS	:= ""
+
+	cQuery := " UPDATE 	" + AllTrim(cBanco_) + ".dbo.SPED201 "
+	cQuery += " SET		D_E_L_E_T_ = '*', "
+	cQuery += " 		 	R_E_C_D_E_L_ = R_E_C_N_O_ "
+	cQuery += " WHERE 	ID = '" + cIDTSS + "'"
+	cQuery += "        	AND D_E_L_E_T_ = ' ' "
+
+	//::LogConsole(, , , , , "ApagaGNReSPED201", cQuery)
+
+	nRetorno := TcSqlExec(cQuery)
+
+	If nRetorno < 0
+
+		::LogConsole(, , , , , "ApagaGNReSPED201", TCSQLError())
+
+	Endif
+
+Return()
+
+Method RejeitaGNReSPED201(cIDTSS) Class TGnreTransmissao
+
+	Local nRetorno	:= 0
+	Local cQuery		:= ""
+	Local cBanco_		:= GetNewPar("MV_YBDGNRE", "DADOSFACILE")
+
+	Default cIDTSS	:= ""
+
+	cQuery := " UPDATE 	" + AllTrim(cBanco_) + ".dbo.SPED201 "
+	cQuery += " SET		STATUS = 4 "
+	cQuery += " WHERE 	ID = '" + cIDTSS + "'"
+	cQuery += "        	AND D_E_L_E_T_ = ' ' "
+
+	//::LogConsole(, , , , , "ApagaGNReSPED201", cQuery)
+
+	nRetorno := TcSqlExec(cQuery)
+
+	If nRetorno < 0
+
+		::LogConsole(, , , , , "ApagaGNReSPED201", TCSQLError())
+
+	Endif
+
+Return()
+
+Method Transmite_Guia(cDocIni, cDocFim, cEst, cCodBar, cAviso) Class TGnreTransmissao
+
+	Local cRetGNRE	:= ""
+	Local aRetGNRE	:= {}
+
+	cUf := cEst
+
+	cRetGNRE := StaticCall(FISA095, GnreTrans, cDocIni, cDocFim, cAmbiente)
+
+Return(cRetGNRE)
+
+Method IsUFWS(cEmp, cFil, cUFDest) Class TGnreTransmissao
+
+	Local lRet		:= .F.
+
+	Default cUFDest := ""
+
+	::LoadParGnre(cEmp, cFil)
+
+	If !Empty(::cUFWSOn)
+
+		If cUFDest $ ::cUFWSOn
+
+			lRet := .T.
+
+		EndIf
+
+	EndIf
+
+Return(lRet)
+
+Method LoadParGnre(cEmp, cFil) Class TGnreTransmissao
+
+	Local aAreaSM0	:= SM0->(GetArea())
+	Local aAreaSX6	:= SX6->(GetArea())
+	Local aAreaCLO	:= CLO->(GetArea())
+	Local aAreaF0L	:= F0L->(GetArea())
+	Local cEmpBck	:= cEmpAnt
+	Local cFilBck	:= cFilAnt
+
+	Default cEmp := cEmpAnt
+	Default cFil := cFilAnt
+
+	cEmpAnt := cEmp
+	cFilAnt := cFil
+
+	SX6->(DbCloseArea())
+	CLO->(DbCloseArea())
+	F0L->(DbCloseArea())
+
+	SM0->(DbSetOrder(1))
+	SM0->(DbSeek(cEmpAnt + cFilAnt))
+
+	DBSelectArea("SX6")
+	DBSelectArea("CLO")
+	DBSelectArea("F0L")
+
+	::cUFSubTrib	:= ""
+
+	::cUFWSOn		:= StrTran(GetNewPar("MV_UFGNWS",""), "/", "','")
+
+	aScan(StrToKarr(GetSubTrib(), "/"), {|x| ::cUFSubTrib += If(Empty(::cUFSubTrib),"","/") + SubStr(x, 1, 2) })
+
+	::cUFSubTrib	:= "%" + FormatIn(::cUFSubTrib, "/") + "%"
+
+	::cUFWSOn		:= "%" + FormatIn(::cUFWSOn, "/") + "%"
+
+	cEmpAnt := cEmpBck
+	cFilAnt := cFilBck
+
+	RestArea(aAreaSM0)
+	RestArea(aAreaSX6)
+	RestArea(aAreaCLO)
+	RestArea(aAreaF0L)
+
+Return()
+
+Method IsUFSubTrib(cEmp, cFil, cUFDest) Class TGnreTransmissao
+
+	Local lRet		:= .F.
+
+	Default cUFDest := ""
+
+	::LoadParGnre(cEmp, cFil)
+
+	If !Empty(::cUFSubTrib) 
+
+		If cUFDest $ ::cUFSubTrib
+
+			lRet := .T.
+
+		EndIf
+
+	EndIf
+
+Return(lRet)
+
+Method MonitoraGNRe(cDocIni, cDocFim, cEst, cAviso, cSerie, cDoc, lRetMsg) Class TGnreTransmissao
+
+	Local aRetGNRE := {}
+	Local xRet := ""
+	Local aErro := {}
+	
+	Default cAviso := ""
+	Default cDoc := ""
+	Default cSerie := ""
+	Default lRetMsg := .F.
+
+	If !Empty(cDocIni) .And. !Empty(cDocFim)
+
+		cUf := cEst
+
+		aRetGNRE := StaticCall(FISA095, GetListBox, ::cUrl, cDocIni, cDocFim, cAmbiente, @aErro)
+
+		If lRetMsg
+
+			If Len(aErro) > 0
+			
+				aRetGNRE[1][5] += " - " + aErro[1][2]
+			
+			EndIf
+			
+			xRet := aRetGNRE[1][5]
+
+		Else
+			
+			If Len(aErro) > 0
+			
+				aRetGNRE[1][5] += " - " + aErro[1][2]
+			
+			EndIf
+			
+			xRet := aRetGNRE
+
+		EndIf
+
+	EndIf
+
+Return(xRet)
+
+Method LogConsole(cNota, cSerie, cNumIcm, cTimeIni, cTimeFim, cMethod, cTexto) Class TGnreTransmissao
+
+	Default cNota		:= ""
+	Default cSerie	:= ""
+	Default cNumIcm	:= ""
+	Default cTimeIni	:= Time()
+	Default cTimeFim	:= Time()
+	Default cMethod	:= ""
+	Default cTexto	:= ""
+
+	Conout("[" + cEmpAnt + cFilAnt + "] - [" + PadR(cMethod, 22, ".") + "] - [Inicio: " + cTimeIni + " - Fim: " + cTimeFim + "] - [Tempo: " + ElapTime(cTimeIni, cTimeFim) + "]" + If(Empty(cNota) .And. Empty(cNumIcm), "", " - [" + PadR("NF: " + cNota+"-"+cSerie, 17) + "] - [" + PadR(cNumIcm, 14) + "]") + If(Empty(cTexto), "", " - [" + AllTrim(cTexto) + "]"))
+
+Return()

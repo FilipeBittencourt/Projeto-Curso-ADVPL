@@ -1,0 +1,585 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "TOPCONN.CH"
+
+/*/{Protheus.doc} TBizagiIntegracaoSolicitCompra
+@author Wlysses Cerqueira (Facile)
+@since 05/02/2020  
+@project 24427
+@version 1.0
+@description 
+@type function
+/*/
+
+User Function BIPROCSC()
+
+    Local oObj := Nil
+
+    //RpcSetEnv("01", "01")
+
+    oObj := TBizagiIntegracaoSolicitCompra():New()
+
+    oObj:Processa()
+
+    //RpcClearEnv()
+
+Return()
+
+Class TBizagiIntegracaoSolicitCompra From LongClassName
+
+    Data aErro
+    Data cEmail
+
+    Public Method New() Constructor
+    Public Method Processa()
+
+    // Feito via ExecAuto
+    Public Method ExecSC(cQry)
+
+    Public Method ValidateSC(aCabec, aItens)
+    Public Method Status(cStatus, nId, cLog, cNumSC1)
+    Public Method GetErrorLog()
+    Public Method Ordem()
+    Public Method LogMail()
+
+EndClass
+
+Method New(lJob) Class TBizagiIntegracaoSolicitCompra
+
+    ::aErro:= {}
+    ::cEmail := U_GetBiaPar("MV_EMAILINTBIZSOL", "sistemas.ti@biancogres.com.br")
+
+Return(Self)
+
+Method Processa() Class TBizagiIntegracaoSolicitCompra
+
+    Local nNumBizagi := ""
+
+    Local aID := {}
+    Local aCabec := {}
+    Local aItens := {}
+    Local aLinha := {}
+
+    Local cQry := GetNextAlias()
+    Local cSQL := ""
+
+    cSQL := " SELECT * "
+    cSQL += " FROM dbo.BZINTEGRACAO_SOLCOMP A "
+    cSQL += " WHERE A.SC_EMPRESA  = " + ValToSql(cEmpAnt)
+    cSQL += " AND A.SC_FILIAL     = " + ValToSql(cFilAnt)
+    cSQL += " AND A.STATUS        = 'A' " // E=Erro; P=Processado; A=Aguard. Processamento
+
+    // Tratamento para caso seja alterado algum STATUS de apenas um item do pedido
+    // Nao pode processar apenas um item, e sim o pedido com todos os itens.
+    cSQL += " AND NOT EXISTS  "
+    cSQL += " ( "
+    cSQL += "     SELECT * "
+    cSQL += "     FROM dbo.BZINTEGRACAO_SOLCOMP B "
+    cSQL += "     WHERE B.SC_EMPRESA  = A.SC_EMPRESA "
+    cSQL += "     AND B.SC_FILIAL     = A.SC_FILIAL "
+    cSQL += "     AND B.SC_YBIZAGI    = A.SC_YBIZAGI "
+    cSQL += "     AND B.STATUS        <> 'A' "
+    cSQL += " ) "
+
+    cSQL += " ORDER BY SC_EMPRESA, SC_FILIAL, SC_YBIZAGI, SC_ITEM "
+
+    TcQuery cSQL New Alias (cQry)
+
+    DBSelectArea("SB1")
+    SB1->(dbSetOrder(1))
+
+    While !(cQry)->(EOF())
+
+        aID := {}
+        aCabec := {}
+        aItens := {}
+        aLinha := {}
+
+        nNumBizagi  := (cQry)->SC_YBIZAGI
+
+        aAdd(aCabec, { "C1_FILIAL"   , cFilAnt                                  })
+        aadd(aCabec, { "C1_NUM"      , ""                                       }) // Sera preenchido depois que validado!
+        aadd(aCabec, { "C1_SOLICIT"  , UPPER((cQry)->SC_SOLICIT)                })
+        aadd(aCabec, { "C1_EMISSAO"  , STOD((cQry)->SC_EMISSAO)                 })
+        aadd(aCabec, { "C1_FILENT"   , cFilAnt                                  })
+
+        While !(cQry)->(EOF()) .And. (cQry)->SC_YBIZAGI == nNumBizagi
+            
+            aLinha := {}
+
+            SB1->(dbSeek(xFilial("SB1") + (cQry)->SC_PRODUTO))
+
+            aAdd(aID, {(cQry)->ID, nNumBizagi})
+
+            aAdd(aLinha, { "C1_ITEM",   (cQry)->SC_ITEM                , Nil })
+            aAdd(aLinha, { "C1_PRODUTO", AllTrim((cQry)->SC_PRODUTO)   , Nil })
+
+            If Substr(AllTrim((cQry)->SC_PRODUTO), 1, 3) == '306'
+
+                aAdd(aLinha, { "C1_DESCRI",  Upper(AllTrim((cQry)->SC_DESCRI)) , Nil })
+
+            Else
+
+                aAdd(aLinha, { "C1_DESCRI",  AllTrim(SB1->B1_DESC)     , Nil })
+
+            EndIf
+
+            aAdd(aLinha, { "C1_UM",    (cQry)->SC_UM                   , Nil })
+            aAdd(aLinha, { "C1_QUANT",  (cQry)->SC_QUANT               , Nil })
+
+            If (cQry)->SC_YFORNEC != Nil
+
+                aAdd(aLinha, { "C1_YFORNEC", Upper((cQry)->SC_YFORNEC) , Nil })
+
+            EndIf
+
+            aAdd(aLinha, { "C1_YSI",   (cQry)->SC_YSI                  , Nil })
+
+            If !Empty((cQry)->SC_SEGUM)
+
+                aAdd(aLinha, { "C1_SEGUM",  (cQry)->SC_SEGUM           , Nil })
+
+            Else
+
+                aAdd(aLinha, { "C1_SEGUM",  (cQry)->SC_UM              , Nil })
+
+            EndIf
+
+            aAdd(aLinha, { "C1_QTSEGUM", ConvUm((cQry)->SC_PRODUTO, (cQry)->SC_QUANT, 0, 2) , Nil })
+
+            If (cQry)->SC_YOBS != Nil
+
+                aAdd(aLinha, { "C1_YOBS",   Upper((cQry)->SC_YOBS)     , Nil })
+
+            EndIf
+
+            aAdd(aLinha, { "C1_YTAG",   (cQry)->SC_YTAG                , Nil })
+            aAdd(aLinha, { "C1_QTDORIG", (cQry)->SC_QUANT               , Nil })
+            aAdd(aLinha, { "C1_YAPLIC",  IIF(EMPTY((cQry)->SC_YAPLIC),"0",(cQry)->SC_YAPLIC)  , Nil })
+            aAdd(aLinha, { "C1_YANX", (cQry)->SC_YANX                   , Nil })
+            aAdd(aLinha, { "C1_IMPORT", IIF(!Empty((cQry)->SC_IMPORT), IIF((cQry)->SC_IMPORT == '1' .Or. (cQry)->SC_IMPORT == 'S' .Or. UPPER((cQry)->SC_IMPORT) == 'TRUE', 'S', 'N' ), 'N'  ) , Nil })
+            aAdd(aLinha, { "C1_COTACAO", IIF(!Empty((cQry)->SC_IMPORT), IIF((cQry)->SC_IMPORT == '1' .Or. (cQry)->SC_IMPORT == 'S' .Or. UPPER((cQry)->SC_IMPORT) == 'TRUE', 'IMPORT', '' ), ''  )	 , Nil })
+            aAdd(aLinha, { "C1_APROV",  "L"                             , Nil })
+            aAdd(aLinha, { "C1_YMAT",   (cQry)->SC_YMAT                 , Nil })
+            aAdd(aLinha, { "C1_YSOLEMP", (cQry)->SC_YSOLEMP             , Nil })
+
+            aAdd(aLinha, { "C1_YSTATUS", (cQry)->SC_YSTATUS             , Nil }) // N=Normal;U=Urgente;E=Emergencia;P=Parada
+            aAdd(aLinha, { "C1_DATPRF",  STOD((cQry)->SC_DATPRF)        , Nil })
+            aAdd(aLinha, { "C1_YINDSUG", (cQry)->SC_YINDSUG             , Nil })
+            aAdd(aLinha, { "C1_YATSERV", IIF(UPPER((cQry)->SC_YATSERV) == "TRUE","S","N") , Nil })
+            aAdd(aLinha, { "C1_YDRIVER", IIF((cQry)->SC_YDRIVER == Nil,'',IIF(EMPTY((cQry)->SC_YDRIVER),"",(cQry)->SC_YDRIVER)) , Nil })
+
+            If !Empty((cQry)->SC_YCONTR) .And. AllTrim((cQry)->SC_YCONTR) != '000000'
+
+                aAdd(aLinha, { "C1_YCONTR",  (cQry)->SC_YCONTR          , Nil })
+
+            EndIf
+
+            If !Empty((cQry)->SC_YMELHOR) .And. AllTrim((cQry)->SC_YMELHOR) != '000000'
+
+                aAdd(aLinha, { "C1_YMELHOR", (cQry)->SC_YMELHOR         , Nil })
+
+            EndIf
+
+            aAdd(aLinha, { "C1_LOCAL",  (cQry)->SC_LOCAL               , Nil })
+            aAdd(aLinha, { "C1_YGRUPO",  SB1->B1_GRUPO                  , Nil })
+
+            If ((cQry)->SC_CONTA != "00000000" )
+
+                aAdd(aLinha, { "C1_CONTA",  (cQry)->SC_CONTA           , Nil })
+
+            ElseIf SubStr((cQry)->SC_CLVL, 1, 1) $  "1_2_4_8" .And. !Empty(SB1->B1_YCTRADM)
+
+                aAdd(aLinha, { "C1_CONTA",  SB1->B1_YCTRADM            , Nil })
+
+            ElseIf SubStr((cQry)->SC_CLVL, 1, 1) == "3" .And. !Empty(SB1->B1_YCTRIND) .And. SB1->B1_TIPO <> "PI"
+
+                aAdd(aLinha, { "C1_CONTA",  SB1->B1_YCTRIND            , Nil })
+
+            Else
+
+                aAdd(aLinha, { "C1_CONTA",  SB1->B1_CONTA              , Nil })
+
+            EndIf
+
+            aAdd(aLinha, { "C1_CC",  Posicione("CTH",1,XFILIAL("CTH") + alltrim((cQry)->SC_CLVL),"CTH_YCC") , Nil })
+            aAdd(aLinha, { "C1_CLVL", (cQry)->SC_CLVL         , Nil })
+
+            If !Empty((cQry)->SC_ITEMCTA) .And. AllTrim((cQry)->SC_ITEMCTA) != '0000'
+
+                aAdd(aLinha, { "C1_ITEMCTA", (cQry)->SC_ITEMCTA         , Nil })
+
+            EndIf
+
+            aAdd(aLinha, { "C1_QTDORIG", (cQry)->SC_QUANT               , Nil })
+            aAdd(aLinha, { "C1_YDTINCB", Date()                         , Nil })
+            aAdd(aLinha, { "C1_YDATHOR", Subst((cQry)->SC_YDATHOR,7,4) + Subst((cQry)->SC_YDATHOR,4,2) + Subst((cQry)->SC_YDATHOR,1,2) + "-" + Subst((cQry)->SC_YDATHOR,12,5) , Nil })
+            aAdd(aLinha, { "C1_YBIZAGI", AllTrim((cQry)->SC_YBIZAGI)    , Nil })
+
+            If !Empty((cQry)->SC_YSUBITE)
+
+                aAdd(aLinha, { "C1_YSUBITE", AllTrim((cQry)->SC_YSUBITE)     , Nil })
+
+            EndIf
+
+            //aLinha := aClone(::Ordem(aLinha))
+
+            aAdd(aItens, aLinha)
+
+            (cQry)->(DbSkip())
+
+        EndDo
+
+        ::ExecSC(aCabec, aItens, aID)
+
+    EndDo
+
+    (cQry)->(DbCloseArea())
+
+    ::LogMail()
+
+Return()
+
+Method ExecSC(aCabec, aItens, aID) Class TBizagiIntegracaoSolicitCompra
+
+    Local aRet := .F.
+    Local nW := 0
+    Local cProxNum := ""
+    Local nPosNum := aScan(aCabec, { |x| AllTrim(x[1]) == "C1_NUM" })
+
+    Default aCabec := {}
+    Default aItens := {}
+
+    Private lMsErroAuto     := .F.
+    Private lMsHelpAuto     := .T.
+    Private lAutoErrNoFile  := .T.
+
+    aRet := ::ValidateSC(aCabec, aItens)
+
+    Begin Transaction
+
+        If aRet[1]
+
+            DBSelectArea("SC1")
+            SC1->(dbSetOrder(1))
+
+            cProxNum := GetSXENum("SC1", "C1_NUM")
+
+            While SC1->(DBSeek(xFilial("SC1") + cProxNum))
+
+                ConfirmSX8()
+
+                cProxNum := GetSXENum("SC1", "C1_NUM")
+
+            EndDo
+
+            aCabec[nPosNum][2] := cProxNum
+
+            SetFunName("MATA110")
+
+            MSExecAuto({|x,y| Mata110(x,y)}, aCabec, aItens, 3, .F., .T.)
+
+            If lMsErroAuto
+
+                DisarmTransaction() // Deixar antes do metodo ::Status!
+
+                RollBackSx8()
+
+                For nW := 1 To Len(aID)
+
+                    ::Status("E", aID[nW][1], Varinfo( "", GETAUTOGRLOG() ), aID[nW][2])
+
+                Next nW
+
+            Else
+
+                ConfirmSX8()
+
+                For nW := 1 To Len(aID)
+
+                    ::Status("P", aID[nW][1], "", cProxNum)
+
+                Next nW
+
+            EndIf
+
+        Else
+
+            For nW := 1 To Len(aID)
+
+                ::Status("E", aID[nW][1], aRet[2], aID[nW][2])
+
+            Next nW
+
+        EndIf
+
+    End Transaction
+
+Return(lMsErroAuto)
+
+Method ValidateSC(aCabec, aItens) Class TBizagiIntegracaoSolicitCompra
+
+    Local aRet       := {.T., ""}
+    Local nW         := 0
+    Local nPosProd   := 0
+    Local nPosDescri := 0
+    Local nPosNumBiz := 0
+    Local lNumBizagi := .T.
+    Local cQry2      := ""
+    Local cSQL2      := ""
+
+    DBSelectArea("SB1")
+    SB1->(dbSetOrder(1))
+
+    For nW := 1 To Len(aItens)
+
+        nPosProd   := aScan(aItens[nW], { |x| AllTrim(x[1]) == "C1_PRODUTO" })
+        nPosDescri := aScan(aItens[nW], { |x| AllTrim(x[1]) == "C1_DESCRI" })
+        nPosNumBiz := aScan(aItens[nW], { |x| AllTrim(x[1]) == "C1_YBIZAGI" })
+
+        If !SB1->(dbSeek(xFilial("SB1") + aItens[nW][nPosProd][2]))
+
+            aRet[1] := .F.
+
+            aRet[2] += "Produto: " + aItens[nW][nPosProd][2] + " não existe na base!" + CRLF
+
+        EndIf
+
+        If Substr(AllTrim(aItens[nW][nPosProd][2]), 1, 3) == '306'
+
+            If Empty(AllTrim(aItens[nW][nPosDescri][2]))
+
+                aRet[1] := .F.
+
+                aRet[2] += "Produto: " + aItens[nW][nPosProd][2] + " está sem descrição!" + CRLF
+
+            EndIf
+
+        EndIf
+
+        If lNumBizagi
+
+            cQry2 := GetNextAlias()
+
+            cSQL2 := " SELECT C1_NUM "
+            cSQL2 += " FROM " + RetSqlName("SC1")
+            cSQL2 += " WHERE C1_YBIZAGI = " + ValToSql(aItens[nW][nPosNumBiz][2])
+            cSQL2 += " AND D_E_L_E_T_ = '' "
+
+            TCQUERY cSQL2 Alias (cQry2) NEW
+
+            If !(cQry2)->(EOF())
+
+                lNumBizagi := .F.
+
+                aRet[1] := .F.
+
+                aRet[2] += "Solicitação Bizagi: " + aItens[nW][nPosNumBiz][2] + " ja existe no protheus na SC: " + (cQry2)->C1_NUM + CRLF
+
+            EndIf
+
+            (cQry2)->(DbCloseArea())
+
+        EndIf
+
+    Next nW
+
+Return(aRet)
+
+Method Status(cStatus, nId, cLog, cNumSC1) Class TBizagiIntegracaoSolicitCompra
+
+    Local lRet := .T.
+    Local cSql := ""
+
+    Default cStatus := "" // E=Erro; P=Processado; A=Aguard. Processamento
+    Default cLog    := ""
+    Default cNumSC1 := ""
+    Default nId     := 0
+
+    If cStatus == "E"
+
+        aAdd(::aErro, {cNumSC1, cLog})
+
+    EndIf
+
+    cSql := " UPDATE dbo.BZINTEGRACAO_SOLCOMP SET "
+
+    cSql += " STATUS   = " + ValToSql(cStatus)
+    cSql += " , LOG    = " + ValToSql(cLog)
+    
+    If cStatus == "P"
+
+        cSql += " , SC_NUM = " + ValToSql(cNumSC1)
+    
+    EndIf
+
+    cSql += " , DTINTEGRA = " + ValToSql(DTOS(dDataBase))
+    cSql += " , HRINTEGRA = CONVERT(VARCHAR(8), GETDATE(), 114) "
+
+    cSql += " WHERE ID = " + cValToChar(nId)
+
+    lRet := TcSQLExec(cSql) == 0
+
+    If !lRet
+
+        ConOut("TBizagiIntegracaoSolicitCompra: TCSQLError() -> " + TCSQLError())
+
+    EndIf
+
+Return(lRet)
+
+Method GetErrorLog() Class TBizagiIntegracaoSolicitCompra
+
+    Local cRet := ""
+    Local nX := 1
+    Local aError := GETAUTOGRLOG()
+
+    For nX := 1 To Len(aError)
+
+        cRet += aError[nX] + CRLF
+
+    Next nX
+
+Return(cRet)
+
+Method Ordem(aLinha) Class TBizagiIntegracaoSolicitCompra
+
+    Local nW := 0
+    Local nX := 0
+    Local lRet := .T.
+    Local aLinhaNew := {}
+    Local aObrigat := {}
+    Local aAreaSX3 := SX3->(GetArea())
+
+    DBSelectArea("SX3")
+    SX3->(DBSetOrder(1))
+    SX3->(DBGoTop())
+
+    If SX3->(DBSeek("SC1"))
+
+        While !SX3->(EOF()) .And. SX3->X3_ARQUIVO == "SC1"
+
+            If Subs(Bin2Str(SX3->X3_OBRIGAT),1,1) == "x"
+
+                aAdd(aObrigat, SX3->X3_CAMPO)
+
+            EndIf
+
+            For nW := 1 To Len(aLinha)
+
+                If AllTrim(SX3->X3_CAMPO) == AllTrim(aLinha[nW][1])
+
+                    aAdd(aLinhaNew, aLinha[nW])
+
+                    If Subs(Bin2Str(SX3->X3_OBRIGAT),1,1) == "x" .And. Empty(aLinha[nW][2])
+
+                        ConOut("TBizagiIntegracaoSolicitCompra: Campo " + SX3->X3_CAMPO + " é obrigatório e seu conteúdo está vazio!")
+
+                    EndIf
+
+                EndIf
+
+            Next nW
+
+            SX3->(DBSkip())
+
+        EndDo
+
+    EndIf
+
+    For nW := 1 To Len(aObrigat)
+
+        lRet := .F.
+
+        For nX := 1 To Len(aLinha)
+
+            If AllTrim(aObrigat[nW]) == AllTrim(aLinha[nX][1])
+
+                lRet := .T.
+
+            EndIf
+
+        Next nX
+
+        If !lRet
+
+            ConOut("TBizagiIntegracaoSolicitCompra: Campo " +aObrigat[nW] + " é obrigatório e não esta no ExecAuto!")
+
+        EndIf
+
+    Next nW
+
+    RestArea(aAreaSX3)
+
+Return(aLinhaNew)
+
+Method LogMail() Class TBizagiIntegracaoSolicitCompra
+
+    Local nW    := 0
+    Local lFound := .F.
+    Local cNum := ""
+    Local cHtml := ""
+    Local oMail := TAFMail():New()
+
+    For nW := 1 To Len(::aErro)
+
+        If AllTrim(::aErro[nW][2]) <> AllTrim("<br><pre> -> ARRAY (    0) [...]<br></pre><br>")
+
+            If cNum <> ::aErro[nW][1]
+
+                If !Empty(cNum)
+
+                    cHtml += '</tbody>'
+                    cHtml += '</table>'
+
+                EndIf
+
+                cNum := ::aErro[nW][1]
+
+                cHtml += '<style type="text/css">'
+                cHtml += '.tg  {border-collapse:collapse;border-color:#aaa;border-spacing:0;}'
+                cHtml += '.tg td{background-color:#fff;border-color:#aaa;border-style:solid;border-width:1px;color:#333;'
+                cHtml += '  font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;word-break:normal;}'
+                cHtml += '.tg th{background-color:#f38630;border-color:#aaa;border-style:solid;border-width:1px;color:#fff;'
+                cHtml += '  font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}'
+                cHtml += '.tg .tg-zw5y{border-color:inherit;text-align:center;text-decoration:underline;vertical-align:top}'
+                cHtml += '.tg .tg-0lax{text-align:left;vertical-align:top}'
+                cHtml += '</style>'
+
+                cHtml += '<table width="100%" class="tg">'
+                cHtml += '<thead>'
+                cHtml += '  <tr>'
+                cHtml += '    <th class="tg-zw5y">' + cEmpAnt + cFilAnt + ' - Solicitacao: ' + ::aErro[nW][1] + '</th>'
+                cHtml += '  </tr>'
+                cHtml += '</thead>'
+                cHtml += '<tbody>'
+
+            EndIf
+
+            lFound := .T.
+
+            cHtml += '  <tr>'
+            cHtml += '    <td class="tg-0lax">' + ::aErro[nW][2] + '</td>'
+            cHtml += '  </tr>'
+
+            If nW == Len(::aErro)
+
+                cHtml += '</tbody>'
+                cHtml += '</table>'
+
+            EndIf
+
+        EndIf
+
+    Next nW
+
+    If lFound
+
+        oMail:cTo := ::cEmail
+        oMail:cSubject := "TBizagiIntegracaoSolicitCompra - Inconsistencias"
+        oMail:cBody := cHtml
+
+        oMail:Send()
+
+    EndIf
+
+Return()

@@ -1,0 +1,1630 @@
+#INCLUDE "TOTVS.CH"
+#INCLUDE "TBICONN.CH"
+#INCLUDE "TOPCONN.CH"
+
+/*
+##############################################################################################################
+# CLASSE.....: TMDFeAutomatico
+# AUTOR......: WLYSSES CERQUEIRA (FACILE)
+# DATA.......: 12/09/2019
+# DESCRICAO..:
+##############################################################################################################
+# ALTERACAO..:
+# AUTOR......:
+# MOTIVO.....:
+#
+##############################################################################################################
+*/
+
+#DEFINE TRANSMITIDO 		'1'
+#DEFINE NAO_TRANSMITIDO 	'2'
+#DEFINE AUTORIZADO			'3'
+#DEFINE NAO_AUTORIZADO		'4'
+#DEFINE CANCELADO			'5'
+#DEFINE ENCERRADO			'6'
+
+#DEFINE EVENAOREALIZADO	    '1'
+#DEFINE EVEREALIZADO		'2'
+#DEFINE EVEVINCULADO		'3'
+#DEFINE EVENAOVINCULADO	    '4'
+
+#DEFINE P_EST				1
+#DEFINE P_SERIE_MDF			2
+#DEFINE P_NUM_MDF			3
+#DEFINE P_CARGA				4
+#DEFINE P_VALID				5
+#DEFINE P_TOT_NF_07			6
+#DEFINE P_TOT_NF_01			7
+#DEFINE P_ARRAY_NOTAS		8
+
+#DEFINE N_SERIE				1
+#DEFINE N_DOC				2
+#DEFINE N_SERIE_MDF			3
+#DEFINE N_NUM_MDF			4
+#DEFINE N_RECNO_SF2			5
+
+User Function JOBMDFE(aParam)
+
+	Local oBj
+
+	oBj := TMDFeAutomatico():New(.F.)
+
+	oBj:PercorreFiliais()
+
+	FreeObj(oBj)
+
+Return()
+
+User Function EJOBMDFE(aParam)
+
+	Local oBj_ 			:= Nil
+	Local _oSemaforo	:= Nil
+
+	Private cUF			:= ""
+	Private cIdEnt		:= ""
+	Private cAmbiente	:= ""
+	Private cUrl		:= ""
+	Private cModalidade := ""
+	Private cVersao         := ""
+	Private cHoraVeraoMdfe  := ""
+	Private cHorarioMdfe    := ""
+	Private cRecomendacaooLote := ""
+
+	RPCSetType(3)
+
+	RpcSetEnv(aParam[1], aParam[2],,,"FAT")
+
+	PTInternal(1,"U_EJOBMDFE|"+aParam[1]+"|"+aParam[2]+"|")
+
+	U_GravaPZ2(0,"CC0","EJOBMDFE","INICIO","EMP:"+CEMPANT,"MNT",CUSERNAME)
+
+	_oSemaforo	:=	tBiaSemaforo():New()
+
+	_oSemaforo:cGrupo := "MDFE"
+
+	If _oSemaforo:GeraSemaforo("JOB - EJOBMDFE")
+
+		If U_GETBIAPAR("BIA_FATAUTO", .T. , aParam[1], aParam[2])
+
+			oBj_ := TMDFeAutomatico():New(.T.)
+
+			oBj_:Processa()
+
+		Else
+
+			ConOut("EJOBMDFE ==> Cancelado/Desligado[BIA_FATAUTO] - " + Time()+" => Empresa: "+aParam[1]+" Filial: "+aParam[2])
+
+		EndIf
+
+		_oSemaforo:LiberaSemaforo()
+
+	EndIf
+
+	U_GravaPZ2(0,"CC0","EJOBMDFE","FIM","EMP:"+CEMPANT,"MNT",CUSERNAME)
+
+	FreeObj(oBj_)
+
+	RpcClearEnv()
+
+Return()
+
+User Function EJOBMDFX(aParam)
+
+	Local oBj_			:= Nil
+	Local _oSemaforo	:= Nil
+
+	RPCSetType(3)
+
+	RpcSetEnv(aParam[1], aParam[2],,,"FAT")
+
+	Private cUF			:= ""
+	Private cIdEnt		:= ""
+	Private cAmbiente	:= ""
+	Private cUrl		:= ""
+	Private cModalidade := ""
+	Private cVersao         := ""
+	Private cHoraVeraoMdfe  := ""
+	Private cHorarioMdfe    := ""
+	Private lUsaColab		:= UsaColaboracao("5")
+	Private cEntSai			:= "1"
+	Private cNfeFil			:= "2-Não"
+
+	PTInternal(1,"U_EJOBMDFX|"+aParam[1]+"|"+aParam[2]+"|")
+
+	U_GravaPZ2(0,"CC0","EJOBMDFX","INICIO","EMP:"+CEMPANT,"MNT",CUSERNAME)
+
+	_oSemaforo	:=	tBiaSemaforo():New()
+
+	_oSemaforo:cGrupo := "MDFE"
+
+	If _oSemaforo:GeraSemaforo("JOB - EJOBMDFX")
+
+		oBj_ := TMDFeAutomatico():New(.T.)
+
+		oBj_:Processa(.T.)
+
+		_oSemaforo:LiberaSemaforo()
+
+	EndIf
+
+	U_GravaPZ2(0,"CC0","EJOBMDFX","FIM","EMP:"+CEMPANT,"MNT",CUSERNAME)
+
+	FreeObj(oBj_)
+
+	RpcClearEnv()
+
+Return()
+
+	Class TMDFeAutomatico From LongClassName
+
+		Public Data lEnabled
+		Public Data aFiliais
+		Public Data cIdEnt
+		Public Data cUrl
+		Public Data cAmbiente
+		Public Data cModalidade
+		Public Data cSerieDefault
+
+		Public Method New(lJob) Constructor // Metodo construtor
+		Public Method Load() // Carrega as variaveis de controle
+		Public Method LoadFiliais() // Carrega as filiais do sigamat
+		Public Method PercorreFiliais() // Coloque neste metodo todas suas startJobs
+		Public Method ExisteFuncaoEmProcessamento(cFuncProc, cEmp, cFil) // Verifica se as user functions da MDFe ja estao rodando
+
+		Public Method Processa(lEncerra) // Metodo que chama todos metodos secundarios
+		Public Method CreateMDFe(cSerie_, cDoc_, cUfDest_, aNotas_)
+		Public Method EncerrarMDFe()
+		Public Method Processa_MDFe() // Transmissao da guia, gera SPED201 e atualiza as guias com data D-1
+		Public Method ValidArray(aNotas, aNotasItem)
+		Public Method ExisteNovaCarga(cVeic, cCarga, cEmissao, cNumMDFe, cSerieMdfe)
+		Public Method Transmite_Guia(cSerie, cNotaIni, cNotaFim) // Envia a guia para SPED201
+		Public Method GetUfPercurso(cUfOri, cUfDest)
+		Public Method MonitoraNFe(cSerie, cNota, cEst) // Monitora a NF-e para que preencha a chave da nota
+		Public Method MonitoraMDFe(cSerie, cNotaIni, cNotaFim, lRetMsg) // Monitora a MDF-e
+		Public Method IsValidMDFe(cEmp, cFil, cUFDest, cCgcCli, cUFTransp, cCgcTransp)
+		Public Method IsFaltaRota(cEmp, cFil, cUFDest)
+		Public Method IsCargaCompleta(cEmpOri, cCarga)
+		Public Method AlreadyDeleted(cChaveNfe)
+		Public Method LogConsole(cNota, cSerie, cTimeIni, cTimeFim, cMethod, cTexto)
+
+	EndClass
+
+Method New(lJob) Class TMDFeAutomatico
+
+	Default lJob := .F.
+
+	::Load(lJob)
+
+Return(Self)
+
+Method Load(lJob) Class TMDFeAutomatico
+
+	Local aFilAux	:= {}
+	Local nW		 := 0
+	Local cError := ""
+
+	Default lJob := .F.
+
+	::aFiliais := {}
+
+	If !lJob
+
+		aFilAux := ::LoadFiliais()
+
+		For nW := 1 To Len(aFilAux)
+
+			If ::ExisteFuncaoEmProcessamento("U_EJOBMDFE|U_JOBMDFE", aFilAux[nW, 1], aFilAux[nW, 2])
+
+				aAdd(::aFiliais, {aFilAux[nW, 1], aFilAux[nW, 2]})
+
+			EndIf
+
+		Next nW
+
+	Else
+
+		cURL        := PadR(GetNewPar("MV_SPEDURL", "http://"), 250)
+		cIdEnt      := RetIdEnti(UsaColaboracao("5"))
+		aConfig     := GetCfgMdfe(@cError)
+
+		cAmbiente       := aConfig[1]
+		cModalidade     := aConfig[2]
+		cVersao         := aConfig[5]
+		cHoraVeraoMdfe  := aConfig[6]
+		cHorarioMdfe    := aConfig[7]
+
+		::cUrl          := cUrl
+		::cIdEnt        := cIdEnt
+		::cAmbiente     := cAmbiente
+		::cModalidade   := cModalidade
+		::cSerieDefault := If(cEmpAnt == "07", "5", "3")
+
+	EndIf
+
+Return()
+
+Method LoadFiliais() Class TMDFeAutomatico
+
+	Local aFil := {}
+
+	aAdd( aFil , { "01", "01" } )
+	aAdd( aFil , { "07", "01" } )
+
+	//Isso abaixo é muito legal mas desnecessário e pode comprometer performance
+	// abre o sigamat.emp
+	/*If ( Select( "SM0" ) == 0 )
+
+	Private CARQEMP := "sigamat.emp"
+
+	OpenSM0()
+
+EndIf
+
+	// le o sigamat.emp
+	SM0->( DBGoTop() )
+
+While SM0->( !EOF() )
+
+	If SM0->( !Deleted() )
+
+		If AllTrim(SM0->M0_CODIGO) + AllTrim(SM0->M0_CODFIL) $ "0701"
+
+	aAdd( aFil , { SM0->M0_CODIGO, SM0->M0_CODFIL } )
+
+		EndIf
+
+	EndIf
+
+	SM0->( DBSkip( ) )
+
+EndDo
+
+	SM0->(DBcloseArea())
+	*/
+
+Return(aFil)
+
+Method PercorreFiliais() Class TMDFeAutomatico
+
+	Local nI			:= 0
+
+	For nI := 1 To Len(::aFiliais)
+
+		// Coloque aqui todas suas StartJobs
+		//StartJob( "U_EJOBMDFE", GetEnvServer(), .F., {::aFiliais[nI, 1], ::aFiliais[nI, 2]} )
+		//StartJob( "U_EJOBMDFX", GetEnvServer(), .F., {::aFiliais[nI, 1], ::aFiliais[nI, 2]} )
+
+		U_EJOBMDFX({::aFiliais[nI, 1], ::aFiliais[nI, 2]}) // Encerrar MDF-e
+		U_EJOBMDFE({::aFiliais[nI, 1], ::aFiliais[nI, 2]}) // Enviar MDF-e
+
+	Next nI
+
+Return()
+
+Method Processa(lEncerra) Class TMDFeAutomatico
+
+	Local cTime := Time()
+
+	Default lEncerra := .F.
+
+	::LogConsole(, , cTime, , "Processa", "Iniciando...")
+
+	If lEncerra
+
+		::EncerrarMDFe()
+
+	Else
+
+		::Processa_MDFe()
+
+	EndIf
+
+	::LogConsole(, , cTime, , "Processa", "Terminando...")
+
+Return()
+
+Method ExisteFuncaoEmProcessamento(cFuncProc, cEmp, cFil) Class TMDFeAutomatico
+
+	Local aThreads	:= GetUserInfoArray()
+	Local nW		:= 0
+	Local lRet		:= .T.
+
+	ConOut("Inicio: ExisteFuncaoEmProcessamento() -> " + cEmp + cFil + " - " + cFuncProc + " - " + cValToChar(ThreadId()))
+
+	For nW := 1 To Len(aThreads)
+
+		If aThreads[nW, 5] $ cFuncProc .And. aThreads[nW, 3] <> ThreadId()
+
+			If Empty(aThreads[nW, 11])
+
+				ConOut("Nao vou executar: ExisteFuncaoEmProcessamento() -> " + cEmp + cFil + " - " + cFuncProc + " - " + cValToChar(ThreadId()))
+
+				lRet := .F.
+
+				Exit
+
+			ElseIf cFuncProc+"|"+cEmp+"|"+cFil+"|" $ aThreads[nW, 11]
+
+				ConOut("Nao vou executar: ExisteFuncaoEmProcessamento() -> " + cEmp + cFil + " - " + cFuncProc + " - " + cValToChar(ThreadId()))
+
+				lRet := .F.
+
+				Exit
+
+			EndIf
+
+		EndIf
+
+	Next nW
+
+	If lRet
+
+		ConOut("Vou executar: ExisteFuncaoEmProcessamento() -> " + cEmp + cFil + " - " + cFuncProc + " - " + cValToChar(ThreadId()))
+
+	EndIf
+
+	ConOut("Fim: ExisteFuncaoEmProcessamento() -> " + cEmp + cFil + " - " + cFuncProc + " - " + cValToChar(ThreadId()))
+
+Return(lRet)
+
+Method Processa_MDFe() Class TMDFeAutomatico
+
+	Local cAlias 	:= Nil
+	Local aRetorno 	:= {}
+	Local aNotas 	:= {}
+	Local nW 		:= 0
+	Local lRet 		:= .T.
+	Local oObj		:= Nil
+	Local nTot 		:= 0
+	Local aArea 	:= GetArea()
+
+	PTInternal(1,"U_EJOBMDFE|"+cEmpAnt+"|"+cFilAnt+"|Processa_MDFe")
+
+	oObj := TFaturamentoMonitor():New()
+
+	cAlias := GetNextAlias()
+
+	BeginSql ALIAS cAlias
+
+		%NoParser%
+
+		SELECT  DISTINCT SF2.R_E_C_N_O_, F2_CHVNFE, A1_CGC, A1_EST, A4_CGC, A4_EST, C9_AGREG, EMPORI = C5_YEMPPED, A1_COD_MUN,
+
+	CASE WHEN %Exp:cEmpAnt% = '01' THEN
+				
+			(
+				SELECT	COUNT(*) 
+				FROM	SF2010 SF2A 
+				WHERE SF2A.D_E_L_E_T_ = ''
+				AND SubString(SF2A.F2_YAGREG, 5, 4) = C9_AGREG AND SF2A.F2_FILIAL = '01' AND SF2A.F2_VEICUL1 <> ''
+			)
+		
+	ELSE 0 END TOT_01_MDFE,
+
+	CASE WHEN %Exp:cEmpAnt% = '07' THEN
+				
+			(
+				SELECT	COUNT(*) 
+				FROM	SF2010 SF2A 
+				WHERE SF2A.D_E_L_E_T_ = '' 
+				AND SF2A.F2_CLIENTE = '010064'
+				AND SubString(SF2A.F2_YAGREG, 5, 4) = C9_AGREG AND SF2A.F2_FILIAL = '01'
+			)
+		
+	ELSE 0 END TOT_01,
+
+	CASE WHEN %Exp:cEmpAnt% = '07' THEN
+
+			(
+				SELECT	COUNT(*) 
+				FROM	SF2070 SF2B 
+				WHERE SF2B.D_E_L_E_T_ = '' 
+				AND SubString(SF2B.F2_YAGREG, 5, 4) = C9_AGREG AND SF2B.F2_FILIAL = '01' AND SF2B.F2_VEICUL1 <> ''
+			)
+
+	ELSE 0 END TOT_07,
+
+		(
+			SELECT COUNT(*)
+			FROM (
+				SELECT A.C9_FILIAL, A.C9_AGREG, A.C9_PEDIDO, COUNT(*) TOT
+				FROM dbo.SC9010 A (NOLOCK)
+				WHERE A.C9_AGREG = SC9.C9_AGREG
+				AND A.D_E_L_E_T_ = ''
+				GROUP BY A.C9_FILIAL, A.C9_AGREG, A.C9_PEDIDO
+			) TAB_SC9
+		) TOT_01_SC9,
+
+		(
+			SELECT COUNT(*) 
+			FROM (
+				SELECT A.F2_FILIAL, A.F2_YAGREG, A.F2_DOC, A.F2_SERIE, COUNT(*) TOT
+				FROM dbo.SF2010 A (NOLOCK)
+				WHERE A.F2_YAGREG = SF2.F2_YAGREG
+				AND A.D_E_L_E_T_ = ''
+				GROUP BY A.F2_FILIAL, A.F2_YAGREG, A.F2_DOC, A.F2_SERIE
+			) TAB_SF2
+		) TOT_01_SF2,
+
+		(
+			SELECT COUNT(*) 
+			FROM (
+				SELECT A.D2_FILIAL, B.F2_YAGREG, A.D2_DOC, A.D2_SERIE, COUNT(*) TOT
+				FROM dbo.SD2010 A (NOLOCK)
+				JOIN dbo.SF2010 B (NOLOCK) ON (A.D2_FILIAL = B.F2_FILIAL AND A.D2_DOC = B.F2_DOC AND A.D2_SERIE = B.F2_SERIE AND A.D2_CLIENTE = B.F2_CLIENTE AND A.D2_LOJA = B.F2_LOJA AND B.D_E_L_E_T_ = '')
+				WHERE B.F2_YAGREG = SF2.F2_YAGREG
+				AND A.D_E_L_E_T_ = ''
+				GROUP BY A.D2_FILIAL, B.F2_YAGREG, A.D2_DOC, A.D2_SERIE
+			) TAB_SD2
+		) TOT_01_SD2
+
+		FROM    %table:SF2% SF2 ( NOLOCK )
+		JOIN 	%table:SC9% SC9 ( NOLOCK ) ON 
+		(
+			C9_FILIAL          	= F2_FILIAL
+			AND C9_NFISCAL     	= F2_DOC
+			AND C9_SERIENF     	= F2_SERIE
+			AND C9_CLIENTE     	= F2_CLIENTE
+			AND C9_LOJA        	= F2_LOJA
+			AND SC9.D_E_L_E_T_ 	= ''
+		)
+		JOIN %table:SC5% SC5 ( NOLOCK ) ON
+		(
+			C5_FILIAL 			= C9_FILIAL
+			AND C5_NUM 			= C9_PEDIDO
+			AND SC5.D_E_L_E_T_	= ''
+		)
+		JOIN 	%table:SA1% SA1 ( NOLOCK ) ON 
+		(
+			A1_FILIAL			= ''
+			AND A1_COD			= F2_CLIENTE
+			AND A1_LOJA			= F2_LOJA
+			AND SA1.D_E_L_E_T_	= ''
+		)
+		JOIN 	%table:SA4% SA4 ( NOLOCK ) ON 
+		(
+			A4_FILIAL			= %Exp:xFilial("SA4")%
+			AND A4_COD         	= SF2.F2_TRANSP
+			AND SA4.D_E_L_E_T_	= ''
+		)
+		WHERE   SF2.F2_FILIAL   = %Exp:xFilial("SF2")%
+		AND SF2.F2_EMISSAO  	>= %Exp:DToS(dDataBase - 2)%
+		AND SF2.F2_VEICUL1  	<> ''
+
+		AND NOT EXISTS
+		(
+			SELECT  NULL
+			FROM    %table:CC0% CC0 ( NOLOCK )
+			WHERE CC0.CC0_FILIAL    = %Exp:xFilial("CC0")%
+			AND CC0_SERMDF = F2_SERMDF
+			AND CC0_NUMMDF = F2_NUMMDF
+			AND CC0_STATUS IN ('3', '5', '6')
+			AND CC0.D_E_L_E_T_ = ''
+		)
+
+		/*
+		regra:
+		-caso cliente pessoa fisica (cpf) e municipio do cliente nao for da serra;
+		ou
+		-municipio do cliente nao for da serra e cgc do transp igual ao cgc do cliente;
+		*/
+		AND 
+		( 
+			( LEN(REPLACE(REPLACE(REPLACE(A4_CGC, '.', ''), '/', ''), '-', '')) = 11 AND A1_EST + A1_COD_MUN <> %Exp:SM0->M0_ESTENT + SUbStr(SM0->M0_CODMUN, 3, 5)% ) 
+			OR 
+			( A1_EST + A1_COD_MUN <> %Exp:SM0->M0_ESTENT + SUbStr(SM0->M0_CODMUN, 3, 5)% AND REPLACE(REPLACE(REPLACE(A4_CGC, '.', ''), '/', ''), '-', '') = REPLACE(REPLACE(REPLACE(A1_CGC, '.', ''), '/', ''), '-', '') )
+		)
+
+		AND SF2.D_E_L_E_T_ = ''
+
+	   	AND 
+		(
+			(
+				%Exp:cEmpAnt% = '07' 
+				AND
+				ISNULL(
+						(
+							SELECT COUNT(*) 
+							FROM SF2010 SF2A 
+							WHERE SF2A.D_E_L_E_T_ = '' 
+							AND SF2A.F2_CLIENTE = '010064'
+							AND SubString(SF2A.F2_YAGREG, 5, 4) = C9_AGREG AND SF2A.F2_FILIAL = '01' 
+						), 1) 
+						
+						=
+				
+				ISNULL(
+						(
+							SELECT COUNT(*) 
+							FROM SF2070 SF2B 
+							WHERE SF2B.D_E_L_E_T_ = '' 
+							AND SubString(SF2B.F2_YAGREG, 5, 4) = C9_AGREG AND SF2B.F2_FILIAL = '01' AND SF2B.F2_VEICUL1 <> ''
+						), 2)
+			)
+			OR 
+			(
+				%Exp:cEmpAnt% <> '07'
+			)
+	    )
+
+		AND NOT EXISTS 
+		(
+			SELECT TOP 1 * 
+			FROM 
+			(
+				SELECT 	SC9X.C9_AGREG, NFBIA = SC9X.C9_NFISCAL, 
+						OK = CASE WHEN SC9X.C9_NFISCAL <> '' THEN 'S' ELSE 'N' END 
+				FROM 	%TABLE:SC9% SC9X (NOLOCK)
+				WHERE SC9X.C9_FILIAL = '01' 
+				AND SC9X.C9_AGREG = SC9.C9_AGREG
+				AND SC9X.D_E_L_E_T_ = ''
+			) TCARGA 
+			WHERE OK = 'N'
+		)
+
+	EndSql
+
+	(cAlias)->(dbGoTop())
+
+	ConOut( "ThreadId: " + cValToChar(ThreadId()) + " - " + GetLastQuery()[2])
+
+	While (cAlias)->(!EOF())
+
+		aArea := (cAlias)->(GetArea())
+
+		lRet := .T.
+
+		nTot++
+
+		SF2->(DBGoto((cAlias)->R_E_C_N_O_))
+
+		If lRet
+
+			lRet := ::IsValidMDFe(cEmpAnt, cFilAnt, SF2->F2_EST, (cAlias)->A1_CGC, (cAlias)->A4_EST, (cAlias)->A4_CGC, (cAlias)->A1_COD_MUN)
+
+		EndIf
+
+		ConOut( "ThreadId: " + cValToChar(ThreadId()) + " - " +  (cAlias)->C9_AGREG + " - TOT BIANCO......: " + cValToChar((cAlias)->TOT_01) + " - TOT LM: " + cValToChar((cAlias)->TOT_07) + " - RECNO: " + cValToChar((cAlias)->R_E_C_N_O_))
+		ConOut( "ThreadId: " + cValToChar(ThreadId()) + " - " +  (cAlias)->C9_AGREG + " - TOT BIANCO_MDFE.: " + cValToChar((cAlias)->TOT_01_MDFE) + " - RECNO: " + cValToChar((cAlias)->R_E_C_N_O_))
+
+		If (cAlias)->TOT_01 <> (cAlias)->TOT_07 .And. cEmpAnt == "07"
+
+			lRet := .F.
+
+		EndIf
+
+		If !SF2->(DbRLock((cAlias)->R_E_C_N_O_))
+
+			ConOut( "ThreadId: " + cValToChar(ThreadId()) + " - " + 'Record locked by another user. ' + TcInternal(53))
+
+			lRet := .F.
+
+		EndIf
+
+		If lRet .And. ::IsFaltaRota(cEmpAnt, cFilAnt, SF2->F2_EST)
+
+			lRet := .F.
+
+			::LogConsole(SF2->F2_NUMMDF, SF2->F2_SERMDF, , , "MonitoraMDFe", "Falta cadastro UF fronteira")
+
+		EndIf
+
+		If lRet
+
+			lRet := ::MonitoraNFe(SF2->F2_SERIE, SF2->F2_DOC, SF2->F2_EST)
+
+		EndIf
+
+		If lRet
+
+			lRet := ::IsCargaCompleta((cAlias)->EMPORI, (cAlias)->C9_AGREG)
+
+		EndIf
+
+		If lRet
+
+			lRet := !::AlreadyDeleted((cAlias)->F2_CHVNFE)
+
+		EndIf
+
+		If lRet .And. cEmpAnt == "01" .And. SF2->F2_CLIENTE <> "010064"
+
+			ConOut( "ThreadId: " + cValToChar(ThreadId()) + " - " +  (cAlias)->C9_AGREG + " - TOT BIANCO_SC9: " + cValToChar((cAlias)->TOT_01_SC9) + " - RECNO: " + cValToChar((cAlias)->R_E_C_N_O_))
+			ConOut( "ThreadId: " + cValToChar(ThreadId()) + " - " +  (cAlias)->C9_AGREG + " - TOT BIANCO_SD2: " + cValToChar((cAlias)->TOT_01_SD2) + " - RECNO: " + cValToChar((cAlias)->R_E_C_N_O_))
+			ConOut( "ThreadId: " + cValToChar(ThreadId()) + " - " +  (cAlias)->C9_AGREG + " - TOT BIANCO_SF2: " + cValToChar((cAlias)->TOT_01_SF2) + " - RECNO: " + cValToChar((cAlias)->R_E_C_N_O_))
+
+			If (cAlias)->TOT_01_SC9 > 0 .And. (cAlias)->TOT_01_SD2 > 0 .And. (cAlias)->TOT_01_SF2 > 0
+
+				If (cAlias)->TOT_01_SC9 <> (cAlias)->TOT_01_SD2
+
+					lRet := .F.
+
+				EndIf
+
+				If (cAlias)->TOT_01_SC9 <> (cAlias)->TOT_01_SF2
+
+					lRet := .F.
+
+				EndIf
+
+				If (cAlias)->TOT_01_SD2 <> (cAlias)->TOT_01_SF2
+
+					lRet := .F.
+
+				EndIf
+
+			Else
+
+				lRet := .F.
+
+			EndIf
+
+		EndIf
+
+		nPos := aScan(aNotas, {|x| x[P_EST] + x[P_SERIE_MDF] + x[P_NUM_MDF] + x[P_CARGA] == SF2->F2_EST + SF2->F2_SERMDF + SF2->F2_NUMMDF + (cAlias)->C9_AGREG})
+
+		If nPos == 0
+
+			aAdd(aNotas, {SF2->F2_EST, SF2->F2_SERMDF, SF2->F2_NUMMDF, (cAlias)->C9_AGREG, lRet, (cAlias)->TOT_07, (cAlias)->TOT_01_MDFE, {}})
+
+			aAdd(aNotas[Len(aNotas)][P_ARRAY_NOTAS], {SF2->F2_SERIE, SF2->F2_DOC, SF2->F2_SERMDF, SF2->F2_NUMMDF, SF2->(Recno())})
+
+		Else
+
+			If aNotas[nPos][P_VALID] // So atualizo se tiver verdadeiro
+
+				aNotas[nPos][P_VALID] := lRet
+
+			EndIf
+
+			aAdd(aNotas[nPos][P_ARRAY_NOTAS], {SF2->F2_SERIE, SF2->F2_DOC, SF2->F2_SERMDF, SF2->F2_NUMMDF, SF2->(Recno())})
+
+		EndIf
+
+		If aArea[3] <> (cAlias)->(Recno())
+
+			::LogConsole("", "", , , "ThreadId: " + cValToChar(ThreadId()) + " - O CURSOR DO CALIAS FOI DESPOSICIONADO." + " - aArea[3]: [" + cValToChar(aArea[3]) + "] (cAlias)->(Recno()): " +  " [" + cValToChar((cAlias)->(Recno())) + "]")
+
+		EndIf
+
+		RestArea(aArea)
+
+		(cAlias)->(DBSkip())
+
+	EndDo
+
+	(cAlias)->(DBcloseArea())
+
+	::LogConsole("", "", , , "ThreadId: " + cValToChar(ThreadId()) + " - " + cValToChar(nTot) + " registros - MDFE Array aNotas")
+	varinfo( "", aNotas )
+	::LogConsole("", "", , , "ThreadId: " + cValToChar(ThreadId()) + " - MDFE Array aNotas")
+
+	For nW := 1 To Len(aNotas)
+
+		//If ( cEmpAnt == "01" .And. aNotas[nW][P_TOT_NF_01] > 0 .And. aNotas[nW][P_TOT_NF_01] == Len(aNotas[nW][P_ARRAY_NOTAS]) ) .Or. ( cEmpAnt == "07" .And. aNotas[nW][P_TOT_NF_07] > 0 .And. aNotas[nW][P_TOT_NF_07] == Len(aNotas[nW][P_ARRAY_NOTAS]) )
+		If ::ValidArray(aNotas, aNotas[nW])
+
+			If aNotas[nW][P_VALID] .And. Empty(aNotas[nW][P_NUM_MDF]) // Inclusao
+
+				::CreateMDFe(aNotas[nW][P_SERIE_MDF], aNotas[nW][P_NUM_MDF], aNotas[nW][P_EST], aNotas[nW][P_ARRAY_NOTAS])
+
+			EndIf
+
+			If aNotas[nW][P_VALID] .And. !Empty(aNotas[nW][P_NUM_MDF]) // Ja incluso
+
+				DBSelectArea("CC0")
+				CC0->(DBSetOrder(1)) // CC0_FILIAL, CC0_SERMDF, CC0_NUMMDF, R_E_C_N_O_, D_E_L_E_T_
+
+				If CC0->(DBSeek(xFilial("CC0") + aNotas[nW][P_SERIE_MDF] + aNotas[nW][P_NUM_MDF]))
+
+					aRetorno := ::MonitoraMDFe(aNotas[nW][P_SERIE_MDF], aNotas[nW][P_NUM_MDF], aNotas[nW][P_NUM_MDF])
+
+					If Len(aRetorno) == 0
+
+						//1-Transmitidos
+						//2-Não Transmitidos
+						//3-Autorizados
+						//4-Não Autorizados
+						//5-Cancelados
+						//6-Encerrados
+
+						If CC0->CC0_STATUS == "2"
+
+							::Transmite_Guia(aNotas[nW][P_SERIE_MDF], aNotas[nW][P_NUM_MDF], aNotas[nW][P_NUM_MDF])
+
+						EndIf
+
+					Else
+
+						StaticCall(SPEDMDFE, UpdCC0, aRetorno)
+
+						If ( CC0->CC0_STATUS $ "2" .And. Len(aRetorno[1][9]) == 0 ) //.Or. ( CC0->CC0_STATUS == "4" .And. 'Rejei' $ aRetorno[1][6])
+
+							If ::CreateMDFe(aNotas[nW][P_SERIE_MDF], aNotas[nW][P_NUM_MDF], aNotas[nW][P_EST], aNotas[nW][P_ARRAY_NOTAS])
+
+								::Transmite_Guia(aNotas[nW][P_SERIE_MDF], aNotas[nW][P_NUM_MDF], aNotas[nW][P_NUM_MDF])
+
+							EndIf
+
+						EndIf
+
+						::LogConsole(aNotas[nW][P_NUM_MDF], aNotas[nW][P_SERIE_MDF], , , "MonitoraMDFe", aRetorno[1][8])
+
+					EndIf
+
+				Else
+
+					::CreateMDFe(aNotas[nW][P_SERIE_MDF], aNotas[nW][P_NUM_MDF], aNotas[nW][P_EST], aNotas[nW][P_ARRAY_NOTAS])
+
+				EndIf
+
+			EndIf
+
+		EndIf
+
+	Next nW
+
+Return()
+
+Method ValidArray(aNotas, aNotasItem) Class TMDFeAutomatico
+
+	Local lRet		:= .F.
+	Local nX		:= 0
+	Local nTotUf	:= 0
+	Local nTotCarga	:= 0
+
+	For nX := 1 To Len(aNotas)
+
+		If aNotas[nX][P_CARGA] == aNotasItem[P_CARGA] .And. aNotas[nX][P_EST] == aNotasItem[P_EST]
+
+			nTotUf += Len(aNotas[nX][P_ARRAY_NOTAS])
+
+		ElseIf aNotas[nX][P_CARGA] == aNotasItem[P_CARGA]
+
+			nTotCarga += Len(aNotas[nX][P_ARRAY_NOTAS])
+
+		EndIf
+
+	Next nX
+
+	If cEmpAnt == "01" .And. nTotUf + nTotCarga == aNotasItem[P_TOT_NF_01]
+
+		lRet := .T.
+
+	ElseIf cEmpAnt == "07" .And. nTotUf + nTotCarga == aNotasItem[P_TOT_NF_07]
+
+		lRet := .T.
+
+	EndIf
+
+Return(lRet)
+
+Method MonitoraNFe(cSerie, cNota, cEst) Class TMDFeAutomatico
+
+	Local aNotas 	:= { cSerie, cNota, cNota }
+	Local aRetorno	:= {}
+	Local cAviso 	:= ""
+	Local lRet		:= .F.
+
+	aRetorno := ProcMonitorDoc(::cIdEnt, ::cUrl, aNotas, 1, "", .F., @cAviso)
+
+	If Len(aRetorno) == 0
+
+		::LogConsole(cNota, cSerie, , , "MonitoraNFe", "Nota ainda nao esta autorizada!")
+
+	ElseIf !(aRetorno[1, 5] $ "100")
+
+		::LogConsole(cNota, cSerie, , , "MonitoraNFe", aRetorno[1, 9])
+
+	Elseif aRetorno[1, 5] $ "100"
+
+		lRet := .T.
+
+	EndIf
+
+Return(lRet)
+
+Method CreateMDFe(cSerie_, cDoc_, cUfDest_, aNotas_) Class TMDFeAutomatico
+
+	Local lRet 			:= .T.
+	Local cXML			:= ""
+	Local lErpHverao	:= GetNewPar("MV_HVERAO",.F.)   		  // Verifica se o Local fisico do servidor está em Horário de Verão  .F. Não / .T. Sim
+	Local aDados		:= {}
+	Local lUpdate		:= !Empty(cDoc_)
+	Local nW			:= 0
+
+	Default cSerie_     := ""
+	Default cDoc_       := ""
+
+	Private cNumero		:= If(Empty(cDoc_), "", cDoc_)
+	Private cSerie 		:= If(Empty(cDoc_), ::cSerieDefault, cSerie_)
+	Private dDataEmi	:= Date()
+	Private cTime		:= FwTimeUF(Upper(Left(LTrim(SM0->M0_ESTENT),2)),,lErpHVerao)[2]
+	Private cTZD 		:= Substr(Alltrim(FwGMTByUF(Upper(Left(LTrim(SM0->M0_ESTENT),2)),lErpHverao)), 1, 6 )//***Define TZD***
+
+	Private oGetDPerc   := MsNewGetDados():New()
+	Private oGetDLacre  := MsNewGetDados():New()
+	Private oGetDAut    := MsNewGetDados():New()
+	Private oGetDMun    := MsNewGetDados():New()
+
+	Private cMark	    := GetMark()
+	Private lBtnFiltro  := .F.
+
+	Private oMsSel 		:= Nil
+	Private oGerMDFe 	:= Nil
+	Private oListDocs	:= Nil
+
+	Private cNumMDF		:= Space(TamSx3('CC0_NUMMDF')[1])			//Variavel que contem o numero do MDFE
+	Private cSerMDF		:= Space(TamSx3('CC0_SERMDF')[1])			//Variavel que contem a Serie do MDFE
+	Private cUFCarr		:= Space(TamSx3('CC0_UFINI')[1])			//Variavel que contem a UF de Carregamento
+	Private cUFDesc		:= Space(TamSx3('CC0_UFFIM')[1])			//Variavel que contem a UF de Descarregamento
+	Private cUFCarrAux	:= Space(TamSx3('CC0_UFINI')[1])			//Variavel Auxiliar (para controle alteracoes) que contem a UF de Carregamento
+	Private cUFDescAux	:= Space(TamSx3('CC0_UFFIM')[1])			//Variavel Auxiliar (para controle alteracoes) que contem a UF de Descarregamento
+	Private cVTotal		:= Space(TamSx3('CC0_VTOTAL')[1])			//Variavel que contem o valor total da carga/mercadoria
+	Private cVeiculo	:= Space(TamSx3('DA3_COD')[1])				//Variavel que contem
+	Private cVeiculoAux	:= Space(TamSx3('DA3_COD')[1])				//Variavel Auxiliar (para controle alteracoes) que contem o codigo do veiculo
+	Private cCarga		:= Space(TamSx3('DAK_COD')[1])				//Variavel Auxiliar (para controle alteracoes) que contem o codigo da carga
+	Private dDataIniFil	:= CtoD("  /  /  ")							//Variavel Auxiliar que contem a data de inicio para buscar as notas
+	Private dDataFimFil	:= CtoD("  /  /  ")							//Variavel Auxiliar que contem a data de final para buscar as notas
+	Private lLoadParam	:= .F.										//Variavel Auxiliar (para controle alteracoes) que verifica se realiza a buscar as notas
+	Private nQtNFe		:= 0										//Variavel que contem a Quantidade total de NFe
+	Private nVTotal		:= 0										//Variavel que contem a Valor total de notas
+	Private nPBruto		:= 0										//Variavel que contem a Peso total do MDF-e
+	Private nRQtNFe  	:= 0										//ArmaArmazena o valor da Quantidadepra para ser restaurado quando houver troca de filial
+	Private nRVTotal 	:= 0										//ArmaArmazena o valor total para ser restaurado quando houver troca de filial
+	Private nRPBruto 	:= 0										//ArmaArmazena o valor do Peso para ser restaurado quando houver troca de filial
+	Private cInfCpl		:= Space(5000)								//Variavel que contem as informacoes complementares do Manifesto
+	Private cInfFsc		:= Space(2000)								//Variavel que contem as informacoes fiscais do Manifesto
+	Private aCmpBrow 	:= {}
+	Private aMun		:= {}
+	Private cIndTRB1 	:= ""
+	Private cIndTRB2 	:= ""
+	Private cArqTRB	 	:= ""
+	Private cEntSai		:= ""
+	Private cStatFil 	:= ""
+	Private cSerFil		:= ""
+	Private cNfeFil		:= "2-Não"
+
+	oGetDPerc:aCols     := ::GetUfPercurso(SM0->M0_ESTENT, cUfDest_)
+	oGetDLacre:aCols    := {}
+	oGetDAut:aCols      := {}
+	oGetDMun:aCols      := {{SubStr(SM0->M0_CODMUN, 3, 6), SM0->M0_ESTENT, SM0->M0_CIDENT, .F.}}
+
+	dbSelectArea('SA1')
+	SA1->(dbSetOrder(1))
+
+	If Select('TRB') > 0
+
+		StaticCall(SPEDMDFE, CleanTRB, If(lUpdate, 4, 3))
+
+	Else
+
+		StaticCall(SPEDMDFE, CreateTRB)
+
+	EndIf
+
+	For nW:= 1 To Len(aNotas_)
+
+		SF2->(DBGoTo(aNotas_[nW][5]))
+
+		If SF2->F2_TIPO $ "B|D"
+
+			If SA2->(dbSeek(xFilial('SA2') + SF2->F2_CLIENTE + SF2->F2_LOJA))
+
+				cNomCli := SA1->A1_NOME
+
+			EndIf
+
+		Else
+
+			If SA1->(dbSeek(xFilial('SA1') + SF2->F2_CLIENTE + SF2->F2_LOJA))
+
+				cNomCli := SA1->A1_NOME
+
+			EndIf
+
+		EndIf
+
+		If FindFunction("U_XmlMDFeSef")
+
+			cVeiculo    := SF2->F2_VEICUL1
+			cUFCarr     := SM0->M0_ESTENT
+			cUFDesc     := SF2->F2_EST
+
+			nQtNFe++
+			nVTotal     += SF2->F2_VALBRUT
+			nPBruto     += SF2->F2_PBRUTO
+
+			RecLock('TRB', .T.)
+			TRB->TRB_MARCA	:= cMark
+			TRB->TRB_FILIAL := SF2->F2_FILIAL
+			TRB->TRB_SERIE 	:= SF2->F2_SERIE
+			TRB->TRB_DOC 	:= SF2->F2_DOC
+			TRB->TRB_EMISS 	:= SF2->F2_EMISSAO
+			TRB->TRB_CHVNFE := SF2->F2_CHVNFE
+			TRB->TRB_CODMUN := SA1->A1_COD_MUN
+			TRB->TRB_NOMMUN := SA1->A1_MUN
+			TRB->TRB_EST	:= SF2->F2_EST
+			TRB->TRB_CODCLI := SF2->F2_CLIENTE
+			TRB->TRB_LOJCLI := SF2->F2_LOJA
+			TRB->TRB_NOMCLI := cNomCli
+			TRB->TRB_VALTOT := SF2->F2_VALBRUT
+			TRB->TRB_PESBRU := SF2->F2_PBRUTO
+			TRB->TRB_VEICU1 := SF2->F2_VEICUL1
+			TRB->TRB_VEICU2 := SF2->F2_VEICUL2
+			TRB->TRB_VEICU3 := SF2->F2_VEICUL3
+			TRB->TRB_TPNF	:= "S"
+
+			If CC0->(FieldPos("CC0_CARGA")) > 0  //Não está no dicinonário de dados aguardando replica da Issue - LOGTMS01-652
+				//TRB->TRB_CARGA  := cCarga
+			EndIf
+
+			TRB->(MSUnlock())
+
+			If !lUpdate .And. Empty(cNumero)
+
+				ConOut("CreateMDFe ==> Antes - NxtSX5Nota")
+				ConOut("CreateMDFe ==> Serie: "+cvaltochar(cSerie))
+
+				cNumero := NxtSX5Nota(cSerie, .T., SuperGetMV("MV_TPNRNFS"))
+
+				ConOut("CreateMDFe ==> Depois - NxtSX5Nota")
+
+			EndIf
+
+		Else
+
+			MsgInfo("RDMAKE MDFESefaz.prw não encontrado. MDF-e não sera criado.")
+
+			lRet := .F.
+
+		EndIf
+
+	Next nW
+
+	If lRet
+
+		cXML := U_XmlMDFeSef(xFilial('CC0'))[2]
+
+		aAdd(aDados,{"CC0_FILIAL"	,	cFilAnt			})
+		aAdd(aDados,{"CC0_SERMDF"	,	cSerie			})
+		aAdd(aDados,{"CC0_NUMMDF"	,	cNumero			})
+		aAdd(aDados,{"CC0_TPNF"		,	"1" 			})
+		aAdd(aDados,{"CC0_DTEMIS"	,	DtoS (dDataEmi)	})
+		aAdd(aDados,{"CC0_HREMIS"	,	cTime			})
+		aAdd(aDados,{"CC0_UFINI"	,	SM0->M0_ESTENT	})
+		aAdd(aDados,{"CC0_UFFIM"	,	cUfDest_		})
+		aAdd(aDados,{"CC0_QTDNFE"	,	nQtNFe 			})
+		aAdd(aDados,{"CC0_VTOTAL"	,	nVTotal			})
+		aAdd(aDados,{"CC0_STATUS"	, 	NAO_TRANSMITIDO })
+		aAdd(aDados,{"CC0_PESOB"	,	nPBruto			})
+		aAdd(aDados,{"CC0_VEICUL"	,	cVeiculo		})
+		aAdd(aDados,{"CC0_XMLMDF"	,	cXML	        })
+
+		If CC0->(FieldPos("CC0_CARGA")) > 0
+
+			//aAdd(aDados,{"CC0_CARGA"    ,	cCarga         	})
+
+		EndIf
+
+		//Grava Item na CC0
+		If StaticCall(SPEDMDFE, RecInCC0, !lUpdate, aDados)
+
+			For nW:= 1 To Len(aNotas_)
+
+				SF2->(DBGoTo(aNotas_[nW][5]))
+
+				//Atualiza notas na SF2, com o codigo do Manifesto
+				RecLock('SF2',.F.)
+				SF2->F2_SERMDF := cSerie
+				SF2->F2_NUMMDF := cNumero
+				SF2->(MSUnlock())
+
+			Next nW
+
+		Else
+
+			lRet := .F.
+
+		EndIf
+
+	EndIf
+
+Return(lRet)
+
+Method EncerrarMDFe() Class TMDFeAutomatico
+
+	Local cJust := ""
+	Local aTrans := {}
+	Local aList := {}
+	Local cAlias := Nil
+	Local cEvento := "110112"
+	Local aNotas := {}
+	Local nEnvio := 0
+	Local cMsgNOk := ""
+	Local cMsgErro := ""
+	Local cMsg := ""
+	Local cMsgOk := ""
+	Local cErro := ""
+	Local nX
+
+	PTInternal(1,"U_EJOBMDFX|"+cEmpAnt+"|"+cFilAnt+"|EncerrarMDFe")
+
+	cAlias := GetNextAlias()
+
+	BeginSql ALIAS cAlias
+
+		SELECT  DISTINCT CC0.R_E_C_N_O_, CC0_UFFIM, CC0_DTEMIS, CC0_NUMMDF, CC0_SERMDF, CC0_VEICUL, CC0_HREMIS, F2_YAGREG, C9_AGREG, EMPORI = C5_YEMPPED
+		FROM    %table:CC0% CC0 ( NOLOCK )	
+		JOIN	%table:SF2% SF2 ( NOLOCK ) ON
+		(
+			SF2.F2_FILIAL    	= %Exp:xFilial("SF2")%
+			AND F2_SERMDF		= CC0_SERMDF
+			AND F2_NUMMDF		= CC0_NUMMDF
+			AND SF2.D_E_L_E_T_ 	= ''
+		)
+		JOIN 	%table:SC9% SC9 ( NOLOCK ) ON 
+		(
+			C9_FILIAL          	= F2_FILIAL
+			AND C9_NFISCAL     	= F2_DOC
+			AND C9_SERIENF     	= F2_SERIE
+			AND C9_CLIENTE     	= F2_CLIENTE
+			AND C9_LOJA        	= F2_LOJA
+			AND SC9.D_E_L_E_T_ 	= ''
+		)
+		JOIN %table:SC5% SC5 ( NOLOCK ) ON
+		(
+			C5_FILIAL = C9_FILIAL
+			AND C5_NUM = C9_PEDIDO
+			AND SC5.D_E_L_E_T_ = ''
+		)
+		WHERE CC0.CC0_FILIAL    = %Exp:xFilial("CC0")%
+		AND CC0_STATUS 			= '3'
+		AND CC0_DTEMIS			>= '20191101'
+		AND CC0.D_E_L_E_T_ 		= ''
+		ORDER BY CC0.CC0_NUMMDF
+
+	EndSql
+
+	(cAlias)->(dbGoTop())
+
+	While (cAlias)->(!EOF())
+
+		/*
+		If !::IsCargaCompleta((cAlias)->EMPORI, (cAlias)->C9_AGREG)
+
+		(cAlias)->(DBSkip())
+
+		Loop
+
+		EndIf
+		*/
+
+		aTrans := {}
+		aList := {}
+		aNotas := {}
+
+		If ::ExisteNovaCarga((cAlias)->CC0_VEICUL, (cAlias)->F2_YAGREG, (cAlias)->CC0_DTEMIS, (cAlias)->CC0_NUMMDF, (cAlias)->CC0_SERMDF)
+
+			aList := {{"", "", "", "", "", "", .T., (cAlias)->R_E_C_N_O_}}
+
+		ElseIf (cAlias)->CC0_UFFIM $ "BA|RJ|MG"
+
+			If DateWorkDay(STOD((cAlias)->CC0_DTEMIS), dDataBase, .F., .F., .F.) > 2
+
+				aList := {{"", "", "", "", "", "", .T., (cAlias)->R_E_C_N_O_}}
+
+			EndIf
+
+		ElseIf (cAlias)->CC0_UFFIM $ SM0->M0_ESTENT // Intermunicipal
+
+			If STOD((cAlias)->CC0_DTEMIS) < dDataBase .And. Time() > (cAlias)->CC0_HREMIS // 24Hr
+
+				aList := {{"", "", "", "", "", "", .T., (cAlias)->R_E_C_N_O_}}
+
+			EndIf
+
+		Else // Demais estados
+
+			If DateWorkDay(STOD((cAlias)->CC0_DTEMIS), dDataBase, .F., .F., .F.) > 7
+
+				aList := {{"", "", "", "", "", "", .T., (cAlias)->R_E_C_N_O_}}
+
+			EndIf
+
+		EndIf
+
+		//Monta o XML do Evento
+		cXml := '<envEvento>'
+		cXml += '<eventos>'
+
+		For nX := 1 To Len(aList)
+
+			CC0->(DbGoto(aList[nX,8]))
+
+			If lUsaColab
+				// Autorizado ou Nao autorizado (caso o documento for rejeitado podera gerar outro documento)
+				cCondicao := ( CC0->CC0_STATUS == AUTORIZADO .Or. CC0->CC0_STATUS == NAO_AUTORIZADO )
+			Else
+				cCondicao := CC0->CC0_STATUS == AUTORIZADO
+			EndIf
+
+			If cCondicao
+
+				cXml += StaticCall(SPEDMDFE, XmlDetEvento, cEvento,CC0->CC0_CHVMDF,cJust)
+
+				aadd(aTrans,{1,CC0->(RECNO()), CC0->CC0_CHVMDF,CC0->CC0_SERMDF+CC0->CC0_NUMMDF } )
+
+				lEnvEvento := .T.
+
+			Else
+				aadd(aTrans,{3,CC0->(RECNO()), CC0->CC0_CHVMDF,CC0->CC0_SERMDF+CC0->CC0_NUMMDF } )
+			EndIf
+
+			aadd(aNotas,{})
+
+			nX := Len(aNotas)
+
+			aadd(aNotas[nX],CC0->CC0_FILIAL)//[nX][1]
+			aadd(aNotas[nX],CC0->CC0_SERMDF)//[nX][2]
+			aadd(aNotas[nX],CC0->CC0_NUMMDF)//[nX][3]
+			aadd(aNotas[nX],CC0->CC0_DTEMIS)//[nX][4]
+			aadd(aNotas[nX],CC0->CC0_XMLMDF)//[nX][5]
+			aadd(aNotas[nX],CC0->CC0_CHVMDF)//[nX][6]
+			aadd(aNotas[nX],CC0->CC0_PROTOC)//[nX][7]
+
+		Next nx
+
+		cXml += '</eventos>'
+		cXml += '</envEvento>'
+
+		If Len(aList) > 0
+
+			::LogConsole((cAlias)->CC0_NUMMDF, (cAlias)->CC0_SERMDF, , , "MonitoraMDFe", "Encerrando MDF-e")
+
+			//StaticCall(SPEDMDFE, MDFeEvento, aList, "110112")
+
+			// Chamado do metodo e envio
+			oWs:= WsNFeSBra():New()
+			oWs:cUserToken	:= "TOTVS"
+			oWs:cID_ENT		:= cIdEnt
+			oWs:cXML_LOTE	:= cXml
+			oWS:_URL		:= AllTrim(cURL)+"/NFeSBRA.apw"
+
+			If oWs:RemessaEvento()
+				If Type("oWS:oWsRemessaEventoResult:cString") <> "U"
+					If Type("oWS:oWsRemessaEventoResult:cString") <> "A"
+						aRetorno:={oWS:oWsRemessaEventoResult:cString}
+					Else
+						aRetorno:=oWS:oWsRemessaEventoResult:cString
+					EndIf
+
+					For nX:=1  To Len(aTrans)
+						nPos:=aScan(aRetorno,{|X|  Substr(X,9,44) == aTrans[nX][3]})
+						If nPos > 0
+							aTrans[nPos][1] := 2
+							nEnvio++
+						EndIf
+					Next
+					lEnvEvento:= .T.
+				Endif
+			Else
+
+				::LogConsole((cAlias)->CC0_NUMMDF, (cAlias)->CC0_SERMDF, , , "MonitoraMDFe", IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3)))
+
+			Endif
+
+			If lEnvEvento
+				For nX := 1 to len(aTrans)
+					If aTrans[nX][1] == 1
+						cMsgNOk	+= "MDF: "+aTrans[nX][4] + CRLF
+						cMsgNOk	+= cErro
+						StaticCall(SPEDMDFE, MdfAtuEvento, aTrans[nX][2],EVENAOREALIZADO,cEvento)
+					ElseIf aTrans[nX][1] == 2
+						cMsgOk	+= "MDF: "+aTrans[nX][4] + CRLF
+						StaticCall(SPEDMDFE, MdfAtuEvento, aTrans[nX][2],EVEREALIZADO,cEvento)
+					ElseIf aTrans[nX][1] == 3
+						cMsgErro += "MDF: "+aTrans[nX][4] + CRLF
+						cMsgErro += cErro
+					EndIf
+				Next nX
+
+				cMsg := "Resultado da transmissão dos Eventos do MDFe: "+CRLF+CRLF
+				If Len(cMsgOk) > 0
+					If cEvento == "110112"
+						lCleanNF := .T.
+					EndIf
+					cMsg += "MDF-e com evento transmitido com sucesso: " + CRLF+CRLF
+					cMsg += cMsgOk+CRLF
+
+					::LogConsole((cAlias)->CC0_NUMMDF, (cAlias)->CC0_SERMDF, , , "MonitoraMDFe", cMsg)
+
+				EndIf
+
+				If Len(cMsgNOk) > 0
+					cMsg += "MDF-e com problemas na transmissao do evento: " + CRLF+CRLF
+					cMsg += cMsgNOk+CRLF
+					cMsg += IIf( Empty(cErro), cErro , "" )
+
+					::LogConsole((cAlias)->CC0_NUMMDF, (cAlias)->CC0_SERMDF, , , "MonitoraMDFe", cMsg)
+
+				EndIf
+
+				If Len(cMsgErro) > 0
+					cMsg += "MDF-e não autorizados, evento não transmitido: " + CRLF+CRLF
+					cMsg += cMsgErro+CRLF
+					cMsg += IIf( Empty(cErro), cErro , "" )
+
+					::LogConsole((cAlias)->CC0_NUMMDF, (cAlias)->CC0_SERMDF, , , "MonitoraMDFe", cMsg)
+
+				EndIf
+
+				aRetorno := ::MonitoraMDFe((cAlias)->CC0_SERMDF, (cAlias)->CC0_NUMMDF, (cAlias)->CC0_NUMMDF)
+
+				If Len(aRetorno) > 0
+
+					StaticCall(SPEDMDFE, UpdCC0, aRetorno)
+
+					::LogConsole((cAlias)->CC0_SERMDF, (cAlias)->CC0_NUMMDF, , , "MonitoraMDFe", aRetorno[1][6])
+
+				EndIf
+
+			EndIf
+
+		EndIf
+
+		(cAlias)->(DBSkip())
+
+	EndDo
+
+	(cAlias)->(DBcloseArea())
+
+Return()
+
+Method ExisteNovaCarga(cVeic, cCarga, cEmissao, cNumMDFe, cSerieMdfe) Class TMDFeAutomatico
+
+	Local lRet := .F.
+	Local cSQL := ""
+	Local cAliasSF2 := GetNextAlias()
+
+	cSQL := " SELECT COUNT(*) TOT "
+	cSQL += " FROM " + RetSqlName("SF2") + " A ( NOLOCK )
+	cSQL += " WHERE F2_FILIAL	= " + ValToSql(xFilial("SF2"))
+	cSQL += " AND F2_VEICUL1 	= " + ValToSql(cVeic)
+	cSQL += " AND F2_YAGREG    <> " + ValToSql(cCarga)
+	//cSQL += " AND F2_EMISSAO 	= " + ValToSql(cEmissao)
+	cSQL += " AND F2_SERMDF+F2_NUMMDF > " + ValToSql(cSerieMdfe+cNumMDFe)
+	cSQL += " AND D_E_L_E_T_ 	= '' "
+
+	TcQuery cSQL New Alias (cAliasSF2)
+
+	If (cAliasSF2)->TOT > 0
+
+		lRet := .T.
+
+	EndIf
+
+	(cAliasSF2)->(DBcloseArea())
+
+Return(lRet)
+
+Method Transmite_Guia(cSerie, cNotaIni, cNotaFim) Class TMDFeAutomatico
+
+	Local cReTMDFe	:= ""
+	Local aArea		:= GetArea()
+	Local lEnd      := .F.
+
+	//cUf := cEst
+
+	cReTMDFe := MDFeRemes(aArea[1],cSerie,cNotaIni,cNotaFim,cIDEnt,SubStr(cAmbiente,1,1),SubStr(cModalidade,1,1),cVersao,cURL,@lEnd,cHoraVeraoMdfe,cHorarioMdfe)
+
+Return(cReTMDFe)
+
+Method IsCargaCompleta(cEmpOri, cCarga) Class TMDFeAutomatico
+
+	Local lRet 		:= .T.
+	Local cAliasZZV := ""
+	Local _cSQL		:= ""
+	Local _cTabZZV	:= ""
+	Local _cTabZZW	:= ""
+	Local _cTabSC9	:= ""
+
+	Default cEmpOri := ""
+	Default cCarga 	:= ""
+
+	If Empty(cEmpOri) .And. Empty(cCarga)
+		Return(.F.)
+	EndIf
+
+	//SKIPAR Registros de CARGAS que NÃO foram iniciadas AUTOMATICO / NAO ESTAO COMPLESTAS 100% FATURADAS BIANCO e LM
+	::LogConsole(, , Time(), , "Processa_MDFe", "Check Carga Ok: verificando.")
+
+	If !Empty(cEmpOri) .And. AllTrim(cEmpOri) <> AllTrim(CEMPANT)
+		_cTabZZV := "ZZV"+AllTrim(cEmpOri)+"0"
+		_cTabZZW := "ZZW"+AllTrim(cEmpOri)+"0"
+		_cTabSC9 := "SC9"+AllTrim(cEmpOri)+"0"
+	Else
+		_cTabZZV := "ZZV"+AllTrim(CEMPANT)+"0"
+		_cTabZZW := "ZZW"+AllTrim(CEMPANT)+"0"
+		_cTabSC9 := "SC9"+AllTrim(CEMPANT)+"0"
+		cEmpOri  := AllTrim(CEMPANT)
+	EndIf
+
+	cAliasZZV := GetNextAlias()
+
+	_cSQL := " select ZZV_CARGA, NFBIA = C9_NFISCAL, "+CRLF
+	_cSQL += " OK = case "+CRLF
+	_cSQL += " when C9_CLIENTE <> '010064' and C9_NFISCAL <> '' then 'S' "+CRLF
+	_cSQL += " else "+CRLF
+	_cSQL += " case when "+CRLF
+	_cSQL += " (select top 1 C9_NFISCAL from SC9070 C9LM (NOLOCK) where C9LM.C9_FILIAL = '01' "+CRLF
+	_cSQL += " and C9LM.C9_BLINF = '"+cEmpOri+"'+SC9.C9_NFISCAL+SC9.C9_SERIENF+SC9.C9_PEDIDO+SC9.C9_ITEM+SC9.C9_SEQUEN "+CRLF
+	_cSQL += " and D_E_L_E_T_ = '') <> '' then 'S' else 'NOTLM' "+CRLF
+	_cSQL += " end "+CRLF
+	_cSQL += " end "+CRLF
+	_cSQL += " from "+_cTabZZV+" ZZV (NOLOCK) "+CRLF
+	_cSQL += " join "+_cTabZZW+" ZZW (NOLOCK) on ZZW_FILIAL = ZZV_FILIAL and ZZW_CARGA = ZZV_CARGA and ZZW.D_E_L_E_T_ = '' "+CRLF
+	_cSQL += " join "+_cTabSC9+" SC9 (NOLOCK) on C9_FILIAL = ZZW_FILIAL and C9_PEDIDO = ZZW_PEDIDO and C9_ITEM = ZZW_ITEM and C9_SEQUEN = ZZW_SEQUEN and SC9.D_E_L_E_T_='' "+CRLF
+	_cSQL += " where "+CRLF
+	_cSQL += " ZZV_FILIAL = '01' "+CRLF
+	_cSQL += " and ZZV_CARGA = '"+cCarga+"' "+CRLF
+	_cSQL += " and ZZV_FIMP <> '' "+CRLF
+	_cSQL += " and ZZV.D_E_L_E_T_ = '' "+CRLF
+
+	TcQuery _cSQL New Alias (cAliasZZV)
+
+	(cAliasZZV)->(DbGoTop())
+
+	lRet := !(cAliasZZV)->(Eof())
+
+	If lRet
+
+		While !(cAliasZZV)->(Eof())
+
+			If AllTrim((cAliasZZV)->OK) <> "S"
+
+				lRet := .F.
+
+			EndIf
+
+			(cAliasZZV)->(dbSkip())
+
+		EndDo
+
+		If !lRet
+
+			::LogConsole(, , Time(), , "Processa_MDFe", "Check Carga Ok: NOT OK - CARGA "+cCarga+" NAO FATURADA TOTALMENTE")
+
+		EndIf
+
+	Else
+
+		::LogConsole(, , Time(), , "Processa_MDFe", "Check Carga Ok: NOT OK - CARGA "+cCarga+" MANUAL/NAO ENCONTRADA")
+
+	EndIf
+
+	(cAliasZZV)->(DbCloseArea())
+
+	If lRet
+
+		::LogConsole(, , Time(), , "Processa_MDFe", "Check Carga Ok: CARGA "+cCarga+" OK - FATURADA")
+
+	EndIf
+
+Return(lRet)
+
+Method AlreadyDeleted(cChaveNfe) Class TMDFeAutomatico
+
+	Local lRet := .F.
+	Local cSQL := ""
+	Local cAliasZZV := GetNextAlias()
+
+	Default cFil := ""
+	Default cChaveNfe := ""
+
+	cSQL := " SELECT COUNT(*) TOT "
+	cSQL += " FROM " + RetSqlName("CC0") + " CC0 ( NOLOCK )
+	cSQL += " WHERE CC0.CC0_FILIAL = " + ValToSql(xFilial("CC0"))
+	cSQL += " AND ( "
+	cSQL += " 		( CONVERT(VARCHAR(MAX), CONVERT(VARBINARY(MAX), CC0_XMLMDF)) LIKE '%" + cChaveNfe + "%' AND CC0.D_E_L_E_T_ = '*' ) "
+	cSQL += " 		OR "
+	cSQL += " 		( CONVERT(VARCHAR(MAX), CONVERT(VARBINARY(MAX), CC0_XMLMDF)) LIKE '%" + cChaveNfe + "%' AND CC0.CC0_STATUS = '5' ) "
+	cSQL += " 	  ) "
+
+	TcQuery cSQL New Alias (cAliasZZV)
+
+	If (cAliasZZV)->TOT > 0
+
+		lRet := .T.
+
+	EndIf
+
+	(cAliasZZV)->(DbCloseArea())
+
+Return(lRet)
+
+Method IsFaltaRota(cEmp, cFil, cUFDest) Class TMDFeAutomatico
+
+	Local lRet 		:= .F.
+	Local cEmpBck	:= cEmpAnt
+	Local cFilBck	:= cFilAnt
+	Local aAreaSM0	:= SM0->(GetArea())
+
+	cEmpAnt := cEmp
+	cFilAnt := cFil
+
+	SM0->(DbSetOrder(1))
+	SM0->(DbSeek(cEmpAnt + cFilAnt))
+
+	If SM0->M0_ESTENT == "ES"
+
+		If cUFDest <> SM0->M0_ESTENT .And. !cUFDest $ "BA|MG|RJ"
+
+			aPerc := ::GetUfPercurso(SM0->M0_ESTENT, cUFDest)
+
+			If Len(aPerc) > 0
+
+				lRet := .F.
+
+			Else
+
+				lRet := .T.
+
+			EndIf
+
+		EndIf
+
+	Else
+
+		lRet := .F.
+
+	EndIf
+
+	cEmpAnt := cEmpBck
+	cFilAnt := cFilBck
+
+	RestArea(aAreaSM0)
+
+Return(lRet)
+
+Method IsValidMDFe(cEmp, cFil, cUFDest, cCgcCli, cUFTransp, cCgcTransp, cCodMun) Class TMDFeAutomatico
+
+	Local lRet := .F.
+	Local cEmpBck	:= cEmpAnt
+	Local cFilBck	:= cFilAnt
+	Local aAreaSM0	:= SM0->(GetArea())
+
+	cEmpAnt := cEmp
+	cFilAnt := cFil
+
+	SM0->(DbSetOrder(1))
+	SM0->(DbSeek(cEmpAnt + cFilAnt))
+
+	cCgcTransp := AllTrim(Replace(Replace(Replace(cCgcTransp, ".", ""), "/", ""), "-", ""))
+
+	cCgcCli := AllTrim(Replace(Replace(Replace(cCgcCli, ".", ""), "/", ""), "-", ""))
+
+	// SM0->M0_ESTENT + SUbStr(SM0->M0_CODMUN, 3, 5) <> cUFDest + cCodMun
+
+	If Len(cCgcTransp) == 11 .And. SM0->M0_ESTENT + SUbStr(SM0->M0_CODMUN, 3, 5) <> cUFDest + cCodMun
+
+		lRet := .T.
+
+	EndIf
+
+	If SM0->M0_ESTENT + SUbStr(SM0->M0_CODMUN, 3, 5) <> cUFDest + cCodMun .And. AllTrim(cCgcTransp) == AllTrim(cCgcCli)
+
+		lRet := .T.
+
+	EndIf
+
+	cEmpAnt := cEmpBck
+	cFilAnt := cFilBck
+
+	RestArea(aAreaSM0)
+
+Return(lRet)
+
+Method MonitoraMDFe(cSerie, cNotaIni, cNotaFim, lRetMsg) Class TMDFeAutomatico
+
+	Local aRetMDFe := {}
+	Local xRet := ""
+
+	Default lRetMsg := .F.
+
+	//cUf := cEst
+
+	aRetMDFe := StaticCall(SPEDMDFE, MDFeWSMnt, ::cIdEnt, cSerie, cNotaIni, cNotaFim, .T.)
+
+	If Len(aRetMDFe) == 0
+
+		::LogConsole(cNotaIni, cSerie, , , "MonitoraMDFe", "MDFe não transmitida!")
+
+		If lRetMsg
+
+			xRet := "MDFe não transmitida!"
+
+		Else
+
+			xRet := aRetMDFe
+
+		EndIf
+
+	ElseIf !(aRetMDFe[1, 6] $ "100")
+
+		::LogConsole(cNotaIni, cSerie, , , "MonitoraMDFe", aRetMDFe[1, 6])
+
+		If lRetMsg
+
+			xRet := aRetMDFe[1, 6]
+
+		Else
+
+			xRet := aRetMDFe
+
+		EndIf
+
+	Elseif aRetMDFe[1, 5] $ "100"
+
+		If lRetMsg
+
+			xRet := aRetMDFe[1, 6]
+
+		Else
+
+			xRet := .T.
+
+		EndIf
+
+	EndIf
+
+Return(xRet)
+
+Method GetUfPercurso(cUfOri, cUfDest) Class TMDFeAutomatico
+
+	Local aUF := {}
+	Local cAlias := Nil
+
+	Default cUfOri   := ""
+	Default cUfDest   := ""
+
+	cAlias := GetNextAlias()
+
+	BeginSql ALIAS cAlias
+
+		SELECT  *
+		FROM    %table:ZL3% ZL3 ( NOLOCK )
+		WHERE   ZL3.ZL3_FILIAL  = %Exp:xFilial("ZL3")%
+		AND ZL3.ZL3_UFORI   = %Exp:cUfOri%
+		AND ZL3.ZL3_UFDES   = %Exp:cUfDest%
+		AND ZL3.D_E_L_E_T_ = ''
+		ORDER BY ZL3_ROTA
+
+	EndSql
+
+	(cAlias)->(dbGoTop())
+
+	While (cAlias)->(!EOF())
+
+		aAdd(aUF, {(cAlias)->ZL3_UF, .F.})
+
+		(cAlias)->(DBSkip())
+
+	EndDo
+
+	(cAlias)->(DBcloseArea())
+
+Return(aUF)
+
+Method LogConsole(cNota, cSerie, cTimeIni, cTimeFim, cMethod, cTexto) Class TMDFeAutomatico
+
+	Default cNota		:= ""
+	Default cSerie	:= ""
+	Default cTimeIni	:= Time()
+	Default cTimeFim	:= Time()
+	Default cMethod	:= ""
+	Default cTexto	:= ""
+
+	Conout("[" + cEmpAnt + cFilAnt + "] - [" + PadR(cMethod, 22, ".") + "] - [Inicio: " + cTimeIni + " - Fim: " + cTimeFim + "] - [Tempo: " + ElapTime(cTimeIni, cTimeFim) + "]" + If(Empty(cNota), "", " - [" + PadR("NF: " + cNota+"-"+cSerie, 17) + "]") + If(Empty(cTexto), "", " - [" + AllTrim(cTexto) + "]"))
+
+Return()

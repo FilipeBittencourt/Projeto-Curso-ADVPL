@@ -1,0 +1,170 @@
+#INCLUDE "TOTVS.CH"
+#INCLUDE "TOPCONN.CH"
+
+/*/{Protheus.doc} TAutomacaoLog
+@author Fernando Rocha
+@since 23/06/2019
+@project Automação
+@version 1.0
+@description Classe para inclusao de log de procedimentos
+@type class
+/*/
+
+Class TAutomacaoLog From LongClassName
+
+	Public Data cEmp
+	Public Data cFil
+	Public Data cIDProc
+	Public Data cOperac
+	Public Data cMetodo
+	Public Data cTabela
+	Public Data nIDTab
+	Public Data cStatus
+	Public Data dDtIni
+	Public Data cHrIni
+	Public Data dDtFin
+	Public Data cHrFin
+	Public Data cStAPI
+	Public Data cURL
+	Public Data cJsonE
+	Public Data cJsonR
+	Public Data nRecNo
+	Public Data cUser
+	Public Data cEnvWF
+	Public Data cRetOri
+	Public Data cRetMen
+
+	Public Method New() Constructor
+	Public Method SetProperty()
+	Public Method Insert(lAviso)
+	Public Method Update()
+	Public Method Save(lNew, lAviso)
+	Public Method SetConsoleLog()
+
+EndClass
+
+
+Method New() Class TAutomacaoLog
+
+	::SetProperty()
+
+Return()
+
+
+Method SetProperty() Class TAutomacaoLog
+
+	::cEmp := cEmpAnt
+	::cFil := cFilAnt
+	::cIDProc := ""
+	::cOperac := ""
+	::cMetodo := ""
+	::cTabela := ""
+	::nIDTab := 0
+	::cStatus := "0"
+	::dDtIni := dDataBase
+	::cHrIni := Time()
+	::dDtFin := dDataBase
+	::cHrFin := Time()
+	::cStAPI := "0"
+	::cURL := ""
+	::cJsonE := ""
+	::cJsonR := ""
+	::cUser := __cUserId
+	::cEnvWF := "N"
+	::cRetOri := ""
+	::cRetMen := ""
+
+Return()
+
+
+Method Insert(lAviso) Class TAutomacaoLog
+
+	Default lAviso := .F.
+
+	::Save(.T., lAviso)
+
+Return()
+
+
+Method Update(lAviso) Class TAutomacaoLog
+
+	Default lAviso := .F.
+
+	If ::nRecNo > 0
+
+		DbSelectArea("ZK2")
+		ZK2->(DbGoTo(::nRecNo))
+
+		::Save(.F., lAviso)
+
+	EndIf
+
+Return()
+
+
+Method Save(lNew, lAviso) Class TAutomacaoLog
+
+	Default lNew := .T.
+
+	RecLock("ZK2", lNew)
+
+	ZK2->ZK2_FILIAL	:= xFilial("ZK2")
+	ZK2->ZK2_EMP := ::cEmp
+	ZK2->ZK2_FIL := ::cFil
+	ZK2->ZK2_IDPROC := ::cIDProc
+	ZK2->ZK2_OPERAC := ::cOperac
+	ZK2->ZK2_METODO := ::cMetodo
+	ZK2->ZK2_TABELA := ::cTabela
+	ZK2->ZK2_IDTAB := ::nIDTab
+	ZK2->ZK2_STATUS := ::cStatus
+	ZK2->ZK2_DTINI := ::dDtIni
+	ZK2->ZK2_HRINI := ::cHrIni
+	ZK2->ZK2_DTFIN := ::dDtFin
+	ZK2->ZK2_HRFIN := ::cHrFin
+	ZK2->ZK2_STAPI := ::cStAPI
+	ZK2->ZK2_URL := ::cURL
+	ZK2->ZK2_JSONE := ::cJsonE
+	ZK2->ZK2_JSONR := ::cJsonR
+	ZK2->ZK2_USER := ::cUser
+	ZK2->ZK2_ENVWF := ::cEnvWF
+	ZK2->ZK2_RETORI := ::cRetOri
+	ZK2->ZK2_RETMEN := ::cRetMen
+
+	ZK2->(MsUnLock())
+
+	If lAviso
+
+		RecLock("ZK2", .F.)
+		ZK2->ZK2_IDTAB := ZK2->(RecNo())
+		ZK2->(MsUnLock())
+
+	EndIf
+
+	::SetConsoleLog()
+
+	::nRecNo := ZK2->(RecNo())
+
+	::SetProperty()
+
+Return()
+
+
+Method SetConsoleLog() Class TAutomacaoLog
+	Local cLog := ""
+
+	cLog := Replicate("-", 120) + Chr(13)
+	cLog += "[" + Dtoc(Date()) + Space(1) + Time() + "] -- TAutomacaoLog -- Log de Processos" + Chr(13)
+	cLog += "[Thread: " + AllTrim(cValToChar(ThreadId())) + "]" + Chr(13)
+	cLog += "[Empresa: " + cEmpAnt + "]" + Chr(13)
+	cLog += "[Filial: " + cFilAnt + "]" + Chr(13)
+	cLog += "[Processo: " + ::cIDProc + "]" + Chr(13)
+	cLog += "[Operacao: " + AllTrim(::cOperac) + "]" + Chr(13)
+	cLog += "[Metodo: " + AllTrim(::cMetodo) + "]" + Chr(13)
+	cLog += "[Tabela: " + AllTrim(::cTabela) + "]" + Chr(13)
+	cLog += "[ID Tabela: " + cValToChar(::nIDTab) + "]" + Chr(13)
+	cLog += "[Envia WF: " + cValToChar(::cEnvWF) + "]" + Chr(13)
+	cLog += Replicate("-", 120)
+
+	//ConOut(Chr(13) + cLog) Ticket: 27368 - Retirado pois devido ao grande numero de conouts nao esta sendo possivel analiser problemas no arquivo console.log (Para isso leia a ZK2)
+
+Return()

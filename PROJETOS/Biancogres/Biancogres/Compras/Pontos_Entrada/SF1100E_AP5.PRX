@@ -1,0 +1,132 @@
+#include "rwmake.ch"
+#include "topconn.ch"
+
+User Function SF1100E()
+
+/*/
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡Æo    ³ SF1100E  ³ Autor ³ JOAO CARLOS ANDRADE   ³ Data ³ 14.04.99 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Descri‡Æo ³ Ap¢s ExclusÆo da Nota de Entrada                           ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³ Uso      ³ Dispon¡vel nas Versäes DOS e WINDOWS                       ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+/*/
+
+Local fpArea := GetArea()
+Local fpOk   := .T.
+
+/*
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Exclui Titulos Contas a Pagar referente a ISS, IRF e INSS.               ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+IF cEmpAnt <> '02'
+	if !empty(SF1->F1_DOC)
+		cQuery  := ""
+		cQuery  += "UPDATE "+RetSQLName("SE2")+" "
+		cQuery  += "SET D_E_L_E_T_   =  '*' , R_E_C_D_E_L_ = R_E_C_N_O_ "
+		cQuery  += "WHERE E2_FILIAL  =  '"+xFilial("SE2")+"'  "
+		cQuery  += " AND E2_YFORORI  =  '"+SF1->F1_FORNECE+"' "
+		cQuery  += " AND E2_YLOJORI  =  '"+SF1->F1_LOJA+"'    "
+		cQuery  += " AND E2_YPREORI  =  '"+SF1->F1_SERIE+"'   "
+		cQuery  += " AND E2_YNUMORI  =  '"+SF1->F1_DOC+"'     "
+		cQuery  += " AND D_E_L_E_T_  =  '' "
+		TCSQLExec(cQuery)
+		
+		cQuery  := ""
+		cQuery  += "UPDATE "+RetSQLName("ZZR")+" "
+		cQuery  += "SET D_E_L_E_T_   =  '*' "
+		cQuery  += "WHERE ZZR_FILIAL =  '"+xFilial("ZZR")+"'  "
+		cQuery  += " AND ZZR_PREF    =  '"+SF1->F1_SERIE+"'   "
+		cQuery  += " AND ZZR_NUM     =  '"+SF1->F1_DOC+"'     "
+		cQuery  += " AND ZZR_TIPO    =  'NF' "
+		cQuery  += " AND ZZR_FORNEC  =  '"+SF1->F1_FORNECE+"' "
+		cQuery  += " AND ZZR_LOJA    =  '"+SF1->F1_LOJA+"'    "
+		cQuery  += " AND D_E_L_E_T_  =  '' "
+		TCSQLExec(cQuery)
+	endif
+ENDIF
+*/
+
+// Processo de Devolução. Incluído por Marcos Alberto em 11/10/11 a pedido da Diretoria.
+// Rotinas envolvidas: BIA267, SF1100I, SF1100E, SD1100I, MT100LOK, MT100GRV
+If SF1->F1_TIPO == "D"
+	A0002 := " SELECT Z26_NUMPRC, Z26_NFISC, Z26_SERIE, R_E_C_N_O_ REGZ26
+	A0002 += "   FROM "+ RetSqlName("Z26")
+	A0002 += "  WHERE Z26_FILIAL = '"+xFilial("Z26")+"'
+	A0002 += "    AND Z26_OBS = '"+SF1->F1_DOC+SF1->F1_SERIE+"'
+	A0002 += "    AND Z26_ITEMNF = 'XX'
+	A0002 += "    AND D_E_L_E_T_ = ' '
+	TcQuery A0002 New Alias "A002"
+	dbSelectArea("A002")
+	dbGoTop()
+	While !Eof()
+		xd_NumPrc := A002->Z26_NUMPRC
+		xd_RegZ26 := A002->REGZ26
+		
+		dbSelectArea("Z26")
+		dbGoTo(xd_RegZ26)
+		RecLock("Z26",.F.)
+		Z26->Z26_ITEMNF := " "
+		Z26->Z26_OBS    := " "
+		MsUnLock()
+		
+		// Retirado em 04/11/11 para atender a um padrão que está sendo estabelecido para a Biancogres/Incesa, pois antes de lançar a nota no sistema é dado o parecer fis.
+		// Foi necessário retornar esta condição com alguns ajustes porque estava gerando duplicidade nos casos em que a nota era excluída.
+		dbSelectArea("Z25")
+		dbSetOrder(1)
+		dbSeek(xFilial("Z25")+xd_NumPrc)
+		dbSelectArea("Z26")
+		dbGoTo(xd_RegZ26)
+		While !Eof() .and. Z26->Z26_NUMPRC == xd_NumPrc
+			If Z26->Z26_NFISC == A002->Z26_NFISC .and. Z26->Z26_SERIE == A002->Z26_SERIE .and. !Empty(Z26->Z26_ITEMNF)
+				If Z25->Z25_APRFIS == " " .or. Z25->Z25_RETMRC == "N"
+					dbSelectArea("Z26")
+					RecLock("Z26",.F.)
+					Delete
+					MsUnLock()
+				EndIf
+			EndIf
+			dbSelectArea("Z26")
+			dbSkip()
+		End
+		
+		dbSelectArea("Z25")
+		dbSetOrder(1)
+		If dbSeek(xFilial("Z25")+xd_NumPrc)
+			RecLock("Z25",.F.)
+			Z25->Z25_NFLANC := " "
+			Z25->Z25_USLNFE := " "
+			Z25->Z25_DTLNFE := ctod("  /  /  ")
+			MsUnLock()
+		EndIf
+		
+		dbSelectArea("A002")
+		dbSkip()
+	End
+	A002->(dbCloseArea())
+EndIf
+
+/*
+// Implementado em 15/10/12 por Marcos Alberto Soprani. Identificou-se que ao excluir uma nota fiscal Sped Integrada com a rotina de importação, o registro do XML não estava ficando destravado.
+If SF1->(FieldPos("F1_YIMPXML")) > 0
+
+	If SF1->F1_YIMPXML == "S"
+		R0001 := " UPDATE "+ RetSqlName("SDS")
+		R0001 += "    SET DS_STATUS = ' ',
+		R0001 += "        DS_USERPRE = ' ',
+		R0001 += "        DS_DATAPRE = ' ',
+		R0001 += "        DS_HORAPRE = ' '
+		R0001 += "  WHERE DS_FILIAL = '"+xFilial("SDS")+"'
+		R0001 += "    AND DS_CHAVENF = '"+SF1->F1_CHVNFE+"'
+		R0001 += "    AND D_E_L_E_T_ = ' '
+		TCSQLEXEC(R0001)
+	EndIf
+
+EndIf
+*/
+Return(fpOk)

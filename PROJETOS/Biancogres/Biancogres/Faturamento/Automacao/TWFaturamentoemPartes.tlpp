@@ -1,0 +1,1623 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "APWIZARD.CH"
+#INCLUDE "FILEIO.CH"
+#INCLUDE "RPTDEF.CH"
+#INCLUDE "FWPrintSetup.ch"
+#INCLUDE "TOTVS.CH"
+#INCLUDE "PARMTYPE.CH" 
+#INCLUDE "TOPCONN.CH"
+
+/*/{Protheus.doc} BACP0020
+@author Wlysses Cerqueira (Facile)
+@since 26/12/2019  
+@project Automação Faturamento
+@version 1.0
+@description 
+@type function
+/*/
+
+#DEFINE TIT_WND "Faturamento em partes"
+#DEFINE TIT_CAPTION "[Quant. Pedido: @QTD]" + Space(5) + "[Quant. Faturada: @FATQTD]" + Space(5) + "[Saldo: @SALDO]"
+
+STATIC _Self := Nil
+
+Class TWFaturamentoemPartes From LongClassName
+	
+	Public Data cSerieNF
+	
+	Public Data oProcess
+	Public Data oWindow // Janela principal - FWDialogModal 
+	Public Data oContainer	// Divisor de janelas - FWFormContainer 
+	Public Data cHeaderBox // Identificador do cabecalho da janela
+	Public Data cItemBox // Identificador dos itens da janela
+	Public Data cItemFat
+	
+	Public Data oFD // Field editor - MsMGet
+	Public Data cFDTable // Tabela
+	Public Data nFDOpc // Opcao do menu
+	Public Data nFDRecNo // RecNo
+	Public Data oMGField // Estrutura dos campos do MsMGet - TMGField
+	
+	Public Data aLineDefault
+	Public Data oGD // Grid - MsNewGetDados
+	Public Data aGDAField // Array com os campos que podem ser alterados no grid
+	Public Data oGDField // Estrutura dos campos do grid - TGDField
+	
+	Public Data oGDFat // Grid - MsNewGetDados
+	Public Data aGDAFieldFat // Array com os campos que podem ser alterados no grid
+	Public Data oGDFieldFat // Estrutura dos campos do grid - TGDField
+	
+	Public Data oSaySel
+	Public Data nQtdItem
+	Public Data nQtdFat
+	Public Data nSaldo
+	Public Data aNotas
+	Public Data aMsgErro
+	
+	Public Method New() Constructor
+	Public Method LoadInterface()	
+	Public Method LoadWindow()
+	
+	Public Method LoadContainer()
+	Public Method LoadHeader(oWnd)
+	Public Method LoadBrowser(oWnd)
+	Public Method Activate()	
+	Public Method MGFieldProperty()
+	Public Method MGFieldData()
+	
+	Public Method GDEditField()
+	Public Method GDFieldProperty()
+	Public Method GDFieldData()
+	
+	Public Method GDFatEditField()
+	Public Method GDFatProperty()
+	Public Method GDFatFieldData()
+	
+	Public Method Mark()
+	Public Method MarkAll()
+	Public Method GetTitle()
+	Public Method GetSaldo()
+	Public Method Refresh()
+	Public Method PreencheGrid()
+	Public Method GetCount()
+	Public Method GetCountC6()
+	
+	Public Method Valid()	
+	Public Method Save()
+	
+	Public Method Faturamento()
+	Public Method ProcFat()
+	
+	Public Method DocSaida(cCliente,cLoja,aPvlNfs)
+	Public Method Processa()
+	Public Method ReenviarDanfe()
+	Public Method GetLegenda(cStatus)
+	Public Method Legenda()
+	
+	Public Method Confirm()
+	Public Method Close()
+	Public Method RefreshAll()
+	Public Method Log()
+	
+	Public Method Sort(nCol)		
+
+EndClass
+
+Method New(lFatPart) Class TWFaturamentoemPartes
+	
+	Default lFatPart := .T.
+	
+	If lFatPart
+		
+		::cSerieNF := PADR(GetNewPar("MV_YSERFTP", "1"), TamSx3("F2_DOC")[1])
+		
+		::oProcess := Nil
+		::oWindow := Nil
+		::oContainer := Nil
+		::cHeaderBox := ""
+		::cItemBox := ""
+		::cItemFat := ""
+		::aNotas := {}
+	
+		::oFD := Nil
+		::cFDTable := "ZL5"
+	
+		DBSelectArea("ZL5")
+		ZL5->(DBSetOrder(1))
+	
+		If ZL5->(DBSeek(xFilial("ZL5") + cEmpAnt + cFilAnt + SC5->C5_NUM))
+	
+			::nFDOpc := 4
+	
+		Else
+	
+			::nFDOpc := 3
+	
+		EndIf
+	
+		::nFDRecNo := ZL5->(RecNo())
+		::oMGField := Nil
+		::aLineDefault := {}
+		::oGD := Nil
+		::aGDAField := {}
+		::oGDField := TGDField():New() 
+	
+		::oGDFat := Nil
+		::aGDAFieldFat := {}
+		::oGDFieldFat := TGDField():New() 
+	
+		::aMsgErro := {}
+	
+		::oSaySel := Nil
+		::nQtdItem := 0
+		::nQtdFat := 0
+		::nSaldo := 0
+	
+		_Self := @Self
+	
+	EndIf
+
+Return()
+
+Method LoadInterface() Class TWFaturamentoemPartes
+
+	::LoadWindow()
+
+	::LoadContainer()	
+
+	::LoadHeader()
+
+	::LoadBrowser()	
+
+Return()
+
+Method LoadWindow() Class TWFaturamentoemPartes
+
+	Local aCoors := MsAdvSize()
+
+	::oWindow := FWDialogModal():New()
+	::oWindow:SetBackground(.T.) 
+	::oWindow:SetTitle(TIT_WND)
+	::oWindow:SetEscClose(.T.)
+	::oWindow:SetSize(aCoors[4], aCoors[3])
+	::oWindow:EnableFormBar(.T.)
+	::oWindow:CreateDialog()
+	::oWindow:CreateFormBar()
+
+	::oWindow:AddOKButton({|| ::Confirm() })
+	::oWindow:AddCloseButton()
+
+	::oWindow:AddButton("Log	"			, {|| ::Log()		 						},,, .T., .F., .T.)
+	::oWindow:AddButton("Refresh"			, {|| ::RefreshAll() 						},,, .T., .F., .T.)
+	::oWindow:AddButton("Legenda"			, {|| ::Legenda() 							},,, .T., .F., .T.)
+	::oWindow:AddButton("Reenviar DANFE"	, {|| ::ReenviarDanfe()						},,, .T., .F., .T.)
+	::oWindow:AddButton("Faturar"			, {|| If (::Valid(), ::Faturamento(), Nil)	},,, .T., .F., .T.)
+	::oWindow:AddButton("Pesquisar"			, {|| GdSeek(::oGD,,,,.F.) 					},,, .T., .F., .T.)
+
+Return()
+
+Method LoadContainer(lJob) Class TWFaturamentoemPartes
+
+	Default lJob := .F.
+
+	::oContainer := FWFormContainer():New()
+
+	::cHeaderBox := ::oContainer:CreateHorizontalBox(20)
+
+	::cItemBox := ::oContainer:CreateHorizontalBox(40)
+
+	::cItemFat := ::oContainer:CreateHorizontalBox(40)
+
+	If !lJob
+
+		::oContainer:Activate(::oWindow:GetPanelMain(), .T.)
+
+	EndIf
+
+Return()
+
+Method LoadHeader() Class TWFaturamentoemPartes
+
+	::oFD := MsMGet():New(::cFDTable, ::nFDRecNo, ::nFDOpc,,,,,{0, 0 , 0, 0},,,,,,::oContainer:GetPanel(::cHeaderBox))
+
+	::oFD:oBox:Align := CONTROL_ALIGN_ALLCLIENT	
+
+Return()
+
+Method LoadBrowser(lJob) Class TWFaturamentoemPartes
+
+	Local cVldDef := "AllwaysTrue"
+	Local nMaxLine := 2000
+	Local aDefault := {}
+	Local nW := 0
+	Local aCols_ := {}
+	Local aHeader_ := {}
+
+	Default lJob := .F.
+
+	RegToMemory(::cFDTable, ::nFDOpc == 3)
+
+	If lJob
+
+		::oGD := MsNewGetDados():New()
+
+		::oGD:aHeader := ::GDFieldProperty()
+
+		::oGD:aCols := ::GDFieldData()
+
+	Else
+
+		aCols_ := ::GDFieldData()
+		aHeader_ := ::GDFieldProperty(aCols_)
+
+		::oGD := MsNewGetDados():New(0, 0, 0, 0, GD_INSERT+GD_DELETE+GD_UPDATE, cVldDef, cVldDef, "", ::GDEditField(),, nMaxLine, cVldDef,, cVldDef, ::oContainer:GetPanel(::cItemBox), aHeader_, aCols_)
+		::oGD:oBrowse:Align := CONTROL_ALIGN_ALLCLIENT
+
+		::oGD:oBrowse:bHeaderClick := {|oBrw, nCol| ::Sort(nCol) }
+		::oGD:oBrowse:lVScroll := .T.
+		::oGD:oBrowse:lHScroll := .T.
+
+	EndIf
+
+	For nW := 1 To Len(::oGD:aHeader)
+
+		If ::oGD:aHeader[nW][8] == "C"
+
+			aAdd(aDefault, Space(::oGD:aHeader[nW][4]))
+
+		ElseIf ::oGD:aHeader[nW][8] == "N"
+
+			aAdd(aDefault, 0)
+
+		ElseIf ::oGD:aHeader[nW][8] == "D"
+
+			aAdd(aDefault, STOD("  /  /    "))
+
+		ElseIf ::oGD:aHeader[nW][8] == "L"
+
+			aAdd(aDefault, .F.)
+
+		Else 
+
+			aAdd(aDefault, Space(::oGD:aHeader[nW][4]))
+
+		EndIf
+
+	Next nW
+
+	aAdd(aDefault, .F.)
+
+	aAdd(::aLineDefault, aClone(aDefault))
+
+	If lJob
+
+		::oGDFat := MsNewGetDados():New()
+
+		::oGDFat:aHeader := ::GDFatProperty()
+
+		::oGDFat:aCols := ::GDFatFieldData()
+
+	Else
+
+		::oGD:oBrowse:Refresh()
+
+		::oGDFat := MsNewGetDados():New(0, 0, 0, 0, , cVldDef, cVldDef, "", ::GDFatEditField(),, nMaxLine, cVldDef,, cVldDef, ::oContainer:GetPanel(::cItemFat), ::GDFatProperty(), ::GDFatFieldData())
+		::oGDFat:oBrowse:Align := CONTROL_ALIGN_ALLCLIENT
+
+		::oGDFat:oBrowse:bHeaderClick := {|oBrw, nCol| ::Sort(nCol) }
+		::oGDFat:oBrowse:lVScroll := .T.
+		::oGDFat:oBrowse:lHScroll := .T.
+
+		::oSaySel := TSay():Create(::oContainer:GetPanel(::cItemFat))
+		::oSaySel:cName := "oSaySel"
+		::oSaySel:cCaption := ::GetTitle()
+		::oSaySel:nLeft := 00
+		::oSaySel:nTop := 00
+		::oSaySel:nWidth := 100
+		::oSaySel:nHeight := 15
+		::oSaySel:lReadOnly := .T.
+		::oSaySel:Align := CONTROL_ALIGN_BOTTOM
+		::oSaySel:nClrText := RGB(0,50,100)
+
+	EndIf
+
+Return()
+
+Method Activate() Class TWFaturamentoemPartes
+
+	::LoadInterface()
+
+	::oWindow:bInit := {|| DbSelectArea(::cFDTable), RegToMemory(::cFDTable, ::nFDOpc == 3), ::MGFieldData(), ::oFD:Refresh()}
+
+	::oWindow:Activate()
+
+Return()
+
+Method MGFieldProperty() Class TWFaturamentoemPartes
+
+	Local aRet := {}
+
+Return(aRet)
+
+Method MGFieldData(lForce) Class TWFaturamentoemPartes	
+
+	Default lForce := .F.
+
+	If ::nFDOpc == 3 .Or. lForce
+
+		M->ZL5_NUM		:= SC5->C5_NUM
+		M->ZL5_EMAIL	:= Space(TamSx3("ZL5_EMAIL")[1])
+		M->ZL5_EMISSA	:= Date()
+		M->ZL5_QTDNF	:= 0	
+		M->ZL5_ESPECI	:= Space(TamSx3("ZL5_ESPECI")[1])	
+		M->ZL5_QTDVEN	:= 0	
+		M->ZL5_VOLUME	:= 0
+
+	EndIf
+
+Return()
+
+Method GDEditField() Class TWFaturamentoemPartes
+
+	Local aRet := {"ZL6_PLACA", "ZL6_UF", "ZL6_QTDVEN", "ZL6_PLIQUI", "ZL6_PBRUTO", "ZL6_VOLUME", "ZL6_OBS"}
+
+Return(aRet)
+
+Method GDFieldProperty(aCols_) Class TWFaturamentoemPartes
+
+	Local aRet := {}
+	Default aCols_ := {}
+
+	::oGDField:Clear()
+
+	::oGDField:AddField("ZL6_PLACA")
+	::oGDField:AddField("ZL6_UF")
+	//::oGDField:AddField("ZL6_QTDNF")
+	::oGDField:AddField("ZL6_QTDVEN")
+	::oGDField:AddField("ZL6_PLIQUI")
+	::oGDField:AddField("ZL6_PBRUTO")
+	::oGDField:AddField("ZL6_VOLUME")
+	::oGDField:AddField("ZL6_OBS")
+	::oGDField:AddField("Recno")	
+
+	aRet := ::oGDField:GetHeader()
+
+Return(aRet)
+
+Method GDFieldData() Class TWFaturamentoemPartes
+
+	Local aRet := {}
+
+	DBSelectArea("ZL6")
+	ZL6->(DBSetOrder(1))
+
+	If ZL6->(DBSeek(xFilial("ZL6") + cEmpAnt + cFilAnt + SC5->C5_NUM))
+
+		While !ZL6->(EOF()) .And. ZL6->(ZL6_FILIAL + ZL6_CODEMP + ZL6_CODFIL + ZL6_NUM) == xFilial("ZL6") + cEmpAnt + cFilAnt + SC5->C5_NUM
+
+			If Empty(ZL6->ZL6_DOC)
+
+				aAdd(aRet, {ZL6->ZL6_PLACA, ZL6->ZL6_UF, ZL6->ZL6_QTDVEN, ZL6->ZL6_PLIQUI, ZL6->ZL6_PBRUTO, ZL6->ZL6_VOLUME, ZL6->ZL6_OBS, ZL6->(Recno()), .F.})
+
+			EndIf
+
+			ZL6->(DBSkip())
+
+		EndDo
+
+	EndIf
+
+Return(aRet)
+
+Method GDFatEditField() Class TWFaturamentoemPartes
+
+	Local aRet := {}
+
+Return(aRet)
+
+Method GDFatProperty() Class TWFaturamentoemPartes
+
+	Local aRet := {}
+
+	::oGDFieldFat:Clear()
+
+	// Adciona coluna para tratamento de marcacao no grid
+	::oGDFieldFat:AddField("MARK")
+	::oGDFieldFat:FieldName("MARK"):cTitle := ""
+	::oGDFieldFat:FieldName("MARK"):cPict := "@BMP"
+
+	::oGDFieldFat:AddField("ZL6_DOC")
+	::oGDFieldFat:AddField("ZL6_SERIE")
+	::oGDFieldFat:AddField("ZL6_RETNFE")
+	//::oGDFieldFat:AddField("ZL6_TPMOV")
+	::oGDFieldFat:AddField("ZL6_DOCODE")
+	::oGDFieldFat:AddField("ZL6_SERODE")
+	::oGDFieldFat:AddField("ZL6_PEDODE")
+	::oGDFieldFat:AddField("ZL6_EMPODE")
+	::oGDFieldFat:AddField("ZL6_FILODE")
+	::oGDFieldFat:AddField("Recno")	
+
+	aRet := ::oGDFieldFat:GetHeader()
+
+Return(aRet)
+
+Method GDFatFieldData() Class TWFaturamentoemPartes
+
+	Local aRet := {}
+
+	DBSelectArea("ZL6")
+	ZL6->(DBSetOrder(1))
+
+	DBSelectArea("SF2")
+	SF2->(DBSetOrder(1)) // F2_FILIAL, F2_DOC, F2_SERIE, F2_CLIENTE, F2_LOJA, F2_FORMUL, F2_TIPO, R_E_C_N_O_, D_E_L_E_T_
+
+	If ZL6->(DBSeek(xFilial("ZL6") + cEmpAnt + cFilAnt + SC5->C5_NUM))
+
+		While !ZL6->(EOF()) .And. ZL6->(ZL6_FILIAL + ZL6_CODEMP + ZL6_CODFIL + ZL6_NUM) == xFilial("ZL6") + cEmpAnt + cFilAnt + SC5->C5_NUM
+
+			If !Empty(ZL6->ZL6_DOC)
+
+				If SF2->(DBSeek(xFilial("SF2") + ZL6->ZL6_DOC + ZL6->ZL6_SERIE))
+
+					aAdd(aRet, {::GetLegenda(ZL6->ZL6_STATUS), ZL6->ZL6_DOC, ZL6->ZL6_SERIE, ZL6->ZL6_RETNFE, ZL6->ZL6_DOCODE, ZL6->ZL6_SERODE, ZL6->ZL6_PEDODE, ZL6->ZL6_EMPODE, ZL6->ZL6_FILODE, ZL6->(Recno()), .F.})
+
+				EndIf
+
+			EndIf
+
+			ZL6->(DBSkip())
+
+		EndDo
+
+	EndIf
+
+Return(aRet)
+
+Method Valid() Class TWFaturamentoemPartes
+
+	Local lRet 			:= .T.
+	Local nW 			:= 0
+	Local nTotNotas 	:= 0
+	Local nTotQuant 	:= 0
+	Local nSaldo 		:= 0
+	Local lPlaca		:= .T.
+
+	//Local nPosQtdNf 	:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_QTDNF"})
+	Local nPosPlaca 	:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_PLACA"})
+	Local nPosUf 		:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_UF"})
+	Local nPosQtdProd 	:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_QTDVEN"})
+
+	Local nPosVolume	:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_VOLUME"})
+	Local nPosObs		:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_OBS"})
+	Local nPosRecno 	:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "Recno"})
+
+	For nW := 1 To Len(::oGD:aCols)
+
+		If !GdDeleted(nW, ::oGD:aHeader, ::oGD:aCols)
+
+			If lPlaca
+
+				If Empty(::oGD:aCols[nW][nPosPlaca])
+
+					If MsgYesNo("Placa não informada! Deseja continuar sem informar a placa?")
+
+						lPlaca := .F.
+
+					Else
+
+						lPlaca := .F.
+
+						MsgAlert("Placa não preenchida!", "Atenção")
+
+						::oGD:GoTo(nW)
+
+						::oGD:oBrowse:SetFocus()
+
+						lRet := .F.
+
+						Exit
+
+					EndIf
+
+				EndIf
+
+			EndIf
+
+			If !Empty(::oGD:aCols[nW][nPosPlaca]) .And. Empty(::oGD:aCols[nW][nPosUf])
+
+				MsgAlert("UF Placa não preenchida!", "Atenção")
+
+				::oGD:GoTo(nW)
+
+				::oGD:oBrowse:SetFocus()
+
+				lRet := .F.
+
+				Exit
+
+			EndIf
+
+			If Empty(::oGD:aCols[nW][nPosQtdProd])
+
+				MsgAlert("Quant./Nf não preenchida!", "Atenção")
+
+				::oGD:GoTo(nW)
+
+				::oGD:oBrowse:SetFocus()
+
+				lRet := .F.
+
+				Exit
+
+			EndIf
+
+		EndIf
+
+	Next nW
+
+	If lRet
+
+		For nW := 1 To Len(::oGD:aCols)
+
+			If !GdDeleted(nW, ::oGD:aHeader, ::oGD:aCols)
+
+				//nTotNotas += ::oGD:aCols[nW][nPosQtdNf]
+
+				nTotQuant += ::oGD:aCols[nW][nPosQtdProd]
+
+			EndIf
+
+		Next nW
+		/*
+		If M->ZL5_QTDNF <> nTotNotas
+
+		Alert("A quantidade de notas informada no cabeçalho (" + AllTrim(cValToChar(M->ZL5_QTDNF)) + ") difere dos itens ("+ AllTrim(cValToChar(nTotNotas)) +")" + " !")
+
+		lRet := .F.
+
+		EndIf
+		*/
+		
+		If ::GetCountC6() > 1
+			
+			Alert("O pedido contém mais de um item! Para o faturamento em partes só é permitido o faturamento de um item por pedido!")
+
+			lRet := .F.		
+			
+		EndIf
+		
+		If lRet
+
+			nSaldo := ::GetSaldo()
+
+			If nTotQuant > nSaldo
+
+				Alert("A quantidade total informada nos itens (" + AllTrim(cValToChar(nTotQuant)) + ") difere do saldo ("+ AllTrim(cValToChar(nSaldo)) +")" + " !")
+
+				lRet := .F.
+
+			EndIf
+
+		EndIf
+
+	EndIf
+
+Return(lRet)
+
+Method GetTitle() Class TWFaturamentoemPartes
+
+	Local cRet := ""
+
+	::GetSaldo()
+
+	cRet := StrTran(TIT_CAPTION, "@QTD", cValToChar(::nQtdItem))
+
+	cRet := StrTran(cRet, "@FATQTD", AllTrim(Transform(::nQtdFat, PesqPict("SC6", "C6_QTDVEN"))))
+
+	cRet := StrTran(cRet, "@SALDO", AllTrim(Transform(::nSaldo, PesqPict("SC6", "C6_QTDVEN"))))
+
+Return(cRet)
+
+Method GetSaldo() Class TWFaturamentoemPartes
+
+	Local nTotLib := 0
+	Local nSaldoProd := 0
+
+	DBSelectArea("SC6")
+	SC6->(DBSetOrder(1))
+
+	DBSelectArea("SC9")
+	SC9->(DBSetOrder(1))
+
+	DBSelectArea("SB2")
+	SB2->(DBSetOrder(1)) // B2_FILIAL, B2_COD, B2_LOCAL, R_E_C_N_O_, D_E_L_E_T_
+
+	::nQtdFat := 0
+	::nQtdItem := 0
+	::nSaldo := 0
+
+	If SC6->(DBSeek(xFilial("SC6") + SC5->C5_NUM))
+
+		::nQtdItem := SC6->C6_QTDVEN
+
+		If SB2->(DBSeek(xFilial("SB2") + SC6->C6_PRODUTO + SC6->C6_LOCAL))
+
+			nSaldoProd := SB2->B2_QATU - SB2->B2_RESERVA - SB2->B2_QACLASS
+
+		EndIf
+
+	EndIf
+
+	If SC9->(DBSeek(xFilial("SC9") + SC5->C5_NUM))
+
+		While !SC9->(EOF()) .And. SC9->(C9_FILIAL + C9_PEDIDO) == xFilial("SC9") + SC5->C5_NUM
+
+			nTotLib += SC9->C9_QTDLIB
+
+			If SC9->C9_BLCRED == "10" .And. SC9->C9_BLEST = "10"
+
+				::nQtdFat += SC9->C9_QTDLIB
+
+			EndIf
+
+			SC9->(DBSkip())
+
+		EndDo
+
+	EndIf
+
+	::nSaldo := nSaldoProd
+
+Return(::nSaldo)
+
+Method Refresh() Class TWFaturamentoemPartes
+
+	Local nW := 0
+	Local nPosQtdProd := aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_QTDVEN"})
+	//Local nPosQtdNf := aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_QTDNF"})
+
+	::GetSaldo()
+
+	If Len(::oGD:aCols) > 0						
+
+		For nW := 1 To Len(::oGD:aCols)
+
+			If !GdDeleted(nW, ::oGD:aHeader, ::oGD:aCols)
+
+				::nSaldo -= ::oGD:aCols[nW][nPosQtdProd]
+
+			EndIf
+
+		Next
+
+		::oGD:oBrowse:Refresh()
+
+	EndIf
+
+	::oSaySel:cCaption := ::GetTitle()
+
+Return()
+
+Method Log() Class TWFaturamentoemPartes
+
+	Local nPosRecno := aScan(::oGDFat:aHeader, {|x| AllTrim(x[2]) == "Recno"})
+	Local cMsg		:= ""
+	Local nW		:= 0
+
+	For nW := 1 To Len(::oGDFat:aCols)
+
+		If !Empty(::oGDFat:aCols[nW][nPosRecno])
+
+			ZL6->(DbGoTo(::oGDFat:aCols[nW][nPosRecno]))
+
+			If !ZL6->(Eof()) .And. !Empty(ZL6->ZL6_LOG)
+
+				cMsg += "Documento saida: " + ZL6->ZL6_DOC + "-" + ZL6->ZL6_SERIE + CRLF
+				cMsg += "Log: " + CRLF + ZL6->ZL6_LOG + CRLF
+
+			EndIf
+
+		EndIf
+
+	Next nW
+
+	If Empty(cMsg)
+
+		MsgInfo("Não foi encontrado log")
+
+	Else
+
+		Aviso("Log", cMsg, {"Ok"}, 3)
+
+	EndIf
+
+Return()
+
+Method RefreshAll() Class TWFaturamentoemPartes
+
+	_Self := @Self
+
+	::MGFieldData(.T.)
+
+	::oGD:aCols := ::aLineDefault
+
+	::oGD:SetArray(::oGD:aCols, .F.)
+
+	::oGD:oBrowse:Refresh()
+
+	::oGD:Refresh()
+
+	::oGDFat:aCols := ::GDFatFieldData()
+
+	::oGDFat:SetArray(::oGDFat:aCols, .F.)
+
+	::oGDFat:oBrowse:Refresh()
+
+	::oGDFat:Refresh()
+
+	::Refresh()
+
+Return()
+
+Method Save() Class TWFaturamentoemPartes
+
+	Local nW 			:= 0
+	//Local nPosQtdNf 	:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_QTDNF"})
+	Local nPosPlaca 	:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_PLACA"})
+	Local nPosUf 		:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_UF"})
+	Local nPosPliq		:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_PLIQUI"})
+	Local nPosPbru		:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_PBRUTO"})
+	Local nPosQtdProd 	:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_QTDVEN"})
+	Local nPosVolume	:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_VOLUME"})
+	Local nPosObs		:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_OBS"})
+	Local nPosRecno 	:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "Recno"})
+	Local nDelet		:= 0
+	Local oEmpCliVen	:= TLoadEmpresa():New()
+
+	Begin Transaction
+
+		For nW := 1 To Len(::oGD:aCols)
+
+			If !GdDeleted(nW, ::oGD:aHeader, ::oGD:aCols)
+
+				If ::nFDOpc == 4
+
+					If !Empty(::oGD:aCols[nW][nPosRecno])
+
+						ZL6->(DbGoTo(::oGD:aCols[nW][nPosRecno]))
+
+					Else
+
+						::nFDOpc := 3
+
+					EndIf
+
+				EndIf
+
+				RecLock("ZL6", (::nFDOpc == 3))
+				ZL6->ZL6_FILIAL := ""
+				ZL6->ZL6_CODEMP	:= cEmpAnt
+				ZL6->ZL6_CODFIL	:= cFilAnt
+				ZL6->ZL6_NUM	:= SC5->C5_NUM
+				//ZL6->ZL6_QTDNF 	:= ::oGD:aCols[nW][nPosQtdNf]
+				ZL6->ZL6_PLACA 	:= ::oGD:aCols[nW][nPosPlaca]
+				ZL6->ZL6_UF 	:= ::oGD:aCols[nW][nPosUf]
+				ZL6->ZL6_QTDVEN := ::oGD:aCols[nW][nPosQtdProd]
+				ZL6->ZL6_VOLUME	:= ::oGD:aCols[nW][nPosVolume]
+				ZL6->ZL6_OBS	:= ::oGD:aCols[nW][nPosObs]
+				ZL6->ZL6_PLIQUI	:= ::oGD:aCols[nW][nPosPliq]
+				ZL6->ZL6_PBRUTO	:= ::oGD:aCols[nW][nPosPbru]
+				ZL6->ZL6_STATUS	:= "1"
+				ZL6->ZL6_RETNFE	:= ""
+				ZL6->ZL6_TPMOV	:= If(Empty(ZL6->ZL6_TPMOV),"O", ZL6->ZL6_TPMOV)
+				ZL6->(MsUnLock())
+
+				::oGD:aCols[nW][nPosRecno] := ZL6->(Recno())
+
+			ElseIf !Empty(::oGD:aCols[nW][nPosRecno])
+
+				ZL6->(DbGoTo(::oGD:aCols[nW][nPosRecno]))
+				
+				nDelet++
+
+				RecLock("ZL6", .F.)
+				ZL6->(DBDelete())
+				ZL6->(MsUnLock())
+
+			EndIf
+
+		Next nW
+
+		If nDelet > 0 .And. nDelet == Len(::oGD:aCols)
+
+			If Len(::oGDFat:aCols) == 0 .Or. (Len(::oGDFat:aCols) > 0 .And. Empty(::oGDFat:aCols[1][2]))
+				
+				RecLock("ZL5", .F.)
+				ZL5->(DBDelete())
+				ZL5->(MsUnLock())
+			
+			EndIf
+
+		Else
+
+			If ZL5->(DBSeek(xFilial("ZL5") + cEmpAnt + cFilAnt + SC5->C5_NUM))
+
+				::nFDOpc := 4
+
+			Else
+
+				::nFDOpc := 3
+
+			EndIf
+
+			RecLock("ZL5", (::nFDOpc == 3))
+			ZL5->ZL5_FILIAL	:= ""
+			ZL5->ZL5_CODEMP	:= cEmpAnt
+			ZL5->ZL5_CODFIL	:= cFilAnt
+			ZL5->ZL5_NUM	:= SC5->C5_NUM
+			ZL5->ZL5_TRANSP	:= M->ZL5_TRANSP //SC5->C5_TRANSP
+			ZL5->ZL5_ESPECI	:= M->ZL5_ESPECI //SC5->C5_ESPECI1
+			ZL5->ZL5_EMISSA	:= dDataBase
+			ZL5->ZL5_QTDNF	:= M->ZL5_QTDNF
+			ZL5->ZL5_QTDVEN	:= M->ZL5_QTDVEN
+			ZL5->ZL5_EMAIL	:= M->ZL5_EMAIL
+			ZL5->ZL5_VOLUME	:= M->ZL5_VOLUME
+			ZL5->(MsUnLock())
+
+		EndIf		
+
+	End Transaction
+
+Return()
+
+Method Faturamento() Class TWFaturamentoemPartes
+
+	If MsgYesNo("Confirma faturamento?")
+
+		::oProcess := MsNewProcess():New ( {|| ::ProcFat() }, "Faturamento", "Aguarde enquanto o pedido é faturado...", .F. )
+
+		::oProcess:Activate()
+
+	EndIf
+
+Return()
+
+Method ProcFat(lJob, cPedJob) Class TWFaturamentoemPartes
+
+	Local aAreaSC5 := SC5->(GetArea())
+	Local aAreaSC6 := SC6->(GetArea())
+	Local aAreaZL5 := ZL5->(GetArea())
+	Local aAreaZL6 := ZL6->(GetArea())
+
+	Local xRetorno	:= .T.
+	Local aPvlNfs	:= {}
+	Local aBloqueio	:= {}
+	Local nQtdLib_	:= 0
+	Local nQtdJaEnt	:= 0
+
+	Local i			:= 0
+	Local nQtd2		:= 0
+	Local lCredito 	:= .T.
+	Local lEstoque	:= .T.
+	Local lAvalCred	:= .T.
+
+	Local nVolumes	:= 0
+	Local nPesoBrut	:= 0
+	Local nPesoLiq	:= 0
+	Local cEspecie	:= "VOLUME(S)"
+	Local cMens		:= ""
+	Local nCont		:= 0
+	Local nW		:= 0
+
+	//Local nPosQtdNf 	:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_QTDNF"})
+	Local nPosVolume	:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_VOLUME"})
+	Local nPosQtdProd 	:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_QTDVEN"})
+
+	Local nPosPlaca 	:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_PLACA"})
+	Local nPosUf 		:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_UF"})
+	Local nPosObs		:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_OBS"})
+	Local nPosRecno 	:= aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "Recno"})
+
+	Default lJob := .F.
+
+	Public xBiaVTotNf	:= 0
+	Public _XCRGATFAT	:= .T.	
+	Public nFlagFT   	:= "S"
+	Public xVlFrtInf 	:= 0
+	Public nNovaCond 	:= Nil
+
+	Private nTpFrete	:= 2
+	Private nTransp		:= ""
+
+	If !lJob
+
+		::oProcess:SetRegua1(4)
+
+		::oProcess:SetRegua2(Len(::oGD:aCols) * 4)
+
+		::Save()
+
+		::oProcess:IncRegua1("Faturando Pedido...")
+
+	EndIf
+
+		Begin Transaction
+
+		::aNotas := {}
+
+		If Empty(SC5->C5_NOTA)
+
+			If !Empty(::cSerieNF)
+
+				DBSelectArea("SC6")
+				SC6->(DBSetOrder(1)) // C6_FILIAL, C6_NUM, C6_ITEM, C6_PRODUTO, R_E_C_D_E_L_
+				SC6->(DBGoTop())
+
+				DBSelectArea("ZL6")
+				ZL6->(DBSetOrder(1)) // ZL6_FILIAL, ZL6_NUM, R_E_C_N_O_, D_E_L_E_T_
+				ZL6->(DBGoTop())
+
+				For nW := 1 To Len(::oGD:aCols)
+
+					If !GdDeleted(nW, ::oGD:aHeader, ::oGD:aCols)
+
+						ZL6->(DbGoTo(::oGD:aCols[nW][nPosRecno]))
+
+						If ZL6->(!EOF())
+
+							RecLock("ZL6", .F.)
+
+							If SC6->(DBSeek(xFilial("SC6") + ZL6->ZL6_NUM))
+
+								While SC6->(!EOF()) .And. SC6->(C6_FILIAL + C6_NUM) == xFilial("SC6") + ZL5->ZL5_NUM
+
+									xBiaVTotNf	:= 0
+									_XCRGATFAT	:= .T.	
+									nFlagFT   	:= "S"
+									xVlFrtInf 	:= 0
+									nNovaCond 	:= Nil	
+									nTpFrete	:= 2
+									nTransp		:= ZL5->ZL5_TRANSP
+
+									nCont++
+
+									If !lJob
+
+										::oProcess:IncRegua2("Faturando Pedido " + ZL5->ZL5_NUM)
+									
+									EndIf
+
+									//capta os volumes dos itens que tem faturamento direto
+									SB1->(DBSetOrder(1))
+									SB1->(DBSeek(xFilial("SB1")+SC6->C6_PRODUTO))
+
+									nQtd2 := ConvUM(SC6->C6_PRODUTO, ::oGD:aCols[nW][nPosQtdProd], 0, 2)
+
+									// Libera por Item de Pedido
+									nQtdLib_ := MaLibDoFat(SC6->(RecNo()),::oGD:aCols[nW][nPosQtdProd],@lCredito,@lEstoque,lAvalCred,.T.,.F.,.F.,NIL,NIL,NIL,NIL,NIL,NIL,nQtd2)
+
+									nVolumes	+= SC6->C6_QTDVEN-nQtdJaEnt
+									nPesoBrut	+= SB1->B1_PESO*(SC6->C6_QTDVEN-nQtdJaEnt)
+									nPesoLiq	+= SB1->B1_PESO*(SC6->C6_QTDVEN-nQtdJaEnt)
+									cEspecie	:= "VOLUME(S)"
+
+									// Atualiza o Flag do Pedido de Venda
+									MaLiberOk({ZL5->ZL5_NUM},.F.)
+
+									aPvlNfs		:= {}
+									aBloqueio	:= {}
+
+									//Checa itens liberados
+									Ma410LbNfs(1,@aPvlNfs,@aBloqueio)
+
+									If Len(aBloqueio) > 0 .Or. Len(aPvlNfs) == 0
+
+										xRetorno := .F.
+
+										aAdd(::aMsgErro, "Não foi possivel faturar o pedido "+ZL5->ZL5_NUM+" automaticamente devido a problemas na liberação na Empresa\Filial "+cEmpAnt+"\"+cFilAnt+"!")
+
+										If Len(aBloqueio) > 0
+
+											aAdd(::aMsgErro, "Bloqueio -> Credito: [" + aBloqueio[1][6] + "] - Estoque: [" + aBloqueio[1][7] + "]")
+										
+										EndIf
+
+										If Len(aPvlNfs) == 0
+
+											aAdd(::aMsgErro, "Ma410LbNfs -> aPvlNfs vazio!")
+
+										EndIf
+
+									Else
+
+										//apos acerto de volumes realiza o faturamento
+										xRetorno := ::DocSaida(SC5->C5_CLIENTE,SC5->C5_LOJACLI,aPvlNfs)
+
+									EndIf
+
+									SC6->(DBSkip())
+
+								EndDo
+
+							EndIf
+
+						EndIf
+
+					EndIf
+
+				Next nW
+
+				ZL6->(MsUnLockAll())
+
+			Else
+
+				xRetorno := .F.
+
+				aAdd(::aMsgErro,"Serie [" + ::cSerieNF + "]" +ZL5->ZL5_NUM+" não identificada na Empresa\Filial "+cEmpAnt+"\"+cFilAnt+"!")
+
+			EndIf
+
+		EndIf
+
+		If !xRetorno .And. !lJob
+
+			DisarmTransaction()			
+
+		EndIf
+
+		//End Transaction
+
+		If !lJob
+
+			If Len(::aMsgErro) > 0
+
+				cMens := ""
+
+				For i := 1 To Len(::aMsgErro)
+
+					cMens += ::aMsgErro[1]
+
+				Next i
+
+				Aviso("ATENCAO", cMens, {"Ok"},3)
+
+			Else
+
+				::RefreshAll()
+
+			EndIf
+
+		Endif
+
+	End Transaction
+
+	_XCRGATFAT	:= .F.
+
+	RestArea(aAreaSC5)
+	RestArea(aAreaSC6)
+	RestArea(aAreaZL5)
+	RestArea(aAreaZL6)
+
+Return(xRetorno)
+
+Method DocSaida(cCliente,cLoja,aPvlNfs) Class TWFaturamentoemPartes
+
+	Local aPerg 	:= {}
+	Local aNotas 	:= {}
+	Local nItemNf	:= ""
+	Local aTotPvlNfs:= {}
+	Local cNota		:= ""
+	Local nX		:= 0
+	Local i			:= 0
+	Local oObjFatPart := TFaturamentoemPartes():New(.T.)
+	Local aAreaSC5	:= SC5->(GetArea())
+	Local aAreaSC6	:= SC6->(GetArea())
+	
+	//inclui no vetor principal para faturamento
+	aAdd(aTotPvlNfs,{cCliente+cLoja,::cSerieNF,aPvlNfs})
+
+	For i:= 1 to Len(aTotPvlNfs)
+
+		aNotas	:= {}
+
+		nItemNf	:= a460NumIt(aTotPvlNfs[i][2])
+
+		aadd(aNotas,{aTotPvlNfs[i][2],{}})
+
+		//Quebra o pedido em notas caso tenha mais itens do que o determinado em parametro
+		If Len(aTotPvlNfs[i][3]) >= nItemNf
+
+			For nX := 1 To Len(aTotPvlNfs[i][3])
+
+				If Len(aNotas[Len(aNotas)][2]) >= nItemNf
+
+					aadd(aNotas,{aTotPvlNfs[i][2],{}})
+
+				EndIf
+
+				aadd(aNotas[Len(aNotas)][2],aClone(aTotPvlNfs[i][3][nX]))
+
+			Next nX
+
+		Else
+
+			aNotas[Len(aNotas)][2] := aClone(aTotPvlNfs[i][3])
+
+		EndIf
+
+		For nX := 1 To Len(aNotas)
+
+			//Chama grupo de perguntas para emissão da nf fiscal
+			Pergunte("MT460A", .F.,,,,, @aPerg)	
+
+			MV_PAR01 := 2 // Mostra Lanç.Contab ?
+			MV_PAR02 := 1 // Aglut. Lançamentos ?
+			MV_PAR03 := 1 // Lanç.Contab.On-Line ?
+
+			MV_PAR17 := 1 // Gera Titulo da guia (SE2) ?  
+			MV_PAR18 := 1 // Gera guia recolhimento (SF6) ?			
+			MV_PAR19 := 2 // Gera Titulo ICMS Próprio ? 
+			MV_PAR20 := 2 // Gera Guia ICMS Próprio ?
+
+			MV_PAR22 := 2 // Gera Titulo por Produto ?
+			MV_PAR23 := 2 // Gera Guia por Produto ?
+			MV_PAR24 := 1 // Gera Guia ICM Compl. UF Dest (DIFAL) ?
+			MV_PAR25 := 1 // Gera Guia FECP da UF Destino ?
+
+			__SaveParam("MT460A", aPerg)
+
+			//Rotina para geração da nf fiscal
+			cNota := MaPvlNfs(aNotas[nX][2],aNotas[nX][1],MV_PAR01==1,MV_PAR02==1,MV_PAR03==1,MV_PAR04==1,MV_PAR05==1,MV_PAR07,MV_PAR08,MV_PAR15==1,MV_PAR16==2)
+
+			If !Empty(cNota)
+
+				aAdd(::aNotas,{Padr(cNota,TamSx3("F2_DOC")[1]),::cSerieNF,""})
+
+				ZL6->ZL6_DOC	:= cNota
+				ZL6->ZL6_SERIE	:= ::cSerieNF
+
+				If ZL6->ZL6_TPMOV == "D"
+
+					oObjFatPart:SetOrigem(ZL6->ZL6_EMPODE, ZL6->ZL6_FILODE, ZL6->ZL6_PEDODE, ZL6->ZL6_DOCODE, ZL6->ZL6_SERODE, ZL6->ZL6_DOC, ZL6->ZL6_SERIE, ZL6->ZL6_NUM, ZL6->ZL6_CODEMP, ZL6->ZL6_CODFIL)
+
+				EndIf
+
+			Else
+
+				aAdd(::aMsgErro,"Houve problemas no faturamento da nota fiscal na Empresa\Filial "+cEmpAnt+"\"+cFilAnt+"!")
+				aAdd(::aMsgErro,"Numero da nota veio vazio do PE M461SER!! "+cEmpAnt+"\"+cFilAnt+"!")
+
+				Return .F.
+
+			EndIf
+
+		Next nX
+
+	Next i
+
+	RestArea(aAreaSC5)
+	RestArea(aAreaSC6)
+
+Return(.T.)
+
+Method Confirm() Class TWFaturamentoemPartes
+
+	If ::Valid()
+
+		U_BIAMsgRun("Salvando dados...", "Aguarde!", {|| ::Save() })
+
+		::oWindow:oOwner:End()
+
+	EndIf 
+
+Return()
+
+Method Sort(nCol) Class TWFaturamentoemPartes
+
+	Local nSort := 0
+	Local nW := 0
+
+	If nCol > 1 .And. nCol < 12 .And. Len(::oGD:aCols) > 1
+
+		For nW := 1 To ::oGDField:Fields:GetCount()
+
+			If nW <> nCol
+
+				::oGDField:Fields:GetValue(nW):nSort := 0
+
+				::oGD:oBrowse:SetHeaderImage(nW, "")
+
+			EndIf
+
+		Next
+
+		If ::oGDField:Fields:GetValue(nCol):nSort == 1
+
+			nSort := 2
+
+			aSort(::oGD:aCols,,, {|x,y| (x[nCol]) > (y[nCol])})
+
+		Else
+
+			nSort := 1
+
+			aSort(::oGD:aCols,,, {|x,y| (x[nCol]) < (y[nCol])})
+
+		EndIf
+
+		::oGDField:Fields:GetValue(nCol):nSort := nSort
+
+		::oGD:oBrowse:SetHeaderImage(nCol, If (nSort == 1, "COLDOWN", "COLRIGHT"))
+
+		::oGD:Refresh()
+
+	EndIf
+
+Return()
+
+Method GetCount(oGrid) Class TWFaturamentoemPartes
+
+	Local nTot := 0
+	Local nW := 0
+
+	For nW := 1 To Len(oGrid:aCols)
+
+		If !GdDeleted(nW, oGrid:aHeader, oGrid:aCols)
+
+			nTot++
+
+		EndIf
+
+	Next nW
+
+Return(nTot)
+
+Method GetCountC6() Class TWFaturamentoemPartes
+	
+	Local nTot := 0
+	
+	DBSelectArea("SC6")
+	SC6->(DBSetOrder(1))
+
+	If SC6->(DBSeek(xFilial("SC6") + SC5->C5_NUM))
+
+		While !SC6->(EOF()) .And. SC6->(C6_FILIAL + C6_NUM) == xFilial("SC6") + SC5->C5_NUM
+
+			nTot++
+
+			SC6->(DBSkip())
+
+		EndDo
+
+	EndIf
+
+Return(nTot)
+
+Method ReenviarDanfe() Class TWFaturamentoemPartes
+
+	Local nW := 0
+	Local nPosRecno := aScan(::oGD:aHeader, {|x| AllTrim(x[2]) == "Recno"})
+	Local nDelet		:= 0
+
+	Local cTitulo	:= " Escolha o vendedor para fatura "
+	Local cQuery	:= ""
+	Local cRet		:= ""
+	Local cDocSerie := ""
+	Local nW	    := 0
+	Local nSit		:= 0
+	Local aSit		:= {}
+	Local aSelect	:= {}
+	Local nElemRet	:= 0
+	Local nTamDocSerie	:= TAMSX3("ZL6_DOC")[1] + TAMSX3("ZL6_SERIE")[1]
+	Local lMultSelect := .T.
+	Local l1Elem	:= .F.
+
+	DBSelectArea("ZL6")
+	ZL6->(DBSetOrder(1))
+
+	DBSelectArea("SF2")
+	SF2->(DBSetOrder(1)) // F2_FILIAL, F2_DOC, F2_SERIE, F2_CLIENTE, F2_LOJA, F2_FORMUL, F2_TIPO, R_E_C_N_O_, D_E_L_E_T_
+
+	If ZL6->(DBSeek(xFilial("ZL6") + cEmpAnt + cFilAnt + SC5->C5_NUM))
+
+		While !ZL6->(EOF()) .And. ZL6->(ZL6_FILIAL + ZL6_CODEMP + ZL6_CODFIL + ZL6_NUM) == xFilial("ZL6") + cEmpAnt + cFilAnt + SC5->C5_NUM
+
+			If !Empty(ZL6->ZL6_DOC)
+
+				If SF2->(DBSeek(xFilial("SF2") + ZL6->ZL6_DOC + ZL6->ZL6_SERIE))
+
+					aAdd(aSit, ZL6->ZL6_DOC + ZL6->ZL6_SERIE)
+
+					//cDocSerie += ZL6->ZL6_DOC + ZL6->ZL6_SERIE
+
+				EndIf
+
+			EndIf
+
+			ZL6->(DBSkip())
+
+		EndDo
+
+	EndIf
+
+	nElemRet := Len(aSit)
+
+	If nElemRet > 0
+
+		If AdmOpcoes(@cRet,cTitulo,aSit,cDocSerie,,,l1Elem,nTamDocSerie,nElemRet,lMultSelect)
+
+			nSit := 1
+
+			For nW := 1 To Len(cRet) Step nTamDocSerie
+
+				If SubSTR(cRet, nW, nTamDocSerie) <> Replicate("*",nTamDocSerie)
+
+					AADD(aSelect, SubSTR(cRet, nW, nTamDocSerie) )
+
+				Endif
+
+				nSit++
+
+			next
+
+			lTodas := Len(aSelect) == Len(aSit)
+
+			DBSelectArea("ZL6")
+			ZL6->(DBSetOrder(3)) // ZL6_FILIAL, ZL6_NUM, ZL6_DOC, ZL6_SERIE
+
+			If MsgYesNo("Confirma envio das danfes para " + AllTrim(M->ZL5_EMAIL) + " ?")
+
+				RecLock("ZL5", .F.)
+				ZL5->ZL5_EMAIL	:= M->ZL5_EMAIL
+				ZL5->(MsUnLock())
+
+				For nW := 1 To Len(aSelect)
+
+					If ZL6->(DBSeek(xFilial("ZL6") + cEmpAnt + cFilAnt + SC5->C5_NUM + aSelect[nW]))
+
+						RecLock("ZL6", .F.)
+						ZL6->ZL6_STATUS	:= "1"
+						ZL6->(MsUnLock())
+
+					EndIf
+
+				Next nW
+
+				::Close()
+
+			EndIf
+
+		Endif
+
+	EndIf
+
+Return()
+
+Method PreencheGrid() Class TWFaturamentoemPartes
+
+	Local nW := 0
+	//Local nPosQtdNf 	:= aScan(_Self:oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_QTDNF"})
+	Local nPosQtdProd 	:= aScan(_Self:oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_QTDVEN"})
+	Local nPosVolume	:= aScan(_Self:oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_VOLUME"})
+	Local nPosObs		:= aScan(_Self:oGD:aHeader, {|x| AllTrim(x[2]) == "ZL6_OBS"})
+
+	If AllTrim(ReadVar()) $ "M->ZL5_QTDNF"
+
+		If ::GetCount(_Self:oGD) <= M->ZL5_QTDNF
+
+			_Self:oGD:nMax := M->ZL5_QTDNF
+
+			For nW := 1 To M->ZL5_QTDNF
+
+				If ::GetCount(_Self:oGD) == 1 .And. M->ZL5_QTDNF == 1
+
+					_Self:oGD:aCols[nW][nPosQtdProd] := M->ZL5_QTDVEN
+
+					Loop
+
+				EndIf
+
+				If ::GetCount(_Self:oGD) < M->ZL5_QTDNF
+
+					aAdd(_Self:oGD:aCols, aClone(::aLineDefault[1]))
+
+				EndIf
+
+				//_Self:oGD:aCols[nW][nPosQtdNf] := 1
+
+				_Self:oGD:aCols[nW][nPosQtdProd] := M->ZL5_QTDVEN
+
+			Next nW
+
+		Else
+
+			If ::GetCount(_Self:oGD) > M->ZL5_QTDNF
+
+				If MsgYesNo("Deseja refazer o grid?")
+
+					_Self:oGD:nMax := M->ZL5_QTDNF
+
+					aSize(_Self:oGD:aCols, M->ZL5_QTDNF)
+
+				Else
+
+					M->ZL5_QTDNF := ::GetCount(_Self:oGD)
+
+				EndIf
+
+			EndIf
+
+		EndIf
+
+	EndIf
+
+	If AllTrim(ReadVar()) $ "M->ZL5_QTDVEN"
+
+		For nW := 1 To Len(_Self:oGD:aCols)
+
+			_Self:oGD:aCols[nW][nPosQtdProd] := M->ZL5_QTDVEN
+
+		Next nW
+
+	EndIf
+
+	If AllTrim(ReadVar()) $ "M->ZL5_VOLUME"
+
+		For nW := 1 To Len(_Self:oGD:aCols)
+
+			_Self:oGD:aCols[nW][nPosVolume] := M->ZL5_VOLUME
+
+		Next nW
+
+	EndIf
+	/*
+	If AllTrim(ReadVar()) $ "M->nPosObs"
+
+	For nW := 1 To Len(_Self:oGD:aCols)
+
+	_Self:oGD:aCols[nW][nPosObs] := M->ZL5_OBS
+
+	Next nW
+
+	EndIf */
+
+Return()
+
+Method Processa() Class TWFaturamentoemPartes
+
+	If IsInCallStack("U_BACP0020")
+
+		RecLock("SF2", .F.)
+
+		SF2->F2_TRANSP	:= ZL5->ZL5_TRANSP
+		SF2->F2_ESPECI1	:= ZL5->ZL5_ESPECI
+		SF2->F2_YPLACA	:= ZL6->ZL6_PLACA
+		SF2->F2_YUF		:= ZL6->ZL6_UF
+		SF2->F2_YPEDIDO	:= ZL6->ZL6_NUM
+
+		SF2->F2_YMENPAD	:= SC5->C5_MENPAD
+		SF2->F2_YMENNOT	:= If(Empty(AlLTrim(ZL6->ZL6_OBS)), AlLTrim(SC5->C5_MENNOTA), AlLTrim(SC5->C5_MENNOTA) + " - " + AlLTrim(ZL6->ZL6_OBS))
+
+		SF2->F2_VOLUME1	:= ZL6->ZL6_VOLUME
+		SF2->F2_PLIQUI	:= ZL6->ZL6_PLIQUI
+		SF2->F2_PBRUTO	:= ZL6->ZL6_PBRUTO
+
+		SF2->F2_YSUBTP	:= SC5->C5_YSUBTP
+		SF2->F2_YCCUSTO	:= SC5->C5_YCC
+		SF2->F2_YCLVL	:= SC5->C5_YCLVL
+		SF2->F2_YITEMCT	:= SC5->C5_YITEMCT
+		SF2->F2_YEMP	:= SC5->C5_YEMP 		//GRAVA EMPRESA ORIGINAL
+		SF2->F2_YRESULT	:= SC5->C5_YRESULT		//GRAVA RESULTADO
+		SF2->F2_YRESUL2	:= SC5->C5_YRESUL2
+
+		/*
+		//Inserido por Wanisay no dia 25/12/16 para atender a exigência MDF-e /*
+		If !Empty(wPlaca)
+
+		DA3->(DbSetOrder(3))
+
+		If DA3->(DbSeek(xFilial("DA3") + ZL6->ZL6_PLACA))
+
+		SF2->F2_VEICUL1 := AllTrim(DA3->DA3_COD)
+
+		EndIf
+
+		EndIf
+		*/
+
+		SF2->(MsUnLock())
+
+	EndIf
+
+Return()
+
+Method GetLegenda(cStatus) Class TWFaturamentoemPartes
+
+	Local cLegenda := ""
+
+	Default cStatus := "" // 1=Emitida;2=Transmitida;3=Autorizada;4=Rejeitada;5=Cancelada;6=PDF criado;7=PDF enviado;8=Finalizado
+
+	If cStatus == "1"
+
+		cLegenda := "BR_VERMELHO"
+
+	ElseIf cStatus == "2"
+
+		cLegenda := "BR_AZUL"
+
+	ElseIf cStatus == "3"
+
+		cLegenda := "BR_VERDE"
+
+	ElseIf cStatus == "4"
+
+		cLegenda := "BR_PRETO"
+
+	ElseIf cStatus == "5"
+
+		cLegenda := "BR_LARANJA"
+
+	ElseIf cStatus == "6"
+
+		cLegenda := "BR_AMARELO"
+
+	ElseIf cStatus == "7"
+
+		cLegenda := "BR_MARRON"
+
+	ElseIf cStatus == "8"
+
+		cLegenda := "BR_BRANCO"
+
+	EndIf
+
+Return(cLegenda)
+
+Method Legenda() Class TWFaturamentoemPartes
+
+	Local aLegenda := {}
+
+	AADD(aLegenda, {"BR_VERMELHO"	, "Emitida"			})
+	AADD(aLegenda, {"BR_AZUL"       , "Transmitida"		})
+	AADD(aLegenda, {"BR_VERDE"      , "Autorizada"		})
+	AADD(aLegenda, {"BR_PRETO"      , "Rejeitada"		})
+	AADD(aLegenda, {"BR_LARANJA"    , "Cancelada"		})
+	AADD(aLegenda, {"BR_AMARELO"    , "PDF criado"		})
+	AADD(aLegenda, {"BR_MARRON"     , "PDF enviado"		})
+	AADD(aLegenda, {"BR_BRANCO"     , "Finalizado"		})
+
+	BrwLegenda(TIT_WND, "Legenda", aLegenda)
+
+Return()
+
+Method Close() Class TWFaturamentoemPartes
+
+	::oWindow:oOwner:End()
+
+Return()
+
+User Function BAC020R()
+
+	If AllTrim(ReadVar()) $ "M->ZL5_QTDNF|M->ZL5_QTDVEN|M->ZL5_VOLUME|M->ZL5_TRANSP"
+
+		If ValType(_Self) == "O"
+
+			_Self:PreencheGrid()
+
+			_Self:oGD:oBrowse:Refresh()
+
+			_Self:Refresh()
+
+		EndIf
+
+	EndIf
+
+Return(.T.)
+
+User Function BACP0020()
+
+	Local oObj := TWFaturamentoemPartes():New(.T.)
+
+	oObj:Activate()
+
+Return()

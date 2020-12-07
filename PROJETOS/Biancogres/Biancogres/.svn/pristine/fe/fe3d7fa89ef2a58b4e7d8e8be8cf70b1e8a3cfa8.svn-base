@@ -1,0 +1,457 @@
+#Include "TOTVS.CH"
+#Include "Protheus.CH"
+#Include "TOPCONN.CH"
+
+/*/{Protheus.doc} TLiberacaoBloqueioPedidoVenda
+@description Projeto Ciclo do Pedido => 
+@author Pedro Henrique / Facile Sistemas
+@since 09/07/2019
+@version 1.0
+@type class
+/*/
+
+Class TLiberacaoBloqueioPedidoVenda From LongClassName
+	
+	Public Data cEmp
+	Public Data cFil
+	Public Data lJob
+	Public Data cNumPed	
+	Public Data cCodAprov
+	Public Data lAprovTemp
+	Public Data cOrigem
+	Public Data cObs	
+	Public Data cAcao
+	
+	//metodos publicos	
+	Public Method New() Constructor
+	
+	Public Method Liberar() 
+	Public Method LiberarSC5()
+	Public Method LiberarSC6()
+	Public Method LiberarUZ7()	
+	Public Method LiberarOutros()
+	
+	Public Method Revisar()
+	Public Method GetHtmlRevisar()
+	Public Method EnvMailRevisar()
+	
+	Public Method Recusar()
+	Public Method EliminarResiduo()
+
+	Public Method CancelarZKL() 
+	Public Method AtualizarZKL()
+	Public Method CheckAmbiente()
+	Public Method AtuAprovSC5()
+	
+EndClass
+
+Method New () Class TLiberacaoBloqueioPedidoVenda
+	
+	::cNumPed 		:= ""
+	::cCodAprov		:= "" 
+	::lAprovTemp	:= .F.
+	::cOrigem		:= ""
+	::cObs			:= ""
+	::cEmp			:= ""
+	::cFil			:= ""
+	::lJob			:= .F.
+	
+Return
+
+Method CheckAmbiente() Class TLiberacaoBloqueioPedidoVenda
+
+	If ::lJob
+
+		If cEmpAnt <> ::cEmp .Or. cFilAnt <> ::cFil 
+
+			RpcClearEnv()
+
+			RpcSetType(3)
+			RpcSetEnv(::cEmp, ::cFil)
+
+		EndIf
+
+	EndIf
+
+Return
+
+Method Revisar() Class TLiberacaoBloqueioPedidoVenda
+	
+	Local aArea			:= GetArea()
+	Local oBlqCom		:= Nil
+	
+		::CheckAmbiente()
+	
+		::EnvMailRevisar()
+		
+		::cAcao := '2'
+		::AtualizarZKL() 
+	
+		::CancelarZKL()
+		
+		oBlqCom	:= TBloqueioComercialPedidoVenda():New()
+		oBlqCom:cNumPed := ::cNumPed
+		If oBlqCom:Existe()
+			oBlqCom:Exclui()		
+		EndIf
+		
+	RestArea(aArea)
+	
+Return
+
+Method CancelarZKL() Class TLiberacaoBloqueioPedidoVenda
+
+	oPedAprov := TPedidoAprovador():New(::cNumPed)
+	oPedAprov:CancelarAprov()	
+	
+	
+Return
+
+Method EnvMailRevisar()  Class TLiberacaoBloqueioPedidoVenda
+
+	Local aCC 			:= ""
+	Local aCCO 			:= ""			
+	Local cTitulo		:= "Revisa do Pedido - "+::cNumPed
+	Local cDestinatario	:= ""
+	Local cEmp			:= ""
+	Local cQuery		:= ""
+	
+	DbSelectArea('SC5')
+	SC5->(DbSetOrder(1))
+	
+	If SC5->(DbSeek(xFilial('SC5')+::cNumPed)) 
+		
+		Reclock("SC5", .F.)
+
+			SC5->C5_YAPROV	:= ""
+			SC5->C5_YAAPROV	:= ""
+							
+		SC5->(MsUnlock())
+		
+		cQuery := "UPDATE "+RetSqlName("SC6")+" SET 											"
+		cQuery += " C6_BLQ 			= 'N',														"
+		cQuery += " C6_BLOQUEI 		= '',														"
+		cQuery += " C6_MSEXP 		= ''														"
+		cQuery += " WHERE C6_FILIAL = '"+xFilial("SC6")+"' AND C6_NUM = '"+ ::cNumPed +"'  		"
+		cQuery += " AND C6_BLQ <> 'R' AND D_E_L_E_T_ = '' 										"
+		TcSQLExec(cQuery)	
+		
+		
+		If (Empty(SC5->C5_YPEDORI))
+			cEmp	:= SubStr(SC5->C5_YEMP, 1, 2)
+		Else
+			cEmp	:= SC5->C5_YEMPPED
+		EndIf
+		
+		cDestinatario	:= U_MailAtendente(cEmp, SC5->C5_NUM, SC5->C5_VEND1, SC5->C5_CLIENTE, SC5->C5_LOJACLI)
+		
+		DbSelectArea('SA3')
+		SA3->(DbSetOrder(1))
+		If (SA3->(DbSeek(xFilial('SA3')+SC5->C5_VEND1)))
+			cDestinatario += ";"+AllTrim(SA3->A3_EMAIL)
+		EndIf
+		
+		Conout("E-mail destinatario revisao:"+cDestinatario)
+		
+		//cDestinatario	:= 'pedro@facilesistemas.com.br;barbara.madeira@biancogres.com.br'
+				
+		//Envia e-mail
+		U_BIAEnvMail(, cDestinatario, cTitulo, ::GetHtmlRevisar(), , , , aCC, aCCO)
+	
+	EndIf	  	
+
+Return
+
+Method GetHtmlRevisar() Class TLiberacaoBloqueioPedidoVenda
+	
+	Local cHtml := ""
+	
+	cHtml := '   <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	cHtml += '   <html xmlns="http://www.w3.org/1999/xhtml">
+	cHtml += '      <head>
+	cHtml += '         <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	cHtml += '         <title>workflow</title>
+	cHtml += '         <style type="text/css">
+	cHtml += '			<!--
+	cHtml += ' 			body{ font-family: Verdana; font-size: 14px; }  
+	cHtml += '			.motret {1px solid #969696; background-color: #e0e0de; color:#000; padding:1px 1px 1px 1px;}
+	cHtml += '			-->
+	cHtml += '         </style>
+	cHtml += '      </head>
+	cHtml += '      <body>
+
+	cHtml += "<p>O pedido: "+::cNumPed+" foi solicitado revisão pelo aprovador: "+UsrRetName(::cCodAprov)+".</p>"
+	
+	cHtml += "<p>Motivo: </p>"
+	cHtml += "		<table align='center' width='100%' border='1' cellspacing='0' cellpadding='1'>"
+	cHtml += "          <tr>"
+	cHtml += "            <th class='motret' >"+AllTrim(::cObs)+"</th>"
+	cHtml += "			</tr>"
+	cHtml += "		</table>"
+	
+	cHtml += "      </body>"
+	cHtml += "   </html>"
+	
+Return cHtml
+
+
+Method Recusar() Class TLiberacaoBloqueioPedidoVenda
+	
+	Local aArea		:= GetArea()
+	Local oBlqCom	:= Nil
+	
+		::CheckAmbiente()
+		
+		::EliminarResiduo()
+		
+		::cAcao := '3'
+		::AtualizarZKL() 
+		
+		::CancelarZKL()
+		
+		oBlqCom	:= TBloqueioComercialPedidoVenda():New()
+		oBlqCom:cNumPed := ::cNumPed
+		If oBlqCom:Existe()
+			oBlqCom:Exclui()		
+		EndIf
+		
+	
+	RestArea(aArea)	
+
+Return
+
+Method EliminarResiduo() Class TLiberacaoBloqueioPedidoVenda
+	
+	Local cMsg		:= ""
+	Local cLinhaEmp	:= ""
+	
+	DbSelectArea('SC5')
+	SC5->(DbSetOrder(1))
+  
+	If SC5->(DbSeek(xFilial('SC5')+::cNumPed)) 
+	
+		If (Empty(SC5->C5_YPEDORI))
+		
+			U_BACP0007(::cNumPed)
+		
+		Else //empresa 07
+			
+			DbSelectArea('SC6')
+			SC6->(dbSetOrder(1))
+				
+			If (SC6->(DbSeek(xFilial("SC6")+SC5->C5_NUM)))
+			
+				cLinhaEmp	:= SubStr(SC6->C6_YEMPPED, 1 ,2)+"01"
+				cMsg		:= U_FROPCPRO(SubStr(cLinhaEmp, 1, 2),SubStr(cLinhaEmp, 3, 2),"U_BACP0007", SC5->C5_YPEDORI)
+			
+				//TODO enviar email retorno
+			
+				U_BACP0007(::cNumPed)
+			EndIf	
+			
+		EndIf
+		
+	EndIf	  	
+
+Return
+
+Method Liberar() Class TLiberacaoBloqueioPedidoVenda
+
+	Local cIdZKL 		:= "" 
+	Local oAprPed		:= TAprovaPedidoVendaEMail():New() 
+	Local aArea			:= GetArea()
+	
+	::CheckAmbiente()
+	
+	::cAcao := '1'
+	::AtualizarZKL()
+	
+	
+	oPedAprov := TPedidoAprovador():New(::cNumPed)
+	cIdZKL := oPedAprov:GetIdAprov()	
+	
+	
+	If Empty(cIdZKL)
+	
+		::LiberarSC5()
+		::LiberarSC6()
+		::LiberarUZ7()	
+	
+		oConfPedVen := TConferenciaPedidoVenda():New(cEmpAnt, cFilAnt, 3, UsrRetName(::cCodAprov))
+		oConfPedVen:Checar(::cNumPed)	
+	
+		//::LiberarOutros()
+	
+	Else
+		
+		
+		::AtuAprovSC5(cIdZKL)
+		oAprPed:cNumPed	:= ::cNumPed
+		oAprPed:Envia()
+		
+	EndIf
+	
+	RestArea(aArea)	
+			
+Return
+
+Method AtuAprovSC5(cIdZKL) Class TLiberacaoBloqueioPedidoVenda
+
+	Local oBlqCom := Nil
+	
+	If (!Empty(cIdZKL))
+	
+		DbSelectArea("ZKL")
+		ZKL->(DbGoto(cIdZKL))
+		
+		DbSelectArea("SC5")
+		SC5->(DbSetOrder(1))
+		
+		If SC5->(DbSeek(xFilial("SC5") + ::cNumPed))
+		
+			Reclock("SC5", .F.)
+				SC5->C5_YAAPROV := Upper(Substr(Alltrim(UsrRetName(ZKL->ZKL_APROV)), 1, 15))
+			SC5->(MsUnlock())
+			
+			//atualiza bLoqueio de desconto
+			oBlqCom	:= TBloqueioComercialPedidoVenda():New()
+			oBlqCom:cNumPed := ::cNumPed
+			oBlqCom:Inclui()
+			
+			
+		EndIf
+	
+	EndIf
+		
+Return 
+
+Method AtualizarZKL() Class TLiberacaoBloqueioPedidoVenda
+
+	oPedAprov := TPedidoAprovador():New(::cNumPed)
+	oPedAprov:AtualizarAprov(::cCodAprov, ::cOrigem, ::cObs, ::cAcao)	
+	
+Return
+
+
+Method LiberarSC5() Class TLiberacaoBloqueioPedidoVenda
+	
+	DbSelectArea("SC5")
+	SC5->(DbSetOrder(1))
+	If SC5->(DbSeek(xFilial("SC5") + ::cNumPed))
+
+		Reclock("SC5", .F.)
+
+		SC5->C5_YAPROV	:= UsrRetName(::cCodAprov)
+		SC5->C5_LIBEROK	:= ""
+
+		// Aprovador temporario
+		If ::lAprovTemp
+
+			SC5->C5_YAPRTMP := "S"
+
+		EndIf
+		
+		// Altera o tipo do cliente no pedido para nao gerar substituicao tributaria para SP.
+		If SC5->C5_TIPOCLI == "S" .And. AllTrim(SC5->C5_YSUBTP) == "A" .And. Posicione("SA1", 1, xFilial("SA1") + SC5->C5_CLIENTE + SC5->C5_LOJACLI, "A1_EST") == "SP"				
+
+			SC5->C5_TIPOCLI := "R"
+
+		EndIf			
+
+		SC5->(MsUnlock())
+
+	EndIf
+	
+	
+Return
+
+
+Method LiberarSC6() Class TLiberacaoBloqueioPedidoVenda
+	
+	//libera itens
+	DbSelectArea("SC6")
+	SC6->(DbSetOrder(1))
+	If SC6->(DbSeek(xFilial("SC6") + ::cNumPed))
+
+		While !SC6->(Eof()) .And. SC6->C6_NUM == ::cNumPed       	
+
+			If Alltrim(SC6->C6_BLQ) <> "R"		
+
+				Reclock("SC6", .F.)
+
+				SC6->C6_BLOQUEI	:= ""
+				SC6->C6_BLQ 	:= "N"
+
+				SC6->(MsUnlock())
+
+			EndIf
+
+			SC6->(DbSkip())
+
+		EndDo()
+
+	EndIf		
+	
+Return
+
+
+Method LiberarUZ7() Class TLiberacaoBloqueioPedidoVenda
+	
+	DbSelectArea("UZ7")
+	UZ7->(DbSetOrder(1))
+	If UZ7->(DbSeek(xFilial("UZ7") + ::cNumPed))
+
+		Reclock("UZ7", .F.)
+
+		UZ7->UZ7_APROV := UsrRetName(::cCodAprov)
+
+		UZ7->(MsUnlock())
+
+	EndIf  
+	
+Return
+
+
+Method LiberarOutros() Class TLiberacaoBloqueioPedidoVenda
+
+	Local cEmpPed	:= ""
+	
+	DbSelectArea("SC5")
+	SC5->(DbSetOrder(1))
+	If SC5->(DbSeek(xFilial("SC5") + ::cNumPed))
+		
+		// Projeto Reserva de OP/Lote - Só enviar o email de pedido apos liberacao das rejeicoes de lote
+		If U_FROPVLPV(SC5->C5_NUM, .F., .F.) .And. U_fVlLbDes(SC5->C5_NUM,SC5->C5_YCLIORI)   
+	
+			cEmpPed := cEmpAnt
+	
+			If !Empty(SC5->C5_YEMPPED)
+	
+				cEmpPed := SC5->C5_YEMPPED
+	
+			EndIf
+			
+			ConOut("TLiberacaoBloqueioPedidoVenda => PEDIDO: "+::cNumPed+", Conf: "+SC5->C5_YCONF+", YEnvio: "+SC5->C5_YENVIO+",  Data: "+DTOC(dDataBase)+" Hora: "+Time())
+	
+	
+			// Controle para não enviar o pedido novamente
+			If SC5->C5_YCONF == "S" .And. SC5->C5_YENVIO <> "S" .And. Posicione("SA1", 1, xFilial("SA1") + SC5->C5_CLIENTE + SC5->C5_LOJACLI, "A1_YEMAIL") == "S"
+	
+				// Envia e-mail do pedido de venda
+				U_Env_Pedido(SC5->C5_NUM, .T., .T., cEmpPed) 
+	
+				// Envia e-mail para o atendente		
+				U_BIA188()
+	
+				// Atualizar data das reservas de acordo com vencimento dodo boleto antecipado
+				U_FR2VLRES(SC5->C5_NUM)
+	
+			ConOut("TLiberacaoBloqueioPedidoVenda => PEDIDO: "+::cNumPed+"  email enviado.")
+	
+			EndIf  
+	
+		EndIf		
+		
+	EndIf
+		
+Return 

@@ -1,0 +1,1455 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "APWIZARD.CH"
+#INCLUDE "FILEIO.CH"
+#INCLUDE "RPTDEF.CH"
+#INCLUDE "FWPrintSetup.ch"
+#INCLUDE "TOTVS.CH"
+#INCLUDE "PARMTYPE.CH"
+#INCLUDE "TOPCONN.CH"
+
+/*/{Protheus.doc} BACP0020
+@author Wlysses Cerqueira (Facile)
+@since 26/12/2019  
+@project Automação Faturamento
+@version 1.0
+@description 
+@type function
+/*/
+
+User Function JOBFATPARTE()
+
+	Local oBj := Nil
+
+	oBj := TFaturamentoemPartes():New(.F.)
+
+	oBj:PercorreFiliais()
+
+	FreeObj(oBj)
+
+Return()
+
+User Function EJOBFATPARTE(aParam)
+
+	Local oBj_ := Nil
+
+	//RPCSetType(3)
+
+	RpcSetEnv(aParam[1], aParam[2],,,"FAT")
+
+	oBj_ := TFaturamentoemPartes():New(.T.)
+
+	oBj_:AddLog("Iniciando processo")
+
+	oBj_:ProcessaSaida()
+
+	oBj_:ProcessaEntrada(aParam[3])
+
+	FreeObj(oBj_)
+
+	RpcClearEnv()
+
+Return()
+
+	Class TFaturamentoemPartes From LongClassName
+
+		Data cErro
+		Data cProdutoOri
+		Data cProdutoDes
+		Data cEmailTransf
+
+		Data aFiliais
+
+		Public Method New(lJob) Constructor
+		Public Method Load(lJob)
+		Public Method LoadFiliais()
+		Public Method PercorreFiliais()
+		Public Method GetErrorLog()
+		Public Method PDF(aNotas)
+		Public Method EnvioNFe(aNotasEnv)
+		Public Method ProcDocPed(aCabSF1, aItensSF1, aCabSC5, aItensSC6, cEmpOri, cFilOri, cPedOri, cDoc, cSerie, cCodFor, cLojaFor)
+		Public Method ProcPedVen(aCabSC5, aItensSC6, cEmpOri, cFilOri, cPedOri, cDoc, cSerie, cCodFor, cLojaFor)
+		Public Method ProcessaSaida()
+		Public Method ProcessaEntrada(aFiliais)
+		Public Method Transmissao()
+		Public Method AddLog()
+		Public Method Vld_MV_NUMITEN()
+		Public Method WorkflowTransf(cProdOri, cProdDes, nQtd, cLocalOri, cLocalDes, cPedido, aDocEntrada, cPedDes)
+		Public Method SetLog(cEmpOri, cFilOri, cPedOri, cDoc, cSerie, cLog)
+		Public Method SetOrigem(cEmpOri, cFilOri, cPedOri, cDoc, cSerie, cDocDes, cSerDes, cPedDes, cEmpDes, cFilDes)
+		Public Method ExisteFuncaoEmProcessamento(cFuncProc, cEmp, cFil)
+
+	EndClass
+
+Method New(lJob) Class TFaturamentoemPartes
+
+	Default lJob 	:= .F.
+
+	::cErro			:= ""
+	::cProdutoOri	:= "1010255" // Produto padrao do processo de recebimento de argila da JK
+	::cProdutoDes	:= "1010257" // Produto padrao do processo de recebimento de argila da JK
+	::cEmailTransf  := "Jecimar.Ferreira@biancogres.com.br;fabiana.corona@biancogres.com.br;wlysses@facilesistemas.com.br"
+
+	::Load(lJob)
+
+Return(Self)
+
+Method Load(lJob) Class TFaturamentoemPartes
+
+	Local aFilAux	:= {}
+	Local nW		:= 0
+
+	Default lJob := .F.
+
+	::aFiliais := {}
+
+	If !lJob
+
+		aFilAux := ::LoadFiliais()
+
+		For nW := 1 To Len(aFilAux)
+
+			If ::ExisteFuncaoEmProcessamento("U_EJOBFATPARTE", aFilAux[nW, 1], aFilAux[nW, 2])
+
+				aAdd(::aFiliais, {aFilAux[nW, 1], aFilAux[nW, 2], aFilAux[nW, 3]})
+
+			EndIf
+
+		Next nW
+
+	EndIf
+
+Return()
+
+Method ProcessaSaida() Class TFaturamentoemPartes
+
+	Local cSQL 		:= ""
+	Local cAlias 	:= GetNextAlias()
+	Local oObj 		:= Nil
+	Local aRetorno 	:= {}
+	Local aNotas 	:= {}
+	Local aNotasEnv := {}
+	Local nPos 		:= 0
+	Local nW 		:= 0
+
+	cSQL := " SELECT * "
+	cSQL += " FROM " + RetSqlName("ZL6") + " ZL6 ( NOLOCK )
+	cSQL += " WHERE ZL6.ZL6_FILIAL = " + ValToSql(xFilial("ZL6"))
+	cSQL += " AND ZL6.ZL6_CODEMP = " + ValToSql(cEmpAnt)
+	cSQL += " AND ZL6.ZL6_CODFIL = " + ValToSql(cFilAnt)
+	//cSQL += " AND ZL6.ZL6_DOC 	<> '' "
+	cSQL += " AND ( "
+	cSQL += "		( ZL6.ZL6_STATUS NOT IN ( '5', '8' ) ) " // 1=Emitida;2=Transmitida;3=Autorizada;4=Rejeitada;5=Cancelada;6=PDF criado;7=PDF enviado;8=Finalizado
+	cSQL += " 		OR "
+	cSQL += " 			( "
+	cSQL += " 				ZL6.ZL6_STATUS <> '5' AND "
+	cSQL += " 				NOT EXISTS "
+	cSQL += " 				( "
+	cSQL += " 					SELECT NULL "
+	cSQL += " 					FROM " + RetSqlName("SF2") + " SF2 "
+	cSQL += " 					WHERE SF2.F2_FILIAL = " + ValToSql(xFilial("SF2"))
+	cSQL += " 					AND SF2.F2_DOC 		= ZL6.ZL6_DOC "
+	cSQL += " 					AND SF2.F2_SERIE 	= ZL6.ZL6_SERIE "
+	cSQL += " 					AND SF2.D_E_L_E_T_ 	= ''
+	cSQL += " 				) "
+	cSQL += " 			) "
+	cSQL += "	  ) "
+	cSQL += " AND ZL6.D_E_L_E_T_ = '' "
+
+	TCQUERY cSQL NEW ALIAS (cAlias)
+
+	DBSelectArea("ZL5")
+	ZL5->(DBSetOrder(1))
+
+	DBSelectArea("ZL6")
+	ZL6->(DBSetOrder(1))
+
+	DBSelectArea("SF2")
+	SF2->(DBSetOrder(1)) // F2_FILIAL, F2_DOC, F2_SERIE, F2_CLIENTE, F2_LOJA, F2_FORMUL, F2_TIPO, R_E_C_N_O_, D_E_L_E_T_
+
+	DBSelectArea("SC5")
+	SC5->(DBSetOrder(1))
+
+	While (cAlias)->(!EOF())
+
+		ZL6->(DBGoTo((cAlias)->R_E_C_N_O_))
+
+		ZL5->(DBSeek(xFilial("ZL5") + ZL6->ZL6_CODEMP + ZL6->ZL6_CODFIL + ZL6->ZL6_NUM))
+
+		::AddLog("Processando Pedido: " + ZL6->ZL6_NUM + " Nota: " + ZL6->ZL6_DOC + "-" + ZL6->ZL6_SERIE)
+
+		If RecLock("ZL5", .F.)
+
+			If RecLock("ZL6", .F.)
+
+				If Empty(oObj)
+
+					oObj := TFaturamentoAutomatico():New(.T.)
+
+				EndIf
+
+				nPos := aScan(aNotas, {|x| x[1] == ZL6->ZL6_NUM })
+
+				If nPos == 0
+
+					aAdd(aNotas, {ZL6->ZL6_NUM, .T.})
+
+					aAdd(aNotas[Len(aNotas)], {ZL6->ZL6_DOC, ZL6->ZL6_SERIE, ZL6->(Recno())})
+
+				Else
+
+					aAdd(aNotas[nPos], {ZL6->ZL6_DOC, ZL6->ZL6_SERIE, ZL6->(Recno())})
+
+				EndIf
+
+				If !SC5->(DBSeek(xFilial("SC5") + ZL6->ZL6_NUM))
+
+					ZL6->ZL6_STATUS := "5" // 5=Cancelada
+
+					aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
+
+				EndIf
+
+				If !SF2->(DBSeek(xFilial("SF2") + ZL6->ZL6_DOC + ZL6->ZL6_SERIE))
+
+					ZL6->ZL6_STATUS := "5" // 5=Cancelada
+
+					aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
+
+				EndIf
+
+				If !Empty(ZL6->ZL6_DOC)
+
+					If ZL6->ZL6_STATUS == "1" // 1=Emitida
+
+						::Transmissao((cAlias)->ZL6_DOC, (cAlias)->ZL6_SERIE)
+
+						ZL6->ZL6_STATUS := "2"
+
+						aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
+
+					ElseIf ZL6->ZL6_STATUS == "2" // 2=Transmitida
+
+						aRetorno := oObj:MonitoraNFe((cAlias)->ZL6_SERIE, (cAlias)->ZL6_DOC, .F.)
+
+						nPos := aScan(aNotas, {|x| x[1] == ZL6->ZL6_NUM })
+
+						If Len(aRetorno) == 0
+
+							ZL6->ZL6_STATUS := "1" // 1=Emitida
+
+							aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
+
+						ElseIf !(aRetorno[1, 5] $ "100")
+
+							If !('Aguardando processamento' $ AllTrim(aRetorno[1, 9]))
+
+								ZL6->ZL6_STATUS := "4" // 4=Rejeitada
+
+								ZL6->ZL6_RETNFE := AllTrim(aRetorno[1, 9])
+
+								aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
+
+							EndIf
+
+						ElseIf aRetorno[1, 5] $ "100"
+
+							ZL6->ZL6_STATUS := "3" // 3=Autorizada
+
+							ZL6->ZL6_RETNFE := AllTrim(aRetorno[1, 9])
+
+						EndIf
+
+					ElseIf ZL6->ZL6_STATUS == "4" // // 4=Rejeitada
+
+						aRetorno := oObj:MonitoraNFe((cAlias)->ZL6_SERIE, (cAlias)->ZL6_DOC, .F.)
+
+						nPos := aScan(aNotas, {|x| x[1] == ZL6->ZL6_NUM })
+
+						If !(aRetorno[1, 5] $ "100")
+
+							If !('Aguardando processamento' $ AllTrim(aRetorno[1, 9]))
+
+								ZL6->ZL6_STATUS := "4" // 4=Rejeitada
+
+								ZL6->ZL6_RETNFE := AllTrim(aRetorno[1, 9])
+
+								aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
+
+							EndIf
+
+						ElseIf aRetorno[1, 5] $ "100"
+
+							ZL6->ZL6_STATUS := "3" // 3=Autorizada
+
+							ZL6->ZL6_RETNFE := AllTrim(aRetorno[1, 9])
+
+						EndIf
+
+					ElseIf ZL6->ZL6_STATUS == "6" // 6=PDF criado
+
+						nPos := aScan(aNotasEnv, {|x| x[1] == ZL6->ZL6_PDF })
+
+						If nPos == 0
+
+							aAdd(aNotasEnv, {ZL6->ZL6_PDF, .T.})
+
+							aAdd(aNotasEnv[Len(aNotasEnv)], {ZL6->ZL6_DOC, ZL6->ZL6_SERIE, ZL6->ZL6_PDF, ZL6->(Recno())})
+
+							aNotasEnv[Len(aNotasEnv)][2] := File(AllTrim(ZL6->ZL6_PDF)) .And. !File(AllTrim(Replace(ZL6->ZL6_PDF, ".pdf", ".pd_")))
+
+						Else
+
+							aAdd(aNotasEnv[nPos], {ZL6->ZL6_DOC, ZL6->ZL6_SERIE, ZL6->ZL6_PDF, ZL6->(Recno())})
+
+						EndIf
+
+						nPos := aScan(aNotas, {|x| x[1] == ZL6->ZL6_NUM })
+
+						aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
+
+					ElseIf ZL6->ZL6_STATUS == "7" // 7=PDF enviado
+
+						ZL6->ZL6_STATUS := "8" // 8=Finalizado
+
+						nPos := aScan(aNotas, {|x| x[1] == ZL6->ZL6_NUM })
+
+						aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
+
+					EndIf
+
+				EndIf
+
+				ZL6->(MSUnLock())
+
+			Else
+
+				::AddLog("Nao consegui lockar ZL6 -> " + cValToChar(ZL6->(Recno())))
+
+			EndIf
+
+		Else
+
+			::AddLog("Nao consegui lockar ZL5 -> " + cValToChar(ZL5->(Recno())))
+
+			Exit
+
+		EndIf
+
+		(cAlias)->(DBSkip())
+
+	EndDo
+
+	If Len(aNotas) > 0
+
+		For nW := 1 To Len(aNotas)
+
+			If aNotas[nW][2]
+
+				::PDF(aNotas[nW])
+
+			EndIf
+
+		Next nW
+
+	EndIf
+
+	If Len(aNotasEnv) > 0
+
+		For nW := 1 To Len(aNotasEnv)
+
+			If aNotasEnv[nW][2]
+
+				::EnvioNFe(aNotasEnv[nW])
+
+			EndIf
+
+		Next nW
+
+	EndIf
+
+	(cAlias)->(DBcloseArea())
+
+Return()
+
+Method ProcessaEntrada(aFiliais) Class TFaturamentoemPartes
+
+	Local aArea			:= GetArea()
+	Local cSQL 			:= ""
+	Local cAlias1 		:= ""
+	Local oEmpFilVen	:= TLoadEmpresa():New()
+	Local oEmpFilCom	:= TLoadEmpresa():New()
+	Local nW 			:= 0
+
+	Local aDocEntrada	:= {,}
+	Local aPedVenda		:= {}
+
+	Local aCabSF1		:= {}
+	Local aItensSF1		:= {}
+	Local aItemSF1		:= {}
+
+	Local cEmpOri		:= ""
+	Local cFilOri		:= ""
+	Local cPedOri		:= ""
+	Local cCodFor		:= ""
+	Local cLojaFor		:= ""
+	Local cDoc			:= ""
+	Local cSerie		:= ""
+	Local cCliente		:= ""
+	Local cLoja			:= ""
+	Local cCondPag		:= ""
+
+	Default aFiliais	:= {}
+
+	oEmpFilCom:SeekForCli(cEmpAnt, cFilAnt)
+
+	// If cEmpAnt + cFilAnt <> "0603"
+	// 	Return()
+	// EndIf
+
+	For nW:= 1 To Len(aFiliais)
+
+		If cEmpAnt + cFilAnt <> aFiliais[nW][1] + AllTrim(aFiliais[nW][2])
+
+			::AddLog("Buscando notas na filial: " + aFiliais[nW][1] + AllTrim(aFiliais[nW][2]))
+
+			oEmpFilVen:SeekForCli(aFiliais[nW][1], aFiliais[nW][2])
+
+			If oEmpFilCom:lFornecedor
+
+				cAlias1 := GetNextAlias()
+
+				cSQL := " SELECT D2_FILIAL, D2_LOCAL, F2_COND, D2_DOC, D2_SERIE, D2_CLIENTE, D2_LOJA, D2_EMISSAO, D2_COD, D2_QUANT, "
+				cSQL += " 		 D2_TES, D2_ITEM, D2_PRCVEN, D2_TOTAL, D2_LOTECTL, D2_DTVALID, D2_PEDIDO, D2_ITEMPV, DOC_CHV CHAVE, "
+				cSQL += " 		 C6_ITEM, C6_LOCAL, C5_TIPO, C5_TRANSP, C5_TPFRETE, C5_CONDPAG "
+				cSQL += " FROM " + RetFullName("SF2", oEmpFilVen:cCodEmp) + " SF2 ( NOLOCK ) "
+
+				cSQL += " JOIN " + RetFullName("SD2", oEmpFilVen:cCodEmp) + " SD2 (NOLOCK) ON "
+				cSQL += " ( "
+				cSQL += " 	SD2.D2_FILIAL 		= SF2.F2_FILIAL "
+				cSQL += " 	AND SD2.D2_DOC 		= SF2.F2_DOC "
+				cSQL += " 	AND SD2.D2_SERIE 	= SF2.F2_SERIE "
+				cSQL += " 	AND SD2.D2_CLIENTE 	= SF2.F2_CLIENTE "
+				cSQL += " 	AND SD2.D2_LOJA 	= SF2.F2_LOJA "
+				cSQL += " 	AND SD2.D_E_L_E_T_	= '' "
+				cSQL += " ) "
+
+				cSQL += " JOIN " + RetFullName("SC5", oEmpFilVen:cCodEmp) + " SC5 (NOLOCK) ON "
+				cSQL += " ( "
+				cSQL += " 	SC5.C5_FILIAL 		= SD2.D2_FILIAL "
+				cSQL += " 	AND SC5.C5_NUM 		= SD2.D2_PEDIDO "
+				cSQL += " 	AND SC5.D_E_L_E_T_	= '' "
+				cSQL += " ) "
+
+				cSQL += " JOIN " + RetFullName("SC6", oEmpFilVen:cCodEmp) + " SC6 (NOLOCK) ON "
+				cSQL += " ( "
+				cSQL += " 	SC6.C6_FILIAL 		= SC5.C5_FILIAL "
+				cSQL += " 	AND SC6.C6_NUM 		= SC5.C5_NUM "
+				cSQL += " 	AND SC6.C6_ITEM		= SD2.D2_ITEMPV "
+				cSQL += " 	AND SC6.D_E_L_E_T_	= '' "
+				cSQL += " ) "
+
+				cSQL += " JOIN SPED050 SPED (NOLOCK) ON "
+				cSQL += " ( "
+				cSQL += " 	SPED.ID_ENT 		= " + ValToSql(oEmpFilVen:cIdEnt)
+				cSQL += " 	AND SPED.NFE_ID 	= SF2.F2_SERIE + SF2.F2_DOC "
+				cSQL += " 	AND SPED.STATUS 	= 6 "
+				cSQL += " 	AND SPED.D_E_L_E_T_	= '' "
+				cSQL += " ) "
+
+				cSQL += " WHERE SF2.F2_FILIAL 	= " + ValToSql(oEmpFilVen:cCodFil)
+				cSQL += " AND F2_CLIENTE		= " + ValToSql(oEmpFilCom:cCodCli)
+				cSQL += " AND F2_LOJA			= " + ValToSql(oEmpFilCom:cLojaCli)
+				cSQL += " AND F2_EMISSAO	   >= '20200814' "
+
+				cSQL += " AND NOT EXISTS "
+				cSQL += " ( "
+				cSQL += " 	SELECT NULL "
+				cSQL += " 	FROM " + RetSqlName("SF1") + " SF1 (NOLOCK) "
+				cSQL += " 	WHERE F1_FILIAL 	= " + ValToSql(cFilAnt)
+				cSQL += " 	AND F1_FORNECE		= " + ValToSql(oEmpFilVen:cCodFor)
+				cSQL += " 	AND F1_LOJA			= " + ValToSql(oEmpFilVen:cLojaFor)
+				cSQL += " 	AND F1_DOC			= F2_DOC "
+				cSQL += " 	AND F1_SERIE 		= F2_SERIE "
+				//cSQL += " 	AND SF1.D_E_L_E_T_ 	= '' " // Caso o usuario exclua a nota, iria ficar fazendo entrada a todo momento.
+				cSQL += " )
+
+				// A nota deve ter apenas um produto
+				cSQL += " AND EXISTS "
+				cSQL += " ( "
+				cSQL += " 	SELECT NULL "
+				cSQL += " 	FROM " + RetFullName("SD2", oEmpFilVen:cCodEmp) + " SD2X (NOLOCK) "
+				cSQL += " 	WHERE SD2X.D2_FILIAL = SF2.F2_FILIAL "
+				cSQL += " 	AND SD2X.D2_DOC 	= SF2.F2_DOC "
+				cSQL += " 	AND SD2X.D2_SERIE 	= SF2.F2_SERIE "
+				cSQL += " 	AND SD2X.D2_CLIENTE = SF2.F2_CLIENTE "
+				cSQL += " 	AND SD2X.D2_LOJA 	= SF2.F2_LOJA "
+				cSQL += " 	AND SD2X.D2_COD		= " + ValToSql(::cProdutoOri)
+				cSQL += " 	AND SD2X.D_E_L_E_T_	= '' "
+				cSQL += " ) "
+
+				// A nota deve ter apenas um produto
+				cSQL += " AND NOT EXISTS "
+				cSQL += " ( "
+				cSQL += " 	SELECT NULL "
+				cSQL += " 	FROM " + RetFullName("SD2", oEmpFilVen:cCodEmp) + " SD2X (NOLOCK) "
+				cSQL += " 	WHERE SD2X.D2_FILIAL = SF2.F2_FILIAL "
+				cSQL += " 	AND SD2X.D2_DOC 	= SF2.F2_DOC "
+				cSQL += " 	AND SD2X.D2_SERIE 	= SF2.F2_SERIE "
+				cSQL += " 	AND SD2X.D2_CLIENTE = SF2.F2_CLIENTE "
+				cSQL += " 	AND SD2X.D2_LOJA 	= SF2.F2_LOJA "
+				cSQL += " 	AND SD2X.D2_COD		<> " + ValToSql(::cProdutoOri)
+				cSQL += " 	AND SD2X.D_E_L_E_T_	= '' "
+				cSQL += " ) "
+
+				// A nota deve estar autorizada
+				// cSQL += " AND EXISTS "
+				// cSQL += " ( "
+				// cSQL += " 	SELECT NULL "
+				// cSQL += " 	FROM " + RetSqlName("ZL6") + " ZL6 (NOLOCK) "
+				// cSQL += " 	WHERE ZL6_FILIAL 	= '' "
+				// cSQL += " 	AND ZL6_CODEMP		= " + ValToSql(oEmpFilVen:cCodEmp)
+				// cSQL += " 	AND ZL6_CODFIL		= " + ValToSql(oEmpFilVen:cCodFil)
+				// cSQL += " 	AND ZL6_DOC			= F2_DOC "
+				// cSQL += " 	AND ZL6_SERIE 		= F2_SERIE "
+				// cSQL += " 	AND ZL6_STATUS 		NOT IN ('1', '2', '4', '5') " // 1=Emitida;2=Transmitida;3=Autorizada;4=Rejeitada;5=Cancelada;6=PDF criado;7=PDF enviado;8=Finalizado
+				// cSQL += " 	AND ZL6.D_E_L_E_T_ 	= '' "
+				// cSQL += " )	"
+
+				// Todos notas dos pedidos de origem devem estar faturadas
+				cSQL += " AND NOT EXISTS "
+				cSQL += " ( "
+				cSQL += " 	SELECT NULL "
+				cSQL += " 	FROM " + RetSqlName("ZL6") + " ZL6 (NOLOCK) "
+				cSQL += " 	WHERE ZL6_FILIAL 	= '' "
+				cSQL += " 	AND ZL6_CODEMP		= " + ValToSql(oEmpFilVen:cCodEmp)
+				cSQL += " 	AND ZL6_CODFIL		= " + ValToSql(oEmpFilVen:cCodFil)
+				cSQL += " 	AND ZL6_NUM			= D2_PEDIDO "
+				cSQL += " 	AND ZL6_STATUS 		IN ('1', '2', '4') " // 1=Emitida;2=Transmitida;3=Autorizada;4=Rejeitada;5=Cancelada;6=PDF criado;7=PDF enviado;8=Finalizado
+				cSQL += " 	AND ZL6.D_E_L_E_T_ 	= '' "
+				cSQL += " )	"
+
+				cSQL += " AND SF2.D_E_L_E_T_ = '' "
+
+				TCQUERY cSQL NEW ALIAS (cAlias1)
+
+				aDocEntrada := {}
+				aPedVenda 	:= {}
+
+				aCabSF1		:= {}
+				aItemSF1	:= {}
+				aItensSF1	:= {}
+
+				cEmpOri		:= ""
+				cFilOri		:= ""
+				cPedOri		:= ""
+				cDoc		:= ""
+				cSerie		:= ""
+				cCodFor		:= ""
+				cLojaFor	:= ""
+
+				While (cAlias1)->(!EOF())
+
+					If cDoc + cSerie + cCliente + cLoja <> (cAlias1)->(D2_DOC+D2_SERIE+D2_CLIENTE+D2_LOJA)
+
+						If !Empty(cDoc + cSerie + cCliente + cLoja)
+
+							aAdd(aDocEntrada, {aCabSF1, aItensSF1, cEmpOri, cFilOri, cPedOri, cDoc, cSerie, cCodFor, cLojaFor, cCondPag})
+
+							aCabSF1 := {}
+
+							aItensSF1 := {}
+
+						EndIf
+
+						//-----------------------------------
+						// Cabecalho do Documento de Entrada
+						//-----------------------------------
+						aCabSF1		:= {}
+						aItensSF1 	:= {}
+
+						cEmpOri		:= oEmpFilVen:cCodEmp
+						cFilOri		:= (cAlias1)->D2_FILIAL
+						cPedOri		:= (cAlias1)->D2_PEDIDO
+
+						cCodFor		:= oEmpFilVen:cCodFor
+						cLojaFor	:= oEmpFilVen:cLojaFor
+						cDoc		:= (cAlias1)->D2_DOC
+						cSerie		:= (cAlias1)->D2_SERIE
+						cCliente	:= (cAlias1)->D2_CLIENTE
+						cLoja		:= (cAlias1)->D2_LOJA
+						cCondPag	:= (cAlias1)->C5_CONDPAG
+
+						aAdd(aCabSF1, {"F1_TIPO"    , "N"           					, NIL, Nil})
+						aAdd(aCabSF1, {"F1_FORMUL"  , "N"             					, NIL, Nil})
+						aAdd(aCabSF1, {"F1_ESPECIE" , "SPED"			 				, NIL, Nil})
+
+						aAdd(aCabSF1, {"F1_DOC"     	, (cAlias1)->D2_DOC				, NIL, Nil})
+						aAdd(aCabSF1, {"F1_SERIE"   	, (cAlias1)->D2_SERIE	 		, NIL, Nil})
+						aAdd(aCabSF1, {"F1_FORNECE" 	, oEmpFilVen:cCodFor			, NIL, Nil})
+						aAdd(aCabSF1, {"F1_LOJA"    	, oEmpFilVen:cLojaFor  			, NIL, Nil})
+						aAdd(aCabSF1, {"F1_EMISSAO" 	, STOD((cAlias1)->D2_EMISSAO)	, NIL, Nil})
+						aAdd(aCabSF1, {"F1_CHVNFE"   	, (cAlias1)->CHAVE				, NIL, Nil})
+
+					EndIf
+
+					//------------------------------
+					// Itens do Documento de entrada
+					//------------------------------
+					aItemSF1 := {}
+
+					aAdd(aItemSF1, {"D1_ITEM" 		, (cAlias1)->D2_ITEM			, NIL, Nil})
+					aAdd(aItemSF1, {"D1_COD" 		, (cAlias1)->D2_COD     		, NIL, Nil})
+					aAdd(aItemSF1, {"D1_DOC"    	, (cAlias1)->D2_DOC     		, Nil, Nil})
+					aAdd(aItemSF1, {"D1_SERIE"    	, (cAlias1)->D2_SERIE      		, Nil, Nil})
+					aAdd(aItemSF1, {"D1_FORNECE"	, oEmpFilVen:cCodFor      		, Nil, Nil})
+					aAdd(aItemSF1, {"D1_LOJA"    	, oEmpFilVen:cLojaFor			, Nil, Nil})
+					aAdd(aItemSF1, {"D1_TES"    	, "047"  						, Nil, Nil})
+					aAdd(aItemSF1, {"D1_QUANT"    	, (cAlias1)->D2_QUANT  			, Nil, Nil})
+					aAdd(aItemSF1, {"D1_VUNIT"    	, (cAlias1)->D2_PRCVEN   		, Nil, Nil})
+					aAdd(aItemSF1, {"D1_TOTAL"    	, (cAlias1)->D2_TOTAL   		, Nil, Nil})
+					aAdd(aItemSF1, {"D1_LOCAL"  	, (cAlias1)->D2_LOCAL			, Nil, Nil})
+
+					aAdd(aItensSF1, aItemSF1)
+
+					(cAlias1)->(DBSkip())
+
+				EndDo
+
+				(cAlias1)->(DBcloseArea())
+
+				If Len(aItensSF1) > 0
+
+					aAdd(aDocEntrada, {aCabSF1, aItensSF1, cEmpOri, cFilOri, cPedOri, cDoc, cSerie, cCodFor, cLojaFor, cCondPag})
+
+				EndIf
+
+				If Len(aDocEntrada) > 0
+
+					::ProcDocPed(aDocEntrada)
+
+					aCabSF1 := {}
+
+					aItensSF1 := {}
+
+				EndIf
+
+			EndIf
+
+		EndIf
+
+	Next nW
+
+	RestArea(aArea)
+
+Return()
+
+Method ProcDocPed(aDocEntrada) Class TFaturamentoemPartes
+
+	Local aArea		:= GetArea()
+	Local cSQL 		:= ""
+	Local cAlias2	:= ""
+	Local cNumPed 	:= ""
+	Local cLogTxt 	:= ""
+	Local lZL5		:= .T.
+	Local cBckFunc 	:= FunName()
+	Local aPerg		:= {}
+	Local cErro		:= ""
+	Local bErro 	:= ErrorBlock( { |oErr| cErro := oErr:Description })
+	Local oObjTrans	:= Nil
+	Local nY		:= 0
+	Local nZ		:= 0
+
+	Local aCabSF1	:= {}
+	Local aItensSF1	:= {}
+
+	Local aCabSC5	:= {}
+	Local aItensSC6	:= {}
+	Local aItemSC6	:= {}
+	Local nTotQtdPv	:= 0
+	Local nPrcVenPv	:= 0
+	Local oEmpFilPed	:= TLoadEmpresa():New()
+	Local aPedido	:= {}
+	Local nPos		:= 0
+	Local cCondPag	:= ""
+
+	Local cEmpOri	:= ""
+	Local cFilOri	:= ""
+	Local cPedOri	:= ""
+	Local cDoc		:= ""
+	Local cSerie	:= ""
+	Local cCodFor	:= ""
+	Local cLojaFor	:= ""
+
+	Default aDocEntrada := {}
+
+	Private lMsErroAuto 	:= .F.
+	Private lMsHelpAuto 	:= .T.
+	Private lAutoErrNoFile	:= .T.
+
+	If ::Vld_MV_NUMITEN()
+
+		Begin Transaction
+
+			Begin Sequence
+
+				// Processa primeiro Documentos de entrada
+				For nY := 1 To Len(aDocEntrada)
+
+					aCabSF1		:= aClone(aDocEntrada[nY][1])
+					aItensSF1	:= aClone(aDocEntrada[nY][2])
+
+					cEmpOri		:= aDocEntrada[nY][3]
+					cFilOri		:= aDocEntrada[nY][4]
+					cPedOri		:= aDocEntrada[nY][5]
+					cDoc		:= aDocEntrada[nY][6]
+					cSerie		:= aDocEntrada[nY][7]
+					cCodFor		:= aDocEntrada[nY][8]
+					cLojaFor	:= aDocEntrada[nY][9]
+					cCondPag	:= aDocEntrada[nY][10]
+
+					nPos := aScan(aPedido, {|x| x[1] == cPedOri})
+
+					If nPos == 0
+
+						nTotQtdPv := aItensSF1[1][aScan(aItensSF1[1], {|x| x[1] = "D1_QUANT" })][2]
+						nPrcVenPv := aItensSF1[1][aScan(aItensSF1[1], {|x| x[1] = "D1_VUNIT" })][2]
+
+						aAdd(aPedido, {cPedOri, cCondPag})
+
+						aAdd(aPedido[Len(aPedido)], {nTotQtdPv, nPrcVenPv})
+
+					Else
+
+						nTotQtdPv := aItensSF1[1][aScan(aItensSF1[1], {|x| x[1] = "D1_QUANT" })][2]
+
+						aPedido[nPos][3][1] += nTotQtdPv
+
+					EndIf
+
+					aPerg := {}
+
+					::AddLog("Incluindo documento de entrada " + cDoc + "/" +  cSerie)
+
+					SetFunName("MATA103")
+
+					Pergunte("MTA103",.F.,,,,, @aPerg)
+
+					MV_PAR01 := 2
+					MV_PAR02 := 1
+					MV_PAR06 := 1
+
+					__SaveParam("MTA103", aPerg)
+
+					SA2->(DbSetOrder(1))
+					SA2->(DbSeek(XFilial("SA2")+PADR(cCodFor, TamSx3("D1_FORNECE")[1])+PADR(cLojaFor, TamSx3("D1_LOJA")[1])))
+
+					MSExecAuto({|x,y,z| MATA103(x,y,z)}, aCabSF1, aItensSF1, 3, .T.)
+
+					SetFunName(cBckFunc)
+
+					If lMsErroAuto
+
+						VarInfo("aCabSF1", aCabSF1)
+
+						VarInfo("aItensSF1", aItensSF1)
+
+						cLogTxt := ::GetErrorLog()
+
+						::AddLog("Erro ao gerar documento de entrada " + cDoc +"/"+  cSerie + "-" + cLogTxt)
+
+						DisarmTransaction()
+
+						::SetLog(cEmpOri, cFilOri, cPedOri, cDoc, cSerie, cLogTxt)
+
+						Exit
+
+					EndIf
+
+				Next nY
+
+				If !lMsErroAuto
+
+					For nZ := 1 To Len(aPedido)
+
+						oEmpFilPed:SeekForCli("01", "01")
+
+						aCabSC5		:= {}
+						aItensSC6	:= {}
+						aItemSC6	:= {}
+
+						//------------------------------
+						// Cabeçalho do Pedido de Venda
+						//------------------------------
+						aAdd(aCabSC5, {"C5_NUM"   		, ""		   				, Nil})
+						aAdd(aCabSC5, {"C5_TIPO"   		, "N"				   		, Nil})
+
+						aAdd(aCabSC5, {"C5_CLIENTE"   	, oEmpFilPed:cCodCli		, Nil})
+						aAdd(aCabSC5, {"C5_LOJACLI"   	, oEmpFilPed:cLojaCli		, Nil})
+						aAdd(aCabSC5, {"C5_CLIENT"   	, oEmpFilPed:cCodCli		, Nil})
+						aAdd(aCabSC5, {"C5_LOJAENT"		, oEmpFilPed:cLojaCli		, Nil})
+
+						aAdd(aCabSC5, {"C5_ORIGEM"		, ""						, Nil})
+						aAdd(aCabSC5, {"C5_YCONF"		, "S"						, Nil})
+						//aAdd(aCabSC5, {"C5_YSUBTP"		, "O"						, Nil})
+
+						aAdd(aCabSC5, {"C5_TRANSP"		, ""						, Nil})
+						aAdd(aCabSC5, {"C5_TPFRETE"		, "C"						, Nil})
+
+						aAdd(aCabSC5, {"C5_CONDPAG"		, aPedido[nZ][2]			, Nil})
+						aAdd(aCabSC5, {"C5_VEND1"		, "999999"					, Nil})
+						aAdd(aCabSC5, {"C5_COMIS1"		, 0							, Nil})
+						aAdd(aCabSC5, {"C5_COMIS2"		, 0							, Nil})
+						aAdd(aCabSC5, {"C5_COMIS3"		, 0							, Nil})
+						aAdd(aCabSC5, {"C5_COMIS4"		, 0							, Nil})
+						aAdd(aCabSC5, {"C5_COMIS5"		, 0							, Nil})
+						aAdd(aCabSC5, {"C5_EMISSAO"		, dDataBase					, Nil})
+
+						//------------------------------
+						// Itens do Pedido de Venda
+						//------------------------------
+						aAdd(aItemSC6, {"C6_NUM"		, ""									, Nil})
+						aAdd(aItemSC6, {"C6_ITEM"		, "01"									, Nil})
+						aAdd(aItemSC6, {"C6_PRODUTO"	, ::cProdutoDes							, Nil})
+						aAdd(aItemSC6, {"C6_QTDVEN"		, aPedido[nZ][3][1]						, Nil})
+						aAdd(aItemSC6, {"C6_PRCVEN"		, aPedido[nZ][3][2]			   			, Nil})
+						aAdd(aItemSC6, {"C6_VALOR"		, aPedido[nZ][3][1] * aPedido[nZ][3][2]	, Nil})
+						aAdd(aItemSC6, {"C6_PRUNIT"		, aPedido[nZ][3][2]  					, Nil})
+						aAdd(aItemSC6, {"C6_TES"		, "508"				   					, Nil})
+						aAdd(aItemSC6, {"C6_LOCAL"		, "01"									, Nil})
+
+						aAdd(aItensSC6, aClone(aItemSC6))
+
+						::AddLog("Incluindo pedido de venda referente ao pedido " + aPedido[nZ][1] + " da filial " + cEmpOri + cFilOri)
+
+						For nY := 1 To Len(aDocEntrada)
+
+							cEmpOri		:= aDocEntrada[nY][3]
+							cFilOri		:= aDocEntrada[nY][4]
+							cPedOri		:= aDocEntrada[nY][5]
+							cDoc		:= aDocEntrada[nY][6]
+							cSerie		:= aDocEntrada[nY][7]
+							cCodFor		:= aDocEntrada[nY][8]
+							cLojaFor	:= aDocEntrada[nY][9]
+
+							If cPedOri == aPedido[nZ][1]
+
+								::SetLog(cEmpOri, cFilOri, cPedOri, cDoc, cSerie, "") // Limpo o log
+
+							EndIf
+
+						Next nY
+
+						cNumPed := GetSxENum("SC5","C5_NUM")
+						RollBackSX8()
+
+						aCabSC5[1][2] := cNumPed
+
+						aEval(aItensSC6,{|x|  x[1][2] := cNumPed })
+
+						DBSelectArea("SC5")
+						cMay := "SC5"+ Alltrim(xFilial("SC5"))
+						SC5->(dbSetOrder(1))
+
+						While ( DBSeek(xFilial("SC5")+cNumPed) .Or. !MayIUseCode(cMay+cNumPed) )
+
+							cNumPed := Soma1(cNumPed, Len(cNumPed))
+
+							aCabSC5[1][2] := cNumPed
+
+							aEval(aItensSC6,{|x|  x[1][2] := cNumPed })
+
+						EndDo
+
+						SetFunName("MATA410")
+
+						MsExecAuto({|x,y,z| Mata410(x,y,z)}, aCabSC5, aItensSC6, 3)
+
+						SetFunName(cBckFunc)
+
+						If lMsErroAuto
+
+							RollBackSX8()
+
+							VarInfo("aCabSC5", aCabSC5)
+
+							VarInfo("aItensSC6", aItensSC6)
+
+							cLogTxt := ::GetErrorLog()
+
+							::AddLog("Erro ao incluir pedido de venda " + CRLF + cLogTxt)
+
+							DisarmTransaction()
+
+							For nY := 1 To Len(aDocEntrada)
+
+								cEmpOri		:= aDocEntrada[nY][3]
+								cFilOri		:= aDocEntrada[nY][4]
+								cPedOri		:= aDocEntrada[nY][5]
+								cDoc		:= aDocEntrada[nY][6]
+								cSerie		:= aDocEntrada[nY][7]
+								cCodFor		:= aDocEntrada[nY][8]
+								cLojaFor	:= aDocEntrada[nY][9]
+
+								If cPedOri == aPedido[nZ][1]
+
+									::SetLog(cEmpOri, cFilOri, cPedOri, cDoc, cSerie, cLogTxt) // Limpo o log
+
+								EndIf
+
+							Next nY
+
+							Exit
+
+						Else
+
+							ConfirmSX8()
+
+							oObjTrans := TTransferenciaInterna():New(3, , , ::cProdutoOri, "01", aPedido[nZ][3][1], ::cProdutoDes, "01")
+
+							oObjTrans:Executar()
+
+							If oObjTrans:lOk
+
+								::WorkflowTransf(::cProdutoOri, ::cProdutoDes, aPedido[nZ][3][1], "01", "01", aPedido[nZ][1], aDocEntrada, SC5->C5_NUM)
+
+							Else
+
+								DisarmTransaction()
+
+								For nY := 1 To Len(aDocEntrada)
+
+									cEmpOri		:= aDocEntrada[nY][3]
+									cFilOri		:= aDocEntrada[nY][4]
+									cPedOri		:= aDocEntrada[nY][5]
+									cDoc		:= aDocEntrada[nY][6]
+									cSerie		:= aDocEntrada[nY][7]
+									cCodFor		:= aDocEntrada[nY][8]
+									cLojaFor	:= aDocEntrada[nY][9]
+
+									If cPedOri == aPedido[nZ][1]
+
+										::SetLog(cEmpOri, cFilOri, cPedOri, cDoc, cSerie, oObjTrans:cLog)
+
+									EndIf
+
+								Next nY
+
+								Exit
+
+							EndIf
+
+							For nY := 1 To Len(aDocEntrada)
+
+								cEmpOri		:= aDocEntrada[nY][3]
+								cFilOri		:= aDocEntrada[nY][4]
+								cPedOri		:= aDocEntrada[nY][5]
+								cDoc		:= aDocEntrada[nY][6]
+								cSerie		:= aDocEntrada[nY][7]
+								cCodFor		:= aDocEntrada[nY][8]
+								cLojaFor	:= aDocEntrada[nY][9]
+
+								If cPedOri == aPedido[nZ][1]
+
+									cAlias2 := GetNextAlias()
+
+									cSQL := " SELECT * "
+									cSQL += " FROM " + RetSqlName("ZL5") + " ZL5 ( NOLOCK )
+
+									cSQL += " JOIN " + RetSqlName("ZL6") + " ZL6 (NOLOCK) ON "
+									cSQL += " ( "
+									cSQL += " 	ZL6.ZL6_FILIAL 		= ZL5.ZL5_FILIAL"
+									cSQL += " 	AND ZL6.ZL6_CODEMP 	= ZL5.ZL5_CODEMP "
+									cSQL += " 	AND ZL6.ZL6_CODFIL 	= ZL5.ZL5_CODFIL "
+									cSQL += " 	AND ZL6.ZL6_NUM 	= ZL5.ZL5_NUM "
+									cSQL += " 	AND ZL6.D_E_L_E_T_	= '' "
+									cSQL += " ) "
+
+									cSQL += " WHERE ZL5.ZL5_FILIAL 	= " + ValToSql(xFilial("ZL5"))
+									cSQL += " AND ZL5_CODEMP		= " + ValToSql(cEmpOri)
+									cSQL += " AND ZL5_CODFIL		= " + ValToSql(cFilOri)
+									cSQL += " AND ZL6_NUM			= " + ValToSql(cPedOri)
+									cSQL += " AND ZL6_DOC			= " + ValToSql(cDoc)
+									cSQL += " AND ZL6_SERIE			= " + ValToSql(cSerie)
+									cSQL += " AND ZL5.D_E_L_E_T_ = '' "
+
+									TCQUERY cSQL NEW ALIAS (cAlias2)
+
+									While (cAlias2)->(!EOF())
+
+										If lZL5
+
+											RecLock("ZL5", .T.)
+											ZL5->ZL5_FILIAL	:= ""
+											ZL5->ZL5_CODEMP	:= cEmpAnt
+											ZL5->ZL5_CODFIL	:= cFilAnt
+											ZL5->ZL5_NUM	:= SC5->C5_NUM
+											ZL5->ZL5_TRANSP	:= (cAlias2)->ZL5_TRANSP
+											ZL5->ZL5_ESPECI	:= (cAlias2)->ZL5_ESPECI
+											ZL5->ZL5_QTDNF	:= (cAlias2)->ZL5_QTDNF
+											ZL5->ZL5_QTDVEN	:= (cAlias2)->ZL5_QTDVEN
+											ZL5->ZL5_EMAIL	:= (cAlias2)->ZL5_EMAIL
+											ZL5->ZL5_VOLUME	:= (cAlias2)->ZL5_VOLUME
+											ZL5->ZL5_EMISSA	:= dDataBase
+											ZL5->(MsUnLock())
+
+											lZL5 := .F.
+
+										EndIf
+
+										RecLock("ZL6", .T.)
+										ZL6->ZL6_FILIAL := ""
+										ZL6->ZL6_CODEMP	:= cEmpAnt
+										ZL6->ZL6_CODFIL	:= cFilAnt
+										ZL6->ZL6_NUM	:= SC5->C5_NUM
+										ZL6->ZL6_PLACA 	:= (cAlias2)->ZL6_PLACA
+										ZL6->ZL6_UF 	:= (cAlias2)->ZL6_UF
+										ZL6->ZL6_QTDVEN := (cAlias2)->ZL6_QTDVEN
+										ZL6->ZL6_VOLUME	:= (cAlias2)->ZL6_VOLUME
+										ZL6->ZL6_OBS	:= (cAlias2)->ZL6_OBS
+										ZL6->ZL6_PLIQUI	:= (cAlias2)->ZL6_PLIQUI
+										ZL6->ZL6_PBRUTO	:= (cAlias2)->ZL6_PBRUTO
+										ZL6->ZL6_STATUS	:= "1"
+										ZL6->ZL6_RETNFE	:= ""
+
+										ZL6->ZL6_TPMOV	:= "D" // O=Origem;D=Destino
+
+										ZL6->ZL6_DOCODE	:= cDoc
+										ZL6->ZL6_SERODE	:= cSerie
+										ZL6->ZL6_PEDODE	:= cPedOri
+										ZL6->ZL6_EMPODE	:= cEmpOri
+										ZL6->ZL6_FILODE	:= cFilOri
+										ZL6->(MsUnLock())
+
+										(cAlias2)->(DBSkip())
+
+									EndDo
+
+									(cAlias2)->(DBcloseArea())
+
+								Else
+
+									lZL5 := .T.
+
+								EndIf
+
+							Next nY
+
+						EndIf
+
+					Next nZ
+
+				EndIf
+
+			End Sequence
+
+			ErrorBlock( bErro )
+
+			If ( ValType(cErro) <> "U" .And. !Empty(cErro) ) .Or. lMsErroAuto
+
+				RollBackSX8()
+
+				DisarmTransaction()
+
+				::AddLog("EXCEPTION " + cDoc +"/"+  cSerie + "-" + cErro)
+
+			EndIf
+
+		End Transaction
+
+	EndIf
+
+	RestArea(aArea)
+
+Return(!lMsErroAuto)
+
+Method SetOrigem(cEmpOri, cFilOri, cPedOri, cDoc, cSerie, cDocDes, cSerDes, cPedDes, cEmpDes, cFilDes) Class TFaturamentoemPartes
+
+	Local aArea		:= GetArea()
+	Local aAreaZL6	:= ZL6->(GetArea())
+
+	Default cStatus := ""
+	Default cLog := ""
+
+	DBSelectArea("ZL6")
+	ZL6->(DBSetOrder(3)) // ZL6_FILIAL, ZL6_CODEMP, ZL6_CODFIL, ZL6_NUM, ZL6_DOC, ZL6_SERIE
+
+	If ZL6->(DBSeek(xFilial("ZL6") + cEmpOri + cFilOri + cPedOri + cDoc + cSerie))
+
+		RecLock("ZL6", .F.)
+		ZL6->ZL6_DOCODE	:= cDocDes
+		ZL6->ZL6_SERODE	:= cSerDes
+		ZL6->ZL6_PEDODE	:= cPedDes
+		ZL6->ZL6_EMPODE	:= cEmpDes
+		ZL6->ZL6_FILODE	:= cFilDes
+		ZL6->ZL6_TPMOV	:= "O"
+		ZL6->(MsUnLock())
+
+	EndIf
+
+	RestArea(aArea)
+	RestArea(aAreaZL6)
+
+Return()
+
+Method SetLog(cEmpOri, cFilOri, cPedOri, cDoc, cSerie, cLog) Class TFaturamentoemPartes
+
+	Local aArea		:= GetArea()
+	Local aAreaZL6	:= ZL6->(GetArea())
+
+	Default cEmpOri	:= ""
+	Default cFilOri	:= ""
+	Default cPedOri	:= ""
+	Default cDoc	:= ""
+	Default cSerie	:= ""
+	Default cLog 	:= ""
+
+	DBSelectArea("ZL6")
+	ZL6->(DBSetOrder(3)) // ZL6_FILIAL, ZL6_CODEMP, ZL6_CODFIL, ZL6_NUM, ZL6_DOC, ZL6_SERIE
+
+	If ZL6->(DBSeek(xFilial("ZL6") + cEmpOri + cFilOri + cPedOri + cDoc + cSerie))
+
+		RecLock("ZL6", .F.)
+		ZL6->ZL6_LOG := cLog
+		ZL6->(MSUnLock())
+
+	EndIf
+
+	RestArea(aArea)
+	RestArea(aAreaZL6)
+
+Return()
+
+Method AddLog(cMsg) Class TFaturamentoemPartes
+
+	Default cMsg := ""
+
+	::cErro += cMsg + CRLF + CRLF
+
+	ConOut("[" + cEmpAnt + cFilAnt +"] " + "[" + Time() +"] " + "[" + PadR("TFaturamentoemPartes", 32) + "] " + cMsg)
+
+Return()
+
+Method GetErrorLog() Class TFaturamentoemPartes
+	Local cRet := ""
+	Local nCount := 1
+
+	aError := GetAutoGrLog()
+
+	For nCount := 1 To Len(aError)
+
+		cRet += aError[nCount] + CRLF
+
+	Next
+
+Return(cRet)
+
+Method LoadFiliais() Class TFaturamentoemPartes
+
+	Local aFil := {}
+
+	// abre o sigamat.emp
+	If ( Select( "SM0" ) == 0 )
+
+		Private CARQEMP := "sigamat.emp"
+
+		OpenSM0()
+
+	EndIf
+
+	// le o sigamat.emp
+	SM0->( DBGoTop() )
+
+	While SM0->( !EOF() )
+
+		If SM0->( !Deleted() )
+
+			If AllTrim(SM0->M0_CODIGO) == "06"
+
+				aAdd( aFil , { SM0->M0_CODIGO, SM0->M0_CODFIL, SM0->M0_CGC } )
+
+			EndIf
+
+		EndIf
+
+		SM0->( DBSkip( ) )
+
+	EndDo
+
+	SM0->(DBcloseArea())
+
+Return(aFil)
+
+Method PercorreFiliais() Class TFaturamentoemPartes
+
+	Local nI			:= 0
+
+	For nI := 1 To Len(::aFiliais)
+
+		// Coloque aqui todas suas StartJobs
+		//StartJob( "U_EJOBFATPARTE", GetEnvServer(), .F., {::aFiliais[nI, 1], ::aFiliais[nI, 2]} )
+
+		U_EJOBFATPARTE({::aFiliais[nI, 1], ::aFiliais[nI, 2], ::aFiliais})
+
+	Next nI
+
+Return()
+
+Method ExisteFuncaoEmProcessamento(cFuncProc, cEmp, cFil) Class TFaturamentoemPartes
+
+	Local aThreads	:= GetUserInfoArray()
+	Local nW		:= 0
+	Local lRet		:= .T.
+
+	For nW := 1 To Len(aThreads)
+
+		If aThreads[nW, 5] $ cFuncProc .And. aThreads[nW, 3] <> ThreadId()
+
+			If Empty(aThreads[nW, 11])
+
+				lRet := .F.
+
+				Exit
+
+			ElseIf cFuncProc+"|"+cEmp+"|"+cFil+"|" $ aThreads[nW, 11]
+
+				lRet := .F.
+
+				Exit
+
+			EndIf
+
+		EndIf
+
+	Next nW
+
+Return(lRet)
+
+Method Transmissao(cDoc, cSerie) Class TFaturamentoemPartes
+
+	Local aArea		:= GetArea()
+
+	Local _cError
+	Local lRet := .T.
+
+	Private cIdEnt := GetCfgEntidade(@_cerror)
+
+	If Empty(cIdent)
+
+		lRet := .F.
+
+		::AddLog("TFaturamentoemPartes -> TSS não responde")
+
+	Else
+
+		StaticCall(BACP0011, fSendDanfe, cDoc, cDoc, cSerie)
+
+	EndIf
+
+	RestArea(aArea)
+
+Return(lRet)
+
+Method Vld_MV_NUMITEN() Class TFaturamentoemPartes
+
+	Local aArea := SX6->(GetArea())
+
+	DbSelectArea( "SX6" )
+
+	If GetMv("MV_NUMITEN",.T.)
+
+		lLockX6 := MsRLock()
+
+		::AddLog('TFaturamentoemPartes - lock -> MV_NUMITEN ' + If(lLockX6, ".T.", ".F. (travado! [Feche a tela de pedido de venda] ) " + TcInternal(53)))
+
+	EndIf
+
+	RestArea(aArea)
+
+Return(lLockX6)
+
+Method PDF(aNotas) Class TFaturamentoemPartes
+
+	Local nW 		:= 0
+	Local cLocal 	:= "\P10\AUTOMACAO\FATPARTE\"
+	Local cNomeArq 	:= ZL5->ZL5_NUM + "_" + DtoS(Date()) + "_" + Replace(Time(), ":", "")
+	Local cIdEnt	:= GetCfgEntidade()
+	Local oSetup	:= Nil
+	Local oPrint	:= Nil
+	Local lOk		:= .T.
+
+	Default aNotas	:= {}
+
+	lServer := .F.
+	lAdjustToLegacy := .F.
+	lDisableSetup  := .T.
+
+	oPrint := FWMSPrinter():New(cNomeArq, IMP_PDF, .F., cLocal, .T., , ,, .T., .F.)
+
+	oPrint:lViewPDF		:= .F.
+	oPrint:cPathPDF		:= cLocal
+	oPrint:lServer  	:= .T.
+
+	Begin Transaction
+
+		For nW := 3 To Len(aNotas)
+
+			ZL6->(DBGoTo(aNotas[nW][3]))
+
+			If !Empty(cIdEnt)
+
+				u_fautdanfe(cIdEnt ,/*cVal1*/ ,/*cVal2*/ ,oPrint , oSetup, cNomeArq, aNotas[nW][1], aNotas[nW][2])
+
+				Reclock("ZL6", .F.)
+				ZL6->ZL6_STATUS := "6"
+				ZL6->ZL6_PDF := cLocal + cNomeArq + ".pdf"
+				ZL6->(MSUnLock())
+
+			Else
+
+				Reclock("ZL6", .F.)
+				ZL6->ZL6_STATUS := "3"
+				ZL6->ZL6_PDF := "Sem conexao com o TSS"
+				ZL6->(MSUnLock())
+
+				lOk := .F.
+
+			EndIf
+
+		Next nW
+
+	End Transaction
+
+	If lOk
+
+		oPrint:Print()
+
+	EndIf
+
+	FreeObj(oPrint)
+
+	oPrint := Nil
+
+Return(cNomeArq)
+
+Method EnvioNFe(aNotasEnv) Class TFaturamentoemPartes
+
+	Local nW := 0
+	Local lEnv := .T.
+
+	For nW := 3 To Len(aNotasEnv)
+
+		ZL6->(DBGoTo(aNotasEnv[nW][4]))
+
+		If lEnv
+
+			U_BIAEnvMail(, ZL5->ZL5_EMAIL, "NF-e " + AllTrim(SM0->M0_NOME), "Segue nota fiscal eletrônica", , AllTrim(aNotasEnv[1]), .F.)
+
+			lEnv := .F.
+
+		EndIf
+
+		Reclock("ZL6", .F.)
+		ZL6->ZL6_STATUS := "7"
+		ZL6->(MSUnLock())
+
+	Next nW
+
+Return()
+
+Method WorkflowTransf(cProdOri, cProdDes, nQtd, cLocalOri, cLocalDes, cPedido, aDocEntrada, cPedDes) Class TFaturamentoemPartes
+
+	Local cHtml 	:= ""
+	Local oMail 	:= TAFMail():New()
+	Local cDoc		:= ""
+	Local cSerie	:= ""
+	Local nY		:= 0
+
+	Default aDocEntrada := {}
+
+	cHtml += '</tbody>'
+	cHtml += '</table>'
+
+	cHtml += '<style type="text/css">'
+	cHtml += '.tg  {border-collapse:collapse;border-color:#aaa;border-spacing:0;}'
+	cHtml += '.tg td{background-color:#fff;border-color:#aaa;border-style:solid;border-width:1px;color:#333;'
+	cHtml += '  font-family:Arial, sans-serIf;font-size:14px;overflow:hidden;padding:10px 5px;word-break:normal;}'
+	cHtml += '.tg th{background-color:#f38630;border-color:#aaa;border-style:solid;border-width:1px;color:#fff;'
+	cHtml += '  font-family:Arial, sans-serIf;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}'
+	cHtml += '.tg .tg-zw5y{border-color:inherit;text-align:center;text-decoration:underline;vertical-align:top}'
+	cHtml += '.tg .tg-0lax{text-align:left;vertical-align:top}'
+	cHtml += '</style>'
+
+	cHtml += '<table class="tg" width="100%">'
+	cHtml += '   <thead>'
+	cHtml += '      <tr>'
+	cHtml += '         <th class="tg-zw5y" colspan="3" style="width: 99.8856%;">'
+	cHtml += '            <div style="text-align: center;">' + cEmpAnt + cFilAnt + ' - Transferencia de Produto</div>'
+	cHtml += '         </th>'
+	cHtml += '      </tr>'
+	cHtml += '   </thead>'
+	cHtml += '   <tbody>'
+
+	For nY := 1 To Len(aDocEntrada)
+
+		cDoc		:= aDocEntrada[nY][6]
+		cSerie		:= aDocEntrada[nY][7]
+
+		If cPedido == aDocEntrada[nY][5]
+
+			cHtml += '      <tr>'
+			cHtml += '         <td><strong>Documento Entrada</strong></td>'
+			cHtml += '         <td colspan="2">' + cDoc + '</td>'
+			cHtml += '      </tr>'
+			cHtml += '      <tr>'
+			cHtml += '         <td><strong>Serie</strong></td>'
+			cHtml += '         <td colspan="2">' + cSerie + '</td>'
+			cHtml += '      </tr>'
+
+		EndIf
+
+	Next nY
+
+	cHtml += '      <tr>'
+	cHtml += '         <td><strong>Pedido Origem</strong></td>'
+	cHtml += '         <td colspan="2">' + cPedido + '</td>'
+	cHtml += '      </tr>'
+
+	cHtml += '      <tr>'
+	cHtml += '         <td><strong>Pedido Destino</strong></td>'
+	cHtml += '         <td colspan="2">' + cPedDes + '</td>'
+	cHtml += '      </tr>'
+
+	cHtml += '      <tr>'
+	cHtml += '         <td><strong>Produto origem</strong></td>'
+	cHtml += '         <td colspan="2">' + cProdOri + '</td>'
+	cHtml += '      </tr>'
+	cHtml += '      <tr>'
+	cHtml += '         <td><strong>Local origem</strong></td>'
+	cHtml += '         <td colspan="2">' + cLocalOri + '</td>'
+	cHtml += '      </tr>'
+	cHtml += '      <tr>'
+	cHtml += '         <td><strong>Produto destino</strong></td>'
+	cHtml += '         <td colspan="2">' + cProdDes + '</td>'
+	cHtml += '      </tr>'
+	cHtml += '      <tr>'
+	cHtml += '         <td><strong>Local destino</strong></td>'
+	cHtml += '         <td colspan="2">' + cLocalDes + '</td>'
+	cHtml += '      </tr>'
+	cHtml += '      <tr>'
+	cHtml += '         <td><strong>Quantidade</strong></td>'
+	cHtml += '         <td colspan="2">' + AllTrim(TRANSFORM(nQtd,"@E 999,999,999.99")) + '</td>'
+	cHtml += '      </tr>'
+	cHtml += '      <tr>'
+	cHtml += '         <td><strong>Observa&ccedil;&atilde;o</strong></td>'
+	cHtml += '         <td colspan="2">Consulte o Kardex dos produtos</td>'
+	cHtml += '      </tr>'
+	cHtml += '   </tbody>'
+	cHtml += '</table>'
+
+	oMail:cTo := ::cEmailTransf
+	oMail:cSubject := "Tranferencia de Produto - Informativo"
+	oMail:cBody := cHtml
+
+	oMail:Send()
+
+Return()

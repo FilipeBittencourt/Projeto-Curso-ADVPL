@@ -1,0 +1,401 @@
+#Include "TOTVS.CH"
+#Include "Protheus.CH"
+
+Class TConferenciaPedidoVenda From LongClassName
+
+//atributos publico
+Public Data cNumPed	as character
+Public Data cEmp		as character
+Public Data cFil		as character
+Public Data cUser		as character
+Public Data nOpcao		as numeric  // 1=Inserir , 2=Alterar , 3=Tela Liberacao/Job 
+
+Public Data lOk		as logical
+Public Data cMsgLog	as character
+
+//atributos privado
+
+//metodos publicos	
+Public Method New() Constructor
+Public Method Checar()	
+
+//metodos privados
+Public Method _Conferir()
+Public Method _Regra000()
+Public Method _Regra001()
+Public Method _ReplicarConf()
+Public Method _DispararEmpenho()
+Public Method _VerificarPonta()
+Public Method _MailPed()
+Public Method _MailEmpenho() 
+
+EndClass
+
+Method New (_cEmp, _cFil, _nOpcao, _cUser) Class TConferenciaPedidoVenda
+
+	::cEmp		:= _cEmp
+	::cFil		:= _cFil
+	::nOpcao	:= _nOpcao 
+	::cUser		:= _cUser
+
+Return 
+
+Method _Regra000() Class TConferenciaPedidoVenda
+
+	If ::nOpcao==2 .And. (SC5->C5_YCONF == "S")
+
+		Return .T.
+
+	EndIf
+
+Return .F.
+
+Method _Regra001() Class TConferenciaPedidoVenda
+
+
+
+	//busca cliente
+	DbSelectArea('SA1')
+	SA1->(DbSetOrder(1))
+
+	ConOut("TConferenciaPedidoVenda => PEDIDO: "+::cNumPed+", Cliente: "+cvaltochar(SC5->C5_CLIENTE+SC5->C5_LOJACLI)+",  Data: "+DTOC(dDataBase)+" Hora: "+Time())
+	ConOut("TConferenciaPedidoVenda => Conf: "+SC5->C5_YCONF+", Aprov: "+cvaltochar(SC5->C5_YAPROV)+",  Obs: "+SC5->C5_YOBS+" Seg: "+SA1->A1_YTPSEG)
+
+
+	If (SA1->(DbSeek(XFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI)))
+
+		If ( AllTrim(SC5->C5_YSUBTP) $ "M_O_F_G_B")
+
+			Return .F. 
+
+		EndIf
+
+		If (AllTrim(SA1->A1_YTPSEG) == 'R') .And. !Empty(SC5->C5_YAPROV) .And. Empty(StrTran(SC5->C5_YOBS, Chr(13)+Chr(10), "" )) .And. SC5->C5_YCONF <> 'S'
+
+			Return .T.
+
+		EndIf
+
+	EndIf	
+
+Return .F.
+
+Method _ReplicarConf() Class TConferenciaPedidoVenda
+
+	Local cMsg	:= ""
+
+	If (AllTrim(::cEmp) == "07")
+
+		DbSelectArea('SC5')
+		SC5->(DbSetOrder(1))
+
+		If (SC5->(DbSeek(XFilial("SC5")+::cNumPed)))
+
+			If (!Empty(SC5->C5_YPEDORI) .And. SC5->C5_YCONF == "S")
+
+				cMsg := U_FRUTCONF(SC5->C5_NUM, SC5->C5_YPEDORI, SC5->C5_YAPROV)
+
+			EndIf	
+
+		EndIf
+
+	EndIf
+
+Return cMsg
+
+Method _DispararEmpenho() Class TConferenciaPedidoVenda
+
+	Local oEmpAut	:= Nil
+	Local aRetEmp	:= Nil
+	Local cMsg		:= ""
+	Local nLinhaEmp	:= ""
+
+	DbSelectArea('SC5')
+	SC5->(DbSetOrder(1))
+
+	If (SC5->(DbSeek(XFilial("SC5")+::cNumPed)))
+
+		If (SC5->C5_YCONF == "S" .And. AllTrim(SC5->C5_YAPROV) <> "" .And. AllTrim(SC5->C5_YSUBTP) <> "A")
+
+			If (AllTrim(::cEmp) <> "07") //Nao é LM
+
+				ConOut("TConferenciaPedidoVenda => thread: "+AllTrim(Str(ThreadId()))+", PEDIDO: "+::cNumPed+", Data: "+DTOC(dDataBase)+" Hora: "+Time()+" - _DispararEmpenho NAO LM")
+				oEmpAut := TBiaEmpenhoPedido():New()
+				aRetEmp := oEmpAut:LibPedido(SC5->C5_NUM)
+
+				cMsg 	:= aRetEmp[2]
+
+			ElseIf (AllTrim(::cEmp) == "07" .And. !Empty(SC5->C5_YPEDORI)) //É LM
+
+				ConOut("TConferenciaPedidoVenda => thread: "+AllTrim(Str(ThreadId()))+", PEDIDO: "+::cNumPed+", Data: "+DTOC(dDataBase)+" Hora: "+Time()+" - _DispararEmpenho LM")
+				DbSelectArea('SC6')
+				SC6->(dbSetOrder(1))
+
+				If (SC6->(DbSeek(xFilial("SC6")+SC5->C5_NUM)))
+
+					nLinhaEmp	:= SubStr(SC6->C6_YEMPPED,1,2)+"01"
+					cMsg		:= U_FROPCPRO(SubStr(nLinhaEmp, 1, 2),SubStr(nLinhaEmp, 3, 2),"U_XEMPAUPO", SC5->C5_YPEDORI, SC5->C5_YAPROV)
+
+				EndIf	
+			
+			ElseIf (AllTrim(::cEmp) == "07" .And. AllTrim(::cFil) == "05")
+				
+				ConOut("TConferenciaPedidoVenda => thread: "+AllTrim(Str(ThreadId()))+", PEDIDO: "+::cNumPed+", Data: "+DTOC(dDataBase)+" Hora: "+Time()+" - _DispararEmpenho LM => FILIAL 05 ")
+				oEmpAut := TBiaEmpenhoPedido():New()
+				aRetEmp := oEmpAut:LibPedido(SC5->C5_NUM)
+
+				cMsg 	:= aRetEmp[2]
+				
+			EndIf
+
+		EndIf
+
+	EndIf
+
+Return cMsg
+
+Method _Conferir(_cUser) Class TConferenciaPedidoVenda
+
+	RecLock("SC5",.F.)
+	SC5->C5_YCONF 	:= "S"
+	SC5->C5_YUSCONF	:= _cUser
+	SC5->(MsUnlock())				
+
+Return
+
+
+Method _VerificarPonta() Class TConferenciaPedidoVenda
+
+	Local aRetPonta := {}
+	Local cPedido 	:= "" 
+	Local cEmPed	:= ""
+	Local cFilPed	:= "01"
+	Local cAliasTmp	:= Nil
+	Local lExistSC9	:= .F.
+	Local cTabela	:= ""
+
+	cPedido := ::cNumPed
+	If (!Empty(SC5->C5_YPEDORI))
+		cPedido := SC5->C5_YPEDORI
+	EndIf
+	
+	cTabela := cEmpAnt
+	If !Empty(SC5->C5_YEMPPED)
+		cTabela := SC5->C5_YEMPPED
+	EndIf
+	
+	If (!Empty(cTabela) .And. Len(cTabela) == 2)
+		
+		cTabela := "% SC9"+cTabela+"0 %"
+		cAliasTmp := GetNextAlias()
+		BeginSql Alias cAliasTmp
+			select * from %EXP:cTabela% SC9 (nolock) 
+				where 
+				C9_FILIAL 		= %EXP:SC5->C5_FILIAL% 
+				and C9_PEDIDO 	= %EXP:cPedido%
+				AND D_E_L_E_T_ 	= ''
+		EndSql
+		
+		Conout(GetLastQuery()[2])
+	
+		If !(cAliasTmp)->(Eof())
+			lExistSC9 = .T.
+		EndIf
+		(cAliasTmp)->(DbCloseArea())
+		
+	EndIf
+	
+	If (!lExistSC9)
+	
+		DbSelectArea('SC6')
+		SC6->(dbSetOrder(1))
+		SC6->(DbSeek(xFilial("SC6")+::cNumPed))
+	
+		While !SC6->(Eof()) .And. SC6->C6_NUM == ::cNumPed      	
+	
+			cEmpPed := SC6->C6_YEMPPED
+	
+			If Empty(cEmpPed)
+				cEmpPed := CEMPANT
+				cFilPed := CFILANT
+			EndIf
+	
+			aRetPonta := U_FR2CHKPT(SC6->C6_PRODUTO, SC6->C6_LOTECTL, SC6->C6_QTDVEN,, cPedido, SC6->C6_ITEM, "", cEmpPed, cFilPed)  
+	
+			If (aRetPonta[1] == "P")
+				
+				//ConOut("TConferenciaPedidoVenda:_VerificarPonta(): "+cValToChar(SC6->C6_QTDVEN))
+	
+				ConOut(cValToChar(dDataBase) +"-"+ Time() + " -- TConferenciaPedidoVenda:_VerificarPonta()  -- Pedido: "+ ::cNumPed + " -- Produto: " + SC6->C6_PRODUTO+ " -- Item: " + SC6->C6_ITEM)
+	
+				U_GravaPZ2(SC6->(RecNo()),"SC6","CONF",,AllTrim(FunName()),"AGP", CUSERNAME)
+				
+				::_MailEmpenho() 
+				
+				Return .T.
+	
+			EndIf
+	
+			SC6->(DbSkip())
+	
+		EndDo()
+
+	EndIf
+	
+	ConOut(cValToChar(dDataBase) +"-"+ Time() + " -- TConferenciaPedidoVenda:_VerificarPonta()  -- Pedido: "+ ::cNumPed)
+	
+
+Return .F.
+
+Method Checar(_cNumPed) Class TConferenciaPedidoVenda
+
+	Local aArea 	:= GetArea()
+	Local lRet		:= .F.
+	Local cRet		:= ""
+
+
+	If (::nOpcao==1 .Or. ::nOpcao==2 .Or. ::nOpcao==3)
+
+		::cNumPed := _cNumPed
+
+		DbSelectArea('SC5')
+		SC5->(DbSetOrder(1))
+
+		If (SC5->(DbSeek(XFilial("SC5")+::cNumPed)))
+
+			If (::_VerificarPonta()) //realizar validacao de ponta
+				RestArea(aArea)
+				Return
+			EndIf
+
+			lRet := ::_Regra000()//Usuário conferencia manual
+			If (lRet)
+				::_Conferir(::cUser)
+			EndIf
+
+			lRet := ::_Regra001() //Regra 1 : conferencia automatica
+
+			ConOut("TConferenciaPedidoVenda => PEDIDO: "+::cNumPed+", NBloq: "+cvaltochar(lRet)+",  Data: "+DTOC(dDataBase)+" Hora: "+Time())
+
+			If (lRet)
+				::_Conferir("REGRA-001")
+			EndIf
+
+			If (::cEmp <> '07' .Or. (::cEmp == '07' .And. ::cFil <> '05'))
+				
+				cRet := ::_ReplicarConf()
+				If !Empty(cRet)
+					ConOut("TConferenciaPedidoVenda => EMPENHO AUTOMATICO ALERTA : "+CRLF+cRet)
+					//U_FROPMSG("TConferenciaPedidoVenda => EMPENHO AUTOMATICO", "Alerta empenho automático do pedido: "+CRLF+cRet,,2,"Empenho Automático de Pedidos")
+				EndIf
+				
+			EndIf
+			
+			
+
+			ConOut("TConferenciaPedidoVenda => thread: "+AllTrim(Str(ThreadId()))+", PEDIDO: "+::cNumPed+", Data: "+DTOC(dDataBase)+" Hora: "+Time()+" - DISPARANDO EMPENHO AUTOMATICO - ANTES")
+			cRet := ::_DispararEmpenho()
+			If !Empty(cRet)
+				ConOut("TConferenciaPedidoVenda => EMPENHO AUTOMATICO ALERTA : "+CRLF+cRet)
+				//U_FROPMSG("TConferenciaPedidoVenda => EMPENHO AUTOMATICO", "Alerta empenho automático do pedido: "+CRLF+cRet,,2,"Empenho Automático de Pedidos")
+			EndIf
+			
+			::_MailPed()
+
+		EndIf	
+
+	EndIf
+
+
+	RestArea(aArea)
+
+Return
+
+Method _MailEmpenho()  Class TConferenciaPedidoVenda
+
+	Local aCC 			:= ""
+	Local aCCO 			:= ""			
+	Local cTitulo		:= "Ponta - Empenho Automatico do Pedido - "+::cNumPed
+	Local cDestinatario	:= ""
+	Local cEmp			:= ""
+	Local cHtml 		:= ""
+	
+	cHtml := '   <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	cHtml += '   <html xmlns="http://www.w3.org/1999/xhtml">
+	cHtml += '      <head>
+	cHtml += '         <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	cHtml += '         <title>workflow</title>
+	cHtml += '         <style type="text/css">
+	cHtml += '			<!--
+	cHtml += ' 			body{ font-family: Verdana; font-size: 14px; }  
+	cHtml += '			.motret {1px solid #969696; background-color: #e0e0de; color:#000; padding:1px 1px 1px 1px;}
+	cHtml += '			-->
+	cHtml += '         </style>
+	cHtml += '      </head>
+	cHtml += '      <body>
+
+	cHtml += "<p>O pedido: "+::cNumPed+" está gerando ponta.</p>"
+	cHtml += "<p>Produto: "+SC6->C6_PRODUTO+"</p>"
+	cHtml += "<p>Lote: "+SC6->C6_LOTECTL+"</p>"
+		
+	cHtml += "      </body>"
+	cHtml += "   </html>"
+		
+	If (Empty(SC5->C5_YPEDORI))
+		cEmp	:= SubStr(SC5->C5_YEMP, 1, 2)
+	Else
+		cEmp	:= SC5->C5_YEMPPED
+	EndIf
+	
+	cDestinatario	:= U_MailAtendente(cEmp, SC5->C5_NUM, SC5->C5_VEND1, SC5->C5_CLIENTE, SC5->C5_LOJACLI)
+	
+	ConOut("EMAIL PONTA : "+cDestinatario)	
+	//Envia e-mail
+	U_BIAEnvMail(, cDestinatario, cTitulo, cHtml, , , , aCC, aCCO)		
+
+Return
+
+
+Method _MailPed() Class TConferenciaPedidoVenda
+
+	Local cEmpPed	:= ""
+	
+	DbSelectArea("SC5")
+	SC5->(DbSetOrder(1))
+	If SC5->(DbSeek(xFilial("SC5") + ::cNumPed))
+		
+		// Projeto Reserva de OP/Lote - Só enviar o email de pedido apos liberacao das rejeicoes de lote
+		If U_FROPVLPV(SC5->C5_NUM, .F., .F.) .And. U_fVlLbDes(SC5->C5_NUM,SC5->C5_YCLIORI)   
+	
+			cEmpPed := cEmpAnt
+	
+			If !Empty(SC5->C5_YEMPPED)
+	
+				cEmpPed := SC5->C5_YEMPPED
+	
+			EndIf
+			
+			ConOut("TConferenciaPedidoVenda => PEDIDO: "+::cNumPed+", Conf: "+SC5->C5_YCONF+", YEnvio: "+SC5->C5_YENVIO+",  Data: "+DTOC(dDataBase)+" Hora: "+Time())
+	
+	
+			// Controle para não enviar o pedido novamente
+			If SC5->C5_YCONF == "S" .And. SC5->C5_YENVIO <> "S" .And. Posicione("SA1", 1, xFilial("SA1") + SC5->C5_CLIENTE + SC5->C5_LOJACLI, "A1_YEMAIL") == "S"
+	
+				// Envia e-mail do pedido de venda
+				U_Env_Pedido(SC5->C5_NUM, .T., .T., cEmpPed) 
+	
+				// Envia e-mail para o atendente		
+				U_BIA188()
+	
+				// Atualizar data das reservas de acordo com vencimento dodo boleto antecipado
+				U_FR2VLRES(SC5->C5_NUM)
+	
+			ConOut("TConferenciaPedidoVenda => PEDIDO: "+::cNumPed+"  email enviado.")
+	
+			EndIf  
+	
+		EndIf		
+		
+	EndIf
+		
+Return 

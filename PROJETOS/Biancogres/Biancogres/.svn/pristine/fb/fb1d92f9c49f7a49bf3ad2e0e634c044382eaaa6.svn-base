@@ -1,0 +1,22 @@
+#include "rwmake.ch" 
+
+User Function Pagval()
+
+SetPrvt("_VALOR,")
+
+/// VALOR DO DOCUMENTO  DO CODIGO DE BARRA DA POSICAO 06 - 19, NO ARQUIVO E
+/// DA POSICAO 190 - 204, QUANDO NAO FOR CODIGO DE BARRA VAI O VALOR DO SE2
+
+_Valor :="000000000000000"
+
+IF !Empty(SE2->E2_CODBAR)
+
+   _Valor := SubStr(SE2->E2_CODBAR,06,14)
+
+ElseIf !Empty(SE2->E2_YLINDIG)
+   IF Val(SubStr(SE2->E2_YLINDIG,34,14)) <> 0
+       _Valor := SubStr(SE2->E2_YLINDIG,34,14)
+   Endif
+Endif
+
+Return(_Valor)

@@ -1,0 +1,211 @@
+#Include "TOTVS.CH"
+#Include "Protheus.CH"
+#Include "TOPCONN.CH"
+
+/*/{Protheus.doc} TDadosCarga
+@description Classe para dados da Carga
+@since 27/11/2019
+@version 1.0
+@type class
+/*/
+Class TDadosCarga From LongClassName
+
+Public Data cCarga		as character
+
+//metodos publicos	
+Public Method New() Constructor
+Public Method ProcDados()	
+Public Method GetDadosSF2()	
+Public Method GetListaMDF()
+Public Method GetListaNF()
+
+EndClass
+
+
+Method New(cCarga) Class TDadosCarga
+
+	::cCarga		:= cCarga
+
+Return()
+
+Method GetDadosSF2() Class TDadosCarga
+
+Return ::ProcDados()
+
+Method GetListaMDF() Class TDadosCarga
+
+	Local oDadosMDF 	:= ::ProcDados()
+	Local aNovoDados	:= {}
+	Local oObj			:= Nil
+	Local nI
+
+	For nI:=1 To oDadosMDF:GetCount()
+
+		oObj	:= oDadosMDF:GetItem(nI)
+
+		If !(Empty(oObj:cNumMDF))
+
+			Aadd(aNovoDados, { oObj:cEmp, oObj:cNumMDF, oObj:cSerieMDF} )
+
+		EndIf
+
+	Next nI
+
+Return aNovoDados
+
+
+Method GetListaNF() Class TDadosCarga
+
+	Local oDadosNF 		:= ::ProcDados()
+	Local aNovoDados	:= {}
+	Local oObj			:= Nil
+	Local nI
+
+	For nI:=1 To oDadosNF:GetCount()
+
+		oObj	:= oDadosNF:GetItem(nI)
+
+		If !(Empty(oObj:cNumNF))
+
+			Aadd(aNovoDados, { oObj:cEmp, oObj:cNumNF, oObj:cSerieNF, oObj:dDtEmissao, oObj:cCliente, oObj:cLoja } )
+
+		EndIf
+
+	Next nI
+
+Return aNovoDados
+
+
+Method ProcDados() Class TDadosCarga
+
+	Local oResult 		:= Nil
+	Local cAliasTrab 	:= GetNextAlias()
+	Local cQuery		:= ""
+	Local oDados		:= ArrayList():New()
+
+	DbSelectArea("ZZV")
+	ZZV->(dbSetOrder(1))
+
+	If ZZV->(DbSeek(xFilial("ZZV")+::cCarga))
+
+		cQuery := ""+CRLF
+		cQuery += "with 																										 "+CRLF
+		cQuery += " tab_carga as (                                                                                               "+CRLF
+		cQuery += " select * from FNC_CARGA_EMP('"+AllTrim(cEmpAnt)+AllTrim(cFilAnt)+"','"+ZZV->ZZV_CARGA+"','"+ZZV->ZZV_TICKET+"') "+CRLF
+		cQuery += " ),                                                                                                           "+CRLF
+		cQuery += " tab_nf as (                                                                                                  "+CRLF
+		cQuery += " select EMPRESA='01',DOC = C9_NFISCAL, SERIE = C9_SERIENF, F2_NUMMDF, F2_SERMDF                               "+CRLF
+		cQuery += " ,  F2_CLIENTE, F2_LOJA		, F2_EMISSAO															                     "+CRLF
+		cQuery += " from SC9010 SC9                                                                                              "+CRLF
+		cQuery += " join SF2010 SF2 on F2_DOC = C9_NFISCAL AND F2_SERIE = C9_SERIENF AND SF2.D_E_L_E_T_ = ''                     "+CRLF
+		cQuery += " where C9_AGREG in (select CARGA from tab_carga where EMPRESA = '0101')                                       "+CRLF
+		cQuery += "                                                                                                              "+CRLF
+		cQuery += " and C9_CLIENTE <> '010064'                                                                                   "+CRLF
+		cQuery += " and SC9.D_E_L_E_T_ = ''                                                                                      "+CRLF
+		cQuery += " union all                                                                                                    "+CRLF
+		cQuery += " select EMPRESA='07',DOC = C97.C9_NFISCAL,SERIE = C97.C9_SERIENF, F2_NUMMDF, F2_SERMDF                        "+CRLF
+		cQuery += " ,  F2_CLIENTE, F2_LOJA , F2_EMISSAO																	                     "+CRLF
+		cQuery += " from SC9010 C9                                                                                               "+CRLF
+		cQuery += " join SC9070 C97 on C97.C9_BLINF = ('01'+C9.C9_NFISCAL+C9.C9_SERIENF+C9.C9_PEDIDO+C9.C9_ITEM+C9.C9_SEQUEN)    "+CRLF
+		cQuery += " join SF2070 F27 on F27.F2_DOC = C97.C9_NFISCAL AND F27.F2_SERIE = C97.C9_SERIENF AND F27.D_E_L_E_T_ = ''     "+CRLF
+		cQuery += "                                                                                                              "+CRLF
+		cQuery += " where C9.C9_AGREG in (select CARGA from tab_carga where EMPRESA = '0101')                                    "+CRLF
+		cQuery += " and C9.C9_CLIENTE = '010064'                                                                                 "+CRLF
+		cQuery += " and C9.D_E_L_E_T_ = ''                                                                                       "+CRLF
+		cQuery += " and C97.D_E_L_E_T_ = ''                                                                                      "+CRLF
+		cQuery += " union all                                                                                                    "+CRLF
+		cQuery += " select EMPRESA='05', DOC = C9_NFISCAL, SERIE = C9_SERIENF ,  F2_NUMMDF, F2_SERMDF                            "+CRLF
+		cQuery += " ,  F2_CLIENTE, F2_LOJA	, F2_EMISSAO																                     "+CRLF
+		cQuery += " from SC9050 SC9                                                                                              "+CRLF
+		cQuery += " join SF2050 SF2 on F2_DOC = C9_NFISCAL AND F2_SERIE = C9_SERIENF AND SF2.D_E_L_E_T_ = ''                     "+CRLF
+		cQuery += "                                                                                                              "+CRLF
+		cQuery += " where C9_AGREG in (select CARGA from tab_carga where EMPRESA = '0501')                                       "+CRLF
+		cQuery += " and C9_CLIENTE <> '010064'                                                                                   "+CRLF
+		cQuery += " and SC9.D_E_L_E_T_ = ''                                                                                      "+CRLF
+		cQuery += " union all                                                                                                    "+CRLF
+		cQuery += " select EMPRESA='07',DOC = C97.C9_NFISCAL, SERIE = C97.C9_SERIENF,  F2_NUMMDF, F2_SERMDF                      "+CRLF
+		cQuery += " ,  F2_CLIENTE, F2_LOJA	, F2_EMISSAO																                     "+CRLF
+		cQuery += " from SC9050 C9                                                                                               "+CRLF
+		cQuery += " join SC9070 C97 on C97.C9_BLINF = ('05'+C9.C9_NFISCAL+C9.C9_SERIENF+C9.C9_PEDIDO+C9.C9_ITEM+C9.C9_SEQUEN)    "+CRLF
+		cQuery += " join SF2070 F27 on F27.F2_DOC = C97.C9_NFISCAL AND F27.F2_SERIE = C97.C9_SERIENF AND F27.D_E_L_E_T_ = ''     "+CRLF
+		cQuery += "                                                                                                              "+CRLF
+		cQuery += " where C9.C9_AGREG in (select CARGA from tab_carga where EMPRESA = '0501')                                    "+CRLF
+		cQuery += " and C9.C9_CLIENTE = '010064'                                                                                 "+CRLF
+		cQuery += " and C9.D_E_L_E_T_ = ''                                                                                       "+CRLF
+		cQuery += " and C97.D_E_L_E_T_ = ''                                                                                      "+CRLF
+		cQuery += " union all                                                                                                    "+CRLF
+		cQuery += " select EMPRESA='13', DOC = C9_NFISCAL, SERIE = C9_SERIENF,  F2_NUMMDF, F2_SERMDF                             "+CRLF
+		cQuery += " ,  F2_CLIENTE, F2_LOJA, F2_EMISSAO																	                     "+CRLF
+		cQuery += " from SC9130 SC9                                                                                              "+CRLF
+		cQuery += " join SF2130 SF2 on F2_DOC = C9_NFISCAL AND F2_SERIE = C9_SERIENF AND SF2.D_E_L_E_T_ = ''                     "+CRLF
+		cQuery += "                                                                                                              "+CRLF
+		cQuery += " where C9_AGREG in (select CARGA from tab_carga where EMPRESA = '1301')                                       "+CRLF
+		cQuery += " and C9_CLIENTE <> '010064'                                                                                   "+CRLF
+		cQuery += " and SC9.D_E_L_E_T_ = ''                                                                                      "+CRLF
+		cQuery += " union all                                                                                                    "+CRLF
+		cQuery += " select EMPRESA='07',DOC = C97.C9_NFISCAL, SERIE = C97.C9_SERIENF,  F2_NUMMDF, F2_SERMDF                      "+CRLF
+		cQuery += " ,  F2_CLIENTE, F2_LOJA, F2_EMISSAO																	                     "+CRLF
+		cQuery += " from SC9130 C9                                                                                               "+CRLF
+		cQuery += " join SC9070 C97 on C97.C9_BLINF = ('13'+C9.C9_NFISCAL+C9.C9_SERIENF+C9.C9_PEDIDO+C9.C9_ITEM+C9.C9_SEQUEN)    "+CRLF
+		cQuery += " join SF2070 F27 on F27.F2_DOC = C97.C9_NFISCAL AND F27.F2_SERIE = C97.C9_SERIENF AND F27.D_E_L_E_T_ = ''     "+CRLF
+		cQuery += " where C9.C9_AGREG in (select CARGA from tab_carga where EMPRESA = '1301')                                    "+CRLF
+		cQuery += " and C9.C9_CLIENTE = '010064'                                                                                 "+CRLF
+		cQuery += " and C9.D_E_L_E_T_ = ''                                                                                       "+CRLF
+		cQuery += " and C97.D_E_L_E_T_ = '')                                                                                     "+CRLF
+		cQuery += " select DISTINCT * from tab_nf order by DOC        						                                     "+CRLF
+
+		TcQuery cQuery New Alias (cAliasTrab)	
+
+		While ( !(cAliasTrab)->(Eof()) )
+
+			oResult := TDadosCargaSF2Struct():New()
+
+			oResult:cEmp 		:= (cAliasTrab)->EMPRESA
+			oResult:cNumNF 		:= (cAliasTrab)->DOC
+			oResult:cSerieNF	:= (cAliasTrab)->SERIE 
+			oResult:cNumMDF 	:= (cAliasTrab)->F2_NUMMDF 
+			oResult:cSerieMDF	:= (cAliasTrab)->F2_SERMDF 
+			oResult:cCliente	:= (cAliasTrab)->F2_CLIENTE 
+			oResult:cLoja		:= (cAliasTrab)->F2_LOJA 
+			oResult:dDtEmissao	:= (cAliasTrab)->F2_EMISSAO
+
+			oDados:Add(oResult)
+
+			(cAliasTrab)->(DbSkip())
+
+		EndDo
+		(cAliasTrab)->(DbCloseArea())
+
+	EndIf
+
+Return oDados
+
+
+
+Class TDadosCargaSF2Struct From LongClassName
+
+Public Data cEmp		as character 
+Public Data cNumNF		as character 
+Public Data cSerieNF	as character
+Public Data cNumMDF	as character
+Public Data cSerieMDF	as character
+Public Data cCliente	as character
+Public Data cLoja		as character
+Public Data dDtEmissao	as character
+
+Public Method New() Constructor
+
+EndClass
+
+Method New() Class TDadosCargaSF2Struct
+
+	::cEmp			:= ""
+	::cNumNF		:= ""
+	::cSerieNF		:= ""
+	::cNumMDF		:= ""
+	::cSerieMDF		:= ""
+	::cCliente		:= ""
+	::cLoja			:= ""
+	::dDtEmissao	:= ""
+
+Return()

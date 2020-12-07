@@ -1,0 +1,29 @@
+#include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 11/07/01
+
+User Function Pagdigv()        // incluido pelo assistente de conversao do AP5 IDE em 11/07/01
+
+//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+//³ Declaracao de variaveis utilizadas no programa atraves da funcao    ³
+//³ SetPrvt, que criara somente as variaveis definidas pelo usuario,    ³
+//³ identificando as variaveis publicas do sistema utilizadas no codigo ³
+//³ Incluido pelo assistente de conversao do AP5 IDE                    ³
+//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+SetPrvt("_CDIGVER,")
+
+**************************************************************************
+* Programa...: PAGDIGV.PRX
+* Finalidade.: Retornar o numero do Digito Verificador do Codigo de Barras
+*              ou da Linha Digitavel
+**************************************************************************
+
+_cDigVer := "0"
+
+If !Empty(SE2->E2_CODBAR)
+   _cDigVer := SubStr(SE2->E2_CODBAR,5,1)
+ElseIf !Empty(SE2->E2_YLINDIG)
+   _cDigVer := SubStr(SE2->E2_YLINDIG,33,1)
+Endif
+
+// Substituido pelo assistente de conversao do AP5 IDE em 11/07/01 ==> __Return(_cDigVer)
+Return(_cDigVer)        // incluido pelo assistente de conversao do AP5 IDE em 11/07/01
