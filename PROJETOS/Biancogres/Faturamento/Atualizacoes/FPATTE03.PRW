@@ -51,10 +51,28 @@ Return
 
 Static Function FilterBrow()
 
-	cListCli := U_FPATVCLI()
+	Local cCGCVend := ""
+	Local cCODVend := ""
+
+	//Quando for representante
+	If Type("CREPATU") <> "U" .And. !Empty(CREPATU)
+
+		SA3->(DbSetOrder(1))
+		If SA3->(DbSeek(XFilial("SA3")+CREPATU))
+			cListCli := U_FPATVCLI(CREPATU)
+			cCGCVend := SA3->A3_CGC
+			cCODVend := SA3->A3_COD
+		EndIf
+
+		cCondicao := "ZAI_CODCLI $ '"+cListCli+"' .and. ZAI_USER == '"+cCODVend+"'"
+
+	Else
+		cListCli := U_FPATVCLI()
+		cCondicao := "ZAI_CODCLI $ '"+cListCli+"'"
+	EndIf
 
 
-	cCondicao := "ZAI_CODCLI $ '"+cListCli+"'"
+
 
 	//bFiltraBrw := {|| FilBrowse("ZAI",@aIndScr,@cCondicao) }
 
@@ -266,7 +284,7 @@ Static Function fProcImport()
 			EndIf
 
 			_cCodLojCli		:= PADR(_cCodLojCli, TamSX3("A1_COD")[1]+TamSX3("A1_LOJA")[1])
-			_cProdCli		:= PADR(_cProdCli, TamSX3("ZAI_CODPCL")[1])
+			_cProdCli		  := PADR(_cProdCli, TamSX3("ZAI_CODPCL")[1])
 			_cProdBianco	:= ""
 
 			SA1->(DbSetOrder(1))
@@ -385,12 +403,15 @@ User Function FPAT03DE()
 	//Quando for representante
 	If Type("CREPATU") <> "U" .And. !Empty(CREPATU)
 
-		If EMPTY(_cVendCGC)
-
-			_cVendCGC := "" //Apenas para tratamento da variavel  caso ocorra algum conflito na hora do DBSeek com Nil
-
+		SA3->(DbSetOrder(1))
+		If SA3->(DbSeek(XFilial("SA3")+CREPATU))
+			_cVendCGC :=SA3->A3_CGC
 		EndIf
 
+	EndIf
+
+	If EMPTY(_cVendCGC)
+		_cVendCGC := "" //Apenas para tratamento da variavel  caso ocorra algum conflito na hora do DBSeek com Nil
 	EndIf
 
 	ZAI->(DbSetOrder(3)) // ZAI_FILIAL+ZAI_CODCLI+ZAI_LOJCLI+ZAI_DATA+ZAI_CGCVEN
@@ -421,7 +442,7 @@ User Function FPAT03DE()
 
 	ELSE
 
-		MsgInfo("REGISTROS NÃO ENCONTRADOS PARA O CNPJ "+_cVendCGC)
+		MsgInfo("REGISTROS NÃO ENCONTRADOS PARA O CNPJ <B>"+_cVendCGC+ "</B> OU NÃO FOI IMPORTADO COM CNPJ.")
 
 
 	EndIf
