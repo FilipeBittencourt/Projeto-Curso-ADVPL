@@ -1,0 +1,149 @@
+#Include "TOTVS.CH"
+#Include "Protheus.CH"
+#Include "topconn.ch"
+
+Class TPortalIntegracaoCC from LongClassName
+	
+	Public Method New() Constructor
+	Public Method Get()
+	Public Method ConfirmReg()	
+	
+EndClass
+
+
+Method New() Class TPortalIntegracaoCC
+
+Return
+
+
+Method ConfirmReg(cID, cCotacao, cNUser) Class TPortalIntegracaoCC
+	
+	Local cQuery 		:= ""
+	Local nStatus		:= 0
+	Local lRet			:= .T.
+	
+	Default cNUser		:= 'JOB'
+	
+	cQuery := " UPDATE BZINTEGRACAO_COTACAO_PORTAL SET 					"
+	cQuery += " DATA_HORA_PROTHEUS 	= GETDATE(),						"
+	cQuery += " USUARIO_PROTHEUS 	= '"+cNUser+"'  					"
+	cQuery += " COTACAO			 	= '"+cCotacao+"',  					"
+	cQuery += " WHERE CODIGO 		= '"+cvaltochar(cID)+"'				"
+	
+	Conout("Portal Integração - Query: "+cQuery)
+	
+	nStatus := TCSqlExec(cQuery)
+   
+	If (nStatus < 0)
+		lRet	:= .F.
+	EndIf
+	
+Return lRet
+
+
+
+Method Get() Class TPortalIntegracaoCC
+	
+	Local cAliasTemp		:= GetNextAlias()
+	Local cQuery			:= ""
+	Local oCCStruct			:= Nil
+	Local oList				:= ArrayList():New()
+	Local lOk				:= .T.
+	Local cCodigo			:= ""
+	Local cMsgLog			:= ""
+	
+	cQuery	+= " select * from BZINTEGRACAO_COTACAO_PORTAL								"
+	cQuery	+= " where STATUS = 'A' AND DATA_HORA_PROTHEUS IS NULL						"
+	
+	TcQuery cQuery New Alias (cAliasTemp)
+	
+	While (!(cAliasTemp)->(EoF()))
+		
+		lOk					:= .T.
+		cMsgLog				:= ""
+		oCCStruct			:= TCCStruct():New()
+		
+		oCCStruct:cNumero	:= ""
+		oCCStruct:cEmp      := (cAliasTemp)->EMPRESA
+		oCCStruct:cFil      := (cAliasTemp)->FILIAL
+		oCCStruct:cID 	    := (cAliasTemp)->CODIGO
+		
+		cCodigo := AllTrim((cAliasTemp)->CODIGO)
+		
+		While (!(cAliasTemp)->(EoF())  .And. AllTrim((cAliasTemp)->CODIGO) == AllTrim(cCodigo))
+			
+			DbSelectArea('SA2')
+			SA2->(DbSetOrder(1))
+			
+			If (SA2->(DbSeek(xFilial('SA1')+PADR((cAliasTemp)->FORNE_COD, TamSx3("A2_COD")[1])+PADR((cAliasTemp)->FORNE_LOJA, TamSx3("A2_LOJA")[1]))))
+				
+				DbSelectArea('SB1')
+				SB1->(DbSetOrder(1))
+				If (SB1->(DbSeek(xFilial('SB1')+PADR((cAliasTemp)->PRODUTO, TamSx3("B1_COD")[1]))))
+					
+					oCCItemStruct	 				:= TCCItemStruct():New()
+					oCCItemStruct:cNomeFornece 	   	:= SA2->A2_NOME
+					oCCItemStruct:cForMail			:= SA2->A2_EMAIL
+					oCCItemStruct:cFornece 	    	:= (cAliasTemp)->FORNE_COD
+					oCCItemStruct:cLoja	    		:= (cAliasTemp)->FORNE_LOJA
+					oCCItemStruct:cCond      	  	:= SA2->A2_COND //(cAliasTemp)->COND_PAG
+					oCCItemStruct:cContato   	  	:= (cAliasTemp)->CONTATO
+					oCCItemStruct:cTipoFrete	   	:= (cAliasTemp)->TIPO_FRETE
+					oCCItemStruct:cMoeda       		:= (cAliasTemp)->MOEDA
+					oCCItemStruct:dEmissao  	   	:= (cAliasTemp)->DATA_EMISSAO
+						
+					oCCItemStruct:cNumSc        	:= (cAliasTemp)->NUMERO_SC
+					oCCItemStruct:cItemSc       	:= (cAliasTemp)->ITEM_SC
+					
+					oCCItemStruct:cNumPro			:= (cAliasTemp)->PROPOSTA
+					oCCItemStruct:cProd            	:= (cAliasTemp)->PRODUTO
+					oCCItemStruct:cItem            	:= (cAliasTemp)->ITEM
+					oCCItemStruct:cUM				:= SB1->B1_UM 
+					oCCItemStruct:cSegUM			:= SB1->B1_SEGUM //TODO tratar fator conversão
+					oCCItemStruct:nQuantSegUM 	    := (cAliasTemp)->QUANTIDADE
+					
+					oCCItemStruct:nQuant          	:= (cAliasTemp)->QUANTIDADE
+					oCCItemStruct:nPreco          	:= (cAliasTemp)->PRECO
+					oCCItemStruct:nTotal          	:= ((cAliasTemp)->QUANTIDADE * (cAliasTemp)->PRECO)
+					oCCItemStruct:nDesc           	:= 0
+					
+					oCCItemStruct:cTes            	:= ""
+					oCCItemStruct:cMarca          	:= (cAliasTemp)->MARCA
+					oCCItemStruct:nAliqIpi        	:= (cAliasTemp)->ALIQ_IPI
+					oCCItemStruct:cObervacao      	:= (cAliasTemp)->OBSERVACAO
+					oCCItemStruct:nPrazo          	:= (cAliasTemp)->PRAZO
+					oCCItemStruct:cOrcForn        	:= (cAliasTemp)->FORNE_ORCAMENTO
+					oCCItemStruct:cCond           	:= (cAliasTemp)->COND_PAG
+					oCCItemStruct:dValidade       	:= (cAliasTemp)->DATA_VALIDADE
+					oCCItemStruct:cFlag           	:= ""
+					oCCItemStruct:nValorSub      	:= (cAliasTemp)->VALOR_SUB
+					
+					//oCCItemStruct:cEmail          := ""
+					//oCCItemStruct:dDataChe		:= ""
+					
+					oCCItemStruct:cTipoServico		:= (cAliasTemp)->TIPO_SERVICO
+					
+					oCCStruct:oItens:Add(oCCItemStruct)
+				
+				Else
+					lOk			:= .F.
+					cMsgLog 	+= "[Portal Integração - Solicitação Servico/Produto:  "+cCodigo+"/"+(cAliasTemp)->PRODUTO+"] => não encontrado."+ CRLF
+				EndIf
+			Else	
+				lOk			:= .F.
+				cMsgLog 	+= "[Portal Integração - Solicitação Servico/Fornecedor: "+cCodigo+"/"+(cAliasTemp)->FORNE_COD+"] => não encontrado."+ CRLF
+			EndIf
+			
+			(cAliasTemp)->(DbSkip())
+		EndDo
+		
+		If (lOk)
+			oList:Add(oCCStruct)
+		Else
+			ConOut(cMsgLog)
+		EndIf		
+	EndDo
+	
+	(cAliasTemp)->(DbCloseArea())
+	
+Return(oList)

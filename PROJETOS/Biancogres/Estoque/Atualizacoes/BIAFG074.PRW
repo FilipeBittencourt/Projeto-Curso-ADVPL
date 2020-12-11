@@ -39,7 +39,7 @@ Static Function ValidPerg()
 	aAdd( aPergs ,{2,"Almox. Ori. " ,MV_PAR04 ,aOpcs,60,'.T.',.T.})	
 	aAdd( aPergs ,{2,"Almox. Dest. " ,MV_PAR05 ,aOpcs,60,'.T.',.T.})
 
-	If ParamBox(aPergs ,"Processamento de Pré-Transferências",,,,,,,,cLoad,.T.,.T.)
+	If ParamBox(aPergs ,"Processamento de Pré-Transferências",,{|| U_BFG074OK()},,,,,,cLoad,.T.,.T.)
 
 		lRet := .T.
 		MV_PAR01 := ParamLoad(cFileName,,1,MV_PAR01) 
@@ -121,9 +121,9 @@ Static Function fProcessa()
 
 			If _nMedia - _nSaldo > 0 .And. _nSalOri >= _nMedia - _nSaldo
 
-				_nSaldo	:=	Min(_nSaldo,_nSalOri)
+				_nSaldo	:=	Min(_nMedia - _nSaldo,_nSalOri)
 
-				_lRet :=	fCriaTrans((_cAlias)->ZCP_COD,(_cAlias)->ZCP_LOCAL,_nMedia - _nSaldo, _cDoc,MV_PAR04)
+				_lRet :=	fCriaTrans((_cAlias)->ZCP_COD,(_cAlias)->ZCP_LOCAL,_nSaldo, _cDoc,MV_PAR04)
 
 				If _lRet 
 					_lSZI	:=	.T.
@@ -252,3 +252,19 @@ Static Function fSalOri(_cCod,_cLocal)
 	(_cAlias)->(DbCloseArea())
 
 Return _nRet
+
+User Function BFG074OK()
+
+	Local _lRet	:=	.T.
+	
+	If Alltrim(MV_PAR03) == "4"
+		MsgInfo("Não é possível selecionar a política 4 para esse processamento")
+		_lRet	:=	.F.		
+	EndIf
+
+	If Alltrim(MV_PAR04) == Alltrim(MV_PAR05)
+		MsgInfo("O armazém de origem não pode ser igual ao armazém de destino")
+		_lRet	:=	.F.			
+	EndIf
+
+Return _lRet

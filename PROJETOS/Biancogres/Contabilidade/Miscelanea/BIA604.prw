@@ -20,7 +20,7 @@ User Function BIA604()
 
 	Private cTitulo := "RAC Orçada - Proc. Custo Unitário Fixo"
 
-    RpcSetEnv("01", "01")
+    //RpcSetEnv("01", "01")
 
 	oEmp := TLoadEmpresa():New()
 
@@ -68,11 +68,11 @@ User Function BIA604()
 
 	If !lRet
 
-		Alert("Erro no processamento!" + CRLF + CRLF + cMsg, "Empresa: [" + cEmp + "]  - ATENÇÃO")
+		Alert("Erro no processamento!" + CRLF + CRLF + cMsg, "ATENÇÃO")
 
 	EndIf
 
-    RpcClearEnv()
+    //RpcClearEnv()
 
 Return()
 
@@ -677,9 +677,7 @@ Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 			IF EmpOpenFile(cZO8, "ZO8", 1, .T., cEmp, @cModo)
 
 				Reclock(cZO8, .T.)
-				(cZO8)->ZO8_FILIAL  := ""
-                (cZO8)->ZO8_CODEMP  := cEmp
-                (cZO8)->ZO8_CODFIL  := cEmp // Ver com marcos
+				(cZO8)->ZO8_FILIAL  := cEmp
 				(cZO8)->ZO8_VERSAO := cVersao
 				(cZO8)->ZO8_REVISA := cRevisa
 				(cZO8)->ZO8_ANOREF := cAnoRef
@@ -704,9 +702,9 @@ Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
                 (cZO8)->ZO8_CUS206  := (cQry)->CUS206
                 (cZO8)->ZO8_CUS207  := (cQry)->CUS207
                 (cZO8)->ZO8_CUS208  := (cQry)->CUS208
-                (cZO8)->ZO8_CUS209  := (cQry)->CUS209
-                (cZO8)->ZO8_CUS222  := (cQry)->CUS222
-                (cZO8)->ZO8_CUS233  := (cQry)->CUS233
+                // (cZO8)->ZO8_CUS209  := (cQry)->CUS209
+                // (cZO8)->ZO8_CUS222  := (cQry)->CUS222
+                // (cZO8)->ZO8_CUS233  := (cQry)->CUS233
                 (cZO8)->ZO8_CUS210  := (cQry)->CUS210
                 (cZO8)->ZO8_CUS211  := (cQry)->CUS211
                 (cZO8)->ZO8_CUS234  := (cQry)->CUS234
@@ -772,9 +770,7 @@ Static Function ExistThenDelete(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 	cSql := " SELECT R_E_C_N_O_ RECNO "
 	cSql += " FROM " + RetFullName("ZO8", cEmp) + " ZO8 (NOLOCK) "
-	cSql += " WHERE ZO8_FILIAL      = '' "
-	cSql += " AND ZO8_CODEMP        = " + ValToSql(cEmp)
-	cSql += " AND ZO8_CODFIL        = " + ValToSql(cEmp) // Verificar com Marcos.
+	cSql += " WHERE ZO8_FILIAL      = " + ValToSql(cEmp)
 	cSql += " AND ZO8_VERSAO        = " + ValToSql(cVersao)
 	cSql += " AND ZO8_REVISA        = " + ValToSql(cRevisa)
 	cSql += " AND ZO8_ANOREF        = " + ValToSql(cAnoRef)

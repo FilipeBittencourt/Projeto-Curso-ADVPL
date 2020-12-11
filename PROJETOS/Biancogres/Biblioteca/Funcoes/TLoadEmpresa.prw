@@ -314,7 +314,7 @@ Method GetSelEmp(aEmpOut) Class TLoadEmpresa
 
 	RestArea( aSalvSM0 )
 
-	Define MSDialog  oDlg Title "" From 0, 0 To 280, 395 Pixel
+	Define MSDialog  oDlg Title "" From 0, 0 To 290, 395 Pixel
 
 	oDlg:cToolTip := "Tela para Múltiplas Seleções de Empresas/Filiais"
 

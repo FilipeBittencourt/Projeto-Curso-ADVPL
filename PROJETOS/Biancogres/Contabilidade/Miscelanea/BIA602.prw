@@ -19,10 +19,10 @@ User Function BIA602()
 	Local _aHeader		:= {}
 	Local _aCols		:= {}
 
-	Local cSeek	        := xFilial("ZO7") + SPACE(TAMSX3("ZO7_CODEMP")[1]) + SPACE(TAMSX3("ZO7_CODFIL")[1]) + SPACE(TAMSX3("ZO7_VERSAO")[1]) + SPACE(TAMSX3("ZO7_REVISA")[1]) + SPACE(TAMSX3("ZO7_ANOREF")[1])
+	Local cSeek	        := xFilial("ZO7") + SPACE(TAMSX3("ZO7_VERSAO")[1]) + SPACE(TAMSX3("ZO7_REVISA")[1]) + SPACE(TAMSX3("ZO7_ANOREF")[1])
 	Local bWhile	    := {|| ZO7_FILIAL + ZO7_VERSAO + ZO7_REVISA + ZO7_ANOREF }
 
-	Local aNoFields     := {"ZO7_CODEMP", "ZO7_CODFIL", "ZO7_VERSAO", "ZO7_REVISA", "ZO7_ANOREF"}
+	Local aNoFields     := {"ZO7_VERSAO", "ZO7_REVISA", "ZO7_ANOREF"}
 
 	Local oFont         := TFont():New("Arial",9,14,.T.,.T.,5,.T.,5,.T.,.F.)
 	Local _nOpcA	    := 0
@@ -200,8 +200,6 @@ Static Function fBIA602F()
         (SELECT COUNT(*)
         FROM %TABLE:ZO7% ZO7
         WHERE ZO7_FILIAL = %xFilial:ZO7%
-        AND ZO7_CODEMP = %Exp:cEmpAnt%
-        AND ZO7_CODFIL = %Exp:cFilAnt%
         AND ZO7_VERSAO = %Exp:_cVersao%
         AND ZO7_REVISA = %Exp:_cRevisa%
         AND ZO7_ANOREF = %Exp:_cAnoRef%
@@ -211,15 +209,13 @@ Static Function fBIA602F()
         ) NUMREG
         FROM %TABLE:ZO7% ZO7
         WHERE ZO7_FILIAL = %xFilial:ZO7%
-        AND ZO7_CODEMP = %Exp:cEmpAnt%
-        AND ZO7_CODFIL = %Exp:cFilAnt%
         AND ZO7_VERSAO = %Exp:_cVersao%
         AND ZO7_REVISA = %Exp:_cRevisa%
         AND ZO7_ANOREF = %Exp:_cAnoRef%
         // AND ZO7_DATA = %Exp:_cDataRef%
         //AND ZO7_ORIPRC = 'CONTABIL'
         AND ZO7.%NotDel%
-        ORDER BY ZO7_CODEMP, ZO7_CODFIL, ZO7_VERSAO, ZO7_REVISA, ZO7_ANOREF, ZO7_LINHA
+        ORDER BY ZO7_VERSAO, ZO7_REVISA, ZO7_ANOREF, ZO7_LINHA
 
 	EndSql
 
@@ -343,12 +339,10 @@ Static Function fGrvDados()
 
 				Reclock("ZO7",.T.)
 
-				ZO7->ZO7_FILIAL  := xFilial("ZO7")
+				ZO7->ZO7_FILIAL  := cEmpAnt
 				ZO7->ZO7_VERSAO  := _cVersao
 				ZO7->ZO7_REVISA  := _cRevisa
 				ZO7->ZO7_ANOREF  := _cAnoRef
-				ZO7->ZO7_CODEMP  := cEmpAnt
-				ZO7->ZO7_CODFIL  := cFilAnt
 
 				// ZO7->ZO7_ORIPRC  := "CONTABIL"
 				// ZO7->ZO7_LOTE    := "004100"

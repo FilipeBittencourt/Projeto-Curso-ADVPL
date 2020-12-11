@@ -54,7 +54,7 @@ Local cQry := GetNextAlias()
 Local aArea := GetArea()
 
 	cSQL := " SELECT * " 
-	cSQL += " FROM FNC_CTR_SALDO(" + ValToSQL(::cNumero) + ")"
+	cSQL += " FROM FNC_CTR_SALDO_" + cEmpAnt + "(" + ValToSQL(::cNumero) + ")"
 			
 	TcQuery cSQL New Alias (cQry)
 	

@@ -94,8 +94,7 @@ User Function B633IMDD()
 
 		M0007 := " SELECT COUNT(*) CONTAD "
 		M0007 += "   FROM " + RetSqlName("ZBZ") + " ZBZ "
-		M0007 += "  WHERE ZBZ.ZBZ_FILIAL = '" + xFilial("ZBZ") + "' "
-		M0007 += "    AND ZBZ.ZBZ_VERSAO = '" + idVersao + "' "
+		M0007 += "  WHERE ZBZ.ZBZ_VERSAO = '" + idVersao + "' "
 		M0007 += "    AND ZBZ.ZBZ_REVISA = '" + idRevisa + "' "
 		M0007 += "    AND ZBZ.ZBZ_ANOREF = '" + idAnoRef + "' "
 		M0007 += "    AND ZBZ.ZBZ_ORIPRC = 'OBZ' "

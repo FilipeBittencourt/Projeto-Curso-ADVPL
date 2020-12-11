@@ -1,0 +1,418 @@
+#Include "TOTVS.CH"
+#Include "Protheus.CH"
+
+Class TCotacaoCompra from LongClassName
+
+	Public Data oObj
+	Public Data oItem
+	Public Data oResult	
+	
+	Method GatCab()
+	Method GatItem()
+	Method ValidaCab()
+	Method ValidaItem()
+	Method GetCabecalho()
+	Method GetItens()
+	
+	Public Method Incluir()
+	Public Method Atualizar()
+	Public Method Execute()
+	Public Method New() Constructor		
+EndClass
+
+Method New() Class TCotacaoCompra
+	::oResult 	:= TCCResultStruct():New()
+Return
+
+Method GatCab() Class TCotacaoCompra
+Return 
+
+Method GatItem(oObj) Class TCotacaoCompra
+Return 
+
+//todas validações do cabecalho
+Method ValidaCab() Class TCotacaoCompra
+Return 
+
+//todas validações do item
+Method ValidaItem(oObj) Class TCotacaoCompra		
+Return 
+
+
+Method GetCabecalho() Class TCotacaoCompra
+
+	Local aCabec	:= {}
+	Local oItem		:= Nil
+		
+	oItem	:= ::oItem
+	
+	::GatCab() 
+	::ValidaCab() 
+	
+	aAdd(aCabec,{"C8_NUM" 		, PADR(::oObj:cNumero, TamSx3("C8_NUM")[1])			, Nil})
+	aAdd(aCabec,{"C8_EMISSAO"	, oItem:dEmissao									, Nil})
+	aAdd(aCabec,{"C8_FORNECE"	, PADR(oItem:cFornece, TamSx3("C8_FORNECE")[1])		, Nil})
+	aAdd(aCabec,{"C8_LOJA"		, PADR(oItem:cLoja, TamSx3("C8_LOJA")[1])			, Nil})
+	aAdd(aCabec,{"C8_COND"		, PADR(oItem:cCond, TamSx3("C8_COND")[1])			, Nil})
+	aAdd(aCabec,{"C8_CONTATO"	, PADR(oItem:cContato, TamSx3("C8_CONTATO")[1])		, Nil})
+	aAdd(aCabec,{"C8_MOEDA" 	, 1/*::oObj:cMoeda*/								, Nil})	
+	
+	aAdd(aCabec,{"C8_TPFRETE"	, "S"												,Nil})
+	aAdd(aCabec,{"C8_TOTFRE" 	, 0													,Nil})
+	aAdd(aCabec,{"C8_DESPESA" 	, 0													,Nil})
+	aAdd(aCabec,{"C8_SEGURO" 	, 0													,Nil})
+	aAdd(aCabec,{"C8_DESC1" 	, 0													,Nil})
+	aAdd(aCabec,{"C8_DESC2" 	, 0													,Nil})
+	aAdd(aCabec,{"C8_DESC3" 	, 0													,Nil})
+	
+	oCVT := TValidarCampoTabela():New()
+	oCVT:Validar('SC8', aCabec)
+		
+Return aCabec
+
+Method GetItens() Class TCotacaoCompra
+	
+	Local aItens	:= {}
+	Local aItem 	:= {}
+	Local oItem		:= Nil
+		
+	aItem	:= {}
+	oItem	:= ::oItem
+		
+	::GatItem(oItem) 
+	::ValidaItem(oItem) 
+		
+	aAdd(aItem, 		{"C8_NUMPRO"  		, PADR(oItem:cNumPro, TamSx3("C8_NUMPRO")[1])			, Nil })
+	aAdd(aItem,			{"C8_PRODUTO" 		, PADR(oItem:cProd	, TamSx3("C8_PRODUTO")[1])			, Nil})
+	aAdd(aItem,			{"C8_ITEM" 			, PADR(oItem:cItem	, TamSx3("C8_ITEM")[1])				, Nil})
+	aAdd(aItem,			{"C8_UM" 			, PADR(oItem:cUM	, TamSx3("C8_UM")[1])				, Nil})
+
+	aAdd(aItem,			{"C8_CONTATO"		, oItem:cContato										, Nil})
+	aAdd(aItem,			{"C8_QUANT" 		, oItem:nQuant											, Nil})
+	aAdd(aItem,			{"C8_PRECO" 		, oItem:nPreco	 										, Nil})
+	aAdd(aItem,			{"C8_TOTAL" 		, oItem:nTotal	 										, Nil})
+	aAdd(aItem,			{"C8_FILENT"   		, cFilAnt            									, Nil})
+	
+	aAdd(aItem, 		{ "C8_TPFRETE" 		, "S"													, Nil })
+	
+	aAdd(aItem, 		{ "C8_YMARCA"  		, PADR(oItem:cMarca	, TamSx3("C8_YMARCA")[1])			, Nil })
+    aAdd(aItem, 		{ "C8_ALIIPI"  		, oItem:nAliqIpi 										, Nil })
+    aAdd(aItem,			{ "C8_YOBS"    		, PADR(oItem:cObervacao, TamSx3("C8_YOBS")[1])			, Nil })
+    aAdd(aItem, 		{ "C8_PRAZO"   		, oItem:nPrazo	 										, Nil })
+    
+    aAdd(aItem, 		{ "C8_ORCFOR"  		, PADR(oItem:cOrcForn, TamSx3("C8_ORCFOR")[1])			, Nil })
+   // aAdd(aItem, 		{ "C8_VALIDA"  		, (oItem:dValidade)										, Nil })
+   // aAdd(aItem, 		{ "C8_YCOND"   		, oItem:cCond											, Nil })
+   // aAdd(aItem, 		{ "C8_YFLAG"   		, oItem:cFlag  											, Nil })
+    aAdd(aItem, 		{ "C8_YVLSUB"  		, oItem:nValorSub 										, Nil })
+    //aAdd(aItem, 		{ "C8_YEMAIL"  		, oItem:cEmail											, Nil })
+    aAdd(aItem, 		{ "C8_FORMAIL" 		, oItem:cForMail										, Nil })
+    aAdd(aItem, 		{ "C8_YDATCHE" 		, dDataBase+5/*CTOD("  /  /    ")*/						, Nil })
+    
+    oCVT := TValidarCampoTabela():New()
+    oCVT:Validar('SC8', aItem)
+
+    AAdd(aItens, aItem)
+	
+Return aItens
+
+//Subtituir no futuro por execauto, não existia ExecAuto quando desenvolvido
+Method Incluir(_oObj) Class TCotacaoCompra
+	
+	Local lOk		:= .F.
+	Local cMsgLog	:= ""
+	Local nI		:= 0
+	
+	::oObj 			:= _oObj
+		
+	For nI := 1 To ::oObj:oItens:GetCount()
+	
+		oItem	:= ::oObj:oItens:GetItem(nI)
+		
+		RecLock("SC8", .T.)
+		SC8->C8_FILIAL		:= xFilial('SC8')
+		SC8->C8_NUM			:= ::oObj:cNumero
+		SC8->C8_FORNECE		:= oItem:cFornece
+		SC8->C8_LOJA		:= oItem:cLoja
+		SC8->C8_COND		:= oItem:cCond
+		SC8->C8_CONTATO		:= "AUTO"
+		SC8->C8_FILENT		:= xFilial('SC8')
+		SC8->C8_MOEDA		:= 1
+		SC8->C8_TPDOC		:= '1' //Pedido de compra
+		SC8->C8_EMISSAO		:= dDataBase
+		SC8->C8_TOTFRE		:= 0
+		SC8->C8_DESPESA		:= 0
+		SC8->C8_SEGURO		:= 0
+		SC8->C8_DESC1		:= 0
+		SC8->C8_DESC2		:= 0
+		SC8->C8_DESC3		:= 0
+		SC8->C8_PICM		:= 0
+		SC8->C8_FORMAIL		:= oItem:cForMail
+		SC8->C8_FORNOME		:= oItem:cNomeFornece
+		//SC8->C8_YEMAIL		:= UsrRetMail(cUserID)//TODO verificar qual e-mail colocar
+		SC8->C8_DATPRF		:= dDataBase  
+		
+		SC8->C8_NUMPRO		:= "01"	
+		SC8->C8_PRODUTO		:= oItem:cProd
+		SC8->C8_ITEM		:= PADR(oItem:cItem	, TamSx3("C8_ITEM")[1])
+		SC8->C8_UM			:= oItem:cSegUM
+		SC8->C8_QUANT		:= oItem:nQuant
+		SC8->C8_PRECO		:= 0//oItem:nPreco
+		SC8->C8_TOTAL		:= 0//oItem:nTotal
+		SC8->C8_YDATCHE		:= dDataBase + 5//CTOD("  /  /    ")		
+		SC8->C8_VALIDA		:= dDataBase
+		SC8->C8_SEGUM		:= oItem:cSegUM
+		SC8->C8_QTSEGUM		:= oItem:nQuantSegUM
+		SC8->C8_IDENT		:= PADR(oItem:cItem	, TamSx3("C8_ITEM")[1])
+		
+		SC8->C8_NUMSC		:= PADR(oItem:cNumSc, TamSx3("C8_NUMSC")[1])
+		SC8->C8_ITEMSC		:= PADR(oItem:cItemSc, TamSx3("C8_ITEMSC")[1])
+		SC8->C8_YTPPSS		:= cValtoChar(oItem:cTipoServico)
+		
+		
+		SC8->(MsUnlock())
+		
+		DbSelectArea('SC1')
+		SC1->(DbSetOrder(1))
+		If (SC1->(DbSeek(xFilial('SC1')+PADR(oItem:cNumSc, TamSx3("C8_NUMSC")[1])+PADR(oItem:cItemSc, TamSx3("C8_ITEMSC")[1]))))
+			
+			RecLock("SC1",.F.)
+				SC1->C1_COTACAO := SC8->C8_NUM	
+				SC1->C1_IDENT   := SC8->C8_IDENT
+			SC1->(MsUnlock())
+		
+			lOk			:= .T.
+			cMsgLog 	:= ""
+		Else
+			
+			lOk			:= .F.
+			cMsgLog 	:= "[Solicitação de compra: "+oItem:cNumSc+"/"+oItem:cItemSc+"] => não encontrado."
+		
+		EndIf	
+		
+	Next nI
+
+	::oResult:Add(lOk, cMsgLog)
+	
+Return ::oResult
+	
+Method Atualizar(_oObj) Class TCotacaoCompra
+
+	Local aCabec			:= {}
+	Local aItens			:= {}
+	
+	Local lOk				:= .F.
+	Local cMsgLog			:= ""
+	Local nI				:= 0
+	Local nJ				:= 0
+	
+	Local aErroAuto			:= {}
+	
+	Private lMsErroAuto 	:= .F.
+	Private lMsHelpAuto 	:= .T.
+	Private lAutoErrNoFile	:= .T.
+	
+	::oObj 			:= _oObj
+		
+	For nI := 1 To ::oObj:oItens:GetCount()
+	
+		oItem	:= ::oObj:oItens:GetItem(nI)
+		
+		DbSelectArea("SC8")
+		SC8->(DbSetOrder(1))
+		
+		If SC8->(DbSeek(xFilial('SC8')+PADR(::oObj:cNumero, TamSx3("C8_NUM")[1])))
+			
+			aCabec	:= ::GetCabecalho()
+			aItens	:= ::GetItens()
+			
+			SetModulo("SIGACOM", "COM")
+	        SetFunName("MATA150")
+		
+	        MSExecAuto({|v,x,y| MATA150(v, x, y)},aCabec, aItens, 3)
+			
+			If (!lMsErroAuto)
+			
+				lOk			:= .T.
+				cMsgLog 	:= "[Cotação de Compra Numero: "+::oObj:cNumero+", Fornecedor: "+oItem:cFornece+"] => atualizada com sucesso."
+			
+			Else
+				
+				lOk			:= .F.
+				cMsgLog 	:= "[Cotação de Compra Numero: "+::oObj:cNumero+", Fornecedor: "+oItem:cFornece+"] Erro => "+ CRLF
+				
+				aErroAuto	:= GetAutoGRLog()
+				
+				For nJ := 1 To Len(aErroAuto)
+					cMsgLog += StrTran(StrTran(aErroAuto[nJ], "<", ""), "-", "") + " "
+				Next nJ		
+				
+			EndIf
+		
+		Else
+			
+			lOk			:= .F.
+			cMsgLog 	:= "[Cotação de Compra Numero: "+::oObj:cNumero+", Fornecedor: "+oItem:cFornece+"] => não encontrada."
+			
+		EndIf
+		
+	Next nI
+	
+	::oResult:Add(lOk, cMsgLog)
+	
+Return ::oResult
+
+Method Execute(_oObj, _lNovo) Class TCotacaoCompra
+
+	::oObj 			:= _oObj
+	
+	Begin Transaction
+	
+		If (_lNovo)
+			::Incluir(_oObj)//inserir registro da cotação
+		EndIf
+		
+		If(::oResult:lOk)
+			::Atualizar(_oObj)
+			If(!::oResult:lOk)
+				DisarmTransaction()
+			EndIf
+		Else
+			DisarmTransaction()
+		EndIf
+		
+	End Transaction 
+		
+Return ::oResult
+
+
+Class TCCStruct from LongClassName
+
+	Public Data cNumero
+	Public Data cEmp
+	Public Data cFil
+	Public Data cID
+	Public Data oItens
+
+	Public Method New() Constructor
+
+EndClass
+
+Method New() Class TCCStruct
+
+	::cNumero		:= ""
+	::cEmp          := ""
+	::cFil          := ""
+	::cID           := ""
+	::oItens	    := ArrayList():New()
+
+Return()
+
+Class TCCItemStruct From LongClassName
+
+	Public Data cFornece
+	Public Data cLoja
+	Public Data cNomeFornece
+	
+	Public Data cCond
+	Public Data cContato
+	Public Data cTipoFrete
+	Public Data cMoeda
+	Public Data dEmissao
+	
+	
+	Public Data cNumSc        	
+	Public Data cItemSc       	
+	Public Data cNumPro
+	Public Data cProd
+	Public Data cItem
+	Public Data cUM
+	Public Data cSegUM
+	Public Data nQuantSegUM
+	Public Data nQuant
+	Public Data nPreco
+	Public Data nTotal
+	Public Data nDesc
+	Public Data cTes
+	Public Data cMarca
+	Public Data nAliqIpi
+	Public Data cObervacao
+	Public Data nPrazo
+	Public Data cOrcForn
+	Public Data dValidade
+	Public Data cFlag
+	Public Data nValorSub
+	Public Data cForMail
+	Public Data cEmail
+	Public Data dDataChe
+	Public Data cTipoServico
+	
+	Public Method New() Constructor
+
+EndClass
+
+Method New() Class TCCItemStruct
+	
+	::cFornece      := ""
+	::cLoja			:= ""
+	::cContato      := ""
+	::cCond         := ""
+	::cNomeFornece	:= ""
+	::cTipoFrete    := ""
+	::cMoeda        := ""
+	::dEmissao      := Date()
+	
+	::cNumSc        := ""	
+	::cItemSc  		:= ""
+	::cNumPro		:= ""
+	::cProd         := ""
+	::cItem         := ""
+	::cUM           := ""
+	::cSegUM        := ""
+	::nQuantSegUM   := 0
+	::nQuant        := 0
+	::nPreco        := 0
+	::nTotal        := 0
+	::nDesc         := 0
+	::cTes          := ""
+	::cMarca        := ""
+	::nAliqIpi      := 0
+	::cObervacao    := ""
+	::nPrazo        := 0
+	::cOrcForn      := ""
+	::dValidade     := Date()
+	::cFlag         := ""
+	::nValorSub     := 0
+	::cForMail      := ""
+	::cEmail        := ""
+	::dDataChe      := Date()
+	::cTipoServico	:= ""
+		
+Return()
+
+
+Class TCCResultStruct From LongClassName
+	
+	Public Data lOk		as logical
+	Public Data cMensagem	as character
+	Public Data oResult	
+
+	Public Method New() Constructor
+	Public Method Add()
+	
+EndClass
+
+Method New() Class TCCResultStruct
+
+	::lOk		:= .T.
+	::cMensagem	:= ""
+	::oResult	:= Nil
+Return()
+
+Method Add(lOk, cMensagem, oResult) Class TCCResultStruct
+
+	::lOk		:= lOk
+	::cMensagem	+= cMensagem
+	::oResult	:= oResult
+
+Return()

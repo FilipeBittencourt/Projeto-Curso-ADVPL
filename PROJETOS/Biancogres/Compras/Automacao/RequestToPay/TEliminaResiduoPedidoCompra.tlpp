@@ -1,0 +1,102 @@
+#Include "TOTVS.CH"
+#INCLUDE "TOTVS.CH"
+#Include "Protheus.CH"
+#Include "topconn.ch"
+
+Class TEliminaResiduoPedidoCompra from LongClassName
+	
+	Public Data cNumPed
+	Public Data lOk
+	Public Data cMsgLog
+	
+	Public Method New() Constructor
+	Public Method CheckResiduo()	
+	Public Method Update()	
+	Public Method Execute()
+	
+EndClass
+
+
+Method New() Class TEliminaResiduoPedidoCompra
+	::cNumPed	:= ""
+	::lOk		:= .T.
+	::cMsgLog	:= ""
+Return
+
+Method Execute (_cNum) Class TEliminaResiduoPedidoCompra
+
+	::cNumPed	:= _cNum
+	
+	If (!Empty(::cNumPed))
+	
+		DbSelectArea('SC7')
+		SC7->(DbSetOrder(1))
+		If (SC7->(DbSeek(xFilial('SC7')+::cNumPed)))
+			
+			MA235PC(100, 1, FirstYDate(YearSub(sToD(SC7->C7_EMISSAO), 1)), LastYDate(sToD(SC7->C7_EMISSAO)), SC7->C7_NUM, SC7->C7_NUM, Space(1), Replicate("Z", 15), SC7->C7_FORNECE, SC7->C7_FORNECE)	
+			
+			If (::CheckResiduo(::cNumPed))
+				::Update(::cNumPed)
+			Else
+				::lOk 		:= .F.
+				::cMsgLog	:= 'Erro eliminação Residuo, Pedido: '+::cNumPed+'.'
+			EndIf	
+		Else
+			::lOk 		:= .F.
+			::cMsgLog	:= 'Numero do pedido: '+::cNumPed+' não encontrado.'
+		EndIf
+	
+	Else
+		::lOk := .F.	
+		::cMsgLog	:= 'Pedido não informado.'
+	EndIf
+
+Return
+
+Method CheckResiduo() Class TEliminaResiduoPedidoCompra
+
+	Local lOk 			:= .F.
+	Local cQuery 		:= ""
+	Local cAliasTemp	:= GetNextAlias()
+
+	cQuery := " SELECT *												"
+	cQuery += " FROM " + RetSQLName("SC7")+"							"
+	cQuery += " WHERE C7_FILIAL = " + ValToSQL(xFilial("SC7"))+"		"	
+	cQuery += " AND C7_NUM 		= " + ValToSQL(::cNumPed)+"				"			
+	cQuery += " AND C7_RESIDUO 	= 'S' 									"
+	cQuery += " AND D_E_L_E_T_ 	= '' 									"
+		
+	TcQuery cQuery New Alias (cAliasTemp)	
+
+	If !((cAliasTemp)->(Eof()))
+		lOk := .T.
+	EndIf
+			
+	(cAliasTemp)->(DbCloseArea())
+
+Return(lOk)
+
+
+Method Update() Class TEliminaResiduoPedidoCompra
+	
+	DbSelectArea("SC7")
+	DbSetOrder(1)
+	SC7->(DbSeek(xFilial("SC7") +::cNumPed))
+	
+	While !SC7->(Eof()) .And. SC7->C7_FILIAL+SC7->C7_NUM == xFilial("SC7")+::cNumPed
+	
+		If SC7->C7_RESIDUO == "S"
+		
+			RecLock("SC7", .F.)
+			
+				SC7->C7_YRESAUT = "S"
+				
+			SC7->(MsUnLock())
+			
+		EndIf
+		
+		SC7->(DbSkip())
+	
+	EndDo()
+
+Return()

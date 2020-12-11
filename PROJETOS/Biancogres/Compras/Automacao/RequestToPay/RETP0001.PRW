@@ -23,6 +23,8 @@ User Function RETP0001()
 	oIntAE		:= TBizagiIntegracaoAE():New()
 	oList		:= oIntAE:Get()//retorna lista de AE não integrada
 	
+	Conout('Executando função: RETP0001')
+	
 	If (lLog)
 		oAbstract := TAbstractClass():New()
 		oAbstract:oPro:Start()	
@@ -39,7 +41,7 @@ User Function RETP0001()
 			RPCSetEnv(cEmp, cFil, cUser, cSenhaUser)	
 		EndIf
 		
-		BEGIN SEQUENCE	
+	//	BEGIN SEQUENCE	
 		
 			oList:GetItem(nI):cNumero	:= GetNumSC7()
 			oList:GetItem(nI):dEmissao	:= dDataBase
@@ -48,10 +50,11 @@ User Function RETP0001()
 			oAEResult		:= oAE:Execute(oList:GetItem(nI))
 			
 			If (oAEResult:lOk)
+				oIntAEConfirm	:= TBizagiIntegracaoAE():New()
+				oIntAEConfirm:ConfirmReg(oList:GetItem(nI):cID)//confirma item como integrado
 				MsgAlert('<p style="color:green">Autorização de entrega inserida com sucesso.</p>', 'Sucesso')
-				oIntAE:ConfirmReg(oList:GetItem(nI):cIDIntegracao)//confirma item como integrado
 			Else
-				MsgAlert('<p style="color:red">'+oPCResulStruct:cMensagem+'</p>', 'Erro')
+				MsgAlert('<p style="color:red">'+oAEResult:cMensagem+'</p>', 'Erro')
 			EndIf
 			
 			//envio de log
@@ -60,27 +63,27 @@ User Function RETP0001()
 				oAbstract:oLog:cOperac 	:= "N"	
 				oAbstract:oLog:cMetodo 	:= "IBZ_IAE"
 				oAbstract:oLog:cTabela 	:= RetSQLName("SC7")  	//tabela de origem
-				oAbstract:oLog:nIDTab 	:= oList:GetItem(nI):cIDIntegracao		//recno da tabela de origem
-				oAbstract:oLog:cRetMen	:= oPCResulStruct:cMensagem	//mensagem do erro/retorno
+				oAbstract:oLog:nIDTab 	:= oList:GetItem(nI):cID		//recno da tabela de origem
+				oAbstract:oLog:cRetMen	:= oAEResult:cMensagem	//mensagem do erro/retorno
 				oAbstract:oLog:cHrFin 	:= Time()
 				oAbstract:oLog:cEnvWF 	:= 'S' //SIM	
 				oAbstract:oLog:Insert()
 				
 				If (lErroReg)
-					oAbstract:oPro:oWFP:cMenRet := oPCResulStruct:cMensagem
-					oAbstract:oPro:oWFP:AddMensagem("Processo Bizagi", oList:GetItem(nI):cIDIntegracao) 
+					oAbstract:oPro:oWFP:cMenRet := oAEResult:cMensagem
+					oAbstract:oPro:oWFP:AddMensagem("Processo Bizagi", oList:GetItem(nI):cID) 
 				EndIf
 			EndIf
 		
-		RECOVER //executado caso ocorra um erro 
+	//	RECOVER //executado caso ocorra um erro 
 			
-		END SEQUENCE
+	//	END SEQUENCE
 		
-		ErrorBlock( bErrorBlock )
+	//	ErrorBlock( bErrorBlock )
 	
-		If Valtype(oError) == "O" //caso erro
-			ConOut('Erro integraçao item: '+cvaltochar(nI))
-		EndIf
+	//	If Valtype(oError) == "O" //caso erro
+	//		ConOut('Erro integraçao item: '+cvaltochar(nI))
+	//	EndIf
 		
 	Next nI
 	

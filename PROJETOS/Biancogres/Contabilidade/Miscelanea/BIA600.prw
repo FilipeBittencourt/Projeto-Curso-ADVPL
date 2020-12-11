@@ -1,4 +1,5 @@
-#INCLUDE "PROTHEUS.CH"
+#INCLUDE "TOTVS.CH"
+#INCLUDE "TOPCONN.CH"
 
 /*/{Protheus.doc} BIA600
 @author Wlysses Cerqueira (Facile)
@@ -19,10 +20,10 @@ User Function BIA600()
 	Local _aHeader		:= {}
 	Local _aCols		:= {}
 
-	Local cSeek	        := xFilial("ZO6") + SPACE(TAMSX3("ZO6_CODEMP")[1]) + SPACE(TAMSX3("ZO6_CODFIL")[1]) + SPACE(TAMSX3("ZO6_VERSAO")[1]) + SPACE(TAMSX3("ZO6_REVISA")[1]) + SPACE(TAMSX3("ZO6_ANOREF")[1])
+	Local cSeek	        := xFilial("ZO6") + SPACE(TAMSX3("ZO6_VERSAO")[1]) + SPACE(TAMSX3("ZO6_REVISA")[1]) + SPACE(TAMSX3("ZO6_ANOREF")[1])
 	Local bWhile	    := {|| ZO6_FILIAL + ZO6_VERSAO + ZO6_REVISA + ZO6_ANOREF }
 
-	Local aNoFields     := {"ZO6_CODEMP", "ZO6_CODFIL", "ZO6_VERSAO", "ZO6_REVISA", "ZO6_ANOREF"}
+	Local aNoFields     := {"ZO6_VERSAO", "ZO6_REVISA", "ZO6_ANOREF"}
 
 	Local oFont         := TFont():New("Arial",9,14,.T.,.T.,5,.T.,5,.T.,.F.)
 	Local _nOpcA	    := 0
@@ -42,8 +43,7 @@ User Function BIA600()
 	// Private _cHistFil	:= SPACE(TAMSX3("ZO6_HIST")[1])
 	Private _oGHistFil
 
-	//aAdd(_aButtons,{"PRODUTO" ,{|| U_BIA393("E")}, "Layout Integração" , "Layout Integração"})
-	//aAdd(_aButtons,{"PEDIDO"  ,{|| U_B600IEXC() }, "Importa Arquivo"   , "Importa Arquivo"})
+	//aAdd(_aButtons,{"PEDIDO"  ,{|| U_B600IPC() }, "Gera PIS/COFINS" , "Gera PIS/COFINS"})
 
 	_aSize := MsAdvSize(.T.)
 
@@ -200,8 +200,6 @@ Static Function fBIA600F()
         (SELECT COUNT(*)
         FROM %TABLE:ZO6% ZO6
         WHERE ZO6_FILIAL = %xFilial:ZO6%
-        AND ZO6_CODEMP = %Exp:cEmpAnt%
-        AND ZO6_CODFIL = %Exp:cFilAnt%
         AND ZO6_VERSAO = %Exp:_cVersao%
         AND ZO6_REVISA = %Exp:_cRevisa%
         AND ZO6_ANOREF = %Exp:_cAnoRef%
@@ -211,15 +209,13 @@ Static Function fBIA600F()
         ) NUMREG
         FROM %TABLE:ZO6% ZO6
         WHERE ZO6_FILIAL = %xFilial:ZO6%
-        AND ZO6_CODEMP = %Exp:cEmpAnt%
-        AND ZO6_CODFIL = %Exp:cFilAnt%
         AND ZO6_VERSAO = %Exp:_cVersao%
         AND ZO6_REVISA = %Exp:_cRevisa%
         AND ZO6_ANOREF = %Exp:_cAnoRef%
         // AND ZO6_DATA = %Exp:_cDataRef%
         //AND ZO6_ORIPRC = 'CONTABIL'
         AND ZO6.%NotDel%
-        ORDER BY ZO6_CODEMP, ZO6_CODFIL, ZO6_VERSAO, ZO6_REVISA, ZO6_ANOREF, ZO6_LINHA
+        ORDER BY ZO6_VERSAO, ZO6_REVISA, ZO6_ANOREF, ZO6_LINHA
 
 	EndSql
 
@@ -343,12 +339,10 @@ Static Function fGrvDados()
 
 				Reclock("ZO6",.T.)
 
-				ZO6->ZO6_FILIAL  := xFilial("ZO6")
+				ZO6->ZO6_FILIAL  := cEmpAnt
 				ZO6->ZO6_VERSAO  := _cVersao
 				ZO6->ZO6_REVISA  := _cRevisa
 				ZO6->ZO6_ANOREF  := _cAnoRef
-				ZO6->ZO6_CODEMP  := cEmpAnt
-				ZO6->ZO6_CODFIL  := cFilAnt
 
 				// ZO6->ZO6_ORIPRC  := "CONTABIL"
 				// ZO6->ZO6_LOTE    := "004100"
@@ -797,5 +791,53 @@ Static Function fProcImport()
 	EndIf
 
 	RestArea(aArea)
+
+Return()
+
+User Function B600IPC()
+
+	Local cSQL := ""
+	Local cQry := GetNextAlias()
+	Local _nW := 0
+
+	cSQL := "  "
+
+	TcQuery cSQL New Alias (cQry)
+
+	_oGetDados:aCols := {}
+
+	While !(cQry)->(EOF())
+
+		_oGetDados:AddLine(.F., .F.)
+
+		For _nW := 1 To Len(_oGetDados:aHeader)
+
+			If Alltrim(_oGetDados:aHeader[_nW][2]) == "ZO6_VERSAO"
+
+				_oGetDados:aCols[Len(_oGetDados:aCols), _nW] := _cVersao
+
+			EndIf
+
+			If Alltrim(_oGetDados:aHeader[_nW][2]) == "ZO6_REVISA"
+
+				_oGetDados:aCols[Len(_oGetDados:aCols), _nW] := _cRevisa
+
+			EndIf
+
+			If Alltrim(_oGetDados:aHeader[_nW][2]) == "ZO6_ANOREF"
+
+				_oGetDados:aCols[Len(_oGetDados:aCols), _nW] := _cAnoRef
+
+			EndIf
+
+		Next _nW
+
+		(cQry)->(DbSkip())
+
+	EndDo
+
+	_oGetDados:Refresh()
+
+	(cQry)->(DbCloseArea())
 
 Return()

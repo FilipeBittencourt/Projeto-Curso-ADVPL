@@ -231,11 +231,11 @@ Static Function uNOVO(nCli,nPed,nVlr,nVrObra,nCndPag,ChvTmp)
 		oCheckPed:Disable()
 	EndIf
 
-	@ 095,010	SAY "VALOR DO PEDIDO:  "
-	@ 095,100 GET cNVALOR SIZE 35,10 Picture "@R 999,999.99" WHEN lEditTela 
+	@ 095,010	SAY "VALOR SOLICITADO:  "
+	@ 095,100 GET cNVALOR SIZE 50,14 Picture "@E 999,999,999.99" WHEN lEditTela 
 
-	@ 110,010	SAY "VALOR DA OBRA:  "
-	@ 110,100 GET cNVROBRA SIZE 35,10 Picture "@R 999,999.99" WHEN lEditTela	 
+	@ 110,010	SAY "POTENCIAL DA OBRA:  "
+	@ 110,100 GET cNVROBRA SIZE 50,12 Picture "@E 9,999,999.99" 
 	
 	@ 130,010	SAY "CONDIÇÃO DE PAGAMENTO:  "
 	@ 130,100 	GET cNCOND  SIZE 35,10 F3 "ZU2" PICT "@!R" Valid fVldCond() WHEN lEditTela 
@@ -263,13 +263,41 @@ Static Function uSALVAR(nCli)
 	Local ENTER		:= CHR(13)+CHR(10) 
 	Local nObsBGZ	:= ""
 	Local I 
+	Local ehEng := 0
 
 	IF EMPTY(ALLTRIM(cNClient)) .OR. EMPTY(ALLTRIM(cNClient1)) .OR. ;
-	EMPTY(ALLTRIM(STR(cNVALOR))) .OR. EMPTY(ALLTRIM(cNCOND)) .OR. EMPTY(ALLTRIM(cNCOND1)) .OR. ;
+	EMPTY(ALLTRIM(cNCOND)) .OR. EMPTY(ALLTRIM(cNCOND1)) .OR. ;
 	EMPTY(ALLTRIM(cNOBS)) 
 		MSGBOX("FAVOR PREENCHER TODOS OS CAMPOS","INFO","INFO")
 		RETURN
 	END IF
+	
+	DbSelectArea("SA1")
+	SA1->(DbSetOrder(1))
+	If SA1->(DbSeek(xFilial("SA1") + cNClient))
+		
+		IF (ALLTRIM(SA1->A1_YTPSEG) == "E")
+			ehEng := 1
+		ENDIF
+		
+		//para segmento engenharia é obrigatrio
+		If (EMPTY(ALLTRIM(STR(cNVROBRA))) .OR. ALLTRIM(STR(cNVROBRA)) == "0") .AND. ALLTRIM(SA1->A1_YTPSEG) == "E"
+		  	
+		  	SA1->(DbCloseArea())
+		  	
+		  	MSGBOX("O CAMPO POTENCIAL DA OBRA É OBRIGATÓRIO PARA SEGMENTO ENGENHARIA!","INFO","INFO")
+			RETURN
+		EndIf
+		
+		SA1->(DbCloseArea())
+	ENDIF
+
+	//se nao for engenharia obriga o preenchimento do valor do pedido
+	IF (EMPTY(ALLTRIM(STR(cNVALOR))) .OR. ALLTRIM(STR(cNVALOR)) == "0") .AND. ehEng == 0
+		MSGBOX("FAVOR PREENCHER O VALOR SOLICITADO","INFO","INFO")
+		RETURN
+	ENDIF
+	
 	IF valtype(cNDATALIB) <> "D"
 		MSGBOX("FAVOR PREENCHER TODOS OS CAMPOS","INFO","INFO")
 		RETURN
@@ -498,11 +526,11 @@ Static Function uDetalhes()
 	oCheckPed := TCheckBox():New(082,250,'Sem Ped. Venda',{||lSemPed},oDLG1,215,10,,{|| MudaCheckBox() },,,,,,.T.) 
 	oCheckPed:Disable()
 
-	@ 095,010	SAY "VALOR DO PEDIDO:  "
-	@ 095,100 GET cNVALOR SIZE 35,10 PICT "@E"
+	@ 095,010	SAY "VALOR SOLICITADO:  "
+	@ 095,100 GET cNVALOR SIZE 50,14 PICT "@E"
 
-	@ 110,010	SAY "VALOR DA OBRA:  "
-	@ 110,100 GET cNVROBRA SIZE 35,10 PICT "@E"		     
+	@ 110,010	SAY "POTENCIAL DA OBRA:  "
+	@ 110,100 GET cNVROBRA SIZE 50,12 PICT "@E"		     
 
 	@ 130,010	SAY "CONDIÇÃO DE PAGAMENTO:  "
 	@ 130,100 	GET cNCOND  SIZE 35,10 F3 "ZU2" PICT "@!R" WHEN .F.

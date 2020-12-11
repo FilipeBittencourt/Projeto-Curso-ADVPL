@@ -12,8 +12,8 @@
 
 User Function FA070CAN()
 
-    //Local oObjRatComis := TRateioComissao():New()
+    Local oObjRatComis := TRateioComissao():New()
 
-    //oObjRatComis:Mod3Estorno()
+    oObjRatComis:Mod3Estorno()
 
 Return()

@@ -1,0 +1,87 @@
+#Include "TOTVS.CH"
+#Include "Protheus.CH"
+#Include "topconn.ch"
+
+Class TValidarCampoTabela from LongClassName
+	
+	Public Method New() Constructor
+	Public Method Validar()	
+	
+EndClass
+
+
+Method New() Class TValidarCampoTabela
+
+Return
+
+
+Method Validar(cArquivo, aLinha) Class TValidarCampoTabela
+
+    Local nW 			:= 0
+    Local nX 			:= 0
+    Local lRet 			:= .T.
+    Local aLinhaNew		:= {}
+    Local aObrigat		:= {}
+    Local aAreaSX3		:= SX3->(GetArea())
+
+    DBSelectArea("SX3")
+    SX3->(DBSetOrder(1))
+    SX3->(DBGoTop())
+
+    If SX3->(DBSeek(cArquivo))
+
+        While !SX3->(EOF()) .And. SX3->X3_ARQUIVO == cArquivo
+
+            If Subs(Bin2Str(SX3->X3_OBRIGAT),1,1) == "x"
+
+                aAdd(aObrigat, SX3->X3_CAMPO)
+
+            EndIf
+
+            For nW := 1 To Len(aLinha)
+
+                If AllTrim(SX3->X3_CAMPO) == AllTrim(aLinha[nW][1])
+
+                    aAdd(aLinhaNew, aLinha[nW])
+
+                    If Subs(Bin2Str(SX3->X3_OBRIGAT),1,1) == "x" .And. Empty(aLinha[nW][2])
+
+                        ConOut(cArquivo+": Campo " + SX3->X3_CAMPO + " é obrigatório e seu conteúdo está vazio!")
+
+                    EndIf
+
+                EndIf
+
+            Next nW
+
+            SX3->(DBSkip())
+
+        EndDo
+
+    EndIf
+
+    For nW := 1 To Len(aObrigat)
+
+        lRet := .F.
+
+        For nX := 1 To Len(aLinha)
+
+            If AllTrim(aObrigat[nW]) == AllTrim(aLinha[nX][1])
+
+                lRet := .T.
+
+            EndIf
+
+        Next nX
+
+        If !lRet
+
+            ConOut(cArquivo+": Campo " +aObrigat[nW] + " é obrigatório e não esta no ExecAuto!")
+
+        EndIf
+
+    Next nW
+
+    RestArea(aAreaSX3)
+
+Return lRet

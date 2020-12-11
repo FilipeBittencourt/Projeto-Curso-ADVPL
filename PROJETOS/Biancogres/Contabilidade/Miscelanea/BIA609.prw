@@ -18,9 +18,9 @@ User Function BIA609()
 	Local oPerg	:= Nil
 	Local cMsg  := ""
 
-	Private cTitulo := "RAC Orçada - Proc. Custo Unitário Fixo"
+	Private cTitulo := "RAC Orçada - Proc. Custo Unitário Variável"
 
-	RpcSetEnv("01", "01")
+	//RpcSetEnv("01", "01")
 
 	oEmp := TLoadEmpresa():New()
 
@@ -72,7 +72,7 @@ User Function BIA609()
 
 	EndIf
 
-	RpcClearEnv()
+	//RpcClearEnv()
 
 Return()
 
@@ -100,7 +100,7 @@ Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 		cSql += "                ZO5.ZO5_COD PRODUT,  "
 		cSql += "                ZO5.ZO5_ITCUS ITCUS,  "
 		cSql += "                SUM(ZO5.ZO5_CSTUNT) CUS218 "
-		cSql += "         FROM " + RetSqlName("ZO5") + " ZO5  "
+		cSql += "         FROM " + RetFullName("ZO5", cEmp) + " ZO5  "
 		cSql += "         WHERE ZO5.ZO5_FILIAL     = " + ValToSql(cEmp)
 		cSql += "               AND ZO5.ZO5_VERSAO = " + ValToSql(cVersao)
 		cSql += "               AND ZO5.ZO5_REVISA = " + ValToSql(cRevisa)
@@ -118,7 +118,7 @@ Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 		cSql += "                CUS221 = "
 		cSql += "         ( "
 		cSql += "             SELECT SUM(ZO4.ZO4_QTDRAC) "
-		cSql += "             FROM " + RetSqlName("ZO4") + " ZO4  "
+		cSql += "             FROM " + RetFullName("ZO4", cEmp) + " ZO4  "
 		cSql += "             WHERE ZO4.ZO4_FILIAL     = " + ValToSql(cEmp)
 		cSql += "                   AND ZO4.ZO4_VERSAO = CVP01.VERSAO "
 		cSql += "                   AND ZO4.ZO4_REVISA = CVP01.REVISA "
@@ -138,7 +138,7 @@ Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 		cSql += "            CUS223 = CUS221, "
 		cSql += "            CUS224 = CUS220 "
 		cSql += "     FROM CVPROCESS03 CVPR03 "
-		cSql += "          INNER JOIN " + RetSqlName("Z29") + " Z29 ON Z29_FILIAL = '  ' "
+		cSql += "          INNER JOIN " + RetFullName("Z29", cEmp) + " Z29 ON Z29_FILIAL = '  ' "
 		cSql += "                                   AND Z29_COD_IT = ITCUS "
 		cSql += "                                   AND Z29.D_E_L_E_T_ = ' ' "
 		cSql += "     ORDER BY DTREF,  "
@@ -154,14 +154,13 @@ Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 			IF EmpOpenFile(cZO8, "ZO8", 1, .T., cEmp, @cModo)
 
 				Reclock(cZO8, .T.)
-				(cZO8)->ZO8_FILIAL  := ""
-				(cZO8)->ZO8_CODEMP  := cEmp
-				(cZO8)->ZO8_CODFIL  := cEmp // Ver com marcos
+				(cZO8)->ZO8_FILIAL  := cEmp
 				(cZO8)->ZO8_VERSAO  := cVersao
 				(cZO8)->ZO8_REVISA  := cRevisa
 				(cZO8)->ZO8_ANOREF  := cAnoRef
 				(cZO8)->ZO8_TPCUS	:= (cQry)->Z29_TIPO
 				(cZO8)->ZO8_ITCUS   := (cQry)->ITCUS
+				(cZO8)->ZO8_PRODUT  := (cQry)->PRODUT
 				// (cZO8)->ZO8_DESCR   := (cQry)->Z29_DESCR
 				(cZO8)->ZO8_DTREF   := STOD((cQry)->DTREF)
 				(cZO8)->ZO8_CUS218  := (cQry)->CUS218
@@ -219,9 +218,7 @@ Static Function ExistThenDelete(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 	cSql := " SELECT R_E_C_N_O_ RECNO "
 	cSql += " FROM " + RetFullName("ZO8", cEmp) + " ZO8 (NOLOCK) "
-	cSql += " WHERE ZO8_FILIAL      = '' "
-	cSql += " AND ZO8_CODEMP        = " + ValToSql(cEmp)
-	cSql += " AND ZO8_CODFIL        = " + ValToSql(cEmp) // Verificar com Marcos.
+	cSql += " WHERE ZO8_FILIAL      = " + ValToSql(cEmp)
 	cSql += " AND ZO8_VERSAO        = " + ValToSql(cVersao)
 	cSql += " AND ZO8_REVISA        = " + ValToSql(cRevisa)
 	cSql += " AND ZO8_ANOREF        = " + ValToSql(cAnoRef)

@@ -1,0 +1,289 @@
+#Include "TOTVS.CH"
+#Include "Protheus.CH"
+
+Class TCParceria from LongClassName
+
+	Public Data oObj
+	Public Data oResult	
+	
+	Method GatCab()
+	Method GatItem()
+	Method ValidaCab()
+	Method ValidaItem()
+	Method GetCabecalho()
+	Method GetItens()
+	
+	Public Method Execute()
+	Public Method New() Constructor	
+		
+EndClass
+
+Method New() Class TCParceria
+	::oResult 	:= TCPResultStruct():New()
+Return
+
+Method GatCab() Class TCParceria
+Return 
+
+Method GatItem(nPosicao) Class TCParceria
+Return 
+
+//todas validações do cabecalho
+Method ValidaCab() Class TCParceria
+Return 
+
+//todas validações do item
+Method ValidaItem(oObj) Class TCParceria		
+Return 
+
+
+Method GetCabecalho() Class TCParceria
+
+	Local aCabec	:= {}
+	
+	::GatCab() 
+	::ValidaCab() 
+	
+	aAdd(aCabec,{"C3_NUM" 		, PADR(::oObj:cNumero, TamSx3("C3_NUM")[1])				, Nil})
+	aAdd(aCabec,{"C3_EMISSAO"	, ::oObj:dEmissao										, Nil})
+	aAdd(aCabec,{"C3_FORNECE"	, PADR(::oObj:cFornece, TamSx3("C3_FORNECE")[1])		, Nil})
+	aAdd(aCabec,{"C3_LOJA"		, PADR(::oObj:cLoja, TamSx3("C3_LOJA")[1])				, Nil})
+	aAdd(aCabec,{"C3_COND"		, PADR(::oObj:cCond, TamSx3("C3_COND")[1])				, Nil})
+	aAdd(aCabec,{"C3_CONTATO"	, PADR(::oObj:cContato, TamSx3("C3_CONTATO")[1])		, Nil})
+	aAdd(aCabec,{"C3_TPFRETE"	, ::oObj:cTipoFrete										, Nil})
+	aAdd(aCabec,{"C3_MOEDA" 	, ::oObj:cMoeda											, Nil})	
+	aAdd(aCabec,{"C3_FILENT" 	, cFilAnt												, Nil})	
+	
+	oCVT := TValidarCampoTabela():New()
+    oCVT:Validar('SC3', aCabec)
+		
+		
+Return aCabec
+
+Method GetItens() Class TCParceria
+	
+	Local nI		:= 0
+	Local aItens	:= {}
+	Local aItem 	:= {}
+	Local oItem		:= Nil
+	
+	For nI := 1 To ::oObj:oItens:GetCount()
+		
+		aItem	:= {}
+		oItem	:= ::oObj:oItens:GetItem(nI)
+		
+		::GatItem(nI) 
+		::ValidaItem(oItem) 
+		
+	//	aAdd(aItem,			{"C3_FILIAL"		, xFilial("SC3")										, Nil})	
+		aAdd(aItem,			{"C3_PRODUTO" 		, PADR(oItem:cCodProd, TamSx3("C3_PRODUTO")[1])			, Nil})
+		aAdd(aItem,			{"C3_ITEM"			, PADR(oItem:cItem, TamSx3("C3_ITEM")[1])				, Nil})  
+		aAdd(aItem,			{"C3_QUANT" 		, oItem:nQuant											, Nil})
+				
+		aAdd(aItem,			{"C3_PRECO" 		, oItem:nPreco	 										, Nil})
+		aAdd(aItem,			{"C3_TOTAL" 		, oItem:nTotal	 										, Nil})
+		aAdd(aItem,			{"C3_DATPRI"		, dDataBase												, Nil})	
+		aAdd(aItem,			{"C3_DATPRF"		, dDataBase												, Nil})	
+		
+		aAdd(aItem,			{"C3_LOCAL" 		, PADR(oItem:cLocal, TamSx3("C3_LOCAL")[1])				, Nil})
+		
+		aAdd(aItem,			{"C3_FRETE"			, 0														, Nil})	
+		aAdd(aItem,			{"C3_VALFRE"		, 0														, Nil})	
+		aAdd(aItem,			{"C3_AVISTA"		, 0														, Nil})	
+		aAdd(aItem,			{"C3_TAXAFOR"		, 0														, Nil})	
+		aAdd(aItem,			{"C3_IPI"			, 0														, Nil})	
+		
+		aAdd(aItem,			{"C3_OBS"			, ""													, Nil})	
+		
+		If (Empty(oItem:cCC))
+			oItem:cCC := "3000"
+		EndIf
+		If (Empty(oItem:cClVl))
+			oItem:cClVl := "3130"
+		EndIf
+		
+		aAdd(aItem,			{"C3_CC"			, PADR(oItem:cCC, TamSx3("C3_CC")[1])					, Nil})	
+		aAdd(aItem,			{"C3_YCLVL"			, PADR(oItem:cClVl, TamSx3("C3_YCLVL")[1])				, Nil})	
+		
+		aAdd(aItem,			{"C3_UM"			, PADR(oItem:cUM, TamSx3("C3_UM")[1])					, Nil})	
+		aAdd(aItem,			{"C3_SEGUM"			, PADR(oItem:cSegUM, TamSx3("C3_SEGUM")[1])				, Nil})	
+		aAdd(aItem,			{"C3_QTSEGUM"		, oItem:cQtdSegUM										, Nil})	
+				
+		aAdd(aItem,			{"C3_GRADE"			, PADR("", TamSx3("C3_GRADE")[1])						, Nil})	
+		aAdd(aItem,			{"C3_ITEMGRD"		, PADR("", TamSx3("C3_ITEMGRD")[1])												, Nil})	
+		
+				
+		oCVT := TValidarCampoTabela():New()
+        oCVT:Validar('SC3', aItem)
+		
+		AAdd(aItens, aItem)
+	Next nI   
+	
+Return aItens
+
+
+Method Execute(_oObj) Class TCParceria
+
+	Local aCabec			:= {}
+	Local aItens			:= {}
+	
+	Local lOk				:= .F.
+	Local cMsgLog			:= ""
+	Local nI				:= 0
+	
+	Local aErroAuto			:= {}
+	
+	Private lMsErroAuto 	:= .F.
+	Private lMsHelpAuto 	:= .T.
+	Private lAutoErrNoFile	:= .T.
+	
+	
+	::oObj 			:= _oObj
+	
+	Begin Transaction
+		
+		DbSelectArea("SC3")
+		SC3->(DbSetOrder(1))
+		
+		If !SC3->(DbSeek(xFilial('SC3')+PADR(::oObj:cNumero, TamSx3("C3_NUM")[1])))
+			
+			aCabec	:= ::GetCabecalho()
+			aItens	:= ::GetItens()
+			
+			SetModulo("SIGACOM", "COM")
+	        SetFunName("MATA125")
+			MSExecAuto({|v,x,y| MATA125(v, x, y)},aCabec, aItens, 3)
+			
+			If (!lMsErroAuto)
+			
+				lOk			:= .T.
+				cMsgLog 	:= "[Contrato Parceria Numero: "+::oObj:cNumero+", Fornecedor: "+::oObj:cFornece+"] => incluido com sucesso."
+			
+			Else
+				
+				DisarmTransaction()
+				
+				lOk			:= .F.
+				cMsgLog 	:= "[Contrato Parceria Numero: "+::oObj:cNumero+", Fornecedor: "+::oObj:cFornece+"] Erro => "+ CRLF
+				
+				aErroAuto	:= GetAutoGRLog()
+				
+				For nI := 1 To Len(aErroAuto)
+					cMsgLog += StrTran(StrTran(aErroAuto[nI], "<", ""), "-", "") + " "
+				Next nI		
+				
+			EndIf
+		
+		Else
+			
+			DisarmTransaction()
+			
+			lOk			:= .F.
+			cMsgLog 	:= "[Contrato Parceria Numero: "+::oPc:cNumero+", Fornecedor: "+::oPc:cFornece+"] => já existe."
+		EndIf
+	
+	
+	End Transaction 
+	
+	::oResult:Add(lOk, cMsgLog)
+	
+Return ::oResult
+
+
+Class TCPStruct from LongClassName
+
+	Public Data cNumero
+	Public Data dEmissao
+	Public Data cFornece
+	Public Data cLoja
+	Public Data cCond
+	Public Data cContato
+	Public Data cTipoFrete
+	Public Data cMoeda
+	
+	Public Data oItens
+
+	Public Method New() Constructor
+
+EndClass
+
+Method New() Class TCPStruct
+
+	::cNumero 				:= ""
+	::dEmissao				:= Date()
+	::cFornece				:= ""
+	::cLoja					:= ""
+	::cCond					:= ""
+	::cContato				:= ""
+	::cTipoFrete			:= ""
+	::cMoeda				:= ""
+	
+	::oItens	    	:= ArrayList():New()
+
+Return()
+
+Class TCPItemStruct From LongClassName
+
+	Public Data cItem
+	Public Data cCodTag
+	Public Data cLocal
+	Public Data cCodProd
+	Public Data cDescProd
+	Public Data nQuant
+	Public Data nPreco
+	Public Data nTotal
+	Public Data cTes
+	Public Data cUM
+	Public Data cSegUM
+	Public Data cQtdSegUM
+	Public Data cCC
+	Public Data cClVl
+	Public Method New() Constructor
+
+EndClass
+
+Method New() Class TCPItemStruct
+	
+	::cItem			:= ""
+	::cCodTag		:= ""
+	::cLocal		:= ""
+	::cCodProd		:= ""
+	::cDescProd		:= ""
+	::nQuant		:= 0
+	::nPreco		:= 0
+	::nTotal		:= 0
+	::cTES			:= ""
+	::cUM			:= ""
+	::cSegUM		:= ""
+	::cQtdSegUM		:= ""
+	::cCC			:= ""
+	::cClVl			:= ""
+		
+Return()
+
+
+Class TCPResultStruct From LongClassName
+	
+	Public Data lOk		as logical
+	Public Data cMensagem	as character
+	Public Data oResult	
+
+	Public Method New() Constructor
+	Public Method Add()
+	
+EndClass
+
+Method New() Class TCPResultStruct
+
+	::lOk		:= .T.
+	::cMensagem	:= ""
+	::oResult	:= Nil
+Return()
+
+Method Add(lOk, cMensagem, oResult) Class TCPResultStruct
+
+	::lOk		:= lOk
+	::cMensagem	+= cMensagem
+	::oResult	:= oResult
+
+Return()

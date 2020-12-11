@@ -19,10 +19,10 @@ User Function BIA598()
 	Local _aHeader		:= {}
 	Local _aCols		:= {}
 
-	Local cSeek	        := xFilial("ZO3") + SPACE(TAMSX3("ZO3_CODEMP")[1]) + SPACE(TAMSX3("ZO3_CODFIL")[1]) + SPACE(TAMSX3("ZO3_VERSAO")[1]) + SPACE(TAMSX3("ZO3_REVISA")[1]) + SPACE(TAMSX3("ZO3_ANOREF")[1])
+	Local cSeek	        := xFilial("ZO3") + SPACE(TAMSX3("ZO3_VERSAO")[1]) + SPACE(TAMSX3("ZO3_REVISA")[1]) + SPACE(TAMSX3("ZO3_ANOREF")[1])
 	Local bWhile	    := {|| ZO3_FILIAL + ZO3_VERSAO + ZO3_REVISA + ZO3_ANOREF }
 
-	Local aNoFields     := {"ZO3_CODEMP", "ZO3_CODFIL", "ZO3_VERSAO", "ZO3_REVISA", "ZO3_ANOREF"}
+	Local aNoFields     := {"ZO3_VERSAO", "ZO3_REVISA", "ZO3_ANOREF"}
 
 	Local oFont         := TFont():New("Arial",9,14,.T.,.T.,5,.T.,5,.T.,.F.)
 	Local _nOpcA	    := 0
@@ -200,8 +200,6 @@ Static Function fBIA598F()
         (SELECT COUNT(*)
         FROM %TABLE:ZO3% ZO3
         WHERE ZO3_FILIAL = %xFilial:ZO3%
-        AND ZO3_CODEMP = %Exp:cEmpAnt%
-        AND ZO3_CODFIL = %Exp:cFilAnt%
         AND ZO3_VERSAO = %Exp:_cVersao%
         AND ZO3_REVISA = %Exp:_cRevisa%
         AND ZO3_ANOREF = %Exp:_cAnoRef%
@@ -211,15 +209,13 @@ Static Function fBIA598F()
         ) NUMREG
         FROM %TABLE:ZO3% ZO3
         WHERE ZO3_FILIAL = %xFilial:ZO3%
-        AND ZO3_CODEMP = %Exp:cEmpAnt%
-        AND ZO3_CODFIL = %Exp:cFilAnt%
         AND ZO3_VERSAO = %Exp:_cVersao%
         AND ZO3_REVISA = %Exp:_cRevisa%
         AND ZO3_ANOREF = %Exp:_cAnoRef%
         // AND ZO3_DATA = %Exp:_cDataRef%
         //AND ZO3_ORIPRC = 'CONTABIL'
         AND ZO3.%NotDel%
-        ORDER BY ZO3_CODEMP, ZO3_CODFIL, ZO3_VERSAO, ZO3_REVISA, ZO3_ANOREF, ZO3_LINHA
+        ORDER BY ZO3_VERSAO, ZO3_REVISA, ZO3_ANOREF, ZO3_LINHA
 
 	EndSql
 
@@ -347,8 +343,6 @@ Static Function fGrvDados()
 				ZO3->ZO3_VERSAO  := _cVersao
 				ZO3->ZO3_REVISA  := _cRevisa
 				ZO3->ZO3_ANOREF  := _cAnoRef
-				ZO3->ZO3_CODEMP  := cEmpAnt
-				ZO3->ZO3_CODFIL  := cFilAnt
 
 				// ZO3->ZO3_ORIPRC  := "CONTABIL"
 				// ZO3->ZO3_LOTE    := "004100"

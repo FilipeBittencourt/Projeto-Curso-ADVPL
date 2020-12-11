@@ -27,9 +27,9 @@ Method New() Class TPATApiNet
 	::oAuth	:= TAFApiAuth():New(AllTrim(cEmpAnt)+AllTrim(cFilAnt))
 
 
-	//::cURLBase := GETNEWPAR("FA_PAAPIPH","http://iris:4939/api") // PARA AMBIENTE DE PRODUCAO
+	::cURLBase := GETNEWPAR("FA_PAAPIPH","http://iris:4939/api") // PARA AMBIENTE DE PRODUCAO
 
-	::cURLBase := GETNEWPAR("FA_PAAPIPH","http://iris:4950/api") // PARA AMBIENTE DE TESTES
+	//::cURLBase := GETNEWPAR("FA_PAAPIPH","http://iris:4950/api") // PARA AMBIENTE DE TESTES
 
 	::aHeadStr := {"Content-Type: application/json"}
 

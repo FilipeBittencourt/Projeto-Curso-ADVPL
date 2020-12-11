@@ -22,15 +22,16 @@ Method New() Class TBizagiIntegracaoAE
 Return
 
 
-Method ConfirmReg(cID, cUsuario) Class TBizagiIntegracaoAE
+Method ConfirmReg(cID, cNUser) Class TBizagiIntegracaoAE
 	
 	Local cQuery 		:= ""
 	Local nStatus		:= 0
 	Local lRet			:= .T.
 	
-	Default cUsuario	:= 'JOB'
-	
-	cQuery := "update BZINTEGRACAO_PREAE SET DATA_HORA_PROTHEUS = GETDATE(), USUARIO_PROTHEUS = '"+cUsuario+"'  WHERE ID = '"+cID+"'"
+	Default cNUser	:= 'JOB'
+	Conout("cID: "+cvaltochar(cID))
+	cQuery := " update BZINTEGRACAO_PREAE SET DATA_HORA_PROTHEUS = GETDATE(), USUARIO_PROTHEUS = '"+cNUser+"'  WHERE ID = '"+cvaltochar(cID)+"'"
+	Conout("Query: "+cQuery)
 	nStatus := TCSqlExec(cQuery)
    
 	If (nStatus < 0)
@@ -45,8 +46,11 @@ Method PrecoItem(cContrato, cItem, nQuant) Class TBizagiIntegracaoAE
 	Local cAliasTrab		:= GetNextAlias()
 	Local cQuery			:= ""
 	
-	cQuery	+= " select * from " + RetSQLName("ZG3")+"	 											"
-	cQuery	+= " where ZG3_FILIAL 		= '"+xFilial('ZG3')+"'										"
+	//cQuery	+= " select * from " + RetSQLName("ZG3")+"	 											"
+	cQuery	+= " select * from ZG3010				 											"
+	//cQuery	+= " where ZG3_FILIAL 		= '"+xFilial('ZG3')+"'										"
+	cQuery	+= " where ZG3_FILIAL 		= '01'										"
+	
 	cQuery	+= " AND ZG3_NUMERO 		= '"+cContrato+"'											"
 	cQuery	+= " AND ZG3_ITEM	 		= '"+cItem+"'												"
 	cQuery	+= " AND "+cvaltochar(nQuant)+" BETWEEN  ZG3_VLINI AND ZG3_VLFIN						"
@@ -73,7 +77,7 @@ Method Get() Class TBizagiIntegracaoAE
 	Local oList				:= ArrayList():New()
 	
 	cQuery	+= " select * from BZINTEGRACAO_PREAE 										"
-	cQuery	+= " where STATUS = 0 AND DATA_HORA_PROTHEUS IS NULL						"
+	cQuery	+= " where STATUS = 'P' AND DATA_HORA_PROTHEUS IS NULL						"
 	
 	TcQuery cQuery New Alias (cAliasTemp)
 	
@@ -94,7 +98,7 @@ Method Get() Class TBizagiIntegracaoAE
 			oAEStruct:cMoeda		:= SC3->C3_MOEDA
 			oAEStruct:cEmp			:= (cAliasTemp)->EMPRESA
 			oAEStruct:cFil			:= (cAliasTemp)->FILIAL
-			
+			oAEStruct:cID			:= (cAliasTemp)->ID
 			
 			While (!(cAliasTemp)->(EoF())  .And. AllTrim((cAliasTemp)->CONTRATO) == AllTrim(SC3->C3_NUM))
 			
@@ -113,7 +117,7 @@ Method Get() Class TBizagiIntegracaoAE
 					
 					oAEItemStruct	 			:= TAEItemStruct():New()
 				
-					oAEItemStruct:cIDIntegracao	:= (cAliasTemp)->ID
+					
 					oAEItemStruct:cNumSc        := SC3->C3_NUM
 					oAEItemStruct:cItemSc       := SC3->C3_ITEM
 					oAEItemStruct:nQuantSc		:= 0

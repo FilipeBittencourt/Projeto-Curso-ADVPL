@@ -183,7 +183,7 @@ Local cSQL := ""
 Local cQry := GetNextAlias()
 
 	cSQL := " SELECT * " 
-	cSQL += " FROM FNC_CTR_CUSTO(" +; 
+	cSQL += " FROM FNC_CTR_CUSTO_" + cEmpAnt + "(" +; 
 						ValToSQL(::oParam:cContratoDe) + ", " + ValToSQL(::oParam:cContratoAte) +;
 						", " + ValToSQL(::oParam:cClvlDe) + ", " + ValToSQL(::oParam:cClvlAte) +;
 						", " + ValToSQL(::oParam:cItemDe) + ", " + ValToSQL(::oParam:cItemAte) +;
@@ -243,9 +243,9 @@ Local cFile := "BIAF161-" + cEmpAnt + __cUserID + "-" + dToS(Date()) +"-"+ StrTr
 Local cWork01 := "Analítico I"
 Local cWork02 := "Analítico II"
 Local cWork03 := "Sintético"
-Local cTable01 := "Custos dos Projetos " + cWork01 
-Local cTable02 := "Custos dos Projetos " + cWork02
-Local cTable03 := "Custos dos Projetos " + cWork03
+Local cTable01 := "Custos dos Projetos " + cWork01 + " - " + Capital(AllTrim(FWEmpName(cEmpAnt)))
+Local cTable02 := "Custos dos Projetos " + cWork02 + " - " + Capital(AllTrim(FWEmpName(cEmpAnt)))
+Local cTable03 := "Custos dos Projetos " + cWork03 + " - " + Capital(AllTrim(FWEmpName(cEmpAnt)))
 Local cDirTmp := AllTrim(GetTempPath())
 Local nCount := 0
 Local aLine01 := {}
@@ -349,7 +349,7 @@ Local cSQL := ""
 Local cQry := GetNextAlias()
 
 	cSQL := " SELECT * " 
-	cSQL += " FROM FNC_CTR_CUSTO(" +; 
+	cSQL += " FROM FNC_CTR_CUSTO_" + cEmpAnt + "(" +; 
 						ValToSQL(::oParam:cContratoDe) + ", " + ValToSQL(::oParam:cContratoAte) +;
 						", " + ValToSQL(::oParam:cClvlDe) + ", " + ValToSQL(::oParam:cClvlAte) +;
 						", " + ValToSQL(::oParam:cItemDe) + ", " + ValToSQL(::oParam:cItemAte) +;
@@ -379,7 +379,7 @@ Local cSQL := ""
 Local cQry := GetNextAlias()
 
 	cSQL := " SELECT * " 
-	cSQL += " FROM FNC_CTR_CUSTO_PROD(" +; 
+	cSQL += " FROM FNC_CTR_CUSTO_PROD_" + cEmpAnt + "(" +; 
 						ValToSQL(::oParam:cContratoDe) + ", " + ValToSQL(::oParam:cContratoAte) +;
 						", " + ValToSQL(::oParam:cClvlDe) + ", " + ValToSQL(::oParam:cClvlAte) +;
 						", " + ValToSQL(::oParam:cItemDe) + ", " + ValToSQL(::oParam:cItemAte) +;
@@ -411,12 +411,12 @@ Local cQry := GetNextAlias()
 
 	cSQL += " (
 	cSQL += " 	SELECT ISNULL(ROUND(SUM(VALOR), 2) , 0)
-	cSQL += " 	FROM FNC_CTR_MOV_BAN('01', CONTRATO, CONTRATO, " + ValToSQL(::oParam:cClvlDe) + ", " + ValToSQL(::oParam:cClvlAte) + ", ITEMCT, ITEMCT, SUBITEM, SUBITEM) "
+	cSQL += " 	FROM FNC_CTR_MOV_BAN_" + cEmpAnt + "(CONTRATO, CONTRATO, " + ValToSQL(::oParam:cClvlDe) + ", " + ValToSQL(::oParam:cClvlAte) + ", ITEMCT, ITEMCT, SUBITEM, SUBITEM) "
 	cSQL += " ) AS PAGBRU,
 
 	cSQL += " (
 	cSQL += " 	SELECT ISNULL(ROUND(SUM(SALDO), 2) , 0)
-	cSQL += " 	FROM FNC_CTR_PA('01', CONTRATO, CONTRATO, " + ValToSQL(::oParam:cClvlDe) + ", " + ValToSQL(::oParam:cClvlAte) + ", ITEMCT, ITEMCT, SUBITEM, SUBITEM) "
+	cSQL += " 	FROM FNC_CTR_PA_" + cEmpAnt + "(CONTRATO, CONTRATO, " + ValToSQL(::oParam:cClvlDe) + ", " + ValToSQL(::oParam:cClvlAte) + ", ITEMCT, ITEMCT, SUBITEM, SUBITEM) "
 	cSQL += " 	WHERE SALDO > 0
 	cSQL += " ) AS PAGANT	
 	
@@ -424,7 +424,7 @@ Local cQry := GetNextAlias()
 	cSQL += " ( "
 	
 	cSQL += " SELECT CONTRATO, ITEMCT, SUBITEM, ROUND(SUM(VALOR), 2) AS VALOR " 
-	cSQL += " FROM FNC_CTR_CUSTO(" +; 
+	cSQL += " FROM FNC_CTR_CUSTO_" + cEmpAnt + "(" +; 
 						ValToSQL(::oParam:cContratoDe) + ", " + ValToSQL(::oParam:cContratoAte) +;
 						", " + ValToSQL(::oParam:cClvlDe) + ", " + ValToSQL(::oParam:cClvlAte) +;
 						", " + ValToSQL(::oParam:cItemDe) + ", " + ValToSQL(::oParam:cItemAte) +;
@@ -437,7 +437,7 @@ Local cQry := GetNextAlias()
 	cSQL += " UNION ALL "	
 	
 	cSQL += " SELECT CONTRATO, '' AS ITEMCT, '' AS SUBITEM, ROUND(SUM(VALOR), 2) AS VALOR " 
-	cSQL += " FROM FNC_CTR_CUSTO(" +; 
+	cSQL += " FROM FNC_CTR_CUSTO_" + cEmpAnt + "(" +; 
 						ValToSQL(::oParam:cContratoDe) + ", " + ValToSQL(::oParam:cContratoAte) +;
 						", " + ValToSQL(::oParam:cClvlDe) + ", " + ValToSQL(::oParam:cClvlAte) +;
 						", " + ValToSQL(::oParam:cItemDe) + ", " + ValToSQL(::oParam:cItemAte) +;
@@ -450,7 +450,7 @@ Local cQry := GetNextAlias()
 	cSQL += " UNION ALL "
 	
 	cSQL += " SELECT CONTRATO, ITEMCT, SUBITEM, 0 AS VALOR " 
-	cSQL += " FROM FNC_CTR('01', " +; 
+	cSQL += " FROM FNC_CTR_" + cEmpAnt + "(" +; 
 						ValToSQL(::oParam:cContratoDe) + ", " + ValToSQL(::oParam:cContratoAte) +;
 						", " + ValToSQL(::oParam:cClvlDe) + ", " + ValToSQL(::oParam:cClvlAte) +;
 						", " + ValToSQL(::oParam:cItemDe) + ", " + ValToSQL(::oParam:cItemAte) +;
@@ -523,7 +523,7 @@ Local lCtrGen := SubStr(cNumero, 3, 1) == "9"
 	cSQL := " SELECT C3_OBS, " 
 	cSQL += " ( "
 	cSQL += " 	SELECT A2_NOME "
-	cSQL += " 	FROM " + RetSQLName("SA2")
+	cSQL += " 	FROM " + RetFullName("SA2", "01")
 	cSQL += " 	WHERE A2_COD = C3_FORNECE "
 	cSQL += " 	AND A2_LOJA = C3_LOJA "
 	cSQL += " 	AND D_E_L_E_T_ = '' "
@@ -539,7 +539,7 @@ Local lCtrGen := SubStr(cNumero, 3, 1) == "9"
 				
 	EndIf
 	
-	cSQL += " FROM " + RetFullName("SC3", "01")
+	cSQL += " FROM " + RetSQLName("SC3")
 	cSQL += " WHERE C3_FILIAL = " + ValToSQL(xFilial("SC3"))
 	cSQL += " AND C3_NUM = " + ValToSQL(cNumero)
 	//cSQL += " AND C3_YCLVL = " + ValToSQL(cClvl)

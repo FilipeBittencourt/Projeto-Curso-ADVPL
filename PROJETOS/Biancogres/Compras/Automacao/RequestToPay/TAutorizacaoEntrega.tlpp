@@ -180,7 +180,7 @@ Class TAEStruct from LongClassName
 	Public Data cEmp
 	Public Data cFil
 	Public Data cContrato
-	
+	Public Data cID
 	
 	Public Data oItens
 
@@ -201,14 +201,14 @@ Method New() Class TAEStruct
 	::cEmp					:= ""
 	::cFil					:= ""
 	::cContrato				:= ""
-	
+	::cID					:= ""
 	::oItens	    	:= ArrayList():New()
 
 Return()
 
 Class TAEItemStruct From LongClassName
 
-	Public Data cIDIntegracao
+	
 	Public Data cNumSc
 	Public Data cItemSc
 	Public Data nQuantSc
@@ -228,7 +228,7 @@ EndClass
 
 Method New() Class TAEItemStruct
 
-	::cIDIntegracao	:= ""
+	
 	::cNumSc		:= ""
 	::cItemSc		:= ""
 	::nQuantSc		:= 0

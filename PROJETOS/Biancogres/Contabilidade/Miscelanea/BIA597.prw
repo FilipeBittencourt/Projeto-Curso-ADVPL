@@ -20,10 +20,10 @@ User Function BIA597()
 	Local _aHeader		:= {}
 	Local _aCols		:= {}
 
-	Local cSeek	        := xFilial("ZO2") + SPACE(TAMSX3("ZO2_CODEMP")[1]) + SPACE(TAMSX3("ZO2_CODFIL")[1]) + SPACE(TAMSX3("ZO2_VERSAO")[1]) + SPACE(TAMSX3("ZO2_REVISA")[1]) + SPACE(TAMSX3("ZO2_ANOREF")[1])
-	Local bWhile	    := {|| ZO2_FILIAL + ZO2_CODEMP + ZO2_CODFIL + ZO2_VERSAO + ZO2_REVISA + ZO2_ANOREF }
+	Local cSeek	        := xFilial("ZO2") + SPACE(TAMSX3("ZO2_VERSAO")[1]) + SPACE(TAMSX3("ZO2_REVISA")[1]) + SPACE(TAMSX3("ZO2_ANOREF")[1])
+	Local bWhile	    := {|| ZO2_FILIAL + ZO2_VERSAO + ZO2_REVISA + ZO2_ANOREF }
 
-	Local aNoFields     := {"ZO2_CODEMP", "ZO2_CODFIL", "ZO2_VERSAO", "ZO2_REVISA", "ZO2_ANOREF"}
+	Local aNoFields     := {"ZO2_VERSAO", "ZO2_REVISA", "ZO2_ANOREF"}
 
 	Local oFont         := TFont():New("Arial",9,14,.T.,.T.,5,.T.,5,.T.,.F.)
 	Local _nOpcA	    := 0
@@ -204,8 +204,6 @@ Static Function fBIA597F()
         (SELECT COUNT(*)
         FROM %TABLE:ZO2% ZO2
         WHERE ZO2_FILIAL = %xFilial:ZO2%
-        AND ZO2_CODEMP = %Exp:cEmpAnt%
-        AND ZO2_CODFIL = %Exp:cFilAnt%
         AND ZO2_VERSAO = %Exp:_cVersao%
         AND ZO2_REVISA = %Exp:_cRevisa%
         AND ZO2_ANOREF = %Exp:_cAnoRef%
@@ -215,15 +213,13 @@ Static Function fBIA597F()
         ) NUMREG
         FROM %TABLE:ZO2% ZO2
         WHERE ZO2_FILIAL = %xFilial:ZO2%
-        AND ZO2_CODEMP = %Exp:cEmpAnt%
-        AND ZO2_CODFIL = %Exp:cFilAnt%
         AND ZO2_VERSAO = %Exp:_cVersao%
         AND ZO2_REVISA = %Exp:_cRevisa%
         AND ZO2_ANOREF = %Exp:_cAnoRef%
         // AND ZO2_DATA = %Exp:_cDataRef%
         //AND ZO2_ORIPRC = 'CONTABIL'
         AND ZO2.%NotDel%
-        ORDER BY ZO2_CODEMP, ZO2_CODFIL, ZO2_VERSAO, ZO2_REVISA, ZO2_ANOREF, ZO2_LINHA
+        ORDER BY ZO2_VERSAO, ZO2_REVISA, ZO2_ANOREF, ZO2_LINHA
 
 	EndSql
 
@@ -351,8 +347,6 @@ Static Function fGrvDados()
 				ZO2->ZO2_VERSAO  := _cVersao
 				ZO2->ZO2_REVISA  := _cRevisa
 				ZO2->ZO2_ANOREF  := _cAnoRef
-				ZO2->ZO2_CODEMP  := cEmpAnt
-				ZO2->ZO2_CODFIL  := cFilAnt
 
 				// ZO2->ZO2_ORIPRC  := "CONTABIL"
 				// ZO2->ZO2_LOTE    := "004100"
@@ -627,8 +621,6 @@ User Function B597IPC()
 	cSQL += " 			JOIN " + RetFullName("ZBZ", "01") + " ZBZ (NOLOCK) ON " // RetSqlName("ZBZ")
 	cSQL += " 			( "
 	cSQL += " 				ZO3.ZO3_FILIAL = '' "
-	cSQL += " 				AND ZO3.ZO3_CODEMP = " + ValToSql(cEmpAnt)
-	cSQL += " 				AND ZO3.ZO3_CODFIL = " + ValToSql(cFilAnt)
 	// cSQL += " 				AND ZO3.ZO3_CTACUS = '61701001' "
 	cSQL += " 				AND ( ZBZ_DEBITO = ZO3.ZO3_CTACUS  OR ZBZ_CREDIT = ZO3.ZO3_CTACUS ) "
 	cSQL += " 				AND ZBZ.ZBZ_VERSAO = ZO3_VERSAO "
@@ -672,18 +664,6 @@ User Function B597IPC()
 			If Alltrim(_oGetDados:aHeader[_nW][2]) == "ZO2_ANOREF"
 
 				_oGetDados:aCols[Len(_oGetDados:aCols), _nW] := _cAnoRef
-
-			EndIf
-
-			If Alltrim(_oGetDados:aHeader[_nW][2]) == "ZO2_CODEMP"
-
-				_oGetDados:aCols[Len(_oGetDados:aCols), _nW] := cEmpAnt
-
-			EndIf
-
-			If Alltrim(_oGetDados:aHeader[_nW][2]) == "ZO2_CODFIL"
-
-				_oGetDados:aCols[Len(_oGetDados:aCols), _nW] := cFilAnt
 
 			EndIf
 
@@ -802,10 +782,6 @@ User Function B597PRO()
 	cSQL += " INNER JOIN " + RetSqlName("ZO3") + " ZO3 (NOLOCK) ON "
 	cSQL += " ( "
 	cSQL += " 	ZO3.ZO3_FILIAL = '' "
-	cSQL += " 	AND ZO3.ZO3_CODEMP = " + ValToSql(cEmpAnt)
-	cSQL += " 	AND ZO3.ZO3_CODFIL = " + ValToSql(cFilAnt)
-	cSQL += " 	AND ZO3.ZO3_CODEMP = ZO2.ZO2_CODEMP "
-	cSQL += " 	AND ZO3.ZO3_CODFIL = ZO2.ZO2_CODFIL "
 	cSQL += " 	AND ZO3.ZO3_CTAREC = ZO2.ZO2_CTAREC "
 	cSQL += " 	AND ZO3.ZO3_VERSAO = ZO2.ZO2_VERSAO "
 	cSQL += " 	AND ZO3.ZO3_REVISA = ZO2.ZO2_REVISA "
