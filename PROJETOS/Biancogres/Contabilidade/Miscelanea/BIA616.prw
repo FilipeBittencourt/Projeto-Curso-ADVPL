@@ -26,7 +26,7 @@ User Function BIA616()
 
 	oPerg := TWPCOFiltroPeriodo():New()
 
-	If oPerg:Pergunte(, .T.)
+	If oPerg:Pergunte()
 
 		oEmp:GetSelEmp()
 
@@ -74,9 +74,8 @@ Return()
 
 Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
 
-	Local cSQL  := ""
-	Local cQry  := ""
-	Local nW    := 0
+	Local nQINIJan := 0
+	Local nVINIJan := 0
 
 	Local lRet	:= .T.
 	Local cModo := "" //Modo de acesso do arquivo aberto //"E" ou "C"
@@ -88,58 +87,74 @@ Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
 
 	If EmpOpenFile(cZOB, "ZOB", 1, .T., cEmp, @cModo)
 
-		(cZOB)->(DBSetOrder(1)) // ZOB_FILIAL, ZOB_VERSAO, ZOB_REVISA, ZOB_ANOREF, ZOB_PRODUT, ZOB_DTREF, R_E_C_N_O_, D_E_L_E_T_
+		(cZOB)->(DBSetOrder(2)) // ZOB_FILIAL, ZOB_VERSAO, ZOB_REVISA, ZOB_ANOREF, ZOB_DTREF, ZOB_PRODUT, R_E_C_N_O_, D_E_L_E_T_
 
-		If (cZOB)->(DbSeek(cEmp + cVersao + cRevisa + cAnoRef))
+		If EmpOpenFile(cZOA, "ZOA", 1, .T., cEmp, @cModo)
 
 			(cZOA)->(DBSetOrder(2)) // ZOA_FILIAL, ZOA_VERSAO, ZOA_REVISA, ZOA_ANOREF, ZOA_DTREF, ZOA_PRODUT, R_E_C_N_O_, D_E_L_E_T_
 
-			If (cZOA)->(DbSeek(cEmp + cVersao + cRevisa + cAnoRef))
+			If (cZOB)->(DbSeek(cEmp + cVersao + cRevisa + cAnoRef))
 
-				If Month(DTOS((cZOA)->ZOA_DTREF)) == 1
+				While !(cZOB)->(EOF()) .And. (cZOB)->(ZOB_FILIAL + ZOB_VERSAO + ZOB_REVISA + ZOB_ANOREF) == cEmp + cVersao + cRevisa + cAnoRef
 
-					Reclock(cZOB, .F.)
-					(cZOB)->ZOB_QINI := (cZOA)->ZOA_QINI
-					(cZOB)->ZOB_VINI := (cZOA)->ZOA_VINI
-					(cZOB)->(MsUnlock())
+					If (cZOA)->(DbSeek(cEmp + cVersao + cRevisa + cAnoRef + DTOS((cZOB)->ZOB_DTREF) + (cZOB)->ZOB_PRODUT))
 
-				Else
+						If Month((cZOA)->ZOA_DTREF) == 1
 
-					Reclock(cZOB, .F.)
-					(cZOB)->ZOB_QSALDO := (cZOA)->ZOB_QINI + (cZOB)->ZOB_QPROD - (cZOB)->ZOB_QVENDA
-					(cZOB)->ZOB_VSALDO := (cZOA)->ZOB_VINI + (cZOB)->ZOB_VPROD - (cZOB)->ZOB_VVENDA
-					(cZOB)->(MsUnlock())
+							Reclock(cZOB, .F.)
+							(cZOB)->ZOB_QINI := (cZOA)->ZOA_QINI
+							(cZOB)->ZOB_VINI := (cZOA)->ZOA_VINI
+							(cZOB)->(MsUnlock())
 
-				EndIf
-
-				If EmpOpenFile(cZO6, "ZO6", 1, .T., cEmp, @cModo)
-
-					(cZO6)->(DBSetOrder(2)) // ZO6_FILIAL, ZO6_VERSAO, ZO6_REVISA, ZO6_ANOREF, ZO6_PRODUT, ZO6_LINHA, R_E_C_N_O_, D_E_L_E_T_
-
-					If (cZO6)->(DbSeek(cEmp + cVersao + cRevisa + cAnoRef + (cZOA)->ZOB_PRODUT))
-
-						(cZOB)->(DBSetOrder(2)) // ZOB_FILIAL, ZOB_VERSAO, ZOB_REVISA, ZOB_ANOREF, ZOB_DTREF, ZOB_PRODUT, R_E_C_N_O_, D_E_L_E_T_
-
-						If (cZOB)->(DbSeek(cEmp + cVersao + cRevisa + cAnoRef + DTOS(dDataFech) + (cZOA)->ZOA_PRODUT))
-
-
-							(cZO6)->ZOB_QVENDA := (cZOA)->ZOA_QINI
+							nQINIJan := (cZOB)->ZOB_QINI
+							nVINIJan := (cZOB)->ZOB_VINI
 
 						EndIf
 
 					EndIf
 
-				Else
+					// Tenho que buscar de JANEIRO
+					Reclock(cZOB, .F.)
+					(cZOB)->ZOB_QINI := nQINIJan
+					(cZOB)->ZOB_VINI := nVINIJan
+					(cZOB)->(MsUnlock())
 
-					lRet := .F.
+					If EmpOpenFile(cZO6, "ZO6", 1, .T., cEmp, @cModo)
 
-					cMsg := "Não conseguiu abrir a empresa " + cEmp + " !"
+						(cZO6)->(DBSetOrder(1)) // ZO6_FILIAL, ZO6_VERSAO, ZO6_REVISA, ZO6_ANOREF, ZO6_PRODUT, ZO6_LINHA, R_E_C_N_O_, D_E_L_E_T_
 
-				EndIf
+						If (cZO6)->(DbSeek(xFilial("ZO6") + cVersao + cRevisa + cAnoRef + (cZOB)->ZOB_PRODUT))
+
+							Reclock(cZOB, .F.)
+							(cZOB)->ZOB_QVENDA := &("(cZO6)->ZO6_RECM" + StrZero(Month((cZOB)->ZOB_DTREF), 2))
+							(cZOB)->(MsUnlock())
+
+						EndIf
+
+					Else
+
+						lRet := .F.
+
+						cMsg := "Não conseguiu abrir a empresa " + cEmp + " !"
+
+					EndIf
+
+					Reclock(cZOB, .F.)
+					(cZOB)->ZOB_VVENDA := (cZOB)->ZOB_QVENDA * ( ((cZOB)->ZOB_VINI + (cZOB)->ZOB_VPROD) / ((cZOB)->ZOB_QINI + (cZOB)->ZOB_QPROD) )
+					(cZOB)->(MsUnlock())
+
+					Reclock(cZOB, .F.)
+					(cZOB)->ZOB_QSALDO := (cZOB)->ZOB_QINI + (cZOB)->ZOB_QPROD - (cZOB)->ZOB_QVENDA
+					(cZOB)->ZOB_VSALDO := (cZOB)->ZOB_VINI + (cZOB)->ZOB_VPROD - (cZOB)->ZOB_VVENDA
+					(cZOB)->(MsUnlock())
+
+					(cZOB)->(DBSkip())
+
+				EndDo
+
+				// TODO: Chamar BIA610 AQUI??
 
 			EndIf
-
-			// TODO: Chamar BIA610 AQUI??
 
 		Else
 

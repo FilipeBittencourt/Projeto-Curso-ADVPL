@@ -162,7 +162,7 @@ Static Function PesqRes(lProd)
 	//Processar pendencias de reserva de OP
 	cAlias2 := GetNextAlias()
 
-	cSQL := "select * from "+_cSP1Name+" ORDER BY PZ0_OPNUM, C6_PRODUTO, PRIRECGR, C6_CLI, C6_LOJA, RECNO, C6_YEMISSA, C6_NUM "
+	cSQL := "select * from "+_cSP1Name+" ORDER BY PZ0_OPNUM, C6_PRODUTO, C6_YEMISSA, PRIRECGR, C6_CLI, C6_LOJA, RECNO, C6_NUM "
 
 	TCQuery cSQL Alias (cAlias2) New
 
@@ -176,7 +176,7 @@ Static Function PesqRes(lProd)
 	(cAlias2)->(DbCloseArea())
 
 	cIndex   := CriaTrab(nil,.F.)
-	cChave   := "PZ0_OPNUM+C6_PRODUTO+STR(PRIRECGR,20)+C6_CLI+C6_LOJA+STR(RECNO,20)+C6_YEMISSA+C6_NUM+C6_ITEM"
+	cChave   := "PZ0_OPNUM+C6_PRODUTO+C6_YEMISSA+STR(PRIRECGR,20)+C6_CLI+C6_LOJA+STR(RECNO,20)+C6_NUM+C6_ITEM"
 	(cTRB2)->(DbCreateIndex( cIndex, cChave, {|| &cChave}, .F. ))
 	(cTRB2)->(DbCommit()) 
 

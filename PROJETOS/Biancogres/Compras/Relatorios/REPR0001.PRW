@@ -113,7 +113,7 @@ Static Function MontaLinhas()
 
 	cQuery += " SELECT ZI.*,
 	//cQuery += "        ISNULL(CAST(USU.Nome AS VARCHAR(30)), '') ATENDENTE, "
-	cQuery += " ISNULL((SELECT  NOMFUN   FROM VETORH..VW_BG_COLABORADOR WHERE NUMFIS = ZI.ZI_RFIDCAL),'') AS ATENDENTE, "
+	cQuery += " ISNULL((SELECT  NOMFUN   FROM VETORH..VW_BG_COLABORADOR WHERE CAST(NUMFIS AS VARCHAR(30)) = ZI.ZI_RFIDCAL),'') AS ATENDENTE, "
 	cQuery += "        ZJ.*
 	cQuery += " FROM " + RetSqlName('SZI') + " ZI "
 	cQuery += "      INNER JOIN " + RetSqlName('SZJ') + " ZJ ON ZI.ZI_DOC = ZJ.ZJ_DOC "

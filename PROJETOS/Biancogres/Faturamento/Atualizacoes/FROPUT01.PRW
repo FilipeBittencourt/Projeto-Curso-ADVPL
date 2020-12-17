@@ -565,6 +565,15 @@ User function FRGAARM()
 	Local _cProd := M->C6_PRODUTO
 	Local _cLocal
 
+	
+	//tem local e e reserva de OP
+	//problema caso gatinhar produto novamente
+	If (!Empty(Gdfieldget('C6_LOCAL', n)) .And. AllTrim(Gdfieldget('C6_YTPEST', n)) == 'R')
+		_cLocal := Gdfieldget('C6_LOCAL', n)
+		Return(_cLocal)
+	EndIf
+	
+	
 	SB1->(DbSetOrder(1))
 	SB1->(DbSeek(XFilial("SB1")+_cProd))
 	IF (M->C5_YLINHA == '2' .And. SubStr(SB1->B1_YEMPEST,1,2) == "05")

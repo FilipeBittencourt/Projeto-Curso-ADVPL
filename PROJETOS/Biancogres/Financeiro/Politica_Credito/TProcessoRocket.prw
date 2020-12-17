@@ -90,7 +90,7 @@ Method New() Class TProcessoRocket
 	::nVarAum := 0
 	::nValLim := 0
 	::cParCli := ""
-	::lEnvProd := If (Upper(AllTrim(GetEnvserver())) $ "PRODUCAO/SCHEDULE/REMOTO", .T., .F.)
+	::lEnvProd := If (Upper(AllTrim(GetEnvserver())) $ "PRODUCAO/SCHEDULE/REMOTO/COMP-TIAGO", .T., .F.)
 
 Return()
 
@@ -411,6 +411,7 @@ Local cFluxo := ""
 			::cXMLSend += '<soap:Header/>'
 			::cXMLSend += '<soap:Body>'
 			::cXMLSend += '<int:'+ cFluxo +'>'
+			::cXMLSend += '<int:CPROCESS>'+ ::oLst:GetItem(nCount):cCodPro +'</int:CPROCESS>'
 			::cXMLSend += '<int:DATA>'+ dToS(::oLst:GetItem(nCount):dData) +'</int:DATA>'
 			::cXMLSend += '<int:CODIGO>'+ ::oLst:GetItem(nCount):cCliente +'</int:CODIGO>'
 			::cXMLSend += '<int:LOJA>'+ ::oLst:GetItem(nCount):cLoja +'</int:LOJA>'			

@@ -1,16 +1,19 @@
 #include "totvs.ch"
 function u_BIA27673(aSchedParameter) as logical
     
-    local cEmp      as character
-    local cFil      as character
-    local cFWLogMsg as character
-
-    local dDate     as date
-    local dRefe     as date
+    local bError        as block
+    local bErrorBlock   as block
     
-    local lRet      as logical
-    local lIsBlind  as logical
-    local lCentury  as logical
+    local cEmp          as character
+    local cFil          as character
+    local cFWLogMsg     as character
+
+    local dDate         as date
+    local dRefe         as date
+    
+    local lRet          as logical
+    local lIsBlind      as logical
+    local lCentury      as logical
     
     lIsBlind:=isBlind()
     lCentury:=__SetCentury("ON")
@@ -38,8 +41,32 @@ function u_BIA27673(aSchedParameter) as logical
         dDate:=date()
         dRefe:=(dDate-1)
         if (lIsBlind)
-            &("MV_PAR01"):=FirstDate(dDate)
-            &("MV_PAR02"):=dRefe
+            bError:={|e|Break(e)}
+            bErrorBlock:=ErrorBlock(bError)
+            begin sequence
+                &("MV_PAR01"):=Formula("RCI")
+                dDate:=&("MV_PAR01")
+            recover
+                &("MV_PAR01"):=FirstDate(dRefe)
+                dDate:=&("MV_PAR01")
+            end sequence
+            ErrorBlock(bErrorBlock)
+            if (empty(&("MV_PAR01")))
+                &("MV_PAR01"):=FirstDate(dRefe)
+                &("MV_PAR02"):=dRefe
+            else
+                bErrorBlock:=ErrorBlock(bError)
+                begin sequence
+                    &("MV_PAR02"):=Formula("RCF")
+                    dRefe:=&("MV_PAR02")
+                recover
+                    &("MV_PAR02"):=dRefe
+                end sequence
+                ErrorBlock(bErrorBlock)
+                if (empty(&("MV_PAR02")))
+                    &("MV_PAR02"):=dRefe
+                endif
+            endif
         else
             dRefe:=&("MV_PAR02")
         endif
@@ -159,7 +186,7 @@ static function getQuery(nDays as numeric) as character
 
     cDataIni:=&("MV_PAR01")
     cDataFim:=&("MV_PAR02")
-    cDataSub:=DtoS(Date()-1)
+    cDataSub:=DtoS(Date()-nDays)
 
     cDays:=lTrim(str(nDays))
     cDays:="%"+cDays+"%"
@@ -235,11 +262,10 @@ static function getQuery(nDays as numeric) as character
                                     )
                            )                                                
                         WHERE (1=2) 
-                          AND ZZV.ZZV_FILIAL=%xFilial:ZZV%
                           AND ZZV.%NotDel%
-                          /*AND ((SF2.F2_EMISSAO BETWEEN %exp:cDataIni% AND %exp:cDataFim%) OR (CONVERT(DATE,SF2.F2_EMISSAO)>=CONVERT(DATE,GETDATE()-1)))*/
-                          AND ((SF2.F2_EMISSAO BETWEEN %exp:cDataIni% AND %exp:cDataFim%) OR (SF2.F2_EMISSAO>=%exp:cDataSub%))
+                          AND ZZV.ZZV_FILIAL=%xFilial:ZZV%
                           AND SD2.D2_COD COLLATE LATIN1_GENERAL_BIN=FATITEMS.COD_PRODUTO
+                          AND ((SF2.F2_EMISSAO BETWEEN %exp:cDataIni% AND %exp:cDataFim%) OR (SF2.F2_EMISSAO>=%exp:cDataSub%) OR (CONVERT(DATE,SF2.F2_EMISSAO)>=CONVERT(DATE,GETDATE()-%exp:cDays%)))
         ) t
     endsql
 

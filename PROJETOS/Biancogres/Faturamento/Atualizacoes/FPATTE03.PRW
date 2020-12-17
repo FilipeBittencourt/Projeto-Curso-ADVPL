@@ -110,7 +110,7 @@ User Function FPAT03EX
 	Private cPCliente	:= space(6)
 	Private cPLoja		:= space(2)
 	Private cVendCGC	:= ""
-	Private cVendCod	:= ""
+	Private cVendCod	  := ""
 	Private dDatEst		:= CTOD(" ")
 
 	If Select("SX6") <= 0
@@ -182,6 +182,7 @@ Static Function fPergunte()
 		cArquivo  := ParamLoad(cFileName,,1,cArquivo)
 		cPCliente	:= ParamLoad(cFileName,,2,cPCliente)
 		cPLoja		:= ParamLoad(cFileName,,3,cPLoja)
+		cVendCod  := AllTrim(aRet[4])
 		cVendCGC	:= AllTrim(aRet[5])
 		dDatEst		:= ParamLoad(cFileName,,6,dDatEst)
 
@@ -220,8 +221,10 @@ Static Function fProcImport()
 
 	ZAI->(DbSetOrder(3)) // ZAI_FILIAL+ZAI_CODCLI+ZAI_LOJCLI+ZAI_DATA+ZAI_CGCVEN
 	If ZAI->(DbSeek(XFilial("ZAI")+_cCodLojCli+DTOS(dDatEst)+cVendCGC))
-		MsgAlert("ESTOQUE CLIENTE NESTA DATA JA EXISTE - EXCLUIR OS REGISTROS PRIMEIRO ANTES DE IMPORTAR NOVAMENTE.")
-		Return
+		If AllTrim(ZAI->ZAI_USER) == AllTrim(cVendCod)
+			MsgAlert("ESTOQUE CLIENTE NESTA DATA JA EXISTE - EXCLUIR OS REGISTROS PRIMEIRO ANTES DE IMPORTAR NOVAMENTE.")
+			Return
+		EndIf
 	EndIf
 
 
@@ -308,10 +311,10 @@ Static Function fProcImport()
 				cCodSA3 := ""
 				If (!Empty(cVendCGC))
 
-					SA3->(DbSetOrder(3))
-					If SA3->(DbSeek(XFilial("SA3")+cVendCGC))
+					SA3->(DbSetOrder(1))
+					If SA3->(DbSeek(XFilial("SA3")+cVendCod))
 
-						cCodSA3 		:= SA3->A3_COD
+						cCodSA3 		 := SA3->A3_COD
 						__cListCli 		:= U_FPATVCLI(cCodSA3)
 
 						If (!( SubStr(_cCodLojCli,1,6) $ __cListCli ))

@@ -436,7 +436,7 @@ User Function BIA255D
 						Ferase(MscIndex+OrdBagExt())          //indice gerado
 
 						//A0003 := " UPDATE "+RetSqlName("SD4")
-						A0003 := "	 SELECT R_E_C_N_O_ as REG, ROUND(D4_QUANT + (D4_QTDEORI * "+Alltrim(Str(nPerc))+"),2) QTD, "
+						A0003 := "	 SELECT R_E_C_N_O_ as REG, ROUND(D4_QUANT + (D4_QUANT * "+Alltrim(Str(nPerc))+"),2) QTD, "
 						A0003 += "         ROUND(D4_QTDEORI + (D4_QTDEORI * "+Alltrim(Str(nPerc))+"),2) QTDORI"
 						A0003 += "   FROM " + RetSqlName("SD4") + " WITH(NOLOCK) "
 						A0003 += "   WHERE D4_FILIAL = '"+xFilial("SD4")+"' "
@@ -451,7 +451,7 @@ User Function BIA255D
 							Reclock("SD4",.F.)
 							SD4->D4_QUANT 	:= A003->QTD
 							SD4->D4_QTDEORI	:= A003->QTDORI
-							SC2->(MsUnlock())						
+							SD4->(MsUnlock())						
 							A003->(DbSkip())
 						End
 						A003->(dbCloseArea())

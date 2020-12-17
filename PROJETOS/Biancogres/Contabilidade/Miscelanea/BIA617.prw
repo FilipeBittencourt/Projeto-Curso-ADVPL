@@ -82,13 +82,14 @@ Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 	Default cMsg    := ""
 
-	cSql += " SELECT ZOB_FILIAL, ZOB_VERSAO, ZOB_REVISA, ZOB_ANOREF, ZOB_PRODUT, ZOB_DTREF, ZOB_VVENDA "
-    cSql += " FROM " + RetFullName("ZOB", cEmp) + " A (NOLOCK) "
+	cSql := " SELECT ZOB_FILIAL, ZOB_VERSAO, ZOB_REVISA, ZOB_ANOREF, SUBSTRING(ZOB_DTREF, 1, 6) ANOMES, SUM(ZOB_VVENDA) ZOB_VVENDA "
+	cSql += " FROM " + RetFullName("ZOB", cEmp) + " ZOB (NOLOCK) "
 	cSql += " WHERE ZOB.D_E_L_E_T_  = '' "
 	cSql += " AND ZOB.ZOB_FILIAL    = " + ValToSql(cEmp)
 	cSql += " AND ZOB.ZOB_VERSAO    = " + ValToSql(cVersao)
 	cSql += " AND ZOB.ZOB_REVISA    = " + ValToSql(cRevisa)
 	cSql += " AND ZOB.ZOB_ANOREF    = " + ValToSql(cAnoRef)
+	cSql += " GROUP BY ZOB_FILIAL, ZOB_VERSAO, ZOB_REVISA, ZOB_ANOREF, SUBSTRING(ZOB_DTREF, 1, 6) "
 
 	TcQuery cSQL New Alias (cQry)
 
@@ -97,16 +98,27 @@ Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 		If EmpOpenFile(cZBZ, "ZBZ", 1, .T., cEmp, @cModo)
 
 			Reclock(cZBZ,.T.)
-			(cZBZ)->ZBZ_FILIAL := cCodFil
+			(cZBZ)->ZBZ_FILIAL := cEmp
 			(cZBZ)->ZBZ_VERSAO := cVersao
 			(cZBZ)->ZBZ_REVISA := cRevisa
 			(cZBZ)->ZBZ_ANOREF := cAnoRef
-			(cZBZ)->ZBZ_DATA   := (cQry)->ZOB_DTREF
+			(cZBZ)->ZBZ_DATA   := LastDay(STOD((cQry)->ANOMES + "01"))
 			(cZBZ)->ZBZ_VALOR  := (cQry)->ZOB_VVENDA
+			(cZBZ)->ZBZ_DC	   := "D"
 			(cZBZ)->ZBZ_DEBITO := "41301001"
+			(cZBZ)->ZBZ_HIST   := "VLR CPV N/MÊS"
+			(cZBZ)->(MsUnlock())
+
+			Reclock(cZBZ,.T.)
+			(cZBZ)->ZBZ_FILIAL := cEmp
+			(cZBZ)->ZBZ_VERSAO := cVersao
+			(cZBZ)->ZBZ_REVISA := cRevisa
+			(cZBZ)->ZBZ_ANOREF := cAnoRef
+			(cZBZ)->ZBZ_DATA   := LastDay(STOD((cQry)->ANOMES + "01"))
+			(cZBZ)->ZBZ_VALOR  := (cQry)->ZOB_VVENDA
+			(cZBZ)->ZBZ_DC	   := "C"
 			(cZBZ)->ZBZ_CREDIT := "11306001"
 			(cZBZ)->ZBZ_HIST   := "VLR CPV N/MÊS"
-
 			(cZBZ)->(MsUnlock())
 
 		Else
@@ -119,15 +131,15 @@ Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 		EndIf
 
-		If Select(cZBZ) > 0
-
-			(cZBZ)->(DbCloseArea())
-
-		EndIf
-
 		(cQry)->(DbSkip())
 
 	EndDo
+
+	If Select(cZBZ) > 0
+
+		(cZBZ)->(DbCloseArea())
+
+	EndIf
 
 	(cQry)->(DbCloseArea())
 

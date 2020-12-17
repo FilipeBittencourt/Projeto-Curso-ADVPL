@@ -82,20 +82,21 @@ Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
 
 	Default cMsg    := ""
 
-    cSql := " SELECT B9_FILIAL, B9_COD, B9_LOCAL, B9_QINI, B9_VINI1 "
-    cSql += " FROM " + RetFullName("SB9", cEmp) + " SB9 (NOLOCK) "
-    cSql += " INNER JOIN " + RetFullName("SB1", cEmp) + " SB1 (NOLOCK) ON "
-    cSql += " ( "
-    cSql += " 	SB1.B1_FILIAL   = '' AND "
-    cSql += " 	SB1.B1_COD      = B9_COD AND "
-    cSql += " 	SB1.B1_TIPO     = 'PA' AND "
-    cSql += " 	SB1.D_E_L_E_T_  = '' "
-    cSql += " ) "
-    cSql += " WHERE SB9.B9_FILIAL   = '01' "
-    cSql += " AND SB9.B9_DATA       = " + ValToSql(dDataFech)
-    cSql += " AND SB9.B9_QINI       <> 0 "
-    cSql += " AND SB9.B9_LOCAL NOT IN ('05') "
-    cSql += " AND SB9.D_E_L_E_T_    = '' "
+	cSql := " SELECT B9_FILIAL, B9_COD, B9_DATA, SUM(B9_QINI) B9_QINI, SUM(B9_VINI1) B9_VINI1 "
+	cSql += " FROM " + RetFullName("SB9", cEmp) + " SB9 (NOLOCK) "
+	cSql += " INNER JOIN " + RetFullName("SB1", cEmp) + " SB1 (NOLOCK) ON "
+	cSql += " ( "
+	cSql += " 	SB1.B1_FILIAL   = '' AND "
+	cSql += " 	SB1.B1_COD      = B9_COD AND "
+	cSql += " 	SB1.B1_TIPO     = 'PA' AND "
+	cSql += " 	SB1.D_E_L_E_T_  = '' "
+	cSql += " ) "
+	cSql += " WHERE SB9.B9_FILIAL   = '01' "
+	cSql += " AND SB9.B9_DATA       = " + ValToSql(dDataFech)
+	cSql += " AND SB9.B9_QINI       <> 0 "
+	cSql += " AND SB9.B9_LOCAL NOT IN ('05') "
+	cSql += " AND SB9.D_E_L_E_T_    = '' "
+	cSql += " GROUP BY B9_FILIAL, B9_COD, B9_DATA "
 
 	TcQuery cSQL New Alias (cQry)
 
@@ -108,12 +109,11 @@ Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
 			(cZOA)->ZOA_VERSAO  := cVersao
 			(cZOA)->ZOA_REVISA  := cRevisa
 			(cZOA)->ZOA_ANOREF  := cAnoRef
-            (cZOA)->ZOA_DTVIRA  := dDataFech
-			(cZOA)->ZOA_DTREF   := dDataFech
+			(cZOA)->ZOA_DTVIRA  := dDataFech
+			(cZOA)->ZOA_DTREF   := LastDay(STOD(cValToChar(Val(cAnoRef) - 1) + "12" + "01"))
 			(cZOA)->ZOA_PRODUT  := (cQry)->B9_COD
-            (cZOA)->ZOA_LOCAL   := (cQry)->B9_LOCAL
-            (cZOA)->ZOA_QATU    := (cQry)->B9_QINI
-            (cZOA)->ZOA_VATU    := (cQry)->B9_VINI1
+			(cZOA)->ZOA_QATU    := (cQry)->B9_QINI
+			(cZOA)->ZOA_VATU    := (cQry)->B9_VINI1
 			(cZOA)->(MsUnlock())
 
 		Else
@@ -126,16 +126,16 @@ Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
 
 		EndIf
 
-		If Select(cZOA) > 0
-
-			(cZOA)->(DbCloseArea())
-
-		EndIf
-
 		(cQry)->(DbSkip())
 
 	EndDo
 
 	(cQry)->(DbCloseArea())
+
+	If Select(cZOA) > 0
+
+		(cZOA)->(DbCloseArea())
+
+	EndIf
 
 Return(lRet)
