@@ -70,9 +70,17 @@ function u_BIA27673(aSchedParameter) as logical
         else
             dRefe:=&("MV_PAR02")
         endif
+        if (!(valType(dDate)=="D"))
+            dDate:=FirstDate(Date())
+            &("MV_PAR01"):=dDate
+        endif
+        if (!(valType(dRefe)=="D"))
+            dRefe:=(Date()-1)
+            &("MV_PAR02"):=dRefe
+        endif
         private c_pExcelTitle as character
         c_pExcelTitle:=" :: Emissao: "
-        c_pExcelTitle+=strTran(DtoC(dDate),"/","-")
+        c_pExcelTitle+=strTran(DtoC(Date()),"/","-")
         c_pExcelTitle+=" :: "
         c_pExcelTitle+=Time()
         c_pExcelTitle+=" :: "

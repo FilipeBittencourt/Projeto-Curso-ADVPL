@@ -200,6 +200,7 @@ Local cQry := GetNextAlias()
 		
 Return()
 
+
 Method GetSalFin(dData, cConta) Class TConciliacaoContabilFornecedor
 Local nRet := 0
 Local cCodFor := Right(AllTrim(cConta), 6)

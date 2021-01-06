@@ -4,15 +4,16 @@
 User Function FCCFRE02()
 
     Private oReport,oSection1,oSection2
-    Private cPerg  := "FCCFRE02"
-    Private aRegs   := {}
-    Private cQuery  := GetNextAlias()
+    Private cPerg := "_FCCFRE02"
+    Private aRegs := {}
+    Private cQuery := GetNextAlias()
+    Private cAllFil := fGetAllFil()    
 
     ValPerg()
 
     If Pergunte(cPerg , .T. )
 
-        If MV_PAR05 == 1
+        If MV_PAR04 == 1
 
             oReport := ReportDef()
 
@@ -51,7 +52,7 @@ Static Function ReportTxt()
     Local nTotDif := 0    
 
     IF TCSPEXIST("SP_RELPOSCLI_CP_ANALITICO")
-        LjMsgRun("Aguarde... Processando Posição Fornecedor dia "+DTOC(MV_PAR02),,{|| _aRet := TCSPEXEC("SP_RELPOSCLI_CP_ANALITICO", DTOS(MV_PAR02), MV_PAR03, MV_PAR04) })
+        LjMsgRun("Aguarde... Processando Posição Fornecedor dia "+DTOC(MV_PAR01),,{|| _aRet := TCSPEXEC("SP_RELPOSCLI_CP_ANALITICO", DTOS(MV_PAR01), MV_PAR02, MV_PAR03) })
     ENDIF
 
     TCQUERY CSQL New Alias (CQUERY)
@@ -71,13 +72,13 @@ Static Function ReportTxt()
         
         EndIf
         
-        If (MV_PAR06 == 1 .And. ((CQUERY)->SALDO > 0 .Or. (CQUERY)->TOTAL_VENCIDO > 0 .Or. (CQUERY)->TOTAL_A_VENCER > 0)) .Or. MV_PAR06 == 2
+        If (MV_PAR05 == 1 .And. ((CQUERY)->SALDO > 0 .Or. (CQUERY)->TOTAL_VENCIDO > 0 .Or. (CQUERY)->TOTAL_A_VENCER > 0)) .Or. MV_PAR05 == 2
 
             nTotSaldo += (CQUERY)->SALDO
             nTotVEnc  += (CQUERY)->TOTAL_VENCIDO
             nTotAVenc += (CQUERY)->TOTAL_A_VENCER
 
-            nSaldoC := SaldoConta((CQUERY)->CONTA, MV_PAR02, "01")
+            nSaldoC := SaldoConta((CQUERY)->CONTA, MV_PAR01, "01",,,,, cAllFil)
             
             nTotSalC += nSaldoC
             
@@ -160,12 +161,13 @@ Static Function ReportDef()
     TRCell():New(oSection1	,"TOTAL_VENCIDO"  	,,"Vencido"			    ,"@E 999,999,999.99", 10,/*lPixel*/, {|| (cQUERY)->TOTAL_VENCIDO  } )
     TRCell():New(oSection1	,"TOTAL_A_VENCER"  	,,"A Vencer"		    ,"@E 999,999,999.99", 10,/*lPixel*/, {|| (cQUERY)->TOTAL_A_VENCER  } )
     TRCell():New(oSection1	,"SALDO_FINANC"  	  ,,"Saldo Financeiro"				,"@E 999,999,999.99", 10,/*lPixel*/, {|| (cQUERY)->SALDO  } )   
-    TRCell():New(oSection1	,"SALDO_CONTABIL"  	,,"Saldo Contabil"		    ,"@E 999,999,999.99", 10,/*lPixel*/, {|| nSaldoC := SaldoConta((CQUERY)->CONTA, MV_PAR02, "01") } )
+    TRCell():New(oSection1	,"SALDO_CONTABIL"  	,,"Saldo Contabil"		    ,"@E 999,999,999.99", 10,/*lPixel*/, {|| nSaldoC := SaldoConta((CQUERY)->CONTA, MV_PAR01, "01",,,,, cAllFil) } )
     TRCell():New(oSection1	,"DIFERENCA"  	,,"Diferenca"		    ,"@E 999,999,999.99", 10,/*lPixel*/, {|| nSaldoC - (CQUERY)->SALDO } )
 
     oSection1:SetTotalInLine(.F.)
 
 Return(oReport)
+
 
 Static Function ReportPrint( oReport )
 
@@ -179,7 +181,7 @@ Static Function ReportPrint( oReport )
     Local nTotDif := 0        
 
     IF TCSPEXIST("SP_RELPOSCLI_CP_ANALITICO")
-        LjMsgRun("Aguarde... Processando Posição Fornecedor dia "+DTOC(MV_PAR02),,{|| _aRet := TCSPEXEC("SP_RELPOSCLI_CP_ANALITICO", DTOS(MV_PAR02), MV_PAR03, MV_PAR04) })
+        LjMsgRun("Aguarde... Processando Posição Fornecedor dia "+DTOC(MV_PAR01),,{|| _aRet := TCSPEXEC("SP_RELPOSCLI_CP_ANALITICO", DTOS(MV_PAR01), MV_PAR02, MV_PAR03) })
     ENDIF
 
     oSection1:BeginQuery()
@@ -192,13 +194,13 @@ Static Function ReportPrint( oReport )
 
     While (CQUERY)->(!EOF())
 
-        If (MV_PAR06 == 1 .And. ((CQUERY)->SALDO > 0 .Or. (CQUERY)->TOTAL_VENCIDO > 0 .Or. (CQUERY)->TOTAL_A_VENCER > 0)) .Or. MV_PAR06 == 2
+        If (MV_PAR05 == 1 .And. ((CQUERY)->SALDO > 0 .Or. (CQUERY)->TOTAL_VENCIDO > 0 .Or. (CQUERY)->TOTAL_A_VENCER > 0)) .Or. MV_PAR05 == 2
 
             nTotSaldo += (CQUERY)->SALDO
             nTotVEnc  += (CQUERY)->TOTAL_VENCIDO
             nTotAVenc += (CQUERY)->TOTAL_A_VENCER
 
-            nSaldoC := SaldoConta((CQUERY)->CONTA, MV_PAR02, "01")
+            nSaldoC := SaldoConta((CQUERY)->CONTA, MV_PAR01, "01",,,,, cAllFil)
             
             nTotSalC += nSaldoC
             
@@ -233,40 +235,33 @@ Static Function ReportPrint( oReport )
 
 Return()
 
+
 Static Function GetQuery()
+Local CSQL := ""
 
-    Local CSQL := ""
-    Local _cEMP := ""
-
-    If MV_PAR01 == 1
-        _cEMP := "0101"
-    Else
-        _cEMP := "0701"
-    EndIf
-
-    CSQL := " select "+CRLF
-    CSQL += " A.CODFOR, "+CRLF
-    CSQL += " NOME = (select top 1 A2_NOME from SA2010 SA2 (nolock) where A2_COD = A.CODFOR and SA2.D_E_L_E_T_=''), "+CRLF
-    CSQL += " CNPJ = (select top 1 A2_CGC from SA2010 SA2 (nolock) where A2_COD = A.CODFOR and SA2.D_E_L_E_T_=''), "+CRLF
-    CSQL += " SALDO = SUM(B.SALDO), "+CRLF
-    CSQL += " TOTAL_VENCIDO = SUM(B.VALOR_VENCIDO), "+CRLF
-    CSQL += " TOTAL_A_VENCER = SUM(B.VALOR_A_VENCER), "+CRLF
-    
-    CSQL += " CONTA = (SELECT TOP 1 A2_CONTA FROM SA2010 SA2 (NOLOCK) WHERE A2_COD = A.CODFOR AND SA2.D_E_L_E_T_='') "+CRLF
-		
-    CSQL += " from POSCLI_FORNECEDORES A "+CRLF
-    CSQL += " join POSCLI_DATA_CP_ANALITICO B on A.CODFOR = B.CODFOR and A.LOJAFOR = B.LOJAFOR "+CRLF
-
-    CSQL += " WHERE "+CRLF
-    CSQL += " B.EMPFIL = '"+_cEMP+"' "+CRLF
-    CSQL += " and B.DATAREF = '"+DTOS(MV_PAR02)+"' "+CRLF
-    CSQL += " and A.CODFOR between '"+MV_PAR03+"' and '"+MV_PAR04+"' "+CRLF
-
-    CSQL += " GROUP BY "+CRLF
-    CSQL += " A.CODFOR "+CRLF  
-    CSQL += " ORDER BY 1 "+CRLF  
+	CSQL := " select "+CRLF
+	CSQL += " A.CODFOR, "+CRLF
+	CSQL += " NOME = (select top 1 A2_NOME from SA2010 SA2 (nolock) where A2_COD = A.CODFOR and SA2.D_E_L_E_T_=''), "+CRLF
+	CSQL += " CNPJ = (select top 1 A2_CGC from SA2010 SA2 (nolock) where A2_COD = A.CODFOR and SA2.D_E_L_E_T_=''), "+CRLF
+	CSQL += " SALDO = SUM(B.SALDO), "+CRLF
+	CSQL += " TOTAL_VENCIDO = SUM(B.VALOR_VENCIDO), "+CRLF
+	CSQL += " TOTAL_A_VENCER = SUM(B.VALOR_A_VENCER), "+CRLF
+	
+	CSQL += " CONTA = (SELECT TOP 1 A2_CONTA FROM SA2010 SA2 (NOLOCK) WHERE A2_COD = A.CODFOR AND SA2.D_E_L_E_T_='') "+CRLF
+	
+	CSQL += " from POSCLI_FORNECEDORES A "+CRLF
+	CSQL += " join POSCLI_DATA_CP_ANALITICO B on A.CODFOR = B.CODFOR and A.LOJAFOR = B.LOJAFOR "+CRLF
+	
+	CSQL += " WHERE SUBSTRING(B.EMPFIL, 1, 2) = '"+ cEmpAnt +"' "+CRLF
+	CSQL += " and B.DATAREF = '"+DTOS(MV_PAR01)+"' "+CRLF
+	CSQL += " and A.CODFOR between '"+MV_PAR02+"' and '"+MV_PAR03+"' "+CRLF
+	
+	CSQL += " GROUP BY "+CRLF
+	CSQL += " A.CODFOR "+CRLF  
+	CSQL += " ORDER BY 1 "+CRLF  
  
 Return(CSQL)
+
 
 Static Function ValPerg()
 
@@ -279,7 +274,6 @@ Static Function ValPerg()
     cPerg := PADR(cPerg,10)
 
     //DECLARACAO DAS PERGUNTAS NA ORDEM QUE DESEJA CRIAR
-    aAdd(aTRegs,{"Empresa?"		        ,"N", 1,0,0,"C","","Biancogres","LM","","","","",""})
     aAdd(aTRegs,{"Dt.Referencia"		,"D", 8,0,0,"G","","","","","","","",""})
     aAdd(aTRegs,{"Fornecedor De"	    ,"C", 6,0,0,"G","","","","","","","SA2",""})
     aAdd(aTRegs,{"Fornecedor Ate"	    ,"C", 6,0,0,"G","","","","","","","SA2",""})
@@ -331,3 +325,17 @@ Static Function ValPerg()
     Next
 
 Return()
+
+
+Static Function fGetAllFil()
+Local cRet := ""
+Local nCount := 0
+Local aFil := FWAllFilial()
+
+	For nCount := 1 To Len(aFil)
+	
+		cRet += aFil[nCount] + ";"
+		
+	Next
+	
+Return(cRet)

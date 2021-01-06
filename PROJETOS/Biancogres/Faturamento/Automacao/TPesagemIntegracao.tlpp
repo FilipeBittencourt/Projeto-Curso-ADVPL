@@ -380,17 +380,20 @@ Method ProcessaGuardiam() Class TPesagemIntegracao
 	cQuery += " 		AND D_E_L_E_T_ = ''																								                                                                                            " + CRLF
 	cQuery += " 		)	
 	
-	/*cQuery += " AND	NOT EXISTS (																													                                                                                " + CRLF
+	//problemas no cancelamento do ticket
+	cQuery += " AND	NOT EXISTS (																													                                                                                " + CRLF
 	cQuery += " 		SELECT 1 																										                                                                                            " + CRLF
 	cQuery += " 		FROM Z11010	(NOLOCK)																							                                                                                            " + CRLF
 	cQuery += " 		WHERE Z11_FILIAL = '  '																							                                                                                            " + CRLF
 	cQuery += " 		AND Z11_GUARDI = ZLW.ZLW_CODIGO								 																		                                                                        " + CRLF
 	cQuery += " 		AND Z11_PESOIN = 0.01	
 	cQuery += " 		AND Z11_PESOSA = 0.01																								                                                                                        " + CRLF
+	cQuery += " 		AND Z11_MERCAD = '1'																							                                                                                            " + CRLF
 	cQuery += " 		AND D_E_L_E_T_ = ''																								                                                                                            " + CRLF
+	cQuery += " 		AND RTRIM(Z11_OBSER) <> ''																							                                                                                        " + CRLF
 	cQuery += " 		)	
-    */
     
+
 	cQuery += " 		                                                                                                                                                                                                            " + CRLF
 	cQuery += " ) A                                                                                                                                                                                                                 " + CRLF
      

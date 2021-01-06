@@ -696,6 +696,13 @@ Static Function fProcessa()
 		Z68->Z68_PERD		:= M->Z68_PERD
 		Z68->Z68_YMOTIV		:= M->Z68_YMOTIV
 		Z68->Z68_FRTUNI		:= M->Z68_FRTUNI
+		
+		If Z68->(FieldPos("Z68_TPNEG")) > 0
+			Z68->Z68_TPNEG	:= M->Z68_TPNEG
+    	EndIf
+  
+		
+		
 
 		//Aprovacao - gravar data/hora
 		If lAlterar .And. lAprova

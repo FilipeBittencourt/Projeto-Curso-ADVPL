@@ -62,12 +62,13 @@ Method GetEmpenhoBizagi() Class TValidaSaldo
 	Local cQuery 		:= ""
 	Local cAliasTemp	:= Nil
 	Local nTotal		:= 0        	
+	Local cBizagi 		:= U_fGetBase("2")
 	
 	cAliasTemp := GetNextAlias()
 		
-	cQuery := " select Total=SUM(Quantidade)																						"
-	cQuery += "	from ZEUS.BIZAGIPRD.dbo.VW_EMPENHO_BIZAGI																			"
-	cQuery += " where Codigo = '"+::cProd+"' and right('00'+cast(Armazem as varchar (2)), 2) = '"+::cArmazem+"'						"
+	cQuery := " select Total=SUM(Quantidade)																			"
+	cQuery += "	from "+cBizagi+".dbo.VW_EMPENHO_BIZAGI																	"
+	cQuery += " where Codigo = '"+::cProd+"' and right('00'+cast(Armazem as varchar (2)), 2) = '"+::cArmazem+"'			"
 	
 			
 	TcQuery cQuery New Alias (cAliasTemp)

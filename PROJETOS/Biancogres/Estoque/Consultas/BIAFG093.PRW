@@ -53,11 +53,13 @@ Return .T.
 
 Static Function fMSNewGetDados1()
 
+Local cBizagi	:= U_fGetBase("2") 
+
 	aAdd(aHeaderEx,{"Nome"         ,"NOME"   ,"@S40"             , 40  , 0,,, "C",, })      	// 1
 	aAdd(aHeaderEx,{"Matrícula"    ,"MATRIC" ,"@!"               , 8   , 0,,, "C",, })      	// 1
 	aAdd(aHeaderEx,{"ID"           ,"ID"     ,"@!"               , 9   , 0,,, "N",, })      	// 1
 
-	cQUERY := "SELECT NOME, MATRICULA MAT,CAST(IDUSERBZ AS VARCHAR(9)) USERID FROM ZEUS.BIZAGIPRD.DBO.VW_USUARIOS "
+	cQUERY := "SELECT NOME, MATRICULA MAT,CAST(IDUSERBZ AS VARCHAR(9)) USERID FROM "+cBizagi+".DBO.VW_USUARIOS "
 	TcQuery cQUERY New Alias "QRY"
 	dbSelectArea("QRY")
 	dbGoTop()
@@ -81,7 +83,9 @@ Return
 
 Static Function wRetCodCl()
 
-	cQUERY := "SELECT NOME, MATRICULA MAT,CAST(IDUSERBZ AS VARCHAR(9)) USERID FROM ZEUS.BIZAGIPRD.DBO.VW_USUARIOS "
+Local cBizagi	:= U_fGetBase("2")
+
+	cQUERY := "SELECT NOME, MATRICULA MAT,CAST(IDUSERBZ AS VARCHAR(9)) USERID FROM "+cBizagi+".DBO.VW_USUARIOS "
 
 	If nComboBox == "Nome"
 		cQUERY += " WHERE NOME  LIKE '"+Alltrim(cGet1)+"%' "

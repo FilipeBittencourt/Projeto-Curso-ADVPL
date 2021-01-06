@@ -30,6 +30,7 @@ Local nCount := 0
 Local cSQL := ""
 Local cQry := GetNextAlias()
 Local aPedCom := {}
+Local nBizagi := ""	
 	
 	aAdd(aEmp, "01")
 	aAdd(aEmp, "05")
@@ -40,6 +41,8 @@ Local aPedCom := {}
 		
 		RpcSetType(3)
 		RpcSetEnv(aEmp[nCount], "01")
+		
+		cBizagi := U_fGetBase("2") 	
 			
 		cSQL := " SELECT CR_USER, EMP, C7_NUM, C7_USER, C1_YBIZAGI, C1_NUM, C1_USER, MAILSOL, A2_NOME, CR_EMISSAO, CR_TOTAL, "
 		cSQL += " DATEDIFF(DAY, GETDATE(), DATEADD(DAY, 10, CR_EMISSAO)) AS DIA_REP, "
@@ -60,7 +63,7 @@ Local aPedCom := {}
 		cSQL += " 	INNER JOIN "+ RetSQLName("SC1") +" SC1 "
 		cSQL += " 	ON C7_NUMSC = C1_NUM "
 		cSQL += " 	AND C7_ITEMSC = C1_ITEM "
-		cSQL += " 	LEFT JOIN ZEUS.BIZAGIPRD.dbo.BZ_DADOS_SC SC_BIZ "
+		cSQL += " 	LEFT JOIN "+nBizagi+".dbo.BZ_DADOS_SC SC_BIZ "
 		cSQL += " 	ON C1_YBIZAGI = BIZAGI COLLATE Latin1_General_BIN "
 		cSQL += " 	AND C1_NUM = PROTHEUS COLLATE Latin1_General_BIN "
 		cSQL += " 	AND EMPRESA = " + ValToSQL(aEmp[nCount] + "01")

@@ -220,6 +220,11 @@ Method Processa() Class TBizagiIntegracaoSolicitCompra
                 aAdd(aLinha, { "C1_YSUBITE", AllTrim((cQry)->SC_YSUBITE)     , Nil })
 
             EndIf
+            
+            //Ticket 27404
+            aAdd(aLinha, { "C1_YDTENT",	 CTOD("")		  , Nil })
+            aAdd(aLinha, { "C1_YDTCOLE", CTOD("")         , Nil })
+            aAdd(aLinha, { "C1_YUSUENT", ""               , Nil })
 
             //aLinha := aClone(::Ordem(aLinha))
 

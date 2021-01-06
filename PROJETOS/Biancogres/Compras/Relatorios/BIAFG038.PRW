@@ -457,11 +457,15 @@ Static Function fGetSolM()
 	Local _cAlias	
 	Local _cEmpFil	:=	cEmpAnt+cFilAnt
 	
+	Local cBizagi	:= U_fGetBase("2") 
+	Local cTbBZSC	:= "% "+cBizagi+".dbo.[BZ_DADOS_SC] %"
+	
+	
 	If !Empty(SC7->C7_NUMSC)
 		_cAlias	:=	GetNextAlias()
 		BeginSql Alias _cAlias
 			SELECT MAX(EMAIL) EMAIL
-			FROM ZEUS.BIZAGIPRD.dbo.[BZ_DADOS_SC]
+			FROM %Exp:cTbBZSC%
 			WHERE PROTHEUS = %EXP:SC7->C7_NUMSC%
 				AND EMPRESA = %Exp:_cEmpFil%
 		EndSql

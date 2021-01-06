@@ -227,9 +227,10 @@ Static Function fQryDados()
 Return
 
 Static Function MontaQry(_cDataDe, _cDataAte, _cTipoAnomalia)
-	cSql := ""                                                              
+	cBizagi	 := U_fGetBase("2") 
 	
-	cSql += "EXEC ZEUS.BIZAGIPRD.dbo.BIANCOGRES_COMPRAS_ANOMALIAS " + _cTipoAnomalia + ", '" + _cDataDe + "', '" + _cDataAte + "'" + Enter
+	cSql := ""                                                              
+	cSql += "EXEC "+cBizagi+".dbo.BIANCOGRES_COMPRAS_ANOMALIAS " + _cTipoAnomalia + ", '" + _cDataDe + "', '" + _cDataAte + "'" + Enter
 Return
 
 //Gera parametros

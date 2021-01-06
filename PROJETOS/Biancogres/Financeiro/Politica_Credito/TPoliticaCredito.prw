@@ -318,7 +318,7 @@ Method UpdStatus(cStatus) Class TPoliticaCredito
 					
 			ZM0->ZM0_STATUS := cStatus
 		
-			If cStatus == "3"
+			If cStatus $ "3/4"
 		
 				ZM0->ZM0_DATFIM := ::dData
 				ZM0->ZM0_HORFIN := Time()

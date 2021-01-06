@@ -27,10 +27,6 @@ User Function BIAF167()
 
   Private lMsErroAuto    := .F.
 
-  If Select("SX6") <= 0
-    RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
-  EndIf
-
   if UDiaUtil() //Pegando e comparando ultimo dia util do mes
 
     // PEGANDO TODAS AS CONTAS DO BANCO DO BRASIL PARA EXECUTAR EM QUAIS DELEAS POSSUI TARIFAS
@@ -153,4 +149,4 @@ Static Function UDiaUtil()
 
   RestArea(aArea)
 
-Return .T. //lDiaD
+Return lDiaD

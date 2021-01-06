@@ -964,7 +964,10 @@ Static Function fCriaTemp()
 	_cSql	+=	"	                                                              AND SB1.B1_CONTRAT <> 'S'	"+CRLF
 	_cSql	+=	"	                                                              AND SB1.D_E_L_E_T_ = ' '	"+CRLF
 	_cSql	+=	"	                      WHERE     SC7.C7_FILIAL = " +ValtoSql(xFilial("SC7"))+ "	"+CRLF
-	_cSql	+=	"	                                AND SC7.C7_YDTNECE BETWEEN " + ValtoSql(_dIniHist) + " AND " +ValtoSql(dDataRef) + "	"+CRLF
+	
+	//_cSql	+=	"	                                AND SC7.C7_YDTNECE BETWEEN " + ValtoSql(_dIniHist) + " AND " +ValtoSql(dDataRef) + "	"+CRLF
+	_cSql	+=	"	                                AND SC7.C7_YDATCHE BETWEEN " + ValtoSql(_dIniHist) + " AND " +ValtoSql(dDataRef) + "	"+CRLF
+	
 	_cSql	+=	"	                                AND SC7.C7_RESIDUO = ' '	"+CRLF
 	_cSql	+=	"	                                AND SC7.C7_QUANT - SC7.C7_QUJE <> 0	"+CRLF
 	_cSql	+=	"	                                AND SC7.C7_LOCAL IN "+ _cInLocal +" "+CRLF	
@@ -1093,7 +1096,11 @@ Static Function fCriaTemp()
 	_cSql	+=	"	                                SC7.C7_PRODUTO PRODATU ,	"+CRLF
 	_cSql	+=	"	                                SB1.B1_YCODCOM VIGENTE ,	"+CRLF
 	_cSql	+=	"	                                SC7.C7_LOCAL XLOCAL ,	"+CRLF
-	_cSql	+=	"	                                SC7.C7_YDTNECE DTREF ,	"+CRLF
+	
+	//Solicitação Ticket 28921 - Pablo S Nascimento 04/01/2021
+	//_cSql	+=	"	                                SC7.C7_YDTNECE DTREF ,	"+CRLF
+	_cSql	+=	"	                                SC7.C7_YDATCHE DTREF ,	"+CRLF
+	
 	_cSql	+=	"	                                SC7.C7_NUM DOCREF ,	"+CRLF
 	_cSql	+=	"	                                SUM(SC7.C7_QUANT - SC7.C7_QUJE) QUANT	"+CRLF
 	_cSql	+=	"	                      FROM      "+ RETSQLNAME('SC7') + " SC7 ( NOLOCK )	"+CRLF
@@ -1112,7 +1119,11 @@ Static Function fCriaTemp()
 	_cSql	+=	"	                                                              AND SB1.B1_CONTRAT <> 'S'	"+CRLF
 	_cSql	+=	"	                                                              AND SB1.D_E_L_E_T_ = ' '	"+CRLF
 	_cSql	+=	"	                      WHERE     SC7.C7_FILIAL = " +ValtoSql(xFilial("SC7"))+ "	"+CRLF
-	_cSql	+=	"	                                AND SC7.C7_YDTNECE BETWEEN "+ValToSql(_dIniSem1)+" AND "+ValToSql(_dFimHist)+"	"+CRLF
+	
+	//Solicitação Ticket 28921 - Pablo S Nascimento 04/01/2021
+	//_cSql	+=	"	                                AND SC7.C7_YDTNECE BETWEEN "+ValToSql(_dIniSem1)+" AND "+ValToSql(_dFimHist)+"	"+CRLF
+	_cSql	+=	"	                                AND SC7.C7_YDATCHE BETWEEN "+ValToSql(_dIniSem1)+" AND "+ValToSql(_dFimHist)+"	"+CRLF
+	
 	_cSql	+=	"	                                AND SC7.C7_RESIDUO = ' '	"+CRLF
 	_cSql	+=	"	                                AND SC7.C7_LOCAL IN "+ _cInLocal +" "+CRLF
 	_cSql	+=	"	                                AND SC7.C7_QUANT - SC7.C7_QUJE <> 0	"+CRLF
@@ -1120,7 +1131,11 @@ Static Function fCriaTemp()
 	_cSql	+=	"	                      GROUP BY  SC7.C7_PRODUTO ,	"+CRLF
 	_cSql	+=	"	                                SB1.B1_YCODCOM ,	"+CRLF
 	_cSql	+=	"	                                SC7.C7_LOCAL ,	"+CRLF
-	_cSql	+=	"	                                SC7.C7_YDTNECE ,	"+CRLF
+	
+	//Solicitação Ticket 28921 - Pablo S Nascimento 04/01/2021
+	//_cSql	+=	"	                                SC7.C7_YDTNECE ,	"+CRLF
+	_cSql	+=	"	                                SC7.C7_YDATCHE ,	"+CRLF
+	
 	_cSql	+=	"	                                SC7.C7_NUM	"+CRLF
 	_cSql	+=	"	                      UNION ALL	"+CRLF
 	_cSql	+=	"	                      SELECT * FROM (SELECT    'A7-D4ATU' ORIG ,	"+CRLF

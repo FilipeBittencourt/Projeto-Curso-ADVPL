@@ -29,6 +29,8 @@ Static Function RptDetail()
 	aBitmap  := "LOGOPRI"+cEmpAnt+".BMP"
 	fCabec   := "Análise MRP"
 
+	cBizagi	 := U_fGetBase("2")
+
 	wnPag    := 0
 	nRow1    := 0
 
@@ -46,7 +48,7 @@ Static Function RptDetail()
 	IncProc("Armazenando....   Tempo: "+cTempo)
 
 	A0001 := " WITH DADOSBIZAGI AS (SELECT *
-	A0001 += "                        FROM ZEUS.BIZAGIPRD.dbo.DADOS_RECEBIMENTO_MATERIAL
+	A0001 += "                        FROM "+cBizagi+".dbo.DADOS_RECEBIMENTO_MATERIAL
 	A0001 += "                       WHERE Empresa = '"+cEmpAnt+"')
 	A0001 += " SELECT B1_COD COD_COMP,
 	A0001 += "        SUBSTRING(B1_DESC,1,100) DESC_COMP,

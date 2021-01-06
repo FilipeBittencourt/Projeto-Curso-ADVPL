@@ -7431,3 +7431,46 @@ User Function fUpdSC63()
 
 
 Return()
+
+
+/*/{Protheus.doc} fValDEV
+@description Funcao para validar se a rotina esta em ambiente de DESENVOVIMENTO
+@author Ranisses A. Corona
+@since 09/12/2020
+@version undefined
+@history 02/05/2019, Ranisses A. Corona, Criacao da funcao de validaçao
+@type function
+/*/
+User Function fValDEV()
+Local lDev		 := .F.
+Local cServerIP	 := getServerIP()
+Local cEnvServer := upper(getEnvServer())
+ 
+lDev:=((cServerIP=="192.168.20.18") .or. ("DEV"$cEnvServer))
+
+Return(lDev)
+
+
+/*/{Protheus.doc} fGetBase
+@description Funcao para retonar a database de acordo com o ambiente
+@author Ranisses A. Corona
+@since 09/12/2020
+@version undefined
+@history 02/05/2019, Ranisses A. Corona, Criacao da funcao de validaçao
+@type function
+/*/
+User Function fGetBase(xSistema)
+Local cBase		 := ""
+Local cSistema	 := xSistema //1-Protheus 2-Bizagi
+Local cServerIP	 := getServerIP()
+Local cEnvServer := upper(getEnvServer())
+ 
+If ((cServerIP=="192.168.20.18") .Or. ("DEV"$cEnvServer))
+	cBase := Iif(cSistema=="1","DADOSADV","BIZAGIHOM")
+ElseIf ((cServerIP=="192.168.20.18") .Or. ("HOM"$cEnvServer))
+	cBase := Iif(cSistema=="1","DADOSADV","BIZAGIHOM")
+Else
+	cBase := Iif(cSistema=="1","DADOSADV","BIZAGIPRD")
+EndI
+
+Return(cBase)

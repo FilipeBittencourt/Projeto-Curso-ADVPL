@@ -529,31 +529,34 @@ Static Function ChkLotPrc()
 
 					//Verificar se pode atender o pedido  (engenharis / lote restriro / outros...)
 					oEmpPed:cCliLjOri	:= (cTRB2)->C6_CLI+(cTRB2)->C6_LOJA
-					oEmpPed:cProduto 	:= (cTRB2)->C6_PRODUTO
-					oEmpPed:Pedido		:= (cTRB2)->C6_NUM 
-					oEmpPed:Item		:= (cTRB2)->C6_ITEM
-					oEmpPed:Quantidade	:= (cTRB2)->SALDO
-					oEmpPed:Lote		:= aWB1[I][_NP1_LOTE]
+					oEmpPed:cProduto := (cTRB2)->C6_PRODUTO
+					oEmpPed:Pedido := (cTRB2)->C6_NUM 
+					oEmpPed:Item := (cTRB2)->C6_ITEM
+					oEmpPed:Quantidade := (cTRB2)->SALDO
+					oEmpPed:Lote := aWB1[I][_NP1_LOTE]
 
-					If !( oEmpPed:ChkAtendimento() )
+					If !(oEmpPed:ChkAtendimento())
 
 						aWB2[_nPos2][_NP2_ERRO] := oEmpPed:cRegraNAtend
 
 						(cTRB2)->(DbSkip())
+						
 						loop
+						
 					EndIf
 
 					//saldo do pedido
 					_nSalPed := (cTRB2)->SALDO  
 
-					//saldo pendente do cliente
-					_nSldAtCli := 0
+					//saldo pendente do cliente		
+					/*_nSldAtCli := 0
 					_nPX := aScan(aSldCli, {|x| x[1] == (cTRB2)->C6_CLI+(cTRB2)->C6_LOJA})
+					
 					If _nPX > 0
 						_nSldAtCli := aSldCli[_nPX][2]
 					EndIf
 					_nSldPendCli := ((cTRB2)->SLDCLI - _nSldAtCli)
-
+					*/
 
 					If !(_nSalTot >= _nSalPed) 
 
@@ -563,31 +566,35 @@ Static Function ChkLotPrc()
 
 						aWB2[_nPos2][_NP2_ERRO] := "GERANDO PONTA"
 
-					ElseIf ( (_nSalTot < _nSldPendCli) .Or. ( (_nSalTot - _nSldPendCli) > 0 .And. (_nSalTot - _nSldPendCli) < nQtdPal   ) )
+					/*ElseIf ( (_nSalTot < _nSldPendCli) .Or. ( (_nSalTot - _nSldPendCli) > 0 .And. (_nSalTot - _nSldPendCli) < nQtdPal   ) )
 
 						aWB2[_nPos2][_NP2_ERRO] := "SALDO NÃO ATENDE PEDIDOS DO CLIENTE"
-
+					*/
 					Else 
 
 						RecLock(cTRB2,.F.)
-						(cTRB2)->C6_LOTECTL 	:= aWB1[I][_NP1_LOTE]
+						
+						(cTRB2)->C6_LOTECTL := aWB1[I][_NP1_LOTE]
 						(cTRB2)->(MsUnlock())
 
 						//controle de saldo total do cliente
-						_nPX := aScan(aSldCli, {|x| x[1] == (cTRB2)->C6_CLI+(cTRB2)->C6_LOJA})
+						/*_nPX := aScan(aSldCli, {|x| x[1] == (cTRB2)->C6_CLI+(cTRB2)->C6_LOJA})
+						
 						If _nPX > 0
 							aSldCli[_nPX][2] += _nSalPed
 						Else
 							AAdd(aSldCli, {(cTRB2)->C6_CLI+(cTRB2)->C6_LOJA, _nSalPed})
 						EndIf
-
+						*/
+						
 						aWB2[_nPos2][_NP2_LOTE] := aWB1[I][_NP1_LOTE]
 						aWB2[_nPos2][_NP2_ERRO] := ""
 
 						_nSalTot -= _nSalPed 	
 
 					EndIf
-				else                      
+					
+				Else                      
 
 					//limpa o lote no caso de desmarcacao
 					if !aWB2[_nPos2][_NP2_MARCA]
@@ -603,6 +610,7 @@ Static Function ChkLotPrc()
 				endif
 
 				(cTRB2)->(DbSkip())
+				
 			EndDo
 
 		EndIf

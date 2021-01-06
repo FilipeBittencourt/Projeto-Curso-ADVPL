@@ -21,6 +21,12 @@ User Function MC050TREE()
 	Local _cAliasSB6	:=	GetNextAlias()
 	Local _cAliasBIZ	:=	GetNextAlias()
 	Local _nPos
+	
+	
+	Local cBizagi	:= U_fGetBase("2") 
+	Local TbPreReq	:= "% "+cBizagi+".dbo.PreRequisicao %"
+	Local TbPrdReq	:= "% "+cBizagi+".dbo.ProdutosPreRequisitados %"
+	Local TbVWBZPRD	:= "% "+cBizagi+".dbo.VW_BZ_PRODUTO_EK %" 
 
 	PUBLIC oTreeX 	:= PARAMIXB[1]  
 	PUBLIC aTotaisX := {{0,0},{0,0},{0,0}}
@@ -123,9 +129,9 @@ User Function MC050TREE()
 			,ROW_NUMBER() OVER (
 				ORDER BY p.Documento
 				) SEQ
-		FROM ZEUS.BIZAGIPRD.dbo.PreRequisicao p
-		INNER JOIN ZEUS.BIZAGIPRD.dbo.ProdutosPreRequisitados prd ON prd.PreRequisicao = p.idPreRequisicao
-		INNER JOIN ZEUS.BIZAGIPRD.dbo.VW_BZ_PRODUTO_EK ek ON ek.idVW_BZ_PRODUTO = prd.Produto
+		FROM %Exp:TbPreReq% p
+		INNER JOIN %Exp:TbPrdReq% prd ON prd.PreRequisicao = p.idPreRequisicao
+		INNER JOIN %Exp:TbVWBZPRD% ek ON ek.idVW_BZ_PRODUTO = prd.Produto
 		WHERE p.Avaliadopor IS NULL
 			AND p.DocumentoProthues IS NULL
 			AND p.DatadaRejeicao IS NULL

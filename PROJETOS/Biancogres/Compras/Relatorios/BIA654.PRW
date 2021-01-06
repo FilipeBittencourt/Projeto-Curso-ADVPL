@@ -187,8 +187,10 @@ Static Function fQryDados()
 Return
 
 Static Function MontaQry(_cDataDe, _cDataAte, _cTipoData)
-	cSql := ""                                                              
+
+	cBizagi	:= U_fGetBase("2") 
 	
+	cSql := ""                                                              
 	cSql += "" + Enter
 	
 	cSql += "SELECT 'BIANCOGRES' AS EMPRESA" + Enter
@@ -302,7 +304,7 @@ Static Function MontaQry(_cDataDe, _cDataAte, _cTipoData)
 	cSql += "	, SC_APROV AS SC_APROV" + Enter
 	cSql += "	, SC_ATIV AS SC_ATIV" + Enter
 	cSql += "	, ARMAZEM collate Latin1_General_BIN AS ALMOX" + Enter
-	cSql += "FROM ZEUS.BIZAGIPRD.dbo.VW_SC_ABERTA" + Enter
+	cSql += "FROM "+cBizagi+".dbo.VW_SC_ABERTA" + Enter
 	If _cTipoData == "E"
 		cSql += "WHERE SC_DT_EMIS BETWEEN '" + _cDataDe + "' AND '" + _cDataAte + "'" + Enter
 	EndIf

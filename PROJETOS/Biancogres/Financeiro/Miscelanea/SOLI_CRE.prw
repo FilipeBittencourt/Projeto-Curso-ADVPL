@@ -187,7 +187,13 @@ Static Function uNOVO(nCli,nPed,nVlr,nVrObra,nCndPag,ChvTmp)
 		cNClient	:= nCli
 		cNClient1	:= Posicione("SA1",1,xFilial("SA1")+nCli,"A1_NOME")    
 		cNPEDIDO	:= nPed
-		cNVALOR		:= nVlr
+		
+		if(( ROUND(nVlr, 2) - nVlr) < 0) //para arredondar valor do pedido de venda e garantir que sempre terá o credito solicitado
+			cNVALOR		:= ROUND(nVlr, 2) + 0.01 
+		else
+			cNVALOR		:= ROUND(nVlr, 2)
+		endif 
+		
 		cNVROBRA  := nVrObra
 		cNCOND		:= nCndPag
 		cNCOND1		:= Posicione("SE4",1,xFilial("SE4")+nCndPag,"E4_DESCRI")
@@ -287,6 +293,9 @@ Static Function uSALVAR(nCli)
 		  	
 		  	MSGBOX("O CAMPO POTENCIAL DA OBRA É OBRIGATÓRIO PARA SEGMENTO ENGENHARIA!","INFO","INFO")
 			RETURN
+		Elseif (!EMPTY(ALLTRIM(STR(cNVROBRA))) .AND. ALLTRIM(STR(cNVROBRA)) != "0") .AND. ALLTRIM(SA1->A1_YTPSEG) != "E"
+		 	MSGBOX("O CAMPO POTENCIAL DA OBRA É APENAS PARA SEGMENTO ENGENHARIA!","INFO","INFO")
+		 	cNVROBRA := 0.00
 		EndIf
 		
 		SA1->(DbCloseArea())
@@ -527,10 +536,10 @@ Static Function uDetalhes()
 	oCheckPed:Disable()
 
 	@ 095,010	SAY "VALOR SOLICITADO:  "
-	@ 095,100 GET cNVALOR SIZE 50,14 PICT "@E"
+	@ 095,100 GET cNVALOR SIZE 50,14 PICT "@E 999,999,999.99"
 
 	@ 110,010	SAY "POTENCIAL DA OBRA:  "
-	@ 110,100 GET cNVROBRA SIZE 50,12 PICT "@E"		     
+	@ 110,100 GET cNVROBRA SIZE 50,12 PICT "@E 9,999,999.99"		     
 
 	@ 130,010	SAY "CONDIÇÃO DE PAGAMENTO:  "
 	@ 130,100 	GET cNCOND  SIZE 35,10 F3 "ZU2" PICT "@!R" WHEN .F.

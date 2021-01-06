@@ -283,8 +283,10 @@ Method _UpdateVenc() Class TFaturaPagar
 		cQuery	+= " AND E2_PREFIXO	= '"+cValToChar(::_oFatPagStruct:cPrefixo)+"'				"
 		cQuery	+= " AND E2_TIPO	= '"+cValToChar(::_oFatPagStruct:cTipo)+"'					"
 		cQuery	+= " AND E2_PARCELA	= 'A'														"
+		cQuery	+= " AND E2_FILIAL	= '"+xFilial('SE2')+"'										"
 		cQuery	+= " AND D_E_L_E_T_	= ''														"
 		cQuery	+= " ORDER BY R_E_C_N_O_ DESC													"
+	
 	
 	Else
 		
@@ -295,6 +297,7 @@ Method _UpdateVenc() Class TFaturaPagar
 		cQuery	+= " AND E2_PREFIXO	= '"+cValToChar(::_oFatPagStruct:cPrefixo)+"'				"
 		cQuery	+= " AND E2_TIPO	= '"+cValToChar(::_oFatPagStruct:cTipo)+"'					"
 		cQuery	+= " AND E2_PARCELA	= 'A'														"
+		cQuery	+= " AND E2_FILIAL	= '"+xFilial('SE2')+"'										"
 		cQuery	+= " AND D_E_L_E_T_	= ''														"
 		cQuery	+= " ORDER BY R_E_C_N_O_ DESC													"
 		
@@ -354,6 +357,7 @@ Method _ExecBaixaDesc() Class TFaturaPagar
 	cQuery	+= " AND E2_PREFIXO	= '"+cValToChar(::_oFatPagStruct:cPrefixo)+"'				"
 	cQuery	+= " AND E2_TIPO	= '"+cValToChar(::_oFatPagStruct:cTipo)+"'					"
 	cQuery	+= " AND E2_PARCELA	= 'A'														"
+	cQuery	+= " AND E2_FILIAL	= '"+xFilial('SE2')+"'										"
 	cQuery	+= " AND D_E_L_E_T_	= ''														"
 	cQuery	+= " ORDER BY R_E_C_N_O_ DESC													"
 

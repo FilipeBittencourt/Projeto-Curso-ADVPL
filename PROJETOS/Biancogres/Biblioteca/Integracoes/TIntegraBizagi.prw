@@ -211,6 +211,7 @@ Method AprvNFS(cChaveF1,cEntrega,cChvNF) Class TIntegraBizagi
 	Local cLstRecno := ""
 	Local lRetBz
 	Local cXmlRetorno := ""
+	Local cBizagi	:= U_fGetBase("2")
 
 	Local aAreaF1 := SF1->(GetArea())
 	Local aAreaD1 := SD1->(GetArea())
@@ -281,7 +282,7 @@ Method AprvNFS(cChaveF1,cEntrega,cChvNF) Class TIntegraBizagi
 						ZP003 += ", APROVADOR "
 						ZP003 += ", NOME_APROVADOR "
 						ZP003 += ", EMAIL_APROVADOR "
-						ZP003 += "FROM ZEUS.BIZAGIPRD.dbo.VW_SC_SOL_APRV "
+						ZP003 += "FROM "+cBizagi+".dbo.VW_SC_SOL_APRV "
 						ZP003 += "WHERE BIZAGI = '" + cSCBiz + "' AND PROTHEUS =  '" + cSC + "'"
 						ZPcIndex := CriaTrab(Nil,.f.)
 						dbUseArea(.T.,"TOPCONN",TcGenQry(,,ZP003),'ZP003',.T.,.T.)

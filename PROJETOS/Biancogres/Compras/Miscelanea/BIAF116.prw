@@ -37,6 +37,7 @@ Local cMailSol := ""
 Local aSolCom := {}
 Local nCount := 1
 Local aArea := GetArea()
+Local cBizagi := U_fGetBase("2") 
 
 	If cEmpAnt $ "01/05" .And. SF1->F1_TIPO == "N" .And. nConfirm == 1 .And. (nOpc >= 3 .And. nOpc <= 4)
 	
@@ -52,7 +53,7 @@ Local aArea := GetArea()
 		cSQL += " INNER JOIN "+ RetSQLName("SC1") +" SC1 "
 		cSQL += " ON C7_NUMSC = C1_NUM "
 		cSQL += " AND C7_ITEMSC = C1_ITEM "
-		cSQL += " LEFT JOIN ZEUS.BIZAGIPRD.dbo.BZ_DADOS_SC SC_BIZ " 
+		cSQL += " LEFT JOIN "+cBizagi+".dbo.BZ_DADOS_SC SC_BIZ " 
 		cSQL += " ON BIZAGI COLLATE Latin1_General_BIN = C1_YBIZAGI "
 		cSQL += " AND PROTHEUS COLLATE Latin1_General_BIN = C1_NUM "
 		cSQL += " AND EMPRESA = " + ValToSQL(cEmpAnt + "01")

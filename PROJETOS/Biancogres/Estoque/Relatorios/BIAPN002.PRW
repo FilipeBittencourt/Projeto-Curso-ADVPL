@@ -18,6 +18,8 @@ User Function BIAPN002()
 	Local cSQL := ""
 	Local cQry := "cQry"
 	Local oExcel := nil
+	Local cBizagi := U_fGetBase("2") 
+	
 	private aPergs := {}
 	
 	//RpcSetType(3)
@@ -62,18 +64,18 @@ User Function BIAPN002()
 	cSQL += "       UPPER(UA.Matricula) AS MATRICULAAPROV,  																								"	   
 	cSQL += "       ISNULL([Justificativa], '') AS JUSTIFICATIVA, 																							"
 	cSQL += "       [DatadaAprovacao] DATAAPROVACAO																											"
-	cSQL += "FROM ZEUS.BIZAGIPRD.dbo.[PreRequisicao] PR																										"
-	cSQL += "     INNER JOIN ZEUS.BIZAGIPRD.dbo.VW_PVApp P ON P.PreRequisicao = PR.idPreRequisicao															"
-	cSQL += "     INNER JOIN ZEUS.BIZAGIPRD.dbo.VW_WFCASE W ON W.idCase = P.idCase																			"
-	cSQL += "     LEFT JOIN ZEUS.BIZAGIPRD.dbo.[WFUSER] UA ON UA.idUser = PR.Avaliadopor																	"
-	cSQL += "     INNER JOIN ZEUS.BIZAGIPRD.dbo.[ProdutosPreRequisitados] PPR ON PR.idPreRequisicao = PPR.PreRequisicao										"
+	cSQL += "FROM "+cBizagi+".dbo.[PreRequisicao] PR																										"
+	cSQL += "     INNER JOIN "+cBizagi+".dbo.VW_PVApp P ON P.PreRequisicao = PR.idPreRequisicao															"
+	cSQL += "     INNER JOIN "+cBizagi+".dbo.VW_WFCASE W ON W.idCase = P.idCase																			"
+	cSQL += "     LEFT JOIN "+cBizagi+".dbo.[WFUSER] UA ON UA.idUser = PR.Avaliadopor																	"
+	cSQL += "     INNER JOIN "+cBizagi+".dbo.[ProdutosPreRequisitados] PPR ON PR.idPreRequisicao = PPR.PreRequisicao										"
 	cSQL += "     INNER JOIN ( SELECT EK.idVW_BZ_PRODUTO, P.* 																								"
-	cSQL += "				   FROM ZEUS.BIZAGIPRD.dbo.[VW_BZ_PRODUTO] P 																					"
-	cSQL += "				   INNER JOIN ZEUS.BIZAGIPRD.dbo.[VW_BZ_PRODUTO_EK] EK ON EK.Codigo = P.Codigo 													"
+	cSQL += "				   FROM "+cBizagi+".dbo.[VW_BZ_PRODUTO] P 																					"
+	cSQL += "				   INNER JOIN "+cBizagi+".dbo.[VW_BZ_PRODUTO_EK] EK ON EK.Codigo = P.Codigo 													"
 	cSQL += "																   AND EK.Empresa = P.Empresa ) PD ON PD.idVW_BZ_PRODUTO = PPR.Produto			"
 	cSQL += "     INNER JOIN ( SELECT EK.idVW_BZ_PRQREQ,  P.* 																								"
-	cSQL += "				   FROM ZEUS.BIZAGIPRD.dbo.[VW_BZ_PRQREQ] P 																					"
-	cSQL += "				   INNER JOIN ZEUS.BIZAGIPRD.dbo.[VW_BZ_PRQREQ_EK] EK ON EK.Matricula = P.Matricula ) SO ON SO.idVW_BZ_PRQREQ = PR.Matricula	"
+	cSQL += "				   FROM "+cBizagi+".dbo.[VW_BZ_PRQREQ] P 																					"
+	cSQL += "				   INNER JOIN "+cBizagi+".dbo.[VW_BZ_PRQREQ_EK] EK ON EK.Matricula = P.Matricula ) SO ON SO.idVW_BZ_PRQREQ = PR.Matricula	"
 	cSQL += "WHERE PD.Tipo = 'EP'																															"
 	cSQL += "      AND PR.AprovarRequisicao = 1																												"
 	cSQL += "      AND W.idCaseState NOT IN (4)																												"

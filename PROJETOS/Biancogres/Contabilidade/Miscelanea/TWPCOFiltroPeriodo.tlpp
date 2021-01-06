@@ -16,6 +16,7 @@ Class TWPCOFiltroPeriodo From LongClassName
 	Public Data cRevisa
 	Public Data cAnoRef
 	Public Data cMesAno
+	Public Data cTipoRef
 	Public Data dDataFech
 
 	Public Data cName
@@ -42,16 +43,18 @@ Method New() Class TWPCOFiltroPeriodo
 	::cAnoRef := SPACE(TAMSX3("ZBZ_ANOREF")[1])
 	::cMesAno := Space(6)
 	::dDataFech := CTOD("  /  /    ")
+	::cTipoRef	:= ""
 
 Return()
 
-Method Pergunte(lMesAno, lDataFech) Class TWPCOFiltroPeriodo
+Method Pergunte(lMesAno, lDataFech, lTipoRef) Class TWPCOFiltroPeriodo
 
 	Local lRet := .F.
 	Local nTam := 1
 
 	Default lMesAno := .F.
 	Default lDataFech := .F.
+	Default lTipoRef := .F.
 
 	::bConfirm := {|| .T. }
 
@@ -75,6 +78,12 @@ Method Pergunte(lMesAno, lDataFech) Class TWPCOFiltroPeriodo
 
 	EndIf
 
+	If lTipoRef
+
+		aAdd(::aParam, {1, "Tipo Ref.", ::cTipoRef, "@!", ".T.", "", ".T.",,.F.})
+
+	EndIf
+
 	If ParamBox(::aParam, "Operações", ::aParRet, ::bConfirm,,,,,,::cName, .T., .T.)
 
 		lRet := .T.
@@ -92,6 +101,12 @@ Method Pergunte(lMesAno, lDataFech) Class TWPCOFiltroPeriodo
 		If lDataFech
 
 			::dDataFech := ::aParRet[nTam++]
+
+		EndIf
+
+		If lTipoRef
+
+			::cTipoRef := ::aParRet[nTam++]
 
 		EndIf
 

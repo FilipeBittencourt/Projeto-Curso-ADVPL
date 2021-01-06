@@ -125,7 +125,7 @@ User Function BHC01PRC()
 
 				Reclock("ZLC",.T.)
 				ZLC->ZLC_FILIAL	:=	xFilial("ZLC")
-				ZLC->ZLC_CODIGO	:=	GetSxEnum("ZLC","ZLC_CODIGO")
+				ZLC->ZLC_CODIGO	:=	fGetCod()
 				ZLC->ZLC_MAT	:=	(_cAliasZlC)->ZLB_MATRES
 				ZLC->ZLC_TIPO	:=	_cTipo
 				ZLC->ZLC_DATREF	:=	_dDataRef
@@ -168,3 +168,21 @@ User Function JBHC0001()
 	STARTJOB("U_BHC0001",GetEnvServer(),.F.,cEmpAnt,cFilAnt)
 
 Return
+
+Static Function fGetCod()
+
+	Local _aArea	:=	GetArea()	
+	Local _cAlias	:=	GetNextAlias()
+	Local _cCod		:=	""
+
+	BeginSql Alias _cAlias
+		%NoParser%
+		SELECT ISNULL(MAX(ZLC_CODIGO),"000000") COD
+		FROM %TABLE:ZLC% ZLC
+		WHERE %NotDel%
+	EndSql
+	
+	_cCod	:=	SOMA1((_cAlias)->COD) 
+
+	RestArea(_aArea)
+Return _cCod

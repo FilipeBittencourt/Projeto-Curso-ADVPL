@@ -4,14 +4,28 @@
 
 User Function PFAF0001()
 	
-	Local aList	:= {}
-	Local nI	:= 0
+	Local aList			:= {}
+	Local nI			:= 0
+	Local aArea 		:= Nil
+	Local aListFilial	:= {}
 	
 	SetFunName('RPC')
 	
 	RpcSetEnv("01", "01")
-		aList    := U_BAGtEmpr("01_06_13")
+		aArea 		:= GetArea()
+		If ( select("SM0") == 0 )
+			OpenSM0()
+		EndIf
+		
+		aListFilial	:=	FWLoadSM0()
+		For nI := 1 to Len(aListFilial)
+			If (aListFilial[nI, 1] $ "01_06_13_14")
+				Aadd(aList, {aListFilial[nI, 1], aListFilial[nI, 2]})
+			EndIf
+		Next nI
+		RestArea( aArea )
 	RpcClearEnv()
+	
 	
 	Conout("PFAF0001 => Antecipação Fornecedor: ")
 		

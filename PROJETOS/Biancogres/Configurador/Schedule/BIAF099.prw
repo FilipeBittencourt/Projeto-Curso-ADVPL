@@ -59,9 +59,12 @@ Local aSolCom := {}
 Local nCount := 1
 Local cHtml := ""
 Local cItem := ""			
+Local cBizagi := ""
 	
 	RpcSetType(3)
 	RpcSetEnv("01", "01")
+
+	cBizagi := U_fGetBase("2") 	
 		
 	cSQL := " SELECT * "
 	cSQL += " FROM ( "
@@ -102,7 +105,7 @@ Local cItem := ""
 	cSQL += " 	ON C7_FILIAL = C1_FILIAL "
 	cSQL += " 	AND C7_NUM = C1_PEDIDO "
 	cSQL += " 	AND C7_ITEM = C1_ITEMPED "
-	cSQL += " 	LEFT JOIN ZEUS.BIZAGIPRD.dbo.BZ_DADOS_SC SC_BIZ "
+	cSQL += " 	LEFT JOIN "+cBizagi+".dbo.BZ_DADOS_SC SC_BIZ "
 	cSQL += " 	ON BIZAGI COLLATE Latin1_General_BIN = C1_YBIZAGI "
 	cSQL += " 	AND PROTHEUS COLLATE Latin1_General_BIN = C1_NUM "
 	cSQL += " 	AND EMPRESA = '0101' "
@@ -151,7 +154,7 @@ Local cItem := ""
 	cSQL += " 	ON C7_FILIAL = C1_FILIAL "
 	cSQL += " 	AND C7_NUM = C1_PEDIDO "
 	cSQL += " 	AND C7_ITEM = C1_ITEMPED "
-	cSQL += " 	LEFT JOIN ZEUS.BIZAGIPRD.dbo.BZ_DADOS_SC SC_BIZ "
+	cSQL += " 	LEFT JOIN "+cBizagi+".dbo.BZ_DADOS_SC SC_BIZ "
 	cSQL += " 	ON BIZAGI COLLATE Latin1_General_BIN = C1_YBIZAGI "
 	cSQL += " 	AND PROTHEUS COLLATE Latin1_General_BIN = C1_NUM "
 	cSQL += " 	AND EMPRESA = '0501' "

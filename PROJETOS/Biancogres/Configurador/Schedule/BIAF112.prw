@@ -16,13 +16,16 @@ Local cQry := GetNextAlias()
 Local cMailApr := ""
 Local cHtml := ""
 Local cItem := ""			
+Local cBizagi := ""
 	
 	RpcSetType(3)
 	RpcSetEnv("01", "01")
+	
+	cBizagi := U_fGetBase("2") 	
 		
 	cSQL := " SELECT CASE WHEN EMP = '01' THEN 'Biancogres' ELSE 'Incesa' END AS EMP, PROCE AS SC_NUM, SC_SOLIC, SC_DT_EMIS, " 
 	cSQL += " SC_ITEM, PRODUTO AS SC_PROD, SC_APROV, SC_APROV_EMAIL "
-	cSQL += " FROM ZEUS.BIZAGIPRD.dbo.VW_SC_ABERTA "
+	cSQL += " FROM "+cBizagi+".dbo.VW_SC_ABERTA "
 	cSQL += " WHERE SC_NM_ATIV = 'AprovarSolicitacaodeCompra' "
 	cSQL += " ORDER BY SC_APROV_EMAIL, EMP, SC_DT_EMIS, PROCE, SC_ITEM "
 	

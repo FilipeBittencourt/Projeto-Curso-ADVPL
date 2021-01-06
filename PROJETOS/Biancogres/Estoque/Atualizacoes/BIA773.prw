@@ -849,7 +849,7 @@ User Function B773PZG()
 	zjMens += 'Você está prestes a atualizar o PRAZO DE ENTREGA.' + smEnter
 	zjMens += 'Abaixo os passos efetuados:' + smEnter
 	zjMens += ' ' + smEnter
-	zjMens += ' Política = 1' + smEnter
+	zjMens += ' Política = 1/4/6' + smEnter
 	zjMens += ' - Zerar o campo ZCN_PE conforme set de filtro;' + smEnter
 	zjMens += ' - Recalcular e gravar o campo ZCN_PE conforme critério definido;' + smEnter
 	zjMens += ' - Verificar se algum produto do set de filtro ficou sem prazo de entrega e gravar o conteúdo 1 (um).' + smEnter
@@ -872,7 +872,7 @@ User Function B773PZG()
 			Return
 		EndIf
 
-		If MV_PAR01 == "1"
+		If MV_PAR01 $ "1/4/6"
 
 			UP001 := " UPDATE ZCN SET ZCN_PE = 0 "
 			UP001 += "   FROM " + RetSqlName("ZCN") + " ZCN "
@@ -881,7 +881,7 @@ User Function B773PZG()
 			UP001 += "                                      AND SB1.B1_GRUPO BETWEEN '" + MV_PAR02 + "' AND '" + MV_PAR03 + "' "
 			UP001 += "                                      AND SB1.D_E_L_E_T_ = ' ' "
 			UP001 += "  WHERE ZCN.ZCN_FILIAL = '" + xFilial("ZCN") + "' "
-			UP001 += "    AND ZCN.ZCN_POLIT = '1' "
+			UP001 += "    AND ZCN.ZCN_POLIT = " + ValtoSql(MV_PAR01) + " "
 			UP001 += "    AND ZCN.D_E_L_E_T_ = ' ' "
 			U_BIAMsgRun("Aguarde... Preparando base para atualização!!!",,{|| TcSqlExec(UP001) })
 
@@ -942,7 +942,7 @@ User Function B773PZG()
 			UP002 += "  INNER JOIN " + RetSqlName("ZCN") + " ZCN ON ZCN_FILIAL = '" + xFilial("ZCN") + "' "
 			UP002 += "                       AND ZCN.ZCN_COD = D1_COD "
 			UP002 += "                       AND ZCN.ZCN_LOCAL = D1_LOCAL "
-			UP002 += "                       AND ZCN.ZCN_POLIT = '1' "
+			UP002 += "                       AND ZCN.ZCN_POLIT = " + ValtoSql(MV_PAR01) + " "
 			UP002 += "                       AND ZCN.D_E_L_E_T_ = ' ' "
 			U_BIAMsgRun("Aguarde... Atualizando ZCN_PE!!!",,{|| TcSqlExec(UP002) })
 
@@ -954,10 +954,10 @@ User Function B773PZG()
 			UP003 += "                                      AND SB1.B1_MSBLQL <> '1' "
 			UP003 += "                                      AND SB1.D_E_L_E_T_ = ' ' "
 			UP003 += "  WHERE ZCN.ZCN_FILIAL = '" + xFilial("ZCN") + "' "
-			UP003 += "    AND ZCN.ZCN_POLIT = '1' "
+			UP003 += "    AND ZCN.ZCN_POLIT = " + ValtoSql(MV_PAR01) + " "
 			UP003 += "    AND ZCN.ZCN_PE = 0 "
 			UP003 += "    AND ZCN.D_E_L_E_T_ = ' ' "
-			U_BIAMsgRun("Aguarde... Completando ZCN_P8PE, quando prazo ZERO!!!",,{|| TcSqlExec(UP003) })
+			U_BIAMsgRun("Aguarde... Completando ZCN_PE, quando prazo ZERO!!!",,{|| TcSqlExec(UP003) })
 
 			B773LOGPRC("1")
 

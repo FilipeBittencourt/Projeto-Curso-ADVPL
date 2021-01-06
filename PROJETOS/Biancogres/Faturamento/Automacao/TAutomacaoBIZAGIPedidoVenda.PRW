@@ -126,7 +126,7 @@ Method _CriarPedido(cString) Class TAutomacaoBIZAGIPedidoVenda
 	oPVStruct:Transportadora	:= AllTrim(cTrans)
 	oPVStruct:Conf				:= 'S'
 	oPVStruct:Hora				:= Substr(Time(), 1, 5)
-	oPVStruct:Obs				:= cObs
+	oPVStruct:Obs				:= U_fDelTab(cObs)
 	
 	
 	//oPVStruct:TipoSaida		:= cTipoSai

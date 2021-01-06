@@ -81,7 +81,7 @@ Static Function ReportPrint( oReport )
 	CSQL += " C2_YQTRTFC, "+CRLF
 	CSQL += " C2_QUJE, "+CRLF
 	CSQL += " RESERVADA = isnull((select sum(PZ0_QUANT) from "+RetSQLName("PZ0")+" PZ0 where PZ0_FILIAL = C2_FILIAL and PZ0_OPNUM = C2_NUM  "+CRLF
-	CSQL += " 				and PZ0_OPITEM = C2_ITEM and PZ0_OPSEQ = C2_SEQUEN and PZ0_STATUS = 'P' and PZ0.D_E_L_E_T_=''),0), "+CRLF
+	CSQL += " 				and PZ0_OPITEM = C2_ITEM and PZ0_OPSEQ = C2_SEQUEN and PZ0.D_E_L_E_T_=''),0), "+CRLF
 	CSQL += " TOT_DISPO_VENDA = ROUND([dbo].[FNC_ROP_CALC_SALDO_OP_"+AllTrim(CEMPANT)+"](SC2.C2_FILIAL,SC2.C2_NUM,SC2.C2_ITEM,SC2.C2_SEQUEN,'','',0),2) "+CRLF
 	CSQL += " FROM "+RetSQLName("SC2")+" SC2 (nolock) "+CRLF
 	CSQL += " JOIN "+RetSQLName("SB1")+" SB1 (nolock) ON B1_COD = C2_PRODUTO "+CRLF

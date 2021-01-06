@@ -493,20 +493,33 @@ User Function FRGERADM(_cPedido)
 	Local aAreaB1 := SB1->(GetArea())
 	Local aAreaZ7 := ZZ7->(GetArea())
 
+	/*
 	SC6->(DbSetOrder(1))
 	If SC6->(DbSeek(XFilial("SC6")+_cPedido))
-
 		SB1->(DbSetOrder(1))
 		IF SB1->(DbSeek(XFilial("SB1")+SC6->C6_PRODUTO)) .And. !Empty(SB1->B1_YEMPEST)
-
 			cEmpPed := SubStr(SB1->B1_YEMPEST,1,2) 
-
 		ENDIF
-
 	EndIf
-
 	aIdGAdm := StrToKArr(AllTrim(GetNewPar("FA_RGADM"+AllTrim(cEmpPed),"")),";")
+	*/
 
+	SC6->(DbSetOrder(1))
+	If SC6->(DbSeek(XFilial("SC6")+_cPedido))
+	
+		SB1->(DbSetOrder(1))
+		SB1->(DbSeek(XFilial("SB1")+SC6->C6_PRODUTO))
+		
+		ZZ7->(DbSetOrder(1))
+		If ZZ7->(DbSeek(XFilial("ZZ7")+SB1->B1_YLINHA+SB1->B1_YLINSEQ))
+			If Alltrim(ZZ7->ZZ7_EMP) == "1302"
+				aIdGAdm := StrToKArr(AllTrim(U_GETBIAPAR("FA_RGADM1302",.F.)),";")
+			Else
+				aIdGAdm := StrToKArr(AllTrim(U_GETBIAPAR("FA_RGADMXXXX",.F.)),";")
+			EndIf
+		EndIf
+	EndIf
+	
 	For I := 1 To Len(aIdGAdm)
 
 		PswOrder(2)

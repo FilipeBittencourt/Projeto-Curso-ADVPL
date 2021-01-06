@@ -44,7 +44,7 @@ Return()
 Method SendStage() Class TAFSendStagePortal
 
 	Local nCount
-	Local cDBSERVER := GetNewPar("FA_BPDBSRV","HADES")
+	Local cDBSERVER := If(Upper(AllTrim(GetSrvProfString("DbAlias", ""))) == "PRODUCAO", GetNewPar("FA_BPDBSRV","HADES"), GetNewPar("FA_BPDBSRV","POTHOS")) // Ticket: 29154
 	Local cDBSA 	:= GetNewPar("FA_BPDBASE","BPORTAL_SA")
 	Local cSp := "Sp_BPortal_SetBoleto"
 	Local cSql

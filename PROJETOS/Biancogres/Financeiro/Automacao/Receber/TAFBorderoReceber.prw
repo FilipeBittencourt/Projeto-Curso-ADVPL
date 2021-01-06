@@ -37,12 +37,24 @@ Method New() Class TAFBorderoReceber
 	
 Return()
 
-
 Method Create() Class TAFBorderoReceber
-Local nCount := 1
-Local cKey := ""
-Local bKey := {|nCol| ::oLst:GetItem(nCol):cBanco + ::oLst:GetItem(nCol):cAgencia + ::oLst:GetItem(nCol):cConta }
-	
+
+	static lA6YTPINTB	as logical
+
+	local cBanco		as character
+	local cAgencia		as character
+	local cConta		as character
+
+	Local nCount		as numeric
+	Local cKey			as character
+	Local bKey			as block
+
+	nCount:=1
+	cKey:=""
+	bKey:={|nCol| ::oLst:GetItem(nCol):cBanco + ::oLst:GetItem(nCol):cAgencia + ::oLst:GetItem(nCol):cConta }
+
+	DEFAULT lA6YTPINTB:=SA6->(FieldPos("A6_YTPINTB")>0)
+
 	::oLog:cIDProc := ::cIDProc
 	::oLog:cOperac := "R"
 	::oLog:cMetodo := "I_BOR"
@@ -73,18 +85,22 @@ Local bKey := {|nCol| ::oLst:GetItem(nCol):cBanco + ::oLst:GetItem(nCol):cAgenci
 			 		::oLst:GetItem(nCount):cNumBco := ::GetNumBco(nCount)
 			 		
 			 	EndIf		
-					
+
+				cBanco:=::oLst:GetItem(nCount):cBanco
+				cAgencia:=::oLst:GetItem(nCount):cAgencia
+				cConta:=::oLst:GetItem(nCount):cConta
+
 				DbSelectArea("SE1")
 				SE1->(DbGoTo(::oLst:GetItem(nCount):nRecNo))
 				
 				RecLock("SE1", .F.)
 				
-					SE1->E1_PORTADO := ::oLst:GetItem(nCount):cBanco
-					SE1->E1_AGEDEP := ::oLst:GetItem(nCount):cAgencia
-					SE1->E1_CONTA	:= ::oLst:GetItem(nCount):cConta
+					SE1->E1_PORTADO := cBanco
+					SE1->E1_AGEDEP  := cAgencia
+					SE1->E1_CONTA	:= cConta
 					SE1->E1_SITUACA := ::oLst:GetItem(nCount):cSituacao
-					SE1->E1_NUMBOR := ::oLst:GetItem(nCount):cNumBor					
-					SE1->E1_NUMBCO := ::oLst:GetItem(nCount):cNumBco
+					SE1->E1_NUMBOR  := ::oLst:GetItem(nCount):cNumBor					
+					SE1->E1_NUMBCO  := ::oLst:GetItem(nCount):cNumBco
 					
 					//solicitação Nadine
 					If (AllTrim(::oLst:GetItem(nCount):cBanco) == '021') //apenas banco banestes
@@ -109,8 +125,7 @@ Local bKey := {|nCol| ::oLst:GetItem(nCol):cBanco + ::oLst:GetItem(nCol):cAgenci
 				::oLog:cHrFin := Time()
 				::oLog:cEnvWF := "N"
 				
-				::oLog:Insert()
-				
+				::oLog:Insert()				
 		
 				RecLock("SEA", .T.)
 				
@@ -128,7 +143,15 @@ Local bKey := {|nCol| ::oLst:GetItem(nCol):cBanco + ::oLst:GetItem(nCol):cAgenci
 					SEA->EA_SITUACA := ::oLst:GetItem(nCount):cSituacao
 					
 				SEA->(MsUnlock())
-			
+
+				if (lA6YTPINTB)
+					SA1->(dbSetOrder(retOrder("SA1","A1_FILIAL+A1_COD+A1_LOJA")))
+					if (SA1->(MsSeek(xFilial("SA1")+SE1->E1_CLIENTE+SE1->E1_LOJA)))
+						//Contabilizacao FIDC
+						ctbFIDC(@cBanco,@cAgencia,@cConta)
+					endif
+				endif
+
 			Else
 			
 				::oLog:cIDProc := ::cIDProc
@@ -146,7 +169,7 @@ Local bKey := {|nCol| ::oLst:GetItem(nCol):cBanco + ::oLst:GetItem(nCol):cAgenci
 					
 			nCount++
 			
-		EndDo()
+		EndDo
 					
 	End Transaction
 	
@@ -253,3 +276,113 @@ Method CleanBordero(cBordero, cPrefixo, cNum, cParcela, cTipo) Class TAFBorderoR
 	RestArea(aAreaSEA)
 
 Return()
+
+static function ctbFIDC(cBanco as character,cAgencia as character,cConta as character)
+
+	/* begin variavais contabilizacao*/
+	local aArea		as array
+	local aDiario	as array
+	local aFlagCTB	as array
+
+	local cLote		as character
+	local cFunCTB	as character
+	local cPadrao	as character
+	local cArquivo	as character
+	local cTmpAlias	as character
+
+	local lPadrao	as logical
+	local lDigita	as logical
+	local lDiario	as logical
+	local lUsaFlag	as logical
+
+	local nTotal	as numeric
+	local nHdlPrv	as numeric
+	local nSA6RECNO	as numeric
+	/* end variavais contabilizacao*/
+
+	aArea:=getArea()
+	
+	begin sequence
+
+		cTmpAlias:=getNextAlias()
+		
+		beginSQL alias cTmpAlias
+			SELECT SA6.R_E_C_N_O_ SA6RECNO
+				FROM %table:SA6% SA6
+			WHERE SA6.%notDel%
+				AND SA6.A6_FILIAL=%xFilial:SA6%
+				AND SA6.A6_COD=%exp:cBanco%
+				AND SA6.A6_AGENCIA=%exp:cAgencia%
+				AND SA6.A6_NUMCON=%exp:cConta%
+				AND SA6.A6_YTPINTB='1'
+		endSQL
+
+		nSA6RECNO:=0
+		while (cTmpAlias)->(!eof())
+			nSA6RECNO:=(cTmpAlias)->SA6RECNO
+			if (nSA6RECNO>0)
+				exit
+			endif
+			(cTmpAlias)->(dbSkip())
+		end while
+
+		(cTmpAlias)->(dbCloseArea())
+		
+		restArea(aArea)
+
+		if (empty(nSA6RECNO))
+			break
+		endif
+
+		SA6->(MsGoTo(nSA6RECNO))
+
+		cPadrao:=SuperGetMV("BIA_FIDCLP",.F./*lHelp*/,"U01"/*cPadrao*/) 
+
+		lPadrao:=VerPadrao(cPadrao)
+
+		if (!lPadrao)
+			break
+		endif
+		
+		cFunCTB:=SuperGetMV("BIA_FIDCFN",.F./*lHelp*/,"FIDC01"/*cPadrao*/)
+		cLote:=SuperGetMV("BIA_FIDCLT",.F./*lHelp*/,"FIDC01"/*cPadrao*/)
+		
+		cArquivo:=""
+		nHdlPrv:=HeadProva(cLote,cFunCTB,SubStr(&("cUsuario"),7,6),@cArquivo)
+		
+		if (empty(nHdlPrv))
+			break
+		endif
+
+		if (!(nHdlPrv>0))
+			break
+		endif
+
+		lUsaFlag:=SuperGetMV("MV_CTBFLAG",.F./*lHelp*/,.F./*cPadrao*/) 
+		if (lUsaFlag) 
+			// Armazena em aFlagCTB para atualizar no modulo Contabil 
+			aFlagCTB:=array(0)
+			aAdd(aFlagCTB,{"E1_LA","S","SE1",SE1->(Recno()),0,0,0})
+		endif
+		
+		lDiario:=(FindFunction("UsaSeqCor").and.UsaSeqCor())
+		if (lDiario)
+			aDiario:=array(0)
+			aAdd(aDiario,{"SE1",SE1->(recno()),SE1->E1_DIACTB,"E1_NODIA","E1_DIACTB"})
+		EndIf
+
+		nTotal:=DetProva(nHdlPrv,cPadrao,cFunCTB,cLote,/*nLinha*/,/*lExecuta*/,;
+							/*cCriterio*/, /*lRateio*/, /*cChaveBusca*/, /*aCT5*/,;
+							/*lPosiciona*/,@aFlagCTB,/*aTabRecOri*/,/*aDadosProva*/)
+		
+		if (nTotal>0)
+			RodaProva(nHdlPrv,nTotal)
+			lDigita:=.F.
+			cA100Incl(cArquivo,nHdlPrv,3/*nOpcx*/,cLote,lDigita,.F./*lAglut*/,/*cOnLine*/,/*dData*/,/*dReproc*/, @aFlagCTB,/*aDadosProva*/,@aDiario)
+		endif
+	
+	end sequence
+
+	restArea(aArea)
+
+	return

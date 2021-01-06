@@ -74,6 +74,8 @@ Static Function fMSNewGe1()
 	Local aHeaderEx := {}
 	Local aColsEx := {}
 	Local aFieldFill := {}
+	Local cBizagi	:= U_fGetBase("2") 
+	
 	Private oMSNewGe1
 
 	aAdd(aHeaderEx,{"Tipo"              ,"TIPO"   ,""    , 10   , 0,,, "C",, })      	// 1
@@ -94,7 +96,7 @@ Static Function fMSNewGe1()
 	RF003 += "        B.NOME APROVADOR, "
 	RF003 += "        B.EMAIL "
 	RF003 += " FROM VW_BZ_PRQAPRV A "
-	RF003 += "      LEFT JOIN ZEUS.BIZAGIPRD.DBO.VW_USUARIOS B ON RTRIM(B.IDUSERBZ) = RTRIM(A.MATRICULA) COLLATE Latin1_General_BIN "
+	RF003 += "      LEFT JOIN "+cBizagi+".DBO.VW_USUARIOS B ON RTRIM(B.IDUSERBZ) = RTRIM(A.MATRICULA) COLLATE Latin1_General_BIN "
 	RF003 += " WHERE A.CLVL = '" + MV_PAR01 + "' "
 	RF003 += "       AND A.CONTA_CONTABIL = '" + MV_PAR02 + "' "
 	RF003 += "       AND A.APLICACAO = '" + MV_PAR03 + "' "
@@ -108,7 +110,7 @@ Static Function fMSNewGe1()
 	RF003 += "        B.NOME APROVADOR, "
 	RF003 += "        B.EMAIL "
 	RF003 += " FROM VW_BZ_PRQREQ A "
-	RF003 += "      LEFT JOIN ZEUS.BIZAGIPRD.DBO.VW_USUARIOS B ON RTRIM(B.IDUSERBZ) = RTRIM(A.IdSuperiorBZ) COLLATE Latin1_General_BIN "
+	RF003 += "      LEFT JOIN "+cBizagi+".DBO.VW_USUARIOS B ON RTRIM(B.IDUSERBZ) = RTRIM(A.IdSuperiorBZ) COLLATE Latin1_General_BIN "
 	RF003 += " WHERE Matricula = '" + MV_PAR04 + "' "
 	RFcIndex := CriaTrab(Nil,.f.)
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,RF003),'RF03',.F.,.T.)
@@ -263,6 +265,8 @@ User Function B901IBD()
 
 	Local _cAlias
 	Local _cSql
+	Local cBizagi	:= U_fGetBase("2") 
+	Local TbReqNIn	:= "% "+cBizagi+".dbo.VW_BZ_PRQNAOINTG %"
 
 	Private _cErro	:=	""
 
@@ -278,7 +282,7 @@ User Function B901IBD()
 
 		WITH BIZAGI
 		AS (SELECT *
-		FROM ZEUS.BIZAGIPRD.dbo.VW_BZ_PRQNAOINTG)
+		FROM %Exp:TbReqNIn% )
 		SELECT SZI.ZI_YBIZAGI, 
 		BZG.*
 		FROM BIZAGI BZG

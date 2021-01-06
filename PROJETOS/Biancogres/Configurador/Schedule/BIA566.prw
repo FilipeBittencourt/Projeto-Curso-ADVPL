@@ -49,6 +49,7 @@ User Function BIA566()
 		cSql += "WHERE ID_ENT = '" + cSqlPrinc->ID_ENT +"' "   //essa data abaixo retorna o primeiro dia do mês corrente - 2 dias, pra não ficar dois dias sempre sem contar
 		cSql += "	AND DATE_NFE BETWEEN CONVERT(VARCHAR, DATEADD(DAY, -2, CONVERT(VARCHAR(04),DATEPART(YEAR,GETDATE())) + '-' + REPLACE(SPACE(2 - LEN(DATEPART(MONTH,GETDATE()))),' ', '0') + CONVERT(VARCHAR(02),DATEPART(MONTH,GETDATE())) + '-' + '01'), 112) "
 		cSql += "						AND CONVERT(VARCHAR, DATEADD(DAY, -1, GETDATE()), 112) AND MODELO = '55' AND D_E_L_E_T_ = '' "
+		cSql += "   AND STATUSCANC <> '3' "
 		cSql += "ORDER BY NFE_ID "
 
 		TCQUERY cSql New Alias "cSql"

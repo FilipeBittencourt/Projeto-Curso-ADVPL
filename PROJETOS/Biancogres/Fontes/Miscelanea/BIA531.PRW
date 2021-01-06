@@ -70,51 +70,18 @@ Return
 */
 Static Function PC_Prz1()
 
-//cSQL := ""
-
-//cSQL += "SELECT C1_YMAT, C1_YBIZAGI, C7_NUM, C7_ITEM, C7_EMISSAO, C7_PRODUTO, DATEDIFF(DAY,C7_EMISSAO,GETDATE()) AS ATRASO, C7_YCONTR, C3_MSBLQL, C7_NUMSC, C7_ITEMSC, C7_TOTAL, C7_USER, CR_USER, CR_APROV, AK_NOME, B1_DESC, AK_APROSUP, "  + Enter
-////cSQL += "(SELECT TOP 1 Z0_EMAIL FROM SZ0010 WHERE Z0_MAT = SC1.C1_YMAT AND Z0_CLVL = SC7.C7_CLVL AND D_E_L_E_T_ = '') AS Z0_EMAIL, "  + Enter
-////cSQL += "(SELECT TOP 1 Z0_NOME FROM SZ0010 WHERE Z0_MAT = SC1.C1_YMAT AND Z0_CLVL = SC7.C7_CLVL AND D_E_L_E_T_ = '') AS Z0_NOME "  + Enter
-//cSQL += "(SELECT Solicitante FROM ZEUS.BIZAGIPRD.dbo.DADOS_SOLICITANTE_SC WHERE NumeroBizagi = SC1.C1_YBIZAGI COLLATE SQL_Latin1_General_CP1_CI_AS) AS Z0_EMAIL, "  + Enter
-//cSQL += "(SELECT Email       FROM ZEUS.BIZAGIPRD.dbo.DADOS_SOLICITANTE_SC WHERE NumeroBizagi = SC1.C1_YBIZAGI COLLATE SQL_Latin1_General_CP1_CI_AS) AS Z0_NOME "  + Enter
-
-//cSQL += "FROM     " + RETSQLNAME("SC7") + "  SC7, 	"+RetSqlName("SC1")+" SC1, "+RetSqlName("SC3")+" SC3, "+RetSqlName("SCR")+" SCR, "+RetSqlName("SAK")+" SAK, "+RetSqlName("SB1")+" SB1 "  + Enter
-
-//cSQL += "WHERE C7_NUMSC = C1_NUM "  + Enter
-//cSQL += "AND C7_ITEMSC  = C1_ITEM "  + Enter
-//cSQL += "AND C7_NUM     = CR_NUM  "  + Enter
-//cSQL += "AND C7_YCONTR  *= C3_NUM "  + Enter
-//cSQL += "AND C3_ITEM    = '0001' "  + Enter
-//cSQL += "AND C7_QUANT   > C7_QUJE  "  + Enter
-//cSQL += "AND CR_APROV   = AK_COD  "  + Enter
-//cSQL += "AND C7_PRODUTO = B1_COD  "  + Enter
-//cSQL += "AND C7_RESIDUO = '' "  + Enter
-//cSQL += "AND C7_ENCER   <> 'E' "  + Enter
-//cSQL += "AND C7_CONAPRO <> 'L' "  + Enter
-//cSQL += "AND DATEDIFF(DAY,C7_EMISSAO,GETDATE()) >= 7 AND DATEDIFF(DAY,C7_EMISSAO,GETDATE()) <= 10 "  + Enter
-//cSQL += "AND SC1.D_E_L_E_T_ = '' "  + Enter
-//cSQL += "AND SC7.D_E_L_E_T_ = '' "  + Enter
-//cSQL += "AND SC3.D_E_L_E_T_ = '' "  + Enter
-//cSQL += "AND SCR.D_E_L_E_T_ = '' "  + Enter
-//cSQL += "AND SAK.D_E_L_E_T_ = '' "  + Enter
-//cSQL += "AND SB1.D_E_L_E_T_ = '' "  + Enter
-//cSQL += "ORDER BY C1_YMAT, C7_EMISSAO, C7_NUM  "  + Enter
-
+Local cBizagi	:= U_fGetBase("2") 
 
 //ATUALIZAÇÃO QUERY - SQL ATUAL - 13/10/2015
 cSQL := ""
-
 cSQL += "	SELECT C1_YMAT, C1_YBIZAGI, C7_NUM, C7_ITEM, C7_EMISSAO, C7_PRODUTO, 
 
 // Tiago Rossini Coradini - 03-05-16 - Wanisay - Atualização do campo CR_YDTINCL para tratamento de pedidos com atraso na aprovação
 cSQL += " CASE WHEN CR_YDTINCL <> '' THEN CR_YDTINCL ELSE C7_EMISSAO END AS CR_YDTINCL, "
 cSQL += " DATEDIFF(DAY, (CASE WHEN CR_YDTINCL <> '' THEN CR_YDTINCL ELSE C7_EMISSAO END), GETDATE()) AS ATRASO, "
-
 cSQL += " C7_YCONTR, C3_MSBLQL, C7_NUMSC, C7_ITEMSC, C7_TOTAL, C7_USER, CR_USER, CR_APROV, AK_NOME, B1_DESC, AK_APROSUP, "  + Enter
-//cSQL += "(SELECT TOP 1 Z0_EMAIL FROM SZ0010 WHERE Z0_MAT = SC1.C1_YMAT AND Z0_CLVL = SC7.C7_CLVL AND D_E_L_E_T_ = '') AS Z0_EMAIL, "  + Enter
-//cSQL += "(SELECT TOP 1 Z0_NOME FROM SZ0010 WHERE Z0_MAT = SC1.C1_YMAT AND Z0_CLVL = SC7.C7_CLVL AND D_E_L_E_T_ = '') AS Z0_NOME "  + Enter
-cSQL += "(SELECT Solicitante FROM ZEUS.BIZAGIPRD.dbo.DADOS_SOLICITANTE_SC WHERE NumeroBizagi = SC1.C1_YBIZAGI COLLATE SQL_Latin1_General_CP1_CI_AS) AS Z0_EMAIL, "  + Enter
-cSQL += "(SELECT Email       FROM ZEUS.BIZAGIPRD.dbo.DADOS_SOLICITANTE_SC WHERE NumeroBizagi = SC1.C1_YBIZAGI COLLATE SQL_Latin1_General_CP1_CI_AS) AS Z0_NOME "  + Enter
+cSQL += "(SELECT Solicitante FROM "+cBizagi+".dbo.DADOS_SOLICITANTE_SC WHERE NumeroBizagi = SC1.C1_YBIZAGI COLLATE SQL_Latin1_General_CP1_CI_AS) AS Z0_EMAIL, "  + Enter
+cSQL += "(SELECT Email       FROM "+cBizagi+".dbo.DADOS_SOLICITANTE_SC WHERE NumeroBizagi = SC1.C1_YBIZAGI COLLATE SQL_Latin1_General_CP1_CI_AS) AS Z0_NOME "  + Enter
 cSQL += "FROM " + RETSQLNAME("SC7") + "  SC7 "  + Enter
 cSQL += "	INNER JOIN " + RetSqlName("SC1") + " SC1 "  + Enter
 cSQL += "		ON C7_NUMSC = C1_NUM  "  + Enter
@@ -252,52 +219,18 @@ Return
 */
 Static Function PC_Prz2()
 
-//cSQL := ""
-
-//cSQL += "SELECT C1_YMAT, C7_NUM, C7_ITEM, C7_EMISSAO, C7_PRODUTO, DATEDIFF(DAY,C7_EMISSAO,GETDATE()) AS ATRASO, C7_YCONTR, C3_MSBLQL, C7_NUMSC, C7_ITEMSC, C7_TOTAL, C7_USER, CR_USER, CR_APROV, AK_NOME, B1_DESC,AK_APROSUP, "  + Enter
-////cSQL += "(SELECT TOP 1 Z0_EMAIL FROM SZ0010 WHERE Z0_MAT = SC1.C1_YMAT AND Z0_CLVL = SC7.C7_CLVL AND D_E_L_E_T_ = '') AS Z0_EMAIL, "  + Enter
-////cSQL += "(SELECT TOP 1 Z0_NOME FROM SZ0010 WHERE Z0_MAT = SC1.C1_YMAT AND Z0_CLVL = SC7.C7_CLVL AND D_E_L_E_T_ = '') AS Z0_NOME "  + Enter
-//cSQL += "(SELECT Solicitante FROM ZEUS.BIZAGIPRD.dbo.DADOS_SOLICITANTE_SC WHERE NumeroBizagi = SC1.C1_YBIZAGI COLLATE SQL_Latin1_General_CP1_CI_AS) AS Z0_EMAIL, "  + Enter
-//cSQL += "(SELECT Email       FROM ZEUS.BIZAGIPRD.dbo.DADOS_SOLICITANTE_SC WHERE NumeroBizagi = SC1.C1_YBIZAGI COLLATE SQL_Latin1_General_CP1_CI_AS) AS Z0_NOME "  + Enter
-
-//cSQL += "FROM     " + RETSQLNAME("SC7") + "  SC7, 	"+RetSqlName("SC1")+" SC1, "+RetSqlName("SC3")+" SC3, "+RetSqlName("SCR")+" SCR, "+RetSqlName("SAK")+" SAK, "+RetSqlName("SB1")+" SB1 "  + Enter
-
-//cSQL += "WHERE C7_NUMSC = C1_NUM "  + Enter
-//cSQL += "AND C7_ITEMSC  = C1_ITEM "  + Enter
-//cSQL += "AND C7_NUM     = CR_NUM  "  + Enter
-//cSQL += "AND C7_YCONTR  *= C3_NUM "  + Enter
-//cSQL += "AND C3_ITEM    = '0001' "  + Enter
-//cSQL += "AND C7_QUANT   > C7_QUJE  "  + Enter
-//cSQL += "AND CR_APROV   = AK_COD  "  + Enter
-//cSQL += "AND C7_PRODUTO = B1_COD  "  + Enter
-//cSQL += "AND C7_RESIDUO = '' "  + Enter
-//cSQL += "AND C7_ENCER   <> 'E' "  + Enter
-//cSQL += "AND C7_CONAPRO <> 'L' "  + Enter
-//cSQL += "AND DATEDIFF(DAY,C7_EMISSAO,GETDATE()) > 10 "  + Enter
-//cSQL += "AND SC1.D_E_L_E_T_ = '' "  + Enter
-//cSQL += "AND SC7.D_E_L_E_T_ = '' "  + Enter
-//cSQL += "AND SC3.D_E_L_E_T_ = '' "  + Enter
-//cSQL += "AND SCR.D_E_L_E_T_ = '' "  + Enter
-//cSQL += "AND SAK.D_E_L_E_T_ = '' "  + Enter
-//cSQL += "AND SB1.D_E_L_E_T_ = '' "  + Enter
-//cSQL += "ORDER BY C1_YMAT, C7_EMISSAO, C7_NUM  "  + Enter
-
+Local cBizagi	:= U_fGetBase("2")
 
 //ATUALIZAÇÃO QUERY - SQL ATUAL - 13/10/2015
 cSQL := ""
-
 cSQL += " SELECT C1_YMAT, C7_NUM, C7_ITEM, C7_EMISSAO, C7_PRODUTO, "
 
 // Tiago Rossini Coradini - 03-05-16 - Wanisay - Atualização do campo CR_YDTINCL para tratamento de pedidos com atraso na aprovação
 cSQL += " CASE WHEN CR_YDTINCL <> '' THEN CR_YDTINCL ELSE C7_EMISSAO END AS CR_YDTINCL, "
 cSQL += " DATEDIFF(DAY, (CASE WHEN CR_YDTINCL <> '' THEN CR_YDTINCL ELSE C7_EMISSAO END), GETDATE()) AS ATRASO, "
-
 cSQL += " C7_YCONTR, C3_MSBLQL, C7_NUMSC, C7_ITEMSC, C7_TOTAL, C7_USER, CR_USER, CR_APROV, AK_NOME, B1_DESC,AK_APROSUP, "  + Enter
-//cSQL += "(SELECT TOP 1 Z0_EMAIL FROM SZ0010 WHERE Z0_MAT = SC1.C1_YMAT AND Z0_CLVL = SC7.C7_CLVL AND D_E_L_E_T_ = '') AS Z0_EMAIL, "  + Enter
-//cSQL += "(SELECT TOP 1 Z0_NOME FROM SZ0010 WHERE Z0_MAT = SC1.C1_YMAT AND Z0_CLVL = SC7.C7_CLVL AND D_E_L_E_T_ = '') AS Z0_NOME "  + Enter
-cSQL += "(SELECT Solicitante FROM ZEUS.BIZAGIPRD.dbo.DADOS_SOLICITANTE_SC WHERE NumeroBizagi = SC1.C1_YBIZAGI COLLATE SQL_Latin1_General_CP1_CI_AS) AS Z0_EMAIL, "  + Enter
-cSQL += "(SELECT Email       FROM ZEUS.BIZAGIPRD.dbo.DADOS_SOLICITANTE_SC WHERE NumeroBizagi = SC1.C1_YBIZAGI COLLATE SQL_Latin1_General_CP1_CI_AS) AS Z0_NOME "  + Enter
-
+cSQL += "(SELECT Solicitante FROM "+cBizagi+".dbo.DADOS_SOLICITANTE_SC WHERE NumeroBizagi = SC1.C1_YBIZAGI COLLATE SQL_Latin1_General_CP1_CI_AS) AS Z0_EMAIL, "  + Enter
+cSQL += "(SELECT Email       FROM "+cBizagi+".dbo.DADOS_SOLICITANTE_SC WHERE NumeroBizagi = SC1.C1_YBIZAGI COLLATE SQL_Latin1_General_CP1_CI_AS) AS Z0_NOME "  + Enter
 cSQL += "FROM " + RETSQLNAME("SC7") + " SC7 "  + Enter
 cSQL += "	INNER JOIN " + RetSqlName("SC1") + " SC1 "  + Enter
 cSQL += "		ON C7_NUMSC = C1_NUM  "  + Enter
