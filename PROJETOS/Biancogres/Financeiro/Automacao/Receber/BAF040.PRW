@@ -30,7 +30,9 @@ User Function BAF040()
 	Local dVenctoDe 	:= dDataBase
 	Local dVenctoAte 	:= dDataBase
 	Local dReferencia 	:= dDataBase
-	
+
+	MsgSTOP("Rotina desativada! A emissão de boletos deve ser feita utilizando o Portal de Clientes.", "Atenção")
+	Return
 	
 	aAdd(aPergs, {1, "Prefixo De", 		cPrefixoDe, 	"@!", ".T.",,".T.",,.F.})
 	aAdd(aPergs, {1, "Prefixo Ate", 	cPrefixoAte, 	"@!", ".T.",,".T.",,.F.})

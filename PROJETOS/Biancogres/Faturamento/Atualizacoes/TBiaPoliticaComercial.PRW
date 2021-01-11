@@ -11,6 +11,7 @@ User Function FCLA0051; Return()
 @version 1.5
 @type class
 /*/
+
 Class TBiaPolitica
 
 Data RECNO 		as Integer
@@ -75,6 +76,7 @@ Data aDGER_Fields
 Data aDNV_Fields
 Data aDESP_Fields
 Data aDVER_Fields
+Data aDFRA_Fields
 
 Method New(_cFilial) //Construtor da Classe                      
 Method CanActivate(_nOpc, _nRecNo) //Antes de ativar a tela - qualquer operacao
@@ -110,7 +112,9 @@ Method New(_cFilial) Class TBiaPolitica
 	::aDNV_Fields	:= {"ZA0_CAT","ZA0_TPSEG","ZA0_VEND","ZA0_GCLI","ZA0_CODCLI","ZA0_LOJCLI","ZA0_REDE","ZA0_PACOTE","ZA0_FORMAT","ZA0_CODPRO","ZA0_CLASSE","ZA0_ESTCLI","ZA0_LOTE"}
 	::aDESP_Fields	:= {"ZA0_CAT","ZA0_TPSEG","ZA0_GCLI","ZA0_CODCLI","ZA0_LOJCLI","ZA0_REDE","ZA0_VEND","ZA0_PACOTE","ZA0_FORMAT","ZA0_CODPRO","ZA0_CLASSE","ZA0_ESTCLI","ZA0_LOTE"}
 	::aDVER_Fields	:= {"ZA0_CAT","ZA0_TPSEG","ZA0_VEND","ZA0_GCLI","ZA0_CODCLI","ZA0_LOJCLI","ZA0_REDE","ZA0_PACOTE","ZA0_FORMAT","ZA0_CODPRO","ZA0_CLASSE","ZA0_ESTCLI","ZA0_LOTE"}
-
+	::aDFRA_Fields	:= {"ZA0_CAT","ZA0_TPSEG","ZA0_VEND","ZA0_GCLI","ZA0_CODCLI","ZA0_LOJCLI","ZA0_REDE","ZA0_PACOTE","ZA0_FORMAT","ZA0_CODPRO","ZA0_CLASSE","ZA0_ESTCLI","ZA0_LOTE"}
+	
+	
 	//carregar nomes dos campos da tabela para uso diverso
 	::cmp_FILIAL := "ZA0_FILIAL"
 	::cmp_TIPO   := "ZA0_TIPO"
@@ -219,6 +223,7 @@ Method IsActiveByTipo(_cCampo, _cTipo) Class TBiaPolitica
 		Case AllTrim(_cTipo) == "DNV";	lRet := aScan(::aDNV_Fields, {|x| AllTrim(_cCampo) == x }) > 0 
 		Case AllTrim(_cTipo) == "DESP";	lRet := aScan(::aDESP_Fields, {|x| AllTrim(_cCampo) == x }) > 0
 		Case AllTrim(_cTipo) == "DVER";	lRet := aScan(::aDVER_Fields, {|x| AllTrim(_cCampo) == x }) > 0 
+		Case AllTrim(_cTipo) == "DFRA";	lRet := aScan(::aDFRA_Fields, {|x| AllTrim(_cCampo) == x }) > 0 
 
 	EndCase
 

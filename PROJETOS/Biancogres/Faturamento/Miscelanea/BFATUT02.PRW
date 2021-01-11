@@ -74,6 +74,18 @@ User Function PENGVLC5()
 	    lRet	:=	.F.
 	EndIf
 
+	__lRep := Type("CREPATU") <> "U" .And. !Empty(CREPATU)
+	If (__lRep .and. lRet)
+		DbSelectArea('SA3')
+		SA3->(DbSetOrder(1))
+		If SA3->(DbSeek(XFilial("SA3")+CREPATU))
+			If (SA3->A3_YBLQPED == 'S')
+				MsgInfo("Inclusão de pedidos temporariamente bloqueada pelo departamento comercial","PENGVLC5")
+				lRet	:=	.F.
+			EndIf
+		EndIf		
+	EndIf
+
 	If lRet
 		lRet := U_PENGCKCL(cPrEng)
 		If !lRet

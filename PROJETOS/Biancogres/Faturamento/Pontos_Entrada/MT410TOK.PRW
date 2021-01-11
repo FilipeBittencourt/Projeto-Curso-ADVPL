@@ -1,5 +1,7 @@
 #include "PROTHEUS.CH"
 #INCLUDE "RWMAKE.CH"
+#Include "topconn.ch"
+
 
 /*/{Protheus.doc} MT410TOK
 @author Fernando Rocha 
@@ -90,7 +92,39 @@ User Function MT410TOK
 	///Validar Inclusao de Pedido - Projeto Reserva de OP - Verificar se tem item nao reservado e Bloquear
 	If lRetorno .And. nOpc == 3 .And. M->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES","14"))) .And. M->C5_YLINHA <> "4"
 
-
+		If (_cSegmento == "E") .And. (AllTrim(M->C5_YSUBTP) $ "N#E") .And. Empty(M->C5_YNPRENG)
+			If !MsgYesNo( "Pedido com cliente do segmento='Engenharia' é necessario informar 'Numero da Proposta', Deseja continuar sem 'Numero da Proposta'?", 'MT410TOK' )
+				Return(.F.)
+			EndIf
+		EndIf
+		
+		//Empty(M->C5_YNUMSI) .And. !
+		/*
+		//TRATAR FORMA DE PAGAMENTO BONIFICAÇÂO
+		If (AllTrim(M->C5_YSUBTP) $ "B") .And. Empty(M->C5_YNOUTAI)
+			Msgbox("ATENÇÃO. Pedido de venda Tipo: 'Bonificação' é necessario informar 'AI Outros'.","MT410TOK","STOP")
+			Return(.F.)
+		ElseIf (AllTrim(M->C5_YSUBTP) $ "B") .And. !Empty(M->C5_YNOUTAI)
+			
+			_cQuery := "select * from SZO010 where ZO_SI = '"+M->C5_YNOUTAI+"' AND R_E_C_N_O_ = ''"
+			_cAliasTemp := GetNextAlias()
+			TcQuery _cQuery New Alias (_cAliasTemp)
+			
+			If (!(_cAliasTemp)->(Eof()))
+				If !((_cAliasTemp)->ZO_FPAGTO == '1')
+					Msgbox("ATENÇÃO. 'AI Outros' informada não está com forma de pagamento Bonificação.","MT410TOK","STOP")
+					Return(.F.)
+				EndIf
+			Else
+				Msgbox("ATENÇÃO. Número da 'AI Outros' informada não encontrada.","MT410TOK","STOP")
+				Return(.F.)
+			EndIf
+			(_cAliasTemp)->(DbCloseArea())	
+			
+		EndIf	
+		*/					
+		
+		
 		// Tiago Rossini Coradini - 10/04/2017 - OS: 1219-17 - Adicionado tratamento para implantar pedidos de damostra na Mundi
 		If AllTrim(CEMPANT) == "13" .And. !AllTrim(M->C5_YSUBTP) $ "A/IM"
 

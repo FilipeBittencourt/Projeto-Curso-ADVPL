@@ -213,6 +213,11 @@ Method _VerificarPonta() Class TConferenciaPedidoVenda
 	
 		While !SC6->(Eof()) .And. SC6->C6_NUM == ::cNumPed      	
 	
+			If (!Empty(SC6->C6_YNRESER))//não valida ponta quando existir reserva
+				SC6->(DbSkip())
+				Loop
+			EndIf
+			
 			cEmpPed := SC6->C6_YEMPPED
 	
 			If Empty(cEmpPed)

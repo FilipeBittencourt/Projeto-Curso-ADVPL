@@ -20,7 +20,7 @@ Class TRateioComissao From LongClasName
 
 	Method New() Constructor
 	Method Rateio(lMod1, aBase)
-	Method GetRateio(cVendedor, cMarca, cEmissao, nBase, nPorc)
+	Method GetRateio(cVendedor, cMarca, cEmissao, nComissao, nPorc)
 
 	Method Pergunte()
 	Method Load()
@@ -201,11 +201,11 @@ Method Calc(aVendRat) Class TRateioComissao
 
 	For nW := 1 To Len(aVendRat)
 
-		nComiss := Round(((aVendRat[nW][3] * aVendRat[nW][2]) / 100), 2)
+		nComiss := Round(((aVendRat[nW][5] * aVendRat[nW][2]) / 100), 2)
 
 		If nRest == 0
 
-			nRest := aVendRat[nW][3]
+			nRest := aVendRat[nW][5]
 
 			nRest -= nComiss
 
@@ -219,7 +219,7 @@ Method Calc(aVendRat) Class TRateioComissao
 
 			ElseIf nW == Len(aVendRat) - 1
 
-				nComiss := nComiss - ( ( ( Round(((aVendRat[nW][3] * aVendRat[nW][2]) / 100), 2) + Round(((aVendRat[nW+1][3] * aVendRat[nW+1][2]) / 100), 2) ) - (aVendRat[nW][3] - nTotal) ) / 2 )
+				nComiss := nComiss - ( ( ( Round(((aVendRat[nW][5] * aVendRat[nW][2]) / 100), 2) + Round(((aVendRat[nW+1][5] * aVendRat[nW+1][2]) / 100), 2) ) - (aVendRat[nW][5] - nTotal) ) / 2 )
 
 				nComiss := Round(nComiss, 2)
 
@@ -235,7 +235,7 @@ Method Calc(aVendRat) Class TRateioComissao
 
 		EndIf
 
-		aVendRat[nW][4] := nComiss
+		aVendRat[nW][4] := Round(nComiss, 2)
 
 	Next nW
 
@@ -648,11 +648,11 @@ Method Processa() Class TRateioComissao
 
 							ElseIf aSE3[nW][1] == "E3_PORC"
 
-								SE3->(&(aSE3[nW][1])) := aVendRat[nX][4]
+								SE3->(&(aSE3[nW][1])) := Round((( aVendRat[nX][3] ) * aVendRat[nX][2]) / 100, 2 )
 
 							ElseIf aSE3[nW][1] == "E3_COMIS"
 
-								SE3->(&(aSE3[nW][1])) := Round( ( aVendRat[nX][5] * aVendRat[nX][4] ) / aVendRat[nX][3], 2 )
+								SE3->(&(aSE3[nW][1])) := aVendRat[nX][4]
 
 							ElseIf aSE3[nW][1] == "E3_YVENRAT"
 
@@ -703,14 +703,14 @@ Method Processa() Class TRateioComissao
 
 Return()
 
-Method GetRateio(cVendedor, cMarca, cEmissao, nBase, nPorc) Class TRateioComissao
+Method GetRateio(cVendedor, cMarca, cEmissao, nComissao, nPorc) Class TRateioComissao
 
 	Local aVendRat := {}
 
 	Default cVendedor	:= ""
 	Default cMarca		:= ""
 	Default cEmissao 	:= ""
-	Default nBase	 	:= 0
+	Default nComissao	:= 0
 	Default nPorc	 	:= 0
 
 	If PZ9->(DBSeek(xFilial("PZ9") + cVendedor + cMarca))
@@ -721,7 +721,7 @@ Method GetRateio(cVendedor, cMarca, cEmissao, nBase, nPorc) Class TRateioComissa
 
 				If STOD(cEmissao) >= PZ9->PZ9_PERINI .And. STOD(cEmissao) <= PZ9->PZ9_PERFIM
 
-					aAdd(aVendRat, {PZ9->PZ9_VEND, PZ9->PZ9_PERCEN, nPorc, 0, nBase, PZ9->PZ9_VENDPA })
+					aAdd(aVendRat, {PZ9->PZ9_VEND, PZ9->PZ9_PERCEN, nPorc, 0, nComissao, PZ9->PZ9_VENDPA })
 
 				EndIf
 

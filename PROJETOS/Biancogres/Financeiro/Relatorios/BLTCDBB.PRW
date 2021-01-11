@@ -23,6 +23,9 @@ PRIVATE cIndexName := ''
 PRIVATE cIndexKey  := ''
 PRIVATE cFilter    := ''
 
+MsgSTOP("Rotina desativada! A emissão de boletos deve ser feita utilizando o Portal de Clientes.", "Atenção")
+Return
+
 Tamanho  := "M"
 titulo   := "Impressao de Boleto com Codigo de Barras-Banco do Brasil"
 cDesc1   := "Este programa destina-se a impressao do Boleto com Codigo de Barras."

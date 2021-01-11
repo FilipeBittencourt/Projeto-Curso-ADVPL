@@ -38,12 +38,12 @@ Method New() Class TWPCOFiltroPeriodo
 	::bConfirm := {|| .T.}
 	::lConfirm := .F.
 
-	::cVersao := SPACE(TAMSX3("ZBZ_VERSAO")[1])
-	::cRevisa := SPACE(TAMSX3("ZBZ_REVISA")[1])
-	::cAnoRef := SPACE(TAMSX3("ZBZ_ANOREF")[1])
-	::cMesAno := Space(6)
-	::dDataFech := CTOD("  /  /    ")
-	::cTipoRef	:= ""
+	::cVersao:=SPACE(TAMSX3("ZBZ_VERSAO")[1])
+	::cRevisa:=SPACE(TAMSX3("ZBZ_REVISA")[1])
+	::cAnoRef:=SPACE(TAMSX3("ZBZ_ANOREF")[1])
+	::cMesAno:=Space(6)
+	::dDataFech:=CTOD("  /  /    ")
+	::cTipoRef:=SPACE(TAMSX3("ZOF_TIPO")[1])
 
 Return()
 

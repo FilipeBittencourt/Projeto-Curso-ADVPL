@@ -2,6 +2,15 @@
 #include "shell.ch"
 #include "dbstruct.ch"
 
+/*/{Protheus.doc} utoXML
+@author Marinaldo de Jesus (Facile)
+@since 28/12/2020
+@version 1.0
+@Projet void
+@description Exportar Query para XML.
+@type function
+/*/
+
 function u_QryToXML(cQuery,cFile,cExcelTitle,lPicture,lX3Titulo,leecView) as logical
 
     local cMask         as character
@@ -120,7 +129,13 @@ static function ToXML(cQuery as character,cFile as character,cExcelTitle as char
             endif
         endif
 
-        MsAguarde({||lMsOpenDB:=MsOpenDBF(.T.,"TOPCONN",TCGenQry(nil,nil,cQuery),cAlias,.T.,.T.,.F.,.F.)},"Selecionando dados no SGBD","Aguarde...")
+        lMsOpenDB:=(select(cQuery)>0)
+        
+        if (!lMsOpenDB)
+            MsAguarde({||lMsOpenDB:=MsOpenDBF(.T.,"TOPCONN",TCGenQry(nil,nil,cQuery),cAlias,.T.,.T.,.F.,.F.)},"Selecionando dados no SGBD","Aguarde...")
+        else
+            cAlias:=cQuery
+        endif
 
         if (!lMsOpenDB)
             break
@@ -132,8 +147,10 @@ static function ToXML(cQuery as character,cFile as character,cExcelTitle as char
 
     end sequence
 
-    if (select(cAlias)>0)
-        (cAlias)->(dbCloseArea())
+    if (!(cQuery==cAlias))
+        if (select(cAlias)>0)
+            (cAlias)->(dbCloseArea())
+        endif
     endif
 
     restArea(aArea)
@@ -146,12 +163,14 @@ static function dbToXML(cAlias as character,cFile as character,cExcelTitle as ch
 
     local aCells        as array
     local aHeader       as array
+    local aX3CBox       as array
 
     local cType         as character
     local cField        as character
     local cWBreak       as character
     local cTBreak       as character
     local cColumn       as character
+    local cX3CBox       as character
     local cPicture      as character
     local cWorkSheet    as character
 
@@ -159,6 +178,7 @@ static function dbToXML(cAlias as character,cFile as character,cExcelTitle as ch
     local nField        as numeric
     local nFields       as numeric
     local nFormat       as numeric
+    local nX3CBox       as numeric
 
     local lTotal        as logical
 
@@ -215,13 +235,25 @@ static function dbToXML(cAlias as character,cFile as character,cExcelTitle as ch
                 endif
             endif
             if (lPicture)
-                cPicture:=getSX3Cache(cField,"X3_PICTURE")
-                if (!(Empty(cPicture)))
-                    uCell:=Transform(uCell,cPicture)
-                else
-                    if (cType=="D")
-                        uCell:=DToC(uCell)
+                nX3CBox:=0
+                if (cType=="C")
+                    cX3CBox:=getSX3Cache(cField,"X3_CBOX")
+                    if (!empty(cX3CBox))
+                        aX3CBox:=StrTokArr2(cX3CBox,";")
+                        nX3CBox:=aScan(aX3CBox,{|e|(uCell==StrTokArr2(e,"=")[1])})
                     endif
+                endif
+                if (nX3CBox==0)
+                    cPicture:=getSX3Cache(cField,"X3_PICTURE")
+                    if (!(Empty(cPicture)))
+                        uCell:=Transform(uCell,cPicture)
+                    else
+                        if (cType=="D")
+                            uCell:=DToC(uCell)
+                        endif
+                    endif
+                else
+                    uCell:=aX3CBox[nX3CBox]
                 endif
             else
                 if (cType=="D")

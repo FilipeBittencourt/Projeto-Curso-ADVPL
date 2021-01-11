@@ -33,6 +33,9 @@ Default cNumBco := ""
 PRIVATE M->DV1_ASBAC := ''
 PRIVATE M->DV2_ASBAC := ''
 
+MsgSTOP("Rotina desativada! A emissão de boletos deve ser feita utilizando o Portal de Clientes.", "Atenção")
+Return
+
 Tamanho  := "M"
 titulo   := "Impressão de Boleto com Código de Barras"
 cDesc1   := "Este programa destina-se a impressão de Boleto com Código de Barras."
@@ -163,6 +166,9 @@ User Function BIA272P(cListaId)
 	Private oPrint 				:= TMSPrinter():New("Boleto Gráfico")
 	Private	lFimPage	:= .F.			
 	Private lPrintLeg	:= .T.
+
+	MsgSTOP("Rotina desativada! A emissão de boletos deve ser feita utilizando o Portal de Clientes.", "Atenção")
+	Return
 	
 	aList	:= StrTokArr( cListaID, "_" )
 	

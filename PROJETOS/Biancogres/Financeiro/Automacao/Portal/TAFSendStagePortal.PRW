@@ -54,6 +54,12 @@ Method SendStage() Class TAFSendStagePortal
 	For nCount := 1 To Len(::oLote:Boletos)
 
 		oBol := ::oLote:Boletos[nCount]
+		
+		If (oBol:Sacado:CPFCNPJ == Nil .Or. Empty(oBol:Sacado:CPFCNPJ))
+			ConOut("TAF [SendStage "+CEMPANT+"] => DATE: "+DTOC(Date())+" TIME: "+Time())	
+			ConOut("TAF [SendStage "+CEMPANT+"] => ERRO: "+cvaltochar(oBol:Sacado:CPFCNPJ))	
+			Loop
+		EndIf
 
 		cSql := "exec "+cDBSERVER+"."+cDBSA+".dbo."+cSp+" "
 

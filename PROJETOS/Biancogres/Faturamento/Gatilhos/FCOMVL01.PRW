@@ -22,6 +22,18 @@ User Function FCOMVL01
 		MsgInfo("Inclusão de pedidos temporariamente bloqueada pelo departamento comercial","FCOMVL01")
 	    lRet	:=	.F.
 	EndIf
+	
+	__lRep := Type("CREPATU") <> "U" .And. !Empty(CREPATU)
+	If (__lRep)
+		DbSelectArea('SA3')
+		SA3->(DbSetOrder(1))
+		If SA3->(DbSeek(XFilial("SA3")+CREPATU))
+			If (SA3->A3_YBLQPED == 'S')
+				MsgInfo("Inclusão de pedidos temporariamente bloqueada pelo departamento comercial","FCOMVL01")
+				lRet	:=	.F.
+			EndIf
+		EndIf		
+	EndIf
 
 
 	If lRet .And. ( AllTrim(ReadVar()) == "M->C5_YSUBTP" .OR. AllTrim(ReadVar()) == "M->C6_PRODUTO" )

@@ -85,7 +85,7 @@ Static Function ReportDef()
     TRCell():New(oSecMov, "E3_LOJA"     , cQry)
     TRCell():New(oSecMov, "E3_EMISSAO"  , cQry,,,15,,{|| DTOC(STOD((cQry)->E3_EMISSAO)) })
     TRCell():New(oSecMov, "E3_BASE"     , cQry)
-    TRCell():New(oSecMov, "E3_PORC"     , cQry)
+    TRCell():New(oSecMov, "E3_PORC"     , cQry, "% Rateio")
     TRCell():New(oSecMov, "E3_COMIS"    , cQry)
     TRCell():New(oSecMov, "E3_PARCELA"  , cQry)
     TRCell():New(oSecMov, "E3_SEQ"  , cQry)
@@ -147,7 +147,7 @@ Static Function PrintReport(oReport, cQry)
         cSQL += "   E3_CODCLI, "
         cSQL += "   E3_LOJA, "
         cSQL += "   E3_BASE, "
-        cSQL += "   E3_PORC, "
+        cSQL += "   ( ( E3_COMIS * 100 ) / E3_BASE ) E3_PORC, "
         cSQL += "   E3_COMIS, "
         cSQL += "   E3_PREFIXO, "
         cSQL += "   E3_PARCELA, "
@@ -216,7 +216,7 @@ Static Function PrintReport(oReport, cQry)
         cSQL += "   E3_CODCLI, "
         cSQL += "   E3_LOJA, "
         cSQL += "   E3_BASE, "
-        cSQL += "   E3_PORC, "
+        cSQL += "   ( ( E3_COMIS * 100 ) / E3_BASE ) E3_PORC, "
         cSQL += "   E3_COMIS, "
         cSQL += "   E3_PREFIXO, "
         cSQL += "   E3_PARCELA, "

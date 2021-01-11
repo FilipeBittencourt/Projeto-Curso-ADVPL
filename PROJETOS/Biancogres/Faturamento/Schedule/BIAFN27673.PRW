@@ -147,7 +147,7 @@ static function BIA27673() as logical
         cEnvServer:=upper(getEnvServer())
         lDev:=((cServerIP=="192.168.20.18").or.("DEV"$cEnvServer))
         if (lDev)
-            cExcelTitle+=" :: EMITIDO EM AMBIENTE DE DESENVILVIMENTO ::"    
+            cExcelTitle+=" :: EMITIDO EM AMBIENTE DE DESENVOLVIMENTO ::"    
         endif
 
         lPicture:=.F.

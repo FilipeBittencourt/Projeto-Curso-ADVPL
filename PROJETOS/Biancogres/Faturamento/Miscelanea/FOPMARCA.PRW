@@ -21,6 +21,22 @@ User Function FOPLINHA()
 Return(cOpcoes)
 
 
+User Function TPNEGPEN()
+
+	Local cOpcoes := ""
+
+	cOpcoes += "1=Venda Normal;"
+	cOpcoes += "2=Apto modelo;"
+	cOpcoes += "3=Comp. de Obra;"
+	cOpcoes += "4=Personalização;"                                                                                     
+	cOpcoes += "5=Stand de vendas;"
+	cOpcoes += "6=Ped. para Proprietário;"
+	cOpcoes += "7=Áreas Comuns;"
+	cOpcoes += "8=Rep. Avaria;"
+
+Return(cOpcoes)
+
+
 /*/{Protheus.doc} FOPMARCA
 @description Campo OPCOES para MARCA e LINHAS de produtos
 @author Fernando / Pedro Facile

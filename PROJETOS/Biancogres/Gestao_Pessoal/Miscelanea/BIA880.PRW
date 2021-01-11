@@ -246,7 +246,7 @@ Static Function fBIA880A()
 				TG003 += Alltrim("                              ELSE '1'                                                                     ") + msrhEnter
 				TG003 += Alltrim("                           END                                                                             ") + msrhEnter
 				TG003 += Alltrim("          FROM VETORH.dbo.r034fun a(NOLOCK)                                                                ") + msrhEnter
-				TG003 += Alltrim("               LEFT JOIN VETORH.DBO.VW_BG_GESTOR_IMEDIATO v ON v.NUMEMP = a.numemp                         ") + msrhEnter
+				TG003 += Alltrim("               LEFT JOIN VW_BG_GESTOR_IMEDIATO v ON v.NUMEMP = a.numemp                         ") + msrhEnter
 				TG003 += Alltrim("                                                         AND v.TIPCOL = a.tipcol                           ") + msrhEnter
 				TG003 += Alltrim("                                                         AND v.NUMCAD = a.numcad                           ") + msrhEnter
 				TG003 += Alltrim("               LEFT JOIN VETORH.DBO.r162ass b(NOLOCK) ON b.numemp = a.numemp                               ") + msrhEnter

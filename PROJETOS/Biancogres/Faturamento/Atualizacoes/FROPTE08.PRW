@@ -458,7 +458,7 @@ Static Function ChkLotPrc()
 	Local np1_LOTE	:= _NP1_LOTE
 	Local _nPX
 	Local aSldCli	:= {}
-	Local _nSldPendCli
+	Local _nSldPro
 	Local _nSldAtCli
 
 	FOR I := 1 To Len(aWB1)
@@ -522,9 +522,9 @@ Static Function ChkLotPrc()
 
 			While !(cTRB2)->(Eof()) .And. (cTRB2)->(PZ0_OPNUM+C6_PRODUTO) == (aWB1[I][_NP1_OPNUM]+aWB1[I][_NP1_PROD])
 
-				_nPos2 := aScan( aWB2, {|x|  x[_NP2_PEDIDO] ==  (cTRB2)->C6_NUM .And. x[_NP2_ITEM] ==  (cTRB2)->C6_ITEM } )
+				_nPos2 := aScan(aWB2, {|x| x[_NP2_PEDIDO] == (cTRB2)->C6_NUM .And. x[_NP2_ITEM] == (cTRB2)->C6_ITEM})
 
-				//se pedido e lote esta marcado e lote ainda nao preenchido
+				// se pedido e lote esta marcado e lote ainda nao preenchido
 				if aWB2[_nPos2][_NP2_MARCA] .And. Empty(aWB2[_nPos2][_NP2_LOTE]) 
 
 					//Verificar se pode atender o pedido  (engenharis / lote restriro / outros...)
@@ -545,52 +545,36 @@ Static Function ChkLotPrc()
 						
 					EndIf
 
-					//saldo do pedido
-					_nSalPed := (cTRB2)->SALDO  
+					// saldo do pedido
+					_nSalPed := (cTRB2)->SALDO
 
-					//saldo pendente do cliente		
-					/*_nSldAtCli := 0
-					_nPX := aScan(aSldCli, {|x| x[1] == (cTRB2)->C6_CLI+(cTRB2)->C6_LOJA})
+					_nSldPro := 0
+
+					If (_nPosPrd := aScan(aWB2, {|x| x[_NP2_PEDIDO] == (cTRB2)->C6_NUM .And. x[_NP2_PROD] == (cTRB2)->C6_PRODUTO .And. x[_NP2_ITEM] <> (cTRB2)->C6_ITEM })) > 0
 					
-					If _nPX > 0
-						_nSldAtCli := aSldCli[_nPX][2]
+						_nSldPro := _nSalPed + aWB2[_nPosPrd][_NP2_SALDO]
+					
 					EndIf
-					_nSldPendCli := ((cTRB2)->SLDCLI - _nSldAtCli)
-					*/
-
-					If !(_nSalTot >= _nSalPed) 
+					
+					If !(_nSalTot >= _nSalPed) .Or. (_nPosPrd > 0 .And. ((_nSalTot < _nSldPro) .Or. ((_nSalTot - _nSldPro) > 0 .And. (_nSalTot - _nSldPro) < nQtdPal))) 
 
 						aWB2[_nPos2][_NP2_ERRO] := "SALDO INSUFICIENTE"
 
-					ElseIf !( (_nSalTot - _nSalPed) == 0 .Or. (_nSalTot - _nSalPed) >= nQtdPal ) //So atende pedidos que nao vai causar ponta no estoque
+					ElseIf !((_nSalTot - _nSalPed) == 0 .Or. (_nSalTot - _nSalPed) >= nQtdPal) // So atende pedidos que nao vai causar ponta no estoque
 
 						aWB2[_nPos2][_NP2_ERRO] := "GERANDO PONTA"
-
-					/*ElseIf ( (_nSalTot < _nSldPendCli) .Or. ( (_nSalTot - _nSldPendCli) > 0 .And. (_nSalTot - _nSldPendCli) < nQtdPal   ) )
-
-						aWB2[_nPos2][_NP2_ERRO] := "SALDO NÃO ATENDE PEDIDOS DO CLIENTE"
-					*/
+					
 					Else 
 
 						RecLock(cTRB2,.F.)
 						
 						(cTRB2)->C6_LOTECTL := aWB1[I][_NP1_LOTE]
 						(cTRB2)->(MsUnlock())
-
-						//controle de saldo total do cliente
-						/*_nPX := aScan(aSldCli, {|x| x[1] == (cTRB2)->C6_CLI+(cTRB2)->C6_LOJA})
-						
-						If _nPX > 0
-							aSldCli[_nPX][2] += _nSalPed
-						Else
-							AAdd(aSldCli, {(cTRB2)->C6_CLI+(cTRB2)->C6_LOJA, _nSalPed})
-						EndIf
-						*/
-						
+					
 						aWB2[_nPos2][_NP2_LOTE] := aWB1[I][_NP1_LOTE]
 						aWB2[_nPos2][_NP2_ERRO] := ""
 
-						_nSalTot -= _nSalPed 	
+						_nSalTot -= _nSalPed
 
 					EndIf
 					

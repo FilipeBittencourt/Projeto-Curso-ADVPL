@@ -5,12 +5,27 @@
 @author Wlysses Cerqueira (Facile)
 @since 25/11/2020
 @version 1.0
-@Projet A-35
 @description Processamento - RAC Orçada - Desdobra capacidade produtiva.
 @type function
+@Obs Projeto A-35
 /*/
 
 User Function BIA603()
+
+	cCadastro := Upper(Alltrim("RAC Orçada - Desdobra capacidade produtiva"))
+	aRotina   := { {"Pesquisar"       ,"AxPesqui"	    				,0,1},;
+	{               "Visualizar"      ,"AxVisual"	    				,0,2},;
+	{               "Processar"       ,'ExecBlock("BIA603A",.F.,.F.)'   ,0,3}}
+
+	dbSelectArea("ZO4")
+	dbSetOrder(1)
+	dbGoTop()
+
+	mBrowse(06,01,22,75,"ZO4")
+
+Return
+
+User Function BIA603A()
 
 	Local oEmp 	:= Nil
 	Local nW	:= 0
@@ -18,7 +33,8 @@ User Function BIA603()
 	Local oPerg	:= Nil
 	Local cMsg  := ""
 
-	Private cTitulo := "RAC Orçada - Desdobra capacidade produtiva"
+	Private cTitulo   := "RAC Orçada - Desdobra capacidade produtiva"
+	Private msCanPrc  := .F.
 
 	oEmp := TLoadEmpresa():New()
 
@@ -44,6 +60,10 @@ User Function BIA603()
 
 						EndIf
 
+					Else
+
+						msCanPrc  := .T.
+
 					EndIf
 
 				Next nW
@@ -59,18 +79,35 @@ User Function BIA603()
 		Else
 
 			Alert("Nenhuma empresa foi selecionada!")
+			msCanPrc  := .T.
 
 		EndIf
 
-	EndIf
+	Else
 
-	If !lRet
-
-		Alert("Erro no processamento!" + CRLF + CRLF + cMsg, "Empresa: [" + cEmp + "]  - ATENÇÃO")
+		msCanPrc  := .T.
 
 	EndIf
 
-Return()
+	If !msCanPrc
+
+		If !lRet
+
+			MsgSTOP("Erro no processamento!" + CRLF + CRLF + cMsg, "Empresa: [" + cEmp + "]  - ATENÇÃO")
+
+		Else
+
+			MsgINFO("Fim do processamento!" + CRLF + CRLF + cMsg, "Empresa: [" + cEmp + "]  - ATENÇÃO")
+
+		EndIf
+
+	Else
+
+		MsgALERT("Processamento Abortado", "BIA603")
+
+	EndIf
+
+Return
 
 Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 

@@ -5,12 +5,27 @@
 @author Wlysses Cerqueira (Facile)
 @since 25/11/2020
 @version 1.0
-@Projet A-35
 @description Processamento - RAC Orçada - Desdobra capacidade produtiva.
 @type function
+@Obs Projeto A-35
 /*/
 
 User Function BIA604()
+
+	cCadastro := Upper(Alltrim("RAC Orçada - Proc. Custo Unitário Fixo"))
+	aRotina   := { {"Pesquisar"       ,"AxPesqui"	    				,0,1},;
+	{               "Visualizar"      ,"AxVisual"	    				,0,2},;
+	{               "Processar"       ,'ExecBlock("BIA604A",.F.,.F.)'   ,0,3}}
+
+	dbSelectArea("ZO8")
+	dbSetOrder(1)
+	dbGoTop()
+
+	mBrowse(06,01,22,75,"ZO8")
+
+Return
+
+User Function BIA604A()
 
 	Local oEmp 	:= Nil
 	Local nW	:= 0
@@ -19,8 +34,7 @@ User Function BIA604()
 	Local cMsg  := ""
 
 	Private cTitulo := "RAC Orçada - Proc. Custo Unitário Fixo"
-
-    //RpcSetEnv("01", "01")
+	Private msCanPrc  := .F.
 
 	oEmp := TLoadEmpresa():New()
 
@@ -46,6 +60,9 @@ User Function BIA604()
 
 						EndIf
 
+					Else
+
+						msCanPrc  := .T.
 					EndIf
 
 				Next nW
@@ -61,20 +78,36 @@ User Function BIA604()
 		Else
 
 			Alert("Nenhuma empresa foi selecionada!")
+			msCanPrc  := .T.
 
 		EndIf
 
+
+	Else
+
+		msCanPrc  := .T.
+
 	EndIf
 
-	If !lRet
+	If !msCanPrc
 
-		Alert("Erro no processamento!" + CRLF + CRLF + cMsg, "ATENÇÃO")
+		If !lRet
+
+			MsgSTOP("Erro no processamento!" + CRLF + CRLF + cMsg, "ATENÇÃO")
+
+		Else
+
+			MsgINFO("Fim do processamento!" + CRLF + CRLF + cMsg, "ATENÇÃO")
+
+		EndIf
+
+	Else
+
+		MsgALERT("Processamento Abortado", "BIA604")
 
 	EndIf
 
-    //RpcClearEnv()
-
-Return()
+Return
 
 Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
@@ -670,7 +703,7 @@ Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 		TcQuery cSQL New Alias (cQry)
 
-        cZO8 := GetNextAlias()
+		cZO8 := GetNextAlias()
 
 		While !(cQry)->(Eof())
 
@@ -681,43 +714,43 @@ Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 				(cZO8)->ZO8_VERSAO := cVersao
 				(cZO8)->ZO8_REVISA := cRevisa
 				(cZO8)->ZO8_ANOREF := cAnoRef
-                (cZO8)->ZO8_TPCUS	:= (cQry)->TIPO	
-                (cZO8)->ZO8_ITCUS   := (cQry)->ITCUS 
-                // (cZO8)->ZO8_DESCR   := (cQry)->DESCR 
-                (cZO8)->ZO8_DTREF   := STOD((cQry)->DTREF) 
-                (cZO8)->ZO8_TPPROD  := (cQry)->TPPROD
-                (cZO8)->ZO8_PRODUT  := (cQry)->PRODUT
-                (cZO8)->ZO8_LINHA   := (cQry)->LINHA 
-                (cZO8)->ZO8_LNH209  := (cQry)->LNH209
-                (cZO8)->ZO8_LNH222  := (cQry)->LNH222
-                (cZO8)->ZO8_LNH233  := (cQry)->LNH233
-                (cZO8)->ZO8_PSECO   := (cQry)->PSECO 
-                
-                (cZO8)->ZO8_CUS200  := (cQry)->CUS200
-                (cZO8)->ZO8_CUS201  := (cQry)->CUS201
-                (cZO8)->ZO8_CUS202  := (cQry)->CUS202
-                (cZO8)->ZO8_CUS203  := (cQry)->CUS203
-                (cZO8)->ZO8_CUS204  := (cQry)->CUS204
-                (cZO8)->ZO8_CUS205  := (cQry)->CUS205
-                (cZO8)->ZO8_CUS206  := (cQry)->CUS206
-                (cZO8)->ZO8_CUS207  := (cQry)->CUS207
-                (cZO8)->ZO8_CUS208  := (cQry)->CUS208
-                // (cZO8)->ZO8_CUS209  := (cQry)->CUS209
-                // (cZO8)->ZO8_CUS222  := (cQry)->CUS222
-                // (cZO8)->ZO8_CUS233  := (cQry)->CUS233
-                (cZO8)->ZO8_CUS210  := (cQry)->CUS210
-                (cZO8)->ZO8_CUS211  := (cQry)->CUS211
-                (cZO8)->ZO8_CUS234  := (cQry)->CUS234
-                (cZO8)->ZO8_CUS212  := (cQry)->CUS212
-                (cZO8)->ZO8_CUS213  := (cQry)->CUS213
-                (cZO8)->ZO8_CUS235  := (cQry)->CUS235
-                (cZO8)->ZO8_CUS214  := (cQry)->CUS214
-                (cZO8)->ZO8_CUS215  := (cQry)->CUS215
-                (cZO8)->ZO8_CUS236  := (cQry)->CUS236
-                (cZO8)->ZO8_CUS216  := (cQry)->CUS216
-                (cZO8)->ZO8_CUS217  := (cQry)->CUS217
-                (cZO8)->ZO8_CUS223  := (cQry)->CUS223
-                (cZO8)->ZO8_CUS224  := (cQry)->CUS224
+				(cZO8)->ZO8_TPCUS	:= (cQry)->TIPO	
+				(cZO8)->ZO8_ITCUS   := (cQry)->ITCUS 
+				// (cZO8)->ZO8_DESCR   := (cQry)->DESCR 
+				(cZO8)->ZO8_DTREF   := STOD((cQry)->DTREF) 
+				(cZO8)->ZO8_TPPROD  := (cQry)->TPPROD
+				(cZO8)->ZO8_PRODUT  := (cQry)->PRODUT
+				(cZO8)->ZO8_LINHA   := (cQry)->LINHA 
+				(cZO8)->ZO8_LNH209  := (cQry)->LNH209
+				(cZO8)->ZO8_LNH222  := (cQry)->LNH222
+				(cZO8)->ZO8_LNH233  := (cQry)->LNH233
+				(cZO8)->ZO8_PSECO   := (cQry)->PSECO 
+
+				(cZO8)->ZO8_CUS200  := (cQry)->CUS200
+				(cZO8)->ZO8_CUS201  := (cQry)->CUS201
+				(cZO8)->ZO8_CUS202  := (cQry)->CUS202
+				(cZO8)->ZO8_CUS203  := (cQry)->CUS203
+				(cZO8)->ZO8_CUS204  := (cQry)->CUS204
+				(cZO8)->ZO8_CUS205  := (cQry)->CUS205
+				(cZO8)->ZO8_CUS206  := (cQry)->CUS206
+				(cZO8)->ZO8_CUS207  := (cQry)->CUS207
+				(cZO8)->ZO8_CUS208  := (cQry)->CUS208
+				// (cZO8)->ZO8_CUS209  := (cQry)->CUS209
+				// (cZO8)->ZO8_CUS222  := (cQry)->CUS222
+				// (cZO8)->ZO8_CUS233  := (cQry)->CUS233
+				(cZO8)->ZO8_CUS210  := (cQry)->CUS210
+				(cZO8)->ZO8_CUS211  := (cQry)->CUS211
+				(cZO8)->ZO8_CUS234  := (cQry)->CUS234
+				(cZO8)->ZO8_CUS212  := (cQry)->CUS212
+				(cZO8)->ZO8_CUS213  := (cQry)->CUS213
+				(cZO8)->ZO8_CUS235  := (cQry)->CUS235
+				(cZO8)->ZO8_CUS214  := (cQry)->CUS214
+				(cZO8)->ZO8_CUS215  := (cQry)->CUS215
+				(cZO8)->ZO8_CUS236  := (cQry)->CUS236
+				(cZO8)->ZO8_CUS216  := (cQry)->CUS216
+				(cZO8)->ZO8_CUS217  := (cQry)->CUS217
+				(cZO8)->ZO8_CUS223  := (cQry)->CUS223
+				(cZO8)->ZO8_CUS224  := (cQry)->CUS224
 				(cZO8)->(MsUnlock())
 
 			Else
@@ -742,7 +775,7 @@ Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 		(cQry)->(DbCloseArea())
 
-        oTable:Delete()
+		oTable:Delete()
 
 		If !lRet
 

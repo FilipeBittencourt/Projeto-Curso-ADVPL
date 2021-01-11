@@ -33,40 +33,40 @@ User Function BIAFG127(_nRecno)
 			%NoParser%
 
 			WITH PRMCANC
-			     AS (SELECT COUNT(*) QTD
-			         FROM BZINTEGRACAO (NOLOCK)
-			         WHERE PROCESSO_NOME = 'RM'
-			               AND RECNO_RETORNO LIKE %Exp:_cRecno%
-			               AND STATUS = 'CN'
-			         UNION ALL
-			         SELECT COUNT(*) QTD
-			         FROM BZINTEGRACAO (NOLOCK)
-			         WHERE PROCESSO_NOME = 'RM'
-			               AND PROCESSO_BIZAGI IN
-			         (
-			             SELECT PROCESSO_BIZAGI
-			             FROM BZINTEGRACAO (NOLOCK)
-			             WHERE PROCESSO_NOME = 'RM'
-			                   AND RECNO_RETORNO LIKE %Exp:_cRecno%
-			         )
-			               AND STATUS = 'IB'
-			               AND RTRIM(DADOS_RETORNO) IN('NÃO PROCESSADO', 'ERRO CLASSIFICACAO')
-			         UNION ALL
-			         SELECT COUNT(*) QTD
-			         FROM BZINTEGRACAO  (NOLOCK)
-			         WHERE PROCESSO_NOME = 'RM'
-			               AND RECNO_RETORNO LIKE %Exp:_cRecno%
-			               AND STATUS = 'IM'
-			               AND DADOS_RETORNO = 'PROCESSADO COM SUCESSO'
-			               AND GETDATE() - CONVERT(DATETIME, DATA_INTEGRACAO_PROTHEUS) > '1900-01-01 00:30:00.00')
-			     SELECT SUM(QTD) QTD
-			     FROM PRMCANC			
+			AS (SELECT COUNT(*) QTD
+			FROM BZINTEGRACAO (NOLOCK)
+			WHERE PROCESSO_NOME = 'RM'
+			AND RECNO_RETORNO LIKE %Exp:_cRecno%
+			AND STATUS = 'CN'
+			UNION ALL
+			SELECT COUNT(*) QTD
+			FROM BZINTEGRACAO (NOLOCK)
+			WHERE PROCESSO_NOME = 'RM'
+			AND PROCESSO_BIZAGI IN
+			(
+			SELECT PROCESSO_BIZAGI
+			FROM BZINTEGRACAO (NOLOCK)
+			WHERE PROCESSO_NOME = 'RM'
+			AND RECNO_RETORNO LIKE %Exp:_cRecno%
+			)
+			AND STATUS = 'IB'
+			AND RTRIM(DADOS_RETORNO) IN('NÃO PROCESSADO', 'ERRO CLASSIFICACAO')
+			UNION ALL
+			SELECT COUNT(*) QTD
+			FROM BZINTEGRACAO  (NOLOCK)
+			WHERE PROCESSO_NOME = 'RM'
+			AND RECNO_RETORNO LIKE %Exp:_cRecno%
+			AND STATUS = 'IM'
+			AND DADOS_RETORNO = 'PROCESSADO COM SUCESSO'
+			AND GETDATE() - CONVERT(DATETIME, DATA_INTEGRACAO_PROTHEUS) > '1900-01-01 00:30:00.00')
+			SELECT SUM(QTD) QTD
+			FROM PRMCANC			
 
 		ENDSQL
 
 		If (_cAlias)->QTD == 0
 			_lRet	:=	.F.
-			MsgInfo("A Nota Fiscal possui processo em aberto no BIZAGI. Para prosseguir com a operação o mesmo deverá ser cancelado!","BIAFG127")
+			MsgInfo("A Nota Fiscal está com o processo de RECEBIMENTO DE MERCADORIA em aberto no BIZAGI. Para prosseguir com a exclusão, será necessário alinhar com o Almoxarifado se o processo já foi recebido, se a etiqueta já foi impressa e se 30 minutos se passaram desde a impressão da etiqueta. Ainda com o Almoxarifado poderá ser verificado se o processo deveria ter sido cancelado e ainda porque ainda não o foi. Somente depois destas conferrências, a nota poderá ser excluída!","BIAFG127")
 
 		EndIf
 

@@ -109,8 +109,10 @@ Method GetNFe() Class TLoadXMLNFe
 					EndIf
 					
 					If (AllTrim(SA2->A2_SIMPNAC) == '1')//simples nacional
-						oNotaItemStruct:nAliqICMS 	:= IIF(XmlChildEx(oDet[nI]:_imposto:_ICMS:_ICMSSN101, "_PCREDSN") <> NIL, Val(oDet[nI]:_imposto:_ICMS:_ICMSSN101:_PCREDSN:TEXT), 0)
-						oNotaItemStruct:nValICMS 	:= IIF(XmlChildEx(oDet[nI]:_imposto:_ICMS:_ICMSSN101, "_VCREDICMSSN") <> NIL, Val(oDet[nI]:_imposto:_ICMS:_ICMSSN101:_VCREDICMSSN:TEXT), 0)
+						If (XmlChildEx(oDet[nI]:_imposto:_ICMS, "_ICMSSN101") <> NIL)
+							oNotaItemStruct:nAliqICMS 	:= IIF(XmlChildEx(oDet[nI]:_imposto:_ICMS:_ICMSSN101, "_PCREDSN") <> NIL, Val(oDet[nI]:_imposto:_ICMS:_ICMSSN101:_PCREDSN:TEXT), 0)
+							oNotaItemStruct:nValICMS 	:= IIF(XmlChildEx(oDet[nI]:_imposto:_ICMS:_ICMSSN101, "_VCREDICMSSN") <> NIL, Val(oDet[nI]:_imposto:_ICMS:_ICMSSN101:_VCREDICMSSN:TEXT), 0)
+						EndIf
 					EndIf
 					
 				 	If !Empty(oNotaItemStruct:cPedido) .And. !Empty(oNotaItemStruct:cItemPed)

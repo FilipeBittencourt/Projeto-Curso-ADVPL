@@ -80,6 +80,7 @@ Static Function GridZKL()
 	Local aAlterFields	:= AClone(aFieldsZKL)
 
 	aHeader := GetHeader(aFieldsZKL)
+	Aadd(aHeader, {"Regras", "REGRAS", "@!", 10, 0, , , "M", , , ,})
 
 	oGrid := MsNewGetDados():New( 0, 0, 0, 0,  0, "AllwaysTrue", "AllwaysTrue", "+Field1+Field2", aAlterFields,, 999, "AllwaysTrue", "", "", oPanel1, aHeader, aCols)
 	oGrid:oBrowse:Align := CONTROL_ALIGN_ALLCLIENT
@@ -98,12 +99,30 @@ Static Function LoadZKL()
 	Local aCols			:= {}
 	Local aHeader		:= AClone(oGrid:aHeader)
 	Local aLinha		:= {}
-
+	Local nI			:= 0
+	Local cRegras		:= ""
+	Local aRegras		:= {}
 
 	If (ZKL->(DbSeek(cFilPed+cNumPed)))
 
 		While(!ZKL->(Eof()) .And. ZKL->ZKL_FILIAL+ZKL->ZKL_PEDIDO == cFilPed+cNumPed)
-
+			
+			aRegras := StrTokArr(ZKL->ZKL_REGRA, "/")
+			cRegras := ""
+			For nI := 1 To Len (aRegras)
+	
+				DbSelectArea("ZKI")
+				ZKI->(DbSetOrder(1))
+	
+				If (ZKI->(DbSeek(xFilial('ZKI')+aRegras[nI])))
+	
+					cRegras += ZKI->ZKI_DESBLQ
+					
+				EndIf
+	
+			Next nI
+			
+			
 			aLinha := {;
 			ZKL->ZKL_APROV,;
 			UsrRetName(ZKL->ZKL_APROV),;
@@ -114,6 +133,7 @@ Static Function LoadZKL()
 			ZKL->ZKL_ORIGEM,;
 			ZKL->ZKL_STATUS,;
 			ZKL->ZKL_OBS,;
+			cRegras,;
 			.F.;
 			}
 

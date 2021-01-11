@@ -32,6 +32,18 @@ If nOpc == 4 .Or. nOpc == 1
 		MsgInfo("Inclusão de pedidos temporariamente bloqueada pelo departamento comercial","MT410ACE")
 		Return .F.
 	EndIf
+	
+	__lRep := Type("CREPATU") <> "U" .And. !Empty(CREPATU)
+	If (__lRep)
+		DbSelectArea('SA3')
+		SA3->(DbSetOrder(1))
+		If SA3->(DbSeek(XFilial("SA3")+CREPATU))
+			If (SA3->A3_YBLQPED == 'S')
+				MsgInfo("Inclusão de pedidos temporariamente bloqueada pelo departamento comercial","MT410ACE")
+				Return .F.
+			EndIf
+		EndIf		
+	EndIf
 
 EndIf
 

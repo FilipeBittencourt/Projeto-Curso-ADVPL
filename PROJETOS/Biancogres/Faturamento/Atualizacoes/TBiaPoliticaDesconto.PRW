@@ -3,6 +3,7 @@
 #INCLUDE "FWMBROWSE.CH"
 #INCLUDE "FWMVCDEF.CH"
 
+
 User Function FCLA0048; Return()
 
 /*/{Protheus.doc} TBiaPoliticaDesconto
@@ -23,6 +24,8 @@ Data DESP as Float
 Data DACO as Float
 Data DVER as Float
 Data DAI  as Float
+Data DFRA as Float
+
 
 Data FC as Float  //Fator Contratual  
 Data DPAL_ORI as Float
@@ -33,9 +36,11 @@ Data DNV_ORI  as Float
 Data DACO_ORI as Float
 Data DVER_ORI as Float
 Data DAI_ORI as Float
+Data DFRA_ORI as Float
 
 Data DNV_MAX  //OS 4184-16 DNV maximo da politica para validacao da digitacao
 Data DVER_MAX
+Data DFRA_MAX
 
 Data DPOL as Float
 Data DTOT as Float
@@ -47,7 +52,8 @@ Data oDetalhe  //Lista detalhada da composicao do desconto para exibicao na tela
 Data _cCliente 	
 Data _cVendedor 	
 Data _cProduto 	
-Data _lPaletizado  
+Data _lPaletizado 
+Data _lFracionada  
 Data _nPICMS
 Data _nPPIS
 Data _nPCOF
@@ -79,6 +85,7 @@ Method New() Class TBiaPoliticaDesconto
 	::DVER := 0
 	::DACO := 0
 	::DAI  := 0
+	::DFRA := 0
 
 	::DPOL := 0
 	::DTOT := 0   
@@ -87,6 +94,7 @@ Method New() Class TBiaPoliticaDesconto
 	::_cVendedor 	:= ""
 	::_cProduto 	:= ""
 	::_lPaletizado 	:= .F.
+	::_lFracionada	:= .F.
 	::_nPICMS	    := 0
 	::_nPPIS		:= 0
 	::_nPCOF		:= 0
@@ -119,14 +127,18 @@ Method GetPolitica() Class TBiaPoliticaDesconto
 		TCQuery _cSQL Alias (_cAliasDet) New
 
 		If !(_cAliasDet)->(Eof())	
-
+			
+			
 			::DPAL 		:= (_cAliasDet)->DPAL
 			::DCAT 		:= (_cAliasDet)->DCAT
 			::DREG 		:= (_cAliasDet)->DREG
 			::DGER 		:= (_cAliasDet)->DGER
+			//::DFRA		:= (_cAliasDet)->DFRA
 
 			//::DNV  		:= (_cAliasDet)->DNV  //nao preenche mais OS 4184-16 - vai ser informado manualmente com no maximo o DNV_MAX
 			::DNV_MAX	:= (_cAliasDet)->DNV
+			::DFRA_MAX	:= (_cAliasDet)->DFRA
+			
 
 			If SC6->(FieldPos("C6_YDVER")) > 0
 
@@ -148,6 +160,7 @@ Method GetPolitica() Class TBiaPoliticaDesconto
 			::DREG_ORI 	:= (_cAliasDet)->DREG_ORI
 			::DGER_ORI 	:= (_cAliasDet)->DGER_ORI
 			::DNV_ORI  	:= (_cAliasDet)->DNV_ORI
+			::DFRA_ORI 	:= (_cAliasDet)->DFRA_ORI
 
 		EndIf
 
@@ -169,7 +182,7 @@ Method Calculate() Class TBiaPoliticaDesconto
 	_DPOL := (1 - ( (1 - (::DCAT/100)) * (1 - (::DREG/100)) * (1 - (::DGER/100)) )) * 100
 	::DPOL := _DPOL
 
-	_DTOT := (1 - ( (1 - (::DPAL/100)) * (1 - (::DPOL/100)) * (1 - (::DNV/100))  )) * 100
+	_DTOT := (1 - ( (1 - (::DPAL/100)) * (1 - (::DPOL/100)) * (1 - (::DNV/100)) * (1 - (::DFRA/100))   )) * 100
 
 	::DTOT_ORI := _DTOT  //Desconto total sem o DESP
 
@@ -195,13 +208,14 @@ Method LoadParMem(_NL) Class TBiaPoliticaDesconto
 	Local _cEMPPED
 
 	Default _NL := N
-
+	
+	
 	::_cCliente 	:= M->C5_CLIENTE+M->C5_LOJACLI
 	::_cVendedor 	:= M->C5_VEND1
 	::_dData		:= M->C5_EMISSAO
 	::_cProduto 	:= aCols[_NL][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_PRODUTO"})]
 	::_cLote		:= aCols[_NL][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_LOTECTL"})]
-
+	
 	_cLOTSUG	:= aCols[_NL][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_YLOTSUG"})]
 	_cQTDSUG	:= aCols[_NL][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_YQTDSUG"})]
 	_cLOCAL		:= aCols[_NL][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_LOCAL"})]
@@ -209,32 +223,38 @@ Method LoadParMem(_NL) Class TBiaPoliticaDesconto
 
 	_cTPEST		:= aCols[_NL][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_YTPEST"})]
 	_nQtdDig 	:= Round(aCols[_NL][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_QTDVEN"})],2)
-
+	
 	::DESP		:= aCols[_NL][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_YDESP"})]
 
 	::DVER		:= aCols[_NL][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_YDVER"})]
 	::DACO		:= aCols[_NL][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_YDACO"})]
-
+	
 	If SC6->(FieldPos("C6_YDAI")) > 0
 		::DAI		:= aCols[_NL][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_YDAI"})]
 	EndIf
 
 	//OS 4184-16 - DNV passa a ser digitado
 	::DNV		:= aCols[_NL][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_YDNV"})] 
-
+	
+	If SC6->(FieldPos("C6_YDFRA")) > 0
+		::DFRA		:= aCols[_NL][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_YDFRA"})] 
+	EndIf
+	
 	//Se aceitou sugestao do lote dar desconto de paletizado 18%
 	::_lPaletizado  := ( ::_cLote == _cLOTSUG ) .And. ( _nQtdDig == _cQTDSUG )
 
 	SB1->(DbSetOrder(1))
 	SB1->(DbSeek(XFilial("SB1")+::_cProduto))
-
+	
+	
 	//Pode ser que tenha rejeitado sugestao de fracionado mas a quantidade e paletizada
 	//Pode estar como OP
 	//Tickets 1642 e 1416 - se tiver quantidade paletizada / mesmo lotes com DIVPA diferentes / aplicar desconto de paletizao
 	If (_cTPEST $ "R_V")
 
 		nDivPA := SB1->B1_YDIVPA * SB1->B1_CONV
-		::_lPaletizado := (_nQtdDig % nDivPA) == 0
+		::_lPaletizado	:= (_nQtdDig % nDivPA) == 0
+		::_lFracionada	:= (_nQtdDig % nDivPA) != 0	
 
 	Else
 
@@ -251,12 +271,13 @@ Method LoadParMem(_NL) Class TBiaPoliticaDesconto
 
 			EndIf
 
-			::_lPaletizado := (_nQtdDig % nDivPA) == 0
+			::_lPaletizado	:= (_nQtdDig % nDivPA) == 0
+			::_lFracionada	:= (_nQtdDig % nDivPA) != 0	
 
 			//Se nao for palete fechado mas estiver arrematando o estoque dar o desconto.
 			If (!::_lPaletizado)
-
-
+				
+				
 				If (AllTrim(cEmpAnt) == '07')
 
 					IF Empty(SB1->B1_YEMPEST)
@@ -271,8 +292,9 @@ Method LoadParMem(_NL) Class TBiaPoliticaDesconto
 					_nSldLot 		:= U_FROPRT01(::_cProduto, _cLOCAL, "", "", _nQtdDig, ::_cLote, "", _cEMPPED)[7]
 					::_lPaletizado	:= ( _nQtdDig == _nSldLot ) .Or. (_nSldLot == 0)			
 					
-				EndIf		
-
+				EndIf
+				
+			
 			EndIf
 
 		EndIf
@@ -284,7 +306,7 @@ Method LoadParMem(_NL) Class TBiaPoliticaDesconto
 		EndIf
 
 	EndIf
-
+	
 	_aImposto := U_fItImpos(N,{"IT_ALIQICM","IT_ALIQPIS","IT_ALIQCOF"})
 
 	::_nPICMS 	:= _aImposto[1]
@@ -350,7 +372,9 @@ Method LoadParAlt() Class TBiaPoliticaDesconto
 
 		EndIf
 
-		::_lPaletizado := (_nQtdDig % nDivPA) == 0
+		::_lPaletizado	:= (_nQtdDig % nDivPA) == 0
+		::_lFracionada	:= (_nQtdDig % nDivPA) != 0	
+		
 	EndIf
 
 	//buscando posicao do item gravado no aCols para reprocessamento do imposto   
@@ -408,12 +432,14 @@ Method LoadParSC6(_cPedido, _cItem) Class TBiaPoliticaDesconto
 		::DREG 			:= SC6->C6_YDREG
 		::DGER 			:= SC6->C6_YDMIX
 		::DNV  			:= SC6->C6_YDNV
+		::DFRA 			:= SC6->C6_YDFRA
 
 		::DCAT_ORI		:= ::DCAT
 		::DPAL_ORI		:= ::DPAL
 		::DREG_ORI		:= ::DREG
 		::DGER_ORI		:= ::DGER
 		::DNV_ORI		:= ::DNV	 
+		::DFRA_ORI		:= ::DFRA	 
 
 		ZA4->(DbSetOrder(1))
 		If ZA4->(DbSeek(XFilial("ZA4")+SC6->(C6_NUM+C6_ITEM)+"DCAT")) .And. ( ZA4->ZA4_FC <> 0 )
@@ -435,6 +461,10 @@ Method LoadParSC6(_cPedido, _cItem) Class TBiaPoliticaDesconto
 
 		If ZA4->(DbSeek(XFilial("ZA4")+SC6->(C6_NUM+C6_ITEM)+"DNV")) .And. ( ZA4->ZA4_FC <> 0 )
 			::DNV_ORI  		:= ZA4->ZA4_PDORI
+		EndIf
+		
+		If ZA4->(DbSeek(XFilial("ZA4")+SC6->(C6_NUM+C6_ITEM)+"DFRA")) .And. ( ZA4->ZA4_FC <> 0 )
+			::DFRA_ORI  	:= ZA4->ZA4_PDORI
 		EndIf
 
 	EndIf
@@ -702,6 +732,9 @@ Method PrcAntVer(_nPrcTab) Class TBiaPoliticaDesconto
 	Local nVALDACO
 
 	nPrc := nPrc - round(( nPrc * ::DPAL )/100,2)
+	
+	//desconto fracionado
+	nPrc := nPrc - round(( nPrc * ::DFRA )/100, 2)
 
 	nDPOL := (1 - ( (1 - (::DCAT/100)) * (1 - (::DREG/100)) * (1 - (::DGER/100)) )) * 100
 

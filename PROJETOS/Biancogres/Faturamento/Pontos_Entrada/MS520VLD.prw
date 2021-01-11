@@ -49,6 +49,7 @@ CSQL += "WHERE	E1_PREFIXO	= '"+SF2->F2_SERIE+"'	AND "
 CSQL += "		E1_NUM		= '"+SF2->F2_DOC+"'	AND "
 CSQL += "		E1_TIPO		= 'ST'	AND "
 CSQL += "		E1_NUMBOR	<>	''		AND "
+CSQL += "		E1_FILIAL	=	'"+xFilial('SE1')+"' AND "
 CSQL += "		D_E_L_E_T_  = '' "
 If chkfile("c_TRAB")
 	dbSelectArea("c_TRAB")
@@ -67,7 +68,9 @@ CSQL += "WHERE	E2_PREFIXO	=	'"+SF2->F2_SERIE+"'	AND "
 CSQL += "		E2_NUM		=	'"+SF2->F2_DOC+"'	AND "
 CSQL += "		E2_NUMBOR	<>	''		AND "
 CSQL += "		E2_TIPO		=	'ST'	AND "
+CSQL += "		E2_FILIAL	=	'"+xFilial('SE2')+"' AND "
 CSQL += "		D_E_L_E_T_	=	'' "
+
 If chkfile("c_TRAB")
 	dbSelectArea("c_TRAB")
 	dbCloseArea()
@@ -125,7 +128,7 @@ If DbSeek(xFilial('SF6')+'2'+'N'+SF2->F2_DOC+SF2->F2_SERIE+SF2->F2_CLIENTE+SF2->
 	
 	//Verifica se o Titulo no Contas a Pagar foi pago
 	CSQL := "SELECT COUNT(*) AS QUANT FROM "+RetSqlName("SE2")+" "
-	CSQL += "WHERE E2_PREFIXO+E2_NUM IN (SELECT F6_NUMERO FROM "+RetSqlName("SF6")+" WHERE F6_SERIE = '"+SF2->F2_SERIE+"' AND F6_DOC = '"+SF2->F2_DOC+"' AND D_E_L_E_T_ = '' ) AND E2_NUMBOR <> '' AND D_E_L_E_T_ = '' "
+	CSQL += "WHERE E2_FILIAL = "+xFilial('SE2')+" AND E2_PREFIXO+E2_NUM IN (SELECT F6_NUMERO FROM "+RetSqlName("SF6")+" WHERE F6_FILIAL = "+xFilial('SF6')+" AND F6_SERIE = '"+SF2->F2_SERIE+"' AND F6_DOC = '"+SF2->F2_DOC+"' AND D_E_L_E_T_ = '' ) AND E2_NUMBOR <> '' AND D_E_L_E_T_ = '' "
 	If chkfile("TRB")
 		dbSelectArea("TRB")
 		dbCloseArea()
@@ -137,6 +140,13 @@ If DbSeek(xFilial('SF6')+'2'+'N'+SF2->F2_DOC+SF2->F2_SERIE+SF2->F2_CLIENTE+SF2->
 	END IF
 	
 EndIf
+
+CRET := ValidSE2()
+If (CRET)
+	CRET := ValidSF6()
+EndIf
+
+
 
 // Tratamento incluído por Marcos Alberto Soprani em 28/08/14 conforme OS effettivo 1605-14
 If !SF2->F2_TIPO $ "D/B"
@@ -360,5 +370,95 @@ If cEmpAnt <> "07" .And. SF2->F2_CLIENTE == "010064"
 	QRY->(DbCloseArea())
 
 EndIf
+
+Return lRet
+
+
+Static Function ValidSE2()
+
+	Local cQuery 		:= ""
+	Local cAliasTmp		:= Nil
+	Local lRet			:= .T.
+	Local aArea			:= GetArea()
+	Local cFilSE2		:= xFilial('SF2')
+	
+	
+	If (cEmpAnt == '07' .And. cFilAnt == '01')
+		If (SF2->F2_CLIENTE  == '029954') //LM SP
+			
+			cFilSE2 := '05'
+			
+			cQuery := "SELECT TOTAL=ISNULL(COUNT(E2_NUM),0)  FROM "+RETSQLNAME("SE2")+"		 		"
+			cQuery += "WHERE	E2_PREFIXO	=	'"+SF2->F2_SERIE+"'			AND 					"
+			cQuery += "			E2_NUM		=	'"+SF2->F2_DOC+"'			AND 					"
+			cQuery += "			E2_NUMBOR	<>	''							AND 					"
+			cQuery += "			E2_TIPO		=	'ST'						AND 					"
+			cQuery += "			E2_FILIAL	=	'"+cFilSE2+"' 				AND 					"
+			cQuery += "			D_E_L_E_T_	=	'' 													"
+			
+			cAliasTmp := GetNextAlias()
+			TcQuery cQuery New Alias (cAliasTmp)
+			
+			If (!(cAliasTmp)->(Eof()))	
+				If ((cAliasTmp)->TOTAL > 0)
+					MsgBox("A NOTA FISCAL NÃO PODERÁ SER EXCLUÍDA, POIS EXISTE TITULO DE SUBSTITUICAO TRIBUTARIA JÁ BAIXADO! FILIAL: 05","MS520VLD","STOP")
+					lRet := .F.
+				EndIf
+			EndIf
+			
+		EndIf
+	EndIf
+	
+	RestArea(aArea)
+		
+Return lRet
+
+
+Static Function ValidSF6()
+	
+	Local cQuery 		:= ""
+	Local lRet			:= .T.
+	Local aArea			:= GetArea()
+	Local lRet			:= .T.
+	Local cFilSF6		:= xFilial('SF6')
+	Local cFilSE2		:= xFilial('SF2')
+	
+	
+	If (cEmpAnt == '07' .And. cFilAnt == '01')
+		If (SF2->F2_CLIENTE  == '029954') //LM SP
+			
+			cFilSF6 := '05'
+			cFilSE2 := '05'
+			
+			DbSelectArea('SF6')
+			SF6->(DbSetOrder(3))
+			
+			If SF6->(DbSeek(cFilSF6+'2'+'N'+SF2->F2_DOC+SF2->F2_SERIE+SF2->F2_CLIENTE+SF2->F2_LOJA,.T.))
+				
+				//Verifica se a Guia foi Processada
+				If SF6->F6_PROCESS == "1"
+					lRet := MsgBox("FOI GERADO O ARQUIVO XML PARA PAGAMENTO DA SUBSTITUICAO TRIBUTÁRIA, FILIAL: 05. DESEJA PROSSEGUIR COM A EXCLUSÃO DA NF?","MS520VLD","YesNo")
+				EndIf
+					
+				//Verifica se o Titulo no Contas a Pagar foi pago
+				cQuery := "SELECT TOTAL=COUNT(*)  FROM "+RetSqlName("SE2")+" "
+				cQuery += "WHERE E2_FILIAL = "+cFilSE2+" AND E2_PREFIXO+E2_NUM IN (SELECT F6_NUMERO FROM "+RetSqlName("SF6")+" WHERE F6_FILIAL = "+cFilSF6+" AND F6_SERIE = '"+SF2->F2_SERIE+"' AND F6_DOC = '"+SF2->F2_DOC+"' AND D_E_L_E_T_ = '' ) AND E2_NUMBOR <> '' AND D_E_L_E_T_ = '' "
+				
+				cAliasTmp := GetNextAlias()
+				TcQuery cQuery New Alias (cAliasTmp)
+				
+				If (!(cAliasTmp)->(Eof()))	
+					If ((cAliasTmp)->TOTAL > 0)
+						MsgBox("A NOTA FISCAL NÃO PODERÁ SER EXCLUÍDA, POIS EXISTE TITULO DE SUBSTITUICAO TRIBUTARIA JÁ BAIXADO!, FILIAL: 05","MS520VLD","STOP")
+						lRet := .F.
+					EndIf
+				EndIf
+				
+			EndIf
+			
+		EndIf
+	EndIf	
+	
+	RestArea(aArea)
 
 Return lRet

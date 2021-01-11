@@ -5,12 +5,27 @@
 @author Wlysses Cerqueira (Facile)
 @since 25/11/2020
 @version 1.0
-@Projet A-35
 @description Processamento - RAC Orçada - Desdobra Mix de produção.
 @type function
+@Obs Projeto A-35
 /*/
 
 User Function BIA606()
+
+	cCadastro := Upper(Alltrim("RAC Orçada - Desdobra Mix de produção"))
+	aRotina   := { {"Pesquisar"       ,"AxPesqui"	    				,0,1},;
+	{               "Visualizar"      ,"AxVisual"	    				,0,2},;
+	{               "Processar"       ,'ExecBlock("BIA606A",.F.,.F.)'   ,0,3}}
+
+	dbSelectArea("ZO5")
+	dbSetOrder(1)
+	dbGoTop()
+
+	mBrowse(06,01,22,75,"ZO5")
+
+Return
+
+User Function BIA606A()
 
 	Local oEmp 	:= Nil
 	Local nW	:= 0
@@ -19,6 +34,7 @@ User Function BIA606()
 	Local cMsg  := ""
 
 	Private cTitulo := "RAC Orçada - Desdobra Mix de produção"
+	Private msCanPrc  := .F.
 
 	oEmp := TLoadEmpresa():New()
 
@@ -44,6 +60,10 @@ User Function BIA606()
 
 						EndIf
 
+					Else
+
+						msCanPrc  := .T.
+
 					EndIf
 
 				Next nW
@@ -59,18 +79,37 @@ User Function BIA606()
 		Else
 
 			Alert("Nenhuma empresa foi selecionada!")
+			msCanPrc  := .T.
 
 		EndIf
 
+
+	Else
+
+		msCanPrc  := .T.
+
 	EndIf
 
-	If !lRet
+	If !msCanPrc
 
-		Alert("Erro no processamento!" + CRLF + CRLF + cMsg, "Empresa: [" + cEmp + "]  - ATENÇÃO")
+		If !lRet
+
+			MsgSTOP("Erro no processamento!" + CRLF + CRLF + cMsg, "Empresa: [" + cEmp + "]  - ATENÇÃO")
+
+		Else
+
+			MsgINFO("Fim do processamento!" + CRLF + CRLF + cMsg, "Empresa: [" + cEmp + "]  - ATENÇÃO")
+
+		EndIf
+
+	Else
+
+		MsgALERT("Processamento Abortado", "BIA606")
 
 	EndIf
 
-Return()
+
+Return
 
 Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 

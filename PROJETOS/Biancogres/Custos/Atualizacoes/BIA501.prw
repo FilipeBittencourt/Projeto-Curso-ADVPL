@@ -1250,7 +1250,7 @@ User Function B501RPLC()
 					_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := (M002)->(Stod( _cAnoRef + Substr(&(Alltrim(_oGetDados:aHeader[_msc][2])),5,4) ) )
 
 				ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) $ "Z42_DTFIM"
-					_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := UltimoDia( (M002)->(Stod( _cAnoRef + Substr(&(Alltrim(_oGetDados:aHeader[_msc][2])),5,4) ) ) )
+					_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := UltimoDia( (M002)->(Stod( _cAnoRef + Substr(&(Alltrim(_oGetDados:aHeader[_msc][2])),5,2) + "01" ) ) )
 
 				Else
 					_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := (M002)->(&(Alltrim(_oGetDados:aHeader[_msc][2])))
