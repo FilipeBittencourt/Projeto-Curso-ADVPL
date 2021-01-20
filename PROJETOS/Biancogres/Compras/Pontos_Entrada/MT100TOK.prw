@@ -764,11 +764,17 @@ User Function MT100TOK()
 
 		RestArea(aArea)
 	EndIf
-	If lret
-		Conout("PASSA NO PE GTPE005")
-		lret := U_GTPE005()
-	Else
-		Conout("NÃO PASSA NO PE GTPE005")
+
+	// Ticket: 25655 - Quando essa rotina eh executada via JOB, ocorre um travamento na contabilizacao.
+	If !IsInCallStack("U_EJOBDEVINTE")
+
+		If lret
+			Conout("PASSA NO PE GTPE005")
+			lret := U_GTPE005()
+		Else
+			Conout("NÃO PASSA NO PE GTPE005")
+		EndIf
+
 	EndIf
 
 	//Inserido para Solicitar o número do RPV

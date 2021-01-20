@@ -10,7 +10,36 @@
 @type function
 /*/
 
-function u_BIA661() as logical
+procedure u_BIA661()
+
+    local oBrowse   as object
+
+    // Instanciamento da classe de Browse
+    oBrowse:=FWMBrowse():New()
+
+    //Alias
+    oBrowse:SetAlias("ZOF")
+
+    // Titulo da Browse
+    oBrowse:SetDescription("Consolidado - Previsão de contas a receber")
+
+    //Define o menu do Browse
+    oBrowse:setMenuDef("BIA661MVC")
+
+    //Habilita o botao para fechar a janela
+    oBrowse:ForceQuitButton()
+
+    // Ativacao da classe
+    ZOF->(oBrowse:Activate())
+
+    freeObj(oBrowse)
+
+    return
+
+function u_BIA661Excel() as logical
+	return(u_BIA661Proc())
+
+function u_BIA661Proc() as logical
 	
 	local aArea		as array
 	local aAreaSM0	as array
@@ -40,23 +69,26 @@ function u_BIA661() as logical
 	begin sequence
 
 		oEmp:=TLoadEmpresa():New()
-		oPerg:=TWPCOFiltroPeriodo():New()
 
 		lMesAno:=.F.
 		lDataFech:=.F.
 		lTipoRef:=.T.
 
-		lRet:=oPerg:Pergunte(@lMesAno,@lDataFech,@lTipoRef)
+		lRet:=__TWPCOFiltroPeriodo():Pergunte(@lMesAno,@lDataFech,@lTipoRef)
 		
 		if (!lRet)
 			break
 		endif
 
-		lShowXML:=ApMsgNoYes("Deseja consultar os dados gerados ao final de cada processo?",cCadastro)
+		lShowXML:=stacktools():IsInCallStack("u_BIA661Excel")
+		if (!lShowXML)
+			lShowXML:=ApMsgNoYes("Deseja consultar os dados gerados ao final de cada processo?",cCadastro)
+		endif
 
 		oEmp:GetSelEmp()
+		oPerg:=__TWPCOFiltroPeriodo():Get()
 
-		lRet:=Processa({|lEnd|BIA661(@cEmp,@cFil,@oEmp,@oPerg,@lEnd,@lShowXML)},cCadastro,nil,.T.)
+		lRet:=Processa({|lEnd|BIA661Proc(@cEmp,@cFil,@oEmp,@oPerg,@lEnd,@lShowXML)},cCadastro,nil,.T.)
 
 	end sequence
 
@@ -67,7 +99,7 @@ function u_BIA661() as logical
 
 	return(lRet)
 
-static function BIA661(cEmpDef as character,cFilDef as character,oEmp as object,oPerg as object,lEnd as logical,lShowXML as logical) as logical
+static function BIA661Proc(cEmpDef as character,cFilDef as character,oEmp as object,oPerg as object,lEnd as logical,lShowXML as logical) as logical
 
 	local aMsg			as array
 	local aSM0RecNo		as array
@@ -110,7 +142,7 @@ static function BIA661(cEmpDef as character,cFilDef as character,oEmp as object,
 		endif
 
 		aMsg:=array(0)
-		bExec:={||lRet:=BIA661Proc(@cEmp,@cFil,@cVersao,@cRevisa,@cAnoRef,@cTipoRef,@cMsg,@lShowXML,@nKeepResponse)}
+		bExec:={||lRet:=ProcBIA661(@cEmp,@cFil,@cVersao,@cRevisa,@cAnoRef,@cTipoRef,@cMsg,@lShowXML,@nKeepResponse)}
 
 		ProcRegua(SM0->(recCount()))
 
@@ -228,7 +260,7 @@ static function BIA661(cEmpDef as character,cFilDef as character,oEmp as object,
 
 	return(lRet)
 
-static function BIA661Proc(cEmp as character,cFil as character,cVersao as character, cRevisa as character, cAnoRef as character, cTipoRef as character,cMsg as character,lShowXML as logical,nKeepResponse as numeric) as logical
+static function ProcBIA661(cEmp as character,cFil as character,cVersao as character, cRevisa as character, cAnoRef as character, cTipoRef as character,cMsg as character,lShowXML as logical,nKeepResponse as numeric) as logical
 
     local aFieldPos		as array
 	local aTmpStruct	as array
@@ -260,6 +292,7 @@ static function BIA661Proc(cEmp as character,cFil as character,cVersao as charac
     local leecView      as logical
 	
 	local lZOFFound		as logical
+	local lBIA661Excel	as logical
 
     local nField		as numeric
 	local nFields		as numeric
@@ -273,6 +306,8 @@ static function BIA661Proc(cEmp as character,cFil as character,cVersao as charac
 	DEFAULT cEmp:=&("cEmpAnt")
 	DEFAULT cFil:=&("cFilAnt")
 	DEFAULT lRet:=.T.
+
+	lBIA661Excel:=stacktools():IsInCallStack("u_BIA661Excel")
 
 	cCRLF:=CRLF
 
@@ -315,7 +350,10 @@ static function BIA661Proc(cEmp as character,cFil as character,cVersao as charac
 			cMsgNoYes+=cCRLF
 			cMsgNoYes+=cCRLF
 			cMsgNoYes+=" Deseja Reprocessar?"
-			lZOFFound:=ApMsgNoYes(cMsgNoYes,&("cCadastro"))
+			lZOFFound:=lBIA661Excel
+			if (!lZOFFound)
+				lZOFFound:=ApMsgNoYes(cMsgNoYes,&("cCadastro"))
+			endif
 			nKeepResponse:=if(lZOFFound,1,0)
 		else
 			lZOFFound:=(nKeepResponse==1)
@@ -332,7 +370,7 @@ static function BIA661Proc(cEmp as character,cFil as character,cVersao as charac
 			lZOFFound:=.F.
 			MsAguarde({||cTmpAlias:=getQueryNW(@cVersao,@cRevisa,@cAnoRef,@cTipoRef,@cTmp_Resumo)},&("cCadastro"),"Obtendo dados no SGBD...Empresa:["+cEmp+"] :: Filial:["+cFil+"]")
 		endif
-	else
+	elseif (!lBIA661Excel)
 		MsAguarde({||cTmpAlias:=getQueryNW(@cVersao,@cRevisa,@cAnoRef,@cTipoRef,@cTmp_Resumo)},&("cCadastro"),"Obtendo dados no SGBD...Empresa:["+cEmp+"] :: Filial:["+cFil+"]")
 	endif
 
@@ -401,6 +439,10 @@ static function BIA661Proc(cEmp as character,cFil as character,cVersao as charac
 			if (dirtools():MakeDir(cXMLPath))
 
 				cXMLFile:=cXMLPath
+				cXMLFile+=cEmp
+				cXMLFile+="_"
+				cXMLFile+=cFil
+				cXMLFile+="_"
 				cXMLFile+=ProcName()
 				cXMLFile+="_"
 				cXMLFile+=DtoS(Date())

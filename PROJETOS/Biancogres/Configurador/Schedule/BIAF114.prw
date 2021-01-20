@@ -30,7 +30,7 @@ Local nCount := 0
 Local cSQL := ""
 Local cQry := GetNextAlias()
 Local aPedCom := {}
-Local nBizagi := ""	
+Local cBizagi := ""	
 	
 	aAdd(aEmp, "01")
 	aAdd(aEmp, "05")
@@ -63,7 +63,7 @@ Local nBizagi := ""
 		cSQL += " 	INNER JOIN "+ RetSQLName("SC1") +" SC1 "
 		cSQL += " 	ON C7_NUMSC = C1_NUM "
 		cSQL += " 	AND C7_ITEMSC = C1_ITEM "
-		cSQL += " 	LEFT JOIN "+nBizagi+".dbo.BZ_DADOS_SC SC_BIZ "
+		cSQL += " 	LEFT JOIN "+cBizagi+".dbo.BZ_DADOS_SC SC_BIZ "
 		cSQL += " 	ON C1_YBIZAGI = BIZAGI COLLATE Latin1_General_BIN "
 		cSQL += " 	AND C1_NUM = PROTHEUS COLLATE Latin1_General_BIN "
 		cSQL += " 	AND EMPRESA = " + ValToSQL(aEmp[nCount] + "01")

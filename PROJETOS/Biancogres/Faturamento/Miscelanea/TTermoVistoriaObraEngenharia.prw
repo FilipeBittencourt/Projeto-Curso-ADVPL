@@ -15,6 +15,7 @@ Class TTermoVistoriaObraEngenharia From LongClassName
 	Data dEmiDe
 	Data dEmiAte
 	Data docto //caso queira gerar o termo de um documento especifico
+	Data nobra
 		
 	Method New() Constructor
 	Method Process()
@@ -65,11 +66,15 @@ Local cBody := ""
 	cSQL += " ON ZKS_PRODUT = B1_COD
 	cSQL += " WHERE ZKS_FILIAL = " + ValToSQL(xFilial("ZKS"))
 	
-	//docto preenchido apenas via tela de Vistorias. No Job é executado sempre o between de datas.
-	if(Empty(::docto))
+	//docto e nobra preenchidos apenas via tela de Vistorias. No Job é executado sempre o between de datas.
+	if(Empty(::docto) .AND. Empty(::nobra))
 		cSQL += " AND ZKS_DATA BETWEEN " + ValToSQL(::dEmiDe) + " AND " + ValToSQL(::dEmiAte)
 	else
-		cSQL += " AND ZKS.ZKS_DOC = '" + ::docto + "' "	
+		if(!Empty(::nobra))
+			cSQL += " AND ZKS.ZKS_NUMOBR = '" + ::nobra + "' "
+		else
+			cSQL += " AND ZKS.ZKS_DOC = '" + ::docto + "' "
+		endif	
 	endif
 	
 	cSQL += " AND ZKS.D_E_L_E_T_ = '' 

@@ -97,6 +97,54 @@ Method Get() Class TAFMovimentoRemessaReceber
 	cSQL := " SELECT E1_PREFIXO, E1_NUM, E1_PARCELA, E1_TIPO, E1_CLIENTE, E1_LOJA, E1_VALOR, E1_SALDO, E1_DECRESC, E1_PORCJUR, E1_EMISSAO, E1_VENCTO, E1_VENCREA, "
 	cSQL += " E1_NUMBOR, E1_NUMBCO, E1_IDCNAB, E1_PEDIDO, E1_PORTADO, E1_AGEDEP, E1_CONTA, E1_SITUACA, E1_YCDGREG, E1_YCLASSE, E1_YEMP, E1_YUFCLI, SE1.R_E_C_N_O_ AS SE1_RECNO, "
 	cSQL += " A1_YCDGREG, A1_YDTPRO, A1_YTFGNRE, A1_YEMABOL, E1_NATUREZ "
+
+	//Inclui a Chave da NF
+	if (FIDC():isFIDCEnabled())
+
+		cSQL += " ,IsNull((SELECT DISTINCT (CASE SE1.E1_TIPO WHEN 'FT' THEN ("
+		cSQL += "	SELECT  CAST("
+		cSQL += "					STUFF("
+		cSQL += "								(SELECT CHAR(59)+CONVERT(NVARCHAR(1024),ISNULL(SF2CHVNFE.F2_CHVNFE,''))"
+		cSQL += "								FROM ("
+		cSQL += "												SELECT DISTINCT SF2.F2_CHVNFE AS F2_CHVNFE"
+		cSQL += "													FROM "+RetSQLName("SF2")+" SF2 (NOLOCK)"
+		cSQL += "													JOIN "+RetSQLName("SE1")+" SE1FAT (NOLOCK)"
+		cSQL += "													  ON SF2.D_E_L_E_T_=''"
+		cSQL += "													 AND SE1FAT.D_E_L_E_T_=SF2.D_E_L_E_T_"
+		cSQL += "													 AND SF2.F2_FILIAL=SE1FAT.E1_FILIAL"
+		cSQL += "													 AND SF2.F2_DOC=SE1FAT.E1_NUM"
+		cSQL += "													 AND SF2.F2_SERIE=SE1FAT.E1_SERIE"
+		cSQL += "													 AND SF2.F2_CLIENT=SE1FAT.E1_CLIENTE"
+		cSQL += "													 AND SF2.F2_LOJA=SE1FAT.E1_LOJA"
+		cSQL += "													 AND SF2.F2_EMISSAO=SE1FAT.E1_EMISSAO"
+		cSQL += "													 AND SE1FAT.E1_FILIAL=SE1.E1_FILIAL"
+		cSQL += "													 AND SE1FAT.E1_CLIENTE=SE1.E1_CLIENTE"
+		cSQL += "													 AND SE1FAT.E1_LOJA=SE1.E1_LOJA"
+		cSQL += "													 AND SE1FAT.E1_FATURA=SE1.E1_NUM"
+		cSQL += "								) SF2CHVNFE"
+		cSQL += "								FOR XML PATH('')"
+		cSQL += "								)"
+		cSQL += "								,1"
+		cSQL += "								,1"
+		cSQL += "								,''"
+		cSQL += "							)"
+		cSQL += "						AS VARCHAR(1024))"
+		cSQL += "					)"
+		cSQL += "ELSE"
+		cSQL += "(SELECT DISTINCT (SELECT SF2.F2_CHVNFE"
+		cSQL += "					 FROM "+RetSQLName("SF2")+" SF2 (NOLOCK)"
+		cSQL += "		            WHERE SF2.D_E_L_E_T_=''"
+		cSQL += "		              AND SF2.F2_FILIAL=SE1.E1_FILIAL"
+		cSQL += "		              AND SF2.F2_DOC=SE1.E1_NUM"
+		cSQL += "		              AND SF2.F2_SERIE=SE1.E1_SERIE"
+		cSQL += "		              AND SF2.F2_CLIENT=SE1.E1_CLIENTE"
+		cSQL += "		              AND SF2.F2_LOJA=SE1.E1_LOJA"
+		cSQL += "		              AND SF2.F2_EMISSAO=SE1.E1_EMISSAO)"
+		cSQL += ") END ) AS F2_CHVNFE),'') AS F2_CHVNFE"
+
+	endif
+
+	
 	cSQL += " FROM "+ RetSQLName("SE1") + " SE1 (NOLOCK) "
 	cSQL += " INNER JOIN "+ RetSQLName("SA1") + " SA1 (NOLOCK) "
 	cSQL += " ON A1_FILIAL = "+ ValToSQL(xFilial("SA1"))
@@ -162,7 +210,7 @@ Method Get() Class TAFMovimentoRemessaReceber
 
 	TcQuery cSQL New Alias (cQry)
 
-	While !(cQry)->(Eof())
+	While (cQry)->(!Eof())
 
 		oObj := TIAFMovimentoFinanceiro():New()
 
@@ -257,6 +305,11 @@ Method Get() Class TAFMovimentoRemessaReceber
 		oObj:cGRCB := (cQry)->A1_YCDGREG
 		oObj:cRCB := (cQry)->E1_YCDGREG
 		oObj:lMRCB := .F.
+
+		//Inclui a Chave da NF
+		if (FIDC():isFIDCEnabled())
+			oObj:cCHVNFE:=(cQry)->F2_CHVNFE
+		endif
 
 		::oLst:Add(oObj)
 
@@ -375,14 +428,16 @@ Method SetSend(nRecno, nTarAcrec) Class TAFMovimentoRemessaReceber
 	SE1->(DbSetOrder(0))
 	SE1->(DbGoTo(nRecno))
 
-	If !SE1->(Eof())
+	If SE1->(!Eof())
 
-		RecLock("SE1", .F.)
+		if SE1->(RecLock("SE1", .F.))
 
-		SE1->E1_YSITAPI := "1" // 0=Pendente; 1=Enviado; 2=Retorno com Sucesso; 3=Retorno com Erro
-		SE1->E1_YTXCOBR := nTarAcrec
+			SE1->E1_YSITAPI := "1" // 0=Pendente; 1=Enviado; 2=Retorno com Sucesso; 3=Retorno com Erro
+			SE1->E1_YTXCOBR := nTarAcrec
 
-		SE1->(MSUnlock())
+			SE1->(MSUnlock())
+		
+		endif
 
 	EndIf
 
@@ -504,7 +559,7 @@ Method GetFatura(cPrefixo, cNumero, cParcela) Class TAFMovimentoRemessaReceber
 
 	TcQuery cSQL New Alias (cQry)
 
-	While !(cQry)->(Eof())
+	While (cQry)->(!Eof())
 
 		If Empty(cRet)
 
@@ -585,7 +640,7 @@ Method ValidFatura(cPrefixo, cNumero, cParcela, cCliFor, cLoja) Class TAFMovimen
 
 	TcQuery cSQL New Alias (cQry)
 
-	While !(cQry)->(Eof()) .And. lRet
+	While lRet .and. (cQry)->(!Eof())
 
 		lRet := ::IsGreater24Hour((cQry)->E1_PREFIXO, (cQry)->E1_NUM, (cQry)->E1_CLIENTE, (cQry)->E1_LOJA, (cQry)->E1_PARCELA)
 

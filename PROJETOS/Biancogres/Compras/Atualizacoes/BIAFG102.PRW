@@ -27,7 +27,7 @@ User Function BIAFG102()
 
 	BeginSql Alias _cAlias
 		%NoParser%
-		SELECT ID 
+		SELECT TOP 1 ID 
 				,DADOS_ENTRADA DADOS
 				,PROCESSO_BIZAGI PROCBIZ
 		FROM BZINTEGRACAO
@@ -245,7 +245,7 @@ Static Function fImpEtiq(_cNota,_cSerie,_cFornece,_cLoja,_cItem,_cCod,_nEtiq)
 		//Realiza a Impressão
 		WinExec("CMD /C TYPE D:\PROTHEUS12\Protheus_Data\ImpAutoEtiq\" + _cArqEtiq + " > LPT3")
 
-		Sleep(5000 * _nEtiq)
+		Sleep(5000 + (2000 * (_nEtiq -1)))
 
 		If File("D:\PROTHEUS12\Protheus_Data\ImpAutoEtiq\" + _cArqEtiq)
 			_nRet	:=	FErase( "D:\PROTHEUS12\Protheus_Data\ImpAutoEtiq\" + _cArqEtiq )

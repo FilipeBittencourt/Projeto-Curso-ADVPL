@@ -684,6 +684,9 @@ User Function FCOMXPED(cPedido, cEmpDest, _cRepAtu, _cUserName, cFilOri, lMatriz
 
 			aAdd(aAux,{"C6_YDVER"	,(cAliasTmp)->C6_YDVER			,Nil})
 			aAdd(aAux,{"C6_YDACO"	,(cAliasTmp)->C6_YDACO			,Nil})
+			aAdd(aAux,{"C6_YDFRA"	,(cAliasTmp)->C6_YDFRA			,Nil})
+			
+			
 
 			If SC6->(FieldPos("C6_YDAI")) > 0
 				aAdd(aAux,{"C6_YDAI"	,(cAliasTmp)->C6_YDAI			,Nil})

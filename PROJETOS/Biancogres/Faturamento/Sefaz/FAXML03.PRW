@@ -170,10 +170,7 @@ Return(LRET)
 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
 Static Function fMSNewGe1()
 
-	Local nX
-	Local aHeaderEx := {}
-	Local aFieldFill := {}
-	Local aFields := {}
+	Local aHeadEx := {}
 	Local aAlterFields := {"CODPRO","PEDIDO","ITEMPC"}
 
 	//Carrega aHead

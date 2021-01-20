@@ -582,14 +582,14 @@ Method GetQuerySC6() Class TBloqueioPedidoVenda
 	cQueryFormato += " , '') FORMATO_P"+ CRLF
 	
 	cQueryPallet += " ISNULL("	+ CRLF
-	cQueryPallet += " (SELECT TOP 1 CASE WHEN (														"+ CRLF
-	cQueryPallet +=	"		(cast(MAX(C6_QTDVEN) as decimal(15,2))/cast(B1_CONV as decimal(15,2)))       "+ CRLF
-	cQueryPallet +=	"		% cast(B1_YDIVPA as decimal(15,2))                                      "+ CRLF
-	cQueryPallet +=	"	  ) = 0                                                                     "+ CRLF
-	cQueryPallet +=	"	 THEN 'S' ELSE 'N' END 	   		                                            "+ CRLF
+	cQueryPallet += " (SELECT TOP 1 CASE WHEN (															"+ CRLF
+	cQueryPallet +=	"		(cast(MAX(C6_QTDVEN) as decimal(15,2))/cast(B1_CONV as decimal(15,2)))		"+ CRLF
+	cQueryPallet +=	"		% cast(B1_YDIVPA as decimal(15,2))                                      	"+ CRLF
+	cQueryPallet +=	"	  ) = 0 Or (MAX(C6_QTDVEN) = MAX(C6_YQTDSUG))                            	    "+ CRLF
+	cQueryPallet +=	"	 THEN 'S' ELSE 'N' END 	   		                                          		"+ CRLF
 	cQueryPallet += " FROM "+RetSQLName("SB1")+" WHERE B1_COD = MAX(C6_PRODUTO) AND	D_E_L_E_T_ 	= '' 	"+ CRLF
-	cQueryPallet += " AND B1_FILIAL = '"+xFilial("SB1")+"' )										"+ CRLF
-	cQueryPallet += " , '') PALETIZADO 																"+ CRLF
+	cQueryPallet += " AND B1_FILIAL = '"+xFilial("SB1")+"' )											"+ CRLF
+	cQueryPallet += " , '') PALETIZADO 																	"+ CRLF
 	
 	cQueryDupli += " ISNULL((																			"+ CRLF
 	cQueryDupli += " select TOP 1 F4_DUPLIC from "+RetSQLName("SF4")+" 									"+ CRLF
@@ -626,16 +626,21 @@ Method GetQuerySC6() Class TBloqueioPedidoVenda
 		cFiltroExCl := " CASE WHEN (SELECT COUNT(*) 													"+ CRLF
 		cFiltroExCl += " 	FROM "+RetSQLName("SC6")+" A 												"+ CRLF
 		cFiltroExCl += " 	JOIN "+RetSQLName("SB1")+" B on B1_COD = C6_PRODUTO 						"+ CRLF
-		cFiltroExCl += " 	JOIN (SELECT A1_FILIAL, A1_COD, A1_LOJA, A1_YCAT 							"+ CRLF
+		cFiltroExCl += " 	JOIN (SELECT A1_FILIAL, A1_COD, A1_LOJA, A1_YCAT, A1_YGALERI				"+ CRLF
 		cFiltroExCl += " 			FROM "+cSA1+" 														"+ CRLF
 		cFiltroExCl += " 			WHERE D_E_L_E_T_='') C on A1_COD = C6_CLI and A1_LOJA = C6_LOJA 	"+ CRLF
 		cFiltroExCl += " 	WHERE 	C6_FILIAL	= '"+xFilial("SC6")+"' 									"+ CRLF
 		cFiltroExCl += " 	AND C6_NUM 			= '"+::cNumPed+"' 										"+ CRLF
 		cFiltroExCl += " 	AND B1_YEXCL 		= 'E' AND A1_YCAT <> 'LOJA ESPEC'						"+ CRLF
+		cFiltroExCl += " 	AND A1_YGALERI 		NOT IN ('T', 'A', 'L')									"+ CRLF
 		cFiltroExCl += " 	AND A.D_E_L_E_T_ 	= '' 													"+ CRLF
+		cFiltroExCl += " 	AND A.C6_BLQ	 	= '' 													"+ CRLF
+		
 		cFiltroExCl += " 	AND B.D_E_L_E_T_= '') > 0 THEN 'S' ELSE 'N' END BLOQ_EXCL 					"+ CRLF
 
 	EndIf
+	
+	
 	
 	cQueryExEng := " CASE WHEN (SELECT COUNT(*) 													"+ CRLF
 	cQueryExEng += " 	FROM "+RetSQLName("SC6")+" A 												"+ CRLF
@@ -647,6 +652,7 @@ Method GetQuerySC6() Class TBloqueioPedidoVenda
 	cQueryExEng += " 	AND C6_NUM 			= '"+::cNumPed+"' 										"+ CRLF
 	cQueryExEng += " 	AND B1_YEXCL 		= 'H' AND A1_YTPSEG <> 'E'								"+ CRLF
 	cQueryExEng += " 	AND A.D_E_L_E_T_ 	= '' 													"+ CRLF
+	cQueryExEng += " 	AND A.C6_BLQ	 	= '' 													"+ CRLF
 	cQueryExEng += " 	AND B.D_E_L_E_T_= '') > 0 THEN 'S' ELSE 'N' END BLOQ_EXENG 					"+ CRLF
 
 	//Calcula Media do Desconto Padrão e Realizada - Gravação de Campos legados no SC5

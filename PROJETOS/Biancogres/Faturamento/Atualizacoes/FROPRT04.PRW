@@ -438,12 +438,16 @@ User Function FRRT04V1()
 
 			EndIf
 			//Thiago Haagensen - Ticket 27599 - Alterar o parâmetro de data máxima de necessidade de engenharia para 180 dias
-			If AllTrim(SA1->A1_YTPSEG) == "E" .And. !( DateDiffMonth(M->C6_YDTNECE, dDataBase) <= 6 )
+			//ZZ6_PRZENG
+			
+			__nPrazoMaximo	:= GetNewPar("FA_PRAZOM", 360)
+				
+			If AllTrim(SA1->A1_YTPSEG) == "E" .And. ((M->C6_YDTNECE - dDataBase) >__nPrazoMaximo )
 
 				If !U_VALOPER("R04",.F.,.F.)
 
 					U_FROPMSG("OP R04 - "+TIT_MSG, 	"SEGMENTO: ENGENHARIA"+CRLF+;
-					"A DATA DE NECESSIDADE não pode ser acima de 06 meses da data atual.",;
+					"A DATA DE NECESSIDADE não pode ser acima de "+cvaltochar(__nPrazoMaximo)+" dias da data atual.",;
 					,,"Informar Data de Necessidade")
 					Return(.F.)
 

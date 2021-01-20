@@ -17,9 +17,11 @@ User Function BIA609()
 	{               "Visualizar"      ,"AxVisual"	    				,0,2},;
 	{               "Processar"       ,'ExecBlock("BIA609A",.F.,.F.)'   ,0,3}}
 
-	dbSelectArea("ZO8")
-	dbSetOrder(1)
-	dbGoTop()
+	_bCondicao := {|| ZO8_TPCUS = 'CV' }
+	_cCondicao := "ZO8_TPCUS = 'CV'"
+	DbSelectArea("ZO8")
+	DbSetOrder(1)
+	DbSetFilter(_bCondicao, _cCondicao)	
 
 	mBrowse(06,01,22,75,"ZO8")
 
@@ -27,8 +29,6 @@ Return
 
 User Function BIA609A()
 
-	Local oEmp 	:= Nil
-	Local nW	:= 0
 	Local lRet  := .F.
 	Local oPerg	:= Nil
 	Local cMsg  := ""
@@ -36,52 +36,32 @@ User Function BIA609A()
 	Private cTitulo := "RAC Orçada - Proc. Custo Unitário Variável"
 	Private msCanPrc  := .F.
 
-	oEmp := TLoadEmpresa():New()
-
 	oPerg := TWPCOFiltroPeriodo():New()
 
 	If oPerg:Pergunte()
 
-		oEmp:GetSelEmp()
+		Begin Transaction
 
-		If Len(oEmp:aEmpSel) > 0
+			xVerRet := .F.
+			Processa({ || ExistThenD(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Deletando dados...", .F.)
+			If xVerRet
 
-			Begin Transaction
+				Processa({ || fProcessa(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Processando dados...", .F.)
+				lRet := xVerRet 
 
-				For nW := 1 To Len(oEmp:aEmpSel)
+			Else
 
-					If ExistThenDelete(oEmp:aEmpSel[nW][1], oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg)
+				msCanPrc  := .T.
 
-						lRet := Processa(oEmp:aEmpSel[nW][1], oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg)
+			EndIf
 
-						If !lRet
+			If !lRet
 
-							Exit
+				DisarmTransaction()
 
-						EndIf
+			EndIf
 
-					Else
-
-						msCanPrc  := .T.
-
-					EndIf
-
-				Next nW
-
-				If !lRet
-
-					DisarmTransaction()
-
-				EndIf
-
-			End Transaction
-
-		Else
-
-			Alert("Nenhuma empresa foi selecionada!")
-			msCanPrc  := .T.
-
-		EndIf
+		End Transaction
 
 	Else
 
@@ -109,19 +89,20 @@ User Function BIA609A()
 
 Return
 
-Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
+Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 	Local cSQL := ""
 	Local nW   := 0
 	Local cQry := ""
 
 	Local lRet	:= .T.
-	Local cModo //Modo de acesso do arquivo aberto //"E" ou "C"
-	Local cZO8	:= ""
 
 	Default cMsg    := ""
 
+	ProcRegua(0)
 	For nW := 1 To 12
+
+		IncProc("Processando Registros encontrados na base...")
 
 		cQry := GetNextAlias()
 
@@ -180,70 +161,46 @@ Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 		TcQuery cSQL New Alias (cQry)
 
-		cZO8 := GetNextAlias()
-
+		ProcRegua(0)
 		While !(cQry)->(Eof())
 
-			IF EmpOpenFile(cZO8, "ZO8", 1, .T., cEmp, @cModo)
+			IncProc("Processando Registros encontrados na base...")
 
-				Reclock(cZO8, .T.)
-				(cZO8)->ZO8_FILIAL  := cEmp
-				(cZO8)->ZO8_VERSAO  := cVersao
-				(cZO8)->ZO8_REVISA  := cRevisa
-				(cZO8)->ZO8_ANOREF  := cAnoRef
-				(cZO8)->ZO8_TPCUS	:= (cQry)->Z29_TIPO
-				(cZO8)->ZO8_ITCUS   := (cQry)->ITCUS
-				(cZO8)->ZO8_PRODUT  := (cQry)->PRODUT
-				// (cZO8)->ZO8_DESCR   := (cQry)->Z29_DESCR
-				(cZO8)->ZO8_DTREF   := STOD((cQry)->DTREF)
-				(cZO8)->ZO8_CUS218  := (cQry)->CUS218
-				(cZO8)->ZO8_CUS221  := (cQry)->CUS221
-				(cZO8)->ZO8_CUS220  := (cQry)->CUS220
-				(cZO8)->ZO8_CUS223  := (cQry)->CUS223
-				(cZO8)->ZO8_CUS224  := (cQry)->CUS224
-				(cZO8)->(MsUnlock())
-
-			Else
-
-				lRet := .F.
-
-				cMsg := "Não conseguiu abrir a empresa " + cEmp + " !"
-
-				Exit
-
-			EndIf
-
-			If Select(cZO8) > 0
-
-				(cZO8)->(DbCloseArea())
-
-			EndIf
+			Reclock("ZO8", .T.)
+			ZO8->ZO8_FILIAL  := cEmp
+			ZO8->ZO8_VERSAO  := cVersao
+			ZO8->ZO8_REVISA  := cRevisa
+			ZO8->ZO8_ANOREF  := cAnoRef
+			ZO8->ZO8_TPCUS	:= (cQry)->Z29_TIPO
+			ZO8->ZO8_ITCUS   := (cQry)->ITCUS
+			ZO8->ZO8_PRODUT  := (cQry)->PRODUT
+			// ZO8->ZO8_DESCR   := (cQry)->Z29_DESCR
+			ZO8->ZO8_DTREF   := STOD((cQry)->DTREF)
+			ZO8->ZO8_CUS218  := (cQry)->CUS218
+			ZO8->ZO8_CUS221  := (cQry)->CUS221
+			ZO8->ZO8_CUS220  := (cQry)->CUS220
+			ZO8->ZO8_CUS223  := (cQry)->CUS223
+			ZO8->ZO8_CUS224  := (cQry)->CUS224
+			ZO8->(MsUnlock())
 
 			(cQry)->(DbSkip())
 
-		EndDo
+		End
 
 		(cQry)->(DbCloseArea())
 
-		If !lRet
-
-			Exit
-
-		EndIf
-
 	Next nW
+
+	xVerRet := lRet 
 
 Return(lRet)
 
-Static Function ExistThenDelete(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
+Static Function ExistThenD(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 	Local cSQL  := ""
 	Local cQry  := ""
 	Local lPerg := .T.
 	Local lRet  := .T.
-
-	Local cModo //Modo de acesso do arquivo aberto //"E" ou "C"
-	Local cZO8	:= GetNextAlias()
 
 	Default cMsg := ""
 
@@ -260,7 +217,10 @@ Static Function ExistThenDelete(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 	TcQuery cSQL New Alias (cQry)
 
+	ProcRegua(0)
 	While !(cQry)->(Eof())
+
+		IncProc("Apagando Registros encontrados na base...")
 
 		If lPerg
 
@@ -280,36 +240,22 @@ Static Function ExistThenDelete(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 		EndIf
 
-		If EmpOpenFile(cZO8, "ZO8", 1, .T., cEmp, @cModo)
+		ZO8->(DBGoTo((cQry)->RECNO))
 
-			(cZO8)->(DBGoTo((cQry)->RECNO))
+		If !ZO8->(EOF())
 
-			If !(cZO8)->(EOF())
-
-				Reclock(cZO8, .F.)
-				(cZO8)->(DBDelete())
-				(cZO8)->(MsUnlock())
-
-			EndIf
-
-		Else
-
-			lRet := .F.
-
-			cMsg := "Não conseguiu abrir a empresa " + cEmp + " !"
-
-		EndIf
-
-		If Select(cZO8) > 0
-
-			(cZO8)->(DbCloseArea())
+			Reclock("ZO8", .F.)
+			ZO8->(DBDelete())
+			ZO8->(MsUnlock())
 
 		EndIf
 
 		(cQry)->(DbSkip())
 
-	EndDo
+	End
 
 	(cQry)->(DbCloseArea())
+
+	xVerRet := lRet 
 
 Return(lRet)

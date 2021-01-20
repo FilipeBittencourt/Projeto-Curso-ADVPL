@@ -10,16 +10,17 @@
 @type function
 /*/
 
-User Function FPBIGEMP(cCodPro, nQtdDig, cSegmento, cIdTemp, cItemPV, nPercMax, nPercMin, cEmpOri, lPalete, _cCategoria, _cLotRes, _nProxLote, _cLoteAdd, _cLoteExc)
+User Function FPBIGEMP(cCodPro, nQtdDig, cSegmento, cIdTemp, cItemPV, nPercMax, nPercMin, cEmpOri, lPalete, _cCategoria, _cLotRes, _nProxLote, _cLoteAdd, _cLoteExc, _cPrioSaldo, _nTolerancia, _lExibirTela)
 
 	Local oPBI
-	Local aRet := Array(12)
+	Local aRet := Array(13)
 
 	Default cEmpOri 	:= ""
 	Default lPalete 	:= .F.
 	Default _cCategoria	:= ""
 	Default _cLotRes	:= ""
 	Default _nProxLote	:= .F.
+	
 
 	oPBI := TPorcelanatoBiancogresIncesa():New()
 
@@ -37,8 +38,11 @@ User Function FPBIGEMP(cCodPro, nQtdDig, cSegmento, cIdTemp, cItemPV, nPercMax, 
 	oPBI:nProxLote	:= _nProxLote
 	oPBI:cLoteAdd	:= _cLoteAdd
 	oPBI:cLoteExc	:= _cLoteExc
-
-	oPBI:ChkEmpPro()
+	oPBI:cPrioSaldo	:= _cPrioSaldo
+	oPBI:nTolerancia:= _nTolerancia
+	oPBI:ExibirTela := _lExibirTela
+	
+	oPBI:TelaSugestao()
 
 	aRet[1] 	:= oPBI:EmpEst		
 	aRet[2] 	:= oPBI:LocEst		
@@ -52,5 +56,6 @@ User Function FPBIGEMP(cCodPro, nQtdDig, cSegmento, cIdTemp, cItemPV, nPercMax, 
 	aRet[10] 	:= oPBI:Qtd_Um_Pallet
 	aRet[11] 	:= oPBI:Qtd_Ponta		
 	aRet[12] 	:= oPBI:Regra_Sug
-
+	aRet[13] 	:= oPBI:EscolheuSugestao
+	
 Return(aRet)

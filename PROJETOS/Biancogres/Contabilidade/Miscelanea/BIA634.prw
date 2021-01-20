@@ -1,7 +1,7 @@
 #INCLUDE "TOTVS.CH"
 #INCLUDE "TOPCONN.CH"
 
-/*/{Protheus.doc} BIA628
+/*/{Protheus.doc} BIA634
 @author Wlysses Cerqueira (Facile)
 @since 14/12/2020
 @version 1.0

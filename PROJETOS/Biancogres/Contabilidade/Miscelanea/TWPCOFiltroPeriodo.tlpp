@@ -1,6 +1,8 @@
 #INCLUDE "TOTVS.CH"
 #INCLUDE "TOPCONN.CH"
 
+static __oPergunte	as object
+
 /*/{Protheus.doc} TWPCOFiltroPeriodo
 @author Wlysses Cerqueira (Facile)
 @since 27/10/2020
@@ -56,55 +58,68 @@ Method Pergunte(lMesAno, lDataFech, lTipoRef) Class TWPCOFiltroPeriodo
 	Default lDataFech := .F.
 	Default lTipoRef := .F.
 
-	::bConfirm := {|| .T. }
+	::bConfirm := {|| ValidData() }
 
 	::aParam := {}
 
 	::aParRet := {}
 
-	aAdd( ::aParam, {1, "Versão"	, ::cVersao	, "@!", ".T.", "ZB5", ".T.", , .T. })
-	aAdd( ::aParam, {1, "Revisão"	, ::cRevisa	, "@!", ".T.", ""	, ".T.", , .T. })
-	aAdd( ::aParam, {1, "Ano Ref."	, ::cAnoRef	, "@!", ".T.", ""	, ".T.", , .T. })
+	private MV_PAR01
+	varRef("self:cVersao","MV_PAR01")
+	aAdd( ::aParam, {1, "Versão"	, ::cVersao	, "@!", ".T.", "ZB5", "AllWaysTrue()", , .T. })
+	
+	private MV_PAR02
+	varRef("self:cRevisa","MV_PAR02")
+	aAdd( ::aParam, {1, "Revisão"	, ::cRevisa	, "@!", ".T.", ""	, "AllWaysTrue()", , .T. })
+	
+	private MV_PAR03
+	varRef("self:cAnoRef","MV_PAR03")
+	aAdd( ::aParam, {1, "Ano Ref."	, ::cAnoRef	, "@!", ".T.", ""	, "AllWaysTrue()", , .T. })
 
-	If lMesAno
+	If (lMesAno)
 
+		private MV_PAR04
+		varRef("self:cMesAno","MV_PAR04")
 		aAdd(::aParam, {1, "Mes/Ano", ::cMesAno, "@R !!/!!!!", ".T.", "", ".T.",,.F.})
 
 	EndIf
 
-	If lDataFech
+	If (lDataFech)
 
+		private MV_PAR05
+		varRef("self:dDataFech","MV_PAR05")
 		aAdd(::aParam, {1, "Dt fechamento", ::dDataFech, "@D", ".T.",,".T.",,.F.})
 
 	EndIf
 
-	If lTipoRef
+	If (lTipoRef)
 
+		private MV_PAR06
+		varRef("self:cTipoRef","MV_PAR06")
 		aAdd(::aParam, {1, "Tipo Ref.", ::cTipoRef, "@!", ".T.", "", ".T.",,.F.})
 
 	EndIf
 
-	If ParamBox(::aParam, "Operações", ::aParRet, ::bConfirm,,,,,,::cName, .T., .T.)
-
-		lRet := .T.
+	lRet:=ParamBox(::aParam, "Operações", ::aParRet, ::bConfirm,,,,,,::cName, .T., .T.)
+	If (lRet)
 
 		::cVersao := ::aParRet[nTam++]
 		::cRevisa := ::aParRet[nTam++]
 		::cAnoRef := ::aParRet[nTam++]
 
-		If lMesAno
+		If (lMesAno)
 
 			::cMesAno := ::aParRet[nTam++]
 
 		EndIf
 
-		If lDataFech
+		If (lDataFech)
 
 			::dDataFech := ::aParRet[nTam++]
 
 		EndIf
 
-		If lTipoRef
+		If (lTipoRef)
 
 			::cTipoRef := ::aParRet[nTam++]
 
@@ -112,4 +127,42 @@ Method Pergunte(lMesAno, lDataFech, lTipoRef) Class TWPCOFiltroPeriodo
 
 	EndIf
 
+	varUnref("self:cVersao")
+	varUnref("self:cRevisa")
+	varUnref("self:cAnoRef")
+	
+	If (lMesAno)
+		varUnref("self:cMesAno")
+	endif
+	
+	If (lDataFech)
+		varUnref("self:dDataFech")
+	endif
+	
+	If (lTipoRef)
+		varUnref("self:cTipoRef")
+	endif
+
 Return(lRet)
+
+static function ValidData() as logical
+	local lDataValid as logical
+	lDataValid:=ExistCPO("ZB5",MV_PAR01+MV_PAR02+MV_PAR03)
+	return(lDataValid)
+
+class __TWPCOFiltroPeriodo
+	static Method Get() as object
+	static Method Pergunte() as logical
+end class
+
+static Method Get() class __TWPCOFiltroPeriodo
+	if (!(valtype(__oPergunte)=="O"))
+		__oPergunte:=TWPCOFiltroPeriodo():New()
+	endif
+	return(__oPergunte)
+
+static Method Pergunte(lMesAno,lDataFech,lTipoRef) class __TWPCOFiltroPeriodo
+	local lPergunte				as logical
+	__oPergunte:=TWPCOFiltroPeriodo():New()
+	lPergunte:=__oPergunte:Pergunte(@lMesAno,@lDataFech,@lTipoRef)
+	return(lPergunte)

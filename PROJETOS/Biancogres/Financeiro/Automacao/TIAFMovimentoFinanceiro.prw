@@ -87,6 +87,9 @@ Class TIAFMovimentoFinanceiro From LongClassName
 	Data cGRCB // Grupo
 	Data cRCB // Regra
 	Data lMRCB // Regra multipla
+
+	//Chave da Nota Fiscal
+	Data cCHVNFE	
 	
 	Method New() Constructor
 	

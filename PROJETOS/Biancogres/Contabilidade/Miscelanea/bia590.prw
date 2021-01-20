@@ -25,7 +25,7 @@ User Function BIA590()
 	{                         "OBZ p/ CAPEX"         ,"U_B590OCAP"   ,0,4},;
 	{                         "Trocar Usuário Resp"  ,"U_B590TRCA"   ,0,5},;
 	{                         "Conferir Digitação"   ,"U_B590CFDG"   ,0,6},;
-	{                         "SN3 p/ ATF Orçamen"   ,"U_B590SN3O"   ,0,7},;
+	{                         "SN3 p/ ATF Orçamento" ,"U_B590SN3O"   ,0,7},;
 	{                         "CAPEX p/ ATF Orçamen" ,"U_B590ZBVO"   ,0,8} }
 
 	dbSelectArea("ZBV")
@@ -33,7 +33,7 @@ User Function BIA590()
 
 	If cEmpAnt <> "01"
 
-		MsgSTOP("Esta rotina somente poderá ser acessada pela empresa Biancogres. Isto porque tanto a leitura do formuário CAPEX quanto a explosão da tabela SN3 são feitas de uma única vez para as empresas 01 / 05 / 06 / 07 / 12 / 13 / 14!!!")
+		MsgSTOP("Esta rotina somente poderá ser acessada pela empresa Biancogres. Isto porque tanto a leitura do formuário CAPEX quanto a explosão da tabela SN3 são feitas de uma única vez para as empresas 01 / 05 / 06 / 07 / 12 / 13 / 14 / 16 / 17!!!")
 
 	Else
 
@@ -60,6 +60,11 @@ User Function B590OCAP()
 	Private ocVersao        := space(010)
 	Private ocRevisa        := space(003) 
 	Private ocAnoRef		:= space(004) 
+
+
+	MsgSTOP("Sem funcionalidade para o modelo. Retirado de uso devido melhora no processo de OBZ!!!")
+	Return
+
 
 	AADD(aSays, OemToAnsi("Rotina para importação de dados oriundos da tabela OBZ p/ CAPEX Integration!"))   
 	AADD(aSays, OemToAnsi(""))   
@@ -394,6 +399,11 @@ User Function B590IEXC()
 	Private xdRevisa        := space(003) 
 	Private xdAnoRef		:= space(004) 
 	Private xdUserDigt      := space(006) 
+
+
+	MsgSTOP("Opção substituída pela rotina BIAFG105. Processo abortado!!!", "Atenção")
+	Return
+
 
 	AADD(aSays, OemToAnsi("Rotina para importação da Planilha de dados oriunda do CAPEX Integration!"))   
 	AADD(aSays, OemToAnsi(""))   
@@ -734,6 +744,11 @@ User Function B590TRCA()
 	Private trUserDigt      := space(006) 
 	Private trNovoUser      := space(006) 
 
+
+	MsgSTOP("Rotina descontinuada. Toda manutenção de arquivo é feita pela rotina BIAFG105!!!")
+	Return
+
+
 	AADD(aSays, OemToAnsi("Rotina para Troca de Usuário Responsável pelo Acompanhamento CAPEX Integration!"))   
 	AADD(aSays, OemToAnsi(""))   
 	AADD(aSays, OemToAnsi("Antes de continuar, verifique os parâmetros!"))   
@@ -878,6 +893,11 @@ User Function B590CFDG()
 	Private cfVersao        := space(010)
 	Private cfRevisa        := space(003) 
 	Private cfAnoRef		:= space(004) 
+
+
+	MsgSTOP("Rotina descontinuada. Toda manutenção de arquivo é feita pela rotina BIAFG105!!!")
+	Return
+
 
 	AADD(aSays, OemToAnsi("Rotina para listar divergência encontrada após importação planilhas CAPEX!"))   
 	AADD(aSays, OemToAnsi(""))   
@@ -1272,7 +1292,7 @@ Return
 Static Function fProcSN3Or()
 
 	Local n3xy
-	Local n3EmprPrc := {"01","05","06","07","12","13","14"}
+	Local n3EmprPrc := {"01", "05", "06", "07", "12", "13", "14", "16", "17"}
 
 	ProcRegua(0)
 	For n3xy := 1 to Len(n3EmprPrc)

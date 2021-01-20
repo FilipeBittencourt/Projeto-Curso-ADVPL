@@ -5,112 +5,89 @@
 @author Wlysses Cerqueira (Facile)
 @since 04/12/2020
 @version 1.0
-@Projet A-35
 @description Processamento - Kardex Orçado - Processamento dos Saldos Iniciais.
 @type function
+@Obs Projeto A-35
 /*/
 
 User Function BIA614()
 
-	Local oEmp 	:= Nil
-	Local nW	:= 0
 	Local lRet  := .F.
 	Local oPerg	:= Nil
 	Local cMsg  := ""
 
 	Private cTitulo := "Kardex Orçado - Processamento dos Saldos Iniciais"
-
-	//RpcSetEnv("01", "01")
-
-	oEmp := TLoadEmpresa():New()
+	Private msCanPrc  := .F.
 
 	oPerg := TWPCOFiltroPeriodo():New()
 
 	If oPerg:Pergunte(, .T.)
 
-		oEmp:GetSelEmp()
+		Begin Transaction
 
-		If Len(oEmp:aEmpSel) > 0
+			xVerRet := .F.
+			Processa({ || fProcessa(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, oPerg:dDataFech, @cMsg) }, "Aguarde...", "Processando dados...", .F.)
+			lRet := xVerRet 
 
-			Begin Transaction
+			If !lRet
 
-				For nW := 1 To Len(oEmp:aEmpSel)
+				DisarmTransaction()
 
-					lRet := Processa(oEmp:aEmpSel[nW][1], oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, oPerg:dDataFech, @cMsg)
+			EndIf
 
-					If !lRet
+		End Transaction
 
-						Exit
+	Else
 
-					EndIf
+		msCanPrc  := .T.
 
-				Next nW
+	EndIf
 
-				If !lRet
+	If !msCanPrc
 
-					DisarmTransaction()
+		If !lRet
 
-				EndIf
-
-			End Transaction
+			MsgSTOP("Erro no processamento!" + CRLF + CRLF + cMsg, "ATENÇÃO - BIA614")
 
 		Else
 
-			Alert("Nenhuma empresa foi selecionada!")
-
-		EndIf
-
-	EndIf
-
-	If !lRet
-
-		Alert("Erro no processamento!" + CRLF + CRLF + cMsg, "Empresa: [" + cEmp + "]  - ATENÇÃO")
-
-	EndIf
-
-	//RpcClearEnv()
-
-Return()
-
-Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
-
-	Local lRet  := .T.
-	Local cModo := "" //Modo de acesso do arquivo aberto //"E" ou "C"
-	Local cZOA  := GetNextAlias()
-
-	Default cMsg    := ""
-
-	If EmpOpenFile(cZOA, "ZOA", 1, .T., cEmp, @cModo)
-
-		(cZOA)->(DBSetOrder(2)) // ZOA_FILIAL, ZOA_VERSAO, ZOA_REVISA, ZOA_ANOREF, ZOA_DTREF, ZOA_PRODUT, R_E_C_N_O_, D_E_L_E_T_
-
-		If (cZOA)->(DbSeek(cEmp + cVersao + cRevisa + cAnoRef))
-
-			While !(cZOA)->(Eof()) .And. (cZOA)->(ZOA_FILIAL + ZOA_VERSAO + ZOA_REVISA + ZOA_ANOREF) == cEmp + cVersao + cRevisa + cAnoRef
-
-				Reclock(cZOA, .F.)
-				(cZOA)->ZOA_QINI := ( ( (cZOA)->ZOA_QATU + (cZOA)->ZOA_QEPROJ ) - (cZOA)->ZOA_QSPROJ )
-				(cZOA)->ZOA_VINI := ( ( (cZOA)->ZOA_VATU + (cZOA)->ZOA_VEPROJ ) - (cZOA)->ZOA_VSPROJ )
-				(cZOA)->(MsUnlock())
-
-				(cZOA)->(DbSkip())
-
-			EndDo
+			MsgINFO("Fim do processamento!" + CRLF + CRLF + cMsg, "ATENÇÃO - BIA614")
 
 		EndIf
 
 	Else
 
-		lRet := .F.
-
-		cMsg := "Não conseguiu abrir a empresa " + cEmp + " !"
+		MsgALERT("Processamento Abortado", "BIA614")
 
 	EndIf
 
-	If Select(cZOA) > 0
+Return
 
-		(cZOA)->(DbCloseArea())
+Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
+
+	Local lRet  := .T.
+
+	Default cMsg    := ""
+
+	ZOA->(DBSetOrder(2))
+	If ZOA->(DbSeek(cEmp + cVersao + cRevisa + cAnoRef))
+
+		ProcRegua(0)
+		While !ZOA->(Eof()) .And. ZOA->(ZOA_FILIAL + ZOA_VERSAO + ZOA_REVISA + ZOA_ANOREF) == cEmp + cVersao + cRevisa + cAnoRef
+
+			IncProc("Processando Registros encontrados na base...")
+
+			Reclock("ZOA", .F.)
+			ZOA->ZOA_QINI := ( ( ZOA->ZOA_QATU + ZOA->ZOA_QEPROJ ) - ZOA->ZOA_QSPROJ )
+			ZOA->ZOA_VINI := ( ( ZOA->ZOA_VATU + ZOA->ZOA_VEPROJ ) - ZOA->ZOA_VSPROJ )
+			ZOA->(MsUnlock())
+
+			ZOA->(DbSkip())
+
+		End
 
 	EndIf
+
+	xVerRet := lRet 
 
 Return(lRet)

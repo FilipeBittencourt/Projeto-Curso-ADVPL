@@ -278,9 +278,7 @@ static function dbToXML(cAlias as character,cFile as character,cExcelTitle as ch
 
 static function ReadMemo(cFile) as character
 	local cMemoRead as character
-	local ocTools   as object
-    ocTools:=cTools():New()
-	cMemoRead:=ocTools:ReadMemo(cFile)
+	cMemoRead:=cTools():ReadMemo(cFile)
 	return(cMemoRead)
 
 static function getFileTmp(cFile as character) as character

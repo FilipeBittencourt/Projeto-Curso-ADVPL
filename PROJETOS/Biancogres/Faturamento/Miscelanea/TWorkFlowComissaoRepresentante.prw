@@ -523,7 +523,7 @@ Method SendWorkFlow(cCGC, cMail, cHtml) Class TWorkFlowComissaoRepresentante
 Local cFile := ""
 Local oMail := TAFMail():New()
 
-	cFile := "\P10\Relato\Rep\comissao\CR_" + AllTrim(cCGC) + "_" + cEmpAnt + "_" + Month2Str(dDataBase) + ".html"
+	cFile := "\P10\Relato\Rep\comissao\CR_" + AllTrim(cCGC) + "_" + cEmpAnt + "_" + cFilAnt + "_" + Month2Str(dDataBase) + ".html"
 	
 	If File(cFile)
 

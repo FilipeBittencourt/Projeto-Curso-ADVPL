@@ -672,6 +672,10 @@ Static Function fHeaderClick(oBrw, nCol)
 	Local nTabOrd := 0
 	Static nColClick := 0
 
+	if (.F.)
+		fHeaderClick(@oBrw,@nCol)
+	endif
+
 	DbSelectArea(oBrw:cAlias)
 
 	aField := (oBrw:cAlias)->(Dbstruct())

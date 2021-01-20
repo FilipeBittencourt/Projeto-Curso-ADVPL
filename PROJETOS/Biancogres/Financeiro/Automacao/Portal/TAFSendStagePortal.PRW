@@ -68,7 +68,13 @@ Method SendStage() Class TAFSendStagePortal
 		cSql += ValToSql(oBol:CodBanco) + ", "
 		cSql += ValToSql(::oCedente:CPFCNPJ) + ", "
 		cSql += ValToSql(::oCedente:Codigo) + ", "
-		cSql += ValToSql(oBol:Sacado:CPFCNPJ) + ", "
+		
+		if(!Empty(oBol:Sacado:CPFCNPJ))
+			cSql += ValToSql(oBol:Sacado:CPFCNPJ) + ", "
+		else
+			cSql += "'', "
+		endif
+		
 		cSql += ValToSql(oBol:NumDoc) + ", "
 		cSql += ValToSql(oBol:ChaveUnica) + ", "
 		cSql += ValToSql(oBol:NNumero) + ", "

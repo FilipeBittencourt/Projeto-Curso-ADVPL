@@ -5,137 +5,110 @@
 @author Wlysses Cerqueira (Facile)
 @since 14/12/2020
 @version 1.0
-@Projet A-35
 @description Processamento - Variação de Estoque de Quant. e Custo
 @type function
+@Obs Projeto A-35
 /*/
 
 User Function BIA619()
 
-	Local oEmp 	:= Nil
-	Local nW	:= 0
 	Local lRet  := .F.
 	Local oPerg	:= Nil
 	Local cMsg  := ""
 
 	Private cTitulo := "DRE - Variação de Estoque de Quant. e Custo"
-
-	//RpcSetEnv("01", "01")
-
-	oEmp := TLoadEmpresa():New()
+	Private msCanPrc  := .F.
 
 	oPerg := TWPCOFiltroPeriodo():New()
 
 	If oPerg:Pergunte()
 
-		oEmp:GetSelEmp()
+		Begin Transaction
 
-		If Len(oEmp:aEmpSel) > 0
+			xVerRet := .F.
+			Processa({ || fProcessa(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Processando dados...", .F.)
+			If xVerRet
 
-			Begin Transaction
+				Processa({ || fProcesZBZ(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Gravando ZBZ dados...", .F.)
+				lRet := xVerRet 
 
-				For nW := 1 To Len(oEmp:aEmpSel)
+			Else
 
-					lRet := Processa(oEmp:aEmpSel[nW][1], oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg)
+				msCanPrc  := .T.
 
-					If lRet
+			EndIf
 
-						lRet := ProcessaZBZ(oEmp:aEmpSel[nW][1], oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg)
+			If !lRet
 
-					Else
+				DisarmTransaction()
 
-						Exit
+			EndIf
 
-					EndIf
+		End Transaction
 
-					If !lRet
+	Else
 
-						Exit
+		msCanPrc  := .T.
 
-					EndIf
+	EndIf
 
-				Next nW
+	If !msCanPrc
 
-				If !lRet
+		If !lRet
 
-					DisarmTransaction()
-
-				EndIf
-
-			End Transaction
+			MsgSTOP("Erro no processamento!" + CRLF + CRLF + cMsg, "ATENÇÃO - BIA619")
 
 		Else
 
-			Alert("Nenhuma empresa foi selecionada!")
-
-		EndIf
-
-	EndIf
-
-	If !lRet
-
-		Alert("Erro no processamento!" + CRLF + CRLF + cMsg, "ATENÇÃO")
-
-	EndIf
-
-	//RpcClearEnv()
-
-Return()
-
-Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
-
-	Local lRet	:= .T.
-	Local cModo := "" //Modo de acesso do arquivo aberto //"E" ou "C"
-	Local cZOB  := GetNextAlias()
-
-	Default cMsg := ""
-
-	If EmpOpenFile(cZOB, "ZOB", 1, .T., cEmp, @cModo)
-
-		(cZOB)->(DBSetOrder(2)) // ZOB_FILIAL, ZOB_VERSAO, ZOB_REVISA, ZOB_ANOREF, ZOB_DTREF, ZOB_PRODUT, R_E_C_N_O_, D_E_L_E_T_
-
-		If (cZOB)->(DbSeek(cEmp + cVersao + cRevisa + cAnoRef))
-
-			While !(cZOB)->(EOF()) .And. (cZOB)->(ZOB_FILIAL + ZOB_VERSAO + ZOB_REVISA + ZOB_ANOREF) == cEmp + cVersao + cRevisa + cAnoRef
-
-				Reclock(cZOB, .F.)
-				(cZOB)->ZOB_VAREST	:= (cZOB)->ZOB_VPROD - (cZOB)->ZOB_VVENDAS
-				(cZOB)->ZOB_VEQTDA	:= ((cZOB)->ZOB_QPROD-(cZOB)->ZOB_QVENDAS) * ((cZOB)->ZOB_VVENDAS/(cZOB)->ZOB_QVENDAS)
-				// (cZOB)->ZOB_VECST	:= ( ( ((cZOB)->ZOB_VVENDAS/(cZOB)->ZOB_QVENDAS)-((cZOB)->ZOB_VPROD-(cZOB)->ZOB_QPROD) ) * (-1) ) * (cZOB)->ZOB_QPROD
-				(cZOB)->ZOB_VECHEC	:= (cZOB)->ZOB_VAREST - (cZOB)->ZOB_VEQTDA - (cZOB)->ZOB_VECST
-				(cZOB)->(MsUnlock())
-
-				(cZOB)->(DBSkip())
-
-				// 15.827.621.359990 
-
-			EndDo
+			MsgINFO("Fim do processamento!" + CRLF + CRLF + cMsg, "ATENÇÃO - BIA619")
 
 		EndIf
 
 	Else
 
-		lRet := .F.
-
-		cMsg := "Não conseguiu abrir a empresa " + cEmp + " !"
+		MsgALERT("Processamento Abortado", "BIA619")
 
 	EndIf
 
-	If Select(cZOB) > 0
+Return
 
-		(cZOB)->(DbCloseArea())
+Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
+
+	Local lRet	:= .T.
+
+	Default cMsg := ""
+
+	ZOB->(DBSetOrder(2))
+
+	If ZOB->(DbSeek(cEmp + cVersao + cRevisa + cAnoRef))
+
+		ProcRegua(0)
+		While !ZOB->(EOF()) .And. ZOB->(ZOB_FILIAL + ZOB_VERSAO + ZOB_REVISA + ZOB_ANOREF) == cEmp + cVersao + cRevisa + cAnoRef
+
+			IncProc("Processando Registros encontrados na base...")
+
+			Reclock("ZOB", .F.)
+			ZOB->ZOB_VAREST	:= ZOB->ZOB_VPROD - ZOB->ZOB_VVENDAS
+			ZOB->ZOB_VEQTDA	:= (ZOB->ZOB_QPROD-ZOB->ZOB_QVENDAS) * (ZOB->ZOB_VVENDAS/ZOB->ZOB_QVENDAS)
+			// ZOB->ZOB_VECST	:= ( ( (ZOB->ZOB_VVENDAS/ZOB->ZOB_QVENDAS)-(ZOB->ZOB_VPROD-ZOB->ZOB_QPROD) ) * (-1) ) * ZOB->ZOB_QPROD
+			ZOB->ZOB_VECHEC	:= ZOB->ZOB_VAREST - ZOB->ZOB_VEQTDA - ZOB->ZOB_VECST
+			ZOB->(MsUnlock())
+
+			ZOB->(DBSkip())
+
+		End
 
 	EndIf
+
+	xVerRet := lRet 
 
 Return(lRet)
 
-Static Function ProcessaZBZ(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
+Static Function fProcesZBZ(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 	Local lRet  := .T.
 	Local cSQL  := ""
-	Local cModo := "" //Modo de acesso do arquivo aberto //"E" ou "C"
 	Local cQry  := GetNextAlias()
-	Local cZBZ  := GetNextAlias()
 
 	Default cMsg    := ""
 
@@ -150,78 +123,65 @@ Static Function ProcessaZBZ(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 	TcQuery cSQL New Alias (cQry)
 
+	ProcRegua(0)
 	While !(cQry)->(Eof())
 
-		If EmpOpenFile(cZBZ, "ZBZ", 1, .T., cEmp, @cModo)
+		IncProc("Processando Registros encontrados na base...")
 
-			// Variação Qtde
-			Reclock(cZBZ,.T.)
-			(cZBZ)->ZBZ_FILIAL := cEmp
-			(cZBZ)->ZBZ_VERSAO := cVersao
-			(cZBZ)->ZBZ_REVISA := cRevisa
-			(cZBZ)->ZBZ_ANOREF := cAnoRef
-			(cZBZ)->ZBZ_DATA   := LastDay(STOD((cQry)->ANOMES + "01"))
-			(cZBZ)->ZBZ_DEBITO := "41399001"
-			(cZBZ)->ZBZ_HIST   := "VARIAÇÃO DE ESTOQUE – QTDE"
+		// Variação Qtde
+		Reclock("ZBZ",.T.)
+		ZBZ->ZBZ_FILIAL := cEmp
+		ZBZ->ZBZ_VERSAO := cVersao
+		ZBZ->ZBZ_REVISA := cRevisa
+		ZBZ->ZBZ_ANOREF := cAnoRef
+		ZBZ->ZBZ_DATA   := LastDay(STOD((cQry)->ANOMES + "01"))
+		ZBZ->ZBZ_DEBITO := "41399001"
+		ZBZ->ZBZ_HIST   := "VARIAÇÃO DE ESTOQUE – QTDE"
 
-			If (cQry)->ZOB_VEQTDA > 0
+		If (cQry)->ZOB_VEQTDA > 0
 
-				(cZBZ)->ZBZ_DC	   := "C"
-				(cZBZ)->ZBZ_VALOR  := (cQry)->ZOB_VEQTDA
-
-			Else
-
-				(cZBZ)->ZBZ_DC	   := "D"
-				(cZBZ)->ZBZ_VALOR  := (cQry)->ZOB_VEQTDA * -1
-
-			EndIf
-
-			(cZBZ)->(MsUnlock())
-
-			// Variação Custo
-			Reclock(cZBZ,.T.)
-			(cZBZ)->ZBZ_FILIAL := cEmp
-			(cZBZ)->ZBZ_VERSAO := cVersao
-			(cZBZ)->ZBZ_REVISA := cRevisa
-			(cZBZ)->ZBZ_ANOREF := cAnoRef
-			(cZBZ)->ZBZ_DATA   := LastDay(STOD((cQry)->ANOMES + "01"))
-			(cZBZ)->ZBZ_DEBITO := "41399002"
-			(cZBZ)->ZBZ_HIST   := "VARIAÇÃO DE ESTOQUE – CUSTOS"
-
-			If (cQry)->ZOB_VECST > 0
-
-				(cZBZ)->ZBZ_DC	   := "C"
-				(cZBZ)->ZBZ_VALOR  := (cQry)->ZOB_VECST
-
-			Else
-
-				(cZBZ)->ZBZ_DC	   := "D"
-				(cZBZ)->ZBZ_VALOR  := (cQry)->ZOB_VECST * -1
-
-			EndIf
-
-			(cZBZ)->(MsUnlock())
+			ZBZ->ZBZ_DC	   := "C"
+			ZBZ->ZBZ_VALOR  := (cQry)->ZOB_VEQTDA
 
 		Else
 
-			lRet := .F.
-
-			cMsg := "Não conseguiu abrir a empresa " + cEmp + " !"
-
-			Exit
+			ZBZ->ZBZ_DC	   := "D"
+			ZBZ->ZBZ_VALOR  := ABS( (cQry)->ZOB_VEQTDA )
 
 		EndIf
 
+		ZBZ->(MsUnlock())
+
+		// Variação Custo
+		Reclock("ZBZ",.T.)
+		ZBZ->ZBZ_FILIAL := cEmp
+		ZBZ->ZBZ_VERSAO := cVersao
+		ZBZ->ZBZ_REVISA := cRevisa
+		ZBZ->ZBZ_ANOREF := cAnoRef
+		ZBZ->ZBZ_DATA   := LastDay(STOD((cQry)->ANOMES + "01"))
+		ZBZ->ZBZ_DEBITO := "41399002"
+		ZBZ->ZBZ_HIST   := "VARIAÇÃO DE ESTOQUE – CUSTOS"
+
+		If (cQry)->ZOB_VECST > 0
+
+			ZBZ->ZBZ_DC	   := "C"
+			ZBZ->ZBZ_VALOR  := (cQry)->ZOB_VECST
+
+		Else
+
+			ZBZ->ZBZ_DC	   := "D"
+			ZBZ->ZBZ_VALOR  := ABS( (cQry)->ZOB_VECST )
+
+		EndIf
+
+		ZBZ->(MsUnlock())
+
 		(cQry)->(DbSkip())
 
-	EndDo
-
-	If Select(cZBZ) > 0
-
-		(cZBZ)->(DbCloseArea())
-
-	EndIf
+	End
 
 	(cQry)->(DbCloseArea())
+
+	xVerRet := lRet 
 
 Return(lRet)

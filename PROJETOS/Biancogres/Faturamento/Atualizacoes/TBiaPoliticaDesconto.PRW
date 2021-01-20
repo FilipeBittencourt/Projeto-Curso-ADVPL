@@ -185,7 +185,7 @@ Method Calculate() Class TBiaPoliticaDesconto
 	_DTOT := (1 - ( (1 - (::DPAL/100)) * (1 - (::DPOL/100)) * (1 - (::DNV/100)) * (1 - (::DFRA/100))   )) * 100
 
 	::DTOT_ORI := _DTOT  //Desconto total sem o DESP
-
+	
 	//Desconto total com o DESP  
 	//DVER e DACO (16/02/17) - desconto de verba adicionado
 	::DTOT := (1 - ( (1 - (::DTOT_ORI/100)) * (1 - (::DESP/100)) * (1 - ((::DVER + ::DACO + ::DAI)/100)) )) * 100   
@@ -685,7 +685,8 @@ Static Function DemoShow(oDesconto, _nOpc, _cPedido, _cItem)
 	"  DESP = "+			Transform(oDesconto:DESP,"@E 999.99")+"%"+CRLF+;
 	"  DACO = "+			Transform(oDesconto:DACO,"@E 999.99")+"%"+CRLF+;
 	"  DAI  = "+			Transform(oDesconto:DAI,"@E 999.99")+"%"+CRLF+;
-	"  DVER = "+			Transform(oDesconto:DVER,"@E 999.99")+"%"+CRLF+CRLF+;
+	"  DVER = "+			Transform(oDesconto:DVER,"@E 999.99")+"%"+CRLF+;
+	"  DFRA = "+			Transform(oDesconto:DFRA,"@E 999.99")+"%"+CRLF+CRLF+;
 	"  Desconto Total = "+	Transform(oDesconto:DTOT,"@E 999.99")+"%"+CRLF+;
 	IIF(nSeguro > 0,CRLF+"  Seguro + R$ "+	Transform(nSeguro,"@E 999.99")+CRLF,"")+CRLF;
 	,{"OK","Detalhes"}, 3, IIF(nOpc == 3, "Teste de Politica de Desconto", "Composição do Desconto"))

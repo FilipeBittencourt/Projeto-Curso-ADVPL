@@ -648,6 +648,8 @@ Static Function BIA882A()
 						UL009 += "    AND ZBG.ZBG_SEQUEN = '" + _cSequen + "' "
 						UL009 += "    AND ZBG.ZBG_PERIOD <> '00' "
 						UL009 += "    AND ZBG.ZBG_MATR = '" + MQ07->ZBA_MATR + "' "
+						UL009 += "    AND ZBG.ZBG_CLVL = '" + MQ07->ZBA_CLVL + "' "
+						UL009 += "    AND ZBG.ZBG_SEMELH = '" + MQ07->ZBA_SEMELH + "' "
 						UL009 += "    AND ZBG.ZBG_BNADC LIKE '%010%' "
 						UL009 += "    AND ZBG.D_E_L_E_T_ = ' ' "					
 						U_BIAMsgRun("Aguarde... Atualizando PPR Anual... ",,{|| TcSQLExec(UL009) })

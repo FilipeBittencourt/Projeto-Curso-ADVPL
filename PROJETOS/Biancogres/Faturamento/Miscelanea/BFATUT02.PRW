@@ -156,6 +156,7 @@ User Function PENGGAC5()
 		where Z69_FILIAL = %XFILIAL:Z69%
 		and Z69_NUM+Z69_REV = %Exp:cPrEng%
 		and Z69.D_E_L_E_T_=''
+		and ZZ6.D_E_L_E_T_=''
 
 	EndSql
 

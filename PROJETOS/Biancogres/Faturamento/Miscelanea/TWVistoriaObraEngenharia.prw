@@ -473,7 +473,13 @@ Local cTargetPath := "\p10\vistoria_obra\termo\"
 			if !FILE(cTargetPath + cSourceFile)	
 				if MSGYESNO("O termo solicitado não foi encontrado na pasta destino. Deseja gerar novamente?", "Atenção")
 					oObjTerm := TTermoVistoriaObraEngenharia():New()
-					oObjTerm:docto := AllTrim(::oBrw:aCols[::oBrw:oBrowse:nAt, nP_DOC])
+				
+					if(!Empty(AllTrim(::oBrw:aCols[::oBrw:oBrowse:nAt, nP_NUMOBR])))
+						oObjTerm:nobra := AllTrim(::oBrw:aCols[::oBrw:oBrowse:nAt, nP_NUMOBR])
+					else 
+						oObjTerm:docto := AllTrim(::oBrw:aCols[::oBrw:oBrowse:nAt, nP_DOC])
+					endif
+					
 					oObjTerm:Process()
 					
 					FreeObj(oObjTerm)

@@ -213,7 +213,7 @@ User Function B386FOK()
 	Local _gbANOREF := ""
 	Local _gbStatus := GdFieldGet("ZB5_STATUS",_nAt)
 
-	If _gbStatus == "F"
+	If _gbStatus == "F" .and. !(Alltrim(cMenVar) == "M->ZB5_DRVATV" .AND. Alltrim(_nComboBox1) == "CONTABIL")
 
 		MsgSTOP("Status da versão orçamentária fechado por rotina automática. Não é permitido reabrí-lo!!!")
 		Return .F.

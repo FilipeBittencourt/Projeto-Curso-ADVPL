@@ -18,6 +18,8 @@ Class TAprovaPedidoVendaEMail From LongClassName
 	Data cCodAprT
 	Data cEmailAprT
 	Data lEnvMail
+	Data lBlqCondPag
+	
 
 	Data oServidor
 	Data oMensagem
@@ -75,6 +77,7 @@ Method New() Class TAprovaPedidoVendaEMail
 	::cCodAprT 		:= ""
 	::cEmailAprT 	:= ""
 	::lEnvMail		:= .F.
+	::lBlqCondPag  	:= .F.
 
 	::oServidor := TMailManager():New()
 	::oMensagem := TMailMessage():New()
@@ -294,10 +297,12 @@ Method Envia() Class TAprovaPedidoVendaEMail
 
 			::oMensagem := TMailMessage():New()
 
+			//'barbara.madeira@biancogres.com.br;pedro@facilesistemas.com.br'//
+			
 			::oMensagem:cFrom		:= ::cEmail
 			::oMensagem:cTo 		:= ::RetEmailApr()
 			::oMensagem:cCc 		:= ""
-			::oMensagem:cBcc 		:= "suporte.biancogres@facilesistemas.com.br"
+			::oMensagem:cBcc 		:= ""
 			::oMensagem:cSubject	:= "Pedido: " + ::cNumPed + " - Cliente: " + ::RetNomCli()
 			::oMensagem:cBody 		:= ::RetHtml()
 
@@ -786,6 +791,39 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 	cHTML += ' 						<tr>                                                                                                                                                                        '
 	cHTML += ' 							<td>                                                                                                                                                                    '
 	cHTML += ' 								<table width="100%" class="tblItensPedido" cellpadding="0" cellspacing="0">                                                                                         '
+	
+	cHTML += ' 									 <tr style="color: red;">                                                                                                                                                           '
+	cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> TIPO BLOQUEIO(S): </td>                                                                                   '
+	cHTML += ' 										<td colspan="3" align="left"> '+::RetMotBlq()+' </td>                                                                                                                                   '
+	cHTML += ' 									 </tr>                                                                                                                                                          '
+	
+	_cMotivoRej := ""
+	While !SC6->(Eof())  .And. SC6->C6_FILIAL == xFilial('SC6') .AND. SC6->C6_NUM == ::cNumPed
+		
+		If (!Empty(SC6->C6_YMOTFRA))
+			DbSelectArea('PZ7')
+			PZ7->(DbSetOrder(1))
+			If (PZ7->(DbSeek(xFilial('PZ7')+SC6->C6_YMOTFRA)))
+				If(!Empty(_cMotivoRej))
+					_cMotivoRej += "/"
+				EndIf
+				_cMotivoRej += PZ7->PZ7_DESCRI 
+			EndIf
+		EndIf		
+		SC6->(DbSkip())
+	EndDo
+	
+	
+	If (!Empty(_cMotivoRej))
+		cHTML += ' 									 <tr style="color: red;">                                                                                                                                                           '
+		cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> MOTIVO REJEIÇÃO: </td>                                                                                   '
+		cHTML += ' 										<td colspan="3" align="left"> '+_cMotivoRej+' </td>                                                                                                                                   '
+		cHTML += ' 									 </tr>                                                                                                                                                          '
+	EndIf
+	
+	SC6->(DbGoTop())
+	
+	
 	cHTML += ' 									 <tr>                                                                                                                                                           '
 	cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> NÚMERO: </td>                                                                                          '
 	cHTML += ' 										<td align="left"> '+SC5->C5_NUM+' </td>                                                                                                                     '
@@ -798,11 +836,30 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 	cHTML += ' 										<td colspan="3" align="left"> '+AllTrim(SA1->A1_COD)+" - "+AllTrim(SA1->A1_NOME)+ ", " + AllTrim(SA1->A1_MUN) + " - " + AllTrim(SA1->A1_EST) + ' </td>      '
 	cHTML += ' 									 </tr>                                                                                                                                                          '
 
-	cHTML += ' 									  <tr>                                                                                                                                                          '
-	cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> CONDIÇÃO DE PAGAMENTO: </td>                                                                           '
-	cHTML += ' 										<td colspan="3" align="left"> '+AllTrim(SE4->E4_DESCRI)+' </td>                                                                                                                                   '
-	cHTML += ' 									 </tr>                                                                                                                                                          '
 
+	If (::lBlqCondPag)
+		
+		cHTML += ' 									  <tr style="color: red;">                                                                                                                                                          '
+		cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> COND.DE PAG: </td>                                                                           '
+		cHTML += ' 										<td align="left"> '+AllTrim(SE4->E4_DESCRI)+' </td>                                                                                                                                   '
+		
+		DbSelectArea('SE4')
+		SE4->(DbSetOrder(1))
+		SE4->(DbSeek(xFilial("SE4")+SA1->A1_COND))
+		cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> COND.DE PAG. CAD.: </td>                                                                           '
+		cHTML += ' 										<td align="left"> '+AllTrim(SE4->E4_DESCRI)+' </td>                                                                                                                                   '
+		cHTML += ' 									 </tr>  
+		                                                                                                                                                        '
+	Else
+	
+		cHTML += ' 									  <tr>                                                                                                                                                          '
+		cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> CONDIÇÃO DE PAGAMENTO: </td>                                                                           '
+		cHTML += ' 										<td colspan="3" align="left"> '+AllTrim(SE4->E4_DESCRI)+' </td>                                                                                                                                   '
+		cHTML += ' 									 </tr>     
+		                                                                                                                                                     '
+	EndIf
+	
+	
 	cHTML += ' 									  <tr>                                                                                                                                                          '
 	cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> TIPO PEDIDO: </td>                                                                           '
 	cHTML += ' 										<td colspan="3" align="left" class="pedido-detalhe-cor"> '+AllTrim(cSubTp)+' </td>                                                                                                                                   '
@@ -814,11 +871,7 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 	cHTML += ' 										<td colspan="3" align="left"> '+AllTrim(SA3->A3_COD)+" - "+AllTrim(SA3->A3_NREDUZ)+' </td>                                                                                                                                   '
 	cHTML += ' 									 </tr>                                                                                                                                                          '
 
-	cHTML += ' 									 <tr>                                                                                                                                                           '
-	cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> TIPO BLOQUEIO: </td>                                                                                   '
-	cHTML += ' 										<td colspan="3" align="left"> '+::RetMotBlq()+' </td>                                                                                                                                   '
-	cHTML += ' 									 </tr>                                                                                                                                                          '
-
+	
 	If (!Empty(SC5->C5_YOBS))
 		cHTML += ' 									 <tr>                                                                                                                                                           '
 		cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> OBSERVAÇÃO: </td>                                                                                   '
@@ -886,45 +939,108 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 
 	//Ticket 23392 - Pablo S. Nascimento: Solicitação Claudeir para ajustes no layout
 	//configurar variaveis para saber se iremos imprimir a coluna apenas se algum dos itens tiver valor.
-	cYDNV = 0
-	cYDACO = 0
-	cYDVER = 0
-	cYDAI = 0
+	cYDNV 	:= 0
+	cYDACO 	:= 0
+	cYDVER	:= 0
+	cYDAI 	:= 0
+	nYDFRA 	:= 0
 
+	_cARejeicao		:= ""
+	_cAExclusivo	:= ""
+	_lNaoPalete		:= .F.
+	
+	DbSelectArea('SC6')
+	SC6->(DbSetOrder(1))
+	SC6->(DbSeek(xFilial('SC6')+::cNumPed))
+	
 	while !SC6->(Eof())  .And. SC6->C6_FILIAL == xFilial('SC6') .AND. SC6->C6_NUM == ::cNumPed
-		cYDNV := cYDNV + SC6->C6_YDNV
-		cYDACO := cYDACO + SC6->C6_YDACO
-		cYDVER := cYDVER + SC6->C6_YDVER
-		cYDAI := cYDAI + SC6->C6_YDAI
+		cYDNV 	:= cYDNV + SC6->C6_YDNV
+		cYDACO 	:= cYDACO + SC6->C6_YDACO
+		cYDVER 	:= cYDVER + SC6->C6_YDVER
+		cYDAI 	:= cYDAI + SC6->C6_YDAI
+		nYDFRA 	:= nYDFRA + SC6->C6_YDFRA
+		
+		
+		If (!_lNaoPalete)
+			aRetPalete := StaticCall( FROPGA02, CalcPalete, SC6->C6_QTDVEN)
+			If (aRetPalete[2] <> SC6->C6_QTDVEN)
+				_lNaoPalete := .T.
+			EndIf
+		EndIf
+		
+		If (AllTrim(_cARejeicao) =="")
+			_cARejeicao := IIF(!Empty(SC6->C6_YMOTREJ) .Or. !Empty(SC6->C6_YMOTFRA), 'X', '')
+		EndIf
+		
+		
+		cYEXCL := Posicione('SB1',1,xFilial('SB1')+SC6->C6_PRODUTO, 'B1_YEXCL') 
+		
+		If (AllTrim(_cAExclusivo) == "")
+			If (cYEXCL == 'H' .And. AllTrim(SA1->A1_YTPSEG) <> 'E')
+				_cAExclusivo := AllTrim(NGRetSX3Box("B1_YEXCL", cYEXCL))
+			EndIf
+			
+			If (cYEXCL == 'E' .And. AllTrim(SA1->A1_YCAT) <> 'LOJA ESPEC')
+				_cAExclusivo := AllTrim(NGRetSX3Box("B1_YEXCL", cYEXCL))
+			EndIf
+		EndIf
+		
+		conout("_lNaoPalete: "+cvaltochar(_lNaoPalete)+", _cAExclusivo:"+_cAExclusivo+", _cARejeicao:"+_cARejeicao)
 
+	
 		SC6->(DbSkip())
 
 	EndDo()
-
+	
+	conout("_lNaoPalete: "+cvaltochar(_lNaoPalete)+", _cAExclusivo:"+_cAExclusivo+", _cARejeicao:"+_cARejeicao)
+		
+	
 	DbSelectArea('SC6')
 	SC6->(DbSetOrder(1))
 	SC6->(DbSeek(xFilial('SC6')+::cNumPed))
 
-	if(cYDNV > 0)
+	If(cYDNV > 0)
 		cHTML += ' 										<th> NORMA % </th>                                                                                                                                       		'
-	endif
+	EndIf
 
-	if(cYDACO > 0)
+	If(cYDACO > 0)
 		cHTML += ' 										<th>   AO % </th>   	                                                                                                                                    	'
-	endif
+	EndIf
 
-	if(cYDVER > 0)
+	If(cYDVER > 0)
 		cHTML += ' 										<th> VERBA % </th>                                                                                                                                       		'
-	endif
+	EndIf
 
-	if(cYDAI > 0)
+	If(cYDAI > 0)
 		cHTML += ' 										<th>   AI % </th>   	                                                                                                                                    	'
-	endif
-
-	cHTML += ' 										<th> OUTROS % </th>                                                                                                                                         '
+	EndIf
+	
+	If(nYDFRA > 0)
+		cHTML += ' 										<th>   Fra. % </th>   	                                                                                                                                    	'
+	EndIf
+	
+	cHTML += ' 										<th> OUTROS % </th>        
+	
+	cHTML += ' 										<th> DT. ENT. </th>        
+	cHTML += ' 										<th> DT. NECE. </th>    
+	
+	
+	If (AllTrim(_cARejeicao) != "")    
+		cHTML += ' 										<th> REJEIÇÃO % </th>        
+	EndIf
+	
+	If (AllTrim(_cAExclusivo) != "")   
+		cHTML += ' 										<th> PROD. EXCLUSIVO </th>                                                                                                                                  '
+	EndIf
+	
+	If (_lNaoPalete)
+		cHTML += ' 										<th> DESPALETIZADO </th>                                                                                                                                  '
+	EndIf
+	
 	cHTML += ' 									 </tr>                                                                                                                                                          '
 	cHTML += ' 		                                                                                                                                                                                            '
 
+	
 	//ITENS
 	While !SC6->(Eof())  .And. SC6->C6_FILIAL == xFilial('SC6') .AND. SC6->C6_NUM == ::cNumPed
 
@@ -938,25 +1054,59 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 		cHtml += '								<td align="right" class="tblItensPedido-border-left">'+ TRANSFORM(SC6->C6_YDPAL, "@E 999.99") +' %</td>
 		cHtml += '								<td align="right" class="tblItensPedido-border-left">'+ TRANSFORM(SC6->C6_YPERC, "@E 999.99") +' %</td>
 
-		if(cYDNV > 0)
+		If(cYDNV > 0)
 			cHtml += '								<td align="right" class="tblItensPedido-border-left">'+ TRANSFORM(SC6->C6_YDNV, "@E 999.99") +' %</td>
-		endif
+		EndIf
 
-		if(cYDACO > 0)
+		If(cYDACO > 0)
 			cHtml += '								<td align="right" class="tblItensPedido-border-left">'+ TRANSFORM(SC6->C6_YDACO, "@E 999.99") +' %</td>
-		endif
+		EndIf
 
-		if(cYDVER > 0)
+		If(cYDVER > 0)
 			cHtml += '								<td align="right" class="tblItensPedido-border-left">'+ TRANSFORM(SC6->C6_YDVER, "@E 999.99") +' %</td>
-		endif
+		EndIf
 
-		if(cYDAI > 0)
+		If(cYDAI > 0)
 			cHtml += '								<td align="right" class="tblItensPedido-border-left">'+ TRANSFORM(SC6->C6_YDAI, "@E 999.99") +' %</td>
-		endif
-
+		EndIf
+		
+		If(nYDFRA > 0)
+			cHtml += '								<td align="right" class="tblItensPedido-border-left">'+ TRANSFORM(SC6->C6_YDFRA, "@E 999.99") +' %</td>
+		EndIf
+		
 		cHtml += '								<td align="right" class="tblItensPedido-border-right">'+ TRANSFORM(SC6->C6_YDESP, "@E 999,999,999.99") +' %</td>
+		
+		cHtml += '								<td align="right" class="tblItensPedido-border-right">'+cvaltochar(DTOC(SC6->C6_ENTREG)) +' </td>
+		cHtml += '								<td align="right" class="tblItensPedido-border-right">'+cvaltochar(DTOC(SC6->C6_YDTNECE)) +' </td>
+		
+		If (AllTrim(_cARejeicao) != "")    
+			cHtml += '								<td align="right" style="color: red;" class="tblItensPedido-border-right">'+IIF(!Empty(SC6->C6_YMOTREJ) .Or. !Empty(SC6->C6_YMOTFRA), 'X', '') +' </td>
+		EndIf
+		
+		cYEXCL := Posicione('SB1',1,xFilial('SB1')+SC6->C6_PRODUTO, 'B1_YEXCL') 
+		
+		_cExclusivo := ""
+		If (cYEXCL == 'H' .And. AllTrim(SA1->A1_YTPSEG) <> 'E')
+			_cExclusivo := AllTrim(NGRetSX3Box("B1_YEXCL", cYEXCL))
+		EndIf
+		
+		If (cYEXCL == 'E' .And. AllTrim(SA1->A1_YCAT) <> 'LOJA ESPEC')
+			_cExclusivo := AllTrim(NGRetSX3Box("B1_YEXCL", cYEXCL))
+		EndIf
+		
+		If (AllTrim(_cAExclusivo) != "")   
+			cHtml += '								<td align="right" style="color: red;" class="tblItensPedido-border-right">'+_cExclusivo +' </td>
+		EndIf
+		
+		If (_lNaoPalete)
+			
+			aRetPalete := StaticCall(FROPGA02, CalcPalete, SC6->C6_QTDVEN)
+			cHtml += '								<td align="right" style="color: red;" class="tblItensPedido-border-right">'+IIf (aRetPalete[2] <> SC6->C6_QTDVEN, 'X', '')+'</td>
+		EndIf
+		
 		cHtml += '							 </tr>'
 
+		
 		nSomaQuant += SC6->C6_QTDVEN
 		nSomaPreco += SC6->C6_PRCVEN
 		nSomaValor += SC6->C6_VALOR
@@ -977,25 +1127,38 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 	cHtml += '								<td align="right" class="tblItensPedido-border-left">'+ TRANSFORM(nSomaValor, "@E 999,999,999.99") +'</td>
 	cHtml += '								<td align="right" class="tblItensPedido-border-left"></td>
 
-	if(cYDNV > 0)
+	If(cYDNV > 0)
 		cHtml += '								<td align="right" class="tblItensPedido-border-left"></td>
-	endif
+	EndIf
 
-	if(cYDACO > 0)
+	If(cYDACO > 0)
 		cHtml += '								<td align="right" class="tblItensPedido-border-left"></td>
-	endif
+	EndIf
 
-	if(cYDVER > 0)
+	If(cYDVER > 0)
 		cHtml += '								<td align="right" class="tblItensPedido-border-left"></td>
-	endif
+	EndIf
 
-	if(cYDAI > 0)
+	If(cYDAI > 0)
 		cHtml += '								<td align="right" class="tblItensPedido-border-left"></td>
-	endif
+	EndIf
+	
+	If(nYDFRA > 0)
+		cHtml += '								<td align="right" class="tblItensPedido-border-left"></td>
+	EndIf
 
-	cHtml += '								<td align="right" class="tblItensPedido-border-left"></td>
-	cHtml += '								<td align="right" class="tblItensPedido-border-right"></td>
-
+	If (AllTrim(_cARejeicao) != "")    
+		cHtml += '								<td align="right" class="tblItensPedido-border-left"></td>
+	EndIf
+	
+	If (AllTrim(_cAExclusivo) != "")   
+		cHtml += '								<td align="right" class="tblItensPedido-border-left"></td>
+	EndIf
+	
+	If (_lNaoPalete)
+		cHtml += '								<td align="right" class="tblItensPedido-border-right"></td>
+	EndIf
+	
 	cHtml += '							 </tr>'
 
 	cHTML += '                                                                                                                                                                                                    '
@@ -1142,8 +1305,16 @@ Method RetMotBlq() Class TAprovaPedidoVendaEMail
 
 			If (ZKI->(DbSeek(xFilial('ZKI')+aRegras[nI])))
 
+				If (!Empty(cRet))
+					cRet += "/"
+				EndIf
+				
 				cRet += ZKI->ZKI_DESBLQ
-
+				
+				If (AllTrim(ZKI->ZKI_TPBLQ) == 'D')
+					::lBlqCondPag	:= .T.
+				EndIf
+				
 			EndIf
 
 		Next nI

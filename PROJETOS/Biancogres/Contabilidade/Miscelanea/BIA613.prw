@@ -5,129 +5,109 @@
 @author Wlysses Cerqueira (Facile)
 @since 04/12/2020
 @version 1.0
-@Projet A-35
 @description Processamento - Kardex Orçado - (Qtd/Custo) E/S Projetadas a partir de DataRef.
 @type function
+@Obs Projeto A-35
 /*/
 
 User Function BIA613()
 
-	Local oEmp 	:= Nil
-	Local nW	:= 0
 	Local lRet  := .F.
 	Local oPerg	:= Nil
 	Local cMsg  := ""
 
 	Private cTitulo := "Kardex Orçado - (Qtd/Custo) E/S Projetadas a partir de DataRef"
+	Private msCanPrc  := .F.
 
-	//RpcSetEnv("01", "01")
+	MsgINFO("Rotina em desenvolvimento!!!", "BIA613")
+	Return
 
-	oEmp := TLoadEmpresa():New()
 
 	oPerg := TWPCOFiltroPeriodo():New()
 
 	If oPerg:Pergunte(, .T.)
 
-		oEmp:GetSelEmp()
+		Begin Transaction
 
-		If Len(oEmp:aEmpSel) > 0
+			xVerRet := .F.
+			Processa({ || fProcessa(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, oPerg:dDataFech, @cMsg) }, "Aguarde...", "Processando dados...", .F.)
+			lRet := xVerRet 
 
-			Begin Transaction
+			If !lRet
 
-				For nW := 1 To Len(oEmp:aEmpSel)
+				DisarmTransaction()
 
-					lRet := Processa(oEmp:aEmpSel[nW][1], oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, oPerg:dDataFech, @cMsg)
+			EndIf
 
-					If !lRet
+		End Transaction
 
-						Exit
+	Else
 
-					EndIf
+		msCanPrc  := .T.
 
-				Next nW
+	EndIf
 
-				If !lRet
+	If !msCanPrc
 
-					DisarmTransaction()
+		If !lRet
 
-				EndIf
-
-			End Transaction
+			MsgSTOP("Erro no processamento!" + CRLF + CRLF + cMsg, "ATENÇÃO - BIA613")
 
 		Else
 
-			Alert("Nenhuma empresa foi selecionada!")
+			MsgINFO("Fim do processamento!" + CRLF + CRLF + cMsg, "ATENÇÃO - BIA613")
 
 		EndIf
 
-	EndIf
+	Else
 
-	If !lRet
-
-		Alert("Erro no processamento!" + CRLF + CRLF + cMsg, "Empresa: [" + cEmp + "]  - ATENÇÃO")
+		MsgALERT("Processamento Abortado", "BIA613")
 
 	EndIf
 
-	//RpcClearEnv()
+Return
 
-Return()
-
-Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
+Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
 
 	Local lRet  := .T.
 	Local cSQL  := ""
-	Local cModo := "" //Modo de acesso do arquivo aberto //"E" ou "C"
 	Local cQry  := GetNextAlias()
-	Local cZOA  := GetNextAlias()
 
 	Default cMsg    := ""
 
-    cSql := " * "
+	cSql := " * "
 
 	TcQuery cSQL New Alias (cQry)
 
+	ProcRegua(0)
 	While !(cQry)->(Eof())
 
-		If EmpOpenFile(cZOA, "ZOA", 1, .T., cEmp, @cModo)
+		IncProc("Processando Registros encontrados na base...")
 
-			Reclock(cZOA, .T.)
-			(cZOA)->ZOA_FILIAL  := cEmp
-			(cZOA)->ZOA_VERSAO  := cVersao
-			(cZOA)->ZOA_REVISA  := cRevisa
-			(cZOA)->ZOA_ANOREF  := cAnoRef
-            (cZOA)->ZOA_DTVIRA  := dDataFech
-			(cZOA)->ZOA_DTREF   := STOD((cQry)->ZO8_DTREF)
-			(cZOA)->ZOA_PRODUT  := (cQry)->B9_COD
-            (cZOA)->ZOA_LOCAL   := (cQry)->B9_LOCAL
+		Reclock("ZOA", .T.)
+		ZOA->ZOA_FILIAL  := cEmp
+		ZOA->ZOA_VERSAO  := cVersao
+		ZOA->ZOA_REVISA  := cRevisa
+		ZOA->ZOA_ANOREF  := cAnoRef
+		ZOA->ZOA_DTVIRA  := dDataFech
+		ZOA->ZOA_DTREF   := STOD((cQry)->ZO8_DTREF)
+		ZOA->ZOA_PRODUT  := (cQry)->B9_COD
+		ZOA->ZOA_LOCAL   := (cQry)->B9_LOCAL
 
-            (cZOA)->ZOA_QEPROJ  := 0
-            (cZOA)->ZOA_VEPROJ  := 0
+		ZOA->ZOA_QEPROJ  := 0
+		ZOA->ZOA_VEPROJ  := 0
 
-            (cZOA)->ZOA_QSPROJ  := 0
-            (cZOA)->ZOA_VSPROJ  := 0
+		ZOA->ZOA_QSPROJ  := 0
+		ZOA->ZOA_VSPROJ  := 0
 
-			(cZOA)->(MsUnlock())
-
-		Else
-
-			lRet := .F.
-
-			cMsg := "Não conseguiu abrir a empresa " + cEmp + " !"
-
-			Exit
-
-		EndIf
-
-		If Select(cZOA) > 0
-
-			(cZOA)->(DbCloseArea())
-
-		EndIf
+		ZOA->(MsUnlock())
 
 		(cQry)->(DbSkip())
 
-	EndDo
+	End
 
 	(cQry)->(DbCloseArea())
+
+	xVerRet := lRet 
 
 Return(lRet)

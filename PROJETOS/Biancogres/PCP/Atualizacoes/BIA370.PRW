@@ -26,7 +26,6 @@ Static Function RptDetail()
 
 	private bErro := ErrorBlock( { |oErr|  MsgAlert(oErr:Description) })
 
-
 	cHInicio := Time()
 	fPerg := "BIA370"
 	fTamX1 := IIF(Alltrim(oApp:cVersion) == "MP8.11", 6, 10)
@@ -211,25 +210,25 @@ Return
 Static Function RptB1Dtl()
 	#ENDIF
 
-		_Camp := { {"NUM_OP"    , "C", 13, 0},;
-		{           "PRODUTO"   , "C", 15, 0},;
-		{           "DESCRPR"   , "C", 50, 0},;
-		{           "INSUMO"    , "C", 15, 0},;
-		{           "UM"        , "C", 02, 0},;
-		{           "GRUPO"     , "C", 04, 0},;
-		{           "DESCRI"    , "C", 45, 0},;
-		{           "EMPENH"    , "N", 18, 7},;
-		{           "QTDESTRU"  , "N", 18, 7},;
-		{           "DIFERE"    , "N", 18, 4},;
-		{           "REGSD4"    , "N", 18, 0},;
-		{           "TRT"       , "C", 03, 0} }
-		T001 := CriaTrab(_Camp)
-		cInd   := CriaTrab(Nil,.F.)
-		DbUseArea(.T.,,T001,"T001",.F.,.F.)
-		dbCreateInd(T001,"NUM_OP+INSUMO",{|| "NUM_OP+INSUMO" })
-	
-		dbSelectArea("MARK")
-		dbGoTop()
+	_Camp := { {"NUM_OP"    , "C", 13, 0},;
+	{           "PRODUTO"   , "C", 15, 0},;
+	{           "DESCRPR"   , "C", 50, 0},;
+	{           "INSUMO"    , "C", 15, 0},;
+	{           "UM"        , "C", 02, 0},;
+	{           "GRUPO"     , "C", 04, 0},;
+	{           "DESCRI"    , "C", 45, 0},;
+	{           "EMPENH"    , "N", 18, 7},;
+	{           "QTDESTRU"  , "N", 18, 7},;
+	{           "DIFERE"    , "N", 18, 4},;
+	{           "REGSD4"    , "N", 18, 0},;
+	{           "TRT"       , "C", 03, 0} }
+	T001 := CriaTrab(_Camp)
+	cInd   := CriaTrab(Nil,.F.)
+	DbUseArea(.T.,,T001,"T001",.F.,.F.)
+	dbCreateInd(T001,"NUM_OP+INSUMO",{|| "NUM_OP+INSUMO" })
+
+	dbSelectArea("MARK")
+	dbGoTop()
 
 	BEGIN SEQUENCE
 
@@ -238,22 +237,22 @@ Static Function RptB1Dtl()
 			oDlg1:End()
 			Return
 		EndIf
-	
+
 		ProcRegua(RecCount())
 		While !Eof()                                                       // Empenhos
 			**************************************************************************
-	
+
 			cTempo := Alltrim(ElapTime(cHInicio, Time()))
 			IncProc("Empenho - Tempo: "+cTempo)
-	
+
 			If MARK->OK == xkMarca
-	
+
 				dbSelectArea("SD4")
 				dbSetOrder(2)
 				If dbSeek(xFilial("SD4")+MARK->NUMOP)
-	
+
 					While !Eof() .and. SD4->D4_FILIAL == xFilial("SD4") .and. SD4->D4_OP == MARK->NUMOP
-	
+
 						SB1->(dbSetOrder(1))
 						SB1->(dbSeek(xFilial("SB1")+SD4->D4_COD))
 						dbSelectArea("T001")
@@ -273,49 +272,49 @@ Static Function RptB1Dtl()
 						EndIf
 						T001->EMPENH += SD4->D4_QTDEORI
 						MsUnLock()
-	
+
 						dbSelectArea("SD4")
 						dbSkip()
-	
+
 					End
-	
+
 				EndIf
-	
+
 			EndIf
-	
+
 			dbSelectArea("MARK")
 			dbSkip()
-	
+
 		End
-	
+
 		dbSelectArea("MARK")
 		dbGoTop()
 		ProcRegua(RecCount())
 		While !Eof()                                                     // Estruturas
 			**************************************************************************
-	
+
 			cTempo := Alltrim(ElapTime(cHInicio, Time()))
 			IncProc("Estrutura - Tempo: "+cTempo)
-	
+
 			If MARK->OK == xkMarca
-	
+
 				dbSelectArea("SB1")
 				dbSetOrder(1)
 				dbSeek(xFilial("SB1")+MARK->PRODUTO)
-	
+
 				nEstru     := 0
 				wProduto   := SB1->B1_COD
 				wQtd       := MARK->QUANT
 				cArqTmp    := ""
 				cAliasTRB  := cArqTRB := "Estrut"
-	
+
 				cNome      := Processa({|| StrutBia(wProduto, wQtd, cAliasTRB, cArqTRB, .F.) })
 				cArqTRB    := cArqTmp
 				ESTRUT->(dbGoTop())
 				While ESTRUT->(!Eof())
 					cTempo := Alltrim(ElapTime(cHInicio, Time()))
 					IncProc("Produto: "+wProduto+"  Tempo: "+cTempo)
-	
+
 					SB1->(dbSetOrder(1))
 					SB1->(dbSeek(xFilial("SB1")+ESTRUT->COMP))
 					dbSelectArea("T001")
@@ -334,21 +333,21 @@ Static Function RptB1Dtl()
 					EndIf
 					T001->QTDESTRU += Round(ESTRUT->QUANT,2)
 					MsUnLock()
-	
+
 					ESTRUT->(dbSkip())
 				End
 				U_BIAFimStru(cAliasTRB,cArqTRB)
-	
+
 			EndIf
-	
+
 			dbSelectArea("MARK")
 			dbSkip()
 		End
-	
+
 		dbSelectArea("T001")
 		dbGoTop()
 		While !Eof()
-	
+
 			If MV_PAR02 == 1
 				If T001->EMPENH == T001->QTDESTRU
 					dbSelectarea("T001")
@@ -356,7 +355,7 @@ Static Function RptB1Dtl()
 					Loop
 				EndIf
 			EndIf
-	
+
 			If MV_PAR03 == 1
 				Aadd(aDados2, { T001->NUM_OP,;
 				T001->PRODUTO,;
@@ -384,21 +383,20 @@ Static Function RptB1Dtl()
 				Transform(T001->REGSD4,"@E 999999999999999999"),;
 				T001->TRT } )
 			EndIf
-	
+
 			dbSkip()
 		End
-	
+
 		T001->(dbCloseArea())
-	
+
 		If MV_PAR02 == 1 .and. MV_PAR03 == 1
 			Processa({|| fxAtuSD4() })
 		Else
 			U_BIAxExcel(aDados2, _Camp, T001)
 		EndIf
-	
+
 		fh_Esc := .T.
 		oDlg1:End()
-
 
 	END SEQUENCE
 
@@ -434,6 +432,7 @@ User Function BIA370M()
 		dbSelectArea("MARK")
 		dbSkip()
 	End
+
 	dbGoTop()
 
 Return
@@ -636,23 +635,23 @@ Static Function fxAtuSD4()
 			SC2->(dbSeek(xFilial("SC2")+aDados2[nt][01]))
 			_cAlias	:=	GetNextAlias()
 			BeginSql Alias _cAlias
-				
+
 				SELECT C2_LINHA
-				FROM %TABLE:SC2% SC2
+				FROM %TABLE:SC2% SC2 (NOLOCK)
 				WHERE C2_FILIAL = %XFILIAL:SC2%
-					AND C2_NUM = %Exp:SC2->C2_NUM%
-					AND C2_ITEM = %Exp:SC2->C2_ITEM%
-					AND C2_SEQUEN = '001'
-					AND %NotDel%
-				
+				AND C2_NUM = %Exp:SC2->C2_NUM%
+				AND C2_ITEM = %Exp:SC2->C2_ITEM%
+				AND C2_SEQUEN = '001'
+				AND %NotDel%
+
 			EndSql
-			
+
 			If !Empty((_cAlias)->C2_LINHA) 
 				U_BFG73LIN((_cAlias)->C2_LINHA,aDados2[nt][04],@_cLocal,.F.)
 			EndIf
-			
+
 			(_cAlias)->(DbCloseArea())
-			
+
 			jiQuant := aDados2[nt][09]
 			If SC2->C2_QUJE > 0
 				jiQuant := SC2->C2_QUJE / SC2->C2_QUANT * aDados2[nt][09]
@@ -775,19 +774,20 @@ Return
 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
 User Function BIA370R()
 
-	#IFDEF WINDOWS
 	Processa({|| RptR2Dtl()})
+
 Return
+
 Static Function RptR2Dtl()
-	#ENDIF
+
 	Local _cAlias
 	Local _cLocal	:=	""
 
 	Private lMsErroAuto := .F.
 
-		dbSelectArea("MARK")
-		dbGoTop()
-	
+	dbSelectArea("MARK")
+	dbGoTop()
+
 	BEGIN SEQUENCE
 
 		If !fCriaSem()
@@ -796,7 +796,6 @@ Static Function RptR2Dtl()
 			Return
 		EndIf
 
-	
 		ProcRegua(RecCount())
 		While !Eof()
 
@@ -832,24 +831,24 @@ Static Function RptR2Dtl()
 								fhLinha   := MARK->LINHA
 								fhDtFrm   := SC2->C2_YDTFIRM
 								fhSeqPai  := SC2->C2_SEQPAI
-								
+
 								_cAlias	:=	GetNextAlias()
 								BeginSql Alias _cAlias
-									
+
 									SELECT C2_LINHA
-									FROM %TABLE:SC2% SC2
+									FROM %TABLE:SC2% SC2 (NOLOCK)
 									WHERE C2_FILIAL = %XFILIAL:SC2%
-										AND C2_NUM = %Exp:SC2->C2_NUM%
-										AND C2_ITEM = %Exp:SC2->C2_ITEM%
-										AND C2_SEQUEN = '001'
-										AND %NotDel%
-									
+									AND C2_NUM = %Exp:SC2->C2_NUM%
+									AND C2_ITEM = %Exp:SC2->C2_ITEM%
+									AND C2_SEQUEN = '001'
+									AND %NotDel%
+
 								EndSql
-								
+
 								If !Empty((_cAlias)->C2_LINHA) 
 									U_BFG73LIN((_cAlias)->C2_LINHA,fhProdut,@_cLocal,.F.)
 								EndIf
-								
+
 								(_cAlias)->(DbCloseArea())
 								DbSelectArea("SB1")
 								SB1->(dbSetOrder(1))
@@ -884,7 +883,7 @@ Static Function RptR2Dtl()
 									SB1->(dbSeek(xFilial("SB1")+fhProdut))
 									SBZ->(dbSetOrder(1))
 									SBZ->(dbSeek(xFilial("SBZ") + fhProdut))
-									
+
 									aMata650  := {{'C2_SEQUEN'   ,fhSeqOP                             ,NIL},;
 									{              'C2_ITEM'     ,fhItnOP                             ,NIL},;
 									{              'C2_NUM'      ,fhNumOP                             ,NIL},;
@@ -938,13 +937,9 @@ Static Function RptR2Dtl()
 		fh_Esc := .T.
 		oDlg1:End()
 
-	
 	END SEQUENCE
 
-
 	ErrorBlock( bErro )
-
-
 
 Return
 
@@ -956,6 +951,7 @@ Return
 ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
 Static Function ValidPerg()
+
 	Local i,j
 
 	_sAlias := Alias()
@@ -1006,5 +1002,4 @@ Static Function fCriaSem(_cLocal)
 		Return .F.
 	EndIF	
 
-	
 Return _lRet

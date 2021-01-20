@@ -5,80 +5,79 @@
 @author Wlysses Cerqueira (Facile)
 @since 09/12/2020
 @version 1.0
-@Projet A-35
 @description CPV Orçado - Processamento.
 @type function
+@Obs Projeto A-35
 /*/
 
 User Function BIA617()
 
-	Local oEmp 	:= Nil
-	Local nW	:= 0
 	Local lRet  := .F.
 	Local oPerg	:= Nil
 	Local cMsg  := ""
 
 	Private cTitulo := "CPV Orçado - Processamento"
-
-	//RpcSetEnv("01", "01")
-
-	oEmp := TLoadEmpresa():New()
+	Private msCanPrc  := .F.
 
 	oPerg := TWPCOFiltroPeriodo():New()
 
 	If oPerg:Pergunte()
 
-		oEmp:GetSelEmp()
+		Begin Transaction
 
-		If Len(oEmp:aEmpSel) > 0
+			xVerRet := .F.
+			Processa({ || ExistThenD(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Deletando dados...", .F.)
+			If xVerRet
 
-			Begin Transaction
+				Processa({ || fProcessa(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Processando dados...", .F.)
+				lRet := xVerRet 
 
-				For nW := 1 To Len(oEmp:aEmpSel)
+			Else
 
-					lRet := Processa(oEmp:aEmpSel[nW][1], oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg)
+				msCanPrc  := .T.
 
-					If !lRet
+			EndIf
 
-						Exit
+			If !lRet
 
-					EndIf
+				DisarmTransaction()
 
-				Next nW
+			EndIf
 
-				If !lRet
+		End Transaction
 
-					DisarmTransaction()
+	Else
 
-				EndIf
+		msCanPrc  := .T.
 
-			End Transaction
+	EndIf
+
+	If !msCanPrc
+
+		If !lRet
+
+			MsgSTOP("Erro no processamento!" + CRLF + CRLF + cMsg, "ATENÇÃO - BIA617")
 
 		Else
 
-			Alert("Nenhuma empresa foi selecionada!")
+			MsgINFO("Fim do processamento!" + CRLF + CRLF + cMsg, "ATENÇÃO - BIA617")
 
 		EndIf
 
-	EndIf
+	Else
 
-	If !lRet
-
-		Alert("Erro no processamento!" + CRLF + CRLF + cMsg, "ATENÇÃO")
+		MsgALERT("Processamento Abortado", "BIA617")
 
 	EndIf
 
-	//RpcClearEnv()
 
-Return()
+Return
 
-Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
+Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 	Local lRet  := .T.
 	Local cSQL  := ""
-	Local cModo := "" //Modo de acesso do arquivo aberto //"E" ou "C"
 	Local cQry  := GetNextAlias()
-	Local cZBZ  := GetNextAlias()
 
 	Default cMsg    := ""
 
@@ -93,41 +92,40 @@ Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 	TcQuery cSQL New Alias (cQry)
 
+	ProcRegua(0)
 	While !(cQry)->(Eof())
 
-		If EmpOpenFile(cZBZ, "ZBZ", 1, .T., cEmp, @cModo)
+		IncProc("Processando Registros encontrados na base...")
 
-			Reclock(cZBZ,.T.)
-			(cZBZ)->ZBZ_FILIAL := cEmp
-			(cZBZ)->ZBZ_VERSAO := cVersao
-			(cZBZ)->ZBZ_REVISA := cRevisa
-			(cZBZ)->ZBZ_ANOREF := cAnoRef
-			(cZBZ)->ZBZ_DATA   := LastDay(STOD((cQry)->ANOMES + "01"))
-			(cZBZ)->ZBZ_VALOR  := (cQry)->ZOB_VVENDA
-			(cZBZ)->ZBZ_DC	   := "D"
-			(cZBZ)->ZBZ_DEBITO := "41301001"
-			(cZBZ)->ZBZ_HIST   := "VLR CPV N/MÊS"
-			(cZBZ)->(MsUnlock())
+		If (cQry)->ZOB_VVENDA <> 0
 
-			Reclock(cZBZ,.T.)
-			(cZBZ)->ZBZ_FILIAL := cEmp
-			(cZBZ)->ZBZ_VERSAO := cVersao
-			(cZBZ)->ZBZ_REVISA := cRevisa
-			(cZBZ)->ZBZ_ANOREF := cAnoRef
-			(cZBZ)->ZBZ_DATA   := LastDay(STOD((cQry)->ANOMES + "01"))
-			(cZBZ)->ZBZ_VALOR  := (cQry)->ZOB_VVENDA
-			(cZBZ)->ZBZ_DC	   := "C"
-			(cZBZ)->ZBZ_CREDIT := "11306001"
-			(cZBZ)->ZBZ_HIST   := "VLR CPV N/MÊS"
-			(cZBZ)->(MsUnlock())
+			Reclock("ZBZ",.T.)
+			ZBZ->ZBZ_FILIAL := cEmp
+			ZBZ->ZBZ_VERSAO := cVersao
+			ZBZ->ZBZ_REVISA := cRevisa
+			ZBZ->ZBZ_ANOREF := cAnoRef
+			ZBZ->ZBZ_DATA   := LastDay(STOD((cQry)->ANOMES + "01"))
+			ZBZ->ZBZ_VALOR  := (cQry)->ZOB_VVENDA
+			ZBZ->ZBZ_DC	    := "D"
+			ZBZ->ZBZ_DEBITO := "41301001"
+			ZBZ->ZBZ_HIST   := "VLR CPV N/MÊS"
+			ZBZ->ZBZ_ORIPRC := "CPV"
+			ZBZ->(MsUnlock())
 
-		Else
-
-			lRet := .F.
-
-			cMsg := "Não conseguiu abrir a empresa " + cEmp + " !"
-
-			Exit
+			/* -- Retirado até que seja definido o que será feito com o Ativo Fixo
+			Reclock("ZBZ",.T.)
+			ZBZ->ZBZ_FILIAL := cEmp
+			ZBZ->ZBZ_VERSAO := cVersao
+			ZBZ->ZBZ_REVISA := cRevisa
+			ZBZ->ZBZ_ANOREF := cAnoRef
+			ZBZ->ZBZ_DATA   := LastDay(STOD((cQry)->ANOMES + "01"))
+			ZBZ->ZBZ_VALOR  := (cQry)->ZOB_VVENDA
+			ZBZ->ZBZ_DC	    := "C"
+			ZBZ->ZBZ_CREDIT := "11306001"
+			ZBZ->ZBZ_HIST   := "VLR CPV N/MÊS"
+			ZBZ->ZBZ_ORIPRC := "CPV"
+			ZBZ->(MsUnlock())
+			*/
 
 		EndIf
 
@@ -135,12 +133,72 @@ Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 	EndDo
 
-	If Select(cZBZ) > 0
+	(cQry)->(DbCloseArea())
 
-		(cZBZ)->(DbCloseArea())
+	xVerRet := lRet 
 
-	EndIf
+Return(lRet)
+
+Static Function ExistThenD(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
+
+	Local cSQL  := ""
+	Local cQry  := ""
+	Local lPerg := .T.
+	Local lRet  := .T.
+
+	Default cMsg := ""
+
+	cQry := GetNextAlias()
+
+	cSql := " SELECT R_E_C_N_O_ RECNO "
+	cSql += " FROM " + RetFullName("ZBZ", cEmp) + " ZBZ (NOLOCK) "
+	cSql += " WHERE ZBZ_FILIAL = " + ValToSql(cEmp)
+	cSql += " AND ZBZ_VERSAO = " + ValToSql(cVersao)
+	cSql += " AND ZBZ_REVISA = " + ValToSql(cRevisa)
+	cSql += " AND ZBZ_ANOREF = " + ValToSql(cAnoRef)
+	cSql += " AND ZBZ_ORIPRC = 'CPV' "
+	cSql += " AND ZBZ.D_E_L_E_T_    = ' ' "
+
+	TcQuery cSQL New Alias (cQry)
+
+	ProcRegua(0)
+	While !(cQry)->(Eof())
+
+		IncProc("Apagando Registros encontrados na base...")
+
+		If lPerg
+
+			If MsgYesNo("Já existem dados para o tempo orçamentário. Deseja continuar?" + CRLF + CRLF + "Caso clique em sim esses dados serão apagados e gerados novos!", "Empresa: [" + cEmp + "]  - ATENÇÃO")
+
+				lRet := .T.
+
+			Else
+
+				lRet := .F.
+
+				Exit
+
+			EndIf
+
+			lPerg := .F.
+
+		EndIf
+
+		ZBZ->(DBGoTo((cQry)->RECNO))
+		If !ZBZ->(EOF())
+
+			Reclock("ZBZ", .F.)
+			ZBZ->(DBDelete())
+			ZBZ->(MsUnlock())
+
+		EndIf
+
+		(cQry)->(DbSkip())
+
+	End
 
 	(cQry)->(DbCloseArea())
 
-Return(lRet)
+	xVerRet := lRet 
+
+Return ( lRet )

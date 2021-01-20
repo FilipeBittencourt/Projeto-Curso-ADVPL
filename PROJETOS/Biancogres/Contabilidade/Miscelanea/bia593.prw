@@ -471,10 +471,7 @@ Return
 User Function B593FOK()
 
 	Local cMenVar    := ReadVar()
-	Local vfArea     := GetArea()
-	Local _cAlias
 	Local _nAt       := _oGetDados:nAt
-	Local _nI
 	Local isDC       := ""
 	Local isDEBITO   := ""
 	Local isCREDIT   := ""
@@ -612,8 +609,10 @@ User Function B593LOK()
 
 	If xxDC == "1"
 		If Empty(xxDEBITO) .or. Empty(xxCLVLDB) .or. !Empty(xxCREDIT) .or. !Empty(xxCLVLCR) .or. !Empty(xxITEMC)
-			MsgINFO("Favor verificar o tipo de lançamento vs conta e classe de valor preenchidos, pois são conflitantes!!!")
-			Return .F.
+			If Alltrim(xxDEBITO) <> "41301001"
+				MsgINFO("Favor verificar o tipo de lançamento vs conta e classe de valor preenchidos, pois são conflitantes!!!")
+				Return .F.
+			EndIf
 		EndIf
 	EndIf
 
@@ -739,8 +738,6 @@ Static Function fProcImport()
 	Local cTabImp			:= 'ZBZ'
 	Local aItem 			:= {}
 	Local aLinha			:= {}
-	Local aErro				:= {}
-	Local cErro 			:= ''
 	Local nImport			:= 0
 	Local cConteudo			:= ''
 	Local nTotLin			:= 0

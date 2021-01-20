@@ -76,7 +76,7 @@ Static Function GridZKL()
 
 	Local aHeader		:= {}
 	Local aCols			:= {}
-	Local aFieldFill 	:= {}
+*	Local aFieldFill 	:= {}
 	Local aAlterFields	:= AClone(aFieldsZKL)
 
 	aHeader := GetHeader(aFieldsZKL)
@@ -97,9 +97,9 @@ Static Function LoadZKL()
 
 	Local nI			:= 1
 	Local aCols			:= {}
-	Local aHeader		:= AClone(oGrid:aHeader)
+*	Local aHeader		:= AClone(oGrid:aHeader)
 	Local aLinha		:= {}
-	Local nI			:= 0
+*	Local nI			:= 0
 	Local cRegras		:= ""
 	Local aRegras		:= {}
 

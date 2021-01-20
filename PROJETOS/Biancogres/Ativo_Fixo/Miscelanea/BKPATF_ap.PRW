@@ -92,7 +92,7 @@ While !eof()
 			wArq := Alltrim(wDir) + Alltrim(SX2->X2_ARQUIVO) + ".dbf"
 			copy to &wArq //SDF
 		End
-		dbclosearea(SX2->X2_CHAVE)
+		(SX2->X2_CHAVE)->(dbclosearea())
 		dbselectarea("SX2")
 	END IF
 	dbSkip()

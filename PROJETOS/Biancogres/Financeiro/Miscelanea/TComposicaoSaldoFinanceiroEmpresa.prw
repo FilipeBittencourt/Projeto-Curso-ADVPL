@@ -57,7 +57,6 @@ Method New() Class TComposicaoSaldoFinanceiroEmpresa
 
 Return()
 
-
 Method GetMovBan(aProfile) Class TComposicaoSaldoFinanceiroEmpresa
 	Local aRet := {}
 	Local cSQL := ""
@@ -73,7 +72,7 @@ Method GetMovBan(aProfile) Class TComposicaoSaldoFinanceiroEmpresa
 
 		//nValor := (cQry)->VALOR + ::GetRecEmp((cQry)->BANCO, (cQry)->AGENCIA, (cQry)->CONTA) + ::GetPagFun((cQry)->BANCO, (cQry)->AGENCIA, (cQry)->CONTA)
 
-		nValor := (cQry)->VALOR
+		nValor := (cQry)->VALOR + ::GetRecEmp( (cQry)->BANCO, (cQry)->AGENCIA, (cQry)->CONTA )
 
 		lCheck := (aScan(aProfile, {|x| x[nPrf_EMP] == ::cCompany .And. x[nPrf_BANCO] == (cQry)->BANCO .And. x[nPrf_AGENCIA] == (cQry)->AGENCIA .And. x[nPrf_CONTA] == (cQry)->CONTA}) > 0)
 
@@ -470,9 +469,9 @@ Return(cSQL)
 
 Method GetPagFun() Class TComposicaoSaldoFinanceiroEmpresa
 
-	Local nRet := 0
-	Local cSQL := ""
-	Local cQry := ""
+	Local lExist    := .F.
+	Local cSQL      := ""
+	Local cQry      := ""
 	Local cBankData := ""
 
 	/*cBankData := Alltrim(cBanco) + Alltrim(cAgencia) + Alltrim(cConta)
@@ -493,30 +492,42 @@ Method GetPagFun() Class TComposicaoSaldoFinanceiroEmpresa
 
 		iF (::cCompany == "01")
 			cSQL := " SELECT '001' BANCO,  '34312' AGENCIA, '55.097-3' CONTA, E2_VALOR *-1  "
+			lExist := .T.
 		ElseiF (::cCompany == "05")
 			cSQL := " SELECT '001' BANCO,  '34312' AGENCIA, '5.666-9' CONTA, E2_VALOR *-1  "
+			lExist := .T.
 		ElseiF (::cCompany == "06")
 			cSQL := " SELECT '001' BANCO,  '34312' AGENCIA, '55.098-1' CONTA, E2_VALOR *-1  "
+			lExist := .T.
 		ElseiF (::cCompany == "07")
 			cSQL := " SELECT '001' BANCO,  '34312' AGENCIA, '52868' CONTA, E2_VALOR *-1  "
+			lExist := .T.
 		ElseiF (::cCompany == "11")
 			cSQL := " SELECT '001' BANCO,  '34312' AGENCIA, '53295' CONTA, E2_VALOR *-1  "
+			lExist := .T.
 		ElseiF (::cCompany == "12")
 			cSQL := " SELECT '001' BANCO,  '34312' AGENCIA, '54968' CONTA, E2_VALOR *-1  "
+			lExist := .T.
 		ElseiF (::cCompany == "13")
 			cSQL := " SELECT '001' BANCO,  '34312' AGENCIA, '54666' CONTA, E2_VALOR *-1  "
+			lExist := .T.
 		ElseiF (::cCompany == "14")
 			cSQL := " SELECT '001' BANCO,  '3431' AGENCIA, '48755' CONTA, E2_VALOR *-1  "
+			lExist := .T.
 		EndIf
 
-		cSQL += " FROM "+ RetFullName("SE2", ::cCompany)
-		cSQL += " WHERE (E2_TIPO IN ('FOL', 'FER') OR (E2_TIPO IN ('RES', 'ADI', '132', 'INS', '131') AND E2_FORNECE IN ('PARC13', 'RESCIS', 'EMPRES', 'ADTOSL')))"
-		cSQL += " AND E2_NUMBCO = '' "
-		cSQL += " AND E2_NUMBOR = '' "
-		cSQL += " AND E2_VENCREA BETWEEN "+ ValToSQL(FirstDate(::dDate)) + " AND " + ValToSQL(::dDate)
-		cSQL += " AND D_E_L_E_T_ = '' "
+		If lExist
 
-		cSQL += " UNION ALL "
+			cSQL += " FROM "+ RetFullName("SE2", ::cCompany)
+			cSQL += " WHERE (E2_TIPO IN ('FOL', 'FER') OR (E2_TIPO IN ('RES', 'ADI', '132', 'INS', '131') AND E2_FORNECE IN ('PARC13', 'RESCIS', 'EMPRES', 'ADTOSL')))"
+			cSQL += " AND E2_NUMBCO = '' "
+			cSQL += " AND E2_NUMBOR = '' "
+			cSQL += " AND E2_VENCREA BETWEEN "+ ValToSQL(FirstDate(::dDate)) + " AND " + ValToSQL(::dDate)
+			cSQL += " AND D_E_L_E_T_ = '' "
+
+			cSQL += " UNION ALL "
+
+		EndIf
 
 		Return cSQL
 

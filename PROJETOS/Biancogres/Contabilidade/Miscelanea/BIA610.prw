@@ -5,143 +5,239 @@
 @author Wlysses Cerqueira (Facile)
 @since 03/12/2020
 @version 1.0
-@Projet A-35
 @description Processamento - Kardex Orçado - Custo das produções Orçadas.
 @type function
+@Obs Projeto A-35
 /*/
 
 User Function BIA610()
 
-	Local oEmp 	:= Nil
-	Local nW	:= 0
+	cCadastro := Upper(Alltrim("Kardex Orçado"))
+	aRotina   := { {"Pesquisar"               ,"AxPesqui"                      ,0,1},;
+	{               "Visualizar"              ,"AxVisual"                      ,0,2},;
+	{               "Produção Orçada"         ,'ExecBlock("BIA610A",.F.,.F.)'  ,0,3},;
+	{               "Kardex Orçado"           ,'ExecBlock("BIA616",.F.,.F.)'   ,0,3},;
+	{               "Variação de Estoque"     ,'ExecBlock("BIA619",.F.,.F.)'   ,0,3},;
+	{               "Gera Excel Kardex"       ,'ExecBlock("BIA639",.F.,.F.)'   ,0,3} }
+
+	dbSelectArea("ZOB")
+	dbSetOrder(1)
+	dbGoTop()
+
+	mBrowse(06,01,22,75,"ZOB")
+
+Return
+
+User Function BIA610A()
+
 	Local lRet  := .F.
 	Local oPerg	:= Nil
 	Local cMsg  := ""
 
 	Private cTitulo := "Kardex Orçado - Custo das produções Orçadas"
-
-	//RpcSetEnv("01", "01")
-
-	oEmp := TLoadEmpresa():New()
+	Private msCanPrc  := .F.
 
 	oPerg := TWPCOFiltroPeriodo():New()
 
 	If oPerg:Pergunte()
 
-		oEmp:GetSelEmp()
+		Begin Transaction
 
-		If Len(oEmp:aEmpSel) > 0
+			xVerRet := .F.
+			Processa({ || ExistThenD(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Deletando dados...", .F.)
+			If xVerRet
 
-			Begin Transaction
+				Processa({ || fProcessa(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Processando dados...", .F.)
+				lRet := xVerRet 
 
-				For nW := 1 To Len(oEmp:aEmpSel)
+			Else
 
-					lRet := Processa(oEmp:aEmpSel[nW][1], oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg)
+				msCanPrc  := .T.
 
-					If !lRet
+			EndIf
 
-						Exit
+			If !lRet
 
-					EndIf
+				DisarmTransaction()
 
-				Next nW
+			EndIf
 
-				If !lRet
+		End Transaction
 
-					DisarmTransaction()
+	Else
 
-				EndIf
+		msCanPrc  := .T.
 
-			End Transaction
+	EndIf
+
+	If !msCanPrc
+
+		If !lRet
+
+			MsgSTOP("Erro no processamento!" + CRLF + CRLF + cMsg, "ATENÇÃO - BIA610")
 
 		Else
 
-			Alert("Nenhuma empresa foi selecionada!")
+			MsgINFO("Fim do processamento!" + CRLF + CRLF + cMsg, "ATENÇÃO - BIA610")
 
 		EndIf
 
-	EndIf
+	Else
 
-	If !lRet
-
-		Alert("Erro no processamento!" + CRLF + CRLF + cMsg, "ATENÇÃO")
+		MsgALERT("Processamento Abortado", "BIA610")
 
 	EndIf
 
-	//RpcClearEnv()
+Return
 
-Return()
-
-Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
+Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 	Local lRet  := .T.
 	Local cSQL  := ""
-	Local cModo := "" //Modo de acesso do arquivo aberto //"E" ou "C"
 	Local cQry  := GetNextAlias()
-	Local cZOB  := GetNextAlias()
 
 	Default cMsg    := ""
 
-	cSql += " SELECT ZO8_FILIAL, ZO8_VERSAO, ZO8_REVISA, ZO8_ANOREF, ZO8_TPPROD, ZO8_PRODUT, ZO8_DTREF, "
-	cSql += " 	Z47_QTDM01, Z47_QTDM02, Z47_QTDM03, Z47_QTDM04, Z47_QTDM05, Z47_QTDM06, "
-	cSql += "   Z47_QTDM07, Z47_QTDM08, Z47_QTDM09, Z47_QTDM10, Z47_QTDM11, Z47_QTDM12, "
-    cSql += "   SUM ( CASE WHEN ISNULL(ZO8_CUS223, 0) > 0 THEN ( ISNULL(ZO8_CUS224, 0) / ZO8_CUS223 ) ELSE 0 END) CUSTO_TOTAL "
+	cSql += " SELECT ZO8_FILIAL, "
+	cSql += " 	     ZO8_VERSAO, "
+	cSql += " 	     ZO8_REVISA, "
+	cSql += " 	     ZO8_ANOREF, "
+	cSql += " 	     ZO8_PRODUT, "
+	cSql += " 	     ZO8_DTREF, "
+	cSql += " 	     Z47_QTDM01, "
+	cSql += " 	     Z47_QTDM02, "
+	cSql += " 	     Z47_QTDM03, "
+	cSql += " 	     Z47_QTDM04, "
+	cSql += " 	     Z47_QTDM05, "
+	cSql += " 	     Z47_QTDM06, "
+	cSql += "        Z47_QTDM07, "
+	cSql += " 	     Z47_QTDM08, "
+	cSql += " 	     Z47_QTDM09, "
+	cSql += " 	     Z47_QTDM10, "
+	cSql += " 	     Z47_QTDM11, "
+	cSql += " 	     Z47_QTDM12, "
+	cSql += "        SUM(ZO8_CUS224) CUSTO_TOTAL "
 	cSql += " FROM " + RetFullName("ZO8", cEmp) + " ZO8 (NOLOCK) "
 	cSql += " JOIN " + RetFullName("Z47", cEmp) + " Z47 (NOLOCK) ON "
 	cSql += " ( "
-	cSql += " 	Z47.Z47_FILIAL = '' AND "
+	cSql += " 	Z47.Z47_FILIAL = '" + xFilial("Z47") +  "' AND "
 	cSql += " 	Z47.Z47_VERSAO = ZO8.ZO8_VERSAO AND "
 	cSql += " 	Z47.Z47_REVISA = ZO8.ZO8_REVISA AND "
 	cSql += " 	Z47.Z47_ANOREF = ZO8.ZO8_ANOREF AND "
 	cSql += " 	Z47.Z47_PRODUT = ZO8.ZO8_PRODUT AND "
-	cSql += " 	Z47.D_E_L_E_T_ = '' "
+	cSql += " 	Z47.D_E_L_E_T_ = ' ' "
 	cSql += " ) "
-	cSql += " WHERE ZO8.D_E_L_E_T_  = '' "
+	cSql += " WHERE ZO8.D_E_L_E_T_  = ' ' "
 	cSql += " AND ZO8.ZO8_FILIAL    = " + ValToSql(cEmp)
 	cSql += " AND ZO8.ZO8_VERSAO    = " + ValToSql(cVersao)
 	cSql += " AND ZO8.ZO8_REVISA    = " + ValToSql(cRevisa)
 	cSql += " AND ZO8.ZO8_ANOREF    = " + ValToSql(cAnoRef)
-	cSql += " GROUP BY ZO8_FILIAL, ZO8_VERSAO, ZO8_REVISA, ZO8_ANOREF, ZO8_TPPROD, ZO8_PRODUT, ZO8_DTREF, "
-	cSql += " Z47_QTDM01, Z47_QTDM02, Z47_QTDM03, Z47_QTDM04, Z47_QTDM05, Z47_QTDM06, "
-	cSql += " Z47_QTDM07, Z47_QTDM08, Z47_QTDM09, Z47_QTDM10, Z47_QTDM11, Z47_QTDM12 "
+	cSql += " GROUP BY ZO8_FILIAL, "
+	cSql += "          ZO8_VERSAO, "
+	cSql += "          ZO8_REVISA, "
+	cSql += "          ZO8_ANOREF, "
+	cSql += "          ZO8_PRODUT, "
+	cSql += "          ZO8_DTREF, "
+	cSql += "          Z47_QTDM01, "
+	cSql += "          Z47_QTDM02, "
+	cSql += "          Z47_QTDM03, "
+	cSql += "          Z47_QTDM04, "
+	cSql += "          Z47_QTDM05, "
+	cSql += "          Z47_QTDM06, "
+	cSql += "          Z47_QTDM07, "
+	cSql += "          Z47_QTDM08, "
+	cSql += "          Z47_QTDM09, "
+	cSql += "          Z47_QTDM10, "
+	cSql += "          Z47_QTDM11, "
+	cSql += "          Z47_QTDM12 "
 
 	TcQuery cSQL New Alias (cQry)
 
+	ProcRegua(0)
 	While !(cQry)->(Eof())
 
-		If EmpOpenFile(cZOB, "ZOB", 1, .T., cEmp, @cModo)
+		IncProc("Processando Registros encontrados na base...")
 
-			Reclock(cZOB, .T.)
-			(cZOB)->ZOB_FILIAL  := cEmp
-			(cZOB)->ZOB_VERSAO  := cVersao
-			(cZOB)->ZOB_REVISA  := cRevisa
-			(cZOB)->ZOB_ANOREF  := cAnoRef
-			(cZOB)->ZOB_DTREF   := STOD((cQry)->ZO8_DTREF)
-			(cZOB)->ZOB_PRODUT  := (cQry)->ZO8_PRODUT
-			(cZOB)->ZOB_QPROD   := &("(cQry)->Z47_QTDM" + SubStr((cQry)->ZO8_DTREF, 5, 2))
-			(cZOB)->ZOB_VPROD   := &("(cQry)->Z47_QTDM" + SubStr((cQry)->ZO8_DTREF, 5, 2)) * (cQry)->CUSTO_TOTAL
-			(cZOB)->(MsUnlock())
+		Reclock("ZOB", .T.)
+		ZOB->ZOB_FILIAL  := cEmp
+		ZOB->ZOB_VERSAO  := cVersao
+		ZOB->ZOB_REVISA  := cRevisa
+		ZOB->ZOB_ANOREF  := cAnoRef
+		ZOB->ZOB_DTREF   := STOD((cQry)->ZO8_DTREF)
+		ZOB->ZOB_PRODUT  := (cQry)->ZO8_PRODUT
+		ZOB->ZOB_QPROD   := &("(cQry)->Z47_QTDM" + SubStr((cQry)->ZO8_DTREF, 5, 2))
+		ZOB->ZOB_VPROD   := (cQry)->CUSTO_TOTAL
+		ZOB->(MsUnlock())
 
-		Else
+		(cQry)->(DbSkip())
 
-			lRet := .F.
+	End
 
-			cMsg := "Não conseguiu abrir a empresa " + cEmp + " !"
+	(cQry)->(DbCloseArea())
 
-			Exit
+	xVerRet := lRet 
+
+Return(lRet)
+
+Static Function ExistThenD(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
+
+	Local cSQL  := ""
+	Local cQry  := ""
+	Local lPerg := .T.
+	Local lRet  := .T.
+
+	Default cMsg := ""
+
+	cQry := GetNextAlias()
+
+	cSql := " SELECT R_E_C_N_O_ RECNO "
+	cSql += " FROM " + RetFullName("ZOB", cEmp) + " ZOB (NOLOCK) "
+	cSql += " WHERE ZOB_FILIAL      = " + ValToSql(cEmp)
+	cSql += " AND ZOB_VERSAO        = " + ValToSql(cVersao)
+	cSql += " AND ZOB_REVISA        = " + ValToSql(cRevisa)
+	cSql += " AND ZOB_ANOREF        = " + ValToSql(cAnoRef)
+	cSql += " AND ZOB.D_E_L_E_T_    = ' ' "
+
+	TcQuery cSQL New Alias (cQry)
+
+	ProcRegua(0)
+	While !(cQry)->(Eof())
+
+		IncProc("Apagando Registros encontrados na base...")
+
+		If lPerg
+
+			If MsgYesNo("Já existem dados para o tempo orçamentário. Deseja continuar?" + CRLF + CRLF + "Caso clique em sim esses dados serão apagados e gerados novos!", "Empresa: [" + cEmp + "]  - ATENÇÃO")
+
+				lRet := .T.
+
+			Else
+
+				lRet := .F.
+
+				Exit
+
+			EndIf
+
+			lPerg := .F.
 
 		EndIf
 
-		If Select(cZOB) > 0
+		ZOB->(DBGoTo((cQry)->RECNO))
+		If !ZOB->(EOF())
 
-			(cZOB)->(DbCloseArea())
+			Reclock("ZOB", .F.)
+			ZOB->(DBDelete())
+			ZOB->(MsUnlock())
 
 		EndIf
 
 		(cQry)->(DbSkip())
 
-	EndDo
+	End
 
 	(cQry)->(DbCloseArea())
 
-Return(lRet)
+	xVerRet := lRet 
+
+Return ( lRet )

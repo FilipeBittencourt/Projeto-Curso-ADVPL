@@ -660,11 +660,22 @@ Return()
 
 
 Method ExecMovFin(oObj, nValor, cNat, cHist) Class TAFBaixaReceber
+	
 	Local aMovBan := {}
 	Local aAutoErro := {}
 	Local cLogTxt := ""
 	Local dDataDisp := If(oObj:cBanco $ "237", If(Empty(oObj:dDtCred), DataValida(oObj:dDtLiq + 1), oObj:dDtCred), oObj:dDtLiq)
 	Local _cFilBkp := cFilAnt
+
+	Local cBanco
+	Local cAgencia
+	Local cConta
+
+	Local cPadrao
+
+	Local cSA1IdxKey
+	
+	local oJSONArray
 
 	Private lMsErroAuto := .F.
 	Private lMsHelpAuto := .T.
@@ -718,6 +729,28 @@ Method ExecMovFin(oObj, nValor, cNat, cHist) Class TAFBaixaReceber
 
 		//Atualizar Status ZK4
 		::UpdStatus(oObj:nID, "2")
+
+		if (FIDC():isFIDCEnabled())
+			cSA1IdxKey:="A1_FILIAL+A1_COD+A1_LOJA"
+			SA1->(dbSetOrder(retOrder("SA1",cSA1IdxKey)))
+			if (SA1->(MsSeek(xFilial("SA1")+SE1->E1_CLIENTE+SE1->E1_LOJA)))
+				//Contabilizacao FIDC
+				cPadrao:=getNewPar("BIA_FIDCLP","FDC")
+				if (!empty(cPadrao))
+					cBanco:=SE1->E1_PORTADO
+					cAgencia:=SE1->E1_AGEDEP
+					cConta:=SE1->E1_CONTA
+					oJSONArray:=JSONArray():New()
+					oJSONArray:Set("cPadrao",cPadrao)
+					oJSONArray:Set("nSE1RecNo",SE1->(recNo()))
+					oJSONArray:Set("nSA1RecNo",SA1->(recNo()))
+					oJSONArray:Set("cBanco",cBanco)
+					oJSONArray:Set("cAgencia",cAgencia)
+					oJSONArray:Set("cConta",cConta)
+					FIDC():ctbFIDC(@oJSONArray)
+				endif
+			endif
+		endif
 
 	Else
 

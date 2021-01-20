@@ -17,35 +17,33 @@ User Function BIABC020()
 	Private bInsere    := .T.
 	cEnter             := Chr(13) + Chr(10)
 	
-	Aviso('Cálculo de Consumo Médio', "Data Referência:" + MesExtenso(Month2Str( Date() ) ) + "/" + Year2Str( Date() ) + cEnter +;
+	Aviso('Cálculo de Consumo Médio', ;
+	'Data Referência:' + MesExtenso(Month2Str( Date() ) ) + '/' + Year2Str( Date() ) + cEnter +;
 	'Políticas: 4 e 8 ' + cEnter + 'Período: 3 meses',{'Ok'})
-	
-	/*@ 0,0 TO 230,280 DIALOG oEntra TITLE "Cálculo de Consumo médio"	
-	
-	@ 20,25 SAY "Data Referência (AAAAMM): " + sAnoMes
-	@ 35,35 SAY "Políticas: 4 e 8" 
-	@ 55,45 SAY "Período: 3 meses------------------------------------------------------------------------------------------------------" 
-	
-	@ 85,60 BMPBUTTON TYPE 1 ACTION Close( oEntra )*/
-
-	ACTIVATE DIALOG oEntra CENTERED
 
 
 	cQuery := "SELECT DISTINCT BM_GRUPO, BM_DESC, " + cEnter
 	cQuery += "       ROUND(SUM(CUSTO)/(DATEDIFF(DAY," + sdtInicial +", " + sdtFinal + ")/30), 2) CUSTO" + cEnter
-	cQuery += "  FROM (SELECT DISTINCT SBM1.BM_GRUPO, SBM1.BM_DESC," + cEnter
+	cQuery += "  FROM (SELECT DISTINCT SBM.BM_GRUPO, SBM.BM_DESC," + cEnter
 	cQuery += "               CASE WHEN D3_TM >= '500' THEN D3_QUANT" + cEnter
 	cQuery += "               ELSE D3_QUANT * (-1) END QUANT," + cEnter
 	cQuery += "               CASE WHEN D3_TM >= '500' THEN D3_CUSTO1 " + cEnter
 	cQuery += "               ELSE D3_CUSTO1 * (-1) END CUSTO " + cEnter
-	cQuery += "          FROM SBM010 SBM1 WITH (NOLOCK)" + cEnter
-	cQuery += "         INNER JOIN SBM010 SBM2 WITH (NOLOCK) ON SBM1.BM_GRUPO = SBM2.BM_YAGRPCT AND SBM2.D_E_L_E_T_ = ''" + cEnter
-	cQuery += "         INNER JOIN SB1010 SB1  WITH (NOLOCK) ON B1_GRUPO = SBM2.BM_GRUPO AND SB1.D_E_L_E_T_ = ''" + cEnter
-	cQuery += "         INNER JOIN ZCN010 ZCN  WITH (NOLOCK) ON B1_COD = ZCN_COD AND ZCN_POLIT IN ('4','8') AND ZCN.D_E_L_E_T_ = ''" + cEnter
-	cQuery += "         INNER JOIN SD3010 SD3  WITH (NOLOCK) ON D3_COD = ZCN_COD AND D3_LOCAL = ZCN_LOCAL AND D3_YPARADA <> 'S' AND SD3.D_E_L_E_T_ = ' '" + cEnter
-	cQuery += "         WHERE SBM1.D_E_L_E_T_ = ''" + cEnter
-	cQuery += "           AND D3_EMISSAO BETWEEN " + sdtInicial +" AND " + sdtFinal + cEnter
-	cQuery += "           AND SBM1.BM_YAGRPCT = '')TBL" + cEnter
+	cQuery += "          FROM SBM010 SBM WITH (NOLOCK)" + cEnter
+	cQuery += "         INNER JOIN SB1010 SB1  WITH (NOLOCK)" + cEnter 
+	cQuery += "            ON B1_GRUPO = SBM.BM_GRUPO " + cEnter
+	cQuery += "           AND SB1.D_E_L_E_T_ = ''" + cEnter
+	cQuery += "         INNER JOIN ZCN010 ZCN  WITH (NOLOCK) " + cEnter
+	cQuery += "            ON B1_COD = ZCN_COD " + cEnter
+	cQuery += "           AND ZCN_POLIT IN ('4','8') " + cEnter
+	cQuery += "           AND ZCN.D_E_L_E_T_ = ''" + cEnter
+	cQuery += "         INNER JOIN SD3010 SD3  WITH (NOLOCK) " + cEnter
+	cQuery += "            ON D3_COD = ZCN_COD " + cEnter
+	cQuery += "           AND D3_LOCAL = ZCN_LOCAL " + cEnter
+	cQuery += "           AND D3_YPARADA <> 'S' " + cEnter
+	cQuery += "            AND SD3.D_E_L_E_T_ = ' '" + cEnter
+	cQuery += "         WHERE D3_EMISSAO BETWEEN " + sdtInicial +" AND " + sdtFinal + cEnter
+	cQuery += "           AND SBM.D_E_L_E_T_ = '')TBL" + cEnter
 	cQuery += " GROUP BY BM_GRUPO, BM_DESC " + cEnter
 
 	TCQUERY cQuery ALIAS "QRY1" NEW

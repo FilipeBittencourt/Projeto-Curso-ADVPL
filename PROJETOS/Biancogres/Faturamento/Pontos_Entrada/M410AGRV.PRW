@@ -348,6 +348,16 @@ User Function M410AGRV()
 		If M->C5_CLIENTE == "017361" .And. !(M->C5_TIPO $ "D_B")
 			M->C5_MENNOTA := "Entrega depósito fechado CNPJ - 05.621.609/0002-82 INSC.EST. 082.796.9-3 Mercantil Molina Ltda EPP – Filial - Av. Alegre, 1606 – Bairro Shell – Linhares-ES - CEP 29.901-600"
 		EndIf 
+		
+		//Ticket 29524 - Barbara Luan Gomes Coelho 18/01/21
+		If M->C5_CLIENTE == "001124" .And. !(M->C5_TIPO $ "D_B")
+			M->C5_MENNOTA := "O ICMS devido por substituição tributária será recolhido pelo destinatário – Regime Especial PTA 45.000019084-05/2020"
+		EndIf 
+		
+		//Ticket 29536 - Barbara Luan Gomes Coelho 18/01/21
+		If M->C5_CLIENTE == "031646" .And. !(M->C5_TIPO $ "D_B")
+			M->C5_MENNOTA := "Dispensado destaque do ICMS ST - destinatário com Regime Especial (MG) E-PTA-RE N.° 45.000021720-54"
+		EndIf 
 
 		//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 		//Grava Mensagem Padrao p/ REVIX - BIANCOGRES/LM OS 1079-14
@@ -441,11 +451,18 @@ User Function M410AGRV()
 			dbSelectArea("SC6")
 			wwOrdem := INDEXORD()
 			wwPosReg := RECNO()
-			aColsBck := {}
+			aColsBck 	:= {}
+			___nLenCols	:= 0
+			
 			dbSetOrder(1)
 			If dbSeek(xFilial("SC6")+M->C5_NUM,.F.)
 				While !EOF() .AND. M->C5_NUM == SC6->C6_NUM .AND. (XFILIAL("SC5") == SC6->C6_FILIAL)
 					AADD(aColsBck, {SC6->C6_ITEM,SC6->C6_PRODUTO,SC6->C6_YDESC,SC6->C6_LOTECTL,SC6->C6_VALDESC,SC6->C6_YDESP})
+					
+					If (SC6->C6_BLQ != 'R') //não pega residuo
+						___nLenCols += 1
+					EndIf
+					 
 					dbSkip()
 				EndDo
 			Else
@@ -456,7 +473,7 @@ User Function M410AGRV()
 			dbSetorder(wwOrdem)
 			dbGoto(wwPosReg)
 			dbSelectArea(wwArea)
-
+			
 			//Verifica o que esta diferente no PV para submeter a aprovacao novamente
 			For I := 1 To Len(aCols)
 
@@ -497,7 +514,9 @@ User Function M410AGRV()
 				EndIf			
 
 			Next
-
+			
+			
+			
 			//Verifica alteracao no FATOR FINANCEIRO - Submete a rotina de bloqueio
 			nFatorFinMem := Posicione("SE4",1,xFilial("SE4")+M->C5_CONDPAG,"E4_YMEDIA")
 			nFatorFinGrv := Posicione("SE4",1,xFilial("SE4")+SC5->C5_CONDPAG,"E4_YMEDIA")
@@ -509,6 +528,12 @@ User Function M410AGRV()
 				Conout("M410AGRV APROVAÇÃO PEDIDO " + M->C5_NUM + " => (" + Iif(nOpcao==1,"INCLUSÃO",Iif(nOpcao==2,"ALTERAÇÃO","EXCLUSÃO")) + "), Motivo: SC5->C5_YMAXCND <> M->C5_YMAXCND " + Str(SC5->C5_YMAXCND) + " e " + Str(M->C5_YMAXCND) + ", thread: "+AllTrim(Str(ThreadId()))+"  data: "+DTOC(dDataBase)+" hora: "+Time())
 				lCheckPV := .T.
 			EndIF
+			
+			If (___nLenCols != Len(aCols))
+				Conout("M410AGRV APROVAÇÃO PEDIDO " + M->C5_NUM + " => (" + Iif(nOpcao==1,"INCLUSÃO",Iif(nOpcao==2,"ALTERAÇÃO","EXCLUSÃO")) + "), Motivo: __nLenCols != Len(aCols), thread: "+AllTrim(Str(ThreadId()))+"  data: "+DTOC(dDataBase)+" hora: "+Time())
+				lCheckPV := .T.
+			EndIf
+			
 
 			//Se for Condição de Pagamento Tipo 9 por Valor
 			cTipoCond 	:= Posicione("SE4",1,xFilial("SE4")+M->C5_CONDPAG,"E4_TIPO")

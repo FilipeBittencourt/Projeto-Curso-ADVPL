@@ -87,7 +87,8 @@ User Function FROPRT08()
 	Next nI
 	//--------------------------------------------------------------//
 
-
+	//Filipe - Facile em 18/01/2021 -Alerta  para saber quando o titulo não  é  gerado na E1 como PR
+	GetErro001() // https://suporteti.biancogres.com.br/Ticket/Edit/24654 - Erro Geração de Titulos de Pedidos Antecipados
 
 Return
 
@@ -122,14 +123,14 @@ Static Function PrcReplica()
 	EndSql
 
 	(cAliasAux)->(DbGoTop())
-	While !(cAliasAux)->(Eof()) 
+	While !(cAliasAux)->(Eof())
 
 		U_GravaPZ2((cAliasAux)->R_E_C_N_O_,"SC5",(cAliasAux)->C5_NUM,"REPL",AllTrim(FunName()),"RPL", "JOB" )
 
 		U_FCOMRT01((cAliasAux)->C5_NUM,,.T.)
 
 		oConfPedVen := TConferenciaPedidoVenda():New(cEmpAnt, cFilAnt, 3, "")
-		oConfPedVen:Checar((cAliasAux)->C5_NUM)	
+		oConfPedVen:Checar((cAliasAux)->C5_NUM)
 
 
 		(cAliasAux)->(DbSkip())
@@ -247,7 +248,7 @@ Static Function PrcEfetiva()
 			While !PZ0->(Eof()) .And. AllTrim(PZ0->(PZ0_FILIAL+PZ0_USUINC)) == AllTrim((XFilial("PZ0")+_cUserName))
 
 				//Efetiva reservas temporarias pela chave do usuario e confirma numero do pedido que pode ter mudado
-				If PZ0->PZ0_STATUS == "T"   
+				If PZ0->PZ0_STATUS == "T"
 
 					U_GravaPZ2(PZ0->(RecNo()),"PZ0",PZ0->(PZ0_FILIAL+PZ0_PEDIDO+PZ0_ITEMPV),"EFET_TEMP",AllTrim(FunName()),"EFT", "JOB")
 
@@ -287,7 +288,7 @@ Return
 Static Function PrcRepConf()
 
 	Local cAliasTrab	:= GetNextAlias()
-	Local cQuery		:= ""        
+	Local cQuery		:= ""
 	Local cRet			:= ""
 
 	cQuery += " SELECT C5_NUM, C5_YPEDORI, C5_YAPROV FROM SC5070 SC5_7 			"+ CRLF
@@ -352,7 +353,7 @@ Static Function PrcConfAut()
 
 	If (cEmpAnt == '07')
 
-		cQuery += " select C5_NUM from SC5070 SC5																									"	
+		cQuery += " select C5_NUM from SC5070 SC5																									"
 		cQuery += " join SA1010 SA1 ON A1_COD+A1_LOJA = C5_CLIENTE+C5_LOJACLI AND SA1.D_E_L_E_T_ = ''                                                "
 		cQuery += " where                                                                                                                            "
 		cQuery += " SC5.D_E_L_E_T_					= ''		AND                                                                                  "
@@ -420,9 +421,9 @@ Static Function PrcConfAut()
 		cQuery += " WHERE C9_FILIAL = C6_FILIAL AND C9_PEDIDO = C6_NUM AND C9_ITEM = C6_ITEM AND SC9.D_E_L_E_T_=''	                                 "
 		cQuery += " ) 																															     "
 		cQuery += " and ( (select datediff( minute,  convert(smalldatetime, rtrim(C5_EMISSAO)+' '+rtrim(C5_YHORA)) , getdate())) >= 20 )             "
-		
 
-	EndIf             
+
+	EndIf
 
 	Conout('TConferenciaPedidoVenda: Automatica Schedule => Query: '+cQuery)
 
@@ -435,11 +436,105 @@ Static Function PrcConfAut()
 		Conout('TConferenciaPedidoVenda: Automatica Schedule => Pedido: '+cNumPed+', Empresa: '+cEmpAnt)
 
 		oConfPedVen := TConferenciaPedidoVenda():New(cEmpAnt, cFilAnt, 3, "")
-		oConfPedVen:Checar(cNumPed)	
+		oConfPedVen:Checar(cNumPed)
 
 		(cAliasTmp)->(DbSkip())
 	EndDo()
 
 	(cAliasTmp)->(DbCloseArea())
+
+Return
+
+
+Static Function GetErro001()
+
+	Local cSQL := ""
+	Local cQry := ""
+	Local cHtml := ""
+	Local  cMail :=  "filipe.bittencourt@facilesistemas.com.br;nadine.araujo@biancogres.com.br"
+	Local lErro := .F.
+
+	If Select("SX6") <= 0
+		RPCSetEnv("07", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+	EndIf
+
+	cQry := GetNextAlias()
+
+	cSQL := " select   " + CRLF
+	cSQL += "   'LM COMERCIO' as EMPRESA,  " + CRLF
+	cSQL += "   C5_FILIAL,  " + CRLF
+	cSQL += "   C5_NUM,  " + CRLF
+	cSQL += "   C5_CLIENTE,  " + CRLF
+	cSQL += "   C5_YPEDORI ,  " + CRLF
+	cSQL += "   C5_YEMPPED AS 'REPLICADO' ,  " + CRLF
+	cSQL += "   C5_YLINHA AS 'LINHA DO PRODUTO',   " + CRLF
+	cSQL += "   C5_EMISSAO+' '+C5_YHORA as hora,  " + CRLF
+	cSQL += "   C5_YENVIO, C5_YFORMA, C5_YCONF,  " + CRLF
+	cSQL += "   C5_EMISSAO, C5_CONDPAG, C5_YCONF, C5_YAPROV, C5_YAAPROV, C5_YUSCONF, C5_YHORA, C5_YPEDORI, C5_YENVIO  " + CRLF
+	cSQL += "   from SC5070  SC5 with (nolock)   " + CRLF
+	cSQL += "   where 1=1   " + CRLF
+	cSQL += "   AND C5_FILIAL	  IN ('01','02','03','04','05','06')  " + CRLF
+	cSQL += "   AND C5_EMISSAO >= '20210101'  " + CRLF
+	cSQL += "   AND D_E_L_E_T_	= ''  " + CRLF
+	cSQL += "   AND C5_CONDPAG	IN ('000', '208')  " + CRLF
+	cSQL += "   AND C5_TIPO		= 'N'       " + CRLF
+	cSQL += "   AND C5_YCONF		= 'S'   " + CRLF
+	cSQL += "   AND C5_YENVIO		= 'N'   " + CRLF
+	cSQL += "   AND C5_YPEDORI	<> ''       " + CRLF
+	cSQL += "   AND C5_YHORA		<> ''   " + CRLF
+	cSQL += "   AND C5_NOTA		= ''        " + CRLF
+	cSQL += "   AND C5_YAPROV     <> ''   " + CRLF
+
+	cSQL += "   and not exists (SELECT E1_NUM FROM SE1070 (nolock)  " + CRLF
+	cSQL += "   	where   " + CRLF
+	cSQL += "   	E1_FILIAL IN ('01','02','03','04','05','06') " + CRLF
+	cSQL += " 	AND E1_CLIENTE	= C5_CLIENTE   " + CRLF
+	cSQL += "   	AND E1_LOJA		= C5_LOJACLI     " + CRLF
+	cSQL += " 	AND E1_PREFIXO	=   'PR'+C5_YLINHA   " + CRLF
+	cSQL += "   	and E1_PEDIDO = C5_NUM    	     " + CRLF
+	cSQL += "   	AND D_E_L_E_T_			= '' )   " + CRLF
+	cSQL += "  order by R_E_C_N_O_ DESC              " + CRLF
+
+	TcQuery cSQL New Alias (cQry)
+
+	cHtml := " <html>"
+	cHtml += " <body>"
+
+	cHtml += " <div style='margin:0;padding:0;background-color:#ffffff;height:100%'>"
+
+	cHtml += " <table border='1' cellpadding='0' cellspacing='0' width='100%' style='background-color:#ffffff;overflow-x:hidden'>"
+	cHtml += " <tr>"
+	cHtml += " <td>EMPRESA</td>"
+	cHtml += " <td>FILIAL</td>"
+	cHtml += " <td>CLIENTE</td>"
+	cHtml += " <td>NUM. PV</td>"
+	cHtml += " <td>NUM. PV. FABRICA</td>"
+	cHtml += " <td>DATA</td>"
+	cHtml += " </tr>"
+
+	While (cQry)->(!EOF())
+
+		lErro := .T.
+		cHtml += " <tr>"
+		cHtml += " <td>"+(cQry)->(EMPRESA)+"</td>"
+		cHtml += " <td>"+(cQry)->(C5_FILIAL)+"</td>"
+		cHtml += " <td>"+(cQry)->(C5_CLIENTE)+"</td>"
+		cHtml += " <td>"+(cQry)->(C5_NUM)+"</td>"
+		cHtml += " <td>"+(cQry)->(C5_YPEDORI)+"</td>"
+		cHtml += " <td>"+(cQry)->(hora)+"</td>"
+		cHtml += " </tr>"
+
+		(cQry)->(DBSkip())
+
+	EndDo
+
+	cHtml += " </table> "
+	cHtml += " </div> "
+	cHtml += " </body> "
+	cHtml += " </html>   "
+
+	if lErro
+		U_BIAEnvMail(,cMail,'Erro Geração de Titulos de Pedidos Antecipados',cHtml)
+	Endif
 
 Return

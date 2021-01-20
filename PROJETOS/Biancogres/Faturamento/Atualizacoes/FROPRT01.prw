@@ -25,14 +25,18 @@
 @type function
 /*/
 
-User Function FROPRT01(_cProd, _cLocal, _cPedido, _cItem, _nQtdDig, _cLote, _cSegmento, _cEmpOri, _lPalete, _cCategoria, _cLotRes, _nProxLote, _cLoteAdd, _cLoteExc)
+User Function FROPRT01(_cProd, _cLocal, _cPedido, _cItem, _nQtdDig, _cLote, _cSegmento, _cEmpOri, _lPalete, _cCategoria, _cLotRes, _nProxLote, _cLoteAdd, _cLoteExc, _lExibirTela)
 
 	Local aArea := GetArea()
 	Local _nSaldo
 	Local _cUserName	:= CUSERNAME
-	Local _nPMax 		:= GetNewPar("MV_YSLTMAX",20)  
-	Local _nPMin 		:= GetNewPar("MV_YSLTMIN",20)  
-	Local _aRetSaldo	:= Array(12)
+	Local _nPMax 		:= GetNewPar("MV_YSLTMAX",	20)  
+	Local _nPMin 		:= GetNewPar("MV_YSLTMIN",	20)  
+	Local _cPrioSaldo	:= GetNewPar("MV_YSLTPRI",	'')
+	Local _nTolerancia	:= GetNewPar("MV_YSLTTMA",	0.99)
+	  
+	
+	Local _aRetSaldo	:= Array(13)
 
 	/*Formato do vetor _aRetSaldo
 	aRet[1] 	:= oPBI:EmpEst			=> Empresa do Estoque	
@@ -47,16 +51,19 @@ User Function FROPRT01(_cProd, _cLocal, _cPedido, _cItem, _nQtdDig, _cLote, _cSe
 	aRet[10] 	:= oPBI:Qtd_Um_Pallet	=> Qtde m2 de um palete
 	aRet[11] 	:= oPBI:Qtd_Ponta		=> Qtde em Ponta/Fracionado sugerido para venda
 	aRet[12] 	:= oPBI:Regra_Sug		=> Regra de sugestao usada
+	aRet[13] 	:= oPBI:EscolhaManual	=> Escolha lote manual
+	
 	*/
 
-	Default _cLote 		:= ""
-	Default _cSegmento 	:= ""
-	Default _cEmpOri 	:= ""
-	Default _cCategoria	:= ""
-	Default _cLotRes	:= ""
-	Default _nProxLote	:= 0
-	Default _cLoteAdd	:= ""
-	Default _cLoteExc	:= ""
+	Default _cLote 			:= ""
+	Default _cSegmento 		:= ""
+	Default _cEmpOri 		:= ""
+	Default _cCategoria		:= ""
+	Default _cLotRes		:= ""
+	Default _nProxLote		:= 0
+	Default _cLoteAdd		:= ""
+	Default _cLoteExc		:= ""
+	Default _lExibirTela	:= .F.
 
 	If Type("_FROPCHVTEMPRES") <> "U" .And. !Empty(_FROPCHVTEMPRES)
 		_cUserName := _FROPCHVTEMPRES
@@ -72,7 +79,8 @@ User Function FROPRT01(_cProd, _cLocal, _cPedido, _cItem, _nQtdDig, _cLote, _cSe
 	If (Empty(_cEmpOri) .And. AllTrim(cEmpAnt) == '07' .And. AllTrim(cFilAnt) == '05')
 		_cEmpOri := '07'
 	EndIf
-
+	
+	
 	SB1->(DbSetOrder(1))
 	SB1->(DbSeek(XFilial("SB1")+_cProd))
 
@@ -95,7 +103,7 @@ User Function FROPRT01(_cProd, _cLocal, _cPedido, _cItem, _nQtdDig, _cLote, _cSe
 		SB1->(DbSetOrder(1))
 		IF SB1->(DbSeek(XFilial("SB1")+_cProd)) .And. !Empty(SB1->B1_YEMPEST)
 
-			_aRetPBI := U_FPBIGEMP(_cProd, _nQtdDig, _cSegmento, _cUserName, _cItem, _nPMax, _nPMin, _cEmpOri, _lPalete, _cCategoria, _cLotRes, _nProxLote, _cLoteAdd, _cLoteExc)
+			_aRetPBI := U_FPBIGEMP(_cProd, _nQtdDig, _cSegmento, _cUserName, _cItem, _nPMax, _nPMin, _cEmpOri, _lPalete, _cCategoria, _cLotRes, _nProxLote, _cLoteAdd, _cLoteExc, _cPrioSaldo, _nTolerancia, _lExibirTela)
 
 			_aRetSaldo := _aRetPBI
 
@@ -103,7 +111,7 @@ User Function FROPRT01(_cProd, _cLocal, _cPedido, _cItem, _nQtdDig, _cLote, _cSe
 
 			U_FROPMSG(TIT_MSG, 	"Formato sem ESTOQUE E/OU EMPRESA DE FABRICAÇÃO configurada. Verifique.",,,"CONFIGURAÇÃO DO PRODUTO")
 
-			_aRetSaldo := Array(12)
+			_aRetSaldo := Array(13)
 
 		EndIf
 
@@ -381,7 +389,7 @@ User Function FRRT01P3(_cProduto, _cLocal, _nQuant)
 
 		If !(cAliasTmp)->(Eof())
 
-			aRET := Array(9)
+			aRET := Array(10)
 
 			aRET[1] := (cAliasTmp)->LOTE
 			aRET[2] := (cAliasTmp)->SALDO
@@ -392,10 +400,11 @@ User Function FRRT01P3(_cProduto, _cLocal, _nQuant)
 			aRET[7]	:= 0
 			aRET[8]	:= AllTrim(CEMPANT)
 			aRET[9]	:= _cLocal
+			aRET[10]:= .T.
 
 		Else
 
-			aRET := Array(9)
+			aRET := Array(10)
 
 		EndIf
 		(cAliasTmp)->(DbCloseArea()) 
@@ -443,3 +452,441 @@ User Function FRRT01P4(_cProd, _cLocal, _nQtdDig, _cLote, _cSegmento, _cEmpOri)
 
 	RestArea(_aAreaB1)
 Return(_lRet)
+
+
+User Function BSRESPRO(_cNRESER,  _cProduto, _cLote, nQuant, _cTipo, _cDocRes)
+	Local _cQuery			:= ""
+	Local _cAliasTemp		:= Nil//GetNextAlias()
+	Local _aArea			:= Nil//GetArea()
+	Local lRet				:= .F.
+	Local lErro				:= .F.
+	
+	Local nQtdResult	:= 0 
+	Local cNum			:= ""
+	Local cProd			:= ""
+	Local cLocal		:= ""
+	Local cNumLote		:= ""
+	Local cLoteCtl		:= ""
+	Local cLocaliz		:= ""
+	Local cNumSerie		:= ""
+	Local cData			:= ""
+	Local cSolici		:= ""
+	Local cYPraSol		:= ""
+	
+	Default _cTipo			:= 'CL'
+	Default _cDocRes		:= 'SILVER'
+	
+		
+	_cAliasTemp		:= GetNextAlias()
+	_aArea			:= GetArea()
+					
+	_cQuery += " SELECT ID=R_E_C_N_O_								 		 						"
+	_cQuery += " FROM " + RetSQLName("SC0")+"														"		    
+	_cQuery += " WHERE C0_FILIAL 		= "+ ValToSQL(xFilial("SC0"))+"								"
+	_cQuery += " AND C0_TIPO			= '"+_cTipo+"'												"
+	_cQuery += " AND C0_DOCRES			= '"+_cDocRes+"'											"
+	_cQuery += " AND C0_NUM		 		= '"+_cNRESER+"' 											"
+	_cQuery += " AND C0_PRODUTO			= '"+_cProduto+"'											"
+	_cQuery += " AND C0_LOTECTL	 		= '"+_cLote+"'												"
+	
+	_cQuery += " AND C0_QUANT 			>= '"+cvaltochar(nQuant)+"' 								"
+	_cQuery += " AND C0_LOCALIZ 		NOT IN ('AMT') 												"
+	_cQuery += " AND D_E_L_E_T_ 		= '' 														"
+	TcQuery _cQuery New Alias (_cAliasTemp)
+
+	If (!(_cAliasTemp)->(Eof()))
+		
+		  DBSelectArea("SC0")
+		  SC0->(DBGoTo((_cAliasTemp)->ID))
+		  	
+		  	nQtdResult	:= (SC0->C0_QUANT - nQuant) 
+		  	cNum		:= SC0->C0_NUM
+		  	cProd		:= SC0->C0_PRODUTO
+		  	cLocal		:= SC0->C0_LOCAL
+		  	cNumLote	:= SC0->C0_NUMLOTE
+		  	cLoteCtl	:= SC0->C0_LOTECTL
+		  	cLocaliz	:= SC0->C0_LOCALIZ
+		  	cNumSerie	:= SC0->C0_NUMSERI
+		  	cData		:= SC0->C0_VALIDA
+            cSolici		:= SC0->C0_SOLICIT
+            cYPraSol	:= SC0->C0_YPRASOL	
+            
+		   Begin Transaction
+		   
+		   	 lErro := !a430Reserv({3,"VD","", cUserName, XFilial("SC0")},; // A funcao estorna tudo
+		        	SC0->C0_NUM,;
+		            SC0->C0_PRODUTO,;
+		            SC0->C0_LOCAL,;
+		            SC0->C0_QUANT,;
+		            {	SC0->C0_NUMLOTE,;
+		            SC0->C0_LOTECTL,;
+		            SC0->C0_LOCALIZ,;
+		            SC0->C0_NUMSERI})
+		    
+		    If !lErro // Significa que foi estornado parte da SC0
+
+                lErro := !a430Reserva({1,"VD","", cUserName, XFilial("SC0")},;
+                   	cNum,;
+                    cProd,;
+                    cLocal,;
+                    (nQtdResult),;
+                    {"", cLoteCtl, cLocaliz, cNumSerie})
+
+                	SC0->(DbSetOrder(1))
+					If SC0->(DbSeek(XFilial("SC0")+cNum+cProd))
+						RecLock("SC0",.F.)
+						SC0->C0_VALIDA		:= cData
+						SC0->C0_TIPO		:= 	'CL'	
+						SC0->C0_DOCRES		:= 'SILVER'
+						SC0->C0_SOLICIT		:=  cSolici
+						SC0->C0_YPRASOL		:= cYPraSol
+					EndIf    
+
+            EndIf
+                    
+		    If lErro
+		
+		        DisarmTransaction()
+		
+		    EndIf
+		
+		   End Transaction         
+            
+     EndIf
+
+	(_cAliasTemp)->(DbCloseArea())
+	
+	RestArea(_aArea)
+Return lErro
+
+User Function CSRESPRO(_cNRESER, _cProduto, _cLote, _nQuant, _cTipo, _cDocRes)
+	Local _cQuery			:= ""
+	Local _cAliasTemp		:= Nil//GetNextAlias()
+	Local _aArea			:= Nil//GetArea()
+	Local lRet				:= .F.
+	Local lErro				:= .F.
+	
+	Local nQtdResult	:= "" 
+	Local cNum			:= ""
+	Local cProd			:= ""
+	Local cLocal		:= ""
+	Local cNumLote		:= ""
+	Local cLoteCtl		:= ""
+	Local cLocaliz		:= ""
+	Local cNumSerie		:= ""
+	Local cData			:= ""
+	Local cSolici		:= ""
+	Local cYPraSol		:= ""
+	
+	Default _cTipo			:= 'CL'
+	Default _cDocRes		:= 'SILVER'
+	
+	_cAliasTemp		:= GetNextAlias()
+	_aArea			:= GetArea()
+					
+	_cQuery += " SELECT ID=R_E_C_N_O_								 		 						"
+	_cQuery += " FROM " + RetSQLName("SC0")+"														"		    
+	_cQuery += " WHERE C0_FILIAL 		= "+ ValToSQL(xFilial("SC0"))+"								"
+	_cQuery += " AND C0_TIPO			= '"+_cTipo+"'												"
+	_cQuery += " AND C0_DOCRES			= '"+_cDocRes+"'											"
+	_cQuery += " AND C0_NUM		 		= '"+_cNRESER+"' 											"
+	_cQuery += " AND C0_LOCALIZ 		NOT IN ('AMT') 												"
+	_cQuery += " AND C0_PRODUTO			= '"+_cProduto+"'											"
+	_cQuery += " AND C0_LOTECTL	 		= '"+_cLote+"'												"
+	_cQuery += " AND D_E_L_E_T_ 		= '' 														"
+	
+	TcQuery _cQuery New Alias (_cAliasTemp)
+
+	If (!(_cAliasTemp)->(Eof()))
+		
+		  DBSelectArea("SC0")
+		  SC0->(DBGoTo((_cAliasTemp)->ID))
+		  	
+		  	nQtdResult	:= (SC0->C0_QUANT + _nQuant) 
+		  	cNum		:= SC0->C0_NUM
+		  	cProd		:= SC0->C0_PRODUTO
+		  	cLocal		:= SC0->C0_LOCAL
+		  	cNumLote	:= SC0->C0_NUMLOTE
+		  	cLoteCtl	:= SC0->C0_LOTECTL
+		  	cLocaliz	:= SC0->C0_LOCALIZ
+		  	cNumSerie	:= SC0->C0_NUMSERI
+		  	cData		:= SC0->C0_VALIDA
+            cSolici		:= SC0->C0_SOLICIT
+            cYPraSol	:= SC0->C0_YPRASOL	
+            
+		   Begin Transaction
+		   
+		   	 lErro := !a430Reserv({3,"VD","", cUserName, XFilial("SC0")},; // A funcao estorna tudo
+		        	SC0->C0_NUM,;
+		            SC0->C0_PRODUTO,;
+		            SC0->C0_LOCAL,;
+		            SC0->C0_QUANT,;
+		            {	SC0->C0_NUMLOTE,;
+		            SC0->C0_LOTECTL,;
+		            SC0->C0_LOCALIZ,;
+		            SC0->C0_NUMSERI})
+		    
+		    If !lErro // Significa que foi estornado parte da SC0
+
+                lErro := !a430Reserva({1,"VD","", cUserName, XFilial("SC0")},;
+                   	cNum,;
+                    cProd,;
+                    cLocal,;
+                    (nQtdResult),;
+                    {"", cLoteCtl, cLocaliz, cNumSerie})
+
+                	SC0->(DbSetOrder(1))
+					If SC0->(DbSeek(XFilial("SC0")+cNum+cProd))
+						RecLock("SC0",.F.)
+						SC0->C0_VALIDA		:= cData
+						SC0->C0_TIPO		:= 	'CL'	
+						SC0->C0_DOCRES		:= 'SILVER'
+						SC0->C0_SOLICIT		:=  cSolici
+						SC0->C0_YPRASOL		:= cYPraSol
+					EndIf    
+
+            EndIf
+                    
+		    If lErro
+		
+		        DisarmTransaction()
+		
+		    EndIf
+		
+		   End Transaction         
+            
+     EndIf
+
+	(_cAliasTemp)->(DbCloseArea())
+	
+	RestArea(_aArea)
+Return lErro
+
+
+User Function EXRESPEI(_cSolicit, _cProduto, _cLote, _nQuant, _cPedido, _cItem, _cEmp, _cFil)
+
+	Local _cQuery			:= ""
+	Local _cAliasTemp		:= Nil
+	Local _aArea			:= Nil
+	Local _lRet				:= .F.
+	
+	_cAliasTemp		:= GetNextAlias()
+	_aArea			:= GetArea()
+					
+					
+	_cQuery += " SELECT *													 						"
+	_cQuery += " FROM " + RetSQLName("SC0")+"														"		    
+	_cQuery += " WHERE C0_FILIAL 		= "+ ValToSQL(xFilial("SC0"))+"								"
+	_cQuery += " AND C0_SOLICIT			= '"+_cSolicit+"'											"
+	_cQuery += " AND C0_PRODUTO			= '"+_cProduto+"'											"
+	_cQuery += " AND C0_LOTECTL	 		= '"+_cLote+"'												"
+	_cQuery += " AND C0_QUANT 			= '"+cvaltochar(_nQuant)+"'									"
+		
+	If (_cEmp == '07')
+		_cQuery += " AND C0_YPITORI	 		= '"+_cPedido+_cItem+"' 								"	
+	Else
+		_cQuery += " AND C0_YPEDIDO	= '"+_cPedido+"'				 								"	
+		_cQuery += " AND C0_YITEMPV	= '"+_cItem+"'			 										"	
+	EndIf
+	_cQuery += " AND C0_YTEMP	= 'S'				 												"	
+					
+	_cQuery += " AND D_E_L_E_T_ = ''		 														"
+	
+	conout(_cQuery)
+	
+	TcQuery _cQuery New Alias (_cAliasTemp)
+
+	If (!(_cAliasTemp)->(Eof()))
+		  _lRet := .T.
+	EndIf
+
+	(_cAliasTemp)->(DbCloseArea())
+	
+//	Alert(cvaltochar(_lRet))
+	
+	RestArea(_aArea)
+Return _lRet
+
+
+User Function VAPRESPI(_cNRESER, _nQtdDig, _cSolicit, _cProduto, _cLote, _cPedido, _cItem, _cEmp, _cFil)
+
+	Local _cQuery			:= ""
+	Local _cAliasTemp		:= Nil
+	Local _aArea			:= Nil
+	Local _nQuant			:= 0
+	Local _cTipo			:= 'CL'
+	Local _cDocRes			:= 'SILVER'
+	Local _lRet				:= .T.
+	Local _nDivPA			:= 0
+	Local _nLoteMin			:= 0
+	
+	_cAliasTemp		:= GetNextAlias()
+	_aArea			:= GetArea()
+					
+	_cQuery += " SELECT C0_PRODUTO, C0_QUANT														"
+	_cQuery += " FROM " + RetSQLName("SC0")+"														"		    
+	_cQuery += " WHERE C0_FILIAL 		= "+ ValToSQL(xFilial("SC0"))+"								"
+	_cQuery += " AND C0_TIPO			= '"+_cTipo+"'												"
+	_cQuery += " AND C0_DOCRES			= '"+_cDocRes+"'											"
+	_cQuery += " AND C0_NUM		 		= '"+_cNRESER+"' 											"
+	_cQuery += " AND C0_PRODUTO			= '"+_cProduto+"'											"
+	_cQuery += " AND C0_LOCALIZ 		NOT IN ('AMT') 												"
+	_cQuery += " AND D_E_L_E_T_ 		= '' 														"
+	
+	TcQuery _cQuery New Alias (_cAliasTemp)
+
+	If (!(_cAliasTemp)->(Eof()))
+		 _nQuant := (_cAliasTemp)->C0_QUANT
+	EndIf
+	
+	(_cAliasTemp)->(DbCloseArea())
+	
+	_nQuant += U_GQTRESPI(_cSolicit, _cProduto, _cLote, _cPedido, _cItem, _cEmp, _cFil)
+	
+
+	SB1->(DbSetOrder(1))
+	If SB1->(DbSeek(XFilial("SB1")+_cProduto))
+
+		_nDivPA := SB1->B1_YDIVPA * SB1->B1_CONV
+
+		ZZ9->(DbSetOrder(1))
+		If ZZ9->(DbSeek(XFilial("ZZ9")+_cLote+_cProduto))
+
+			_nDivPA := ZZ9->ZZ9_DIVPA * SB1->B1_CONV
+
+		EndIf
+		
+	
+		DbSelectArea('ZZ6')
+		ZZ6->(DbSetOrder(1))
+		If (ZZ6->(DbSeek(xFilial('ZZ6')+SB1->B1_YFORMAT)))
+			_nLoteMin := ZZ6->ZZ6_LOTEMI
+		EndIf
+		
+		_lRet := ((_nQuant - _nQtdDig) % _nDivPA) >= _nLoteMin  
+		
+		If (!_lRet)
+			_lRet := (_nQuant - _nQtdDig) == 0
+		EndIf
+		
+	EndIf
+	
+	RestArea(_aArea)
+
+Return _lRet
+
+
+User Function GQTRESPI(_cSolicit, _cProduto, _cLote, _cPedido, _cItem, _cEmp, _cFil)
+
+	Local _cQuery			:= ""
+	Local _cAliasTemp		:= Nil
+	Local _aArea			:= Nil
+	Local _nQuant			:= 0
+	
+	_cAliasTemp		:= GetNextAlias()
+	_aArea			:= GetArea()
+					
+					
+	_cQuery += " SELECT *													 						"
+	_cQuery += " FROM " + RetSQLName("SC0")+"														"		    
+	_cQuery += " WHERE C0_FILIAL 		= "+ ValToSQL(xFilial("SC0"))+"								"
+	_cQuery += " AND C0_SOLICIT			= '"+_cSolicit+"'											"
+	_cQuery += " AND C0_PRODUTO			= '"+_cProduto+"'											"
+	_cQuery += " AND C0_LOTECTL	 		= '"+_cLote+"'												"
+		
+	If (_cEmp == '07')
+		_cQuery += " AND C0_YPITORI	 		= '"+_cPedido+_cItem+"' 								"	
+	Else
+		_cQuery += " AND C0_YPEDIDO	= '"+_cPedido+"'				 								"	
+		_cQuery += " AND C0_YITEMPV	= '"+_cItem+"'			 										"	
+	EndIf
+	_cQuery += " AND C0_YTEMP	= 'S'				 												"	
+					
+	_cQuery += " AND D_E_L_E_T_ = ''		 														"
+	
+	conout(_cQuery)
+	
+	TcQuery _cQuery New Alias (_cAliasTemp)
+
+	If (!(_cAliasTemp)->(Eof()))
+		 _nQuant := (_cAliasTemp)->C0_QUANT
+	EndIf
+
+	(_cAliasTemp)->(DbCloseArea())
+	
+	RestArea(_aArea)
+Return _nQuant
+
+
+User Function GDRESPRO(_cNRESER, _cProd, _nQuant, _cTipo, _cDocRes)
+
+	Local _cQuery			:= ""
+	Local _cAliasTemp		:= Nil
+	Local _aArea			:= Nil
+	Local _aRet				:= {"", "", "", "", ""}
+	Default _cTipo			:= 'CL'
+	Default _cDocRes		:= 'SILVER'
+	
+	_cAliasTemp		:= GetNextAlias()
+	_aArea			:= GetArea()
+					
+	_cQuery += " SELECT C0_PRODUTO, C0_QUANT, C0_LOTECTL, C0_LOCALIZ, C0_LOCAL 						"
+	_cQuery += " FROM " + RetSQLName("SC0")+"														"		    
+	_cQuery += " WHERE C0_FILIAL 		= "+ ValToSQL(xFilial("SC0"))+"								"
+	_cQuery += " AND C0_TIPO			= '"+_cTipo+"'												"
+	_cQuery += " AND C0_DOCRES			= '"+_cDocRes+"'											"
+	_cQuery += " AND C0_NUM		 		= '"+_cNRESER+"' 											"
+	_cQuery += " AND C0_PRODUTO	 		= '"+_cProd+"' 												"
+	_cQuery += " AND C0_QUANT 			>= '"+cvaltochar(_nQuant)+"' 								"
+	_cQuery += " AND C0_LOCALIZ 		NOT IN ('AMT') 												"
+	_cQuery += " AND D_E_L_E_T_ 		= '' 														"
+	
+	TcQuery _cQuery New Alias (_cAliasTemp)
+
+	If (!(_cAliasTemp)->(Eof()))
+		   _aRet := {;
+		   			(_cAliasTemp)->C0_PRODUTO,; 
+		   			(_cAliasTemp)->C0_LOTECTL,; 
+		   			(_cAliasTemp)->C0_QUANT,;
+		   			(_cAliasTemp)->C0_LOCALIZ,;
+		   			(_cAliasTemp)->C0_LOCAL;
+		   			}
+	EndIf
+
+	(_cAliasTemp)->(DbCloseArea())
+	
+	RestArea(_aArea)
+Return _aRet
+
+//existe produto com DFRA na politica comercial ativa 
+User Function PRPCDFRA(_cData, _cProd)
+	
+	Local _lRet 			:= .F.
+	Local _cQuery			:= ""
+	Local _cAliasTemp		:= GetNextAlias()
+	Local _aArea			:= GetArea()
+	
+	_cQuery += " SELECT TOP 1 ZA0_PDESC FROM ZA0010													"		    
+	_cQuery += " WHERE ZA0_FILIAL 		= "+ ValToSQL(xFilial("ZA0"))+"								"
+	_cQuery += " AND ZA0_TIPO			= 'DFRA'													"
+	_cQuery += " AND ZA0_CODPRO			= '"+_cProd+"'												"
+	_cQuery += " AND ZA0_VIGINI 		<= '"+_cData+"' and ZA0_VIGFIM >= '"+_cData+"'				"
+	_cQuery += " AND ZA0_STATUS 		= 'A' 														"
+	_cQuery += " AND D_E_L_E_T_ 		= '' 														"
+	_cQuery += " ORDER BY ZA0_MARCA																	"
+	
+	Conout(_cQuery)
+	
+	TcQuery _cQuery New Alias (_cAliasTemp)
+
+	If !((_cAliasTemp)->(Eof()))
+		_lRet := .T.
+	EndIf
+
+	(_cAliasTemp)->(DbCloseArea())
+	
+	RestArea(_aArea)
+	
+Return _lRet
+
+

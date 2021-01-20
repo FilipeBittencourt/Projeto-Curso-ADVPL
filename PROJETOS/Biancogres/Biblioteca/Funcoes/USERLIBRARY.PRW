@@ -1688,9 +1688,9 @@ User Function VLTOTPED(PEDI,lSaldo)
 	Local aFisGetSC5:= {}
 	Local aDupl     := {}
 	Local aVencto   := {}
-	Local aFlHead   := { STR0046,STR0047,STR0063 } //"Vencimento"###"Valor"
-	Local aEntr     := {}
-	Local aDuplTmp  := {}
+*	Local aFlHead   := { STR0046,STR0047,STR0063 } //"Vencimento"###"Valor"
+*	Local aEntr     := {}
+*	Local aDuplTmp  := {}
 	Local aRentab   := {}
 	Local nPLocal   := aScan(aHeader,{|x| AllTrim(x[2])=="C6_LOCAL"})
 	Local nPTotal   := aScan(aHeader,{|x| AllTrim(x[2])=="C6_VALOR"})

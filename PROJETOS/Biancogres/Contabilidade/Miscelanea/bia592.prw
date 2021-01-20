@@ -9,7 +9,7 @@
 @author Marcos Alberto Soprani
 @since 02/11/17
 @version 1.0
-@description Browser principal para a rotina de Ativo Fixo p/ Orçamento
+@description Browser principal para a rotina de Ativo Fixo Orçado para OrcaFinal
 @type function
 /*/
 
@@ -18,10 +18,10 @@ User Function BIA592()
 	Local aArea     := GetArea()
 	Local cCondicao := ""
 
-	Private cCadastro 	:= "AtivoFixo CAPEX p/ Orçamento"
-	Private aRotina 	:= { {"Pesquisar"  			     ,"AxPesqui"     ,0,1},;
-	{                         "Visualizar"			     ,"AxVisual"     ,0,2},;
-	{                         "ATF (CAPEX) p/ DESPESAS"  ,"U_B592IMDD"   ,0,3} }
+	Private cCadastro 	:= "AtivoFixo CAPEX p/ OrcaFinal"
+	Private aRotina 	:= { {"Pesquisar"  			      ,"AxPesqui"     ,0,1},;
+	{                         "Visualizar"			      ,"AxVisual"     ,0,2},;
+	{                         "ATF (CAPEX) p/ OrcaFinal"  ,"U_B592IMDD"   ,0,3} }
 
 	dbSelectArea("ZBY")
 	dbSetOrder(1)
@@ -35,7 +35,7 @@ Return
 ¦¦+-----------------------------------------------------------------------+¦¦
 ¦¦¦Funçao    ¦ B592IMDD ¦ Autor ¦ Marcos Alberto S      ¦ Data ¦ 30/10/17 ¦¦¦
 ¦¦+----------+------------------------------------------------------------¦¦¦
-¦¦¦Descriçào ¦ Gera Integração com modelo de Despesas                     ¦¦¦
+¦¦¦Descriçào ¦ Gera Integração com modelo de OrcaFinal                    ¦¦¦
 ¦¦+-----------------------------------------------------------------------+¦¦
 ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
@@ -51,7 +51,7 @@ User Function B592IMDD()
 	Private msrhEnter   := CHR(13) + CHR(10)
 	Private xkContinua  := .T.
 
-	AADD(aSays, OemToAnsi("Rotina para Geração de Integração dos registros CAPEX com Modelo de Despesas!"))   
+	AADD(aSays, OemToAnsi("Rotina para Geração de Integração dos registros CAPEX com Modelo de OrcaFinal!"))   
 	AADD(aSays, OemToAnsi(""))   
 	AADD(aSays, OemToAnsi("Antes de continuar, verifique os parâmetros!"))   
 	AADD(aSays, OemToAnsi(""))   
@@ -61,7 +61,7 @@ User Function B592IMDD()
 	AADD(aButtons, { 1,.T.,{|o| lConfirm := .T. , o:oWnd:End()}} )
 	AADD(aButtons, { 2,.T.,{|o| o:oWnd:End() }} )
 
-	FormBatch( OemToAnsi('Integração CAPEX com DESPESAS'), aSays, aButtons ,,,500)
+	FormBatch( OemToAnsi('Integração CAPEX com OrcaFinal'), aSays, aButtons ,,,500)
 
 	If lConfirm
 
@@ -152,7 +152,7 @@ Static Function fPergIntMD()
 	aAdd( aPergs ,{1,"Revisão:"                     ,idRevisa    ,"@!","NAOVAZIO()",''   ,'.T.', 03,.F.})	
 	aAdd( aPergs ,{1,"Ano Orçamentário: "           ,idAnoRef    ,"@!","NAOVAZIO()",''   ,'.T.', 04,.F.})	
 
-	If ParamBox(aPergs ,"Integração CAPEX p/ DESPESAS",,,,,,,,cLoad,.T.,.T.)      
+	If ParamBox(aPergs ,"Integração CAPEX p/ OrcaFinal",,,,,,,,cLoad,.T.,.T.)      
 		idVersao    := ParamLoad(cFileName,,1,idVersao) 
 		idRevisa    := ParamLoad(cFileName,,2,idRevisa) 
 		idAnoRef    := ParamLoad(cFileName,,3,idAnoRef) 
@@ -305,6 +305,6 @@ Static Function fProcIntMD()
 	ZP001 += "    AND ZB5.D_E_L_E_T_ = ' ' "
 	U_BIAMsgRun("Aguarde... Fechando Versão Orçamentária ... ",,{|| TcSQLExec(ZP001) })
 
-	MsgINFO("Conversão CAPEX em DESPESAS realizada com sucesso!!!")
+	MsgINFO("Conversão CAPEX em OrcaFinal realizada com sucesso!!!")
 
 Return

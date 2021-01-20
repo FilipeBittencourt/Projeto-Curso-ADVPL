@@ -630,7 +630,9 @@ USER FUNCTION M410LIOK()
 		Private __nPTPRES	:= aScan(aHeader,{|x| AllTrim(x[2]) == "C6_YTPEST"})  
 		Private __cDTNECE	:= Gdfieldget("C6_YDTNECE",n)
 		Private __cSEGMENTO := ""
-
+		Private __cCATEGORIA:= ""
+		Private __cNRESER	:= Gdfieldget("C6_YNRESER", n)
+		
 		Private _cItPedBas
 		Private _cEmpOriPB
 
@@ -650,7 +652,8 @@ USER FUNCTION M410LIOK()
 		EndIf 
 
 		If SA1->(DbSeek(xFilial("SA1")+__cChvCli))
-			__cSEGMENTO := SA1->A1_YTPSEG
+			__cSEGMENTO 	:= SA1->A1_YTPSEG
+			__cCATEGORIA	:= SA1->A1_YCAT
 		EndIf
 
 
@@ -705,11 +708,26 @@ USER FUNCTION M410LIOK()
 		ELSEIF INCLUI .OR. (ALTERA .And. Len(U_FRTE02LO("", __cPed, __nItem, "", "")) > 0 .And. U_FRRT03V2(__cPed,__nItem,__nQuant, __nLoteSel))
 
 			__lProdPR := (SB1->B1_TIPO == "PR")
-
+			
+			/*If !(AllTrim(M->C5_YSUBTP) $ "A#M#F") .And. __cSEGMENTO == "R" .And. AllTrim(__cCATEGORIA) == "SILVER" .And. !Empty(__cNRESER)
+				If (ZZ6->ZZ6_VMRSIL != 0 .And. (CalcPalete(__nQuant)[1] <= ZZ6->ZZ6_VMRSIL))
+					__cNRESER := __cNRESER
+				Else
+					__cNRESER := ""
+				EndIf
+			Else
+				__cNRESER := ""
+			EndIf*/
+			//quando executar novamente voltar reserva?
+			If (Type("__cResSilver") <> "U" .And. !__cResSilver)
+				__cNRESER := ""
+			EndIf
+			
+			
 			//GERAR RESERVA PARA ITENS ESTOQUE IMEDIATO - SC0
 			If Gdfieldget("C6_YTPEST",n) == "E"                                                                               
 				//fernando/facile em 30/03/2016 - adicionado o parametro Subtp para reservas de amostra - OS 4467-15
-				__aRetRes := U_FROPRT02(__cPed, __nItem, __nProd, __nLocal, __nQuant, __cVendPed, __nLoteSel, ALTERA,, M->C5_YSUBTP, __nEmpEst)
+				__aRetRes := U_FROPRT02(__cPed, __nItem, __nProd, __nLocal, __nQuant, __cVendPed, __nLoteSel, ALTERA,, M->C5_YSUBTP, __nEmpEst, __cNRESER)
 				If __aRetRes[1] > 0 .Or. ( Len(__aRetRes[2]) <= 0 .And. !__lProdPR)
 
 					U_FROPMSG("SISTEMA - RESERVA DE ESTOQUE/OP","Não foi possível criar reserva para o item."+CRLF+"Verifique a quantidade e saldo disponível")

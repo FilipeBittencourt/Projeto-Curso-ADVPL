@@ -458,6 +458,7 @@ Static Function ChkLotPrc()
 	Local np1_LOTE	:= _NP1_LOTE
 	Local _nPX
 	Local aSldCli	:= {}
+	Local aSldPedProd	:= {}
 	Local _nSldPro
 	Local _nSldAtCli
 
@@ -544,26 +545,41 @@ Static Function ChkLotPrc()
 						loop
 						
 					EndIf
-
+					
 					// saldo do pedido
 					_nSalPed := (cTRB2)->SALDO
-
-					_nSldPro := 0
-
-					If (_nPosPrd := aScan(aWB2, {|x| x[_NP2_PEDIDO] == (cTRB2)->C6_NUM .And. x[_NP2_PROD] == (cTRB2)->C6_PRODUTO .And. x[_NP2_ITEM] <> (cTRB2)->C6_ITEM })) > 0
 					
-						_nSldPro := _nSalPed + aWB2[_nPosPrd][_NP2_SALDO]
 					
+					//controle de saldo pedido/cliente/produto
+					__cChave	:= AllTrim((cTRB2)->C6_NUM)+AllTrim((cTRB2)->C6_CLI+(cTRB2)->C6_LOJA)+AllTrim((cTRB2)->C6_PRODUTO)
+					nSPPTot		:= SaldoPedProd(__cChave)
+					
+					conout("__cChave:"+__cChave)
+					conout("nSPPTot:"+cvaltochar(nSPPTot))
+					
+					
+					_nSPedProd	:= 0
+					_nPX 		:= aScan(aSldPedProd, {|x| x[1] == __cChave})
+					
+					If (_nPX > 0)
+						_nSPedProd	:= aSldPedProd[_nPX][2]
 					EndIf
-					
-					If !(_nSalTot >= _nSalPed) .Or. (_nPosPrd > 0 .And. ((_nSalTot < _nSldPro) .Or. ((_nSalTot - _nSldPro) > 0 .And. (_nSalTot - _nSldPro) < nQtdPal))) 
+					_nSldPendPP 	:= (nSPPTot - _nSPedProd)
+					//fim
+
+					If !(_nSalTot >= _nSalPed)  
 
 						aWB2[_nPos2][_NP2_ERRO] := "SALDO INSUFICIENTE"
 
 					ElseIf !((_nSalTot - _nSalPed) == 0 .Or. (_nSalTot - _nSalPed) >= nQtdPal) // So atende pedidos que nao vai causar ponta no estoque
 
 						aWB2[_nPos2][_NP2_ERRO] := "GERANDO PONTA"
-					
+					ElseIf ((_nSalTot  < _nSldPendPP) .Or. ((_nSalTot  - _nSldPendPP) > 0 .And. (_nSalTot  - _nSldPendPP) < nQtdPal)) 
+						
+						//aWB2[_nPos2][_NP2_ERRO] := "NAO ATENDE PED/PROD"
+						
+						AtuItemSPP(__cChave)
+						
 					Else 
 
 						RecLock(cTRB2,.F.)
@@ -571,6 +587,16 @@ Static Function ChkLotPrc()
 						(cTRB2)->C6_LOTECTL := aWB1[I][_NP1_LOTE]
 						(cTRB2)->(MsUnlock())
 					
+						//controle de saldo pedido/cliente/produto
+						_nPX := aScan(aSldPedProd, {|x| x[1] == __cChave})
+						If _nPX > 0
+							aSldPedProd[_nPX][2] += _nSalPed
+						Else
+							AAdd(aSldPedProd, {__cChave, _nSalPed})
+						EndIf
+						//fim
+						
+						
 						aWB2[_nPos2][_NP2_LOTE] := aWB1[I][_NP1_LOTE]
 						aWB2[_nPos2][_NP2_ERRO] := ""
 
@@ -604,6 +630,55 @@ Static Function ChkLotPrc()
 	LoadWB2()
 
 Return
+
+Static Function AtuItemSPP(cChave)
+
+	Local _nI		:= 0
+	Local _cChave1	:= ""
+	Local _cChave2	:= ""
+	
+	_cChave1	+= cChave
+	
+	For _nI := 1 To Len(aWB2)
+		
+		_cChave2	:= ""
+		
+		_cChave2	+= AllTrim(aWB2[_nI][_NP2_PEDIDO])
+		_cChave2	+= AllTrim(aWB2[_nI][_NP2_CODCLI])
+		_cChave2	+= AllTrim(aWB2[_nI][_NP2_PROD])
+		
+		If (_cChave1 == _cChave2)
+			aWB2[_nI][_NP2_ERRO] := "NAO ATENDE PED/PROD"
+		EndIf
+		
+	Next _nI
+
+Return 
+
+Static Function SaldoPedProd(cChave)
+
+	Local _nI		:= 0
+	Local _cChave1	:= ""
+	Local _cChave2	:= ""
+	Local _nTotal	:= 0
+	
+	_cChave1	+= cChave
+	
+	For _nI := 1 To Len(aWB2)
+		
+		_cChave2	:= ""
+		
+		_cChave2	+= AllTrim(aWB2[_nI][_NP2_PEDIDO])
+		_cChave2	+= AllTrim(aWB2[_nI][_NP2_CODCLI])
+		_cChave2	+= AllTrim(aWB2[_nI][_NP2_PROD])
+		
+		If (_cChave1 == _cChave2)
+			_nTotal := _nTotal + aWB2[_nI][_NP2_SALDO]
+		EndIf
+		
+	Next _nI
+	
+Return _nTotal
 
 
 /*/{Protheus.doc} F_EXCEL

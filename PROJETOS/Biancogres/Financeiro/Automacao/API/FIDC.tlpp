@@ -1,0 +1,370 @@
+#include "totvs.ch"
+#include "parmtype.ch"
+
+static aBCOIsFIDC as array
+
+class FIDC
+
+	static method isFIDCEnabled() as logical
+    
+	static method bcoIsFIDC(oJSONArray as object) as logical
+	static method getbcoFIDC(lClear as logical) as array
+
+	static method ctbFIDC(oJSONArray as object)
+	static method ctaDebito(cCTADebito as character) as character
+	static method ctaCredito(cCTACredito as character) as character
+	
+	static method ctbValorDebito(nValor as numeric) as numeric
+	static method ctbValorCredito(nValor as numeric) as numeric
+	
+	static method historicoDebito(cHistorico as character) as character
+	static method historicoCredito(cHistorico as character) as character
+
+end class
+
+static method isFIDCEnabled() class FIDC
+	
+	static s__cKeyFIDC		as character
+	static s__lA6YTPINTB	as logical
+	
+	local lChkFiDC			as logical
+	DEFAULT s__cKeyFIDC:="__cKeyFIDC__"
+	
+	lChkFiDC:=(type("cEmpAnt")=="C").and.(!&("cEmpAnt")==s__cKeyFIDC)
+	if (lChkFiDC)
+		s__cKeyFIDC:=&("cEmpAnt")
+		s__lA6YTPINTB:=SA6->(FieldPos("A6_YTPINTB")>0)
+	endif
+	
+	DEFAULT s__lA6YTPINTB:=.F.
+
+	return(s__lA6YTPINTB)
+
+static method BCOIsFIDC(oJSONArray) class FIDC
+
+    local aArea    		as array
+	
+	local bBCOIsFIDC	as block
+	
+	local cEmp			as character
+	local cFil			as character
+	
+	local cBanco        as character
+    local cAgencia      as character
+    local cConta        as character
+    local cTmpAlias     as character
+
+    local lBCOIsFIDC    as logical
+
+    local nSA6RecNo     as numeric
+	local nBCOIsFIDC	as numeric
+
+	paramtype oJSONArray as object
+
+    cBanco:=oJSONArray:Get("cBanco","")
+    cAgencia:=oJSONArray:Get("cAgencia","")
+    cConta:=oJSONArray:Get("cConta","")
+
+	cEmp:=&("cEmpAnt")
+	cFil:=&("cFilAnt")
+
+	DEFAULT aBCOIsFIDC:=array(0)
+	bBCOIsFIDC:={|e|(e[1]==cEmp).and.(e[2]==cFil).and.(e[3]==cBanco).and.(e[4]==cAgencia).and.(e[5]==cConta)}
+	nBCOIsFIDC:=aScan(aBCOIsFIDC,bBCOIsFIDC)
+	if (nBCOIsFIDC==0)
+
+		aArea:=getArea()
+
+		cTmpAlias:=getNextAlias()
+		
+		beginSQL alias cTmpAlias
+			SELECT SA6.R_E_C_N_O_ SA6RECNO
+				FROM %table:SA6% SA6
+			WHERE SA6.%notDel%
+				AND SA6.A6_FILIAL=%xFilial:SA6%
+				AND SA6.A6_COD=%exp:cBanco%
+				AND SA6.A6_AGENCIA=%exp:cAgencia%
+				AND SA6.A6_NUMCON=%exp:cConta%
+				AND SA6.A6_YTPINTB='1'
+		endSQL
+
+		nSA6RecNo:=0
+
+		while (cTmpAlias)->(!eof())
+			nSA6RecNo:=(cTmpAlias)->SA6RECNO
+			if (nSA6RecNo>0)
+				lBCOIsFIDC:=.T.
+				oJSONArray:Set("nSA6RecNo",nSA6RecNo)
+				SA6->(MsGoTo(nSA6RecNo))
+				exit
+			endif
+			(cTmpAlias)->(dbSkip())
+		end while
+
+		(cTmpAlias)->(dbCloseArea())
+    
+    	restArea(aArea)
+
+		aAdd(aBCOIsFIDC,{cEmp,cFil,cBanco,cAgencia,cConta,nSA6RecNo})
+		nBCOIsFIDC:=len(aBCOIsFIDC)
+
+	endif
+	
+	lBCOIsFIDC:=(!empty(aBCOIsFIDC[nBCOIsFIDC][6]))
+
+    return(lBCOIsFIDC)
+
+static method getbcoFIDC(lClear) class FIDC
+	DEFAULT lClear:=.F.
+	paramtype lClear as logical optional
+	DEFAULT aBCOIsFIDC:=array(0)
+	if (lClear)
+		aSize(aBCOIsFIDC,0)
+	endif
+	return(aBCOIsFIDC)
+
+static method ctbFIDC(oJSONArray) class FIDC
+
+	local aArea		as array
+	local aDiario	as array
+	local aFlagCTB	as array
+
+    local cLote		as character
+	local cPadrao   as character
+	local cFunCTB	as character
+	local cArquivo	as character
+
+	local lPadrao	as logical
+	local lDigita	as logical
+	local lDiario	as logical
+	local lUsaFlag	as logical
+
+	local nTotal	as numeric
+	local nHdlPrv	as numeric
+
+	local nSA1RecNo	as numeric
+	local nSA6RecNo as numeric
+    local nSE1RecNo	as numeric
+
+	paramtype oJSONArray as object
+
+	aArea:=getArea()
+	
+	begin sequence
+
+        if (!FIDC():BCOIsFIDC(oJSONArray))
+			break
+		endif
+
+		nSA1RecNo:=oJSONArray:Get("nSA1RecNo",0)
+		if (!empty(nSA1RecNo))
+			SA1->(MsGoTo(nSA1RecNo))
+		endif
+
+		nSA6RecNo:=oJSONArray:Get("nSA6RecNo",0)
+		if (!empty(nSA6RecNo))
+			SA6->(MsGoTo(nSA6RecNo))
+		endif
+
+		nSE1RecNo:=oJSONArray:Get("nSE1RecNo",0)
+		if (!empty(nSE1RecNo))
+			SE1->(MsGoTo(nSE1RecNo))
+		endif
+
+		cPadrao:=oJSONArray:Get("cPadrao","")
+		if (empty(cPadrao))
+			cPadrao:=getNewPar("BIA_FIDCLP","FDC")
+		endif
+
+		lPadrao:=VerPadrao(cPadrao)
+
+		if (!lPadrao)
+			break
+		endif
+		
+		cFunCTB:=getNewPar("BIA_FIDCFN","CTBFIDC")
+		cLote:=getNewPar("BIA_FIDCLT","FIDCLT")
+		
+		cArquivo:=""
+		nHdlPrv:=HeadProva(cLote,cFunCTB,SubStr(&("cUsuario"),7,6),@cArquivo)
+		
+		if (empty(nHdlPrv))
+			break
+		endif
+
+		if (!(nHdlPrv>0))
+			break
+		endif
+
+		lUsaFlag:=SuperGetMV("MV_CTBFLAG",.F./*lHelp*/,.F./*cPadrao*/) 
+		if (lUsaFlag) 
+			// Armazena em aFlagCTB para atualizar no modulo Contabil 
+			aFlagCTB:=array(0)
+			aAdd(aFlagCTB,{"E1_LA","S","SE1",SE1->(Recno()),0,0,0})
+		endif
+		
+		lDiario:=(FindFunction("UsaSeqCor").and.UsaSeqCor())
+		if (lDiario)
+			aDiario:=array(0)
+			aAdd(aDiario,{"SE1",SE1->(recno()),SE1->E1_DIACTB,"E1_NODIA","E1_DIACTB"})
+		EndIf
+
+		nTotal:=DetProva(nHdlPrv,cPadrao,cFunCTB,cLote,/*nLinha*/,/*lExecuta*/,;
+							/*cCriterio*/, /*lRateio*/, /*cChaveBusca*/, /*aCT5*/,;
+							/*lPosiciona*/,@aFlagCTB,/*aTabRecOri*/,/*aDadosProva*/)
+		
+		if (nTotal>0)
+			RodaProva(nHdlPrv,nTotal)
+			lDigita:=.F.
+			cA100Incl(cArquivo,nHdlPrv,3/*nOpcx*/,cLote,lDigita,.F./*lAglut*/,/*cOnLine*/,/*dData*/,/*dReproc*/, @aFlagCTB,/*aDadosProva*/,@aDiario)
+		endif
+	
+	end sequence
+
+	restArea(aArea)
+
+	return
+
+static method ctaDebito(cCTADebito) class FIDC
+	local bFormula as block
+	local cFormula as character
+	paramtype cCTADebito as character optional
+	if (empty(cCTADebito))
+		if (stacktools():IsInCallStack("CleanBorSE1"))
+			cFormula:=getNewPar("BIA_CTBD01","",&("cFilAnt"))
+			if (!empty(cFormula))
+				bFormula:={|cFormula|cCTADebito:=Formula(cFormula)}
+				if (!evalBlock():EvalBlock(bFormula,cFormula))
+					cCTADebito:=""
+				endif
+			endif
+		elseif (stacktools():IsInCallStack("ExecMovFin"))
+			cFormula:=getNewPar("BIA_CTBD02","",&("cFilAnt"))
+			if (!empty(cFormula))
+				bFormula:={|cFormula|cCTADebito:=Formula(cFormula)}
+				if (!evalBlock():EvalBlock(bFormula,cFormula))
+					cCTADebito:=""
+				endif
+			endif
+		endif
+		DEFAULT cCTADebito:=""
+	endif
+	return(cCTADebito)
+
+static method ctaCredito(cCTACredito) class FIDC
+	local bFormula as block
+	local cFormula as character
+	paramtype cCTACredito as character optional
+	if (empty(cCTACredito))
+		if (stacktools():IsInCallStack("CleanBorSE1"))
+			cFormula:=getNewPar("BIA_CTBC01","",&("cFilAnt"))
+			if (!empty(cFormula))
+				bFormula:={|cFormula|cCTACredito:=Formula(cFormula)}
+				if (!evalBlock():EvalBlock(bFormula,cFormula))
+					cCTACredito:=""
+				endif
+			endif
+		elseif (stacktools():IsInCallStack("ExecMovFin"))
+			cFormula:=getNewPar("BIA_CTBC02","",&("cFilAnt"))
+			if (!empty(cFormula))
+				bFormula:={|cFormula|cCTACredito:=Formula(cFormula)}
+				if (!evalBlock():EvalBlock(bFormula,cFormula))
+					cCTACredito:=""
+				endif
+			endif
+		endif
+		DEFAULT cCTACredito:=""
+	endif
+	return(cCTACredito)
+
+static method ctbValorDebito(nValor) class FIDC
+	local bFormula as block
+	local cFormula as character
+	paramtype nValor as numeric optional
+	if (empty(nValor))
+		if (stacktools():IsInCallStack("CleanBorSE1"))
+			cFormula:=getNewPar("BIA_CTBVD1","",&("cFilAnt"))
+			if (!empty(cFormula))
+				bFormula:={|cFormula|nValor:=Formula(cFormula)}
+				evalBlock():EvalBlock(bFormula,cFormula)
+			endif
+		elseif (stacktools():IsInCallStack("ExecMovFin"))
+			cFormula:=getNewPar("BIA_CTBVD2","",&("cFilAnt"))
+			if (!empty(cFormula))
+				bFormula:={|cFormula|nValor:=Formula(cFormula)}
+				evalBlock():EvalBlock(bFormula,cFormula)
+			endif
+		endif
+		DEFAULT nValor:=0
+	endif
+	return(nValor)
+
+static method ctbValorCredito(nValor) class FIDC
+	local bFormula as block
+	local cFormula as character
+	paramtype nValor as numeric optional
+	if (empty(nValor))
+		if (stacktools():IsInCallStack("CleanBorSE1"))
+			cFormula:=getNewPar("BIA_CTBVC1","",&("cFilAnt"))
+			if (!empty(cFormula))
+				bFormula:={|cFormula|nValor:=Formula(cFormula)}
+				evalBlock():EvalBlock(bFormula,cFormula)
+			endif
+		elseif (stacktools():IsInCallStack("ExecMovFin"))
+			cFormula:=getNewPar("BIA_CTBVC2","",&("cFilAnt"))
+			if (!empty(cFormula))
+				bFormula:={|cFormula|nValor:=Formula(cFormula)}
+				evalBlock():EvalBlock(bFormula,cFormula)
+			endif
+		endif
+		DEFAULT nValor:=0
+	endif
+	return(nValor)
+
+static method historicoDebito(cHistorico) class FIDC
+	local bFormula as block
+	local cFormula as character
+	paramtype cHistorico as character optional
+	if (empty(cHistorico))
+		if (stacktools():IsInCallStack("CleanBorSE1"))
+			cFormula:=getNewPar("BIA_CTBHD1","",&("cFilAnt"))
+			if (!empty(cFormula))
+				bFormula:={|cFormula|cHistorico:=Formula(cFormula)}
+				if (!evalBlock():EvalBlock(bFormula,cFormula))
+					cHistorico:=""
+				endif
+			endif
+		elseif (stacktools():IsInCallStack("ExecMovFin"))
+			cFormula:=getNewPar("BIA_CTBHD2","",&("cFilAnt"))
+			if (!empty(cFormula))
+				bFormula:={|cFormula|cHistorico:=Formula(cFormula)}
+				if (!evalBlock():EvalBlock(bFormula,cFormula))
+					cHistorico:=""
+				endif
+			endif
+		endif
+		DEFAULT cHistorico:=""
+	endif
+	return(cHistorico)
+
+static method historicoCredito(cHistorico) class FIDC
+	local bFormula as block
+	local cFormula as character
+	paramtype cHistorico as character optional
+	if (empty(cHistorico))
+		if (stacktools():IsInCallStack("CleanBorSE1"))
+			cFormula:=getNewPar("BIA_CTBHC1","",&("cFilAnt"))
+			if (!empty(cFormula))
+				bFormula:={|cFormula|cHistorico:=Formula(cFormula)}
+				evalBlock():EvalBlock(bFormula,cFormula)
+			endif
+		elseif (stacktools():IsInCallStack("ExecMovFin"))
+			cFormula:=getNewPar("BIA_CTBHC2","",&("cFilAnt"))
+			if (!empty(cFormula))
+				bFormula:={|cFormula|cHistorico:=Formula(cFormula)}
+				evalBlock():EvalBlock(bFormula,cFormula)
+			endif
+		endif
+		DEFAULT cHistorico:="FIDC"
+	endif
+	return(cHistorico)

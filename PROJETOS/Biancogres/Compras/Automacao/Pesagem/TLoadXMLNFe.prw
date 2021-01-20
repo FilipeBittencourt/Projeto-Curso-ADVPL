@@ -112,8 +112,12 @@ Method GetNFe() Class TLoadXMLNFe
 						If (XmlChildEx(oDet[nI]:_imposto:_ICMS, "_ICMSSN101") <> NIL)
 							oNotaItemStruct:nAliqICMS 	:= IIF(XmlChildEx(oDet[nI]:_imposto:_ICMS:_ICMSSN101, "_PCREDSN") <> NIL, Val(oDet[nI]:_imposto:_ICMS:_ICMSSN101:_PCREDSN:TEXT), 0)
 							oNotaItemStruct:nValICMS 	:= IIF(XmlChildEx(oDet[nI]:_imposto:_ICMS:_ICMSSN101, "_VCREDICMSSN") <> NIL, Val(oDet[nI]:_imposto:_ICMS:_ICMSSN101:_VCREDICMSSN:TEXT), 0)
+						Else
+							cLogMsg := "Fornecedor "+cvaltochar(SA2->A2_COD)+" cadastrado como 'Simples Nacional': Não encontrado TAG ICMSSN101"+CRLF
+							lRet	:= .F.	
 						EndIf
 					EndIf
+					
 					
 				 	If !Empty(oNotaItemStruct:cPedido) .And. !Empty(oNotaItemStruct:cItemPed)
 

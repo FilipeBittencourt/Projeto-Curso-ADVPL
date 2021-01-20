@@ -22,7 +22,7 @@
 
 #DEFINE TIT_MSG "SISTEMA - RESERVA DE ESTOQUE/OP"
 
-User Function FROPRT02(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed, _cLoteSel, _lNoTemp, _cMotExc, _cSubTp, _cEmpEst)
+User Function FROPRT02(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed, _cLoteSel, _lNoTemp, _cMotExc, _cSubTp, _cEmpEst, _cNumRes)
 	Local aArea := GetArea()
 	Local nSaldo
 	Local aRet
@@ -34,6 +34,7 @@ User Function FROPRT02(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 	Default _cMotExc  := "LOK"
 	Default _cSubTp	  := ""
 	Default _cEmpEst  := ""
+	Default _cNumRes  := ""
 
 	If Type("_FROPCHVTEMPRES") <> "U" .And. !Empty(_FROPCHVTEMPRES)
 		_cUserName := _FROPCHVTEMPRES
@@ -44,11 +45,11 @@ User Function FROPRT02(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 
 	If !( AllTrim(CEMPANT) $ "07#14" ) .OR. (SB1->B1_TIPO == "PR")
 
-		aRet := U_FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed, _cLoteSel,,_cUserName, _lNoTemp, _cMotExc, _cSubTp)
+		aRet := U_FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed, _cLoteSel,,_cUserName, _lNoTemp, _cMotExc, _cSubTp, _cNumRes)
 	
 	ElseIf (AllTrim(cEmpAnt) == '07' .And. AllTrim(cFilAnt) == '05' )
 	
-		aRet := U_FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed, _cLoteSel, ,_cUserName, _lNoTemp, _cMotExc, _cSubTp)
+		aRet := U_FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed, _cLoteSel, ,_cUserName, _lNoTemp, _cMotExc, _cSubTp, _cNumRes)
 	
 	Else
 
@@ -65,7 +66,7 @@ User Function FROPRT02(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 
 			EndIf
 
-			aRet := U_FROPCPRO(SubStr(nLinhaEmp,1,2),SubStr(nLinhaEmp,3,2),"U_FRRT02IR", _cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed, _cLoteSel, AllTrim(CEMPANT)+AllTrim(CFILANT), _cUserName, _lNoTemp, _cMotExc, _cSubTp)
+			aRet := U_FROPCPRO(SubStr(nLinhaEmp,1,2),SubStr(nLinhaEmp,3,2),"U_FRRT02IR", _cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed, _cLoteSel, AllTrim(CEMPANT)+AllTrim(CFILANT), _cUserName, _lNoTemp, _cMotExc, _cSubTp, _cNumRes)
 
 		Else
 
@@ -99,7 +100,7 @@ User Function FROPRT02(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 	RestArea(aArea)
 Return(aRet)
 
-User Function FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed, _cLoteSel, _cEmpOri, _cUserName, _lNoTemp, _cMotExc, _cSubTp)
+User Function FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed, _cLoteSel, _cEmpOri, _cUserName, _lNoTemp, _cMotExc, _cSubTp, _cNumRes)
 	Local cAliasSld
 	Local nSaldo
 	Local nTotRes
@@ -119,7 +120,11 @@ User Function FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 	Default _lNoTemp 	:= .F.
 	Default _cMotExc 	:= "LOK"
 	Default _cSubTp		:= "" 
-
+	Default _cNumRes	:= ""
+		
+		
+		
+		
 	//Indice 8 personalido -> C0_YPEDIDO+C0_YITEMPV   nick  'PEDIDO'
 	//Indice 9 personalido -> C0_YEMPORI+C0_YPITORI   nick  'EMPPEDORI'
 	//Apagar reservas anteriores
@@ -134,10 +139,26 @@ User Function FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 		_cFieldsC0 := "C0_FILIAL+C0_YPEDIDO+C0_YITEMPV"
 	EndIf
 
+	If (!Empty(_cNumRes))
+	
+		__nQuantAnt := U_GQTRESPI(_cUserName, _cProduto, _cLoteSel, _cPedido, _cItem, _cEmpOri, '')
+		If (__nQuantAnt > 0 .And.  __nQuantAnt <> _nQuant)
+			U_CSRESPRO(_cNumRes, _cProduto, _cLoteSel, __nQuantAnt)	//Volta a quantidad da reserva anterior*/
+		EndIf
+		
+		If !(U_EXRESPEI(_cUserName, _cProduto, _cLoteSel, _nQuant, _cPedido, _cItem, _cEmpOri, ''))
+			U_BSRESPRO(_cNumRes, _cProduto, _cLoteSel, _nQuant)
+		EndIf		 
+		 
+	EndIf
+	
 	//Apagar reservas do Item para gerar novamente
 	U_FRRT02EX(_cPedido, _cItem, _cProduto, _cMotExc, _cEmpOri, _cUserName)
 
-
+	//Alert('Passei: '+_cNumRes)
+	
+		
+		
 	SB1->(DbSetOrder(1))
 	SB1->(DbSeek(XFilial("SB1")+_cProduto))
 
@@ -293,7 +314,7 @@ User Function FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 			Exit
 
 		EndIf
-
+		
 		cNumero := GetSx8Num("SC0","C0_NUM")
 		ConfirmSx8()
 

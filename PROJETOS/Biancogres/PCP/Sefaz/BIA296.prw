@@ -816,10 +816,8 @@ Return(lRet)
 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
 Static Function fMSNewGe1()
 
-	Local nX
-	Local aHeaderEx := {}
-	Local aFieldFill := {}
-	Local aFields := {}
+	Local aHeadEx := {}
+	Local aColsEx := {}
 	Local aAlterFields := {"CODPRO", "PEDIDO", "ITEMPC", "CLVL", "TES", "REGRA", "CODREF", "ARREDU"}
 
 	If xChqCfopC

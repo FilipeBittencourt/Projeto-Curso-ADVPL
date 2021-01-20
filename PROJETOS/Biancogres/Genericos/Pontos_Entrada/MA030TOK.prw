@@ -573,7 +573,16 @@ User Function MA030TOK()
 	EndIf
 
 	If lRET
+		
+		If Inclui .Or. Altera
+		
+			// Preencher a categoria dos demais clientes do grupo ao alterar a categoria de um cliente
+			U_BFG136B()	
+		
+		EndIf
+
 		U_BIA863()
+		
 	EndIf
 
 	If lRET

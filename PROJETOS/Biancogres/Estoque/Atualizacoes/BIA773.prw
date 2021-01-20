@@ -847,18 +847,19 @@ User Function B773PZG()
 	Local zjMens := ""
 
 	zjMens += 'Você está prestes a atualizar o PRAZO DE ENTREGA.' + smEnter
-	zjMens += 'Abaixo os passos efetuados:' + smEnter
+	zjMens += 'Abaixo detalhes do cálculo efetuado:' + smEnter
 	zjMens += ' ' + smEnter
 	zjMens += ' Política = 1/4/6' + smEnter
-	zjMens += ' - Zerar o campo ZCN_PE conforme set de filtro;' + smEnter
-	zjMens += ' - Recalcular e gravar o campo ZCN_PE conforme critério definido;' + smEnter
-	zjMens += ' - Verificar se algum produto do set de filtro ficou sem prazo de entrega e gravar o conteúdo 1 (um).' + smEnter
+	zjMens += ' 1 -	Todos os prazos de entrega da política selecionada são zerados no início do processamento;(ZCN_PE = 0)' + smEnter
+	zjMens += ' 2 -	São recuperadas todas as notas entre a data da última entrada e retrocedendo 180 dias, calculando a diferença entre as datas da solicitação e da entrada da nota;' + smEnter
+	zjMens += ' 3 -	O prazo de entrega é alterado nos produtos de acordo com a média do cálculo do item ;' + smEnter
+	zjMens += ' 4 -	Os demais produtos da mesma política que ao fim do processamento não tenham prazo de entrega terão o mesmo alterado para 1. (ZCN_PE = 1)' + smEnter
 	zjMens += ' ' + smEnter
 	zjMens += ' Política = 8' + smEnter
 	zjMens += ' - Zerar o campo ZCN_P8PE conforme set de filtro;' + smEnter
-	zjMens += ' - Recalcular e gravar o campo ZCN_P8PE conforme critério definido;' + smEnter
+	zjMens += ' - Recalcular e gravar o campo ZCN_P8PE conforme critério definido (mesmo cálculo anterior);' + smEnter
 	zjMens += ' - Verificar se algum produto do set de filtro ficou sem prazo de entrega e gravar o conteúdo 1 (um).' + smEnter
-	zjMens += ' ' + smEnter
+	zjMens += ' ' + smEnter	
 
 	qwContinua := Aviso('B773PZG(1)',  zjMens, {'Confirma', 'Cancela'}, 3)
 
@@ -1083,6 +1084,17 @@ User Function B773ETS()
 	Local zjMens := ""
 
 	zjMens += 'Você está prestes a atualizar o ESTOQUE DE SEGURANÇA.' + smEnter
+	zjMens += 'Abaixo detalhes do cálculo efetuado:' + smEnter
+	zjMens += ' ' + smEnter
+	zjMens += ' Política = 1' + smEnter
+	zjMens += ' 1 -	É feito o cálculo do consumo médio diário, tendo como base o consumo dos últimos 6 meses' + smEnter
+	zjMens += ' 2 -	O consumo médio diário é multiplicado pelo prazo de entrega e dividido por 2;' + smEnter
+	zjMens += ' 3 -	Se este valor for superior a 1, este será o ESTOQUE DE SEGURANÇA;(ZCN_ESTSEG)' + smEnter
+	zjMens += ' 4 -	Caso contrário, o ESTOQUE DE SEGURANÇA será zero;' + smEnter
+	zjMens += ' ' + smEnter
+	zjMens += ' Política = 8' + smEnter
+	zjMens += ' - O campo ZCN_P8ESEG recebe o valor calculado conforme critério definido (mesmo cálculo anterior);' + smEnter
+	zjMens += ' ' + smEnter	
 
 	qwContinua := Aviso('B773ETS(1)',  zjMens, {'Confirma', 'Cancela'}, 3)
 
@@ -1245,6 +1257,17 @@ User Function B773PPD()
 	Local zjMens := ""
 
 	zjMens += 'Você está prestes a atualizar o PONTO DE PEDIDO.' + smEnter
+	zjMens += 'Abaixo detalhes do cálculo efetuado:' + smEnter
+	zjMens += ' ' + smEnter
+	zjMens += ' Política = 1' + smEnter
+	zjMens += ' 1 -	É feito o cálculo do consumo médio diário, tendo como base o consumo dos últimos 6 meses' + smEnter
+	zjMens += ' 2 -	O consumo médio diário é multiplicado pelo prazo de entrega;' + smEnter
+	zjMens += ' 3 -	PONTO DE PEDIDO será esse valor, somado ao estoque de segurança;(ZCN_PONPED)' + smEnter
+	zjMens += ' 3 -	Caso o estoque de segurança seja zero, o PONTO DE PEDIDO será 1;' + smEnter
+	zjMens += ' ' + smEnter
+	zjMens += ' Política = 8' + smEnter
+	zjMens += ' - O campo ZCN_P8PPED recebe o valor calculado conforme critério definido (mesmo cálculo anterior);' + smEnter
+	zjMens += ' ' + smEnter	
 
 	qwContinua := Aviso('B773PPD(1)',  zjMens, {'Confirma', 'Cancela'}, 3)
 

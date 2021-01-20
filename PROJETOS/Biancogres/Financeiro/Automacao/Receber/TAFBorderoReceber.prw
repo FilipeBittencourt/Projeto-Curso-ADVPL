@@ -22,7 +22,7 @@ Class TAFBorderoReceber From LongClassName
 	Method GetNumBor() // Retorna numero do bordero
 	Method GetNumBco(nPos) // Retorna nosso numero
 	
-	Method CleanBorSE1(nRecno, cStatus, cCodBar)
+	Method CleanBorSE1(nSE1RecNo, cStatus, cCodBar)
 	Method CleanBordero(cBordero, cPrefixo, cNum, cParcela, cTipo)
 	
 EndClass
@@ -39,8 +39,6 @@ Return()
 
 Method Create() Class TAFBorderoReceber
 
-	static lA6YTPINTB	as logical
-
 	local cBanco		as character
 	local cAgencia		as character
 	local cConta		as character
@@ -49,11 +47,11 @@ Method Create() Class TAFBorderoReceber
 	Local cKey			as character
 	Local bKey			as block
 
+	Local nSE1RecNo		as numeric
+
 	nCount:=1
 	cKey:=""
 	bKey:={|nCol| ::oLst:GetItem(nCol):cBanco + ::oLst:GetItem(nCol):cAgencia + ::oLst:GetItem(nCol):cConta }
-
-	DEFAULT lA6YTPINTB:=SA6->(FieldPos("A6_YTPINTB")>0)
 
 	::oLog:cIDProc := ::cIDProc
 	::oLog:cOperac := "R"
@@ -61,9 +59,9 @@ Method Create() Class TAFBorderoReceber
 	
 	::oLog:Insert()
 
+	aSort(::oLst:ToArray(),,,{|x,y| x:cBanco + x:cAgencia + x:cConta > y:cBanco + y:cAgencia + y:cConta})
+
 	Begin Transaction
-	
-		aSort(::oLst:ToArray(),,,{|x,y| x:cBanco + x:cAgencia + x:cConta > y:cBanco + y:cAgencia + y:cConta})
 			
 		While nCount <= ::oLst:GetCount()
 			
@@ -91,7 +89,8 @@ Method Create() Class TAFBorderoReceber
 				cConta:=::oLst:GetItem(nCount):cConta
 
 				DbSelectArea("SE1")
-				SE1->(DbGoTo(::oLst:GetItem(nCount):nRecNo))
+				nSE1Recno:=::oLst:GetItem(nCount):nRecNo
+				SE1->(MsGoTo(nSE1Recno))
 				
 				RecLock("SE1", .F.)
 				
@@ -121,7 +120,7 @@ Method Create() Class TAFBorderoReceber
 				::oLog:cOperac := "R"
 				::oLog:cMetodo := "CR_S_BOR"
 				::oLog:cTabela := RetSQLName("SE1")
-				::oLog:nIDTab := ::oLst:GetItem(nCount):nRecNo
+				::oLog:nIDTab := nSE1Recno
 				::oLog:cHrFin := Time()
 				::oLog:cEnvWF := "N"
 				
@@ -144,21 +143,13 @@ Method Create() Class TAFBorderoReceber
 					
 				SEA->(MsUnlock())
 
-				if (lA6YTPINTB)
-					SA1->(dbSetOrder(retOrder("SA1","A1_FILIAL+A1_COD+A1_LOJA")))
-					if (SA1->(MsSeek(xFilial("SA1")+SE1->E1_CLIENTE+SE1->E1_LOJA)))
-						//Contabilizacao FIDC
-						ctbFIDC(@cBanco,@cAgencia,@cConta)
-					endif
-				endif
-
 			Else
 			
 				::oLog:cIDProc := ::cIDProc
 				::oLog:cOperac := "R"
 				::oLog:cMetodo := "CR_S_BOR"
 				::oLog:cTabela := RetSQLName("SE1")
-				::oLog:nIDTab := ::oLst:GetItem(nCount):nRecNo
+				::oLog:nIDTab := nSE1Recno
 				::oLog:cHrFin := Time()
 				::oLog:cRetMen := "Reenvio"
 				::oLog:cEnvWF := "N"
@@ -209,28 +200,62 @@ Local oObj := Nil
 	 
 Return(cRet)
 
-Method CleanBorSE1(nRecno, cStatus, cCodBar) Class TAFBorderoReceber
+Method CleanBorSE1(nSE1RecNo,cStatus,cCodBar) Class TAFBorderoReceber
 
-	Local aArea := SE1->(GetArea())
-	
-	Default cStatus := "0"
-	Default cCodBar := ""
-	
-	SE1->(DbSetOrder(0))
-	SE1->(DbGoTo(nRecno))
+	Local aArea 		as array
 
-	If !SE1->(EOF())
+	local cBanco		as character
+	local cAgencia		as character
+	local cConta		as character
+	local cPadrao		as character
+
+	local cSA1IdxKey	as character
+
+	Local oJSONArray	as object
+
+	aArea:=SE1->(GetArea())
+
+	Default cStatus:="0"
+	Default cCodBar:=""
+	
+	SE1->(dbSetOrder(0))
+	SE1->(MsGoTo(nSE1RecNo))
+
+	If SE1->(!EOF())
 		
-		If cStatus == "2"
+		If (cStatus=="2")
 			
-			RecLock("SE1", .F.)
-				SE1->E1_CODBAR  := cCodBar
-				SE1->E1_YSITAPI := cStatus	 //0=Pendente;1=Enviado;2=Retorno com Sucesso;3=Retorno com Erro
-			SE1->(MSUnlock())
-			
+			if (RecLock("SE1", .F.))
+				SE1->E1_CODBAR:=cCodBar
+				SE1->E1_YSITAPI:=cStatus	 //0=Pendente;1=Enviado;2=Retorno com Sucesso;3=Retorno com Erro
+				SE1->(MSUnlock())
+			endif
+
+			if (FIDC():isFIDCEnabled())
+				cSA1IdxKey:="A1_FILIAL+A1_COD+A1_LOJA"
+				SA1->(dbSetOrder(retOrder("SA1",cSA1IdxKey)))
+				if (SA1->(MsSeek(xFilial("SA1")+SE1->E1_CLIENTE+SE1->E1_LOJA)))
+					//Contabilizacao FIDC
+					cPadrao:=getNewPar("BIA_FIDCLP","FDC")
+					if (!empty(cPadrao))
+						cBanco:=SE1->E1_PORTADO
+						cAgencia:=SE1->E1_AGEDEP
+						cConta:=SE1->E1_CONTA
+						oJSONArray:=JSONArray():New()
+						oJSONArray:Set("cPadrao",cPadrao)
+						oJSONArray:Set("nSE1RecNo",nSE1RecNo)
+						oJSONArray:Set("nSA1RecNo",SA1->(recNo()))
+						oJSONArray:Set("cBanco",cBanco)
+						oJSONArray:Set("cAgencia",cAgencia)
+						oJSONArray:Set("cConta",cConta)
+						FIDC():ctbFIDC(@oJSONArray)
+					endif
+				endif
+			endif
+
 		Else
 		
-			RecLock("SE1", .F.)
+			if (RecLock("SE1", .F.))
 	
 				::CleanBordero(SE1->E1_NUMBOR, SE1->E1_PREFIXO, SE1->E1_NUM, SE1->E1_PARCELA, SE1->E1_TIPO)
 		
@@ -242,7 +267,9 @@ Method CleanBorSE1(nRecno, cStatus, cCodBar) Class TAFBorderoReceber
 				
 				SE1->E1_YSITAPI := cStatus	 //0=Pendente;1=Enviado;2=Retorno com Sucesso;3=Retorno com Erro
 				
-			SE1->(MSUnlock())
+				SE1->(MSUnlock())
+			
+			endif
 		
 		EndIf
 
@@ -276,113 +303,3 @@ Method CleanBordero(cBordero, cPrefixo, cNum, cParcela, cTipo) Class TAFBorderoR
 	RestArea(aAreaSEA)
 
 Return()
-
-static function ctbFIDC(cBanco as character,cAgencia as character,cConta as character)
-
-	/* begin variavais contabilizacao*/
-	local aArea		as array
-	local aDiario	as array
-	local aFlagCTB	as array
-
-	local cLote		as character
-	local cFunCTB	as character
-	local cPadrao	as character
-	local cArquivo	as character
-	local cTmpAlias	as character
-
-	local lPadrao	as logical
-	local lDigita	as logical
-	local lDiario	as logical
-	local lUsaFlag	as logical
-
-	local nTotal	as numeric
-	local nHdlPrv	as numeric
-	local nSA6RECNO	as numeric
-	/* end variavais contabilizacao*/
-
-	aArea:=getArea()
-	
-	begin sequence
-
-		cTmpAlias:=getNextAlias()
-		
-		beginSQL alias cTmpAlias
-			SELECT SA6.R_E_C_N_O_ SA6RECNO
-				FROM %table:SA6% SA6
-			WHERE SA6.%notDel%
-				AND SA6.A6_FILIAL=%xFilial:SA6%
-				AND SA6.A6_COD=%exp:cBanco%
-				AND SA6.A6_AGENCIA=%exp:cAgencia%
-				AND SA6.A6_NUMCON=%exp:cConta%
-				AND SA6.A6_YTPINTB='1'
-		endSQL
-
-		nSA6RECNO:=0
-		while (cTmpAlias)->(!eof())
-			nSA6RECNO:=(cTmpAlias)->SA6RECNO
-			if (nSA6RECNO>0)
-				exit
-			endif
-			(cTmpAlias)->(dbSkip())
-		end while
-
-		(cTmpAlias)->(dbCloseArea())
-		
-		restArea(aArea)
-
-		if (empty(nSA6RECNO))
-			break
-		endif
-
-		SA6->(MsGoTo(nSA6RECNO))
-
-		cPadrao:=SuperGetMV("BIA_FIDCLP",.F./*lHelp*/,"U01"/*cPadrao*/) 
-
-		lPadrao:=VerPadrao(cPadrao)
-
-		if (!lPadrao)
-			break
-		endif
-		
-		cFunCTB:=SuperGetMV("BIA_FIDCFN",.F./*lHelp*/,"FIDC01"/*cPadrao*/)
-		cLote:=SuperGetMV("BIA_FIDCLT",.F./*lHelp*/,"FIDC01"/*cPadrao*/)
-		
-		cArquivo:=""
-		nHdlPrv:=HeadProva(cLote,cFunCTB,SubStr(&("cUsuario"),7,6),@cArquivo)
-		
-		if (empty(nHdlPrv))
-			break
-		endif
-
-		if (!(nHdlPrv>0))
-			break
-		endif
-
-		lUsaFlag:=SuperGetMV("MV_CTBFLAG",.F./*lHelp*/,.F./*cPadrao*/) 
-		if (lUsaFlag) 
-			// Armazena em aFlagCTB para atualizar no modulo Contabil 
-			aFlagCTB:=array(0)
-			aAdd(aFlagCTB,{"E1_LA","S","SE1",SE1->(Recno()),0,0,0})
-		endif
-		
-		lDiario:=(FindFunction("UsaSeqCor").and.UsaSeqCor())
-		if (lDiario)
-			aDiario:=array(0)
-			aAdd(aDiario,{"SE1",SE1->(recno()),SE1->E1_DIACTB,"E1_NODIA","E1_DIACTB"})
-		EndIf
-
-		nTotal:=DetProva(nHdlPrv,cPadrao,cFunCTB,cLote,/*nLinha*/,/*lExecuta*/,;
-							/*cCriterio*/, /*lRateio*/, /*cChaveBusca*/, /*aCT5*/,;
-							/*lPosiciona*/,@aFlagCTB,/*aTabRecOri*/,/*aDadosProva*/)
-		
-		if (nTotal>0)
-			RodaProva(nHdlPrv,nTotal)
-			lDigita:=.F.
-			cA100Incl(cArquivo,nHdlPrv,3/*nOpcx*/,cLote,lDigita,.F./*lAglut*/,/*cOnLine*/,/*dData*/,/*dReproc*/, @aFlagCTB,/*aDadosProva*/,@aDiario)
-		endif
-	
-	end sequence
-
-	restArea(aArea)
-
-	return

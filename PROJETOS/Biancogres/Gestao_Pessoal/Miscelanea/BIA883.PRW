@@ -668,6 +668,8 @@ Static Function BIA883A()
 						UL009 += "    AND ZBA.ZBA_ANOREF = '" + _cAnoRef + "' "
 						UL009 += "    AND ZBA.ZBA_PERIOD <> '00' "
 						UL009 += "    AND ZBA.ZBA_MATR = '" + MQ07->ZBA_MATR + "' "
+						UL009 += "    AND ZBA.ZBA_CLVL = '" + MQ07->ZBA_CLVL + "' "
+						UL009 += "    AND ZBA.ZBA_SEMELH = '" + MQ07->ZBA_SEMELH + "' "
 						UL009 += "    AND ZBA.ZBA_BNADC LIKE '%010%' "
 						UL009 += "    AND ZBA.D_E_L_E_T_ = ' ' "					
 						U_BIAMsgRun("Aguarde... Atualizando PPR Anual... ",,{|| TcSQLExec(UL009) })

@@ -39,6 +39,9 @@ User Function MA410MNU()
 			aadd(arotina, {"Reajuste de Preço", 'U_M410RPRC()',0,4,0,NIL})
 		EndIf
 
+		// Ticket: 25655 - Tela para monitoramento do processo automatico de devolucao.
+		//aadd(arotina, {"Monitor Devolucao", 'U_BIA702()',0,4,0,NIL})
+
 	EndIf
 
-Return
+Return()

@@ -35,7 +35,6 @@ Method GetCTe() Class TLoadXMLCTe
 	Local oCTeResulStruct 	:= TCTeResulStruct():New()
 
 	Local cLogMsg			:= ""
-	Local msTpMens          := "1" // 1 = Stop (imterrompe o processo); 2 = Alerta (apenas exibe a mensagem, mas deixa prosseguir)
 	Local lRet				:= .T.
 
 	Local nI				:= 0
@@ -187,11 +186,9 @@ Method GetCTe() Class TLoadXMLCTe
 
 						Else
 
-							cLogMsg := "Nota fiscal da Mercadoria relacionada ao CTe não lançada no sistema:" + CRLF + CRLF
-							cLogMsg += "Confirme os dados: " +  msMensErr + CRLF
-
-							msTpMens := "2"
-
+							cLogMsg := "Nota Fiscal da Mercadoria relacionada ao CTe não lançada no sistema ou as informações encontradas no XML do CTe não conferem com o que foi digitado:" + CRLF + CRLF
+							cLogMsg += "Confirme os dados: " +  msMensErr + CRLF + CRLF
+							cLogMsg += "Verifique com o setor de suprimentos ou entre em contato com o fornecedor solicitando a correção do erro no XML." + CRLF
 							lRet	:= .F.	
 
 						EndIf

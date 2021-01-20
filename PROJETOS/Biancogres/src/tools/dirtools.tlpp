@@ -13,7 +13,7 @@ class dirtools
     static method MakeDir(cDirMake) as logical
     static method MakeFileDir(cDirMake) as logical
 
-endclass
+end class
 
 static method MakeDir(cDirMake) class dirtools
     local lIsDir as logical

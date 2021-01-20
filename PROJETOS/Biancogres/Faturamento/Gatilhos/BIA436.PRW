@@ -33,7 +33,7 @@ User Function BIA436()
 	Private cEmpNPOL := AllTrim(GetNewPar("FA_EMPNPOL","14#"))
 
 	//Fernando/Facile em 10/08/15 - nova politica passa a so calcular preco/desconto nestes campos
-	If (!(AllTrim(cEmpAnt) $ cEmpNPOL) .And. !(ALLTRIM(__READVAR) $ 'M->C6_QTDVEN#M->C6_YDTNECE#M->C6_YDESP#M->C6_YDNV#M->C6_YDVER#M->C6_YDACO#M->C6_YDAI#M->C6_YPREAJU')) .And. !(AllTrim(M->C5_YSUBTP) ==  "O")
+	If (!(AllTrim(cEmpAnt) $ cEmpNPOL) .And. !(ALLTRIM(__READVAR) $ 'M->C6_QTDVEN#M->C6_YDTNECE#M->C6_YDESP#M->C6_YDNV#M->C6_YDVER#M->C6_YDACO#M->C6_YDAI#M->C6_YPREAJU#M->C6_YDFRA')) .And. !(AllTrim(M->C5_YSUBTP) ==  "O")
 		If !(AllTrim(M->C5_YSUBTP) $ "A#M#F")
 			If !(isincallstack("U_ConsEst") .And. Type("__FCESTALTLTPOL") <> "U")
 				Return(GdFieldGet("C6_PRCVEN",n))
