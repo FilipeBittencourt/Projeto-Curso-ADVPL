@@ -19,6 +19,7 @@ Data Descricao
 Data Pacote
 Data Marca
 Data Tipo
+Data ClasseProd
 
 Method FromCodigo(cCodSB1) Constructor
 
@@ -36,6 +37,7 @@ Method FromCodigo(cCodSB1) Class TPedidoVendaProdutoRegras
 		::Descricao := SB1->B1_DESC
 		::Pacote 	:= SB1->B1_YPCGMR3
 		::Tipo		:= SB1->B1_TIPO
+		::ClasseProd:= SB1->B1_YCLASSE
 		
 		ZZ7->(DbSetOrder(1))
 		If ZZ7->(DbSeek(XFilial("ZZ7")+SB1->B1_YLINHA+SB1->B1_YLINSEQ))

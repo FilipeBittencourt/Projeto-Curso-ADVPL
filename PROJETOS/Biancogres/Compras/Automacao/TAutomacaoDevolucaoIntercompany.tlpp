@@ -46,7 +46,7 @@ User Function EJOBDEVINTE(aParam)
 
 	oBj_:FaturarPedido()
 
-	oBj_:ProcessaEntrada({{cEmpAnt, cFilAnt}})
+	oBj_:ProcessaEntrada(aParam[3])
 
 	oBj_:AddLog("Finalizando processo")
 

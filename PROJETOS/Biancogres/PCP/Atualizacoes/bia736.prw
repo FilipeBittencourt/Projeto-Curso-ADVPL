@@ -329,11 +329,11 @@ User Function BIA736Prc(xProdDe, xProdAt)
 				RC008 += Alltrim("                 ZCM_TEMPAD,                                                                                    ") + entEnter
 				RC008 += Alltrim("                 ZCM_TPPROD                                                                                     ") + entEnter
 				RC008 += Alltrim("          FROM " + RetSqlName("ZCM") + " ZCM                                                                    ") + entEnter
-				RC008 += Alltrim("               INNER JOIN " + RetSqlName("SH1") + " SH1 ON SH1.H1_CTRAB = ZCM.ZCM_CTRAB                         ") + entEnter
+				RC008 += Alltrim("               INNER JOIN " + RetSqlName("SH1") + " SH1(NOLOCK) ON SH1.H1_CTRAB = ZCM.ZCM_CTRAB                 ") + entEnter
 				RC008 += Alltrim("                                        AND SH1.D_E_L_E_T_ = ' '                                                ") + entEnter
-				RC008 += Alltrim("               INNER JOIN " + RetSqlName("SHB") + " SHB ON SHB.HB_COD = ZCM.ZCM_CTRAB                           ") + entEnter
+				RC008 += Alltrim("               INNER JOIN " + RetSqlName("SHB") + " SHB(NOLOCK) ON SHB.HB_COD = ZCM.ZCM_CTRAB                   ") + entEnter
 				RC008 += Alltrim("                                        AND SHB.D_E_L_E_T_ = ' '                                                ") + entEnter
-				RC008 += Alltrim("               INNER JOIN " + RetSqlName("ZCL") + " ZCL ON ZCL.ZCL_OPERAC = SH1.H1_YOPRPAD                      ") + entEnter
+				RC008 += Alltrim("               INNER JOIN " + RetSqlName("ZCL") + " ZCL(NOLOCK) ON ZCL.ZCL_OPERAC = SH1.H1_YOPRPAD              ") + entEnter
 				RC008 += Alltrim("                                        AND SH1.D_E_L_E_T_ = ' '                                                ") + entEnter
 				RC008 += Alltrim("          WHERE ZCM.D_E_L_E_T_ = ' ')                                                                           ") + entEnter
 				RC008 += Alltrim("      UPDATE SG2 SET G2_LOTEPAD = ZCM_LOTPAD                                                                    ") + entEnter
@@ -387,6 +387,9 @@ User Function BIA736Prc(xProdDe, xProdAt)
 			END TRANSACTION
 
 		EndIf
+
+		// Revalidação Geral das Op's versus Roteiros
+		U_BIAMsgRun("Aguarde... Revalidação Geral das Op's versus RoteiroS" , , {|| f02AtuRot( xProdDe, xProdAt) })	
 
 		(_cAlias)->(DbCloseArea())
 
@@ -505,5 +508,108 @@ Static Function fAtuRot(_cCodPro,_cRoteiro)
 	(_cAlias)->(DbCloseArea())
 
 	SetFunName(cFuncaoAux)
+
+Return
+
+Static Function f02AtuRot(xProdDe, xProdAt)
+
+	Local _cAlias	:=	GetNextAlias()
+	Local lBkpInc
+	Local lBkpAlt
+	Local cFuncaoAux
+
+	cFuncaoAux := FunName()
+
+	BeginSql Alias _cAlias
+
+		%NoParser%
+
+		WITH ROTEIRO
+		AS (SELECT ZCM_CTRAB, 
+		HB_NOME, 
+		ZCM_FORMAT, 
+		ZCM_ROTEIR, 
+		H1_YOPRPAD, 
+		H1_CODIGO, 
+		ZCL_DESCRI, 
+		ZCM_SETUP, 
+		ZCM_LOTPAD, 
+		ZCM_TEMPAD, 
+		ZCM_TPPROD
+		FROM %TABLE:ZCM% ZCM
+		INNER JOIN %TABLE:SH1% SH1 ON SH1.H1_CTRAB = ZCM.ZCM_CTRAB
+		AND SH1.%NotDel%
+		INNER JOIN %TABLE:SHB% SHB ON SHB.HB_COD = ZCM.ZCM_CTRAB
+		AND SHB.%NotDel%
+		INNER JOIN %TABLE:ZCL% ZCL ON ZCL.ZCL_OPERAC = SH1.H1_YOPRPAD
+		AND SH1.%NotDel%
+		WHERE ZCM.%NotDel%),
+		APLICROTEIRO
+		AS (SELECT DISTINCT 
+		B1_COD, 
+		ZCM_ROTEIR
+		FROM ROTEIRO RTR
+		INNER JOIN %TABLE:SB1% SB1 ON SB1.B1_YFORMAT = ZCM_FORMAT
+		AND ((SB1.B1_TIPO = 'PA'
+		AND SB1.B1_YCLASSE = '1'
+		AND SB1.B1_YSTATUS = '1')
+		OR (SB1.B1_TIPO = 'PP'
+		AND SB1.B1_YCLASSE = ' '
+		AND SB1.B1_YSTATUS = '1'))
+		AND SB1.B1_COD BETWEEN %Exp:xProdDe% AND %Exp:xProdAt%
+		AND SB1.B1_TIPO = ZCM_TPPROD
+		AND SB1.B1_MSBLQL <> '1'
+		AND SB1.%NotDel%
+		INNER JOIN %TABLE:SG2% SG2 ON G2_PRODUTO = B1_COD
+		AND G2_CODIGO = ZCM_ROTEIR
+		AND G2_OPERAC = H1_YOPRPAD
+		AND SG2.%NotDel%)
+		SELECT R_E_C_N_O_ REC, ZCM_ROTEIR
+		FROM %TABLE:SC2% SC2
+		INNER JOIN APLICROTEIRO APR ON APR.B1_COD = SC2.C2_PRODUTO
+		WHERE C2_FILIAL = %xFilial:SC2%
+		AND C2_DATRF = '        '
+		AND C2_QUJE = 0
+		AND C2_SEQUEN = '001'
+		AND C2_ROTEIRO <> ZCM_ROTEIR
+		AND SC2.%NotDel%
+
+	ENDSQL
+
+	While (_cAlias)->(!EOF())
+
+		SC2->(DbGoTo((_cAlias)->REC))
+		If SC2->(!EOF())
+
+			RecLock("SC2", .F.)
+			SC2->C2_ROTEIRO := (_cAlias)->(ZCM_ROTEIR)
+			SC2->C2_YITGMES := "S"
+			MsUnlock()
+
+			SetFunName("MATA650")
+
+			If Type("INCLUI") == "L"
+				lBkpInc := INCLUI
+			EndIf
+			If Type("ALTERA") == "L"
+				lBkpAlt := ALTERA
+			EndIf
+			INCLUI	:=	.F.
+			ALTERA	:=	.T.
+			If PCPIntgPPI()
+				lProcessa := mata650PPI(,,.T.,.T.,.F.)
+			EndIf
+			INCLUI	:=	lBkpInc
+			ALTERA	:=	lBkpAlt
+
+		EndIf
+
+		SetFunName(cFuncaoAux)
+
+		(_cAlias)->(DbSkip())
+
+	EndDo
+
+	(_cAlias)->(DbCloseArea())
 
 Return

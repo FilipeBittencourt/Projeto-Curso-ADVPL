@@ -96,7 +96,7 @@ Method CreatePCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
         If lError
             oJSRet           := JsonObject():New()
             oJSRet["Status"] := 400
-            oJSRet["Erros"]  := aError
+            oJSRet["errors"]  := aError
         Else
             ConOut("FIM RECLONK Z42")
         EndIf
@@ -430,7 +430,7 @@ Method CreatePVenda(oJsonPV) Class TIntegracaoMotorAbastecimentoDAO
     If lError
         oJSRet           := JsonObject():New()
         oJSRet["Status"] := 400
-        oJSRet["Erros"]  := aError
+        oJSRet["errors"]  := aError
     Else
 
         ConOut("FIM MsExecAuto MataMata410 - MOTOR de ABASTECIMENTO")

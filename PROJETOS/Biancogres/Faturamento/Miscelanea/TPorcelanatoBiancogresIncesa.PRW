@@ -50,6 +50,7 @@ Class TPorcelanatoBiancogresIncesa From LongClassName
 	Data cPrioSaldo
 	Data nTolerancia
 	Data ExibirTela
+	Data lDFRA
 	
 	Data oWBrowse
 	Data oDlg1
@@ -83,6 +84,7 @@ Method New() Class TPorcelanatoBiancogresIncesa
 	::Regra_Sug		:= ""
 	::EscolheuSugestao	:= .F.
 	::ExibirTela	:= .T.	
+	::lDFRA			:= .F.
 	
 	//parametros para a pesquisa de lote
 	::cCodPro		:= ""
@@ -281,7 +283,8 @@ Method LoadDados() Class TPorcelanatoBiancogresIncesa
 			%Exp:self:cLoteAdd%,
 			%Exp:self:cLoteExc%,
 			%Exp:self:cPrioSaldo%,
-			%Exp:self:nTolerancia%)
+			%Exp:self:nTolerancia%,
+			%Exp:IIF(self:lDFRA,1,0)%)
 			
 //cPrioSaldo
 			order by PRI, SALDO
@@ -310,7 +313,8 @@ Method LoadDados() Class TPorcelanatoBiancogresIncesa
 			%Exp:__cLoteAdd%,
 			%Exp:__cLoteExc%,
 			%Exp:self:cPrioSaldo%,
-			%Exp:self:nTolerancia%) 
+			%Exp:self:nTolerancia%,
+			%Exp:IIF(self:lDFRA,1,0)%) 
 
 			order by PRI, SALDO
 
@@ -422,7 +426,8 @@ Method ChkEmpPro() Class TPorcelanatoBiancogresIncesa
 			%Exp:self:cLoteAdd%,
 			%Exp:self:cLoteExc%,
 			%Exp:self:cPrioSaldo%,
-			%Exp:self:nTolerancia%) 
+			%Exp:self:nTolerancia%,
+			%Exp:IIF(self:lDFRA,1,0)%) 
 
 			order by PRI, SALDO
 
@@ -450,7 +455,8 @@ Method ChkEmpPro() Class TPorcelanatoBiancogresIncesa
 			%Exp:__cLoteAdd%,
 			%Exp:__cLoteExc%,
 			%Exp:self:cPrioSaldo%,
-			%Exp:self:nTolerancia%) 
+			%Exp:self:nTolerancia%,
+			%Exp:IIF(self:lDFRA,1,0)%) 
 
 			order by PRI, SALDO
 

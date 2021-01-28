@@ -5490,12 +5490,16 @@ Return cAtendente
 # DESCRICAO..: RETORNAR PARA QUAL EMAIL SERA ENVIADO O WORKFLOW DE ACORDO COM A TABELA Z28
 ##############################################################################################################     
 */
-User Function EmailWF(pRotina, pEmp, pClasse)
+User Function EmailWF(pRotina, pEmp, pClasse, pTpDest)
 
 	Local cRet := ""
 
 	If Empty(pClasse)
 		pClasse := ""
+	EndIf
+	
+	If Empty(pTpDest)
+		pTpDest := ""
 	EndIf
 
 	dbSelectArea("Z28")
@@ -5504,7 +5508,7 @@ User Function EmailWF(pRotina, pEmp, pClasse)
 		//If dbSeek( pRotina)
 
 		While !Eof() //.And. Alltrim(Z28->Z28_ROTINA) == Alltrim(pRotina) .AND. (Z28->Z28_EMPRES == pEmp .OR. Z28_REPLIC == 'S') .And. (Empty(Z28->Z28_CLASSE) .OR. Alltrim(Z28->Z28_CLASSE) == Alltrim(pClasse))
-			If Alltrim(Z28->Z28_ROTINA) == Alltrim(pRotina) .AND. (Z28->Z28_EMPRES == pEmp .OR. Z28_REPLIC == 'S' .Or. Alltrim(Z28->Z28_EMPRES)=='*' .Or. Alltrim(Z28->Z28_EMPRES)=='') .And. (Empty(Z28->Z28_CLASSE) .OR. Alltrim(Z28->Z28_CLASSE) == Alltrim(pClasse))
+			If Alltrim(Z28->Z28_ROTINA) == Alltrim(pRotina) .AND. (Z28->Z28_EMPRES == pEmp .OR. Z28_REPLIC == 'S' .Or. Alltrim(Z28->Z28_EMPRES)=='*' .Or. Alltrim(Z28->Z28_EMPRES)=='') .And. (Empty(Z28->Z28_CLASSE) .OR. Alltrim(Z28->Z28_CLASSE) == Alltrim(pClasse)) .And. (Empty(Alltrim(pTpDest)) .OR. Alltrim(Z28->Z28_TP_ENV) == Alltrim(pTpDest))
 				cRet+= Alltrim(Z28->Z28_EMAIL) +";"
 			EndIf
 			dbSelectArea("Z28")

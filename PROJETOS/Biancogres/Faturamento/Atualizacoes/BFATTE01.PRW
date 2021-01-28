@@ -939,7 +939,10 @@ User Function Z68ALQGE()
 		Return .T.
 	EndIf
 
-	cCodCli := "G"+AllTrim(M->Z68_EST)+"I"+StrZero(M->Z68_ALIQ,2)
+	//função int foi usado para resolver um problema de aliquota quebrada
+	//na epoca o codigo do cliente tinha 6 digitos e a forma q foi modelado a função não permitia troca com baixo impacto 
+	
+	cCodCli := "G"+AllTrim(M->Z68_EST)+"I"+StrZero(INT(M->Z68_ALIQ),2)
 
 	cAliasTmp := GetNextAlias()
 	BeginSql Alias cAliasTmp

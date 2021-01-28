@@ -108,6 +108,8 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 		IncProc("Processando Registros encontrados na base...")
 
+		msUltDia := Substr( dtos( Ultimodia( stod( cAnoRef + Alltrim( StrZero( nW, 2 ) ) + "01" ) ) ), 7, 2 )
+
 		cQry := GetNextAlias()
 
 		oTable := FWTemporaryTable():New( /*cAlias*/, /*aFields*/)
@@ -559,7 +561,7 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 		cSql += "             AND XXX.LINHA = PRC01.LINHA "
 		cSql += "             AND XXX.TPPROD = PRC01.TPPROD "
 		cSql += "     ),  "
-		cSql += "         CUS205 = 31 / "
+		cSql += "         CUS205 = " + msUltDia + " / "
 		cSql += "     ( "
 		cSql += "         SELECT SUM(XXX.CUS202) "
 		cSql += "         FROM CFPROCESS01 XXX "
@@ -567,7 +569,7 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 		cSql += "             AND XXX.LINHA = PRC01.LINHA "
 		cSql += "             AND XXX.TPPROD = PRC01.TPPROD "
 		cSql += "     ) * CUS202,  "
-		cSql += "         CUS206 = CUS201 * (31 / "
+		cSql += "         CUS206 = CUS201 * (" + msUltDia + " / "
 		cSql += "     ( "
 		cSql += "         SELECT SUM(XXX.CUS202) "
 		cSql += "         FROM CFPROCESS01 XXX "
@@ -576,7 +578,7 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 		cSql += "             AND XXX.TPPROD = PRC01.TPPROD "
 		cSql += "     ) * CUS202),  "
 		cSql += "         CUS207 = PSECO,  "
-		cSql += "         CUS208 = (CUS201 * (31 / "
+		cSql += "         CUS208 = (CUS201 * (" + msUltDia + " / "
 		cSql += "     ( "
 		cSql += "         SELECT SUM(XXX.CUS202) "
 		cSql += "         FROM CFPROCESS01 XXX "

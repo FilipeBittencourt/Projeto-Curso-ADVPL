@@ -123,7 +123,7 @@ Method ExecAutoPCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
     If lError
         oJSRet           := JsonObject():New()
         oJSRet["Status"] := 400
-        oJSRet["Erros"]  := aError       
+        oJSRet["Errors"]  := aError       
     Else
         ConOut("FIM MsExecAuto Mata120")       
     EndIf	
@@ -362,7 +362,7 @@ Method BaixaParcialPC(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
     If lError
         oJSRet           := JsonObject():New()
         oJSRet["Status"] := 400
-        oJSRet["Erros"]  := aError       
+        oJSRet["Errors"]  := aError       
     Else
         ConOut("FIM MsExecAuto Mata120")       
     EndIf	

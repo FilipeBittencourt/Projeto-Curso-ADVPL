@@ -228,14 +228,16 @@ Method _VerificarPonta() Class TConferenciaPedidoVenda
 			aRetPonta := U_FR2CHKPT(SC6->C6_PRODUTO, SC6->C6_LOTECTL, SC6->C6_QTDVEN,, cPedido, SC6->C6_ITEM, "", cEmpPed, cFilPed)  
 	
 			If (aRetPonta[1] == "P")
-				
+
 				//ConOut("TConferenciaPedidoVenda:_VerificarPonta(): "+cValToChar(SC6->C6_QTDVEN))
-	
 				ConOut(cValToChar(dDataBase) +"-"+ Time() + " -- TConferenciaPedidoVenda:_VerificarPonta()  -- Pedido: "+ ::cNumPed + " -- Produto: " + SC6->C6_PRODUTO+ " -- Item: " + SC6->C6_ITEM)
-	
+
 				U_GravaPZ2(SC6->(RecNo()),"SC6","CONF",,AllTrim(FunName()),"AGP", CUSERNAME)
-				
-				::_MailEmpenho() 
+
+				//Ticket 29650 - Enviar somente para pedidos diferente de Amostra e Mostruario - Pablo s. Nascimento 25/01/2021			
+				if !AllTrim(SC5->C5_YSUBTP) $ "A/M"
+					::_MailEmpenho()
+				endif
 				
 				Return .T.
 	
@@ -356,6 +358,7 @@ Method _MailEmpenho()  Class TConferenciaPedidoVenda
 	
 	ConOut("EMAIL PONTA : "+cDestinatario)	
 	//Envia e-mail
+	aCC = aCC + "; " + U_EmailWF("FROPRT08_WF","","","C")
 	U_BIAEnvMail(, cDestinatario, cTitulo, cHtml, , , , aCC, aCCO)		
 
 Return

@@ -268,7 +268,26 @@ Method Validar() Class TPedidoVendaRegras
 		If (!Empty(::oCliente:Codigo))
 
 			//REGRA 004: Clientes com campo tratamento especial = “Não”, obrigar o pedido a ser pela empresa fabricante (Biancogres ou Incesa). Exceto produtos do pacote “9”-Outs. Premium e “C”-Louças Mundialli.
+			
+		//	alert(cvaltochar(::lOk))
+	//		alert(cvaltochar(::lValLinha))
+	//		alert(cvaltochar(::lEmpFabric))
+		//	alert(cvaltochar(::aItems[nX]:oProduto:Pacote))
+			
+			
 			If ( 	::lOk .And.;
+			::lValLinha .And.;
+			!::lEmpFabric .And.;
+			!::oCliente:lEspecial .And.;
+			!(::aItems[nX]:oProduto:Pacote $ "9#C#J") .And.;
+			!( ::aItems[nX]:oProduto:Pacote $ "4" .And. ::aItems[nX]:EmpEst == "05" ) .And.;
+			!(AllTrim(::oCliente:Segmento) == 'R' .And. AllTrim(::oCliente:cUF) == 'ES' .And. ::aItems[nX]:oProduto:ClasseProd $ "2_3" ) )
+
+				::SetRegra(.F., ::REG_004, nX) 
+
+			EndIf
+			
+			/*If ( 	::lOk .And.;
 			::lValLinha .And.;
 			!::oCliente:lEspecial .And.;
 			!::lEmpFabric .And.;
@@ -277,7 +296,7 @@ Method Validar() Class TPedidoVendaRegras
 
 				::SetRegra(.F., ::REG_004, nX) 
 
-			EndIf
+			EndIf*/
 
 			//REGRA 005: Produto X Linha
 			If ( ::lOk .And. !( ::aItems[nX]:oProduto:Marca $ ::MarcasPermitidas ) )

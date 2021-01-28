@@ -301,7 +301,10 @@ User Function FROPGA02()
 	
 	If (!(AllTrim(M->C5_YSUBTP) $ "A#M#F"))
 		//defrar não exibe tela, verifica dfra ativo
-		__lDFRA			:= 	U_PRPCDFRA(DTOS(M->C5_EMISSAO), _cProd)
+		//PRPCDFRA(_cCliLoja, _cVend, _cData, _cProd, _cLote)
+		__lDFRA			:= 	U_PRPCDFRA(M->C5_CLIENTE+M->C5_LOJACLI, M->C5_VEND1, DTOS(M->C5_EMISSAO), _cProd, '')
+		
+		//__lDFRA			:= 	U_PRPCDFRA(DTOS(M->C5_EMISSAO), _cProd)
 		_lExibirTela	:= !__lDFRA
 		
 	EndIf
@@ -478,19 +481,19 @@ User Function FROPGA02()
 				
 				If ( AllTrim(_cUFCli) $  GetNewPar("FA_UFLF35", "ES#MG")) .And. ( _cSegmento == "R" )
 
-					_aSaldo 	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, /*PROXLOT*/, /*LOTADD*/, "F35" /*LOTEXC*/, _lExibirTela)
+					_aSaldo 	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, /*PROXLOT*/, /*LOTADD*/, "F35" /*LOTEXC*/, _lExibirTela, __lDFRA)
 					_nSaldo		:= Round(_aSaldo[7], 2)
 
 				Else
 
 					_lBlqPesq	:= .T.
-					_aSaldo 	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, /*PROXLOT*/, "F35" /*LOTADD*/, /*LOTEXC*/, _lExibirTela)
+					_aSaldo 	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, /*PROXLOT*/, "F35" /*LOTADD*/, /*LOTEXC*/, _lExibirTela, __lDFRA)
 					_nSaldo		:= Round(_aSaldo[7], 2)
 
 				EndIf
 			Else	
 				
-				_aSaldo 	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, /*PROXLOT*/, /*LOTADD*/, /*LOTEXC*/, _lExibirTela)
+				_aSaldo 	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, /*PROXLOT*/, /*LOTADD*/, /*LOTEXC*/, _lExibirTela, __lDFRA)
 				
 			EndIf
 
@@ -604,7 +607,6 @@ User Function FROPGA02()
 							
 			ElseIf (!Empty(_aRetLot[1]) .And. _aRetLot[1] <> Nil .And. _aRetLot[10] == .F.) //rejeitou sugestão
 				
-				
 				__ShowMReg	:= .T.
 				If  SA1->A1_YPALETE == '1' .And. !(AllTrim(M->C5_YSUBTP) $ "A#M#F")
 					__aPal := CalcPalete(_nQtdDig)
@@ -642,7 +644,8 @@ User Function FROPGA02()
 				
 			If (Empty(_aRetLot[1]) .Or. _aRetLot[1] == Nil .Or. !_lEstoque) //não achou lote ou não aceitou sugestão
 				
-				
+				//alert("_lEstoque: "+cvaltochar(_lEstoque))
+							
 				If (_lProdPR)
 					
 					//produto PR - entra nesta pesquisa que considera produtos sem localizacao
@@ -656,13 +659,13 @@ User Function FROPGA02()
 						If ( AllTrim(_cUFCli) $ GetNewPar("FA_UFLF35", "ES#MG") ) .And. ( _cSegmento == "R" )
 	
 							//Pesquisa primeiro lote que NÃO GERE PONTA (_nProxLote := 1) e Não seja F35
-							_aSaldo 	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, 1, /*LOTADD*/, "F35" /*LOTEXC*/, .F.)
+							_aSaldo 	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, 1, /*LOTADD*/, "F35" /*LOTEXC*/, .F., __lDFRA)
 							_nSaldo		:= Round(_aSaldo[7], 2)
 	
 							// NAO Achou sem F35 - Pesquisa no F35
 							If (_nSaldo <= 0 .Or. _aSaldo == Nil)
 	
-								_aSaldo	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, 1, /*LOTADD*/"F35",  /*LOTEXC*/, .F.)
+								_aSaldo	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, 1, /*LOTADD*/"F35",  /*LOTEXC*/, .F., __lDFRA)
 								
 								If (_nSaldo <= 0 .Or. _aSaldo == Nil)
 									_lSugerePalete := .F.
@@ -673,11 +676,11 @@ User Function FROPGA02()
 						Else
 	
 							//Pesquisa primeiro lote que NÃO GERE PONTA e seja somente F35
-							_aSaldo 	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, 1, "F35" , /*LOTEXC*/, .F.)
+							_aSaldo 	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, 1, "F35" , /*LOTEXC*/, .F., __lDFRA)
 							_nSaldo		:= Round(_aSaldo[7], 2)
 							
 							If (_nSaldo <= 0 .Or. _aSaldo == Nil)
-									_lSugerePalete := .F.
+								_lSugerePalete := .F.
 							EndIf
 	
 						EndIf
@@ -686,6 +689,8 @@ User Function FROPGA02()
 					
 					_nQtdRet := _nQtdDig
 					
+					//alert("_lSugerePalete: "+cvaltochar(_lSugerePalete))
+			
 					
 					If (_lSugerePalete)
 						__aPal := CalcPalete(_nQtdDig)
@@ -745,13 +750,13 @@ User Function FROPGA02()
 						If ( AllTrim(_cUFCli) $ GetNewPar("FA_UFLF35", "ES#MG") ) .And. ( _cSegmento == "R" )
 	
 							//Pesquisa primeiro lote que NÃO GERE PONTA (_nProxLote := 1) e Não seja F35
-							_aSaldo 	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, _nProxLote, /*LOTADD*/, "F35" /*LOTEXC*/, _lExibirTela)
+							_aSaldo 	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, _nProxLote, /*LOTADD*/, "F35" /*LOTEXC*/, _lExibirTel, __lDFRA)
 							_nSaldo		:= Round(_aSaldo[7],2)
 	
 							// NAO Achou sem F35 - Pesquisa todos mas que nao gere PONTA
 							If (_nSaldo <= 0 .Or. _aSaldo == Nil)
 	
-								_aSaldo	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, _nProxLote, /*LOTADD*/"F35",  /*LOTEXC*/, _lExibirTela)
+								_aSaldo	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, _nProxLote, /*LOTADD*/"F35",  /*LOTEXC*/, _lExibirTela, __lDFRA)
 	
 							EndIf
 	
@@ -760,7 +765,7 @@ User Function FROPGA02()
 						//	alert("F35")
 	
 							//Pesquisa primeiro lote que NÃO GERE PONTA e seja somente F35
-							_aSaldo 	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, _nProxLote, "F35" , /*LOTEXC*/, _lExibirTela)
+							_aSaldo 	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, _nProxLote, "F35" , /*LOTEXC*/, _lExibirTela, __lDFRA)
 							_nSaldo		:= Round(_aSaldo[7],2)
 	
 						EndIf
@@ -768,7 +773,7 @@ User Function FROPGA02()
 					Else
 	
 						//Outros produtos fora da regra F35 - Pesquisa primeiro lote que NÃO GERE PONTA (_nProxLote := 1)
-						_aSaldo 	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, _nProxLote, /*LOTADD*/,  /*LOTEXC*/, _lExibirTela)
+						_aSaldo 	:= U_FROPRT01(_cProd,_cLocal,M->C5_NUM,_cItem,_nQtdDig,,_cSegmento, IIF(INCLUI,"",M->C5_YEMPPED), _lPalete, _cCategoria, _cLotRes, _nProxLote, /*LOTADD*/,  /*LOTEXC*/, _lExibirTela, __lDFRA)
 	
 					EndIf
 					
@@ -814,7 +819,7 @@ User Function FROPGA02()
 					EndIf
 				EndIf
 				
-				__lFormPalOk := .F.
+				__lValidOk := .F.
 				
 				If (_aRetLot[10] <> Nil  .And. _aRetLot[10] == .F. .And. AllTrim(aCols[N][_nPMOTREJ]) == 'X')
 					If (AllTrim(ZZ6->ZZ6_VENPAL) == 'S' .And. ZZ6->ZZ6_LOTEMI > 0)
@@ -823,17 +828,29 @@ User Function FROPGA02()
 						If (!Empty(_aRetLot[2]) .And. _aRetLot[2] <> Nil .And. !Empty(_aRetLot[5]) .And. _aRetLot[5] <> Nil  )
 							__QtdMinEst := _aRetLot[5] *  ZZ6->ZZ6_LOTEMI
 							If(_aRetLot[2] > __QtdMinEst)
-								__lFormPalOk	:= .T.
+								__lValidOk	:= .T.
+							EndIf
+						EndIf
+					EndIf
+				ElseIf (_aRetLot[10] <> Nil  .And. _aRetLot[10] == .F.)
+					If (ZZ6->ZZ6_LOTEMI > 0)
+						//Saldo 			= _aRetLot[2]
+						//Quantidade Palete = _aRetLot[5]
+						If (!Empty(_aRetLot[2]) .And. _aRetLot[2] <> Nil .And. !Empty(_aRetLot[5]) .And. _aRetLot[5] <> Nil  )
+							__QtdMinEst := _aRetLot[5] *  ZZ6->ZZ6_LOTEMI
+							If(_aRetLot[2] > __QtdMinEst)
+								__lValidOk	:= .T.
 							EndIf
 						EndIf
 					EndIf
 				EndIf
 				
+				
 								
 				//Achou lote
 				If (!Empty(_aRetLot[1]) .And. _aRetLot[1] <> Nil .And. _aRetLot[10] == .T.) ; 
 				.OR. (_lProdPR) ;
-				.OR. (!Empty(_aRetLot[1]) .And. _aRetLot[1] <> Nil .And.  __lFormPalOk ) ;
+				.OR. (!Empty(_aRetLot[1]) .And. _aRetLot[1] <> Nil .And.  __lValidOk ) ;
 				.OR. __lF35 ;
 				.OR. (!Empty(_aRetLot[1]) .And. _aRetLot[1] <> Nil .And. __lDFRA) 
 

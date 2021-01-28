@@ -1,0 +1,592 @@
+#include "totvs.ch"
+#include "dbStruct.ch"
+#include "parmtype.ch"
+
+/*/{Protheus.doc} BIA662
+@author Marinaldo de Jesus (Facile)
+@since 28/12/2020
+@version 1.0
+@Projet A-35oFWMBrowse
+@description BP BP - Regras de Cálculo.
+@type function
+/*/
+
+procedure u_BIA662()
+
+    local oFWMBrowse   as object
+
+    // Instanciamento da classe de Browse
+    oFWMBrowse:=FWMBrowse():New()
+
+    //Alias
+    oFWMBrowse:SetAlias("ZOG")
+
+    private cCadastro as character
+    cCadastro:="BP - Regras de Cálculo"
+
+    // Titulo da Browse
+    oFWMBrowse:SetDescription(cCadastro)
+
+    //Define o menu do Browse
+    oFWMBrowse:setMenuDef("BIA662MVC")
+
+    //Habilita o botao para fechar a janela
+    oFWMBrowse:ForceQuitButton()
+
+    // Ativacao da classe
+    ZOG->(oFWMBrowse:Activate())
+
+    freeObj(oFWMBrowse)
+
+    return
+
+function u_BIA662Load() as logical
+    
+    local aArea         as array
+    local aAreaSM0      as array
+
+    local bMsNewProcess as block
+
+    local cEmp          as character
+    local cFil          as character
+
+    local lRet          as logical
+    local lMesAno       as logical
+    local lDataFech     as logical
+    local lTipoRef      as logical
+
+    local nKeepResponse as numeric
+
+    local oEmpresas     as object
+    local oPergunte     as object
+    local oMsNewProcess as object
+
+    nKeepResponse:=(-1)
+
+    cEmp:=&("cEmpAnt")
+    cFil:=&("cFilAnt")
+
+    if (!type("cCadastro")=="C")
+        private cCadastro as character
+        cCadastro:="BP - Regras de Cálculo"
+    endif
+    
+    aArea:=getArea()
+    aAreaSM0:=SM0->(getArea())
+
+    begin sequence
+
+        oEmpresas:=TLoadEmpresa():New()
+
+        lMesAno:=.F.
+        lDataFech:=.F.
+        lTipoRef:=.F.
+
+        lRet:=__TWPCOFiltroPeriodo():Pergunte(@lMesAno,@lDataFech,@lTipoRef)
+        
+        if (!lRet)
+            break
+        endif
+
+        oEmpresas:GetSelEmp()
+        oPergunte:=__TWPCOFiltroPeriodo():Get()
+
+        bMsNewProcess:={|lEnd|MsProcess():ProcRedefine(@oMsNewProcess,nil,0,350,350,.T.,.T.),oMsNewProcess:SetRegua1(0),lRet:=BIA662Load(@oMsNewProcess,@cEmp,@cFil,@oEmpresas,@oPergunte,@lEnd,@nKeepResponse)}
+        oMsNewProcess:=MsNewProcess():New(bMsNewProcess,cCadastro,"Aguarde...",.T.)
+        oMsNewProcess:Activate()
+
+    end sequence
+
+    RPCTools():RpcSetEnv(cEmp,cFil)
+
+    restArea(aAreaSM0)
+    restArea(aArea)
+
+    return(lRet)
+
+static function BIA662Load(oMsNewProcess as object,cEmpDef as character,cFilDef as character,oEmpresas as object,oPergunte as object,lEnd as logical,nKeepResponse as numeric) as logical
+
+    local aMsg          as array
+    local aSM0RecNo     as array
+
+    local bError        as block
+    local bErrorBlock   as block
+
+    local cMsg          as character
+    local cCRLF         as character
+    local cMsgPrc       as character
+
+    local cEmp          as character
+    local cFil          as character
+    local cVersao       as character
+    local cRevisa       as character
+    local cAnoRef       as character
+
+    local lRet          as logical
+
+    local nD            as numeric
+    local nJ            as numeric
+
+    local nSM0AT        as numeric
+    local nSM0RecNo     as numeric
+
+    lRet:=.T.
+
+    begin sequence
+
+        nJ:=Len(oEmpresas:aEmpSel)
+        lRet:=(nJ>0)
+        if (!lRet)
+            ApMsgAlert("Nenhuma empresa foi selecionada!")
+            break
+        endif
+
+        aMsg:=array(0)
+
+        oMsNewProcess:SetRegua1(SM0->(recCount()))
+
+        aSM0RecNo:=array(0)
+        SM0->(dbSetOrder(1))
+        SM0->(dbGoTop())
+        while SM0->(!eof())
+            oMsNewProcess:IncRegua1()
+            SM0->(aAdd(aSM0RecNo,{fieldGet(fieldPos("M0_CODIGO")),fieldGet(fieldPos("M0_CODFIL")),recNo()}))
+            SM0->(dbSkip())
+        end while
+
+        ProcRegua(if(nJ<=1,0,nJ))
+
+        bError:={|oError|A35():breakError(@oError,@cEmp,@cFil,@cMsg)}
+
+        oMsNewProcess:SetRegua1(nJ)
+
+        for nD:=1 to nJ
+
+            cEmp:=oEmpresas:aEmpSel[nD][1]
+            
+            nSM0AT:=aScan(aSM0RecNo,{|e|e[1]==cEmp})
+            if (nSM0AT==0)
+                loop
+            endif
+            
+            cFil:=rTrim(aSM0RecNo[nSM0AT][2])
+            
+            nSM0RecNo:=aSM0RecNo[nSM0AT][3]
+
+            SM0->(dbGoTo(nSM0RecNo))
+
+            cVersao:=left(oPergunte:cVersao,getSX3Cache("ZOG_VERSAO","X3_TAMANHO"))
+            cRevisa:=left(oPergunte:cRevisa,getSX3Cache("ZOG_REVISA","X3_TAMANHO"))
+            cAnoRef:=left(oPergunte:cAnoRef,getSX3Cache("ZOG_ANOREF","X3_TAMANHO"))
+
+            cMsgPrc:="Processando...Empresa:["+cEmp+"] :: Filial:["+cFil+"]"
+            oMsNewProcess:IncRegua1(cMsgPrc)
+        
+            if (lEnd)
+                cMsg:="Operação Cancelada pelo usuário"
+                aAdd(aMsg,{cEmp,cFil,cVersao,cRevisa,cAnoRef,cMsg})
+                break
+            endif
+
+            bErrorBlock:=ErrorBlock(bError)
+            begin sequence
+
+                MsAguarde({||RPCTools():RpcSetEnv(cEmp,cFil),&("cCadastro"),StrTran(cMsgPrc,"Processando","Preparando Ambiente")})
+
+                SM0->(dbGoTo(nSM0RecNo))
+
+                lRet:=ProcBIA662(@oMsNewProcess,@cEmp,@cFil,@cVersao,@cRevisa,@cAnoRef,@cMsg,@nKeepResponse)
+
+            recover
+                
+                MsgRun(cMsg,"Aguarde...",{||sleep(100)})
+            
+            end sequence
+            ErrorBlock(bErrorBlock)
+
+            if (!empty(cMsg))
+                aAdd(aMsg,{cEmp,cFil,cVersao,cRevisa,cAnoRef,cMsg})
+                cMsg:=""
+            endif
+
+        next nD
+
+    end sequence
+
+    RPCTools():RpcSetEnv(cEmpDef,cFilDef)
+
+    if (!empty(aMsg))
+
+        cMsg:=""
+        cCRLF:=CRLF
+        nJ:=len(aMsg)
+        for nD:=1 to nJ
+            cMsg+="Empresa:"
+            cMsg+=" "
+            cMsg+=aMsg[nD][1]
+            cMsg+=cCRLF
+            cMsg+="Filial:"
+            cMsg+=" "
+            cMsg+=aMsg[nD][2]
+            cMsg+=cCRLF
+            cMsg+="Versao:"
+            cMsg+=" "
+            cMsg+=aMsg[nD][3]
+            cMsg+=cCRLF
+            cMsg+="Revisao:"
+            cMsg+=" "
+            cMsg+=aMsg[nD][4]
+            cMsg+=cCRLF
+            cMsg+="Referecia:"
+            cMsg+=" "
+            cMsg+=aMsg[nD][5]
+            cMsg+=cCRLF
+            cMsg+="Mensagem:"
+            cMsg+=" "
+            cMsg+=aMsg[nD][6]
+            cMsg+=cCRLF
+        next nD
+        
+        evalBlock():EvalBlock({||eecView(cMsg,&("cCadastro")+" :: Log de Processamento :: ATENÇÃO")},nil,.T.)
+
+    endif
+
+    return(lRet)
+
+static function ProcBIA662(oMsNewProcess as object,cEmp as character,cFil as character,cVersao as character, cRevisa as character, cAnoRef as character,cMsg as character,nKeepResponse as numeric) as logical
+
+    local aFieldPos     as array
+    local aTmpStruct    as array
+    
+    local cCRLF         as character
+    local cMsgNoYes     as character
+    local cTmpAlias     as character
+
+    local cZOGOrder     as character
+    local cZOGConta     as character
+    local cZOGFilial    as character
+    local cZOGKeySeek   as character
+
+    local lRet          as logical
+    
+    local lZOGFound     as logical
+
+    local nField        as numeric
+    local nFields       as numeric
+    local nFieldSrc     as numeric
+    local nFieldTrg     as numeric
+    local nFieldSeq     as numeric
+    local nFieldEnable  as numeric
+    
+    local nZOGOrder     as numeric
+
+    local uSrc
+
+    DEFAULT cEmp:=&("cEmpAnt")
+    DEFAULT cFil:=&("cFilAnt")
+    DEFAULT lRet:=.T.
+
+    cCRLF:=CRLF
+
+    cZOGOrder:="ZOG_FILIAL+ZOG_VERSAO+ZOG_REVISA+ZOG_ANOREF+ZOG_CONTA+ZOG_MNEMON"
+    nZOGOrder:=retOrder("ZOG",cZOGOrder)
+
+    ZOG->(dbSetOrder(nZOGOrder))
+    
+    cZOGFilial:=xFilial("ZOG")
+    
+    cZOGKeySeek:=cZOGFilial
+    cZOGKeySeek+=cVersao
+    cZOGKeySeek+=cRevisa
+    cZOGKeySeek+=cAnoRef
+
+    begin sequence
+
+        lZOGFound:=ZOG->(dbSeek(cZOGKeySeek,.F.))
+
+        if (lZOGFound)
+            if (nKeepResponse==(-1))
+                cMsgNoYes:="Já Existem dados para este Orçamento."
+                cMsgNoYes+=cCRLF
+                cMsgNoYes+=cCRLF
+                cMsgNoYes+=" Empresa:["+cEmp+"] :: Filial:["+cFil+"]"
+                cMsgNoYes+=" :: "
+                cMsgNoYes+="["
+                cMsgNoYes+=cVersao
+                cMsgNoYes+="]"
+                cMsgNoYes+="["
+                cMsgNoYes+=cRevisa
+                cMsgNoYes+="]"
+                cMsgNoYes+="["
+                cMsgNoYes+=cAnoRef
+                cMsgNoYes+="]"
+                cMsgNoYes+=cCRLF
+                cMsgNoYes+=" Deseja Reprocessar?"
+                lZOGFound:=ApMsgNoYes(cMsgNoYes,&("cCadastro"))
+                nKeepResponse:=if(lZOGFound,1,0)
+                lZOHFound:=(!lZOHFound)
+            else
+                lZOGFound:=(nKeepResponse==1)
+            endif
+        endif
+
+        if (!lZOGFound)
+            MsAguarde({||cTmpAlias:=getQuery(@cEmp,@cFil,@cVersao,@cRevisa,@cAnoRef)},&("cCadastro"),"Obtendo dados no SGBD...Empresa:["+cEmp+"] :: Filial:["+cFil+"]")
+        else
+            cTmpAlias:=""
+        endif
+
+        lRet:=((!empty(cTmpAlias)).and.(select(cTmpAlias)>0))
+
+        if (!lRet)
+            break
+        endif
+
+        lRet:=(cTmpAlias)->(!(eof().and.bof()))
+
+        if (!lRet)
+            break
+        endif
+
+        if (!lZOGFound)
+
+            aFieldPos:=array(0)
+            aTmpStruct:=(cTmpAlias)->(dbStruct())
+
+            nFields:=len(aTmpStruct)
+
+            oMsNewProcess:SetRegua2(nFields)
+
+            for nField:=1 to nFields
+                oMsNewProcess:IncRegua2()
+                nFieldTrg:=ZOG->(fieldPos(aTmpStruct[nField][DBS_NAME]))
+                if (nFieldTrg>0)
+                    if ("ZOG_SEQFOR"==aTmpStruct[nField][DBS_NAME])
+                        nFieldSeq:=nFieldTrg
+                    elseif ("ZOG_ENABLE"==aTmpStruct[nField][DBS_NAME])
+                        nFieldEnable:=nFieldTrg
+                    endif
+                    aAdd(aFieldPos,{nField,nFieldTrg})
+                endif
+            next nField
+
+            nFields:=len(aFieldPos)
+
+            begin transaction
+
+                oMsNewProcess:SetRegua2(0)
+
+                while (cTmpAlias)->(!eof())
+                    oMsNewProcess:IncRegua2()
+                    cZOGConta:=(cTmpAlias)->ZOG_CONTA
+                    lZOGFound:=ZOG->(dbSeek(cZOGKeySeek+cZOGConta,.F.))
+                    lAddNew:=(!lZOGFound)
+                    if ZOG->(recLock("ZOG",lAddNew))
+                        ZOG->ZOG_FILIAL:=cZOGFilial
+                        for nField:=1 to nFields
+                            nFieldSrc:=aFieldPos[nField][1]
+                            nFieldTrg:=aFieldPos[nField][2]
+                            uSrc:=(cTmpAlias)->(fieldGet(nFieldSrc))
+                            if ((nFieldTrg==nFieldSeq).or.(nFieldTrg==nFieldEnable))
+                                if (lZOGFound)
+                                    loop
+                                endif
+                            endif
+                            ZOG->(fieldPut(nFieldTrg,uSrc))
+                        next nField
+                        ZOG->(msUnLock())
+                    endif
+                    (cTmpAlias)->(dbSkip())
+                end while
+
+            end transaction
+
+        endif
+
+        if (select(cTmpAlias)>0)
+            (cTmpAlias)->(dbCloseArea())
+            dbSelectArea("ZOG")
+        endif
+
+    end sequence
+
+    return(lRet)
+
+static function getQuery(cEmp as character,cFil as character,cVersao as character,cRevisa as character,cAnoRef as character) as character
+
+    local cAlias    as character
+
+    local cSQLPath  as character
+    local cSQLFile  as character
+    local cSQLQuery as character
+
+    if (IsBlind())
+        cSQLPath:="\tmp\"
+    else
+        cSQLPath:=getTempPath()
+        if (!right(cSQLPath,1)=="\")
+            cSQLPath+="\"
+        endif
+    endif
+    cSQLPath+="BIA662\SQL\"
+
+    cAlias:=getNextAlias()
+
+    beginSQL alias cAlias
+        SELECT %exp:cVersao% AS ZOG_VERSAO
+              ,%exp:cRevisa% AS ZOG_REVISA
+              ,%exp:cAnoRef% AS ZOG_ANOREF
+              ,'000000'      AS ZOG_SEQFOR
+              ,CT1.CT1_CONTA AS ZOG_CONTA
+              ,'0'             AS ZOG_ENABLE
+          FROM %table:CT1% CT1
+         WHERE CT1.%notDel%
+           AND CT1.CT1_FILIAL=%xFilial:CT1%
+           AND CT1_CLASSE='1' 
+           AND CT1_BLOQ<>'1' 
+           AND (LEN(CT1.CT1_CONTA)<=5)
+      ORDER BY CT1.CT1_FILIAL
+              ,CT1.CT1_CONTA              
+    endSQL
+
+    cSQLQuery:=getLastQuery()[2]
+    
+    A35():writeSQLFile(@cSQLQuery,@cEmp,@cFil,"bia662","00","qry_final",@cSQLPath,@cSQLFile)
+
+    return(cAlias)
+
+procedure U_BIA662Excel()
+    
+    local aArea     as array
+    local aAreaZOG  as array
+    
+    local oPergunte     as object
+    
+    aArea:=getArea()
+    aAreaZOG:=ZOG->(getArea())
+    if (__TWPCOFiltroPeriodo():Pergunte())
+        oPergunte:=__TWPCOFiltroPeriodo():Get()
+        BIA662Excel(@oPergunte)
+    endif
+    
+    restArea(aAreaZOG)
+    restArea(aArea)
+    
+    return
+
+static procedure BIA662Excel(oPergunte as object)
+
+    local aZOGQuery        as array
+
+    local cVersao       as character
+    local cRevisa       as character
+    local cAnoRef       as character
+
+    local cXMLPath      as character
+    local cXMLFile      as character
+    local cExcelTitle   as character
+
+    local cServerIP     as character
+    local cEnvServer    as character
+
+    local cZOGOrder     as character
+    local cZOGFilial    as character
+    local cZOGFilter    as character
+    local cZOGKeySeek   as character
+
+    local lDev          as logical
+    local lPicture      as logical
+    local lX3Titulo     as logical
+    local leecView      as logical
+
+    local nZOGOrder     as numeric
+
+    cVersao:=left(oPergunte:cVersao,getSX3Cache("ZOG_VERSAO","X3_TAMANHO"))
+    cRevisa:=left(oPergunte:cRevisa,getSX3Cache("ZOG_REVISA","X3_TAMANHO"))
+    cAnoRef:=left(oPergunte:cAnoRef,getSX3Cache("ZOG_ANOREF","X3_TAMANHO"))
+
+    cZOGOrder:="ZOG_FILIAL+ZOG_VERSAO+ZOG_REVISA+ZOG_ANOREF+ZOG_CONTA+ZOG_MNEMON"
+    nZOGOrder:=retOrder("ZOG",cZOGOrder)
+
+    ZOG->(dbSetOrder(nZOGOrder))
+    
+    cZOGFilial:=xFilial("ZOG")
+    
+    cZOGKeySeek:=cZOGFilial
+    cZOGKeySeek+=cVersao
+    cZOGKeySeek+=cRevisa
+    cZOGKeySeek+=cAnoRef
+
+    ZOG->(dbSeek(cZOGKeySeek,.F.))
+
+    aZOGQuery:=array(0)
+    cZOGFilter:="ZOG_FILIAL=='"+cZOGFilial+"' .AND. ZOG_VERSAO=='"+cVersao+"' .AND. ZOG_REVISA=='"+cRevisa+"' .AND. ZOG_ANOREF=='"+cAnoRef+"'"
+
+    MsAguarde({||FilBrowse("ZOG",@aZOGQuery,cZOGFilter)},&("cCadastro"),"Obtendo dados no SGBD...")
+
+    cXMLPath:="\tmp\BIA662\XML\"
+    if (dirtools():MakeDir(cXMLPath))
+
+        cXMLFile:=A35():getXMLFile(&("cEmpAnt"),&("cFilAnt"),cXMLPath,"BIA662","00","ZOG")
+        
+        if (type("cCadastro")=="C")
+            cExcelTitle:=&("cCadastro")
+            cExcelTitle+=" :: "
+        else
+            cExcelTitle:=""
+        endif
+
+        cExcelTitle+="Empresa: "+&("cEmpAnt")
+        cExcelTitle+=" :: "
+        cExcelTitle+="Filial:  "+&("cFilAnt")
+        cExcelTitle+=" :: "
+        cExcelTitle+="Ver.: "+cVersao
+        cExcelTitle+=" :: "
+        cExcelTitle+="Rev.: "+cRevisa
+        cExcelTitle+=" :: "
+        cExcelTitle+="Ref.: "+cAnoRef
+        
+        cServerIP:=getServerIP()
+        cEnvServer:=upper(getEnvServer())
+
+        lDev:=((cServerIP=="192.168.20.18").or.("DEV"$cEnvServer))
+        if (lDev)
+            cExcelTitle+=" :: EMITIDO EM AMBIENTE DE DESENVOLVIMENTO ::"    
+        endif
+
+        lPicture:=.T.
+        lX3Titulo:=.T.
+        leecView:=.F.
+
+        ZOG->(dbSeek(cZOGKeySeek,.F.))
+
+        uToXML():QryToXML("ZOG",@cXMLFile,@cExcelTitle,@lPicture,@lX3Titulo,@leecView)
+
+    endif
+
+    EndFilBrw("ZOG",@aZOGQuery)
+
+    return
+
+class BIA662
+    static method ZOGACCSX5Filter() as character
+end class
+
+static method ZOGACCSX5Filter() class BIA662
+    local cZOGACCSX5Filter as character
+    if (stackTools():IsInCallStack("U_BIA662"))
+        cZOGACCSX5Filter:="ZOG_VERSAO=='"+ZOG_VERSAO+"'"
+        cZOGACCSX5Filter+=".AND."
+        cZOGACCSX5Filter+="ZOG_REVISA=='"+ZOG_REVISA+"'"
+        cZOGACCSX5Filter+=".AND."
+        cZOGACCSX5Filter+="ZOG_ANOREF=='"+ZOG_ANOREF+"'"
+        cZOGACCSX5Filter+=".AND."
+        cZOGACCSX5Filter+="ZOG_MNEMON<>'"+space(getSX3Cache("ZOG_MNEMON","X3_TAMANHO"))+"'"
+    else
+        cZOGACCSX5Filter:=".T."
+    endif
+    cZOGACCSX5Filter:="@#"+cZOGACCSX5Filter+"@#"
+    return(cZOGACCSX5Filter)
+
+function U_ZOGACCSX5Filter() as character
+    return(BIA662():ZOGACCSX5Filter())

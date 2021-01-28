@@ -576,21 +576,36 @@ Method GetQuerySC6() Class TBloqueioPedidoVenda
 	Local cQueryFormato	:= ""
 	Local cQueryPallet	:= ""
 	
-	cQueryFormato += " ISNULL("	+ CRLF
-	cQueryFormato += " ( SELECT TOP 1 ZZ6_VENPAL FROM "+RetSQLName("ZZ6")+" WHERE ZZ6_COD = SUBSTRING(MAX(C6_PRODUTO), 1, 2) " + CRLF
-	cQueryFormato += " AND ZZ6_FILIAL = '"+xFilial("ZZ6")+"' AND D_E_L_E_T_ = '' ) 	" + CRLF
-	cQueryFormato += " , '') FORMATO_P"+ CRLF
+//	cQueryFormato += " ISNULL("	+ CRLF
+//	cQueryFormato += " ( SELECT TOP 1 ZZ6_VENPAL FROM "+RetSQLName("ZZ6")+" WHERE ZZ6_COD = SUBSTRING(MAX(C6_PRODUTO), 1, 2) " + CRLF
+//	cQueryFormato += " AND ZZ6_FILIAL = '"+xFilial("ZZ6")+"' AND D_E_L_E_T_ = '' ) 	" + CRLF
+//	cQueryFormato += " , '') FORMATO_P"+ CRLF
+	cQueryFormato += "  PALETIZADO='N'"+ CRLF
 	
-	cQueryPallet += " ISNULL("	+ CRLF
-	cQueryPallet += " (SELECT TOP 1 CASE WHEN (															"+ CRLF
-	cQueryPallet +=	"		(cast(MAX(C6_QTDVEN) as decimal(15,2))/cast(B1_CONV as decimal(15,2)))		"+ CRLF
-	cQueryPallet +=	"		% cast(B1_YDIVPA as decimal(15,2))                                      	"+ CRLF
-	cQueryPallet +=	"	  ) = 0 Or (MAX(C6_QTDVEN) = MAX(C6_YQTDSUG))                            	    "+ CRLF
-	cQueryPallet +=	"	 THEN 'S' ELSE 'N' END 	   		                                          		"+ CRLF
-	cQueryPallet += " FROM "+RetSQLName("SB1")+" WHERE B1_COD = MAX(C6_PRODUTO) AND	D_E_L_E_T_ 	= '' 	"+ CRLF
-	cQueryPallet += " AND B1_FILIAL = '"+xFilial("SB1")+"' )											"+ CRLF
-	cQueryPallet += " , '') PALETIZADO 																	"+ CRLF
 	
+	
+	cQueryPallet += " FORMATO_P=CASE WHEN (																"+ CRLF
+	cQueryPallet += " (SELECT count(*)  FROM																"+ CRLF
+	cQueryPallet += " (SELECT PAL=  CASE WHEN (																"+ CRLF
+	cQueryPallet +=	"		(cast((C6_QTDVEN) as decimal(15,2))/cast(B1_CONV as decimal(15,2)))				"+ CRLF
+	cQueryPallet +=	"		% cast(B1_YDIVPA as decimal(15,2))                       		               	"+ CRLF
+	cQueryPallet +=	"	  ) = 0 Or C6_QTDVEN = C6_YQTDSUG		           		 	                	    "+ CRLF
+	cQueryPallet +=	"	 THEN 'S' ELSE 'N' END, 	   		                     	                     		"+ CRLF
+	cQueryPallet +=	"	 FORMATO_P=ZZ6_VENPAL 	   		                     	                     		"+ CRLF
+	cQueryPallet += " 	FROM "+RetSQLName("SC6")+" A 														"+ CRLF
+	cQueryPallet += " 	JOIN "+RetSQLName("SB1")+" B on B1_COD = C6_PRODUTO AND B.D_E_L_E_T_	= ''		"+ CRLF
+	cQueryPallet += " 	JOIN "+RetSQLName("ZZ6")+" C on ZZ6_COD = SUBSTRING(C6_PRODUTO, 1, 2) AND C.D_E_L_E_T_	= ''		"+ CRLF
+	cQueryPallet += " 	WHERE 	C6_FILIAL	= '"+xFilial("SC6")+"' 											"+ CRLF
+	cQueryPallet += " 	AND C6_NUM 			= '"+::cNumPed+"' 												"+ CRLF
+	cQueryPallet += " 	AND A.D_E_L_E_T_ 	= '' 															"+ CRLF
+	cQueryPallet += " 	AND A.C6_BLQ	 	= '' 															"+ CRLF
+	cQueryPallet += " )AA where PAL 		= 'N'	 AND FORMATO_P = 'S' 									"+ CRLF
+	cQueryPallet += " 	 )	> 0																				"+ CRLF
+	cQueryPallet += " 	)    																				"+ CRLF
+	cQueryPallet += " 	THEN 'S' ELSE 'N' END 	     														"+ CRLF
+		
+	conout(cQueryPallet)
+
 	cQueryDupli += " ISNULL((																			"+ CRLF
 	cQueryDupli += " select TOP 1 F4_DUPLIC from "+RetSQLName("SF4")+" 									"+ CRLF
 	cQueryDupli += " where 																				"+ CRLF
@@ -669,7 +684,7 @@ Method GetQuerySC6() Class TBloqueioPedidoVenda
 	cQuery +=" SUM(C6_QTDVEN) VOLUME,                                                                                    														"+ CRLF
 	cQuery +=" MAX(C6_YMOTREJ) MOTREJ,  
 	cQuery +=" MAX(C6_YMOTFRA) MOTFRA,  
-	                                                                                  															"+ CRLF
+	
 	
 	cQuery +=" CASE WHEN EXISTS(                                                                                         														"+ CRLF
 	cQuery +="	SELECT 1 FROM "+RetSQLName("ZA6")+" ZA6 WHERE ZA6_RODAPE in                                                       												"+ CRLF

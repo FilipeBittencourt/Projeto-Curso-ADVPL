@@ -1,0 +1,675 @@
+#include "totvs.ch"
+#include "parmtype.ch"
+#include "jsonhash.ch"
+#include "jsonarray.ch"
+
+static aZOEStack        as array
+
+static lOrcamentoInit   as logical
+
+static oMnemonicos      as object
+
+class A35
+
+    static method OrcamentoInit(cVersao as character,cRevisa as character,cAnoRef as character) as object
+    static method OrcamentoClose() as object
+
+    static method receitaBruta(cMes as character) as numeric
+    static method receitaBrutaDRE(cMes as character) as numeric
+
+    static method giroMedio(cMes as character) as numeric
+    static method giroFornecedor(cMes as character) as numeric
+
+    static method diasDeCaixa(cMes as character) as numeric
+
+    static method receitaLiquidaDRE() as numeric
+
+    static method custoVariavel() as numeric
+
+    static method estoqueMP() as numeric
+
+    static method CPP() as numeric
+    static method CVPP() as numeric
+    static method CPV() as numeric
+
+    static method getZOEVariavel(cVariavel as character,cMes as character) as numeric
+
+    static method setValA(cMnemonico as character,aValue as array)
+    static method getValA(cMnemonico as character,aDefault as array) as array
+
+    static method setValB(cMnemonico as character,bValue as block)
+    static method getValB(cMnemonico as character,bDefault as block) as block
+
+    static method setValC(cMnemonico as character,cValue as character)
+    static method getValC(cMnemonico as character,cDefault as character) as character
+
+    static method setValD(cMnemonico as character,dValue as date)
+    static method getValD(cMnemonico as character,dDefault as date) as date
+
+    static method setValL(cMnemonico as character,lValue as logical)
+    static method getValL(cMnemonico as character,lDefault as logical) as logical
+
+    static method setValN(cMnemonico as character,nValue as numeric)
+    static method getValN(cMnemonico as character,nDefault as numeric) as numeric
+
+    static method setValO(cMnemonico as character,oValue as object)
+    static method getValO(cMnemonico as character,oDefault as object) as object
+
+    static method setMnemonico(cMnemonico as character,xValue)
+    static method getMnemonico(cMnemonico as character,xDefault)
+
+    static method breakError(oError as object,cEmp as character,cFil as character,cMsg as character) 
+
+    static method tmpTableName(cTableName) as character
+    
+    static method getSQLFile(cEmp as character,cFil as character,cSQLPath as character,cProcName as character,cSeq as character,cSQLName as character) as character
+    static method writeSQLFile(cSQLQuery as character,cEmp as character,cFil as character,cProcName as character,cSeq as character,cSQLName as character,cSQLPath as character,cSQLFile as character) as logical
+
+    static method getXMLFile(cEmp,cFil,cXMLPath,cProcName,cSeq,cXMLName) as character
+
+end class
+
+static method OrcamentoInit(cVersao,cRevisa,cAnoRef) class A35
+    paramtype cVersao as character
+    paramtype cRevisa as character
+    paramtype cAnoRef as character
+    DEFAULT lOrcamentoInit:=.F.
+    DEFAULT oMnemonicos:=JSONArray():New()
+    A35():OrcamentoClose()
+    if (!lOrcamentoInit)
+        oMnemonicos:Set("cVersao",cVersao)
+        oMnemonicos:Set("cRevisa",cRevisa)
+        oMnemonicos:Set("cAnoRef",cAnoRef)
+        lOrcamentoInit:=.T.
+    endif
+    return(oMnemonicos)
+
+static method OrcamentoClose() class A35
+    DEFAULT aZOEStack:=array(0)
+    DEFAULT oMnemonicos:=JSONArray():New()
+    oMnemonicos:Clear()
+    aSize(aZOEStack,0)
+    lOrcamentoInit:=.F.
+    return(oMnemonicos)
+
+static method receitaBruta(cMes) class A35
+
+    local aArea         as array
+    
+    local cAlias        as character
+
+    local cVersao       as character
+    local cRevisa       as character
+    local cAnoRef       as character
+
+    local cExpMes       as character
+    local cExpSelect    as character
+
+    local nReceitaBruta as numeric
+
+    DEFAULT cMes:=""
+    paramtype cMes as character optional
+
+    begin sequence
+
+        DEFAULT lOrcamentoInit:=.F.
+        if (!lOrcamentoInit)
+            break
+        endif
+
+        aArea:=getArea()
+
+        cVersao:=oMnemonicos:Get("cVersao","")
+        cRevisa:=oMnemonicos:Get("cRevisa","")
+        cAnoRef:=oMnemonicos:Get("cAnoRef","")
+
+        if (empty(cMes))
+            cExpMes:="(1=1)"
+            cExpSelect:=" SUM(RECEITA.VALOR) "
+        else
+            cExpMes:="(RIGHT(LEFT(ZBZ.ZBZ_DATA,6),2)='"+cMes+"')"
+            cExpSelect:=" RECEITA.VALOR "
+        endif
+        cExpMes:="%"+cExpMes+"%"
+        cExpSelect:="%"+cExpSelect+"%"
+
+        cAlias:=getNextAlias()
+
+        beginSQL alias cAlias
+
+            %noParser%
+
+            WITH RECEITA AS
+            (
+                    SELECT LEFT(ZBZ.ZBZ_DATA,6)		    AS PERIODO
+                           ,(SUM(ZBZ.ZBZ_VALOR)*(-1))   AS VALOR
+                      FROM %table:ZBZ% ZBZ
+                     WHERE ZBZ.ZBZ_FILIAL=%xFilial:ZBZ%
+                       AND ZBZ.ZBZ_VERSAO=%exp:cVersao%
+                       AND ZBZ.ZBZ_REVISA=%exp:cRevisa%
+                       AND ZBZ.ZBZ_ANOREF=%exp:cAnoRef%
+                       AND ZBZ.ZBZ_ORIPRC='RECEITA'
+                       AND LEFT(ZBZ.ZBZ_DEBITO,3)='411'
+                       AND (%exp:cExpMes%)
+                       AND ZBZ.%notDel%
+                  GROUP BY ZBZ.ZBZ_FILIAL
+                           ,LEFT(ZBZ.ZBZ_DATA,6)
+                  UNION ALL
+                    SELECT LEFT(ZBZ.ZBZ_DATA,6) AS PERIODO
+                           ,SUM(ZBZ.ZBZ_VALOR)  AS VALOR
+                      FROM %table:ZBZ% ZBZ
+                     WHERE ZBZ.ZBZ_FILIAL=%xFilial:ZBZ%
+                       AND ZBZ.ZBZ_VERSAO=%exp:cVersao%
+                       AND ZBZ.ZBZ_REVISA=%exp:cRevisa%
+                       AND ZBZ.ZBZ_ANOREF=%exp:cAnoRef%
+                       AND ZBZ.ZBZ_ORIPRC='RECEITA'
+                       AND LEFT(ZBZ.ZBZ_CREDIT,3)='411'
+                       AND (%exp:cExpMes%)
+                       AND ZBZ.%notDel%
+                  GROUP BY ZBZ.ZBZ_FILIAL
+                           ,LEFT(ZBZ.ZBZ_DATA,6)
+            )
+            SELECT %exp:cExpSelect% AS VALOR FROM RECEITA
+
+        endSQL
+
+        nReceitaBruta:=(cAlias)->VALOR
+
+        restArea(aArea)
+
+    end sequence
+
+    DEFAULT nReceitaBruta:=0
+
+    return(nReceitaBruta)
+
+static method receitaBrutaDRE(cMes) class A35
+
+    local aArea             as array
+    
+    local cAlias            as character
+
+    local cVersao           as character
+    local cRevisa           as character
+    local cAnoRef           as character
+
+    local cExpMes           as character
+    local cExpSelect        as character
+
+    local nReceitaBrutaDRE  as numeric
+
+    DEFAULT cMes:=""
+    paramtype cMes as character optional
+
+    begin sequence
+
+        if (!lOrcamentoInit)
+            break
+        endif
+
+        aArea:=getArea()
+
+        cVersao:=oMnemonicos:Get("cVersao","")
+        cRevisa:=oMnemonicos:Get("cRevisa","")
+        cAnoRef:=oMnemonicos:Get("cAnoRef","")
+
+        if (empty(cMes))
+            cExpMes:="(1=1)"
+            cExpSelect:=" SUM(RECEITA.VALOR) "
+        else
+            cExpMes:="(RIGHT(LEFT(ZBZ.ZBZ_DATA,6),2)='"+cMes+"')"
+            cExpSelect:=" RECEITA.VALOR "
+        endif
+        cExpMes:="%"+cExpMes+"%"
+        cExpSelect:="%"+cExpSelect+"%"
+
+        cAlias:=getNextAlias()
+
+        beginSQL alias cAlias
+
+            %noParser%
+
+            WITH RECEITA AS
+            (
+                    SELECT LEFT(ZBZ.ZBZ_DATA,6)		    AS PERIODO
+                           ,(SUM(ZBZ.ZBZ_VALOR)*(-1))   AS VALOR
+                      FROM %table:ZBZ% ZBZ
+                     WHERE ZBZ.ZBZ_FILIAL=%xFilial:ZBZ%
+                       AND ZBZ.ZBZ_VERSAO=%exp:cVersao%
+                       AND ZBZ.ZBZ_REVISA=%exp:cRevisa%
+                       AND ZBZ.ZBZ_ANOREF=%exp:cAnoRef%
+                       AND ZBZ.ZBZ_ORIPRC='RECEITA'
+                       AND LEFT(ZBZ.ZBZ_DEBITO,3)='411'
+                       AND (%exp:cExpMes%)
+                       AND ZBZ.%notDel%
+                  GROUP BY ZBZ.ZBZ_FILIAL
+                           ,LEFT(ZBZ.ZBZ_DATA,6)
+                  UNION ALL
+                    SELECT LEFT(ZBZ.ZBZ_DATA,6) AS PERIODO
+                           ,SUM(ZBZ.ZBZ_VALOR)  AS VALOR
+                      FROM %table:ZBZ% ZBZ
+                     WHERE ZBZ.ZBZ_FILIAL=%xFilial:ZBZ%
+                       AND ZBZ.ZBZ_VERSAO=%exp:cVersao%
+                       AND ZBZ.ZBZ_REVISA=%exp:cRevisa%
+                       AND ZBZ.ZBZ_ANOREF=%exp:cAnoRef%
+                       AND ZBZ.ZBZ_ORIPRC='RECEITA'
+                       AND LEFT(ZBZ.ZBZ_CREDIT,3)='411'
+                       AND (%exp:cExpMes%)
+                       AND ZBZ.%notDel%
+                  GROUP BY ZBZ.ZBZ_FILIAL
+                           ,LEFT(ZBZ.ZBZ_DATA,6)
+            )
+            SELECT %exp:cExpSelect% AS VALOR FROM RECEITA
+
+        endSQL
+
+        nReceitaBrutaDRE:=(cAlias)->VALOR
+
+        restArea(aArea)
+
+    end sequence
+
+    DEFAULT nReceitaBrutaDRE:=0
+
+    return(nReceitaBrutaDRE)
+
+static method giroMedio(cMes) class A35
+    local nGiroMedio as numeric
+    paramtype cMes as character
+    nGiroMedio:=A35():getZOEVariavel("yGiroMedio",cMes)
+    return(nGiroMedio)
+
+static method giroFornecedor(cMes) class A35
+    local nGiroFornecedor as numeric
+    paramtype cMes as character
+    nGiroFornecedor:=A35():getZOEVariavel("yGiroFornecedor",cMes)
+    return(nGiroFornecedor)
+
+static method diasDeCaixa(cMes) class A35
+    local nDiasDeCaixa as numeric
+    paramtype cMes as character
+    nDiasDeCaixa:=A35():getZOEVariavel("yDiasDeCaixa",cMes)
+    return(nDiasDeCaixa)
+
+static method receitaLiquidaDRE() class A35
+    local nReceitaLiquidaDRE as numeric
+    DEFAULT nReceitaLiquidaDRE:=0
+    return(nReceitaLiquidaDRE)
+
+static method custoVariavel() class A35
+    local nCustoVariavel as numeric
+    DEFAULT nCustoVariavel:=0
+    return(nCustoVariavel)
+
+static method estoqueMP() class A35
+    local nEstqueMP as numeric
+    DEFAULT nEstqueMP:=0
+    return(nEstqueMP)
+
+static method CPP() class A35
+    local nCPP as numeric
+    DEFAULT nCPP:=0
+    return(nCPP)
+
+static method CVPP() class A35
+    local nCVPP as numeric
+    DEFAULT nCVPP:=0
+    return(nCVPP)
+
+static method CPV() class A35
+    local nCPV as numeric
+    DEFAULT nCPV:=0
+    return(nCPV)
+
+static method getZOEVariavel(cVariavel,cMes) class A35
+
+    local aZOEData      as array
+
+    local cAlias        as array
+
+    local cVersao       as character
+    local cRevisa       as character
+    local cAnoRef       as character
+
+    local nAT           as numeric
+    local nValue        as numeric
+    local nATValue      as numeric
+    local nATVarivel    as numeric
+
+    local nZOERecNo     as numeric
+
+    paramtype cVariavel as character
+    paramtype cMes      as character
+
+    begin sequence
+
+        if (empty(cVariavel))
+            break
+        endif
+
+        if (empty(cMes))
+            break
+        endif
+
+        DEFAULT aZOEStack:=array(0)
+
+        cMes:=PadL(cMes,2,"0")
+        nATValue:=ZOE->(FieldPos("ZOE_MES"+cMes))
+        if (nATValue==0)
+            break
+        endif
+
+        nATVarivel:=ZOE->(FieldPos("ZOE_VARIAV"))
+        if (nATVarivel==0)
+            break
+        endif
+
+        nAT:=aScan(aZOEStack,{|x|(x[nATVarivel]==cVariavel)})
+
+        if (nAT==0)
+
+            DEFAULT lOrcamentoInit:=.F.
+            if (!lOrcamentoInit)
+                break
+            endif
+
+            aArea:=getArea()
+
+            cVersao:=oMnemonicos:Get("cVersao","")
+            cRevisa:=oMnemonicos:Get("cRevisa","")
+            cAnoRef:=oMnemonicos:Get("cAnoRef","")
+
+            cAlias:=getNextAlias()
+            
+            beginSQL alias cAlias
+
+                SELECT ZOE.R_E_C_N_O_ ZOERECNO 
+                  FROM %table:ZOE% ZOE
+                WHERE ZOE.%notDel%
+                  AND ZOE.ZOE_FILIAL=%xFilial:ZOE%
+                  AND ZOE.ZOE_VERSAO=%exp:cVersao%
+                  AND ZOE.ZOE_REVISA=%exp:cRevisa%
+                  AND ZOE.ZOE_ANOREF=%exp:cAnoRef%
+                  AND ZOE_VARIAV=%exp:cVariavel%
+
+            endSQL
+
+            nZOERecNo:=(cAlias)->ZOERECNO
+            (cAlias)->(dbCloseArea())
+            restArea(aArea)
+
+            ZOE->(MsGoTo(nZOERecNo))
+
+            aZOEData:=ZOE->(__ArrayUtils():RegToArray("ZOE",nZOERecNo))
+
+            ZOE->(aAdd(aZOEStack,aZOEData))
+            nAT:=Len(aZOEStack)
+
+        endif
+
+        nValue:=aZOEStack[nAT][nATValue]
+
+    end sequence
+
+    DEFAULT nValue:=0
+    
+    return(nValue)
+
+static method setMnemonico(cMnemonico,xValue) class A35
+    paramtype cMnemonico as character
+    DEFAULT oMnemonicos:=JSONArray():New()
+    return(oMnemonicos:Set(cMnemonico,xValue))
+
+static method getMnemonico(cMnemonico,xDefault) class A35
+    paramtype cMnemonico as character
+    DEFAULT oMnemonicos:=JSONArray():New()
+    return(oMnemonicos:Get(cMnemonico,xDefault))
+
+static method setValA(cMnemonico,aValue) class A35
+    paramtype cMnemonico    as character
+    paramtype aValue        as array
+    DEFAULT oMnemonicos:=JSONArray():New()
+    return(A35():setMnemonico(cMnemonico,aValue))
+
+static method getValA(cMnemonico,aDefault) class A35
+    local aValRet   as array
+    paramtype cMnemonico    as character
+    DEFAULT aDefault:=array(0)
+    paramtype aDefault      as array optional
+    DEFAULT oMnemonicos:=JSONArray():New()
+    aValRet:=A35():getMnemonico(cMnemonico,aDefault)
+    return(aValRet)
+
+static method setValB(cMnemonico,bValue) class A35
+    paramtype cMnemonico    as character
+    paramtype bValue        as block
+    DEFAULT oMnemonicos:=JSONArray():New()
+    return(A35():setMnemonico(cMnemonico,bValue))
+
+static method getValB(cMnemonico,bDefault) class A35
+    local bValRet   as block
+    paramtype cMnemonico    as character
+    DEFAULT bDefault:={||}
+    paramtype bDefault      as block optional
+    DEFAULT oMnemonicos:=JSONArray():New()
+    bValRet:=A35():getMnemonico(cMnemonico,bDefault)
+    return(bValRet)
+
+static method setValC(cMnemonico,cValue) class A35
+    paramtype cMnemonico    as character
+    paramtype cValue        as character
+    DEFAULT oMnemonicos:=JSONArray():New()
+    return(A35():setMnemonico(cMnemonico,cValue))
+
+static method getValC(cMnemonico,cDefault) class A35
+    local cValRet   as character
+    paramtype cMnemonico    as character
+    DEFAULT cDefault:=""
+    paramtype cDefault      as character optional
+    DEFAULT oMnemonicos:=JSONArray():New()
+    cValRet:=A35():getMnemonico(cMnemonico,bDefault)
+    return(cValRet)
+
+static method setValD(cMnemonico,dValue) class A35
+    paramtype cMnemonico    as character
+    paramtype dValue        as date
+    DEFAULT oMnemonicos:=JSONArray():New()
+    return(A35():setMnemonico(cMnemonico,dValue))
+
+static method getValD(cMnemonico,dDefault) class A35
+    local dValRet   as date
+    paramtype cMnemonico    as character
+    DEFAULT dDefault:=CtoD("")
+    paramtype dDefault      as date optional
+    DEFAULT oMnemonicos:=JSONArray():New()
+    dValRet:=A35():getMnemonico(cMnemonico,dDefault)
+    return(dValRet)
+
+static method setValL(cMnemonico,lValue) class A35
+    paramtype cMnemonico    as character
+    paramtype lValue        as logical
+    DEFAULT oMnemonicos:=JSONArray():New()
+    return(A35():setMnemonico(cMnemonico,lValue))
+
+static method getValL(cMnemonico,lDefault) class A35
+    local lValRet   as logical
+    paramtype cMnemonico    as character
+    DEFAULT lDefault:=.F.
+    paramtype lDefault      as date optional
+    DEFAULT oMnemonicos:=JSONArray():New()
+    lValRet:=A35():getMnemonico(cMnemonico,lDefault)
+    return(lValRet)
+
+static method setValN(cMnemonico,nValue) class A35
+    paramtype cMnemonico    as character
+    paramtype nValue        as numeric
+    DEFAULT oMnemonicos:=JSONArray():New()
+    return(A35():setMnemonico(cMnemonico,nValue))
+
+static method getValN(cMnemonico,nDefault) class A35
+    local nValRet   as logical
+    paramtype cMnemonico    as character
+    DEFAULT nDefault:=0
+    paramtype nDefault      as numeric optional
+    DEFAULT oMnemonicos:=JSONArray():New()
+    nValRet:=A35():getMnemonico(cMnemonico,nDefault)
+    return(nValRet)
+
+static method setValO(cMnemonico,oValue) class A35
+    paramtype cMnemonico    as character
+    paramtype oValue        as object
+    DEFAULT oMnemonicos:=JSONArray():New()
+    return(A35():setMnemonico(cMnemonico,oValue))
+
+static method getValO(cMnemonico,oDefault) class A35
+    local oValRet   as logical
+    paramtype cMnemonico    as character
+    DEFAULT oDefault:=JSONArray():New()
+    paramtype oDefault      as object optional
+    DEFAULT oMnemonicos:=JSONArray():New()
+    oValRet:=A35():getMnemonico(cMnemonico,oDefault)
+    return(oValRet)
+
+static method breakError(oError,cEmp,cFil,cMsg) class A35
+	paramtype oError as object
+	paramtype cEmp as character
+	paramtype cFil as character
+	paramtype cMsg as character optional
+	return(breakError(@oError,@cEmp,@cFil,@cMsg))
+
+static procedure breakError(oError as object,cEmp as character,cFil as character,cMsg as character)
+
+	local cCRLF as character
+
+	cCRLF:=CRLF
+
+	if (valtype(oError)=="O")
+		cMsg:="Problemas no processamento. Empresa:["+cEmp+"] :: Filial:["+cFil+"]"
+		cMsg+=cCRLF
+		cMsg+=oError:Description
+		cMsg+=cCRLF
+		cMsg+=oError:ErrorStack
+		cMsg+=cCRLF
+		cMsg+=oError:ErrorEnv
+	endif
+
+	break
+
+	return
+
+static method tmpTableName(cTableName) class A35
+
+    local cTmpTableName as character
+
+    paramtype cTableName as character
+
+	cTmpTableName:="##"
+    cTmpTableName+=cTableName
+	cTmpTableName+="_"
+	cTmpTableName+=DtoS(Date())
+	cTmpTableName+="_"
+	cTmpTableName+=StrTran(Time(),":","")
+	cTmpTableName+="_"
+	cTmpTableName+=StrTran(cValtoChar(Seconds()),".","")
+	cTmpTableName+="_"
+	cTmpTableName+=cValtoChar(Randomize(1,999))
+
+    return(cTmpTableName)
+
+static method getSQLFile(cEmp,cFil,cSQLPath,cProcName,cSeq,cSQLName) class A35
+
+	local cSQLFile as character
+
+    DEFAULT cEmp:=&("cEmpAnt")
+    paramtype cEmp      as character optional   
+    
+    DEFAULT cFil:=&("cFilAnt")
+    paramtype cFil      as character optional   
+    
+    DEFAULT cSQLPath:=if(IsBlind(),"\tmp\",getTempPath())
+    paramtype cSQLPath  as character optional   
+    
+    DEFAULT cProcName:=if(empty(FunName()),ProcName(1),FunName())
+    paramtype cProcName as character optional   
+    
+    DEFAULT cSeq:="00"
+    paramtype cSeq      as character optional   
+    
+    DEFAULT cSQLName:=cProcName
+    paramtype cSQLName  as character optional   
+
+	cSQLFile:=cSQLPath
+	cSQLFile+=cEmp
+	cSQLFile+="_"
+	cSQLFile+=cFil
+	cSQLFile+="_"
+	cSQLFile+=DtoS(Date())
+	cSQLFile+="_"
+	cSQLFile+=StrTran(Time(),":","")
+	cSQLFile+="_"
+	cSQLFile+=PadL(StrTran(cValtoChar(Seconds()),".",""),6,"0")
+	cSQLFile+="_"
+    cSQLFile+=strZero(Randomize(1,999),3)
+    cSQLFile+="_"
+	cSQLFile+=cSeq
+	cSQLFile+="_"
+	cSQLFile+=cProcName
+	cSQLFile+="_"
+	cSQLFile+=cSQLName
+	cSQLFile+=".sql"
+
+	return(cSQLFile)
+
+static method writeSQLFile(cSQLQuery,cEmp,cFil,cProcName,cSeq,cSQLName,cSQLPath,cSQLFile) class A35
+	
+    local cTCSQLError       as character
+    local cFileTCSQLError   as character
+    
+    local lWriteOK          as logical
+
+    if (empty(cSQLQuery))
+        cSQLQuery:=getLastQuery()[2]
+    endif
+    paramtype cSQLQuery as character optional
+
+    DEFAULT cEmp:=&("cEmpAnt")
+    paramtype cEmp      as character optional   
+    
+    DEFAULT cFil:=&("cFilAnt")
+    paramtype cFil      as character optional   
+    
+    DEFAULT cProcName:=if(empty(FunName()),ProcName(1),FunName())
+    paramtype cProcName as character optional   
+    
+    DEFAULT cSeq:="00"
+    paramtype cSeq      as character optional   
+    
+    DEFAULT cSQLName:=cProcName
+    paramtype cSQLName  as character optional   
+
+    DEFAULT cSQLPath:=if(IsBlind(),"\tmp\",getTempPath())
+    paramtype cSQLPath  as character
+
+    paramtype cSQLFile  as character optional
+
+    if (dirtools():MakeDir(cSQLPath))
+        if (empty(cSQLFile))
+            cSQLFile:=A35():getSQLFile(@cEmp,@cFil,@cSQLPath,@cProcName,@cSeq,@cSQLName)
+		endif
+        lWriteOK:=memoWrite(cSQLFile,cSQLQuery)
+		cTCSQLError:=TCSQLError()
+		if (!empty(cTCSQLError))
+			cFileTCSQLError:=strTran(cSQLFile,".sql",".error.log")
+            memoWrite(cFileTCSQLError,cTCSQLError)
+		endif
+	endif
+    
+    DEFAULT lWriteOK:=.F.
+    
+    return(lWriteOK) 
+
+static method getXMLFile(cEmp,cFil,cXMLPath,cProcName,cSeq,cXMLName) class A35
+    local cXMLFile as character
+    cXMLFile:=A35():getSQLFile(cEmp,cFil,cXMLPath,cProcName,cSeq,cXMLName)
+    cXMLFile:=strTran(cXMLFile,".sql",".xml")
+    return(cXMLFile)

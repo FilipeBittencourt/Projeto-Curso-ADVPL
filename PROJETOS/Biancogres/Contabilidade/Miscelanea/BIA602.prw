@@ -133,7 +133,7 @@ Static Function fBIA602D()
 	EndIf
 
 	xfMensCompl := ""
-	xfMensCompl += "Tipo Orçamento igual CONTABIL" + msrhEnter
+	xfMensCompl += "Tipo Orçamento igual RECEITA" + msrhEnter
 	xfMensCompl += "Status igual Aberto" + msrhEnter
 	xfMensCompl += "Data Digitação diferente de branco e menor ou igual DataBase" + msrhEnter
 	xfMensCompl += "Data Conciliação igual branco" + msrhEnter
@@ -146,7 +146,7 @@ Static Function fBIA602D()
 		AND ZB5.ZB5_VERSAO = %Exp:_cVersao%
 		AND ZB5.ZB5_REVISA = %Exp:_cRevisa%
 		AND ZB5.ZB5_ANOREF = %Exp:_cAnoRef%
-		AND RTRIM(ZB5.ZB5_TPORCT) = 'CONTABIL'
+		AND RTRIM(ZB5.ZB5_TPORCT) = 'RECEITA'
 		AND ZB5.ZB5_STATUS = 'A'
 		AND ZB5.ZB5_DTDIGT <> ''
 		AND ZB5.ZB5_DTDIGT <= %Exp:dtos(Date())%
@@ -156,7 +156,8 @@ Static Function fBIA602D()
 	EndSql
 
 	(M001)->(dbGoTop())
-	If (M001)->CONTAD <> 1
+
+	If (M001)->CONTAD <> 1 .and. 1 == 2
 		MsgALERT("A versão informada não está ativa para execução deste processo." + msrhEnter + msrhEnter + "Favor verificar o preenchimento dos campos no tabela de controle de versão conforme abaixo:" + msrhEnter + msrhEnter + xfMensCompl + msrhEnter + msrhEnter + "Favor verificar com o responsável pelo processo Orçamentário!!!")
 		_msCtrlAlt := .F.
 		_oGetDados:lInsert := .F.

@@ -148,7 +148,7 @@ ElseIf SM0->M0_CODIGO $ "01/05/14" .And. Alltrim(SD2->D2_COD) $ "5010020"	//|Tan
 	cConta3 := "41501005" 
 	
 //Gas Natural.
-ElseIf (SUBSTR(SD2->D2_CF,2,3) == "102" .AND. !SD2->D2_TES $ '515/5B5' .AND. SM0->M0_CODIGO <> '07' .AND. SD2->D2_TP <> 'PA')
+ElseIf (SUBSTR(SD2->D2_CF,2,3) == "102" .AND. !SD2->D2_TES $ '515/5B5/5B8' .AND. SM0->M0_CODIGO <> '07' .AND. SD2->D2_TP <> 'PA') //Thiago Haagensen - Ticket 29402 - Adicionada a TES 5B8 na exceção
    DbSelectArea("SB1")
    cArqSB1 := Alias()
    cIndSB1 := IndexOrd()

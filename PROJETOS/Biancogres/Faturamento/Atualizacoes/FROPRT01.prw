@@ -25,7 +25,7 @@
 @type function
 /*/
 
-User Function FROPRT01(_cProd, _cLocal, _cPedido, _cItem, _nQtdDig, _cLote, _cSegmento, _cEmpOri, _lPalete, _cCategoria, _cLotRes, _nProxLote, _cLoteAdd, _cLoteExc, _lExibirTela)
+User Function FROPRT01(_cProd, _cLocal, _cPedido, _cItem, _nQtdDig, _cLote, _cSegmento, _cEmpOri, _lPalete, _cCategoria, _cLotRes, _nProxLote, _cLoteAdd, _cLoteExc, _lExibirTela, _lDFRA)
 
 	Local aArea := GetArea()
 	Local _nSaldo
@@ -64,6 +64,7 @@ User Function FROPRT01(_cProd, _cLocal, _cPedido, _cItem, _nQtdDig, _cLote, _cSe
 	Default _cLoteAdd		:= ""
 	Default _cLoteExc		:= ""
 	Default _lExibirTela	:= .F.
+	Default	_lDFRA			:= .F.
 
 	If Type("_FROPCHVTEMPRES") <> "U" .And. !Empty(_FROPCHVTEMPRES)
 		_cUserName := _FROPCHVTEMPRES
@@ -103,7 +104,7 @@ User Function FROPRT01(_cProd, _cLocal, _cPedido, _cItem, _nQtdDig, _cLote, _cSe
 		SB1->(DbSetOrder(1))
 		IF SB1->(DbSeek(XFilial("SB1")+_cProd)) .And. !Empty(SB1->B1_YEMPEST)
 
-			_aRetPBI := U_FPBIGEMP(_cProd, _nQtdDig, _cSegmento, _cUserName, _cItem, _nPMax, _nPMin, _cEmpOri, _lPalete, _cCategoria, _cLotRes, _nProxLote, _cLoteAdd, _cLoteExc, _cPrioSaldo, _nTolerancia, _lExibirTela)
+			_aRetPBI := U_FPBIGEMP(_cProd, _nQtdDig, _cSegmento, _cUserName, _cItem, _nPMax, _nPMin, _cEmpOri, _lPalete, _cCategoria, _cLotRes, _nProxLote, _cLoteAdd, _cLoteExc, _cPrioSaldo, _nTolerancia, _lExibirTela, _lDFRA)
 
 			_aRetSaldo := _aRetPBI
 
@@ -859,14 +860,19 @@ User Function GDRESPRO(_cNRESER, _cProd, _nQuant, _cTipo, _cDocRes)
 Return _aRet
 
 //existe produto com DFRA na politica comercial ativa 
-User Function PRPCDFRA(_cData, _cProd)
+User Function PRPCDFRA(_cCliLoja, _cVend, _cData, _cProd, _cLote)
 	
 	Local _lRet 			:= .F.
 	Local _cQuery			:= ""
 	Local _cAliasTemp		:= GetNextAlias()
 	Local _aArea			:= GetArea()
 	
-	_cQuery += " SELECT TOP 1 ZA0_PDESC FROM ZA0010													"		    
+	
+	_cQuery += " SELECT TOP 1 ATIVO=[dbo].[CHECK_ATIVO_DFRA_POLITICA_DATA_01] 							"
+	_cQuery += " ('01', '"+_cCliLoja+"', '"+_cVend+"', '"+_cProd+"', '"+_cLote+"' , '"+_cData+"')		"
+	
+	
+	/*_cQuery += " SELECT TOP 1 ZA0_PDESC FROM ZA0010													"		    
 	_cQuery += " WHERE ZA0_FILIAL 		= "+ ValToSQL(xFilial("ZA0"))+"								"
 	_cQuery += " AND ZA0_TIPO			= 'DFRA'													"
 	_cQuery += " AND ZA0_CODPRO			= '"+_cProd+"'												"
@@ -874,12 +880,13 @@ User Function PRPCDFRA(_cData, _cProd)
 	_cQuery += " AND ZA0_STATUS 		= 'A' 														"
 	_cQuery += " AND D_E_L_E_T_ 		= '' 														"
 	_cQuery += " ORDER BY ZA0_MARCA																	"
+	*/
 	
 	Conout(_cQuery)
 	
 	TcQuery _cQuery New Alias (_cAliasTemp)
 
-	If !((_cAliasTemp)->(Eof()))
+	If !((_cAliasTemp)->(Eof())) .And. (_cAliasTemp)->ATIVO == 'S'
 		_lRet := .T.
 	EndIf
 

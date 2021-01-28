@@ -284,7 +284,7 @@ User Function BIAF6FOK()
 			_cEquipe	:=	GdFieldGet("Z94_EQUIPE",n)
 			_cTurno		:=	GdFieldGet("Z94_TURNO",n)				
 			_cInLinha		:=	"%('" + "L" + Substr(GdFieldGet("Z94_FORNO",n),2,2) + "')%"
-			If _cForm $ "CE/C6/BO/B9"
+			If _cForm $ "C6/BO/B9"
 				_cInLinha := "%('E03','E04')%"
 			EndIf			
 
@@ -293,7 +293,7 @@ User Function BIAF6FOK()
 			_cEquipe	:=	GdFieldGet("Z94_EQUIPE",n)
 			_cTurno		:=	M->Z94_TURNO
 			_cInLinha		:=	"%('" + "L" + Substr(GdFieldGet("Z94_FORNO",n),2,2) + "')%"
-			If _cForm $ "CE/C6/BO/B9"
+			If _cForm $ "C6/BO/B9"
 				_cInLinha := "%('E03','E04')%"
 			EndIf				
 
@@ -302,7 +302,7 @@ User Function BIAF6FOK()
 			_cEquipe	:=	M->Z94_EQUIPE
 			_cTurno		:=	GdFieldGet("Z94_TURNO",n)
 			_cInLinha		:=	"%('" + "L" + Substr(GdFieldGet("Z94_FORNO",n),2,2) + "')%"
-			If _cForm $ "CE/C6/BO/B9"
+			If _cForm $ "C6/BO/B9"
 				_cInLinha := "%('E03','E04')%"
 			EndIf			
 
@@ -311,7 +311,7 @@ User Function BIAF6FOK()
 			_cEquipe	:=	GdFieldGet("Z94_EQUIPE",n)
 			_cTurno		:=	GdFieldGet("Z94_TURNO",n)
 			_cInLinha		:=	"%('" + "L" + Substr(GdFieldGet("Z94_FORNO",n),2,2) + "')%"
-			If _cForm $ "CE/C6/BO/B9"
+			If _cForm $ "C6/BO/B9"
 				_cInLinha := "%('E03','E04')%"
 			EndIf			
 

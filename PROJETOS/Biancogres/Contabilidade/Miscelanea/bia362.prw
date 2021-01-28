@@ -235,10 +235,10 @@ Static Function fProcIntMD()
 	ET003 += "             AND ZBZ_CREDIT NOT IN('61112001','61111001') "
 	ET003 += "             AND ( ( SUBSTRING(ZBZ_DEBITO,1,1) IN('3','6') OR ZBZ_DEBITO = '41301001' ) "
 	ET003 += "              OR ( SUBSTRING(ZBZ_CREDIT,1,1) IN('3','6') OR ZBZ_CREDIT = '41301001' ) ) "
-	If cEmpAnt == "05"
-		ET003 += "             AND SUBSTRING(ZBZ_DEBITO, 1, 3) <> '615' "
-		ET003 += "             AND SUBSTRING(ZBZ_CREDIT, 1, 3) <> '615' "
-	EndIf
+	//If cEmpAnt == "05"
+	//	ET003 += "             AND SUBSTRING(ZBZ_DEBITO, 1, 3) <> '615' "
+	//	ET003 += "             AND SUBSTRING(ZBZ_CREDIT, 1, 3) <> '615' "
+	//EndIf
 	ET003 += "             AND D_E_L_E_T_ = ' ' "
 	ET003 += "       GROUP BY ZBZ_FILIAL, "
 	ET003 += "                ZBZ_DATA, "

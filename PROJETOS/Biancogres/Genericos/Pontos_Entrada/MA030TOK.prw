@@ -574,11 +574,22 @@ User Function MA030TOK()
 
 	If lRET
 		
-		If Inclui .Or. Altera
-		
-			// Preencher a categoria dos demais clientes do grupo ao alterar a categoria de um cliente
+		// Preencher a categoria dos demais clientes do grupo ao alterar a categoria de um cliente
+		If Inclui 		
+			
 			U_BFG136B()	
+			
+		elseif Altera
 		
+			DbSelectArea("SA1")
+			SA1->(DbSetOrder(1))
+			SA1->(DbSeek(xFilial("SA1")+M->A1_COD+M->A1_LOJA))
+
+			//se o usuario alterou a categoria
+			if(!Empty(M->A1_YCAT) .And. Alltrim(M->A1_YCAT) <> Alltrim(SA1->A1_YCAT))
+				U_BFG136B()
+			ENDIF
+	
 		EndIf
 
 		U_BIA863()

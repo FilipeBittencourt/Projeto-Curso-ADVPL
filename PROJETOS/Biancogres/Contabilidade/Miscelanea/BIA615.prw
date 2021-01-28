@@ -98,7 +98,11 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
 
 	Default cMsg    := ""
 
-	cSql := " SELECT B9_FILIAL, B9_COD, B9_DATA, SUM(B9_QINI) B9_QINI, SUM(B9_VINI1) B9_VINI1 "
+	cSql := " SELECT B9_FILIAL, "
+	cSql += "        SUBSTRING(B9_COD, 1, 7) + '1       ' B9_COD, "
+	cSql += "        B9_DATA, "
+	cSql += "        SUM(B9_QINI) B9_QINI, "
+	cSql += "        SUM(B9_VINI1) B9_VINI1 "
 	cSql += " FROM " + RetFullName("SB9", cEmp) + " SB9 (NOLOCK) "
 	cSql += " INNER JOIN " + RetFullName("SB1", cEmp) + " SB1 (NOLOCK) ON "
 	cSql += " ( "
@@ -109,10 +113,11 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
 	cSql += " ) "
 	cSql += " WHERE SB9.B9_FILIAL   = '" + xFilial("SB9") + "' "
 	cSql += " AND SB9.B9_DATA       = " + ValToSql(dDataFech)
-	cSql += " AND SB9.B9_QINI       <> 0 "
-	cSql += " AND SB9.B9_LOCAL NOT IN ('05') "
+	cSql += " AND SB9.B9_VINI1 <> 0 "
 	cSql += " AND SB9.D_E_L_E_T_    = '' "
-	cSql += " GROUP BY B9_FILIAL, B9_COD, B9_DATA "
+	cSql += " GROUP BY B9_FILIAL, "
+	cSql += "          SUBSTRING(B9_COD, 1, 7), "
+	cSql += "          B9_DATA "
 
 	TcQuery cSQL New Alias (cQry)
 

@@ -18,6 +18,8 @@ Data Codigo
 Data Loja
 Data Nome
 Data Segmento
+Data cUF
+
 
 Data lEspecial
 
@@ -36,7 +38,8 @@ Method FromCodLin(cCodLojSA1, cLinhaPed) Class TPedidoVendaClienteRegras
 
 	SA1->(DbSetOrder(1))
 	If SA1->(DbSeek(XFilial("SA1")+::Codigo+::Loja))
-		::Nome		:= SA1->A1_NOME
+		::Nome		:= SA1->A1_NOME		::cUF		:= SA1->A1_EST
+		
 	EndIf
 
 	_aDadCli := U_fInfCliente(cLinhaPed, ::Codigo, ::Loja)

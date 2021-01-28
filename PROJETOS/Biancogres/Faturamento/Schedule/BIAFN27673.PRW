@@ -156,7 +156,7 @@ static function BIA27673() as logical
 
         cQuery:=getQuery(if(lDev,15,2))
 
-        lRet:=u_QryToXML(@cQuery,@cFile,@cExcelTitle,@lPicture,@lX3Titulo,@leecView)
+        lRet:=uToXML():QryToXML(@cQuery,@cFile,@cExcelTitle,@lPicture,@lX3Titulo,@leecView)
         
         if (!lRet)
             break

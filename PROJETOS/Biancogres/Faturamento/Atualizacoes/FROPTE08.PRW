@@ -738,7 +738,7 @@ Static Function ProcPrc()
 	(cAlias1Det)->(DbGoTop())
 	While !(cAlias1Det)->(Eof()) 
 
-		_nPos := aScan( aWB1, {|x|  x[_NP1_PROD] ==  (cAlias1Det)->DA_PRODUTO .And. x[_NP1_LOTE] ==  (cAlias1Det)->DA_LOTECTL } )
+		_nPos := aScan( aWB1, {|x|  x[_NP1_PROD] ==  (cAlias1Det)->DA_PRODUTO .And. x[_NP1_LOTE] ==  (cAlias1Det)->DA_LOTECTL .And. x[_NP1_OPNUM] == (cAlias1Det)->D3_OP  }  )
 
 		//se lote esta marcado
 		if _nPos > 0 .And. aWB1[_nPos][_NP1_MARCA]

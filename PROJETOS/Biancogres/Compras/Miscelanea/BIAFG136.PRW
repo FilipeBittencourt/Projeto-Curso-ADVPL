@@ -1080,7 +1080,9 @@ Static Function MyOpenSM0(lShared)
 Local lOpen := .F.
 Local nLoop := 0
 
-If FindFunction( "OpenSM0Excl" )
+	lShared := .T.
+	
+/*If FindFunction( "OpenSM0Excl" )
 	For nLoop := 1 To 20
 		If OpenSM0Excl(,.F.)
 			lOpen := .T.
@@ -1088,7 +1090,8 @@ If FindFunction( "OpenSM0Excl" )
 		EndIf
 		Sleep( 500 )
 	Next nLoop
-Else
+Else*/
+
 	For nLoop := 1 To 20
 		dbUseArea( .T., , "SIGAMAT.EMP", "SM0", lShared, .F. )
 
@@ -1099,7 +1102,8 @@ Else
 		EndIf
 		Sleep( 500 )
 	Next nLoop
-EndIf
+	
+//EndIf
 
 If !lOpen
 	MsgStop( "Não foi possível a abertura da tabela " + ;

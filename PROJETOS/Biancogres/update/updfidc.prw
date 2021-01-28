@@ -293,6 +293,12 @@ If ( lOpen := MyOpenSm0(.T.) )
 			oProcess:IncRegua1( "Helps de Campo" + " - " + SM0->M0_CODIGO + " " + SM0->M0_NOME + " ..." )
 			FSAtuHlp()
 
+			//------------------------------------
+			// Atualiza o dicionário SX6
+			//------------------------------------
+			oProcess:IncRegua1( "Dicionário de parâmetros" + " - " + SM0->M0_CODIGO + " " + SM0->M0_NOME + " ..." )
+			FSAtuSX6()
+
 			AutoGrLog( Replicate( "-", 128 ) )
 			AutoGrLog( " Data / Hora Final.: " + DtoC( Date() ) + " / " + Time() )
 			AutoGrLog( Replicate( "-", 128 ) )
@@ -977,3 +983,406 @@ Return cRet
 
 
 /////////////////////////////////////////////////////////////////////////////
+
+//--------------------------------------------------------------------
+/*/{Protheus.doc} FSAtuSX6
+Função de processamento da gravação do SX6 - Parâmetros
+
+@author TOTVS Protheus
+@since  20/01/21
+@obs    Gerado por EXPORDIC - V.6.6.1.5 EFS / Upd. V.5.1.0 EFS
+@version 1.0
+/*/
+//--------------------------------------------------------------------
+Static Function FSAtuSX6()
+Local aEstrut   := {}
+Local aSX6      := {}
+Local cAlias    := ""
+Local cMsg      := ""
+Local lContinua := .T.
+Local lReclock  := .T.
+Local lTodosNao := .F.
+Local lTodosSim := .F.
+Local nI        := 0
+Local nJ        := 0
+Local nOpcA     := 0
+Local nTamFil   := Len( SX6->X6_FIL )
+Local nTamVar   := Len( SX6->X6_VAR )
+
+AutoGrLog( "Ínicio da Atualização" + " SX6" + CRLF )
+
+aEstrut := { "X6_FIL"    , "X6_VAR"    , "X6_TIPO"   , "X6_DESCRIC", "X6_DSCSPA" , "X6_DSCENG" , "X6_DESC1"  , ;
+             "X6_DSCSPA1", "X6_DSCENG1", "X6_DESC2"  , "X6_DSCSPA2", "X6_DSCENG2", "X6_CONTEUD", "X6_CONTSPA", ;
+             "X6_CONTENG", "X6_PROPRI" , "X6_VALID"  , "X6_INIT"   , "X6_DEFPOR" , "X6_DEFSPA" , "X6_DEFENG" , ;
+             "X6_PYME"   }
+
+aAdd( aSX6, { ;
+	'01'																	, ; //X6_FIL
+	'BIA_CTBC01'															, ; //X6_VAR
+	'C'																		, ; //X6_TIPO
+	'FORMULA CONTA CONTABIL CREDITO PARA BIA_CTBC01'						, ; //X6_DESCRIC
+	''																		, ; //X6_DSCSPA
+	''																		, ; //X6_DSCENG
+	''																		, ; //X6_DESC1
+	''																		, ; //X6_DSCSPA1
+	''																		, ; //X6_DSCENG1
+	''																		, ; //X6_DESC2
+	''																		, ; //X6_DSCSPA2
+	''																		, ; //X6_DSCENG2
+	'FD3'																	, ; //X6_CONTEUD
+	''																		, ; //X6_CONTSPA
+	''																		, ; //X6_CONTENG
+	''																		, ; //X6_PROPRI
+	''																		, ; //X6_VALID
+	''																		, ; //X6_INIT
+	''																		, ; //X6_DEFPOR
+	''																		, ; //X6_DEFSPA
+	''																		, ; //X6_DEFENG
+	''																		} ) //X6_PYME
+
+aAdd( aSX6, { ;
+	'01'																	, ; //X6_FIL
+	'BIA_CTBC02'															, ; //X6_VAR
+	'C'																		, ; //X6_TIPO
+	'FORMULA CONTA CONTABIL CREDITO PARA BIA_CTBC02'						, ; //X6_DESCRIC
+	''																		, ; //X6_DSCSPA
+	''																		, ; //X6_DSCENG
+	''																		, ; //X6_DESC1
+	''																		, ; //X6_DSCSPA1
+	''																		, ; //X6_DSCENG1
+	''																		, ; //X6_DESC2
+	''																		, ; //X6_DSCSPA2
+	''																		, ; //X6_DSCENG2
+	'FD4'																	, ; //X6_CONTEUD
+	''																		, ; //X6_CONTSPA
+	''																		, ; //X6_CONTENG
+	''																		, ; //X6_PROPRI
+	''																		, ; //X6_VALID
+	''																		, ; //X6_INIT
+	''																		, ; //X6_DEFPOR
+	''																		, ; //X6_DEFSPA
+	''																		, ; //X6_DEFENG
+	''																		} ) //X6_PYME
+
+aAdd( aSX6, { ;
+	'01'																	, ; //X6_FIL
+	'BIA_CTBD01'															, ; //X6_VAR
+	'C'																		, ; //X6_TIPO
+	'FORMULA CONTA CONTABIL DEBITO PARA BIA_CTBD01'							, ; //X6_DESCRIC
+	''																		, ; //X6_DSCSPA
+	''																		, ; //X6_DSCENG
+	''																		, ; //X6_DESC1
+	''																		, ; //X6_DSCSPA1
+	''																		, ; //X6_DSCENG1
+	''																		, ; //X6_DESC2
+	''																		, ; //X6_DSCSPA2
+	''																		, ; //X6_DSCENG2
+	'FD1'																	, ; //X6_CONTEUD
+	''																		, ; //X6_CONTSPA
+	''																		, ; //X6_CONTENG
+	''																		, ; //X6_PROPRI
+	''																		, ; //X6_VALID
+	''																		, ; //X6_INIT
+	''																		, ; //X6_DEFPOR
+	''																		, ; //X6_DEFSPA
+	''																		, ; //X6_DEFENG
+	''																		} ) //X6_PYME
+
+aAdd( aSX6, { ;
+	'01'																	, ; //X6_FIL
+	'BIA_CTBD02'															, ; //X6_VAR
+	'C'																		, ; //X6_TIPO
+	'FORMULA CONTA CONTABIL DEBITO PARA BIA_CTBD02'							, ; //X6_DESCRIC
+	''																		, ; //X6_DSCSPA
+	''																		, ; //X6_DSCENG
+	''																		, ; //X6_DESC1
+	''																		, ; //X6_DSCSPA1
+	''																		, ; //X6_DSCENG1
+	''																		, ; //X6_DESC2
+	''																		, ; //X6_DSCSPA2
+	''																		, ; //X6_DSCENG2
+	'FD2'																	, ; //X6_CONTEUD
+	''																		, ; //X6_CONTSPA
+	''																		, ; //X6_CONTENG
+	''																		, ; //X6_PROPRI
+	''																		, ; //X6_VALID
+	''																		, ; //X6_INIT
+	''																		, ; //X6_DEFPOR
+	''																		, ; //X6_DEFSPA
+	''																		, ; //X6_DEFENG
+	''																		} ) //X6_PYME
+
+aAdd( aSX6, { ;
+	'01'																	, ; //X6_FIL
+	'BIA_CTBHC1'															, ; //X6_VAR
+	'C'																		, ; //X6_TIPO
+	'FORMULA HIST. CONTABIL PARA BIA_CTBHC1'								, ; //X6_DESCRIC
+	''																		, ; //X6_DSCSPA
+	''																		, ; //X6_DSCENG
+	''																		, ; //X6_DESC1
+	''																		, ; //X6_DSCSPA1
+	''																		, ; //X6_DSCENG1
+	''																		, ; //X6_DESC2
+	''																		, ; //X6_DSCSPA2
+	''																		, ; //X6_DSCENG2
+	'FD9'																	, ; //X6_CONTEUD
+	''																		, ; //X6_CONTSPA
+	''																		, ; //X6_CONTENG
+	''																		, ; //X6_PROPRI
+	''																		, ; //X6_VALID
+	''																		, ; //X6_INIT
+	''																		, ; //X6_DEFPOR
+	''																		, ; //X6_DEFSPA
+	''																		, ; //X6_DEFENG
+	''																		} ) //X6_PYME
+
+aAdd( aSX6, { ;
+	'01'																	, ; //X6_FIL
+	'BIA_CTBHC2'															, ; //X6_VAR
+	'C'																		, ; //X6_TIPO
+	'FORMULA HIST. CONTABIL PARA BIA_CTBHC2'								, ; //X6_DESCRIC
+	''																		, ; //X6_DSCSPA
+	''																		, ; //X6_DSCENG
+	''																		, ; //X6_DESC1
+	''																		, ; //X6_DSCSPA1
+	''																		, ; //X6_DSCENG1
+	''																		, ; //X6_DESC2
+	''																		, ; //X6_DSCSPA2
+	''																		, ; //X6_DSCENG2
+	'FDA'																	, ; //X6_CONTEUD
+	''																		, ; //X6_CONTSPA
+	''																		, ; //X6_CONTENG
+	''																		, ; //X6_PROPRI
+	''																		, ; //X6_VALID
+	''																		, ; //X6_INIT
+	''																		, ; //X6_DEFPOR
+	''																		, ; //X6_DEFSPA
+	''																		, ; //X6_DEFENG
+	''																		} ) //X6_PYME
+
+aAdd( aSX6, { ;
+	'01'																	, ; //X6_FIL
+	'BIA_CTBHD1'															, ; //X6_VAR
+	'C'																		, ; //X6_TIPO
+	'FORMULA HIST. CONTABIL PARA BIA_CTBHD1'								, ; //X6_DESCRIC
+	''																		, ; //X6_DSCSPA
+	''																		, ; //X6_DSCENG
+	''																		, ; //X6_DESC1
+	''																		, ; //X6_DSCSPA1
+	''																		, ; //X6_DSCENG1
+	''																		, ; //X6_DESC2
+	''																		, ; //X6_DSCSPA2
+	''																		, ; //X6_DSCENG2
+	'FD7'																	, ; //X6_CONTEUD
+	''																		, ; //X6_CONTSPA
+	''																		, ; //X6_CONTENG
+	''																		, ; //X6_PROPRI
+	''																		, ; //X6_VALID
+	''																		, ; //X6_INIT
+	''																		, ; //X6_DEFPOR
+	''																		, ; //X6_DEFSPA
+	''																		, ; //X6_DEFENG
+	''																		} ) //X6_PYME
+
+aAdd( aSX6, { ;
+	'01'																	, ; //X6_FIL
+	'BIA_CTBHD2'															, ; //X6_VAR
+	'C'																		, ; //X6_TIPO
+	'FORMULA HIST. CONTABIL PARA BIA_CTBHD2'								, ; //X6_DESCRIC
+	''																		, ; //X6_DSCSPA
+	''																		, ; //X6_DSCENG
+	''																		, ; //X6_DESC1
+	''																		, ; //X6_DSCSPA1
+	''																		, ; //X6_DSCENG1
+	''																		, ; //X6_DESC2
+	''																		, ; //X6_DSCSPA2
+	''																		, ; //X6_DSCENG2
+	'FD8'																	, ; //X6_CONTEUD
+	''																		, ; //X6_CONTSPA
+	''																		, ; //X6_CONTENG
+	''																		, ; //X6_PROPRI
+	''																		, ; //X6_VALID
+	''																		, ; //X6_INIT
+	''																		, ; //X6_DEFPOR
+	''																		, ; //X6_DEFSPA
+	''																		, ; //X6_DEFENG
+	''																		} ) //X6_PYME
+
+aAdd( aSX6, { ;
+	'01'																	, ; //X6_FIL
+	'BIA_CTBVC1'															, ; //X6_VAR
+	'C'																		, ; //X6_TIPO
+	'FORMULA CONTA CONTABIL VALOR PARA BIA_CTBVC1'							, ; //X6_DESCRIC
+	''																		, ; //X6_DSCSPA
+	''																		, ; //X6_DSCENG
+	''																		, ; //X6_DESC1
+	''																		, ; //X6_DSCSPA1
+	''																		, ; //X6_DSCENG1
+	''																		, ; //X6_DESC2
+	''																		, ; //X6_DSCSPA2
+	''																		, ; //X6_DSCENG2
+	'FDB'																	, ; //X6_CONTEUD
+	''																		, ; //X6_CONTSPA
+	''																		, ; //X6_CONTENG
+	''																		, ; //X6_PROPRI
+	''																		, ; //X6_VALID
+	''																		, ; //X6_INIT
+	''																		, ; //X6_DEFPOR
+	''																		, ; //X6_DEFSPA
+	''																		, ; //X6_DEFENG
+	''																		} ) //X6_PYME
+
+aAdd( aSX6, { ;
+	'01'																	, ; //X6_FIL
+	'BIA_CTBVC2'															, ; //X6_VAR
+	'C'																		, ; //X6_TIPO
+	'FORMULA CONTA CONTABIL VALOR PARA BIA_CTBVC2'							, ; //X6_DESCRIC
+	''																		, ; //X6_DSCSPA
+	''																		, ; //X6_DSCENG
+	''																		, ; //X6_DESC1
+	''																		, ; //X6_DSCSPA1
+	''																		, ; //X6_DSCENG1
+	''																		, ; //X6_DESC2
+	''																		, ; //X6_DSCSPA2
+	''																		, ; //X6_DSCENG2
+	'FDC'																	, ; //X6_CONTEUD
+	''																		, ; //X6_CONTSPA
+	''																		, ; //X6_CONTENG
+	''																		, ; //X6_PROPRI
+	''																		, ; //X6_VALID
+	''																		, ; //X6_INIT
+	''																		, ; //X6_DEFPOR
+	''																		, ; //X6_DEFSPA
+	''																		, ; //X6_DEFENG
+	''																		} ) //X6_PYME
+
+aAdd( aSX6, { ;
+	'01'																	, ; //X6_FIL
+	'BIA_CTBVD1'															, ; //X6_VAR
+	'C'																		, ; //X6_TIPO
+	'FORMULA CONTA CONTABIL VALOR PARA BIA_CTBVD1'							, ; //X6_DESCRIC
+	''																		, ; //X6_DSCSPA
+	''																		, ; //X6_DSCENG
+	''																		, ; //X6_DESC1
+	''																		, ; //X6_DSCSPA1
+	''																		, ; //X6_DSCENG1
+	''																		, ; //X6_DESC2
+	''																		, ; //X6_DSCSPA2
+	''																		, ; //X6_DSCENG2
+	'FD5'																	, ; //X6_CONTEUD
+	''																		, ; //X6_CONTSPA
+	''																		, ; //X6_CONTENG
+	''																		, ; //X6_PROPRI
+	''																		, ; //X6_VALID
+	''																		, ; //X6_INIT
+	''																		, ; //X6_DEFPOR
+	''																		, ; //X6_DEFSPA
+	''																		, ; //X6_DEFENG
+	''																		} ) //X6_PYME
+
+aAdd( aSX6, { ;
+	'01'																	, ; //X6_FIL
+	'BIA_CTBVD2'															, ; //X6_VAR
+	'C'																		, ; //X6_TIPO
+	'FORMULA CONTA CONTABIL VALOR PARA BIA_CTBVD2'							, ; //X6_DESCRIC
+	''																		, ; //X6_DSCSPA
+	''																		, ; //X6_DSCENG
+	''																		, ; //X6_DESC1
+	''																		, ; //X6_DSCSPA1
+	''																		, ; //X6_DSCENG1
+	''																		, ; //X6_DESC2
+	''																		, ; //X6_DSCSPA2
+	''																		, ; //X6_DSCENG2
+	'FD6'																	, ; //X6_CONTEUD
+	''																		, ; //X6_CONTSPA
+	''																		, ; //X6_CONTENG
+	''																		, ; //X6_PROPRI
+	''																		, ; //X6_VALID
+	''																		, ; //X6_INIT
+	''																		, ; //X6_DEFPOR
+	''																		, ; //X6_DEFSPA
+	''																		, ; //X6_DEFENG
+	''																		} ) //X6_PYME
+
+//
+// Atualizando dicionário
+//
+oProcess:SetRegua2( Len( aSX6 ) )
+
+dbSelectArea( "SX6" )
+dbSetOrder( 1 )
+
+For nI := 1 To Len( aSX6 )
+	lContinua := .F.
+	lReclock  := .F.
+
+	If !SX6->( dbSeek( PadR( aSX6[nI][1], nTamFil ) + PadR( aSX6[nI][2], nTamVar ) ) )
+		lContinua := .T.
+		lReclock  := .T.
+		AutoGrLog( "Foi incluído o parâmetro " + aSX6[nI][1] + aSX6[nI][2] + " Conteúdo [" + AllTrim( aSX6[nI][13] ) + "]" )
+	Else
+		lContinua := .T.
+		lReclock  := .F.
+		If !StrTran( SX6->X6_CONTEUD, " ", "" ) == StrTran( aSX6[nI][13], " ", "" )
+
+			cMsg := "O parâmetro " + aSX6[nI][2] + " está com o conteúdo" + CRLF + ;
+			"[" + RTrim( StrTran( SX6->X6_CONTEUD, " ", "" ) ) + "]" + CRLF + ;
+			", que é será substituido pelo NOVO conteúdo " + CRLF + ;
+			"[" + RTrim( StrTran( aSX6[nI][13]   , " ", "" ) ) + "]" + CRLF + ;
+			"Deseja substituir ? "
+
+			If      lTodosSim
+				nOpcA := 1
+			ElseIf  lTodosNao
+				nOpcA := 2
+			Else
+				nOpcA := Aviso( "ATUALIZAÇÃO DE DICIONÁRIOS E TABELAS", cMsg, { "Sim", "Não", "Sim p/Todos", "Não p/Todos" }, 3, "Diferença de conteúdo - SX6" )
+				lTodosSim := ( nOpcA == 3 )
+				lTodosNao := ( nOpcA == 4 )
+
+				If lTodosSim
+					nOpcA := 1
+					lTodosSim := MsgNoYes( "Foi selecionada a opção de REALIZAR TODAS alterações no SX6 e NÃO MOSTRAR mais a tela de aviso." + CRLF + "Confirma a ação [Sim p/Todos] ?" )
+				EndIf
+
+				If lTodosNao
+					nOpcA := 2
+					lTodosNao := MsgNoYes( "Foi selecionada a opção de NÃO REALIZAR nenhuma alteração no SX6 que esteja diferente da base e NÃO MOSTRAR mais a tela de aviso." + CRLF + "Confirma esta ação [Não p/Todos]?" )
+				EndIf
+
+			EndIf
+
+			lContinua := ( nOpcA == 1 )
+
+			If lContinua
+				AutoGrLog( "Foi alterado o parâmetro " + aSX6[nI][1] + aSX6[nI][2] + " de [" + ;
+				AllTrim( SX6->X6_CONTEUD ) + "]" + " para [" + AllTrim( aSX6[nI][13] ) + "]" )
+			EndIf
+
+		Else
+			lContinua := .F.
+		EndIf
+	EndIf
+
+	If lContinua
+		If !( aSX6[nI][1] $ cAlias )
+			cAlias += aSX6[nI][1] + "/"
+		EndIf
+
+		RecLock( "SX6", lReclock )
+		For nJ := 1 To Len( aSX6[nI] )
+			If FieldPos( aEstrut[nJ] ) > 0
+				FieldPut( FieldPos( aEstrut[nJ] ), aSX6[nI][nJ] )
+			EndIf
+		Next nJ
+		dbCommit()
+		MsUnLock()
+	EndIf
+
+	oProcess:IncRegua2( "Atualizando Arquivos (SX6)..." )
+
+Next nI
+
+AutoGrLog( CRLF + "Final da Atualização" + " SX6" + CRLF + Replicate( "-", 128 ) + CRLF )
+
+Return NIL

@@ -460,13 +460,9 @@ USER FUNCTION VALIDA_LINHA()
 
 			SBZ->(DbSeek(xFilial("SBZ")+GdfieldGet("ZJ_COD", n)))
 
-			If 1 == 2
-
-				If wSALDO < 0 .And. (!ZCN->(DbSeek(xFilial("ZCN")+GdfieldGet("ZJ_COD", n)+"2"+GdfieldGet("ZJ_LOCAL", n))) .Or. AllTrim(SBZ->BZ_YPOLIT) == "4") 
-					Msgbox("Este produto " + Alltrim(GdfieldGet("ZJ_COD", n)) + " não possui saldo suficiente para atender está Pré-Requisição. Favor verificar!", "Aviso  [BIA902(1)]", "INFO")
-					sRett := .F.
-				EndIf
-
+			If wSALDO < 0 .And. (!ZCN->(DbSeek(xFilial("ZCN")+GdfieldGet("ZJ_COD", n)+"2"+GdfieldGet("ZJ_LOCAL", n))) .Or. AllTrim(SBZ->BZ_YPOLIT) == "4") 
+				Msgbox("Este produto " + Alltrim(GdfieldGet("ZJ_COD", n)) + " não possui saldo suficiente para atender está Pré-Requisição. Favor verificar!", "Aviso  [BIA902(1)]", "INFO")
+				sRett := .F.
 			EndIf
 
 		EndIf
@@ -947,13 +943,9 @@ Static Function fProcessa()
 
 						wSALDO := aSaldos[1] - (cAliasTmp2)->ZJ_QUANT
 
-						If 1 == 2
-
-							If wSALDO < 0
-								Msgbox("Este produto "+(cAliasTmp2)->ZJ_COD+" não possui saldo suficiente no Armazem: "+_cLocSal+" para atender está Pré-Requisição. Favor verificar!", "Aviso [BIA902(1)]", "INFO")
-								Return
-							EndIf
-
+						If wSALDO < 0
+							Msgbox("Este produto "+(cAliasTmp2)->ZJ_COD+" não possui saldo suficiente no Armazem: "+_cLocSal+" para atender está Pré-Requisição. Favor verificar!", "Aviso [BIA902(1)]", "INFO")
+							Return
 						EndIf
 
 					EndIf

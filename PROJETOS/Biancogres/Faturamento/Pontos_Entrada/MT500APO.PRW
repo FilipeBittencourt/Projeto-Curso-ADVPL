@@ -286,26 +286,35 @@ User Function MT500APO()
 		C_HTML += '</body> '
 		C_HTML += '</html> '
 
+		/*
+		Ticket 29619 Pablo S. Nascimento 21/01/2021
+		Os emails que estavam fixos abaixo foram parametrizados pelos seguintes workflows:
+		WPELIMRES0101 - WORKFLOW DE PEDIDOS ELIMINADOS POR RESÍDUO - EMPRESA 0101
+		WPELIMRES0501 - WORKFLOW DE PEDIDOS ELIMINADOS POR RESÍDUO - EMPRESA 0501/1399
+		WPELIMRES0599 - WORKFLOW DE PEDIDOS ELIMINADOS POR RESÍDUO - EMPRESA 0599
+		WPELIMRES1301 - WORKFLOW DE PEDIDOS ELIMINADOS POR RESÍDUO - EMPRESA 1301
+		WPELIMRES1401 - WORKFLOW DE PEDIDOS ELIMINADOS POR RESÍDUO - EMPRESA 1401
+		*/
 		Do Case 
 			Case Alltrim(SC6->C6_YEMP) == "0101"
-			aDestinatario	:= nEmail+";dalvina.ferreira@biancogres.com.br" 
-			aCC := cMailAnted+"; cancelamento.biancogres@biancogres.com.br"	//"claudeir.fadini@biancogres.com.br"
+			aDestinatario	:= nEmail+"; " + U_EmailWF("WPELIMRES0101","","","D") //"dalvina.ferreira@biancogres.com.br" 
+			aCC := cMailAnted+"; " + U_EmailWF("WPELIMRES0101","","","C") //" cancelamento.biancogres@biancogres.com.br"
 			aCCO := "" 																					//"ranisses.corona@biancogres.com.br"
 			Case Alltrim(SC6->C6_YEMP) $ "0501/1399"		
-			aDestinatario	:= nEmail+";william.pernes@biancogres.com.br"
-			aCC	:= cMailAnted+"; cancelamento.incesa@incesa.ind.br"					
+			aDestinatario	:= nEmail+"; " + U_EmailWF("WPELIMRES0501","","","D") //"william.pernes@biancogres.com.br"
+			aCC	:= cMailAnted+"; " + U_EmailWF("WPELIMRES0501","","","C") //"cancelamento.incesa@incesa.ind.br"					
 			aCCO:= "" 																					//"ranisses.corona@biancogres.com.br"
 			Case Alltrim(SC6->C6_YEMP) == "0599"
-			aDestinatario	:= nEmail+";william.pernes@biancogres.com.br"
-			aCC := cMailAnted+"; cancelamento.bellacasa@bellacasaceramica.com.br"	//"carlos.michels@bellacasaceramica.com.br;mateus.fadini@bellacasaceramica.com.br"
+			aDestinatario	:= nEmail+"; " + U_EmailWF("WPELIMRES0599","","","D") //"william.pernes@biancogres.com.br"
+			aCC := cMailAnted+"; " + U_EmailWF("WPELIMRES0599","","","C") //"cancelamento.bellacasa@bellacasaceramica.com.br"
 			aCCO := "" 																								//"ranisses.corona@biancogres.com.br"
 			Case Alltrim(SC6->C6_YEMP) == "1301"
-			aDestinatario	:= nEmail+";rodolfo.stanke.mundi@biancogres.com.br"
-			aCC	:= cMailAnted+"; cancelamento.biancogres@biancogres.com.br"	//"carlos.michels@bellacasaceramica.com.br;mateus.fadini@bellacasaceramica.com.br"
+			aDestinatario	:= nEmail+"; " + U_EmailWF("WPELIMRES1301","","","D") //"rodolfo.stanke.mundi@biancogres.com.br"
+			aCC	:= cMailAnted+"; " + U_EmailWF("WPELIMRES1301","","","C") //"cancelamento.biancogres@biancogres.com.br"	
 			aCCO := "" 																								//"ranisses.corona@biancogres.com.br"
 			Case Alltrim(SC6->C6_YEMP) == "1401"
-			aDestinatario	:= nEmail+";joan.mareto@vitcer.com.br"
-			aCC	:= cMailAnted+"; cancelamento.biancogres@biancogres.com.br"	//"carlos.michels@bellacasaceramica.com.br;mateus.fadini@bellacasaceramica.com.br"
+			aDestinatario	:= nEmail+"; " + U_EmailWF("WPELIMRES1401","","","D") //"joan.mareto@vitcer.com.br"
+			aCC	:= cMailAnted+"; " + U_EmailWF("WPELIMRES1401","","","C") //"cancelamento.biancogres@biancogres.com.br"	
 			aCCO := "" 																								//"ranisses.corona@biancogres.com.br"
 			Otherwise
 			aDestinatario	:= cMailAnted+"; suporte.ti@biancogres.com.br"
@@ -332,8 +341,8 @@ Return
 
 
 User Function fPedCan()
-Local := cNumPEd := "D33511"
-
+	Local := cNumPEd := "D33511"
+	
 	DbSelectArea("SC5")
 	DbSetOrder(1)
 	If SC5->(DbSeek(xFilial("SC5") + cNumPed))

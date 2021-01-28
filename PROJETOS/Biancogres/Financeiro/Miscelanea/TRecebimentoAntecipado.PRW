@@ -42,6 +42,7 @@ Class TRecebimentoAntecipado From LongClassName
 	Method LancContJur() // Inclui lancamento contabil de juros sobre titulo
 	Method PedidoRodape() // Verifica se o pedido é de rodape
 	Method RetDtPedRod() // Retorna data de emissao do pedido de rodape	
+	Method RetDesconto(cPrefixo, cNumero, cParcela, cTipo, cCliente) // Retorna valor de desconto sobre o título 		
 
 EndClass
 
@@ -235,6 +236,7 @@ Local cSQL := ""
 Local cQry := GetNextAlias()
 Local cSE1 := RetSQLName("SE1")
 Local cSEA := RetSQLName("SEA")
+Local nDesconto := 0
 
 Private xfDtCtba
 
@@ -330,7 +332,11 @@ Private xfDtCtba
 	
 			EndIf
 	
-			::oConRecBx:nValor := (cQry)->E1_VALOR
+			// Retorna valor de desconto sobre o título
+			nDesconto := 0
+			nDesconto := ::RetDesconto((cQry)->E1_PREFIXO, (cQry)->E1_NUM, (cQry)->E1_PARCELA, (cQry)->E1_TIPO, (cQry)->E1_CLIENTE)
+			
+			::oConRecBx:nValor := (cQry)->E1_VALOR - nDesconto
 	
 			// Baixa o titulo provisorio
 			If ::oConRecBx:Baixar()
@@ -377,7 +383,7 @@ Private xfDtCtba
 				::oConRecRa:dVencto := sToD((cQry)->E1_YDTCRED)
 				
 				// Se o prefixo for PR e o recebimento possui juros, soma o valor do titulo mais o juros
-				::oConRecRa:nValor := (cQry)->E1_VALOR + If (SubStr(::oConRecBx:cPrefixo, 1, 2) == "PR", ::oConRecBx:nJuros, 0)
+				::oConRecRa:nValor := ((cQry)->E1_VALOR - nDesconto) + If (SubStr(::oConRecBx:cPrefixo, 1, 2) == "PR", ::oConRecBx:nJuros, 0)
 				
 				::oConRecRa:cNumPed := (cQry)->E1_PEDIDO
 				::oConRecRa:cVend1 := (cQry)->E1_VEND1
@@ -1038,3 +1044,29 @@ Private oGetCTB
 	oGetCTB := MsNewGetDados():New( 006, 007, 194, 473, GD_INSERT+GD_DELETE+GD_UPDATE, "AllwaysTrue", "AllwaysTrue", "+Field1+Field2", aAlterFields,, 999, "AllwaysTrue", "", "AllwaysTrue", oDlgCT2, aHeaderEx, aColsEx)
 
 Return()
+
+
+Method RetDesconto(cPrefixo, cNumero, cParcela, cTipo, cCliente) Class TRecebimentoAntecipado
+Local nRet := 0
+Local cSQL := ""
+Local cQry := GetNextAlias()
+
+	cSQL := " SELECT ISNULL(SUM(E5_VALOR), 0) AS E5_VALOR "
+	cSQL += " FROM " + RetSQLName("SE5")
+	cSQL += " WHERE E5_FILIAL = " + ValToSQL(xFilial("SE5"))
+	cSQL += " AND E5_PREFIXO = " + ValToSQL(cPrefixo)
+	cSQL += " AND E5_NUMERO = " + ValToSQL(cNumero)
+	cSQL += " AND E5_PARCELA = " + ValToSQL(cParcela)
+	cSQL += " AND E5_TIPO = " + ValToSQL(cTipo)
+	cSQL += " AND E5_CLIFOR = " + ValToSQL(cCliente)
+	cSQL += " AND E5_TIPODOC = 'DC' "
+	cSQL += " AND E5_RECPAG = 'R' "
+	cSQL += " AND D_E_L_E_T_ = '' "
+		
+	TcQuery cSQL New Alias (cQry)
+
+	nRet := (cQry)->E5_VALOR
+
+	(cQry)->(DbCloseArea())
+
+Return(nRet)

@@ -52,7 +52,7 @@ Static Function fRecCaco(_cDataDe,_cDataAte)
 	While (_cAlias)->(!EOF())
 
 		xa2Linha    := "('L" + Substr((_cAlias)->FORNO,2,2) + "')"
-		If (_cAlias)->FORMAT $ "CE/B9/BO/C6"
+		If (_cAlias)->FORMAT $ "B9/BO/C6"
 			xa2Linha := "('E03','E04')"
 		EndIf
 		_nProduc	:=	fCalcPrd((_cAlias)->FORMAT, (_cAlias)->DTREF, (_cAlias)->TURNO, (_cAlias)->EQUIPE, xa2Linha)
@@ -102,7 +102,7 @@ Static Function fPrdBaia(_cDtRef, _cBaia, _cTurno)
 	While (_cAlias)->(!EOF())
 
 		xa2Linha    := "('L" + Substr((_cAlias)->Z94_FORNO,2,2) + "')"
-		If (_cAlias)->Z94_FORMAT $ "CE/B9/BO/C6"
+		If (_cAlias)->Z94_FORMAT $ "B9/BO/C6"
 			xa2Linha := "('E03','E04')"
 		EndIf
 
@@ -134,7 +134,7 @@ Static Function fCalcPrd(cFormat, _cData, _cTurno, _cEquipe, _cLinha)
 		AND Z75.Z75_TURNO = %EXP:_cTurno%
 		AND Z75.Z75_LINHA IN %Exp:_cIN%
 		AND Z75_TPMOV IN ('ETQ','RET')
-		AND ( ( B1_YFORMAT IN('BM', 'BF', 'BD', 'BE', 'BV', 'BW', 'CC', 'CD') AND Z75_TPPROD = 'PP' ) OR ( B1_YFORMAT NOT IN('BM', 'BF', 'BD', 'BE', 'BV', 'BW', 'CC', 'CD') AND Z75_TPPROD <> 'PP' ) OR ( B1_YFORMAT IN('CE') AND Z75_TPPROD = 'PA' ) )
+		AND ( ( B1_YFORMAT IN('BM', 'BF', 'BD', 'BE', 'BV', 'BW', 'CC', 'CD') AND Z75_TPPROD = 'PP' ) OR ( B1_YFORMAT NOT IN('BM', 'BF', 'BD', 'BE', 'BV', 'BW', 'CC', 'CD') AND Z75_TPPROD <> 'PP' ) )
 		AND ( ( SB1.B1_YFORMAT IN ('B9', 'BO', 'C6') AND Z75.Z75_EQUIPE = '1' AND Z75.Z75_BKEQUI = %Exp:_cEquipe% ) OR ( SB1.B1_YFORMAT NOT IN ('B9', 'BO', 'C6') AND Z75.Z75_EQUIPE = %Exp:_cEquipe% )	)
 		AND Z75.%NotDel%
 
@@ -168,7 +168,7 @@ Static Function fCalcPes(cFormat,_cData, _cTurno, _cEquipe)
 	AND Z75_DATARF = %Exp:_cData%
 	AND Z75.Z75_TURNO = %EXP:_cTurno%
 	AND Z75_TPMOV IN ('ETQ','RET')
-	AND ( ( B1_YFORMAT IN('BM', 'BF', 'BD', 'BE', 'BV', 'BW', 'CC', 'CD') AND Z75_TPPROD = 'PP' ) OR ( B1_YFORMAT NOT IN('BM', 'BF', 'BD', 'BE', 'BV', 'BW', 'CC', 'CD') AND Z75_TPPROD <> 'PP' ) OR ( B1_YFORMAT IN('CE') AND Z75_TPPROD = 'PA' ) )
+	AND ( ( B1_YFORMAT IN('BM', 'BF', 'BD', 'BE', 'BV', 'BW', 'CC', 'CD') AND Z75_TPPROD = 'PP' ) OR ( B1_YFORMAT NOT IN('BM', 'BF', 'BD', 'BE', 'BV', 'BW', 'CC', 'CD') AND Z75_TPPROD <> 'PP' ) )
 	AND ( ( SB1.B1_YFORMAT IN ('B9', 'BO', 'C6') AND Z75.Z75_EQUIPE = '1' AND Z75.Z75_BKEQUI = %Exp:_cEquipe% ) OR ( SB1.B1_YFORMAT NOT IN ('B9', 'BO', 'C6') AND Z75.Z75_EQUIPE = %Exp:_cEquipe% ) )
 	AND Z75.%NotDel%
 	GROUP BY SB1.B1_YFORMAT
@@ -206,8 +206,8 @@ Static Function fCalcCaco(_cDataDe,_cDataAte)
 	END EQUIPE
 	,Z75_TURNO TURNO
 	,CASE 
-	WHEN SUBSTRING(Z75_PRODUT, 1, 2) IN ('B9', 'BO', 'C6', 'CE') AND Z75_LINHA IN ('E03', 'E04') THEN 'F02'
-	WHEN SUBSTRING(Z75_PRODUT, 1, 2) NOT IN ('B9', 'BO', 'C6', 'CE') AND Z75_LINHA IN ('E03', 'E04') THEN 'F03'
+	WHEN SUBSTRING(Z75_PRODUT, 1, 2) IN ('B9', 'BO', 'C6') AND Z75_LINHA IN ('E03', 'E04') THEN 'F02'
+	WHEN SUBSTRING(Z75_PRODUT, 1, 2) NOT IN ('B9', 'BO', 'C6') AND Z75_LINHA IN ('E03', 'E04') THEN 'F03'
 	WHEN Z75_LINHA IN ('L01', 'L02', 'L03', 'L04', 'L05') THEN 'F' + SUBSTRING(Z75_LINHA, 2, 2)
 	ELSE 'IND'
 	END FORNO
@@ -227,7 +227,7 @@ Static Function fCalcCaco(_cDataDe,_cDataAte)
 	WHERE Z75_FILIAL = %XFILIAL:Z75%
 	AND Z75_DATARF BETWEEN %Exp:_cDataDe% AND %Exp:_cDataAte%
 	AND Z75_TPMOV IN ('ETQ', 'RET')
-	AND ( ( B1_YFORMAT IN('BM', 'BF', 'BD', 'BE', 'BW', 'BV', 'CC', 'CD') AND Z75_TPPROD = 'PP' ) OR ( B1_YFORMAT NOT IN ('BM', 'BF', 'BD', 'BE', 'BW', 'BV', 'CC', 'CD') AND Z75_TPPROD <> 'PP' ) OR ( B1_YFORMAT IN('CE') AND Z75_TPPROD = 'PA' ) )
+	AND ( ( B1_YFORMAT IN('BM', 'BF', 'BD', 'BE', 'BW', 'BV', 'CC', 'CD') AND Z75_TPPROD = 'PP' ) OR ( B1_YFORMAT NOT IN ('BM', 'BF', 'BD', 'BE', 'BW', 'BV', 'CC', 'CD') AND Z75_TPPROD <> 'PP' ) )
 	AND ( ( SB1.B1_YFORMAT IN ('B9', 'BO', 'C6') AND Z75.Z75_EQUIPE = '1' ) OR ( SB1.B1_YFORMAT NOT IN ('B9', 'BO', 'C6') ) )
 	AND Z75.%NotDel%
 	) DADOS

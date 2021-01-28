@@ -1,0 +1,992 @@
+#include "totvs.ch"
+#include "dbStruct.ch"
+#include "parmtype.ch"
+#include "jsonhash.ch"
+#include "jsonarray.ch"
+
+/*/{Protheus.doc} BIA663
+@author Marinaldo de Jesus (Facile)
+@since 28/12/2020
+@version 1.0
+@Projet A-35
+@description BP BP - Cálculo Rubricas.
+@type function
+/*/
+
+procedure u_BIA663()
+
+    local cFilterDefault    as character
+
+    local oFWMBrowse        as object
+
+    // Instanciamento da classe de Browse
+    oFWMBrowse:=FWMBrowse():New()
+
+    //Alias
+    oFWMBrowse:SetAlias("ZOH")
+
+    private cCadastro as character
+    cCadastro:="BP - Cálculo Rubricas"
+
+    // Titulo da Browse
+    oFWMBrowse:SetDescription(cCadastro)
+
+    //Define o menu do Browse
+    oFWMBrowse:setMenuDef("BIA663MVC")
+
+    //Habilita o botao para fechar a janela
+    oFWMBrowse:ForceQuitButton()
+
+    //------------------------------------------------------------------------
+    //Define chave para realizar o filtro no browse, e nao trazer registros
+    //repetidos, pois esta tabela nao e cabecalho e itens
+    //------------------------------------------------------------------------
+    if (stackTools():IsInCallStack("u_BIA662"))
+        cFilterDefault:="(ZOH_VERSAO=='"+ZOG->ZOG_VERSAO+"')"
+        cFilterDefault+=".and."
+        cFilterDefault+="(ZOH_REVISA=='"+ZOG->ZOG_REVISA+"')"
+        cFilterDefault+=".and."
+        cFilterDefault+="(ZOH_ANOREF=='"+ZOG->ZOG_ANOREF+"')"
+        oFWMBrowse:setFilterDefault(cFilterDefault)
+    endif
+
+    // Ativacao da classe
+    ZOH->(oFWMBrowse:Activate())
+
+    freeObj(oFWMBrowse)
+
+    return
+
+function u_BIA663Calc() as logical
+    
+    local aArea         as array
+    local aAreaSM0      as array
+
+    local bMsNewProcess as block
+
+    local cEmp          as character
+    local cFil          as character
+
+    local lRet          as logical
+    local lMesAno       as logical
+    local lDataFech     as logical
+    local lTipoRef      as logical
+
+    local oEmpresas     as object
+    local oPergunte     as object
+
+    local nKeepResponse as numeric
+
+    local oMsNewProcess as object
+
+    nKeepResponse:=(-1)
+
+    cEmp:=&("cEmpAnt")
+    cFil:=&("cFilAnt")
+
+    if (!type("cCadastro")=="C")
+        private cCadastro as character
+        cCadastro:="BP - Cálculo Rubricas"
+    endif
+    
+    aArea:=getArea()
+    aAreaSM0:=SM0->(getArea())
+
+    begin sequence
+
+        oEmpresas:=TLoadEmpresa():New()
+
+        lMesAno:=.F.
+        lDataFech:=.F.
+        lTipoRef:=.F.
+
+        lRet:=__TWPCOFiltroPeriodo():Pergunte(@lMesAno,@lDataFech,@lTipoRef)
+        
+        if (!lRet)
+            break
+        endif
+
+        oEmpresas:GetSelEmp()
+        oPergunte:=__TWPCOFiltroPeriodo():Get()
+
+        bMsNewProcess:={|lEnd|MsProcess():ProcRedefine(@oMsNewProcess,nil,0,350,350,.T.,.T.),oMsNewProcess:SetRegua1(0),lRet:=BIA663Calc(@oMsNewProcess,@cEmp,@cFil,@oEmpresas,@oPergunte,@lEnd,@nKeepResponse)}
+        oMsNewProcess:=MsNewProcess():New(bMsNewProcess,cCadastro,"Aguarde...",.T.)
+        oMsNewProcess:Activate()
+
+    end sequence
+
+    RPCTools():RpcSetEnv(cEmp,cFil)
+
+    restArea(aAreaSM0)
+    restArea(aArea)
+
+    return(lRet)
+
+static function BIA663Calc(oMsNewProcess as object,cEmpDef as character,cFilDef as character,oEmpresas as object,oPergunte as object,lEnd as logical,nKeepResponse as numeric) as logical
+
+    local aMsg           as array
+    local aSM0RecNo      as array
+
+    local bError         as block
+    local bErrorBlock    as block
+
+    local cMsg          as character
+    local cCRLF         as character
+    local cMsgPrc       as character
+
+    local cEmp          as character
+    local cFil          as character
+    local cVersao       as character
+    local cRevisa       as character
+    local cAnoRef       as character
+
+    local cIniCalc      as character
+    local cFimCalc      as character
+
+    local dIniCalc      as date
+    local dFimCalc      as date
+
+    local lRet          as logical
+
+    local nD            as numeric
+    local nJ            as numeric
+
+    local nSM0AT        as numeric
+    local nSM0RecNo     as numeric
+
+    local oRTime1       as object
+    local oRTime2       as object
+    local oProgress1    as object
+    local oProgress2    as object
+
+    lRet:=.T.
+
+    cCRLF:=CRLF
+
+    begin sequence
+
+        nJ:=Len(oEmpresas:aEmpSel)
+        lRet:=(nJ>0)
+        if (!lRet)
+            ApMsgAlert("Nenhuma empresa foi selecionada!")
+            break
+        endif
+
+        aMsg:=array(0)
+
+        oMsNewProcess:SetRegua1(SM0->(recCount()))
+
+        oRTime1:=timeRemaining():New(SM0->(recCount()))
+        oProgress1:=txtProgress():New(/*ctPAnim,";"*/)
+
+        oRTime2:=timeRemaining():New()
+        oProgress2:=txtProgress():New(/*ctPAnim,";"*/)
+
+        aSM0RecNo:=array(0)
+        SM0->(dbSetOrder(1))
+        SM0->(dbGoTop())
+        while (SM0->(!eof()))
+            TTimer1(@oMsNewProcess,@oRTime1,@oProgress1,.T.)
+            SM0->(aAdd(aSM0RecNo,{fieldGet(fieldPos("M0_CODIGO")),fieldGet(fieldPos("M0_CODFIL")),recNo()}))
+            SM0->(dbSkip())
+        end while
+
+        ProcRegua(if(nJ<=1,0,nJ))
+
+        bError:={|oError|A35():breakError(@oError,@cEmp,@cFil,@cMsg)}
+
+        oMsNewProcess:SetRegua1(nJ)
+
+        oRTime1:SetRemaining(nJ)
+
+        for nD:=1 to nJ
+
+            TTimer1(@oMsNewProcess,@oRTime1,@oProgress1,.T.)
+
+            cEmp:=oEmpresas:aEmpSel[nD][1]
+            
+            nSM0AT:=aScan(aSM0RecNo,{|e|e[1]==cEmp})
+            if (nSM0AT==0)
+                loop
+            endif
+            
+            cFil:=rTrim(aSM0RecNo[nSM0AT][2])
+            
+            nSM0RecNo:=aSM0RecNo[nSM0AT][3]
+
+            SM0->(dbGoTo(nSM0RecNo))
+
+            cVersao:=left(oPergunte:cVersao,getSX3Cache("ZOH_VERSAO","X3_TAMANHO"))
+            cRevisa:=left(oPergunte:cRevisa,getSX3Cache("ZOH_REVISA","X3_TAMANHO"))
+            cAnoRef:=left(oPergunte:cAnoRef,getSX3Cache("ZOH_ANOREF","X3_TAMANHO"))
+
+            cMsgPrc:="Processando...Empresa:["+cEmp+"] :: Filial:["+cFil+"]"
+            IncProc(cMsgPrc)
+        
+            if (lEnd)
+                cMsg:="Operação Cancelada pelo usuário"
+                aAdd(aMsg,{cEmp,cFil,cVersao,cRevisa,cAnoRef,cMsg})
+                break
+            endif
+
+            bErrorBlock:=ErrorBlock(bError)
+            begin sequence
+
+                MsAguarde({||RPCTools():RpcSetEnv(cEmp,cFil),&("cCadastro"),StrTran(cMsgPrc,"Processando","Preparando Ambiente")})
+
+                SM0->(dbGoTo(nSM0RecNo))
+
+                dIniCalc:=Date()
+                cIniCalc:=Time()
+
+                cMsg:="Inicio do Cálculo: "
+                cMsg+=" "
+                cMsg+="Data:  "+DtoC(dIniCalc)
+                cMsg+=" "
+                cMsg+="Hora: "+cIniCalc
+                cMsg+=cCRLF
+                aAdd(aMsg,{cEmp,cFil,cVersao,cRevisa,cAnoRef,cMsg})
+                cMsg:=""
+
+                A35():OrcamentoInit(cVersao,cRevisa,cAnoRef)
+
+                lRet:=ProcBIA663(@oMsNewProcess,@cEmp,@cFil,@cVersao,@cRevisa,@cAnoRef,@cMsg,@nKeepResponse,@oRTime1,@oProgress1,@oRTime2,@oProgress2)
+
+                A35():OrcamentoClose()
+
+                dFimCalc:=Date()
+                cFimCalc:=Time()
+
+                if (empty(cMsg))
+                    cMsg:="Cálculo Concluido com Sucesso."
+                    cMsg+=cCRLF
+                    cMsg+=cCRLF
+                    cMsg+="Final do Cálculo: "
+                    cMsg+=" "
+                    cMsg+="Data:  "+DtoC(dFimCalc)
+                    cMsg+=" "
+                    cMsg+="Hora: "+cFimCalc
+                    cMsg+=cCRLF
+                    cMsg+=cCRLF
+                    cMsg+="Decorridos: "+ElapTime(cIniCalc,cFimCalc)
+                    cMsg+=cCRLF
+                    aAdd(aMsg,{cEmp,cFil,cVersao,cRevisa,cAnoRef,cMsg})
+                    cMsg:=""
+                endif
+
+            recover
+                
+                MsgRun(cMsg,"Aguarde...",{||sleep(100)})
+            
+            end sequence
+            ErrorBlock(bErrorBlock)
+
+            if (!empty(cMsg))
+                aAdd(aMsg,{cEmp,cFil,cVersao,cRevisa,cAnoRef,cMsg})
+                cMsg:=""
+            endif
+
+        next nD
+
+    end sequence
+
+    RPCTools():RpcSetEnv(cEmpDef,cFilDef)
+
+    if (!empty(aMsg))
+
+        cMsg:=""
+        nJ:=len(aMsg)
+        for nD:=1 to nJ
+            cMsg+="Empresa:"
+            cMsg+=" "
+            cMsg+=aMsg[nD][1]
+            cMsg+=cCRLF
+            cMsg+="Filial:"
+            cMsg+=" "
+            cMsg+=aMsg[nD][2]
+            cMsg+=cCRLF
+            cMsg+="Versao:"
+            cMsg+=" "
+            cMsg+=aMsg[nD][3]
+            cMsg+=cCRLF
+            cMsg+="Revisao:"
+            cMsg+=" "
+            cMsg+=aMsg[nD][4]
+            cMsg+=cCRLF
+            cMsg+="Referecia:"
+            cMsg+=" "
+            cMsg+=aMsg[nD][5]
+            cMsg+=cCRLF
+            cMsg+=cCRLF
+            cMsg+="Mensagem:"
+            cMsg+=" "
+            cMsg+=aMsg[nD][6]
+            cMsg+=cCRLF
+        next nD
+        
+        evalBlock():EvalBlock({||eecView(cMsg,&("cCadastro")+" :: Log de Processamento :: ATENÇÃO")},nil,.T.)
+
+    endif
+
+    return(lRet)
+
+static function ProcBIA663(oMsNewProcess as object,cEmp as character,cFil as character,cVersao as character, cRevisa as character, cAnoRef as character,cMsg as character,nKeepResponse as numeric,oRTime1 as object,oProgress1 as object,oRTime2 as object,oProgress2 as object) as logical
+    
+    local aMeses            as array
+    local aRecNos           as array
+    
+    local bFormula          as block
+    local bFormulaTotal     as block
+
+    local bStrFormula      as character
+    local bStrFormulaTotal as character
+
+    local cMes              as character
+    local cCRLF             as character
+    local cMsgNoYes         as character
+    local cTmpAlias         as character
+    
+    local cMnemonico        as character
+    local cAccumulator      as character
+    local cMnemonicoCol     as character
+    local cAccumulatorCol   as character
+
+    local cFormula          as character
+    local cFormulaTotal     as character
+
+    local cZOGField         as character
+    local cZOHField         as character
+
+    local cZOGFieldTotal    as character
+    local cZOHFieldTotal    as character
+
+    local cZODDtRef         as character
+
+    local cZODOrder         as character
+    local cZOGOrder         as character
+    local cZOHOrder         as character
+    
+    local cZOHConta         as character
+
+    local cZODFilial        as character
+    local cZOGFilial        as character
+    local cZOHFilial        as character
+
+    local cZOHKeySeek       as character
+    local cZODKeySeek       as character
+
+    local dZODDtRef         as date
+    local dZODDtProc        as date
+
+    local lRet              as logical
+    
+    local lZODFound         as logical
+    local lZOGFound         as logical
+    local lZOHFound         as logical
+    
+    local lFormula          as logical
+    local lAccumulator      as logical
+    local lFormulaTotal     as logical
+
+    local nMes              as numeric
+    local nMeses            as numeric
+
+    local nResult           as numeric
+    
+    local nRecNo            as numeric
+    local nRecNos           as numeric
+
+    local nZODOrder         as numeric
+    local nZOGOrder         as numeric
+    local nZOHOrder         as numeric
+
+    local nZOGRecNo         as numeric
+    local nZOHRecNo         as numeric
+
+    local nRecCount         as numeric
+
+    local nTotal            as numeric
+    local nAccumulator      as numeric
+    local nAccumulatorCol   as numeric
+
+    local oJSONArray        as object
+
+    DEFAULT cEmp:=&("cEmpAnt")
+    DEFAULT cFil:=&("cFilAnt")
+    DEFAULT lRet:=.T.
+
+    cCRLF:=CRLF
+
+    cZOGOrder:="ZOG_FILIAL+ZOG_VERSAO+ZOG_REVISA+ZOG_ANOREF+ZOG_SEQFOR+ZOG_CONTA+ZOG_MNEMON"
+    nZOGOrder:=retOrder("ZOG",cZOGOrder)
+
+    ZOG->(dbSetOrder(nZOGOrder))
+    
+    cZOGFilial:=xFilial("ZOG")
+    
+    cZOGKeySeek:=cZOGFilial
+    cZOGKeySeek+=cVersao
+    cZOGKeySeek+=cRevisa
+    cZOGKeySeek+=cAnoRef
+
+    begin sequence
+
+        lZOGFound:=ZOG->(dbSeek(cZOGKeySeek,.F.))
+
+        if (lZOGFound)
+
+            cZOHOrder:="ZOH_FILIAL+ZOH_VERSAO+ZOH_REVISA+ZOH_ANOREF+ZOH_CONTA"
+            nZOHOrder:=retOrder("ZOH",cZOHOrder)
+
+            ZOH->(dbSetOrder(nZOHOrder))
+            
+            cZOHFilial:=xFilial("ZOH")
+            
+            cZOHKeySeek:=cZOHFilial
+            cZOHKeySeek+=cVersao
+            cZOHKeySeek+=cRevisa
+            cZOHKeySeek+=cAnoRef
+
+            lZOHFound:=ZOH->(dbSeek(cZOHKeySeek,.F.))
+
+            if (lZOHFound)
+                if (nKeepResponse==(-1))
+                    cMsgNoYes:="Já Existem dados para este Orçamento."
+                    cMsgNoYes+=cCRLF
+                    cMsgNoYes+=cCRLF
+                    cMsgNoYes+=" Empresa:["+cEmp+"] :: Filial:["+cFil+"]"
+                    cMsgNoYes+=" :: "
+                    cMsgNoYes+="["
+                    cMsgNoYes+=cVersao
+                    cMsgNoYes+="]"
+                    cMsgNoYes+="["
+                    cMsgNoYes+=cRevisa
+                    cMsgNoYes+="]"
+                    cMsgNoYes+="["
+                    cMsgNoYes+=cAnoRef
+                    cMsgNoYes+="]"
+                    cMsgNoYes+=cCRLF
+                    cMsgNoYes+=" Deseja Reprocessar?"
+                    lZOHFound:=ApMsgNoYes(cMsgNoYes,&("cCadastro"))
+                    nKeepResponse:=if(lZOHFound,1,0)
+                    lZOHFound:=(!lZOHFound)
+                else
+                    lZOHFound:=(nKeepResponse==1)
+                endif
+            endif
+
+            if (!lZOHFound)
+                MsAguarde({||cTmpAlias:=getQueryZOG(@cEmp,@cFil,@cVersao,@cRevisa,@cAnoRef)},&("cCadastro"),"Obtendo dados no SGBD...Empresa:["+cEmp+"] :: Filial:["+cFil+"]")
+            else
+                cTmpAlias:=""
+            endif
+
+        else
+
+            cMsg:="Não existem Regras de Cálculo definidas para Este processo"
+
+        endif
+
+        lRet:=((!empty(cTmpAlias)).and.(select(cTmpAlias)>0))
+
+        if (!lRet)
+            break
+        endif
+
+        lRet:=(cTmpAlias)->(!(eof().and.bof()))
+
+        if (!lRet)
+            break
+        endif
+
+        nMeses:=12
+        aMeses:=array(nMeses,3)
+        aRecNos:=array(0)
+
+        cZOGFieldTotal:="ZOG_TOTAL"
+        cZOHFieldTotal:="ZOH_TOTAL"
+
+        oJSONArray:=Array(#)
+        oJSONArray[#"RecNos"]:=aRecNos
+
+        oMsNewProcess:SetRegua2(0)
+        
+        nRecCount:=0
+        while ((cTmpAlias)->(!eof()))
+            TTimer1(@oMsNewProcess,@oRTime1,@oProgress1,.F.)
+            TTimer2(@oMsNewProcess,@oRTime2,@oProgress2,.F.)
+            nRecCount++
+            (cTmpAlias)->(dbSkip())
+        end while
+        
+        oRTime2:SetRemaining(nRecCount)
+
+        (cTmpAlias)->(dbGoTop())
+        
+        while ((cTmpAlias)->(!eof()))
+
+            TTimer1(@oMsNewProcess,@oRTime1,@oProgress1,.F.)
+            TTimer2(@oMsNewProcess,@oRTime2,@oProgress2,.T.)
+
+            nZOGRecNo:=(cTmpAlias)->ZOGRECNO
+            ZOG->(dbGoTo(nZOGRecNo))
+
+            cZOHConta:=ZOG->ZOG_CONTA
+            lZOHFound:=ZOH->(dbSeek(cZOHKeySeek+cZOHConta,.F.))
+            
+            lAddNew:=(!lZOHFound)
+            if (lAddNew)
+                if (ZOH->(recLock("ZOH",lAddNew)))
+                    ZOH->ZOH_FILIAL:=cZOHFilial
+                    ZOH->ZOH_VERSAO:=ZOG->ZOG_VERSAO
+                    ZOH->ZOH_REVISA:=ZOG->ZOG_REVISA
+                    ZOH->ZOH_ANOREF:=ZOG->ZOG_ANOREF
+                    ZOH->ZOH_CONTA:=ZOG->ZOG_CONTA
+                    ZOH->(msUnLock())
+                endif
+            endif
+            
+            nZOHRecNo:=ZOH->(recNo())
+            
+            nRecNo:=oJSONArray:AddItem("RecNos",Array(#))
+            
+            oJSONArray[#"RecNos"][nRecNo][#"nZOGRecNo"]:=nZOGRecNo
+            oJSONArray[#"RecNos"][nRecNo][#"nZOHRecNo"]:=nZOHRecNo
+            
+            cMnemonico:=allTrim(ZOG->ZOG_MNEMON)
+            if (empty(cMnemonico))
+                cMnemonico:=allTrim(ZOG->ZOG_CONTA)
+            endif    
+            oJSONArray[#"RecNos"][nRecNo][#"cMnemonico"]:=cMnemonico
+
+            for nMes:=1 to nMeses
+                
+                TTimer1(@oMsNewProcess,@oRTime1,@oProgress1,.F.)
+                TTimer2(@oMsNewProcess,@oRTime2,@oProgress2,.F.)
+            
+                cMes:=strZero(nMes,2)
+                aMeses[nMes][1]:=cMes
+
+                cZODDtRef:=cAnoRef
+                cZODDtRef+=cMes
+                cZODDtRef+="01"
+                
+                dZODDtRef:=LastDay(SToD(cZODDtRef))
+                
+                aMeses[nMes][2]:=dZODDtRef
+                aMeses[nMes][3]:=DtoS(dZODDtRef)
+
+                cZOGField:=("ZOG_MES"+cMes)
+                oJSONArray[#"RecNos"][nRecNo][#cZOGField]:=Array(#)
+
+                cFormula:=allTrim(ZOG->(&cZOGField))
+                lFormula:=(!empty(cFormula))
+                
+                oJSONArray[#"RecNos"][nRecNo][#cZOGField][#"lFormula"]:=lFormula
+                if (lFormula)
+                    bStrFormula:=__CompStr(cFormula)
+                    oJSONArray[#"RecNos"][nRecNo][#cZOGField][#"cFormula"]:=bStrFormula
+                endif
+
+            next nMes
+
+            cAccumulator:=allTrim(ZOG->ZOG_ACCUMM)
+            lAccumulator:=(!empty(cAccumulator))
+            oJSONArray[#"RecNos"][nRecNo][#"lAccumulator"]:=lAccumulator
+            if (lAccumulator)
+                oJSONArray[#"RecNos"][nRecNo][#"cAccumulator"]:=cAccumulator
+            endif
+            
+            cFormulaTotal:=allTrim(ZOG->(&cZOGFieldTotal))
+            lFormulaTotal:=(!empty(cFormulaTotal))
+            oJSONArray[#"RecNos"][nRecNo][#"lFormulaTotal"]:=lFormulaTotal
+            if (lFormulaTotal)
+                bStrFormulaTotal:=__CompStr(cFormulaTotal)
+                oJSONArray[#"RecNos"][nRecNo][#"cFormulaTotal"]:=bStrFormulaTotal
+            endif
+        
+            (cTmpAlias)->(dbSkip())
+        
+        end while
+
+        (cTmpAlias)->(dbCloseArea())
+
+        dbSelectArea("ZOG")
+
+        nRecNos:=len(aRecNos)
+
+        bFormula:={|bStrFormula|nResult:=__runcb(bStrFormula) }
+        bFormulaTotal:={|bStrFormulaTotal|nResult:=__runcb(bStrFormulaTotal)}
+
+        oMsNewProcess:SetRegua2(nMeses)
+
+        for nMes:=1 to nMeses
+
+            TTimer1(@oMsNewProcess,@oRTime1,@oProgress1,.F.)
+            TTimer2(@oMsNewProcess,@oRTime2,@oProgress2,.F.)
+
+            cMes:=aMeses[nMes][1]
+
+            cZOGField:=("ZOG_MES"+cMes)
+            cZOHField:=("ZOH_MES"+cMes)
+
+            for nRecNo:=1 to nRecNos
+            
+                lFormula:=oJSONArray[#"RecNos"][nRecNo][#cZOGField][#"lFormula"]
+                if (!lFormula)
+                    loop
+                endif
+
+                bStrFormula:=oJSONArray[#"RecNos"][nRecNo][#cZOGField][#"cFormula"]
+
+                nZOHRecNo:=oJSONArray[#"RecNos"][nRecNo][#"nZOHRecNo"]
+                ZOH->(dbGoTo(nZOHRecNo))
+            
+                cMnemonico:=oJSONArray[#"RecNos"][nRecNo][#"cMnemonico"]
+            
+                cMnemonicoCol:=(cMnemonico+cMes)
+
+                lAccumulator:=oJSONArray[#"RecNos"][nRecNo][#"lAccumulator"]
+                if (lAccumulator)
+                    cAccumulator:=oJSONArray[#"RecNos"][nRecNo][#"cAccumulator"]
+                    cAccumulatorCol:=(cAccumulator+cMes)
+                endif
+
+                if (!evalBlock():EvalBlock(bFormula,bStrFormula,.T.))
+                    nZOGRecNo:=oJSONArray[#"RecNos"][nRecNo][#"nZOGRecNo"]
+                    ZOG->(MsGoTo(nZOGRecNo))
+                    cMsg:=CRLF
+                    cMsg+="Ocorreram erros na Formula: "+GetCBSource(bStrFormula)
+                    cMsg+=CRLF
+                    cMsg+="Orçamento  : "+cVersao
+                    cMsg+=CRLF
+                    cMsg+="Revisao    : "+cRevisa
+                    cMsg+=CRLF
+                    cMsg+="Referencia : "+cAnoRef
+                    cMsg+=CRLF
+                    cMsg+="Rubrica    : "+ZOG->ZOG_CONTA
+                    cMsg+=CRLF
+                    break
+                endif
+
+                A35():setValN(cMnemonicoCol,nResult)
+
+                if (lAccumulator)
+                    nAccumulatorCol:=A35():getValN(cAccumulatorCol,0)
+                    nAccumulatorCol+=nResult
+                    A35():setValN(cAccumulatorCol,nAccumulatorCol)
+                endif                
+
+                if (ZOH->(recLock("ZOH",.F.)))
+                    ZOH->(&cZOHField):=nResult
+                    ZOH->(msUnLock())
+                endif
+
+                lFormulaTotal:=oJSONArray[#"RecNos"][nRecNo][#"lFormulaTotal"]
+
+                nTotal:=A35():getValN(cMnemonico,0)
+                nTotal+=nResult
+                A35():setValN(cMnemonico,nTotal)
+
+                if (!lFormulaTotal)
+                    if (lAccumulator)
+                        nAccumulator:=A35():getValN(cAccumulator,0)
+                        nAccumulator+=nResult
+                        A35():setValN(cAccumulator,nAccumulator)
+                    endif                
+                endif
+
+            next nRecNo
+
+        next nMes
+
+        oMsNewProcess:SetRegua2(nRecNos)
+
+        for nRecNo:=1 to nRecNos
+
+            TTimer1(@oMsNewProcess,@oRTime1,@oProgress1,.F.)
+            TTimer2(@oMsNewProcess,@oRTime2,@oProgress2,.F.)
+
+            nZOHRecNo:=oJSONArray[#"RecNos"][nRecNo][#"nZOHRecNo"]
+            ZOH->(dbGoTo(nZOHRecNo))
+
+            cMnemonico:=oJSONArray[#"RecNos"][nRecNo][#"cMnemonico"]
+
+            lFormulaTotal:=oJSONArray[#"RecNos"][nRecNo][#"lFormulaTotal"]
+
+            if (lFormulaTotal)
+                cFormulaTotal:=oJSONArray[#"RecNos"][nRecNo][#"cFormulaTotal"]
+                if (!evalBlock():EvalBlock(bFormulaTotal,bStrFormulaTotal,.T.))
+                    nZOGRecNo:=oJSONArray[#"RecNos"][nRecNo][#"nZOGRecNo"]
+                    ZOG->(MsGoTo(nZOGRecNo))
+                    cMsg:=CRLF
+                    cMsg+="Ocorreram erros na Formula: "+GetCBSource(bStrFormulaTotal)
+                    cMsg+=CRLF
+                    cMsg+="Orçamento  : "+cVersao
+                    cMsg+=CRLF
+                    cMsg+="Revisao    : "+cRevisa
+                    cMsg+=CRLF
+                    cMsg+="Referencia : "+cAnoRef
+                    cMsg+=CRLF
+                    cMsg+="Rubrica    : "+ZOG->ZOG_CONTA
+                    cMsg+=CRLF
+                    break
+                endif
+                A35():setValN(cMnemonico,nResult)
+                lAccumulator:=oJSONArray[#"RecNos"][nRecNo][#"lAccumulator"]
+                if (lAccumulator)
+                    cAccumulator:=oJSONArray[#"RecNos"][nRecNo][#"cAccumulator"]
+                    nAccumulator:=A35():getValN(cAccumulator,0)
+                    nAccumulator+=nResult
+                    A35():setValN(cAccumulator,nAccumulator)
+                endif
+            else
+                nResult:=A35():getValN(cMnemonico,0)
+            endif
+
+            if (ZOH->(recLock("ZOH",.F.)))
+                ZOH->(&cZOHFieldTotal):=nResult
+                ZOH->(msUnLock())
+            endif
+
+        next nRecNo
+
+        cZODOrder:="ZOD_FILIAL+ZOD_VERSAO+ZOD_REVISA+ZOD_ANOREF+ZOD_TIPO+DTOS(ZOD_DTREF)+ZOD_CONTA"
+        nZODOrder:=retOrder("ZOD",cZODOrder)
+        ZOD->(dbSetOrder(nZODOrder))
+
+        cZOHKeySeek:=cZOHFilial
+        cZOHKeySeek+=cVersao
+        cZOHKeySeek+=cRevisa
+        cZOHKeySeek+=cAnoRef
+        cZOHKeySeek+="2"
+
+        cZODFilial:=xFilial("ZOD")
+        dZODDtProc:=Date()
+
+        oMsNewProcess:SetRegua2(nRecNos)
+        
+        for nRecNo:=1 to nRecNos
+
+            TTimer1(@oMsNewProcess,@oRTime1,@oProgress1,.F.)
+            TTimer2(@oMsNewProcess,@oRTime2,@oProgress2,.F.)
+
+            nZOHRecNo:=nZOHRecNo:=oJSONArray[#"RecNos"][nRecNo][#"nZOHRecNo"]
+            ZOH->(dbGoTo(nZOHRecNo))
+
+            for nMes:=1 to nMeses
+
+                cMes:=aMeses[nMes][1]
+
+                cZOHField:=("ZOH_MES"+cMes)
+
+                dZODDtRef:=aMeses[nMes][2]
+                cZODDtRef:=aMeses[nMes][3]
+
+                cZODKeySeek:=cZOHKeySeek
+                cZODKeySeek+=cZODDtRef
+                cZODKeySeek+=ZOH->ZOH_CONTA
+
+                lZODFound:=ZOD->(dbSeek(cZODKeySeek,.F.))
+                lAddNew:=(!lZODFound)
+
+                if (ZOD->(recLock("ZOD",lAddNew)))
+                    ZOD->ZOD_FILIAL:=cZODFilial
+                    ZOD->ZOD_VERSAO:=ZOH->ZOH_VERSAO
+                    ZOD->ZOD_REVISA:=ZOH->ZOH_REVISA
+                    ZOD->ZOD_ANOREF:=ZOH->ZOH_ANOREF
+                    ZOD->ZOD_TIPO:="2"
+                    ZOD->ZOD_DTREF:=dZODDtRef
+                    ZOD->ZOD_CONTA:=ZOH->ZOH_CONTA
+                    ZOD->ZOD_DTPROC:=dZODDtProc
+                    ZOD->ZOD_SALCTA:=ZOH->(&cZOHField)
+                    ZOD->(msUnLock())
+                endif
+
+            next nMeses            
+
+        next nRecNo
+
+    end sequence
+
+    return(lRet)
+
+static function getQueryZOG(cEmp as character,cFil as character,cVersao as character,cRevisa as character,cAnoRef as character) as character
+
+    local cAlias    as character
+
+    local cSQLFile  as character
+    local cSQLPath  as character
+    local cSQLQuery as character
+
+    if (IsBlind())
+        cSQLPath:="\tmp\"
+    else
+        cSQLPath:=getTempPath()
+        if (!right(cSQLPath,1)=="\")
+            cSQLPath+="\"
+        endif
+    endif
+    cSQLPath+="BIA663\SQL\"
+
+    cAlias:=getNextAlias()
+
+    beginSQL alias cAlias
+        SELECT ZOG.R_E_C_N_O_ ZOGRECNO
+          FROM %table:ZOG% ZOG
+         WHERE ZOG.%notDel%
+           AND ZOG.ZOG_FILIAL=%xFilial:ZOG%
+           AND ZOG.ZOG_VERSAO=%exp:cVersao%
+           AND ZOG.ZOG_REVISA=%exp:cRevisa%
+           AND ZOG.ZOG_ANOREF=%exp:cAnoRef%
+           AND ZOG.ZOG_ENABLE='1'
+      ORDER BY ZOG.ZOG_FILIAL
+              ,ZOG.ZOG_VERSAO
+              ,ZOG.ZOG_REVISA
+              ,ZOG.ZOG_ANOREF
+              ,ZOG.ZOG_SEQFOR
+              ,ZOG.ZOG_CONTA
+    endSQL
+
+    cSQLQuery:=getLastQuery()[2]
+
+    A35():writeSQLFile(@cSQLQuery,@cEmp,@cFil,"bia663","00","qry_final",@cSQLPath,@cSQLFile)
+
+    return(cAlias)
+
+procedure U_BIA663Excel()
+    
+    local aArea     as array
+    local aAreaZOH  as array
+    
+    local oPergunte as object
+    
+    aArea:=getArea()
+    aAreaZOH:=ZOH->(getArea())
+    if (__TWPCOFiltroPeriodo():Pergunte())
+        oPergunte:=__TWPCOFiltroPeriodo():Get()
+        BIA663Excel(@oPergunte)
+    endif
+    
+    restArea(aAreaZOH)
+    restArea(aArea)
+    
+    return
+
+static procedure BIA663Excel(oPergunte as object)
+
+    local aZOHQuery        as array
+
+    local cVersao       as character
+    local cRevisa       as character
+    local cAnoRef       as character
+
+    local cXMLPath      as character
+    local cXMLFile      as character
+    local cExcelTitle   as character
+
+    local cServerIP     as character
+    local cEnvServer    as character
+
+    local cZOHOrder     as character
+    local cZOHFilial    as character
+    local cZOHFilter    as character
+    local cZOHKeySeek   as character
+
+    local lDev          as logical
+    local lPicture      as logical
+    local lX3Titulo     as logical
+    local leecView      as logical
+
+    local nZOHOrder     as numeric
+
+    cVersao:=left(oPergunte:cVersao,getSX3Cache("ZOH_VERSAO","X3_TAMANHO"))
+    cRevisa:=left(oPergunte:cRevisa,getSX3Cache("ZOH_REVISA","X3_TAMANHO"))
+    cAnoRef:=left(oPergunte:cAnoRef,getSX3Cache("ZOH_ANOREF","X3_TAMANHO"))
+
+    cZOHOrder:="ZOH_FILIAL+ZOH_VERSAO+ZOH_REVISA+ZOH_ANOREF+ZOH_CONTA"
+    nZOHOrder:=retOrder("ZOH",cZOHOrder)
+
+    ZOH->(dbSetOrder(nZOHOrder))
+    
+    cZOHFilial:=xFilial("ZOH")
+    
+    cZOHKeySeek:=cZOHFilial
+    cZOHKeySeek+=cVersao
+    cZOHKeySeek+=cRevisa
+    cZOHKeySeek+=cAnoRef
+
+    ZOH->(dbSeek(cZOHKeySeek,.F.))
+
+    aZOHQuery:=array(0)
+    cZOHFilter:="ZOH_FILIAL=='"+cZOHFilial+"' .AND. ZOH_VERSAO=='"+cVersao+"' .AND. ZOH_REVISA=='"+cRevisa+"' .AND. ZOH_ANOREF=='"+cAnoRef+"'"
+
+    MsAguarde({||FilBrowse("ZOH",@aZOHQuery,cZOHFilter)},&("cCadastro"),"Obtendo dados no SGBD...")
+    
+    cXMLPath:="\tmp\BIA663\XML\"
+    if (dirtools():MakeDir(cXMLPath))
+
+        cXMLFile:=A35():getXMLFile(&("cEmpAnt"),&("cFilAnt"),cXMLPath,"BIA663","00","ZOH")
+        
+        if (type("cCadastro")=="C")
+            cExcelTitle:=&("cCadastro")
+            cExcelTitle+=" :: "
+        else
+            cExcelTitle:=""
+        endif
+
+        cExcelTitle+="Empresa: "+&("cEmpAnt")
+        cExcelTitle+=" :: "
+        cExcelTitle+="Filial:  "+&("cFilAnt")
+        cExcelTitle+=" :: "
+        cExcelTitle+="Ver.: "+cVersao
+        cExcelTitle+=" :: "
+        cExcelTitle+="Rev.: "+cRevisa
+        cExcelTitle+=" :: "
+        cExcelTitle+="Ref.: "+cAnoRef
+        
+        cServerIP:=getServerIP()
+        cEnvServer:=upper(getEnvServer())
+
+        lDev:=((cServerIP=="192.168.20.18").or.("DEV"$cEnvServer))
+        if (lDev)
+            cExcelTitle+=" :: EMITIDO EM AMBIENTE DE DESENVOLVIMENTO ::"    
+        endif
+
+        lPicture:=.T.
+        lX3Titulo:=.T.
+        leecView:=.F.
+
+        ZOH->(dbSeek(cZOHKeySeek,.F.))
+
+        uToXML():QryToXML("ZOH",@cXMLFile,@cExcelTitle,@lPicture,@lX3Titulo,@leecView)
+
+    endif
+
+    EndFilBrw("ZOH",@aZOHQuery)
+    
+    return
+
+static function TTimer1(oMsNewProcess as object,oRTime as object,oProgress as object,lCalcule as logical) as logical
+    local cIncRegua as character
+    local lTTimer   as logical
+    DEFAULT lCalcule:=.T.
+    oRTime:Calcule(lCalcule)
+    cIncRegua:="Processando  :: "
+    cIncRegua+="Final Estimado em"+":["+DtoC(oRTime:GetdEndTime())+"]["+oRTime:GetcEndTime()+"]"
+    cIncRegua+="["+oProgress:Eval()+"]"
+    oMsNewProcess:IncRegua1(cIncRegua)
+    lTTimer:=(!(oMsNewProcess:lEnd))
+    return(lTTimer)
+
+static function TTimer2(oMsNewProcess as object,oRTime as object,oProgress as object,lCalcule as logical) as logical
+    local cIncRegua as character
+    local lTTimer   as logical
+    DEFAULT lCalcule:=.T.
+    oRTime:Calcule(lCalcule)
+    cIncRegua:="Processando  :: "
+    cIncRegua+="Final Estimado em"+":["+DtoC(oRTime:GetdEndTime())+"]["+oRTime:GetcEndTime()+"]"
+    cIncRegua+="["+oProgress:Eval()+"]"
+    oMsNewProcess:IncRegua2(cIncRegua)
+    lTTimer:=(!(oMsNewProcess:lEnd))
+    return(lTTimer)

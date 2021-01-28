@@ -136,6 +136,9 @@ Static Function fMSNewSraDados1()
 	Ferase(A0cIndex+GetDBExtension())     //arquivo de trabalho
 	Ferase(A0cIndex+OrdBagExt())          //indice gerado
 
+	Aadd(aFieldFill, {'01999998', "MAX ZANCANARO"   , .F. })
+	Aadd(aFieldFill, {'01999999', "LUCAS ZENI"      , .F. })
+
 	If Len(aFieldFill) == 0
 
 		For nX := 1 to Len(aFields)

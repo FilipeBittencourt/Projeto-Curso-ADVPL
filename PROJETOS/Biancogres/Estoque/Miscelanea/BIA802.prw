@@ -59,7 +59,7 @@ User Function BIA802()
 			aSaldos := CalcEst(nProduto,nAlmx,ddatabase+1) //Somado +1 na database, para dar o saldo do dia corrente
 
 			//Verifica se existe saldo suficiente para baixa da requisicao
-			If aSaldos[1] < nQuant .and. 1 == 2
+			If aSaldos[1] < nQuant
 				MsgAlert("Nao existe saldo suficiente, para atender esta Requisicao! Favor conferir o Saldo em Estoque!", "BIA802!!!")
 				Acols[n,nPosQuant] 	:= 0.00
 				nQuant			    := 0.00
