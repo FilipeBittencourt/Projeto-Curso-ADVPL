@@ -12,8 +12,10 @@
 User Function BIAFG127(_nRecno)
 
 	Local _cAlias	:=	GetNextAlias()
+	Local msAlias	:=	GetNextAlias()
 	Local _cRecno	:= "%'%" + Alltrim(Str(_nRecno)) + "%'%"
 	Local _lRet		:=	.T.	
+	Local msEnter   := CHR(13) + CHR(10)
 
 	BEGINSQL Alias _cAlias
 		%NoParser%
@@ -65,8 +67,37 @@ User Function BIAFG127(_nRecno)
 		ENDSQL
 
 		If (_cAlias)->QTD == 0
+
+			BEGINSQL Alias msAlias
+
+				%NoParser%
+
+				SELECT PROCESSO_BIZAGI NUMPROC
+				FROM BZINTEGRACAO(NOLOCK)
+				WHERE PROCESSO_NOME = 'RM'
+				AND RECNO_RETORNO LIKE %Exp:_cRecno%			
+
+			ENDSQL
+
 			_lRet	:=	.F.
-			MsgInfo("A Nota Fiscal está com o processo de RECEBIMENTO DE MERCADORIA em aberto no BIZAGI. Para prosseguir com a exclusão, será necessário alinhar com o Almoxarifado se o processo já foi recebido, se a etiqueta já foi impressa e se 30 minutos se passaram desde a impressão da etiqueta. Ainda com o Almoxarifado poderá ser verificado se o processo deveria ter sido cancelado e ainda porque ainda não o foi. Somente depois destas conferrências, a nota poderá ser excluída!","BIAFG127")
+			msMsgInf := "A Nota Fiscal está com o processo de RECEBIMENTO DE MERCADORIA em aberto no BIZAGI." + msEnter 
+			msMsgInf += msEnter 
+			msMsgInf += "Para prosseguir com a exclusão, será necessário:" + msEnter 
+			msMsgInf += "1) Alinhar com o Almoxarifado se o processo já foi recebido;" + msEnter 
+			msMsgInf += "2) Se a etiqueta já foi impressa e se 30 minutos se passaram desde a impressão da etiqueta;" + msEnter 
+			msMsgInf += "3) Ainda com o Almoxarifado poderá ser verificado se o processo deveria ter sido cancelado e ainda porque ainda não o foi;" + msEnter 
+			msMsgInf += msEnter 
+			msMsgInf += "Somente depois destas conferências, a nota poderá ser excluída!" + msEnter 
+			msMsgInf += msEnter 
+			msMsgInf += "O número do processo gerado é:       " + Alltrim((msAlias)->NUMPROC) + msEnter 
+			msMsgInf += msEnter 
+			msMsgInf += "Se preferir, poderá rastrear o processo acessando o BIZAGI e informando o número código acima." + msEnter 
+			msMsgInf += msEnter 
+			msMsgInf += "Se após executar as etapas acima ainda não for possível excluir a nota, favor abrir ticket, informando o múmero do processo e o status do BIZAGI. " + msEnter 
+
+			MsgInfo(msMsgInf, "BIAFG127")
+
+			(msAlias)->(DbCloseArea())
 
 		EndIf
 

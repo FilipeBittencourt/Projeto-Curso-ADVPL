@@ -424,11 +424,20 @@ Return
 Static Function msChkAtrbR()
 
 	msGravaErr := "Eventos sem associação a Rubricas: " + msEnter + msEnter
-	CK003 := Alltrim(" SELECT DISTINCT               ") + msEnter
-	CK003 += Alltrim("        codeve,                ") + msEnter
-	CK003 += Alltrim("        destpe                 ") + msEnter
-	CK003 += Alltrim(" FROM " + msTblTemp + "        ") + msEnter
-	CK003 += Alltrim(" WHERE rrubric IS NULL         ") + msEnter
+	CK003 := Alltrim(" SELECT DISTINCT                                    ") + msEnter
+	CK003 += Alltrim("        codeve,                                     ") + msEnter
+	CK003 += Alltrim("        destpe,                                     ") + msEnter
+	CK003 += Alltrim("        tabcus,                                     ") + msEnter
+	CK003 += Alltrim("        tabref = CASE                               ") + msEnter
+	CK003 += Alltrim("                     WHEN tabcus = 'FOL'            ") + msEnter
+	CK003 += Alltrim("                     THEN '5-seniorFOL'             ") + msEnter
+	CK003 += Alltrim("                     WHEN tabcus = 'PRV'            ") + msEnter
+	CK003 += Alltrim("                     THEN '6-seniorPRV'             ") + msEnter
+	CK003 += Alltrim("                     WHEN tabcus = 'INS'            ") + msEnter
+	CK003 += Alltrim("                     THEN '7-seniorINS'             ") + msEnter
+	CK003 += Alltrim("                 END                                ") + msEnter
+	CK003 += Alltrim(" FROM " + msTblTemp + "                             ") + msEnter
+	CK003 += Alltrim(" WHERE rrubric IS NULL                              ") + msEnter
 	CKIndex := CriaTrab(Nil,.f.)
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,CK003),'CK03',.T.,.T.)
 	dbSelectArea("CK03")
@@ -437,7 +446,7 @@ Static Function msChkAtrbR()
 
 		If !Alltrim(Str(CK03->codeve)) $ Alltrim(GETMV("MV_YEVEFIL")) 
 			mslOk := .F.
-			msGravaErr += Alltrim(Str(CK03->codeve)) + " - " + CK03->destpe + msEnter
+			msGravaErr += CK03->tabref + " - " + Alltrim(Str(CK03->codeve)) + " - " + CK03->destpe + msEnter
 		EndIf 
 		CK03->(dbSkip())
 
@@ -608,6 +617,10 @@ Static Function msGrvEvent()
 		msGravaErr := TCSQLError()
 
 	EndIf
+
+	SQ07->(dbCloseArea())
+	Ferase(SQIndex+GetDBExtension())
+	Ferase(SQIndex+OrdBagExt())
 
 Return
 

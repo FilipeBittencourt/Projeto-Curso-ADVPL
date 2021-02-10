@@ -63,6 +63,8 @@ Method CreatePCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
             Z42->Z42_SYCELE   :=  "N" // INICIA COMO RESIDUO NÃO ELIMNADO,  JOB
             Z42->Z42_JOBALT   :=  "N" // CONTROLER DE QTD DE JOB DE ALTERACAO
             Z42->Z42_QTDNOV   :=  0   // CASO HAJA ALTERAÇÃO DA QUANTIDADE
+            // Z42->Z42_DESTINO  :=  0   // CASO HAJA ALTERAÇÃO DA QUANTIDADE
+
 
             Z42->(MsUnlock())
         Next nI
@@ -433,6 +435,11 @@ Method CreatePVenda(oJsonPV) Class TIntegracaoMotorAbastecimentoDAO
         oJSRet["errors"]  := aError
     Else
 
+        //Criar o PC para o destino trocar
+
+        //STARTJOB( "U_ENVMOTOR", GetEnvServer(),.T.,oJsonPV:ToJason())
+
+        //Fechar
         ConOut("FIM MsExecAuto MataMata410 - MOTOR de ABASTECIMENTO")
 
     EndIf

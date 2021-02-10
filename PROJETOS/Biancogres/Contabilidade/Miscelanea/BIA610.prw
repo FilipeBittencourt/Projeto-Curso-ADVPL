@@ -18,6 +18,7 @@ User Function BIA610()
 	{               "Produção Orçada"         ,'ExecBlock("BIA610A",.F.,.F.)'  ,0,3},;
 	{               "Kardex Orçado"           ,'ExecBlock("BIA616",.F.,.F.)'   ,0,3},;
 	{               "Variação de Estoque"     ,'ExecBlock("BIA619",.F.,.F.)'   ,0,3},;
+	{               "CPV Orçado"              ,'ExecBlock("BIA617",.F.,.F.)'   ,0,3},;
 	{               "Gera Excel Kardex"       ,'ExecBlock("BIA639",.F.,.F.)'   ,0,3} }
 
 	dbSelectArea("ZOB")
@@ -44,11 +45,20 @@ User Function BIA610A()
 		Begin Transaction
 
 			xVerRet := .F.
-			Processa({ || ExistThenD(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Deletando dados...", .F.)
+			Processa({ || ExistZBZtd(cFilAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Deletando dados Orçados...", .F.)
 			If xVerRet
 
-				Processa({ || fProcessa(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Processando dados...", .F.)
-				lRet := xVerRet 
+				Processa({ || ExistThenD(cFilAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Deletando dados...", .F.)
+				If xVerRet
+
+					Processa({ || fProcessa(cFilAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Processando dados...", .F.)
+					lRet := xVerRet 
+
+				Else
+
+					msCanPrc  := .T.
+
+				EndIf
 
 			Else
 
@@ -102,7 +112,7 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 	cSql += " 	     ZO8_VERSAO, "
 	cSql += " 	     ZO8_REVISA, "
 	cSql += " 	     ZO8_ANOREF, "
-	cSql += " 	     ZO8_PRODUT, "
+	cSql += " 	     Z47.Z47_PRODUT, "
 	cSql += " 	     ZO8_DTREF, "
 	cSql += " 	     Z47_QTDM01, "
 	cSql += " 	     Z47_QTDM02, "
@@ -124,19 +134,19 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 	cSql += " 	Z47.Z47_VERSAO = ZO8.ZO8_VERSAO AND "
 	cSql += " 	Z47.Z47_REVISA = ZO8.ZO8_REVISA AND "
 	cSql += " 	Z47.Z47_ANOREF = ZO8.ZO8_ANOREF AND "
-	cSql += " 	Z47.Z47_PRODUT = ZO8.ZO8_PRODUT AND "
+	cSql += " 	SUBSTRING(Z47.Z47_PRODUT,1,7) = SUBSTRING(ZO8.ZO8_PRODUT,1,7) AND "
 	cSql += " 	Z47.D_E_L_E_T_ = ' ' "
 	cSql += " ) "
 	cSql += " WHERE ZO8.D_E_L_E_T_  = ' ' "
-	cSql += " AND ZO8.ZO8_FILIAL    = " + ValToSql(cEmp)
-	cSql += " AND ZO8.ZO8_VERSAO    = " + ValToSql(cVersao)
-	cSql += " AND ZO8.ZO8_REVISA    = " + ValToSql(cRevisa)
-	cSql += " AND ZO8.ZO8_ANOREF    = " + ValToSql(cAnoRef)
+	cSql += " AND ZO8.ZO8_FILIAL = '" + xFilial("ZO8") + "' "
+	cSql += " AND ZO8.ZO8_VERSAO = " + ValToSql(cVersao)
+	cSql += " AND ZO8.ZO8_REVISA = " + ValToSql(cRevisa)
+	cSql += " AND ZO8.ZO8_ANOREF = " + ValToSql(cAnoRef)
 	cSql += " GROUP BY ZO8_FILIAL, "
 	cSql += "          ZO8_VERSAO, "
 	cSql += "          ZO8_REVISA, "
 	cSql += "          ZO8_ANOREF, "
-	cSql += "          ZO8_PRODUT, "
+	cSql += "          Z47.Z47_PRODUT, "
 	cSql += "          ZO8_DTREF, "
 	cSql += "          Z47_QTDM01, "
 	cSql += "          Z47_QTDM02, "
@@ -159,12 +169,12 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 		IncProc("Processando Registros encontrados na base...")
 
 		Reclock("ZOB", .T.)
-		ZOB->ZOB_FILIAL  := cEmp
+		ZOB->ZOB_FILIAL  := xFilial("ZOB")
 		ZOB->ZOB_VERSAO  := cVersao
 		ZOB->ZOB_REVISA  := cRevisa
 		ZOB->ZOB_ANOREF  := cAnoRef
 		ZOB->ZOB_DTREF   := STOD((cQry)->ZO8_DTREF)
-		ZOB->ZOB_PRODUT  := (cQry)->ZO8_PRODUT
+		ZOB->ZOB_PRODUT  := (cQry)->Z47_PRODUT
 		ZOB->ZOB_QPROD   := &("(cQry)->Z47_QTDM" + SubStr((cQry)->ZO8_DTREF, 5, 2))
 		ZOB->ZOB_VPROD   := (cQry)->CUSTO_TOTAL
 		ZOB->(MsUnlock())
@@ -192,11 +202,11 @@ Static Function ExistThenD(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 	cSql := " SELECT R_E_C_N_O_ RECNO "
 	cSql += " FROM " + RetFullName("ZOB", cEmp) + " ZOB (NOLOCK) "
-	cSql += " WHERE ZOB_FILIAL      = " + ValToSql(cEmp)
-	cSql += " AND ZOB_VERSAO        = " + ValToSql(cVersao)
-	cSql += " AND ZOB_REVISA        = " + ValToSql(cRevisa)
-	cSql += " AND ZOB_ANOREF        = " + ValToSql(cAnoRef)
-	cSql += " AND ZOB.D_E_L_E_T_    = ' ' "
+	cSql += " WHERE ZOB_FILIAL = '" + xFilial("ZOB") + "' "
+	cSql += "       AND ZOB_VERSAO = " + ValToSql(cVersao)
+	cSql += "       AND ZOB_REVISA = " + ValToSql(cRevisa)
+	cSql += "       AND ZOB_ANOREF = " + ValToSql(cAnoRef)
+	cSql += "       AND ZOB.D_E_L_E_T_ = ' ' "
 
 	TcQuery cSQL New Alias (cQry)
 
@@ -229,6 +239,70 @@ Static Function ExistThenD(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 			Reclock("ZOB", .F.)
 			ZOB->(DBDelete())
 			ZOB->(MsUnlock())
+
+		EndIf
+
+		(cQry)->(DbSkip())
+
+	End
+
+	(cQry)->(DbCloseArea())
+
+	xVerRet := lRet 
+
+Return ( lRet )
+
+Static Function ExistZBZtd(msFil, cVersao, cRevisa, cAnoRef, cMsg)
+
+	Local cSQL  := ""
+	Local cQry  := ""
+	Local lPerg := .T.
+	Local lRet  := .T.
+
+	Default cMsg := ""
+
+	cQry := GetNextAlias()
+
+	cSql := " SELECT R_E_C_N_O_ RECNO "
+	cSql += " FROM " + RetFullName("ZBZ", cEmpAnt) + " ZBZ (NOLOCK) "
+	cSql += " WHERE ZBZ_FILIAL = '" + xFilial("ZBZ") + "' "
+	cSql += "       AND ZBZ_VERSAO = " + ValToSql(cVersao)
+	cSql += "       AND ZBZ_REVISA = " + ValToSql(cRevisa)
+	cSql += "       AND ZBZ_ANOREF = " + ValToSql(cAnoRef)
+	cSql += "       AND ZBZ_ORIPRC IN('VARESTOQUE','CPV') "
+	cSql += "       AND ZBZ.D_E_L_E_T_ = ' ' "
+
+	TcQuery cSQL New Alias (cQry)
+
+	ProcRegua(0)
+	While !(cQry)->(Eof())
+
+		IncProc("Apagando Registros encontrados na base...")
+
+		If lPerg
+
+			If MsgYesNo("Já existem dados para o tempo orçamentário - VARIAÇÃO DE ESTOQUE e CPV. Deseja continuar?" + CRLF + CRLF + "Caso clique em sim esses dados serão apagados e gerados novos!", "Empresa: [" + cEmpAnt + "]  - ATENÇÃO")
+
+				lRet := .T.
+
+			Else
+
+				lRet := .F.
+
+				Exit
+
+			EndIf
+
+			lPerg := .F.
+
+		EndIf
+
+		ZBZ->(DBGoTo((cQry)->RECNO))
+		If !ZBZ->(EOF())
+
+			Reclock("ZBZ", .F.)
+			ZBZ->(DBDelete())
+			ZBZ->(MsUnlock())
 
 		EndIf
 

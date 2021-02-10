@@ -26,10 +26,10 @@ User Function BIA617()
 		Begin Transaction
 
 			xVerRet := .F.
-			Processa({ || ExistThenD(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Deletando dados...", .F.)
+			Processa({ || ExistThenD(cFilAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Deletando dados...", .F.)
 			If xVerRet
 
-				Processa({ || fProcessa(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Processando dados...", .F.)
+				Processa({ || fProcessa(cFilAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Processando dados...", .F.)
 				lRet := xVerRet 
 
 			Else
@@ -73,7 +73,7 @@ User Function BIA617()
 
 Return
 
-Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
+Static Function fProcessa(msFil, cVersao, cRevisa, cAnoRef, cMsg)
 
 	Local lRet  := .T.
 	Local cSQL  := ""
@@ -81,14 +81,20 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 	Default cMsg    := ""
 
-	cSql := " SELECT ZOB_FILIAL, ZOB_VERSAO, ZOB_REVISA, ZOB_ANOREF, SUBSTRING(ZOB_DTREF, 1, 6) ANOMES, SUM(ZOB_VVENDA) ZOB_VVENDA "
-	cSql += " FROM " + RetFullName("ZOB", cEmp) + " ZOB (NOLOCK) "
+	cSql := " SELECT ZOB_FILIAL, "
+	cSql += "        ZOB_VERSAO, "
+	cSql += "        ZOB_REVISA, "
+	cSql += "        ZOB_ANOREF, "
+	cSql += "        SUBSTRING(ZOB_DTREF, 1, 6) ANOMES, "
+	cSql += "        SUM(ZOB_VVENDA) ZOB_VVENDA "
+	cSql += " FROM " + RetFullName("ZOB", cEmpAnt) + " ZOB (NOLOCK) "
 	cSql += " WHERE ZOB.D_E_L_E_T_  = '' "
-	cSql += " AND ZOB.ZOB_FILIAL    = " + ValToSql(cEmp)
-	cSql += " AND ZOB.ZOB_VERSAO    = " + ValToSql(cVersao)
-	cSql += " AND ZOB.ZOB_REVISA    = " + ValToSql(cRevisa)
-	cSql += " AND ZOB.ZOB_ANOREF    = " + ValToSql(cAnoRef)
+	cSql += "       AND ZOB.ZOB_FILIAL = '" + xFilial("ZOB") + "' "
+	cSql += "       AND ZOB.ZOB_VERSAO = " + ValToSql(cVersao)
+	cSql += "       AND ZOB.ZOB_REVISA = " + ValToSql(cRevisa)
+	cSql += "       AND ZOB.ZOB_ANOREF = " + ValToSql(cAnoRef)
 	cSql += " GROUP BY ZOB_FILIAL, ZOB_VERSAO, ZOB_REVISA, ZOB_ANOREF, SUBSTRING(ZOB_DTREF, 1, 6) "
+	cSql += " ORDER BY ZOB_FILIAL, ZOB_VERSAO, ZOB_REVISA, ZOB_ANOREF, SUBSTRING(ZOB_DTREF, 1, 6) "
 
 	TcQuery cSQL New Alias (cQry)
 
@@ -100,32 +106,17 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 		If (cQry)->ZOB_VVENDA <> 0
 
 			Reclock("ZBZ",.T.)
-			ZBZ->ZBZ_FILIAL := cEmp
+			ZBZ->ZBZ_FILIAL := xFilial("ZBZ")
 			ZBZ->ZBZ_VERSAO := cVersao
 			ZBZ->ZBZ_REVISA := cRevisa
 			ZBZ->ZBZ_ANOREF := cAnoRef
+			ZBZ->ZBZ_ORIPRC := "CPV"
 			ZBZ->ZBZ_DATA   := LastDay(STOD((cQry)->ANOMES + "01"))
 			ZBZ->ZBZ_VALOR  := (cQry)->ZOB_VVENDA
 			ZBZ->ZBZ_DC	    := "D"
 			ZBZ->ZBZ_DEBITO := "41301001"
-			ZBZ->ZBZ_HIST   := "VLR CPV N/MÊS"
-			ZBZ->ZBZ_ORIPRC := "CPV"
+			ZBZ->ZBZ_HIST   := "VLR CPV N/MES"
 			ZBZ->(MsUnlock())
-
-			/* -- Retirado até que seja definido o que será feito com o Ativo Fixo
-			Reclock("ZBZ",.T.)
-			ZBZ->ZBZ_FILIAL := cEmp
-			ZBZ->ZBZ_VERSAO := cVersao
-			ZBZ->ZBZ_REVISA := cRevisa
-			ZBZ->ZBZ_ANOREF := cAnoRef
-			ZBZ->ZBZ_DATA   := LastDay(STOD((cQry)->ANOMES + "01"))
-			ZBZ->ZBZ_VALOR  := (cQry)->ZOB_VVENDA
-			ZBZ->ZBZ_DC	    := "C"
-			ZBZ->ZBZ_CREDIT := "11306001"
-			ZBZ->ZBZ_HIST   := "VLR CPV N/MÊS"
-			ZBZ->ZBZ_ORIPRC := "CPV"
-			ZBZ->(MsUnlock())
-			*/
 
 		EndIf
 
@@ -139,7 +130,7 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 Return(lRet)
 
-Static Function ExistThenD(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
+Static Function ExistThenD(msFil, cVersao, cRevisa, cAnoRef, cMsg)
 
 	Local cSQL  := ""
 	Local cQry  := ""
@@ -151,13 +142,13 @@ Static Function ExistThenD(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 	cQry := GetNextAlias()
 
 	cSql := " SELECT R_E_C_N_O_ RECNO "
-	cSql += " FROM " + RetFullName("ZBZ", cEmp) + " ZBZ (NOLOCK) "
-	cSql += " WHERE ZBZ_FILIAL = " + ValToSql(cEmp)
-	cSql += " AND ZBZ_VERSAO = " + ValToSql(cVersao)
-	cSql += " AND ZBZ_REVISA = " + ValToSql(cRevisa)
-	cSql += " AND ZBZ_ANOREF = " + ValToSql(cAnoRef)
-	cSql += " AND ZBZ_ORIPRC = 'CPV' "
-	cSql += " AND ZBZ.D_E_L_E_T_    = ' ' "
+	cSql += " FROM " + RetFullName("ZBZ", cEmpAnt) + " ZBZ (NOLOCK) "
+	cSql += " WHERE ZBZ_FILIAL = '" + xFilial("ZBZ") + "' "
+	cSql += "       AND ZBZ_VERSAO = " + ValToSql(cVersao)
+	cSql += "       AND ZBZ_REVISA = " + ValToSql(cRevisa)
+	cSql += "       AND ZBZ_ANOREF = " + ValToSql(cAnoRef)
+	cSql += "       AND ZBZ_ORIPRC = 'CPV' "
+	cSql += "       AND ZBZ.D_E_L_E_T_ = ' ' "
 
 	TcQuery cSQL New Alias (cQry)
 
@@ -168,7 +159,7 @@ Static Function ExistThenD(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 		If lPerg
 
-			If MsgYesNo("Já existem dados para o tempo orçamentário. Deseja continuar?" + CRLF + CRLF + "Caso clique em sim esses dados serão apagados e gerados novos!", "Empresa: [" + cEmp + "]  - ATENÇÃO")
+			If MsgYesNo("Já existem dados para o tempo orçamentário. Deseja continuar?" + CRLF + CRLF + "Caso clique em sim esses dados serão apagados e gerados novos!", "Empresa: [" + cEmpAnt + "]  - ATENÇÃO")
 
 				lRet := .T.
 

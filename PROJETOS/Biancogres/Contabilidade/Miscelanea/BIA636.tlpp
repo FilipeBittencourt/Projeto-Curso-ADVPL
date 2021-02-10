@@ -1,0 +1,502 @@
+#include "totvs.ch"
+#include "topconn.ch"
+
+/*/{Protheus.doc} BIA636
+@author Marinaldo de Jesus (facile)
+@since 28/01/2021
+@version 2.0
+@Projet A-35
+@description BP Consolidado - BP Real (MesRef).
+@type function
+/*/
+
+procedure u_BIA636()
+
+    local oFWMBrowse   as object
+
+    // Instanciamento da classe de Browse
+    oFWMBrowse:=FWMBrowse():New()
+
+    //Alias
+    oFWMBrowse:SetAlias("ZOD")
+
+    private cCadastro as character
+    cCadastro:="Consolidado - BP Real (MesRef)"
+
+    // Titulo da Browse
+    oFWMBrowse:SetDescription(cCadastro)
+
+    //Define o menu do Browse
+    oFWMBrowse:setMenuDef("BIA636MVC")
+
+    //Habilita o botao para fechar a janela
+    oFWMBrowse:ForceQuitButton()
+
+    // Ativacao da classe
+    ZOD->(oFWMBrowse:Activate())
+
+    freeObj(oFWMBrowse)
+
+    return
+
+procedure U_BIA636Proc()
+	local aArea as array
+	if (!type("cCadastro")=="C")
+		private cCadastro as character
+		cCadastro:="Consolidado - BP Real (MesRef)"
+	endif
+	aArea:=getArea()
+	BIA636Proc()
+	restArea(aArea)
+	return
+
+static function BIA636Proc() as logical
+
+	local bAbort		as block
+	local bActive		as block
+
+	local cVersao		as character
+	local cRevisa		as character	
+	local cAnoRef		as character
+
+	local lRet			as logical
+
+	local oEmpresa		as object
+	local oPergunte		as object
+	local otMultProcess as object
+
+	oEmpresa:=TLoadEmpresa():New()
+
+	oPergunte:=TWPCOFiltroPeriodo():New()
+
+	lRet:=oPergunte:Pergunte()
+	
+	if (lRet)
+
+		cVersao:=PadR(oPergunte:cVersao,getSX3Cache("ZOH_VERSAO","X3_TAMANHO"))
+		cRevisa:=PadR(oPergunte:cRevisa,getSX3Cache("ZOH_REVISA","X3_TAMANHO"))
+		cAnoRef:=PadR(oPergunte:cAnoRef,getSX3Cache("ZOH_ANOREF","X3_TAMANHO"))
+
+		oEmpresa:GetSelEmp()
+
+		if (Len(oEmpresa:aEmpSel)>0)
+
+			bAbort:={|lEnd,otMultProcess|.T.}
+			bActive:={|lEnd,otMultProcess|lRet:=BIA636Emp(@otMultProcess,@oEmpresa,@cVersao,@cRevisa,@cAnoRef)}
+	        otMultProcess:=tMultProcess():New(bActive,cCadastro,"Aguarde...",bAbort,2)
+    	    otMultProcess:Activate()
+
+		else
+
+			ApMsgAlert("Nenhuma empresa foi selecionada!",&("cCadastro"))
+
+		endif
+
+	endif
+
+	return
+
+static function BIA636Emp(otMultProcess as object,oEmpresa as character,cVersao as character,cRevisa as character,cAnoRef as character)
+
+	local aMsg			as array
+
+	local cMsg			as character
+	local cEmp			as character
+	local cCRLF			as character
+
+	local nEmpresa		as numeric
+	local nEmpresas		as numeric
+
+	local nKeepResponse as numeric
+
+	local lRet			as logical
+	local lBIA636Emp	as logical
+
+	nEmpresas:=Len(oEmpresa:aEmpSel)
+
+	otMultProcess:SetRegua(1,nEmpresas)
+
+	aMsg:=array(0)
+
+	nKeepResponse:=(-1)
+
+	for nEmpresa := 1 to nEmpresas
+
+		cEmp:=oEmpresa:aEmpSel[nEmpresa][1]
+
+		otMultProcess:IncRegua(1,"Processando Empresa: ["+cEmp+"]")
+
+		begin transaction
+			lRet:=BIA636ExecProc(@otMultProcess,@cEmp,@cVersao,@cRevisa,@cAnoRef,@cMsg,@nKeepResponse)
+			if (!empty(cMsg))
+				aAdd(aMsg,cMsg)
+				cMsg:=""
+			endif
+			if (!lRet)
+				lBIA636Emp:=lRet
+				DisarmTransaction()
+			endif
+		end transaction
+
+	next nEmpresa
+
+    if (!empty(aMsg))
+
+        cMsg:=""
+        cCRLF:=CRLF
+        nEmpresas:=len(aMsg)
+        for nEmpresa:=1 to nEmpresas
+            cMsg+=aMsg[nEmpresa]
+            cMsg+=cCRLF
+        next nEmpresa
+
+		txtEditMemo():txtFileEdit(cMsg,&("cCadastro")+" :: Log de Processamento :: ATENÇÃO")
+
+    endif
+
+	DEFAULT lBIA636Emp:=.T.
+
+	return(lBIA636Emp)
+
+static function BIA636ExecProc(otMultProcess as object,cEmp as character,cVersao as character,cRevisa as character,cAnoRef as character,cMsg as character,nKeepResponse as numeric) as caracter
+
+	local lRet as logical
+
+	otMultProcess:SetRegua(2,0)
+	otMultProcess:IncRegua(2)
+
+	MsAguarde({||lRet:=getQueryBP(@cEmp,@cVersao,@cRevisa,@cAnoRef,@cMsg,@nKeepResponse)},&("cCadastro"),"Aguarde... Obtendo dados no SGBD. Empresa :["+cEmp+"]")
+
+	Return(lRet)
+
+static function getQueryBP(cEmp as character,cVersao as character,cRevisa as character,cAnoRef as character,cMsg as character,nKeepResponse as numeric) as logical
+
+	local cCRLF			as character
+	local cZODTable		as character
+	local cZODFilial	as character
+
+	local cSQLFile	  	as character
+	local cSQLPath		as character
+	local cSQLQuery		as character
+
+	local cMsgNoYes		as character
+
+	local dIDataRef		as date
+	local dFDataRef		as date
+
+	local lRet			as logical
+	local lZODSeek		as logical
+	local lZODFound		as logical
+
+	cCRLF:=CRLF
+	
+	begin sequence
+
+		cZODTable:=retFullName("ZOD",cEmp)
+		cZODFilial:=xFilial("ZOD")
+
+		dIDataRef:=CToD("01"+"/"+"01"+"/"+cValToChar(Val(cAnoRef)-1))
+		dFDataRef:=LastDay(CTOD("01"+"/"+"01"+"/"+cValToChar(Val(cAnoRef)-1)))
+
+		lZODSeek:=ZODSeek(cZODFilial,cZODTable,cVersao,cRevisa,cAnoRef,dFDataRef)
+		lZODFound:=lZODSeek
+
+		if (lZODFound)
+			if (nKeepResponse==(-1))
+				cMsgNoYes:="Já Existem dados para este Orçamento."
+				cMsgNoYes+=cCRLF
+				cMsgNoYes+=cCRLF
+				cMsgNoYes+=" Empresa:["+cEmp+"]"
+				cMsgNoYes+=" :: "
+				cMsgNoYes+="["
+				cMsgNoYes+=cVersao
+				cMsgNoYes+="]"
+				cMsgNoYes+="["
+				cMsgNoYes+=cRevisa
+				cMsgNoYes+="]"
+				cMsgNoYes+="["
+				cMsgNoYes+=cAnoRef
+				cMsgNoYes+="]"
+				cMsgNoYes+=cCRLF
+				cMsgNoYes+=" Deseja Reprocessar?"
+				lZODFound:=ApMsgNoYes(cMsgNoYes,&("cCadastro"))
+				nKeepResponse:=if(lZODFound,1,0)
+				lZODFound:=(!lZODFound)
+			else
+				lZODFound:=(nKeepResponse==1)
+			endif
+		endif
+
+		if (!lZODSeek)
+			cSQLQuery:="INSERT INTO "+cZODTable+" ("+cCRLF
+			cSQLQuery+="					ZOD_FILIAL"+cCRLF
+			cSQLQuery+="					,ZOD_VERSAO"+cCRLF
+			cSQLQuery+="					,ZOD_REVISA"+cCRLF
+			cSQLQuery+="					,ZOD_ANOREF"+cCRLF
+			cSQLQuery+="					,ZOD_TIPO"+cCRLF
+			cSQLQuery+="					,ZOD_DTREF"+cCRLF
+			cSQLQuery+="					,ZOD_DTPROC"+cCRLF
+			cSQLQuery+="					,ZOD_CONTA"+cCRLF
+			cSQLQuery+="					,ZOD_SALCTA"+cCRLF
+			cSQLQuery+="					,D_E_L_E_T_"+cCRLF
+			cSQLQuery+="					,R_E_C_N_O_"+cCRLF
+			cSQLQuery+="					,R_E_C_D_E_L_"+cCRLF
+			cSQLQuery+="		)"+cCRLF
+			cSQLQuery+="SELECT "+valtoSQL(cZODFilial)+"	AS FILIAL"+cCRLF
+			cSQLQuery+="      ,"+valtoSQL(cVersao)+" 	AS ZOD_VERSAO"+cCRLF
+			cSQLQuery+="	  ,"+valtoSQL(cRevisa)+"  	AS ZOD_REVISA"+cCRLF
+			cSQLQuery+="	  ,"+valtoSQL(cAnoRef)+" 	AS ZOD_ANOREF"+cCRLF
+			cSQLQuery+="	  ,'2'					 	AS TIPO"+cCRLF
+			cSQLQuery+="	  ,"+valtoSQL(dFDataRef)+"	AS ZOD_DTREF"+cCRLF
+			cSQLQuery+="	  ,(REPLACE(CAST(CONVERT(date, getdate()) AS VARCHAR),'-','')) AS ZOD_DTPROC"+cCRLF
+			cSQLQuery+="	  ,BP.CONTA					AS ZOD_CONTA"+cCRLF
+			cSQLQuery+="	  ,BP.SALDOATU				AS ZOD_SALCTA"+cCRLF
+			cSQLQuery+="	  ,' '						AS D_E_L_E_T_"+cCRLF
+			cSQLQuery+="	  ,(ISNULL((SELECT MAX(ZOD.R_E_C_N_O_) FROM "+cZODTable+" ZOD),0)+ROW_NUMBER() OVER (PARTITION BY 1 ORDER BY BP.EMPRESA,BP.DATARF,BP.CONTA)) AS R_E_C_N_O_"+cCRLF
+			cSQLQuery+="	  ,0						AS R_E_C_D_E_L_"+cCRLF
+			cSQLQuery+="  FROM dbo.VW_BI_F_BALANCOPATRIMONIAL BP WITH (NOLOCK)"+cCRLF
+			cSQLQuery+=" WHERE BP.EMPRESA="+valtoSQL(cEmp)+cCRLF
+			cSQLQuery+="   AND BP.DATARF BETWEEN "+valtoSQL(dIDataRef)+" AND  "+valtoSQL(dFDataRef)+cCRLF
+			cSQLQuery+="   AND NOT EXISTS ("+cCRLF
+			cSQLQuery+="						SELECT DISTINCT 1 AS FOUND"+cCRLF 
+			cSQLQuery+="					      FROM "+cZODTable+" ZOD WITH (NOLOCK)"+cCRLF
+			cSQLQuery+="					     WHERE ZOD.ZOD_FILIAL="+valtoSQL(cZODFilial)+cCRLF
+			cSQLQuery+="					       AND ZOD.ZOD_VERSAO="+valtoSQL(cVersao)+cCRLF
+			cSQLQuery+="					       AND ZOD.ZOD_REVISA="+valtoSQL(cRevisa)+cCRLF
+			cSQLQuery+="					       AND ZOD.ZOD_ANOREF="+valtoSQL(cAnoRef)+cCRLF
+			cSQLQuery+="					       AND ZOD.ZOD_TIPO='2'"+cCRLF
+			cSQLQuery+="					       AND ZOD.ZOD_DTREF=BP.DATARF"+cCRLF
+			cSQLQuery+="					       AND ZOD.ZOD_CONTA=BP.CONTA"+cCRLF
+			cSQLQuery+=")"+cCRLF
+		elseif ((!lZODFound).and.(lZODSeek))
+			cSQLQuery:="UPDATE ZOD SET ZOD.ZOD_SALCTA=BP.SALDOATU"+cCRLF
+			cSQLQuery+="  FROM dbo.VW_BI_F_BALANCOPATRIMONIAL BP WITH (NOLOCK)"+cCRLF
+			cSQLQuery+=","+cZODTable+" ZOD WITH (NOLOCK)"+cCRLF
+			cSQLQuery+=" WHERE BP.EMPRESA="+valtoSQL(cEmp)+cCRLF
+			cSQLQuery+="   AND BP.DATARF BETWEEN "+valtoSQL(dIDataRef)+" AND  "+valtoSQL(dFDataRef)+cCRLF
+			cSQLQuery+="   AND ZOD.ZOD_VERSAO="+valtoSQL(cVersao)+cCRLF
+			cSQLQuery+="   AND ZOD.ZOD_REVISA="+valtoSQL(cRevisa)+cCRLF
+			cSQLQuery+="   AND ZOD.ZOD_ANOREF="+valtoSQL(cAnoRef)+cCRLF
+			cSQLQuery+="   AND ZOD.ZOD_TIPO='2'"+cCRLF
+			cSQLQuery+="   AND ZOD.ZOD_DTREF=BP.DATARF"+cCRLF
+			cSQLQuery+="   AND ZOD.ZOD_CONTA=BP.CONTA"+cCRLF
+		endif
+
+		DEFAULT cSQLQuery:=""
+
+		cMsg:=cCRLF
+		cMsg+="Empresa:"
+		cMsg+=" "
+		cMsg+=cEmp
+		cMsg+=cCRLF
+		cMsg+="Versao:"
+		cMsg+=" "
+		cMsg+=cVersao
+		cMsg+=cCRLF
+		cMsg+="Revisao:"
+		cMsg+=" "
+		cMsg+=cRevisa
+		cMsg+=cCRLF
+		cMsg+="Referecia:"
+		cMsg+=" "
+		cMsg+=cAnoRef
+		cMsg+=cCRLF
+		cMsg+="Mensagem:"
+		cMsg+=cCRLF
+
+		lRet:=(!empty(cSQLQuery))
+		if (!lRet)
+			cMsg+=cCRLF
+			cMsg+="Nenhum Registro Processado."
+			cMsg+=cCRLF
+			cMsg+=cCRLF
+			break
+		endif
+			
+		lRet:=(TCSQLExec(cSQLQuery)==0)
+
+		if (!lRet)
+
+			if (IsBlind())
+				cSQLPath:="\tmp\"
+			else
+				cSQLPath:=getTempPath()
+				if (!right(cSQLPath,1)=="\")
+					cSQLPath+="\"
+				endif
+			endif
+			cSQLPath+="BIA636\SQL\"
+
+			A35():writeSQLFile(@cSQLQuery,@cEmp,&("cFilAnt"),"bia636","00","qry_final",@cSQLPath,@cSQLFile)
+
+			cMsg+=cCRLF
+			cMsg+=TCSQLError()
+			cMsg+=cCRLF
+			cMsg+=cCRLF
+
+			break
+
+		endif
+
+		cMsg+=cCRLF
+		cMsg+="Registros Processados OK."
+		cMsg+=cCRLF
+		cMsg+=cCRLF
+
+	end sequece
+
+	return(lRet)
+
+static function ZODSeek(cZODFilial as character,cZODTable as character,cVersao as character,cRevisa as character,cAnoRef as character,dFDataRef as date) as logical
+
+	local aArea		as array
+	
+	local cAlias	as character
+	local cTable	as character
+	local cDataRef  as character
+
+	local lFound	as logical
+
+	aArea:=getArea()
+
+	cAlias:=getNextAlias()
+	cTable:="%"+cZODTable+"%"
+	cDataRef:=DToS(dFDataRef)
+	cDataRef:="%"+cDataRef+"%"
+
+	beginSQL alias cAlias
+
+		SELECT DISTINCT 1 AS FOUND
+		  FROM %exp:cTable% ZOD
+		 WHERE ZOD.%notDel%
+		   AND ZOD.ZOD_FILIAL=%exp:cZODFilial%
+		   AND ZOD.ZOD_VERSAO=%exp:cVersao%
+		   AND ZOD.ZOD_REVISA=%exp:cRevisa%
+		   AND ZOD.ZOD_ANOREF=%exp:cAnoRef%
+		   AND ZOD.ZOD_TIPO='2'
+		   AND ZOD.ZOD_DTREF=%exp:cDataRef%
+
+	endSQL
+
+	lFound:=(cAlias)->((!(eof().and.bof())).and.(FOUND==1))
+
+	(cAlias)->(dbCloseArea())
+	dbSelectArea("ZOD")
+
+	restArea(aArea)
+
+	return(lFound)
+
+
+procedure U_BIA636Excel()
+    
+    local aArea     as array
+    local aAreaZOD  as array
+    
+    local oPergunte as object
+    
+    aArea:=getArea()
+    aAreaZOD:=ZOD->(getArea())
+    if (__TWPCOFiltroPeriodo():Pergunte())
+        oPergunte:=__TWPCOFiltroPeriodo():Get()
+        BIA636Excel(@oPergunte)
+    endif
+    
+    restArea(aAreaZOD)
+    restArea(aArea)
+    
+    return
+
+static procedure BIA636Excel(oPergunte as object)
+
+    local aZODQuery        as array
+
+    local cVersao       as character
+    local cRevisa       as character
+    local cAnoRef       as character
+
+    local cXMLPath      as character
+    local cXMLFile      as character
+    local cExcelTitle   as character
+
+    local cServerIP     as character
+    local cEnvServer    as character
+
+    local cZODOrder     as character
+    local cZODFilial    as character
+    local cZODFilter    as character
+    local cZODKeySeek   as character
+
+    local lDev          as logical
+    local lPicture      as logical
+    local lX3Titulo     as logical
+    local ltxtEditMemo  as logical
+
+    local nZODOrder     as numeric
+
+    cVersao:=left(oPergunte:cVersao,getSX3Cache("ZOD_VERSAO","X3_TAMANHO"))
+    cRevisa:=left(oPergunte:cRevisa,getSX3Cache("ZOD_REVISA","X3_TAMANHO"))
+    cAnoRef:=left(oPergunte:cAnoRef,getSX3Cache("ZOD_ANOREF","X3_TAMANHO"))
+
+    cZODOrder:="ZOD_FILIAL+ZOD_VERSAO+ZOD_REVISA+ZOD_ANOREF+ZOD_TIPO+DTOS(ZOD_DTREF)+ZOD_CONTA"
+    nZODOrder:=retOrder("ZOD",cZODOrder)
+
+    ZOD->(dbSetOrder(nZODOrder))
+    
+    cZODFilial:=xFilial("ZOD")
+    
+    cZODKeySeek:=cZODFilial
+    cZODKeySeek+=cVersao
+    cZODKeySeek+=cRevisa
+    cZODKeySeek+=cAnoRef
+
+    ZOD->(dbSeek(cZODKeySeek,.F.))
+
+    aZODQuery:=array(0)
+    cZODFilter:="ZOD_FILIAL=='"+cZODFilial+"' .AND. ZOD_VERSAO=='"+cVersao+"' .AND. ZOD_REVISA=='"+cRevisa+"' .AND. ZOD_ANOREF=='"+cAnoRef+"'"
+
+    MsAguarde({||FilBrowse("ZOD",@aZODQuery,cZODFilter)},&("cCadastro"),"Obtendo dados no SGBD...")
+
+    cXMLPath:="\tmp\BIA636\XML\"
+    if (dirtools():MakeDir(cXMLPath))
+
+        cXMLFile:=A35():getXMLFile(&("cEmpAnt"),&("cFilAnt"),cXMLPath,"BIA636","00","ZOD")
+        
+        if (type("cCadastro")=="C")
+            cExcelTitle:=&("cCadastro")
+            cExcelTitle+=" :: "
+        else
+            cExcelTitle:=""
+        endif
+
+        cExcelTitle+="Empresa: "+&("cEmpAnt")
+        cExcelTitle+=" :: "
+        cExcelTitle+="Filial:  "+&("cFilAnt")
+        cExcelTitle+=" :: "
+        cExcelTitle+="Ver.: "+cVersao
+        cExcelTitle+=" :: "
+        cExcelTitle+="Rev.: "+cRevisa
+        cExcelTitle+=" :: "
+        cExcelTitle+="Ref.: "+cAnoRef
+        
+        cServerIP:=getServerIP()
+        cEnvServer:=upper(getEnvServer())
+
+        lDev:=((cServerIP=="192.168.20.18").or.("DEV"$cEnvServer))
+        if (lDev)
+            cExcelTitle+=" :: EMITIDO EM AMBIENTE DE DESENVOLVIMENTO ::"    
+        endif
+
+        lPicture:=.T.
+        lX3Titulo:=.T.
+        ltxtEditMemo:=.F.
+
+        ZOD->(dbSeek(cZODKeySeek,.F.))
+
+        uToXML():QryToXML("ZOD",@cXMLFile,@cExcelTitle,@lPicture,@lX3Titulo,@ltxtEditMemo)
+
+    endif
+
+    EndFilBrw("ZOD",@aZODQuery)
+
+    return

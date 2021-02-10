@@ -21,8 +21,8 @@ User Function BIAFG130()
 	Private mslOk       := .T.
 	Private msGravaErr  := ""
 
-	If cEmpAnt <> "90"
-		Msgbox("Esta rotina poderá ser utilizada somente na empresa 90 - Grupo Consolidado.", "BIAFG130", "STOP")
+	If cEmpAnt <> "90" .and. cFilAnt <> "90"
+		Msgbox("Esta rotina poderá ser utilizada somente na empresa 90 - Grupo Consolidado, filial 90.", "BIAFG130", "STOP")
 		Return
 	EndIf
 
@@ -1196,3 +1196,10 @@ Static Function fValidPerg()
 	dbSelectArea(_sAlias)
 
 Return
+
+static function __Dummy()
+	if (.F.)
+		Menudef()
+		__Dummy()
+	endif
+	return(.F.)

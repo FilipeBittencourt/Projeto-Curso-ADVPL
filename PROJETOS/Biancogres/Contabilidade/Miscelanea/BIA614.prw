@@ -63,17 +63,17 @@ User Function BIA614()
 
 Return
 
-Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
+Static Function fProcessa(msFil, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
 
 	Local lRet  := .T.
 
 	Default cMsg    := ""
 
 	ZOA->(DBSetOrder(2))
-	If ZOA->(DbSeek(cEmp + cVersao + cRevisa + cAnoRef))
+	If ZOA->(DbSeek(xFilial("ZOA") + cVersao + cRevisa + cAnoRef))
 
 		ProcRegua(0)
-		While !ZOA->(Eof()) .And. ZOA->(ZOA_FILIAL + ZOA_VERSAO + ZOA_REVISA + ZOA_ANOREF) == cEmp + cVersao + cRevisa + cAnoRef
+		While !ZOA->(Eof()) .And. ZOA->(ZOA_FILIAL + ZOA_VERSAO + ZOA_REVISA + ZOA_ANOREF) == xFilial("ZOA") + cVersao + cRevisa + cAnoRef
 
 			IncProc("Processando Registros encontrados na base...")
 

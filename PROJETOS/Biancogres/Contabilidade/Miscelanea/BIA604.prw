@@ -43,11 +43,22 @@ User Function BIA604A()
 		Begin Transaction
 
 			xVerRet := .F.
-			Processa({ || ExistThenD(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Deletando dados...", .F.)
+			Processa({ || ExistThenD(cFilAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Deletando dados...", .F.)
 			If xVerRet
 
-				Processa({ || fProcessa(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Processando dados...", .F.)
+				Processa({ || fProcessa(cFilAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Processando dados...", .F.)
 				lRet := xVerRet 
+
+				If xVerRet
+
+					Processa({ || fProcC1(cFilAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Processando dados...", .F.)
+					lRet := xVerRet 
+
+				Else
+
+					msCanPrc  := .T.
+
+				EndIf
 
 			Else
 
@@ -89,7 +100,7 @@ User Function BIA604A()
 
 Return
 
-Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
+Static Function fProcessa(msFil, cVersao, cRevisa, cAnoRef, cMsg)
 
 	Local cSQL := ""
 	Local nW   := 0
@@ -149,8 +160,8 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 		cSql += "                CLVL = ZBZ_CLVLDB,  "
 		cSql += "                PERIODO = LEFT(ZBZ_DATA, 6),  "
 		cSql += "                VALOR = SUM(ZBZ_VALOR) "
-		cSql += "         FROM " + RetFullName("ZBZ", cEmp)
-		cSql += "         WHERE ZBZ_FILIAL= " + ValToSql(cEmp)
+		cSql += "         FROM " + RetFullName("ZBZ", cEmpAnt)
+		cSql += "         WHERE ZBZ_FILIAL = '" + xFilial("ZBZ") + "' "
 		cSql += "               AND ZBZ_VERSAO = " + ValToSql(cVersao)
 		cSql += "               AND ZBZ_REVISA = " + ValToSql(cRevisa)
 		cSql += "               AND ZBZ_ANOREF = " + ValToSql(cAnoRef)
@@ -169,8 +180,8 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 		cSql += "                CLVL = ZBZ_CLVLCR,  "
 		cSql += "                PERIODO = LEFT(ZBZ_DATA, 6),  "
 		cSql += "                VALOR = SUM(ZBZ_VALOR) * (-1) "
-		cSql += "         FROM " + RetFullName("ZBZ", cEmp)
-		cSql += "         WHERE ZBZ_FILIAL     = " + ValToSql(cEmp)
+		cSql += "         FROM " + RetFullName("ZBZ", cEmpAnt)
+		cSql += "         WHERE ZBZ_FILIAL = '" + xFilial("ZBZ") + "' "
 		cSql += "               AND ZBZ_VERSAO = " + ValToSql(cVersao)
 		cSql += "               AND ZBZ_REVISA = " + ValToSql(cRevisa)
 		cSql += "               AND ZBZ_ANOREF = " + ValToSql(cAnoRef)
@@ -189,8 +200,8 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 		cSql += "                CLVL = ZBZ_CLVLDB,  "
 		cSql += "                PERIODO = LEFT(ZBZ_DATA, 6),  "
 		cSql += "                VALOR = SUM(ZBZ_VALOR) "
-		cSql += "         FROM " + RetFullName("ZBZ", cEmp)
-		cSql += "         WHERE ZBZ_FILIAL= " + ValToSql(cEmp)
+		cSql += "         FROM " + RetFullName("ZBZ", cEmpAnt)
+		cSql += "         WHERE ZBZ_FILIAL = '" + xFilial("ZBZ") + "' "
 		cSql += "               AND ZBZ_VERSAO = " + ValToSql(cVersao)
 		cSql += "               AND ZBZ_REVISA = " + ValToSql(cRevisa)
 		cSql += "               AND ZBZ_ANOREF = " + ValToSql(cAnoRef)
@@ -209,8 +220,8 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 		cSql += "                CLVL = ZBZ_CLVLCR,  "
 		cSql += "                PERIODO = LEFT(ZBZ_DATA, 6),  "
 		cSql += "                VALOR = SUM(ZBZ_VALOR) * (-1) "
-		cSql += "         FROM " + RetFullName("ZBZ", cEmp)
-		cSql += "         WHERE ZBZ_FILIAL= " + ValToSql(cEmp)
+		cSql += "         FROM " + RetFullName("ZBZ", cEmpAnt)
+		cSql += "         WHERE ZBZ_FILIAL = '" + xFilial("ZBZ") + "' "
 		cSql += "               AND ZBZ_VERSAO = " + ValToSql(cVersao)
 		cSql += "               AND ZBZ_REVISA = " + ValToSql(cRevisa)
 		cSql += "               AND ZBZ_ANOREF = " + ValToSql(cAnoRef)
@@ -270,10 +281,10 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 		cSql += "                CRIT = SUBSTRING(CTH_YCRIT, 1, 3),  "
 		cSql += "                VALOR = SUM(VALOR) "
 		cSql += "         FROM TAB_A_ACUM AS TAB "
-		cSql += "              INNER JOIN " + RetFullName("CT1", cEmp) + " CT1 ON CT1_FILIAL = '  ' "
+		cSql += "              INNER JOIN " + RetFullName("CT1", cEmpAnt) + " CT1 ON CT1_FILIAL = '" + xFilial("CT1") + "' "
 		cSql += "                                               AND CT1_CONTA = CTA "
 		cSql += "                                               AND CT1.D_E_L_E_T_ = ' ' "
-		cSql += "              INNER JOIN " + RetFullName("CTH", cEmp) + " CTH ON CTH_FILIAL = '  ' "
+		cSql += "              INNER JOIN " + RetFullName("CTH", cEmpAnt) + " CTH ON CTH_FILIAL = '" + xFilial("CTH") + "' "
 		cSql += "                                               AND CTH_CLVL = CLVL "
 		cSql += "                                               AND CTH_YAPLCT = 'S' "
 		cSql += "                                               AND CTH.D_E_L_E_T_ = ' ' "
@@ -361,7 +372,7 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 		cSql += "                              ELSE 'PP' "
 		cSql += "                          END "
 		cSql += "         FROM TAB_B B "
-		cSql += "              LEFT JOIN " + RetFullName("Z29", cEmp) + " Z29 ON Z29_COD_IT = B.ITCUS "
+		cSql += "              LEFT JOIN " + RetFullName("Z29", cEmpAnt) + " Z29 ON Z29_COD_IT = B.ITCUS "
 		cSql += "                                              AND Z29.D_E_L_E_T_ = ' '), "
 		cSql += "     TABFINAL "
 		cSql += "     AS (SELECT C.*,  "
@@ -377,7 +388,7 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 		cSql += "                             ELSE 'INDEFINIDO' "
 		cSql += "                         END "
 		cSql += "         FROM TAB_C C "
-		cSql += "              LEFT JOIN " + RetFullName("SB1", cEmp) + " SB1 ON B1_FILIAL = '  ' "
+		cSql += "              LEFT JOIN " + RetFullName("SB1", cEmpAnt) + " SB1 ON B1_FILIAL = '" + xFilial("SB1") + "' "
 		cSql += "                                              AND B1_COD = MODS "
 		cSql += "                                              AND SB1.D_E_L_E_T_ = ' ' "
 		cSql += "         WHERE Z29_TIPO = 'CF') "
@@ -487,8 +498,8 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 		cSql += " AS (SELECT Z29_TIPO TIPO,  "
 		cSql += "         Z29_COD_IT ITCUS,  "
 		cSql += "         Z29_DRESUM DESCR "
-		cSql += "     FROM " + RetFullName("Z29", cEmp) + " Z29 "
-		cSql += "     WHERE Z29_FILIAL = '  ' "
+		cSql += "     FROM " + RetFullName("Z29", cEmpAnt) + " Z29 "
+		cSql += "     WHERE Z29_FILIAL = '" + xFilial("Z29") + "' "
 		cSql += "         AND Z29_TIPO = 'CF' "
 		cSql += "         AND D_E_L_E_T_ = ' '), "
 		cSql += " CFPROCESS01 "
@@ -530,8 +541,8 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 		cSql += "         CUS203 = "
 		cSql += "     ( "
 		cSql += "         SELECT SUM(XXX.ZO4_QTDRAC) "
-		cSql += "         FROM " + RetFullName("ZO4", cEmp) + " XXX "
-		cSql += "             INNER JOIN " + RetFullName("SB1", cEmp) + " QQQ ON QQQ.B1_COD = XXX.ZO4_PRODUT "
+		cSql += "         FROM " + RetFullName("ZO4", cEmpAnt) + " XXX "
+		cSql += "             INNER JOIN " + RetFullName("SB1", cEmpAnt) + " QQQ ON QQQ.B1_COD = XXX.ZO4_PRODUT "
 		cSql += "                                     AND QQQ.B1_TIPO = SB1.B1_TIPO "
 		cSql += "                                     AND QQQ.D_E_L_E_T_ = ' ' "
 		cSql += "         WHERE XXX.ZO4_FILIAL = ZO4.ZO4_FILIAL "
@@ -542,10 +553,10 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 		cSql += "             AND XXX.ZO4_LINHA = ZO4.ZO4_LINHA "
 		cSql += "             AND XXX.D_E_L_E_T_ = ' ' "
 		cSql += "     ) "
-		cSql += "     FROM " + RetFullName("ZO4", cEmp) + " ZO4 "
-		cSql += "         INNER JOIN " + RetFullName("SB1", cEmp) + " SB1 ON SB1.B1_COD = ZO4.ZO4_PRODUT "
+		cSql += "     FROM " + RetFullName("ZO4", cEmpAnt) + " ZO4 "
+		cSql += "         INNER JOIN " + RetFullName("SB1", cEmpAnt) + " SB1 ON SB1.B1_COD = ZO4.ZO4_PRODUT "
 		cSql += "                                 AND SB1.D_E_L_E_T_ = ' ' "
-		cSql += "     WHERE ZO4.ZO4_FILIAL= " + ValToSql(cEmp)
+		cSql += "     WHERE ZO4.ZO4_FILIAL = '" + xFilial("ZO4") + "' "
 		cSql += "         AND ZO4_VERSAO = " + ValToSql(cVersao)
 		cSql += "         AND ZO4_REVISA = " + ValToSql(cRevisa)
 		cSql += "         AND ZO4_ANOREF = " + ValToSql(cAnoRef)
@@ -695,13 +706,12 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 			IncProc("Processando Registros encontrados na base...")
 
 			Reclock("ZO8", .T.)
-			ZO8->ZO8_FILIAL  := cEmp
+			ZO8->ZO8_FILIAL  := xFilial("ZO8")
 			ZO8->ZO8_VERSAO  := cVersao
 			ZO8->ZO8_REVISA  := cRevisa
 			ZO8->ZO8_ANOREF  := cAnoRef
 			ZO8->ZO8_TPCUS	 := (cQry)->TIPO	
 			ZO8->ZO8_ITCUS   := (cQry)->ITCUS 
-			// ZO8->ZO8_DESCR   := (cQry)->DESCR 
 			ZO8->ZO8_DTREF   := STOD((cQry)->DTREF) 
 			ZO8->ZO8_TPPROD  := (cQry)->TPPROD
 			ZO8->ZO8_PRODUT  := (cQry)->PRODUT
@@ -720,9 +730,6 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 			ZO8->ZO8_CUS206  := (cQry)->CUS206
 			ZO8->ZO8_CUS207  := (cQry)->CUS207
 			ZO8->ZO8_CUS208  := (cQry)->CUS208
-			// ZO8->ZO8_CUS209  := (cQry)->CUS209
-			// ZO8->ZO8_CUS222  := (cQry)->CUS222
-			// ZO8->ZO8_CUS233  := (cQry)->CUS233
 			ZO8->ZO8_CUS210  := (cQry)->CUS210
 			ZO8->ZO8_CUS211  := (cQry)->CUS211
 			ZO8->ZO8_CUS234  := (cQry)->CUS234
@@ -752,7 +759,98 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 Return(lRet)
 
-Static Function ExistThenD(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
+Static Function fProcC1(msFil, cVersao, cRevisa, cAnoRef, cMsg)
+
+	Local cSQL := ""
+	Local nW   := 0
+	Local cQry := ""
+
+	Local lRet	:= .T.
+
+	Default cMsg    := ""
+
+	ProcRegua(0)
+	For nW := 1 To 12
+
+		IncProc("Processando Registros encontrados na base...")
+
+		cQry := GetNextAlias()
+
+		cSql := " WITH PROCESSC1 "
+		cSql += "      AS (SELECT Z47_PRODUT PRODUT, "
+		cSql += "                 Z47_QTDM" + StrZero(nW, 2) + " QTDMES, "
+		cSql += "                 GG_COMP COMP, "
+		cSql += "                 GG_FIM DTFIM "
+		cSql += "          FROM " + RetFullName("Z47", cEmpAnt) + " Z47(NOLOCK) "
+		cSql += "               INNER JOIN " + RetFullName("SGG", cEmpAnt) + " SGG(NOLOCK) ON GG_FILIAL = '" + xFilial("SGG") + "' "
+		cSql += "                                                AND GG_COD = Z47_PRODUT "
+		cSql += "                                                AND SUBSTRING(GG_COMP, 1, 2) = 'C1' "
+		cSql += "                                                AND SUBSTRING(GG_FIM, 1, 4) = Z47_ANOREF "
+		cSql += "                                                AND SUBSTRING(GG_FIM, 5, 2) = '01' "
+		cSql += "                                                AND SUBSTRING(GG_FIM, 5, 4) <> '0101' "
+		cSql += "                                                AND SGG.D_E_L_E_T_ = ' ' "
+		cSql += "          WHERE Z47_FILIAL = '" + xFilial("Z47") + "' "
+		cSql += "                AND Z47_VERSAO = " + ValToSql(cVersao)
+		cSql += "                AND Z47_REVISA = " + ValToSql(cRevisa)
+		cSql += "                AND Z47_ANOREF = " + ValToSql(cAnoRef)
+		cSql += "                AND SUBSTRING(Z47_PRODUT, 1, 2) IN('B9', 'BO', 'C6') "
+		cSql += "                AND Z47.D_E_L_E_T_ = ' ') "
+		cSql += "      SELECT ZO8_FILIAL, "
+		cSql += "             ZO8_VERSAO, "
+		cSql += "             ZO8_REVISA, "
+		cSql += "             ZO8_ANOREF, "
+		cSql += "             TPPROD = 'PP', "
+		cSql += "             ZO8_TPCUS, "
+		cSql += "             ZO8_ITCUS, "
+		cSql += "             PRODUTO = SUBSTRING(PRODUT, 1, 7) + '        ', "
+		cSql += "             ZO8_DTREF, "
+		cSql += "             ZO8_CUS223 = QTDMES, "
+		cSql += "             ZO8_CUS224 = QTDMES * (ZO8_CUS224 / ZO8_CUS223) "
+		cSql += "      FROM " + RetFullName("ZO8", cEmpAnt) + " ZO8(NOLOCK) "
+		cSql += "           INNER JOIN PROCESSC1 PC1 ON SUBSTRING(PC1.COMP, 1, 7) = SUBSTRING(ZO8.ZO8_PRODUT, 1, 7) "
+		cSql += "                                       AND PC1.DTFIM = ZO8.ZO8_DTREF "
+		cSql += "      WHERE ZO8_FILIAL = '" + xFilial("ZO8") + "' "
+		cSql += "            AND ZO8_VERSAO = " + ValToSql(cVersao)
+		cSql += "            AND ZO8_REVISA = " + ValToSql(cRevisa)
+		cSql += "            AND ZO8_ANOREF = " + ValToSql(cAnoRef)
+		cSql += "            AND ZO8_DTREF = " + ValToSql(LastDay(CToD("01" + "/" + StrZero(nW, 2) + "/" + cAnoRef)))
+		cSql += "            AND ZO8_TPCUS = 'CF' "
+		cSql += "            AND ZO8.D_E_L_E_T_ = ' ' "
+
+		TcQuery cSQL New Alias (cQry)
+
+		ProcRegua(0)
+		While !(cQry)->(Eof())
+
+			IncProc("Processando Registros encontrados na base...")
+
+			Reclock("ZO8", .T.)
+			ZO8->ZO8_FILIAL  := xFilial("ZO8")
+			ZO8->ZO8_VERSAO  := cVersao
+			ZO8->ZO8_REVISA  := cRevisa
+			ZO8->ZO8_ANOREF  := cAnoRef
+			ZO8->ZO8_TPPROD	 := (cQry)->TPPROD
+			ZO8->ZO8_TPCUS	 := (cQry)->ZO8_TPCUS
+			ZO8->ZO8_ITCUS   := (cQry)->ZO8_ITCUS
+			ZO8->ZO8_PRODUT  := (cQry)->PRODUTO
+			ZO8->ZO8_DTREF   := STOD((cQry)->ZO8_DTREF)
+			ZO8->ZO8_CUS223  := (cQry)->ZO8_CUS223
+			ZO8->ZO8_CUS224  := (cQry)->ZO8_CUS224
+			ZO8->(MsUnlock())
+
+			(cQry)->(DbSkip())
+
+		End
+
+		(cQry)->(DbCloseArea())
+
+	Next nW
+
+	xVerRet := lRet 
+
+Return(lRet)
+
+Static Function ExistThenD(msFil, cVersao, cRevisa, cAnoRef, cMsg)
 
 	Local cSQL  := ""
 	Local cQry  := ""
@@ -764,13 +862,13 @@ Static Function ExistThenD(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 	cQry := GetNextAlias()
 
 	cSql := " SELECT R_E_C_N_O_ RECNO "
-	cSql += " FROM " + RetFullName("ZO8", cEmp) + " ZO8 (NOLOCK) "
-	cSql += " WHERE ZO8_FILIAL      = " + ValToSql(cEmp)
-	cSql += " AND ZO8_VERSAO        = " + ValToSql(cVersao)
-	cSql += " AND ZO8_REVISA        = " + ValToSql(cRevisa)
-	cSql += " AND ZO8_ANOREF        = " + ValToSql(cAnoRef)
-	cSql += " AND ZO8_TPCUS         = 'CF' "
-	cSql += " AND ZO8.D_E_L_E_T_    = ' ' "
+	cSql += " FROM " + RetFullName("ZO8", cEmpAnt) + " ZO8 (NOLOCK) "
+	cSql += " WHERE ZO8_FILIAL = '" + xFilial("ZO8") + "' "
+	cSql += "       AND ZO8_VERSAO = " + ValToSql(cVersao)
+	cSql += "       AND ZO8_REVISA = " + ValToSql(cRevisa)
+	cSql += "       AND ZO8_ANOREF = " + ValToSql(cAnoRef)
+	cSql += "       AND ZO8_TPCUS = 'CF' "
+	cSql += "       AND ZO8.D_E_L_E_T_ = ' ' "
 
 	TcQuery cSQL New Alias (cQry)
 
@@ -781,7 +879,7 @@ Static Function ExistThenD(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 		If lPerg
 
-			If MsgYesNo("Já existem dados para o tempo orçamentário. Deseja continuar?" + CRLF + CRLF + "Caso clique em sim esses dados serão apagados e gerados novos!", "Empresa: [" + cEmp + "]  - ATENÇÃO")
+			If MsgYesNo("Já existem dados para o tempo orçamentário. Deseja continuar?" + CRLF + CRLF + "Caso clique em sim esses dados serão apagados e gerados novos!", "Empresa: [" + cEmpAnt + "]  - ATENÇÃO")
 
 				lRet := .T.
 

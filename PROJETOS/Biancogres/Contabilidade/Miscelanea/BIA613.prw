@@ -30,7 +30,7 @@ User Function BIA613()
 		Begin Transaction
 
 			xVerRet := .F.
-			Processa({ || fProcessa(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, oPerg:dDataFech, @cMsg) }, "Aguarde...", "Processando dados...", .F.)
+			Processa({ || fProcessa(cFilAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, oPerg:dDataFech, @cMsg) }, "Aguarde...", "Processando dados...", .F.)
 			lRet := xVerRet 
 
 			If !lRet
@@ -67,7 +67,7 @@ User Function BIA613()
 
 Return
 
-Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
+Static Function fProcessa(msFil, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
 
 	Local lRet  := .T.
 	Local cSQL  := ""
@@ -85,7 +85,7 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
 		IncProc("Processando Registros encontrados na base...")
 
 		Reclock("ZOA", .T.)
-		ZOA->ZOA_FILIAL  := cEmp
+		ZOA->ZOA_FILIAL  := xFilial("ZOA")
 		ZOA->ZOA_VERSAO  := cVersao
 		ZOA->ZOA_REVISA  := cRevisa
 		ZOA->ZOA_ANOREF  := cAnoRef

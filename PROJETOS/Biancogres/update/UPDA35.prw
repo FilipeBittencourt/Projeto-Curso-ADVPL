@@ -10139,7 +10139,7 @@ aAdd( aSX3, { ;
 	{ ''																	, .T. }, ; //X3_CHECK
 	{ ''																	, .T. }, ; //X3_TRIGGER
 	{ ''																	, .T. }, ; //X3_PROPRI
-	{ 'N'																	, .T. }, ; //X3_BROWSE
+	{ 'S'																	, .T. }, ; //X3_BROWSE
 	{ 'A'																	, .T. }, ; //X3_VISUAL
 	{ 'R'																	, .T. }, ; //X3_CONTEXT
 	{ ''																	, .T. }, ; //X3_OBRIGAT
@@ -10188,7 +10188,7 @@ aAdd( aSX3, { ;
 	{ ''																	, .T. }, ; //X3_CHECK
 	{ ''																	, .T. }, ; //X3_TRIGGER
 	{ ''																	, .T. }, ; //X3_PROPRI
-	{ 'N'																	, .T. }, ; //X3_BROWSE
+	{ 'S'																	, .T. }, ; //X3_BROWSE
 	{ 'A'																	, .T. }, ; //X3_VISUAL
 	{ 'R'																	, .T. }, ; //X3_CONTEXT
 	{ ''																	, .T. }, ; //X3_OBRIGAT
@@ -10237,7 +10237,7 @@ aAdd( aSX3, { ;
 	{ ''																	, .T. }, ; //X3_CHECK
 	{ ''																	, .T. }, ; //X3_TRIGGER
 	{ ''																	, .T. }, ; //X3_PROPRI
-	{ 'N'																	, .T. }, ; //X3_BROWSE
+	{ 'S'																	, .T. }, ; //X3_BROWSE
 	{ 'A'																	, .T. }, ; //X3_VISUAL
 	{ 'R'																	, .T. }, ; //X3_CONTEXT
 	{ ''																	, .T. }, ; //X3_OBRIGAT
@@ -10287,7 +10287,7 @@ aAdd( aSX3, { ;
 	{ ''																	, .T. }, ; //X3_CHECK
 	{ ''																	, .T. }, ; //X3_TRIGGER
 	{ ''																	, .T. }, ; //X3_PROPRI
-	{ 'N'																	, .T. }, ; //X3_BROWSE
+	{ 'S'																	, .T. }, ; //X3_BROWSE
 	{ 'A'																	, .T. }, ; //X3_VISUAL
 	{ 'R'																	, .T. }, ; //X3_CONTEXT
 	{ ''																	, .T. }, ; //X3_OBRIGAT
@@ -10434,7 +10434,7 @@ aAdd( aSX3, { ;
 	{ ''																	, .T. }, ; //X3_CHECK
 	{ ''																	, .T. }, ; //X3_TRIGGER
 	{ ''																	, .T. }, ; //X3_PROPRI
-	{ 'N'																	, .T. }, ; //X3_BROWSE
+	{ 'S'																	, .T. }, ; //X3_BROWSE
 	{ 'A'																	, .T. }, ; //X3_VISUAL
 	{ 'R'																	, .T. }, ; //X3_CONTEXT
 	{ ''																	, .T. }, ; //X3_OBRIGAT
@@ -10483,7 +10483,7 @@ aAdd( aSX3, { ;
 	{ ''																	, .T. }, ; //X3_CHECK
 	{ ''																	, .T. }, ; //X3_TRIGGER
 	{ 'U'																	, .T. }, ; //X3_PROPRI
-	{ 'N'																	, .T. }, ; //X3_BROWSE
+	{ 'S'																	, .T. }, ; //X3_BROWSE
 	{ 'A'																	, .T. }, ; //X3_VISUAL
 	{ 'R'																	, .T. }, ; //X3_CONTEXT
 	{ ''																	, .T. }, ; //X3_OBRIGAT
@@ -12771,6 +12771,18 @@ Static Function FSAtuSIX()
 	'ZODNICK001'																							, ; //NICKNAME
 	'S'																							} ) //SHOWPESQ
 
+	aAdd( aSIX, { ;
+		'ZOD'																					, ; //INDICE
+	'2'																							, ; //ORDEM
+	'ZOD_FILIAL+ZOD_VERSAO+ZOD_REVISA+ZOD_ANOREF+ZOD_CONTA+ZOD_TIPO+DTOS(ZOD_DTREF)'			, ; //CHAVE
+	'Versao+Revisao+Ano Ref.+Conta+Produto+Data Ref.'											, ; //DESCRICAO
+	'Versao+Revisao+Ano Ref.+Conta+Produto+Data Ref.'											, ; //DESCSPA
+	'Versao+Revisao+Ano Ref.+Conta+Produto+Data Ref.'											, ; //DESCENG
+	'U'																							, ; //PROPRI
+	''																							, ; //F3
+	'ZODNICK002'																							, ; //NICKNAME
+	'S'																							} ) //SHOWPESQ
+
 //
 // Tabela ZOE
 //
@@ -13970,7 +13982,7 @@ aAdd( aSX3, { ;
 	{ ''																	, .T. }, ; //X3_PICTVAR
 	{ ''																	, .T. }, ; //X3_WHEN
 	{ ''																	, .T. }, ; //X3_INIBRW
-	{ ''																	, .T. }, ; //X3_GRPSXG
+	{ '003'																	, .T. }, ; //X3_GRPSXG
 	{ ''																	, .T. }, ; //X3_FOLDER
 	{ ''																	, .T. }, ; //X3_CONDSQL
 	{ ''																	, .T. }, ; //X3_CHKSQL
@@ -14037,7 +14049,7 @@ aAdd( aSX3, { ;
 	{ '08'																	, .T. }, ; //X3_ORDEM
 	{ 'ZOG_MNEMON'															, .T. }, ; //X3_CAMPO
 	{ 'C'																	, .T. }, ; //X3_TIPO
-	{ 30																	, .T. }, ; //X3_TAMANHO
+	{ 20																	, .T. }, ; //X3_TAMANHO
 	{ 0																		, .T. }, ; //X3_DECIMAL
 	{ 'Mnemonico'															, .T. }, ; //X3_TITULO
 	{ 'Mnemonico'															, .T. }, ; //X3_TITSPA
@@ -14068,7 +14080,7 @@ aAdd( aSX3, { ;
 	{ ''																	, .T. }, ; //X3_PICTVAR
 	{ ''																	, .T. }, ; //X3_WHEN
 	{ ''																	, .T. }, ; //X3_INIBRW
-	{ ''																	, .T. }, ; //X3_GRPSXG
+	{ '003'																	, .T. }, ; //X3_GRPSXG
 	{ ''																	, .T. }, ; //X3_FOLDER
 	{ ''																	, .T. }, ; //X3_CONDSQL
 	{ ''																	, .T. }, ; //X3_CHKSQL
@@ -14086,7 +14098,7 @@ aAdd( aSX3, { ;
 	{ '09'																	, .T. }, ; //X3_ORDEM
 	{ 'ZOG_ACCUMM'															, .T. }, ; //X3_CAMPO
 	{ 'C'																	, .T. }, ; //X3_TIPO
-	{ 30																	, .T. }, ; //X3_TAMANHO
+	{ 20																	, .T. }, ; //X3_TAMANHO
 	{ 0																		, .T. }, ; //X3_DECIMAL
 	{ 'Acumulador'															, .T. }, ; //X3_TITULO
 	{ 'Acumulador'															, .T. }, ; //X3_TITSPA
@@ -14117,7 +14129,7 @@ aAdd( aSX3, { ;
 	{ ''																	, .T. }, ; //X3_PICTVAR
 	{ ''																	, .T. }, ; //X3_WHEN
 	{ ''																	, .T. }, ; //X3_INIBRW
-	{ ''																	, .T. }, ; //X3_GRPSXG
+	{ '003'																	, .T. }, ; //X3_GRPSXG
 	{ ''																	, .T. }, ; //X3_FOLDER
 	{ ''																	, .T. }, ; //X3_CONDSQL
 	{ ''																	, .T. }, ; //X3_CHKSQL

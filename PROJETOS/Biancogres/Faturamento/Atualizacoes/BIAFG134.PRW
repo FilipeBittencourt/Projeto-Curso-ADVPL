@@ -11,11 +11,12 @@
 User Function BIAFG134()
 
 	Private _aBfg134	:=	{;
-						{"REP_BLQPED"		,"MV_PAR01"	,	'Pedidos'},;
-						{"REP_BLQF6"		,"MV_PAR02"	,	'Consulta Estoque'},;
-						{"REP_BLQRDISP"	,"MV_PAR03"	,	'Relatório de Disp.'},;
-						{"REP_BLQREST"	,"MV_PAR04"	,	'Workflow Estoque PA'};
-					}
+		{"REP_BLQPED"		,"MV_PAR01"	,	'Pedidos'},;
+		{"REP_BLQF6"		,"MV_PAR02"	,	'Consulta Estoque'},;
+		{"REP_BLQRDISP"	,"MV_PAR03"	,	'Relatório de Disp.'},;
+		{"REP_BLQREST"	,"MV_PAR04"	,	'Workflow Estoque PA'},;
+		{"REP_BLQPROPOP","MV_PAR05"	,	'Proposta de engenharia'};
+		}
 
 
 	If U_VALOPER('060')
@@ -33,12 +34,12 @@ Static Function ValidPerg()
 
 	local lRet		:= .F.
 	Local aPergs	:=	{}
-	
+
 	Local _nI
-	
+
 	For _nI	:=	1 to Len(_aBfg134)
 		&(_aBfg134[_nI,2]) := U_GETBIAPAR(_aBfg134[_nI,1],.F.)
-		
+
 		aAdd( aPergs ,{5,_aBfg134[_nI,3]  		  	,&(_aBfg134[_nI,2]) ,100,"",	.F.})
 
 	Next

@@ -20,13 +20,13 @@ User Function BIA639()
 
 	If oPerg:Pergunte()
 
-		Processa({ || fRunExcel(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef) }, "Aguarde...", "Extraindo dados...", .F.)
+		Processa({ || fRunExcel(cFilAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef) }, "Aguarde...", "Extraindo dados...", .F.)
 
 	EndIf
 
 Return
 
-Static Function fRunExcel(aEmp, cVersao, cRevisa, cAnoRef)
+Static Function fRunExcel(msFil, cVersao, cRevisa, cAnoRef)
 
 	Local lRet  := .F.
 	Local cSQL  := ""
@@ -55,28 +55,28 @@ Static Function fRunExcel(aEmp, cVersao, cRevisa, cAnoRef)
 	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_VERSAO"	, 1)
 	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_REVISA"	, 1)
 	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_ANOREF"	, 1)
-	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_DTREF"	, 1)
+	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_DTREF"	, 1, 4)
 	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_PRODUT"	, 1)
+	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_QINI"	, 3, 2)
+	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_VINI"	, 3, 2)
+	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_QPROD"	, 3, 2)
 	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_VPROD"	, 3, 2)
 	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_QVENDA"	, 3, 2)
 	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_VVENDA"	, 3, 2)
 	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_QSALDO"	, 3, 2)
 	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_VSALDO"	, 3, 2)
-	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_QINI"	, 3, 2)
-	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_QPROD"	, 3, 2)
-	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_VINI"	, 3, 2)
 	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_VAREST"	, 3, 2)
 	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_VEQTDA"	, 3, 2)
 	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_VECST"	, 3, 2)
 	oFWExcel:AddColumn(cSheet, cTitSheet, "ZOB_VECHEC"	, 3, 2)
 
 	cSql := " SELECT * "
-	cSql += " FROM " + RetFullName("ZOB", aEmp) + " ZOB (NOLOCK) "
-	cSql += " WHERE ZOB.D_E_L_E_T_  = '' "
-	cSql += " AND ZOB.ZOB_FILIAL    = " + ValToSql(aEmp)
-	cSql += " AND ZOB.ZOB_VERSAO    = " + ValToSql(cVersao)
-	cSql += " AND ZOB.ZOB_REVISA    = " + ValToSql(cRevisa)
-	cSql += " AND ZOB.ZOB_ANOREF    = " + ValToSql(cAnoRef)
+	cSql += " FROM " + RetFullName("ZOB", cEmpAnt) + " ZOB (NOLOCK) "
+	cSql += " WHERE ZOB.ZOB_FILIAL = '" + xFilial("ZOB") + "' "
+	cSql += "       AND ZOB.ZOB_VERSAO = " + ValToSql(cVersao)
+	cSql += "       AND ZOB.ZOB_REVISA = " + ValToSql(cRevisa)
+	cSql += "       AND ZOB.ZOB_ANOREF = " + ValToSql(cAnoRef)
+	cSql += "       AND ZOB.D_E_L_E_T_  = ' ' "
 
 	TcQuery cSQL New Alias (cQry)
 
@@ -91,16 +91,16 @@ Static Function fRunExcel(aEmp, cVersao, cRevisa, cAnoRef)
 		(cQry)->ZOB_VERSAO,;
 		(cQry)->ZOB_REVISA,;
 		(cQry)->ZOB_ANOREF,;
-		(cQry)->ZOB_DTREF,;
+		stod((cQry)->ZOB_DTREF),;
 		(cQry)->ZOB_PRODUT,;
+		(cQry)->ZOB_QINI,;
+		(cQry)->ZOB_VINI,;
+		(cQry)->ZOB_QPROD,;
 		(cQry)->ZOB_VPROD,;
 		(cQry)->ZOB_QVENDA,;
 		(cQry)->ZOB_VVENDA,;
 		(cQry)->ZOB_QSALDO,;
 		(cQry)->ZOB_VSALDO,;
-		(cQry)->ZOB_QINI,;
-		(cQry)->ZOB_QPROD,;
-		(cQry)->ZOB_VINI,;
 		(cQry)->ZOB_VAREST,;
 		(cQry)->ZOB_VEQTDA,;
 		(cQry)->ZOB_VECST,;

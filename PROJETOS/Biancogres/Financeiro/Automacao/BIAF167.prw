@@ -9,41 +9,45 @@
 @description Processa os titulos a receber do banco do brasil para não gerar diariamente
 @type function
 /*/
+//{{'01','01'},{'05','01'},{'07','01'}}      
 
 User Function BIAF167()
 
 
   Local cSQL      := ""
-  Local cSQLFIL   := ""
-  Local cSQLGrp   := ""
-  Local cSQLOrd   := ""
-  Local cQry      := GetNextAlias()
+  Local cQry      := ""
   Local nSoma     := 0
   Local aFINA100  := {}
   Local cError    := ""
-  Local oError    := ErrorBlock({|e| cError := e:Description})
+  Local oError    := ""
   Local cTime     := ""
   Local cClasVlr  := "1215" //1215 - BIANCO | 1219 - LM
+  Local dDtIni    := ""
+  Local dDtFin    := ""
 
   Private lMsErroAuto    := .F.
+
+  cQry      := GetNextAlias()
+  oError    := ErrorBlock({|e| cError := e:Description})
+  dDtIni := FirstDate(Date()) //CToD("01/01/19")
+  dDtFin := LastDate(Date()) //CToD("31/01/19")
 
   if UDiaUtil() //Pegando e comparando ultimo dia util do mes
 
     // PEGANDO TODAS AS CONTAS DO BANCO DO BRASIL PARA EXECUTAR EM QUAIS DELEAS POSSUI TARIFAS
     cSQL := " SELECT  ZK4_BANCO,  ZK4_AGENCI, ZK4_CONTA, SUM(ZK4_VLTAR) as ZK4_VLTAR " + CRLF
     cSQL += " FROM " + RetSQLName("ZK4")  + CRLF
-    cSQLFIL := " WHERE ZK4_FILIAL = '"+FWxFilial('ZK4')+"' " + CRLF
-    cSQLFIL += " AND ZK4_EMP      = '"+cEmpAnt+"'  " + CRLF
-    cSQLFIL += " AND ZK4_FIL      = '"+cFilAnt+"'  " + CRLF
-    cSQLFIL += " AND ZK4_TIPO     = 'R'  " + CRLF
-    cSQLFIL += " AND ZK4_STATUS   = '1' " + CRLF
-    cSQLFIL += " AND ZK4_BANCO    = '001' " + CRLF
-    cSQLFIL += " AND ZK4_VLTAR  > 0 " + CRLF
-    cSQLFIL += " AND D_E_L_E_T_   =  '' " + CRLF
-    cSQLGrp := "group by ZK4_BANCO,  ZK4_AGENCI, ZK4_CONTA"  + CRLF
-    cSQLOrd := "ORDER BY  ZK4_BANCO,  ZK4_AGENCI, ZK4_CONTA" + CRLF
-
-    cSQL := cSQL+cSQLFIL+cSQLGrp+cSQLOrd
+    cSQL += " WHERE ZK4_FILIAL = '"+FWxFilial('ZK4')+"' " + CRLF
+    cSQL += " AND ZK4_EMP      = '"+cEmpAnt+"'  " + CRLF
+    cSQL += " AND ZK4_FIL      = '"+cFilAnt+"'  " + CRLF
+    cSQL += " AND ZK4_TIPO     = 'R'  " + CRLF
+    cSQL += " AND ZK4_STATUS   = '1' " + CRLF
+    cSQL += " AND ZK4_BANCO    = '001' " + CRLF
+    cSQL += " AND ZK4_VLTAR  > 0 " + CRLF
+    cSQL += " AND D_E_L_E_T_   =  '' " + CRLF
+    //cSQL += " AND ZK4_DTLIQ BETWEEN " + ValToSQL(dDtIni) + " AND " + ValToSQL(dDtFin) + CRLF
+    cSQL += "group by ZK4_BANCO,  ZK4_AGENCI, ZK4_CONTA"  + CRLF
+    cSQL += "ORDER BY  ZK4_BANCO,  ZK4_AGENCI, ZK4_CONTA" + CRLF
 
     TcQuery cSQL New Alias (cQry)
 
@@ -77,6 +81,7 @@ User Function BIAF167()
           {"E5_BENEF"     , ""                          ,Nil},;
           {"E5_HISTOR"    , "JOB BIAF167.PRW "+cTime ,Nil}}
 
+
         MSExecAuto({|x,y,z| FinA100(x,y,z)},0,aFINA100,3)
 
 
@@ -92,6 +97,7 @@ User Function BIAF167()
           cSQL += " AND ZK4_BANCO    = '001' " + CRLF
           cSQL += " AND ZK4_VLTAR  > 0 " + CRLF
           cSQL += " AND D_E_L_E_T_   =  '' " + CRLF
+          // cSQL += " AND ZK4_DTLIQ BETWEEN " + ValToSQL(dDtIni) + " AND " + ValToSQL(dDtFin) + CRLF
 
           TCSqlExec(cSQL)
 

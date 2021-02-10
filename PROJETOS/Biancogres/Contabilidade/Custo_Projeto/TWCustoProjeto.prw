@@ -39,6 +39,7 @@ Class TWCustoProjeto From LongClassName
 	Method GetData01()
 	Method GetData02()
 	Method GetData03()
+	Method GetData04()
 	Method GetDataCtr(cNumero, cItemCta, cSubItem)			
 	Method ParamBox()
 	Method Refresh()
@@ -243,14 +244,17 @@ Local cFile := "BIAF161-" + cEmpAnt + __cUserID + "-" + dToS(Date()) +"-"+ StrTr
 Local cWork01 := "Analítico I"
 Local cWork02 := "Analítico II"
 Local cWork03 := "Sintético"
+Local cWork04 := "Crédito INVEST"
 Local cTable01 := "Custos dos Projetos " + cWork01 + " - " + Capital(AllTrim(FWEmpName(cEmpAnt)))
 Local cTable02 := "Custos dos Projetos " + cWork02 + " - " + Capital(AllTrim(FWEmpName(cEmpAnt)))
 Local cTable03 := "Custos dos Projetos " + cWork03 + " - " + Capital(AllTrim(FWEmpName(cEmpAnt)))
+Local cTable04 := "Custos dos Projetos " + cWork04 + " - " + Capital(AllTrim(FWEmpName(cEmpAnt)))
 Local cDirTmp := AllTrim(GetTempPath())
 Local nCount := 0
 Local aLine01 := {}
 Local aLine02 := {}
 Local aLine03 := {}
+Local aLine04 := {}
 	
   oFWExcel := FWMsExcel():New()
 	  
@@ -313,6 +317,25 @@ Local aLine03 := {}
 	For nCount := 1 To Len(aLine03) 
 
 		oFWExcel:AddRow(cWork03, cTable03, aLine03[nCount])
+
+	Next
+	
+	oFWExcel:AddWorkSheet(cWork04) 
+	oFWExcel:AddTable(cWork04, cTable04)
+	oFWExcel:AddColumn(cWork04, cTable04, "Contrato", 1, 1)
+	oFWExcel:AddColumn(cWork04, cTable04, "Pedido", 1, 1)
+	oFWExcel:AddColumn(cWork04, cTable04, "Fornecedor", 1, 1)
+	oFWExcel:AddColumn(cWork04, cTable04, "Loja", 1, 1)
+	oFWExcel:AddColumn(cWork04, cTable04, "Nome", 1, 1)		
+	oFWExcel:AddColumn(cWork04, cTable04, "Data", 1, 1)	
+	oFWExcel:AddColumn(cWork04, cTable04, "Valor", 3, 2, .T.)
+	oFWExcel:AddColumn(cWork04, cTable04, "Crédito", 3, 2, .T.)	
+	  		
+	aLine04 := ::GetData04()
+	
+	For nCount := 1 To Len(aLine04) 
+
+		oFWExcel:AddRow(cWork04, cTable04, aLine04[nCount])
 
 	Next	
 			
@@ -506,6 +529,35 @@ Local cQry := GetNextAlias()
 		aAdd(aRet, {(cQry)->CONTRATO, (cQry)->ITEMCT, (cQry)->SUBITEM, cNomCtr, cFornece, dToC(sToD(dVencto)), nVlrTot, nPagBru, nPagAnt, nTotCom, nSaldo})
 	  
 	  (cQry)->(DbSkip())
+
+	EndDo()
+
+	(cQry)->(DbCloseArea())
+
+Return(aRet)
+
+
+Method GetData04() Class TWCustoProjeto
+Local aRet := {}
+Local cSQL := ""
+Local cQry := GetNextAlias()
+
+	cSQL := " SELECT * " 
+	cSQL += " FROM FNC_CTR_PC_CRED_INVEST_" + cEmpAnt + "(" +; 
+						ValToSQL(::oParam:cContratoDe) + ", " + ValToSQL(::oParam:cContratoAte) +;
+						", " + ValToSQL(::oParam:cClvlDe) + ", " + ValToSQL(::oParam:cClvlAte) +;
+						", " + ValToSQL(::oParam:cItemDe) + ", " + ValToSQL(::oParam:cItemAte) +;
+						", " + ValToSQL(::oParam:cSubitemDe) + ", " + ValToSQL(::oParam:cSubitemAte) +;
+						", " + ValToSQL(::oParam:cCodForDe) + ", " + ValToSQL(::oParam:cCodForAte) +;
+						", " + ValToSQL(::oParam:dDataDe) + ", " + ValToSQL(::oParam:dDataAte) + ")"	
+	
+	TcQuery cSQL New Alias (cQry)
+
+	While !(cQry)->(Eof())
+
+		aAdd(aRet, {(cQry)->C7_YCONTR, (cQry)->C7_NUM, (cQry)->C7_FORNECE, (cQry)->C7_LOJA, (cQry)->A2_NOME, dToC(sToD((cQry)->C7_EMISSAO)), (cQry)->C7_TOTAL, (cQry)->C7_YCREINV})
+
+		(cQry)->(DbSkip())
 
 	EndDo()
 

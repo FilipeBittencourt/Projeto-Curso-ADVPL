@@ -48,7 +48,8 @@ function u_BIA661Proc() as logical
     local aArea         as array
     local aAreaSM0      as array
 
-    local bMsNewProcess as block
+    local bAbort        as block
+    local bActive       as block
 
     local cEmp          as character
     local cFil          as character
@@ -63,7 +64,7 @@ function u_BIA661Proc() as logical
 
     local oEmpresas     as object
     local oPergunte     as object
-    local oMsNewProcess as object
+    local otMultProcess as object
 
     nKeepResponse:=(-1)
 
@@ -100,9 +101,10 @@ function u_BIA661Proc() as logical
         oEmpresas:GetSelEmp()
         oPergunte:=__TWPCOFiltroPeriodo():Get()
 
-        bMsNewProcess:={|lEnd|MsProcess():ProcRedefine(@oMsNewProcess,nil,0,350,350,.T.,.T.),oMsNewProcess:SetRegua1(0),lRet:=BIA661Proc(@oMsNewProcess,@cEmp,@cFil,@oEmpresas,@oPergunte,@lEnd,@lShowXML,@nKeepResponse)}
-        oMsNewProcess:=MsNewProcess():New(bMsNewProcess,&("cCadastro"),"Aguarde...",.T.)
-        oMsNewProcess:Activate()
+        bAbort:={|lEnd,otMultProcess|.T.}
+        bActive:={|lEnd|lRet:=BIA661Proc(@otMultProcess,@cEmp,@cFil,@oEmpresas,@oPergunte,@lEnd,@lShowXML,@nKeepResponse)}
+        otMultProcess:=tMultProcess():New(bActive,&("cCadastro"),"Aguarde...",bAbort,2)
+        otMultProcess:Activate()
 
     end sequence
 
@@ -113,7 +115,7 @@ function u_BIA661Proc() as logical
 
     return(lRet)
 
-static function BIA661Proc(oMsNewProcess as object,cEmpDef as character,cFilDef as character,oEmpresas as object,oPergunte as object,lEnd as logical,lShowXML as logical,nKeepResponse as numeric) as logical
+static function BIA661Proc(otMultProcess as object,cEmpDef as character,cFilDef as character,oEmpresas as object,oPergunte as object,lEnd as logical,lShowXML as logical,nKeepResponse as numeric) as logical
 
     local aMsg          as array
     local aSM0RecNo     as array
@@ -153,13 +155,13 @@ static function BIA661Proc(oMsNewProcess as object,cEmpDef as character,cFilDef 
 
         aMsg:=array(0)
 
-        oMsNewProcess:SetRegua1(SM0->(recCount()))
+        otMultProcess:SetRegua(1,SM0->(recCount()))
 
         aSM0RecNo:=array(0)
         SM0->(dbSetOrder(1))
         SM0->(dbGoTop())
         while SM0->(!eof())
-            oMsNewProcess:IncRegua1()
+            otMultProcess:IncRegua(1)
             SM0->(aAdd(aSM0RecNo,{fieldGet(fieldPos("M0_CODIGO")),fieldGet(fieldPos("M0_CODFIL")),recNo()}))
             SM0->(dbSkip())
         end while
@@ -168,7 +170,7 @@ static function BIA661Proc(oMsNewProcess as object,cEmpDef as character,cFilDef 
 
         bError:={|oError|A35():breakError(@oError,@cEmp,@cFil,@cMsg)}
 
-        oMsNewProcess:SetRegua1(nJ)
+        otMultProcess:SetRegua(1,nJ)
 
         for nD:=1 to nJ
 
@@ -194,7 +196,7 @@ static function BIA661Proc(oMsNewProcess as object,cEmpDef as character,cFilDef 
             endif
 
             cMsgPrc:="Processando...Empresa:["+cEmp+"] :: Filial:["+cFil+"]"
-            oMsNewProcess:IncRegua1(cMsgPrc)
+            otMultProcess:IncRegua(1,cMsgPrc)
         
             if (lEnd)
                 cMsg:="Operação Cancelada pelo usuário"
@@ -209,7 +211,7 @@ static function BIA661Proc(oMsNewProcess as object,cEmpDef as character,cFilDef 
 
                 SM0->(dbGoTo(nSM0RecNo))
 
-                lRet:=ProcBIA661(@oMsNewProcess,@cEmp,@cFil,@cVersao,@cRevisa,@cAnoRef,@cTipoRef,@cMsg,@lShowXML,@nKeepResponse)
+                lRet:=ProcBIA661(@otMultProcess,@cEmp,@cFil,@cVersao,@cRevisa,@cAnoRef,@cTipoRef,@cMsg,@lShowXML,@nKeepResponse)
 
             recover
                 
@@ -265,13 +267,14 @@ static function BIA661Proc(oMsNewProcess as object,cEmpDef as character,cFilDef 
             cMsg+=cCRLF
         next nD
         
-        evalBlock():EvalBlock({||eecView(cMsg,&("cCadastro")+" :: Log de Processamento :: ATENÇÃO")},nil,.T.)
+
+        txtEditMemo():txtFileEdit(cMsg,&("cCadastro")+" :: Log de Processamento :: ATENÇÃO")
 
     endif
 
     return(lRet)
 
-static function ProcBIA661(oMsNewProcess as object,cEmp as character,cFil as character,cVersao as character, cRevisa as character, cAnoRef as character, cTipoRef as character,cMsg as character,lShowXML as logical,nKeepResponse as numeric) as logical
+static function ProcBIA661(otMultProcess as object,cEmp as character,cFil as character,cVersao as character, cRevisa as character, cAnoRef as character, cTipoRef as character,cMsg as character,lShowXML as logical,nKeepResponse as numeric) as logical
 
     local aFieldPos        as array
     local aTmpStruct    as array
@@ -300,7 +303,7 @@ static function ProcBIA661(oMsNewProcess as object,cEmp as character,cFil as cha
     local lDev          as logical
     local lPicture      as logical
     local lX3Titulo     as logical
-    local leecView      as logical
+    local ltxtEditMemo  as logical
     
     local lZOFFound     as logical
     local lBIA661Excel  as logical
@@ -413,10 +416,10 @@ static function ProcBIA661(oMsNewProcess as object,cEmp as character,cFil as cha
 
             nFields:=len(aTmpStruct)
 
-            oMsNewProcess:SetRegua2(nFields)
+            otMultProcess:SetRegua(2,nFields)
 
             for nField:=1 to nFields
-                oMsNewProcess:IncRegua2()
+                otMultProcess:IncRegua(2)
                 nFieldTrg:=ZOF->(fieldPos(aTmpStruct[nField][DBS_NAME]))
                 if (nFieldTrg>0)
                     aAdd(aFieldPos,{nField,nFieldTrg})
@@ -427,10 +430,10 @@ static function ProcBIA661(oMsNewProcess as object,cEmp as character,cFil as cha
 
             begin transaction
 
-                oMsNewProcess:SetRegua2(0)
+                otMultProcess:SetRegua(2,0)
 
                 while (cTmpAlias)->(!eof())
-                    oMsNewProcess:IncRegua2()
+                    otMultProcess:IncRegua(2)
                     cZOFINDICA:=left((cTmpAlias)->(FieldGet(nFldZOFINDICA)),2)
                     lZOFFound:=ZOF->(dbSeek(cZOFKeySeek+cZOFINDICA,.F.))
                     lAddNew:=(!lZOFFound)
@@ -492,11 +495,11 @@ static function ProcBIA661(oMsNewProcess as object,cEmp as character,cFil as cha
 
                 lPicture:=.T.
                 lX3Titulo:=.T.
-                leecView:=.F.
+                ltxtEditMemo:=.F.
 
                 (cTmpAlias)->(dbGoTop())
 
-                uToXML():QryToXML(@cTmpAlias,@cXMLFile,@cExcelTitle,@lPicture,@lX3Titulo,@leecView)
+                uToXML():QryToXML(@cTmpAlias,@cXMLFile,@cExcelTitle,@lPicture,@lX3Titulo,@ltxtEditMemo)
 
             endif
 

@@ -26,7 +26,7 @@ User Function BIA616()
 		Begin Transaction
 
 			xVerRet := .F.
-			Processa({ || fProcessa(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, oPerg:dDataFech, @cMsg) }, "Aguarde...", "Processando dados...", .F.)
+			Processa({ || fProcessa(cFilAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, oPerg:dDataFech, @cMsg) }, "Aguarde...", "Processando dados...", .F.)
 			lRet := xVerRet 
 
 			If !lRet
@@ -63,10 +63,11 @@ User Function BIA616()
 
 Return
 
-Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
+Static Function fProcessa(msFil, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
 
-	Local nQINIJan := 0
-	Local nVINIJan := 0
+	Local nQINI := 0
+	Local nVINI := 0
+	Local nkr
 
 	Local lRet	:= .T.
 
@@ -77,30 +78,44 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
 	ZOA->(DBSetOrder(2))
 
 	ProcRegua(0)
-	While !ZOB->(EOF()) .And. ZOB->(ZOB_FILIAL + ZOB_VERSAO + ZOB_REVISA + ZOB_ANOREF) == cEmp + cVersao + cRevisa + cAnoRef
+	ZOB->(DbSeek(xFilial("ZOB") + cVersao + cRevisa + cAnoRef))
+	While !ZOB->(EOF()) .And. ZOB->(ZOB_FILIAL + ZOB_VERSAO + ZOB_REVISA + ZOB_ANOREF) == xFilial("ZOB") + cVersao + cRevisa + cAnoRef
 
 		IncProc("Processando Registros encontrados na base...")
 
-		If ZOA->(DbSeek(cEmp + cVersao + cRevisa + cAnoRef + DTOS(ZOB->ZOB_DTREF) + ZOB->ZOB_PRODUT))
+		nQINI := 0
+		nVINI := 0
 
-			If Month(ZOA->ZOA_DTREF) == 1
+		If Month(ZOB->ZOB_DTREF) == 1
 
-				Reclock("ZOB", .F.)
-				ZOB->ZOB_QINI := ZOA->ZOA_QINI
-				ZOB->ZOB_VINI := ZOA->ZOA_VINI
-				ZOB->(MsUnlock())
+			msIniRef := Strzero(Val(cAnoRef) - 1, 4) + "1231"
+			If ZOA->(DbSeek(xFilial("ZOA") + cVersao + cRevisa + cAnoRef + msIniRef + ZOB->ZOB_PRODUT))
 
-				nQINIJan := ZOB->ZOB_QINI
-				nVINIJan := ZOB->ZOB_VINI
+				nQINI := ZOA->ZOA_QINI
+				nVINI := ZOA->ZOA_VINI
 
 			EndIf
 
+		Else
+
+			msRegZOB := ZOB->(Recno())
+			msProdut := ZOB->ZOB_PRODUT
+
+			msIniRef := dtos(UltimoDia(stod(Substr(dtos(ZOB->ZOB_DTREF), 1, 4) + StrZero(Val(Substr(dtos(ZOB->ZOB_DTREF), 5, 2)) - 1, 2) + "01"))) 
+			If ZOB->(DbSeek(xFilial("ZOB") + cVersao + cRevisa + cAnoRef + msIniRef + msProdut))
+
+				nQINI := ZOB->ZOB_QSALDO
+				nVINI := ZOB->ZOB_VSALDO
+
+			EndIf
+
+			ZOB->(dbGoto(msRegZOB))
+
 		EndIf
 
-		// Tenho que buscar de JANEIRO
 		Reclock("ZOB", .F.)
-		ZOB->ZOB_QINI := nQINIJan
-		ZOB->ZOB_VINI := nVINIJan
+		ZOB->ZOB_QINI := nQINI
+		ZOB->ZOB_VINI := nVINI
 		ZOB->(MsUnlock())
 
 		ZO6->(DBSetOrder(1))
@@ -125,6 +140,42 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
 		ZOB->(DBSkip())
 
 	End
+
+	//Transporta produtos sem movimento no período
+	ProcRegua(0)
+	For nkr := 1 to 12
+
+		IncProc("Processando Registros encontrados na base...")
+
+		msIniRef := dtos(UltimoDia(stod(cAnoRef + StrZero(nkr,2) + "01")))
+		ProcRegua(0)
+		ZOA->(DbSeek(xFilial("ZOA") + cVersao + cRevisa + cAnoRef))
+		While !ZOA->(EOF()) .And. ZOA->(ZOA_FILIAL + ZOA_VERSAO + ZOA_REVISA + ZOA_ANOREF) == xFilial("ZOA") + cVersao + cRevisa + cAnoRef
+
+			IncProc("Processando Registros encontrados na base...")
+
+			If !ZOB->(DbSeek(xFilial("ZOB") + cVersao + cRevisa + cAnoRef + msIniRef + ZOA->ZOA_PRODUT))
+
+				Reclock("ZOB", .T.)
+				ZOB->ZOB_FILIAL  := xFilial("ZOB")
+				ZOB->ZOB_VERSAO  := cVersao
+				ZOB->ZOB_REVISA  := cRevisa
+				ZOB->ZOB_ANOREF  := cAnoRef
+				ZOB->ZOB_DTREF   := stod(msIniRef)
+				ZOB->ZOB_PRODUT  := ZOA->ZOA_PRODUT
+				ZOB->ZOB_QINI    := ZOA->ZOA_QINI
+				ZOB->ZOB_VINI    := ZOA->ZOA_VINI
+				ZOB->ZOB_QSALDO  := ZOA->ZOA_QINI
+				ZOB->ZOB_VSALDO  := ZOA->ZOA_VINI
+				ZOB->(MsUnlock())
+
+			EndIf
+
+			ZOA->(DBSkip())
+
+		End
+
+	Next nkr
 
 	xVerRet := lRet 
 

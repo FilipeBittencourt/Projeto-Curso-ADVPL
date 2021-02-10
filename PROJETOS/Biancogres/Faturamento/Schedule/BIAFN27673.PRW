@@ -113,7 +113,7 @@ static function BIA27673() as logical
     local lDev          as logical
     local lPicture      as logical
     local lX3Titulo     as logical
-    local leecView      as logical
+    local ltxtEditMemo  as logical
 
     local nAttempts     as numeric
 
@@ -152,11 +152,11 @@ static function BIA27673() as logical
 
         lPicture:=.F.
         lX3Titulo:=.T.
-        leecView:=.F.
+        ltxtEditMemo:=.F.
 
         cQuery:=getQuery(if(lDev,15,2))
 
-        lRet:=uToXML():QryToXML(@cQuery,@cFile,@cExcelTitle,@lPicture,@lX3Titulo,@leecView)
+        lRet:=uToXML():QryToXML(@cQuery,@cFile,@cExcelTitle,@lPicture,@lX3Titulo,@ltxtEditMemo)
         
         if (!lRet)
             break

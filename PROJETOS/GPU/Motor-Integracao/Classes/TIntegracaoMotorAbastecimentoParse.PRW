@@ -37,6 +37,9 @@ METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 	Local nW      := 0
 	Local cMsg    := ""
 
+	Local cBKPEmp := cEmpAnt
+	Local cBKPFil := cFilAnt
+
 
 	oJson["origem"]   := "SC7"
 	oJSPC["empresa"]  := ::ParseEmpresa(oJson)
@@ -54,6 +57,10 @@ METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 
 
 	If 	lError == .F.
+
+		If cEmpAnt+cFilAnt != AllTrim(oJSPC["empresa"]["empresaCodigo"])+AllTrim(oJSPC["empresa"]["empresaFilial"])
+			RPCSetEnv(oJSPC["empresa"]["empresaCodigo"], oJSPC["empresa"]["empresaFilial"], NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+		EndIf
 
 		//Fornecedor
 		oJSPC["fornecedor"] := ::ParseFornecedor(oJson)
@@ -133,6 +140,9 @@ METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 
 	EndIf
 
+	If cEmpAnt+cFilAnt != cBKPEmp+cBKPFil
+		RPCSetEnv(cBKPEmp, cBKPFil, NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+	EndIf
 
 Return oJSRet
 
@@ -564,6 +574,9 @@ METHOD PedidoVenda(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 	Local nW      := 0
 	Local cMsg    := ""
 
+	Local cBKPEmp := cEmpAnt
+	Local cBKPFil := cFilAnt
+
 
 	oJson["origem"]   := "SC5"
 	oJSPV["empresa"]  := ::ParseEmpresa(oJson)
@@ -582,6 +595,9 @@ METHOD PedidoVenda(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 
 	If 	lError == .F.
 
+		If cEmpAnt+cFilAnt != AllTrim(oJSPC["empresa"]["empresaCodigo"])+AllTrim(oJSPC["empresa"]["empresaFilial"])
+			RPCSetEnv(oJSPC["empresa"]["empresaCodigo"], oJSPC["empresa"]["empresaFilial"], NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+		EndIf
 
 		oJSPV["cliente"] := ::ParseCliente(oJson)
 		If Empty(oJSPV["cliente"]["A1_COD"])
@@ -637,6 +653,9 @@ METHOD PedidoVenda(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 
 	EndIf
 
+	If cEmpAnt+cFilAnt != cBKPEmp+cBKPFil
+		RPCSetEnv(cBKPEmp, cBKPFil, NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+	EndIf
 
 Return oJSRet
 
@@ -764,63 +783,3 @@ Static Function EmpFilArmaz(cProduto)
 
 Return cEmpEst + cFilEst
 
-
-/*/
-	@Title   : Função para recuperar o modulo de acordo com o endereço do produto
-	@Type    : Função
-	@Name    : VA039GetModulo
-	@Author  : Ihorran Milholi
-	@Date    : 14/11/2016
-/*/
-/*
-Static Function VA039GetModulo(cLocal,cEnder,cFabric,cTipCarga)
-
-	Local cModulo := Space(TamSx3("ZZA_MODULO")[1])
-	Local cAlias	:= GetNextAlias()
-
-	//posiciona no endereço correspondente
-	SBE->(dbSetOrder(1))
-	If SBE->(dbSeek(xFilial("SBE")+cLocal+cEnder))
-
-		//query para recuperar o modulo
-		BeginSql Alias cAlias
-
-			SELECT TOP 1 ZZA.ZZA_MODULO
-
-			FROM	%table:ZZA% ZZA
-
-			WHERE	ZZA.%NotDel%
-			AND	ZZA.ZZA_FILIAL= %xFilial:ZZA%
-			AND	ZZA.ZZA_LOCAL	= %Exp:SBE->BE_LOCAL%
-
-			AND	%Exp:SBE->BE_LOCALIZ% 	BETWEEN ZZA.ZZA_ENDINI AND ZZA.ZZA_ENDFIN
-			AND	%Exp:SBE->BE_ESTFIS%	BETWEEN ZZA.ZZA_ESTINI AND ZZA.ZZA_ESTFIN
-			AND	%Exp:cTipCarga%			BETWEEN ZZA.ZZA_TIPCIN AND ZZA.ZZA_TIPCFI
-
-			ORDER BY ZZA.ZZA_MODULO
-
-		EndSql
-
-		(cAlias)->(dbGoTop())
-		If (cAlias)->(!Eof()) .and. (cAlias)->(!Bof())
-
-			cModulo := (cAlias)->ZZA_MODULO
-
-		EndIf
-		(cAlias)->(dbCloseArea())
-
-	EndIf
-
-	If Empty(cModulo) .and. cEmpAnt == "08"
-
-		ZZL->(dbSetOrder(1))
-		If ZZL->(dbSeek(xFilial("ZZL")+cFabric))
-
-			cModulo := SubStr("EMTERCEIRO",1,TamSx3("ZZA_MODULO")[1])
-
-		EndIf
-
-	EndIf
-
-Return cModulo
-*/

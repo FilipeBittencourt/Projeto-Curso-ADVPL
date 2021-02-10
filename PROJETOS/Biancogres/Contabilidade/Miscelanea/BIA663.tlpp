@@ -4,6 +4,8 @@
 #include "jsonhash.ch"
 #include "jsonarray.ch"
 
+static __cEmpProc as character
+
 /*/{Protheus.doc} BIA663
 @author Marinaldo de Jesus (Facile)
 @since 28/12/2020
@@ -62,7 +64,8 @@ function u_BIA663Calc() as logical
     local aArea         as array
     local aAreaSM0      as array
 
-    local bMsNewProcess as block
+    local bAbort        as block
+    local bActive       as block
 
     local cEmp          as character
     local cFil          as character
@@ -77,7 +80,7 @@ function u_BIA663Calc() as logical
 
     local nKeepResponse as numeric
 
-    local oMsNewProcess as object
+    local otMultProcess as object
 
     nKeepResponse:=(-1)
 
@@ -109,9 +112,10 @@ function u_BIA663Calc() as logical
         oEmpresas:GetSelEmp()
         oPergunte:=__TWPCOFiltroPeriodo():Get()
 
-        bMsNewProcess:={|lEnd|MsProcess():ProcRedefine(@oMsNewProcess,nil,0,350,350,.T.,.T.),oMsNewProcess:SetRegua1(0),lRet:=BIA663Calc(@oMsNewProcess,@cEmp,@cFil,@oEmpresas,@oPergunte,@lEnd,@nKeepResponse)}
-        oMsNewProcess:=MsNewProcess():New(bMsNewProcess,cCadastro,"Aguarde...",.T.)
-        oMsNewProcess:Activate()
+        bAbort:={|lEnd,otMultProcess|if(InTransact(),evalBlock():EvalBlock({||DisarmTransaction()},nil,.F.),.T.)}
+        bActive:={|lEnd,otMultProcess|lRet:=BIA663Calc(@otMultProcess,@cEmp,@cFil,@oEmpresas,@oPergunte,@nKeepResponse)}
+        otMultProcess:=txtMultProcess():New(bActive,&("cCadastro"),"Aguarde...",bAbort,2)
+        otMultProcess:Activate()
 
     end sequence
 
@@ -122,7 +126,7 @@ function u_BIA663Calc() as logical
 
     return(lRet)
 
-static function BIA663Calc(oMsNewProcess as object,cEmpDef as character,cFilDef as character,oEmpresas as object,oPergunte as object,lEnd as logical,nKeepResponse as numeric) as logical
+static function BIA663Calc(otMultProcess as object,cEmpDef as character,cFilDef as character,oEmpresas as object,oPergunte as object,nKeepResponse as numeric) as logical
 
     local aMsg           as array
     local aSM0RecNo      as array
@@ -154,10 +158,7 @@ static function BIA663Calc(oMsNewProcess as object,cEmpDef as character,cFilDef 
     local nSM0AT        as numeric
     local nSM0RecNo     as numeric
 
-    local oRTime1       as object
-    local oRTime2       as object
-    local oProgress1    as object
-    local oProgress2    as object
+    local nSetRegua     as numeric
 
     lRet:=.T.
 
@@ -174,37 +175,38 @@ static function BIA663Calc(oMsNewProcess as object,cEmpDef as character,cFilDef 
 
         aMsg:=array(0)
 
-        oMsNewProcess:SetRegua1(SM0->(recCount()))
+        nSetRegua:=SM0->(recCount())
 
-        oRTime1:=timeRemaining():New(SM0->(recCount()))
-        oProgress1:=txtProgress():New(/*ctPAnim,";"*/)
-
-        oRTime2:=timeRemaining():New()
-        oProgress2:=txtProgress():New(/*ctPAnim,";"*/)
+        otMultProcess:SetRegua(1,nSetRegua)
+        otMultProcess:SetRegua(2,nSetRegua)
 
         aSM0RecNo:=array(0)
         SM0->(dbSetOrder(1))
         SM0->(dbGoTop())
         while (SM0->(!eof()))
-            TTimer1(@oMsNewProcess,@oRTime1,@oProgress1,.T.)
+            SM0->(setEmpProc(fieldGet(fieldPos("M0_CODIGO"))))
+            TTimer(@otMultProcess,1,.T.,"Empresa ["+getEmpProc()+"]")
+            TTimer(@otMultProcess,2,.T.,"Obtendo Registros:")
             SM0->(aAdd(aSM0RecNo,{fieldGet(fieldPos("M0_CODIGO")),fieldGet(fieldPos("M0_CODFIL")),recNo()}))
             SM0->(dbSkip())
         end while
 
-        ProcRegua(if(nJ<=1,0,nJ))
-
         bError:={|oError|A35():breakError(@oError,@cEmp,@cFil,@cMsg)}
 
-        oMsNewProcess:SetRegua1(nJ)
-
-        oRTime1:SetRemaining(nJ)
+        nSetRegua:=nJ
+        otMultProcess:SetRegua(1,nSetRegua)
 
         for nD:=1 to nJ
 
-            TTimer1(@oMsNewProcess,@oRTime1,@oProgress1,.T.)
+            dIniCalc:=Date()
+            cIniCalc:=Time()
 
             cEmp:=oEmpresas:aEmpSel[nD][1]
             
+            setEmpProc(cEmp)
+
+            TTimer(@otMultProcess,1,.T.,"Empresa ["+getEmpProc()+"]["+DToC(dIniCalc)+"|"+cIniCalc+"]")
+
             nSM0AT:=aScan(aSM0RecNo,{|e|e[1]==cEmp})
             if (nSM0AT==0)
                 loop
@@ -219,15 +221,15 @@ static function BIA663Calc(oMsNewProcess as object,cEmpDef as character,cFilDef 
             cVersao:=left(oPergunte:cVersao,getSX3Cache("ZOH_VERSAO","X3_TAMANHO"))
             cRevisa:=left(oPergunte:cRevisa,getSX3Cache("ZOH_REVISA","X3_TAMANHO"))
             cAnoRef:=left(oPergunte:cAnoRef,getSX3Cache("ZOH_ANOREF","X3_TAMANHO"))
-
-            cMsgPrc:="Processando...Empresa:["+cEmp+"] :: Filial:["+cFil+"]"
-            IncProc(cMsgPrc)
         
-            if (lEnd)
+            if (otMultProcess:lEnd)
                 cMsg:="Operação Cancelada pelo usuário"
                 aAdd(aMsg,{cEmp,cFil,cVersao,cRevisa,cAnoRef,cMsg})
+                Eval(otMultProcess:bAbort)
                 break
             endif
+
+            cMsgPrc:="Processando...Empresa:["+cEmp+"]:Filial:["+cFil+"]"
 
             bErrorBlock:=ErrorBlock(bError)
             begin sequence
@@ -235,9 +237,6 @@ static function BIA663Calc(oMsNewProcess as object,cEmpDef as character,cFilDef 
                 MsAguarde({||RPCTools():RpcSetEnv(cEmp,cFil),&("cCadastro"),StrTran(cMsgPrc,"Processando","Preparando Ambiente")})
 
                 SM0->(dbGoTo(nSM0RecNo))
-
-                dIniCalc:=Date()
-                cIniCalc:=Time()
 
                 cMsg:="Inicio do Cálculo: "
                 cMsg+=" "
@@ -250,7 +249,7 @@ static function BIA663Calc(oMsNewProcess as object,cEmpDef as character,cFilDef 
 
                 A35():OrcamentoInit(cVersao,cRevisa,cAnoRef)
 
-                lRet:=ProcBIA663(@oMsNewProcess,@cEmp,@cFil,@cVersao,@cRevisa,@cAnoRef,@cMsg,@nKeepResponse,@oRTime1,@oProgress1,@oRTime2,@oProgress2)
+                lRet:=ProcBIA663(@otMultProcess,@cEmp,@cFil,@cVersao,@cRevisa,@cAnoRef,@cMsg,@nKeepResponse,DtoC(dIniCalc),cIniCalc)
 
                 A35():OrcamentoClose()
 
@@ -324,13 +323,13 @@ static function BIA663Calc(oMsNewProcess as object,cEmpDef as character,cFilDef 
             cMsg+=cCRLF
         next nD
         
-        evalBlock():EvalBlock({||eecView(cMsg,&("cCadastro")+" :: Log de Processamento :: ATENÇÃO")},nil,.T.)
+        txtEditMemo():txtFileEdit(cMsg,&("cCadastro")+":Log de Processamento:ATENÇÃO")
 
     endif
 
     return(lRet)
 
-static function ProcBIA663(oMsNewProcess as object,cEmp as character,cFil as character,cVersao as character, cRevisa as character, cAnoRef as character,cMsg as character,nKeepResponse as numeric,oRTime1 as object,oProgress1 as object,oRTime2 as object,oProgress2 as object) as logical
+static function ProcBIA663(otMultProcess as object,cEmp as character,cFil as character,cVersao as character, cRevisa as character, cAnoRef as character,cMsg as character,nKeepResponse as numeric,cDIniCalc as character,cHIniCalc as character) as logical
     
     local aMeses            as array
     local aRecNos           as array
@@ -343,13 +342,14 @@ static function ProcBIA663(oMsNewProcess as object,cEmp as character,cFil as cha
 
     local cMes              as character
     local cCRLF             as character
+    local cMeses            as character
+    local cRecNo            as character   
+    local cRecNos           as character
     local cMsgNoYes         as character
     local cTmpAlias         as character
     
     local cMnemonico        as character
     local cAccumulator      as character
-    local cMnemonicoCol     as character
-    local cAccumulatorCol   as character
 
     local cFormula          as character
     local cFormulaTotal     as character
@@ -403,11 +403,10 @@ static function ProcBIA663(oMsNewProcess as object,cEmp as character,cFil as cha
     local nZOGRecNo         as numeric
     local nZOHRecNo         as numeric
 
-    local nRecCount         as numeric
+    local nSetRegua         as numeric
 
     local nTotal            as numeric
     local nAccumulator      as numeric
-    local nAccumulatorCol   as numeric
 
     local oJSONArray        as object
 
@@ -454,8 +453,8 @@ static function ProcBIA663(oMsNewProcess as object,cEmp as character,cFil as cha
                     cMsgNoYes:="Já Existem dados para este Orçamento."
                     cMsgNoYes+=cCRLF
                     cMsgNoYes+=cCRLF
-                    cMsgNoYes+=" Empresa:["+cEmp+"] :: Filial:["+cFil+"]"
-                    cMsgNoYes+=" :: "
+                    cMsgNoYes+=" Empresa:["+cEmp+"]:Filial:["+cFil+"]"
+                    cMsgNoYes+=":"
                     cMsgNoYes+="["
                     cMsgNoYes+=cVersao
                     cMsgNoYes+="]"
@@ -476,7 +475,7 @@ static function ProcBIA663(oMsNewProcess as object,cEmp as character,cFil as cha
             endif
 
             if (!lZOHFound)
-                MsAguarde({||cTmpAlias:=getQueryZOG(@cEmp,@cFil,@cVersao,@cRevisa,@cAnoRef)},&("cCadastro"),"Obtendo dados no SGBD...Empresa:["+cEmp+"] :: Filial:["+cFil+"]")
+                MsAguarde({||cTmpAlias:=getQueryZOG(@cEmp,@cFil,@cVersao,@cRevisa,@cAnoRef)},&("cCadastro"),"Obtendo dados no SGBD...Empresa:["+cEmp+"]:Filial:["+cFil+"]")
             else
                 cTmpAlias:=""
             endif
@@ -499,6 +498,7 @@ static function ProcBIA663(oMsNewProcess as object,cEmp as character,cFil as cha
             break
         endif
 
+        cMeses:="12"
         nMeses:=12
         aMeses:=array(nMeses,3)
         aRecNos:=array(0)
@@ -508,25 +508,30 @@ static function ProcBIA663(oMsNewProcess as object,cEmp as character,cFil as cha
 
         oJSONArray:=Array(#)
         oJSONArray[#"RecNos"]:=aRecNos
-
-        oMsNewProcess:SetRegua2(0)
         
-        nRecCount:=0
+        nSetRegua:=0
         while ((cTmpAlias)->(!eof()))
-            TTimer1(@oMsNewProcess,@oRTime1,@oProgress1,.F.)
-            TTimer2(@oMsNewProcess,@oRTime2,@oProgress2,.F.)
-            nRecCount++
+            nSetRegua++
             (cTmpAlias)->(dbSkip())
         end while
         
-        oRTime2:SetRemaining(nRecCount)
+        cRecNos:=cValToChar(nSetRegua)
+
+        nSetRegua:=((nSetRegua*3)+(nMeses*3))
+        
+        otMultProcess:SetRegua(2,nSetRegua,.T.)
+
+        nSetRegua:=nSetRegua
+        otMultProcess:SetRegua(1,nSetRegua,.T.)
+        
+        TTimer(@otMultProcess,1,.T.,"Empresa ["+getEmpProc()+"]["+cDIniCalc+"|"+cHIniCalc+"]")
 
         (cTmpAlias)->(dbGoTop())
         
         while ((cTmpAlias)->(!eof()))
 
-            TTimer1(@oMsNewProcess,@oRTime1,@oProgress1,.F.)
-            TTimer2(@oMsNewProcess,@oRTime2,@oProgress2,.T.)
+            TTimer(@otMultProcess,1,.T.,"Empresa ["+getEmpProc()+"]["+cDIniCalc+"|"+cHIniCalc+"]")
+            TTimer(@otMultProcess,2,.T.,"Fórmulas:")
 
             nZOGRecNo:=(cTmpAlias)->ZOGRECNO
             ZOG->(dbGoTo(nZOGRecNo))
@@ -549,6 +554,8 @@ static function ProcBIA663(oMsNewProcess as object,cEmp as character,cFil as cha
             nZOHRecNo:=ZOH->(recNo())
             
             nRecNo:=oJSONArray:AddItem("RecNos",Array(#))
+
+            cRecNo:=cValToChar(nRecNo)
             
             oJSONArray[#"RecNos"][nRecNo][#"nZOGRecNo"]:=nZOGRecNo
             oJSONArray[#"RecNos"][nRecNo][#"nZOHRecNo"]:=nZOHRecNo
@@ -560,11 +567,12 @@ static function ProcBIA663(oMsNewProcess as object,cEmp as character,cFil as cha
             oJSONArray[#"RecNos"][nRecNo][#"cMnemonico"]:=cMnemonico
 
             for nMes:=1 to nMeses
-                
-                TTimer1(@oMsNewProcess,@oRTime1,@oProgress1,.F.)
-                TTimer2(@oMsNewProcess,@oRTime2,@oProgress2,.F.)
-            
+
                 cMes:=strZero(nMes,2)
+
+                TTimer(@otMultProcess,1,.T.,"Empresa ["+getEmpProc()+"]["+cDIniCalc+"|"+cHIniCalc+"]")
+                TTimer(@otMultProcess,2,.T.,"Fórmulas ("+cRecNo+"/"+cRecNos+")["+cMes+"/"+cMeses+"]")
+            
                 aMeses[nMes][1]:=cMes
 
                 cZODDtRef:=cAnoRef
@@ -614,43 +622,36 @@ static function ProcBIA663(oMsNewProcess as object,cEmp as character,cFil as cha
         dbSelectArea("ZOG")
 
         nRecNos:=len(aRecNos)
+        cRecNos:=cValToChar(nRecNos)
 
         bFormula:={|bStrFormula|nResult:=__runcb(bStrFormula) }
         bFormulaTotal:={|bStrFormulaTotal|nResult:=__runcb(bStrFormulaTotal)}
 
-        oMsNewProcess:SetRegua2(nMeses)
-
         for nMes:=1 to nMeses
 
-            TTimer1(@oMsNewProcess,@oRTime1,@oProgress1,.F.)
-            TTimer2(@oMsNewProcess,@oRTime2,@oProgress2,.F.)
-
             cMes:=aMeses[nMes][1]
+
+            TTimer(@otMultProcess,1,.T.)
+            TTimer(@otMultProcess,2,.T.,"Calculando ("+cMes+"/"+cMeses+"):")
 
             cZOGField:=("ZOG_MES"+cMes)
             cZOHField:=("ZOH_MES"+cMes)
 
             for nRecNo:=1 to nRecNos
             
+                cRecNo:=cValToChar(nRecNo)
+
+                TTimer(@otMultProcess,1,.T.,"Empresa ["+getEmpProc()+"]["+cDIniCalc+"|"+cHIniCalc+"]")
+                TTimer(@otMultProcess,2,.T.,"Calculando ("+cMes+"/"+cMeses+")["+cRecNo+"/"+cRecNos+"]")
+
                 lFormula:=oJSONArray[#"RecNos"][nRecNo][#cZOGField][#"lFormula"]
                 if (!lFormula)
                     loop
                 endif
 
                 bStrFormula:=oJSONArray[#"RecNos"][nRecNo][#cZOGField][#"cFormula"]
-
-                nZOHRecNo:=oJSONArray[#"RecNos"][nRecNo][#"nZOHRecNo"]
-                ZOH->(dbGoTo(nZOHRecNo))
             
                 cMnemonico:=oJSONArray[#"RecNos"][nRecNo][#"cMnemonico"]
-            
-                cMnemonicoCol:=(cMnemonico+cMes)
-
-                lAccumulator:=oJSONArray[#"RecNos"][nRecNo][#"lAccumulator"]
-                if (lAccumulator)
-                    cAccumulator:=oJSONArray[#"RecNos"][nRecNo][#"cAccumulator"]
-                    cAccumulatorCol:=(cAccumulator+cMes)
-                endif
 
                 if (!evalBlock():EvalBlock(bFormula,bStrFormula,.T.))
                     nZOGRecNo:=oJSONArray[#"RecNos"][nRecNo][#"nZOGRecNo"]
@@ -669,87 +670,36 @@ static function ProcBIA663(oMsNewProcess as object,cEmp as character,cFil as cha
                     break
                 endif
 
-                A35():setValN(cMnemonicoCol,nResult)
+                A35():setValN(cMnemonico,nResult,cMes)
+
+                lAccumulator:=oJSONArray[#"RecNos"][nRecNo][#"lAccumulator"]
+                if (lAccumulator)
+                    cAccumulator:=oJSONArray[#"RecNos"][nRecNo][#"cAccumulator"]
+                endif
 
                 if (lAccumulator)
-                    nAccumulatorCol:=A35():getValN(cAccumulatorCol,0)
-                    nAccumulatorCol+=nResult
-                    A35():setValN(cAccumulatorCol,nAccumulatorCol)
+                    nAccumulator:=A35():getValN(cAccumulator,cMes,0)
+                    nAccumulator+=nResult
+                    A35():setValN(cAccumulator,nAccumulator,cMes)
                 endif                
-
-                if (ZOH->(recLock("ZOH",.F.)))
-                    ZOH->(&cZOHField):=nResult
-                    ZOH->(msUnLock())
-                endif
 
                 lFormulaTotal:=oJSONArray[#"RecNos"][nRecNo][#"lFormulaTotal"]
 
-                nTotal:=A35():getValN(cMnemonico,0)
+                nTotal:=A35():getValN(cMnemonico,"",0)
                 nTotal+=nResult
-                A35():setValN(cMnemonico,nTotal)
+                A35():setValN(cMnemonico,nTotal,"")
 
                 if (!lFormulaTotal)
                     if (lAccumulator)
-                        nAccumulator:=A35():getValN(cAccumulator,0)
+                        nAccumulator:=A35():getValN(cAccumulator,"",0)
                         nAccumulator+=nResult
-                        A35():setValN(cAccumulator,nAccumulator)
+                        A35():setValN(cAccumulator,nAccumulator,"")
                     endif                
                 endif
 
             next nRecNo
 
         next nMes
-
-        oMsNewProcess:SetRegua2(nRecNos)
-
-        for nRecNo:=1 to nRecNos
-
-            TTimer1(@oMsNewProcess,@oRTime1,@oProgress1,.F.)
-            TTimer2(@oMsNewProcess,@oRTime2,@oProgress2,.F.)
-
-            nZOHRecNo:=oJSONArray[#"RecNos"][nRecNo][#"nZOHRecNo"]
-            ZOH->(dbGoTo(nZOHRecNo))
-
-            cMnemonico:=oJSONArray[#"RecNos"][nRecNo][#"cMnemonico"]
-
-            lFormulaTotal:=oJSONArray[#"RecNos"][nRecNo][#"lFormulaTotal"]
-
-            if (lFormulaTotal)
-                cFormulaTotal:=oJSONArray[#"RecNos"][nRecNo][#"cFormulaTotal"]
-                if (!evalBlock():EvalBlock(bFormulaTotal,bStrFormulaTotal,.T.))
-                    nZOGRecNo:=oJSONArray[#"RecNos"][nRecNo][#"nZOGRecNo"]
-                    ZOG->(MsGoTo(nZOGRecNo))
-                    cMsg:=CRLF
-                    cMsg+="Ocorreram erros na Formula: "+GetCBSource(bStrFormulaTotal)
-                    cMsg+=CRLF
-                    cMsg+="Orçamento  : "+cVersao
-                    cMsg+=CRLF
-                    cMsg+="Revisao    : "+cRevisa
-                    cMsg+=CRLF
-                    cMsg+="Referencia : "+cAnoRef
-                    cMsg+=CRLF
-                    cMsg+="Rubrica    : "+ZOG->ZOG_CONTA
-                    cMsg+=CRLF
-                    break
-                endif
-                A35():setValN(cMnemonico,nResult)
-                lAccumulator:=oJSONArray[#"RecNos"][nRecNo][#"lAccumulator"]
-                if (lAccumulator)
-                    cAccumulator:=oJSONArray[#"RecNos"][nRecNo][#"cAccumulator"]
-                    nAccumulator:=A35():getValN(cAccumulator,0)
-                    nAccumulator+=nResult
-                    A35():setValN(cAccumulator,nAccumulator)
-                endif
-            else
-                nResult:=A35():getValN(cMnemonico,0)
-            endif
-
-            if (ZOH->(recLock("ZOH",.F.)))
-                ZOH->(&cZOHFieldTotal):=nResult
-                ZOH->(msUnLock())
-            endif
-
-        next nRecNo
 
         cZODOrder:="ZOD_FILIAL+ZOD_VERSAO+ZOD_REVISA+ZOD_ANOREF+ZOD_TIPO+DTOS(ZOD_DTREF)+ZOD_CONTA"
         nZODOrder:=retOrder("ZOD",cZODOrder)
@@ -764,48 +714,102 @@ static function ProcBIA663(oMsNewProcess as object,cEmp as character,cFil as cha
         cZODFilial:=xFilial("ZOD")
         dZODDtProc:=Date()
 
-        oMsNewProcess:SetRegua2(nRecNos)
-        
-        for nRecNo:=1 to nRecNos
+        begin transaction
 
-            TTimer1(@oMsNewProcess,@oRTime1,@oProgress1,.F.)
-            TTimer2(@oMsNewProcess,@oRTime2,@oProgress2,.F.)
+            for nRecNo:=1 to nRecNos
 
-            nZOHRecNo:=nZOHRecNo:=oJSONArray[#"RecNos"][nRecNo][#"nZOHRecNo"]
-            ZOH->(dbGoTo(nZOHRecNo))
+                cRecNo:=cValToChar(nRecNo)
 
-            for nMes:=1 to nMeses
+                TTimer(@otMultProcess,1,.T.)
+                TTimer(@otMultProcess,2,.T.,"Totalizando/Gravando ("+cRecNo+"/"+cRecNos+"):")
 
-                cMes:=aMeses[nMes][1]
+                lFormulaTotal:=oJSONArray[#"RecNos"][nRecNo][#"lFormulaTotal"]
 
-                cZOHField:=("ZOH_MES"+cMes)
-
-                dZODDtRef:=aMeses[nMes][2]
-                cZODDtRef:=aMeses[nMes][3]
-
-                cZODKeySeek:=cZOHKeySeek
-                cZODKeySeek+=cZODDtRef
-                cZODKeySeek+=ZOH->ZOH_CONTA
-
-                lZODFound:=ZOD->(dbSeek(cZODKeySeek,.F.))
-                lAddNew:=(!lZODFound)
-
-                if (ZOD->(recLock("ZOD",lAddNew)))
-                    ZOD->ZOD_FILIAL:=cZODFilial
-                    ZOD->ZOD_VERSAO:=ZOH->ZOH_VERSAO
-                    ZOD->ZOD_REVISA:=ZOH->ZOH_REVISA
-                    ZOD->ZOD_ANOREF:=ZOH->ZOH_ANOREF
-                    ZOD->ZOD_TIPO:="2"
-                    ZOD->ZOD_DTREF:=dZODDtRef
-                    ZOD->ZOD_CONTA:=ZOH->ZOH_CONTA
-                    ZOD->ZOD_DTPROC:=dZODDtProc
-                    ZOD->ZOD_SALCTA:=ZOH->(&cZOHField)
-                    ZOD->(msUnLock())
+                if (lFormulaTotal)
+                    cFormulaTotal:=oJSONArray[#"RecNos"][nRecNo][#"cFormulaTotal"]
+                    if (!evalBlock():EvalBlock(bFormulaTotal,bStrFormulaTotal,.T.))
+                        nZOGRecNo:=oJSONArray[#"RecNos"][nRecNo][#"nZOGRecNo"]
+                        ZOG->(MsGoTo(nZOGRecNo))
+                        cMsg:=CRLF
+                        cMsg+="Ocorreram erros na Formula: "+GetCBSource(bStrFormulaTotal)
+                        cMsg+=CRLF
+                        cMsg+="Orçamento  : "+cVersao
+                        cMsg+=CRLF
+                        cMsg+="Revisao    : "+cRevisa
+                        cMsg+=CRLF
+                        cMsg+="Referencia : "+cAnoRef
+                        cMsg+=CRLF
+                        cMsg+="Rubrica    : "+ZOG->ZOG_CONTA
+                        cMsg+=CRLF
+                        evalBlock():EvalBlock({||DisarmTransaction()},nil,.F.)
+                        break
+                    endif
+                    A35():setValN(cMnemonico,nResult)
+                    lAccumulator:=oJSONArray[#"RecNos"][nRecNo][#"lAccumulator"]
+                    if (lAccumulator)
+                        cAccumulator:=oJSONArray[#"RecNos"][nRecNo][#"cAccumulator"]
+                        nAccumulator:=A35():getValN(cAccumulator,"",0)
+                        nAccumulator+=nResult
+                        A35():setValN(cAccumulator,nAccumulator,"")
+                    endif
+                else
+                    nResult:=A35():getValN(cMnemonico,"",0)
                 endif
 
-            next nMeses            
+                nZOHRecNo:=oJSONArray[#"RecNos"][nRecNo][#"nZOHRecNo"]
+                ZOH->(dbGoTo(nZOHRecNo))
 
-        next nRecNo
+                cMnemonico:=oJSONArray[#"RecNos"][nRecNo][#"cMnemonico"]
+
+                if (ZOH->(recLock("ZOH",.F.)))
+
+                    ZOH->(&cZOHFieldTotal):=nResult
+
+                    for nMes:=1 to nMeses
+
+                        cMes:=aMeses[nMes][1]
+
+                        TTimer(@otMultProcess,1,.T.)
+                        TTimer(@otMultProcess,2,.T.,"Totalizando/Gravando ("+cRecNo+"/"+cRecNos+")["+cMes+"/"+cMeses+"]")
+
+                        dZODDtRef:=aMeses[nMes][2]
+                        cZODDtRef:=aMeses[nMes][3]
+
+                        nResult:=A35():getValN(cMnemonico,cMes,0)
+
+                        cZOHField:=("ZOH_MES"+cMes)
+
+                        ZOH->(&cZOHField):=nResult
+
+                        cZODKeySeek:=cZOHKeySeek
+                        cZODKeySeek+=cZODDtRef
+                        cZODKeySeek+=ZOH->ZOH_CONTA
+
+                        lZODFound:=ZOD->(dbSeek(cZODKeySeek,.F.))
+                        lAddNew:=(!lZODFound)
+
+                        if (ZOD->(recLock("ZOD",lAddNew)))
+                            ZOD->ZOD_FILIAL:=cZODFilial
+                            ZOD->ZOD_VERSAO:=ZOH->ZOH_VERSAO
+                            ZOD->ZOD_REVISA:=ZOH->ZOH_REVISA
+                            ZOD->ZOD_ANOREF:=ZOH->ZOH_ANOREF
+                            ZOD->ZOD_TIPO:="2"
+                            ZOD->ZOD_DTREF:=dZODDtRef
+                            ZOD->ZOD_CONTA:=ZOH->ZOH_CONTA
+                            ZOD->ZOD_DTPROC:=dZODDtProc
+                            ZOD->ZOD_SALCTA:=nResult
+                            ZOD->(msUnLock())
+                        endif
+
+                    next nMes
+
+                    ZOH->(msUnLock())
+
+                endif
+
+            next nRecNo
+
+        end transaction
 
     end sequence
 
@@ -896,7 +900,7 @@ static procedure BIA663Excel(oPergunte as object)
     local lDev          as logical
     local lPicture      as logical
     local lX3Titulo     as logical
-    local leecView      as logical
+    local ltxtEditMemo  as logical
 
     local nZOHOrder     as numeric
 
@@ -930,19 +934,19 @@ static procedure BIA663Excel(oPergunte as object)
         
         if (type("cCadastro")=="C")
             cExcelTitle:=&("cCadastro")
-            cExcelTitle+=" :: "
+            cExcelTitle+=":"
         else
             cExcelTitle:=""
         endif
 
         cExcelTitle+="Empresa: "+&("cEmpAnt")
-        cExcelTitle+=" :: "
+        cExcelTitle+=":"
         cExcelTitle+="Filial:  "+&("cFilAnt")
-        cExcelTitle+=" :: "
+        cExcelTitle+=":"
         cExcelTitle+="Ver.: "+cVersao
-        cExcelTitle+=" :: "
+        cExcelTitle+=":"
         cExcelTitle+="Rev.: "+cRevisa
-        cExcelTitle+=" :: "
+        cExcelTitle+=":"
         cExcelTitle+="Ref.: "+cAnoRef
         
         cServerIP:=getServerIP()
@@ -950,16 +954,16 @@ static procedure BIA663Excel(oPergunte as object)
 
         lDev:=((cServerIP=="192.168.20.18").or.("DEV"$cEnvServer))
         if (lDev)
-            cExcelTitle+=" :: EMITIDO EM AMBIENTE DE DESENVOLVIMENTO ::"    
+            cExcelTitle+=":EMITIDO EM AMBIENTE DE DESENVOLVIMENTO :"    
         endif
 
         lPicture:=.T.
         lX3Titulo:=.T.
-        leecView:=.F.
+        ltxtEditMemo:=.F.
 
         ZOH->(dbSeek(cZOHKeySeek,.F.))
 
-        uToXML():QryToXML("ZOH",@cXMLFile,@cExcelTitle,@lPicture,@lX3Titulo,@leecView)
+        uToXML():QryToXML("ZOH",@cXMLFile,@cExcelTitle,@lPicture,@lX3Titulo,@ltxtEditMemo)
 
     endif
 
@@ -967,26 +971,30 @@ static procedure BIA663Excel(oPergunte as object)
     
     return
 
-static function TTimer1(oMsNewProcess as object,oRTime as object,oProgress as object,lCalcule as logical) as logical
+static function TTimer(otMultProcess as object,nMeter as numeric,lCalcule as logical,cMsgProc as character) as logical
+    local bIncRegua as block
     local cIncRegua as character
-    local lTTimer   as logical
+    local lEnd      as logical
+    DEFAULT cMsgProc:="Empresa ["+getEmpProc()+"]"
     DEFAULT lCalcule:=.T.
-    oRTime:Calcule(lCalcule)
-    cIncRegua:="Processando  :: "
-    cIncRegua+="Final Estimado em"+":["+DtoC(oRTime:GetdEndTime())+"]["+oRTime:GetcEndTime()+"]"
-    cIncRegua+="["+oProgress:Eval()+"]"
-    oMsNewProcess:IncRegua1(cIncRegua)
-    lTTimer:=(!(oMsNewProcess:lEnd))
-    return(lTTimer)
+    cIncRegua:=cMsgProc
+    lEnd:=(otMultProcess:lEnd)
+    bIncRegua:={||otMultProcess:IncRegua(nMeter,cIncRegua,lEnd,lCalcule)}
+    if (lEnd)
+        cIncRegua:="Operação Cancelada pelo usuário..."
+        eval(bIncRegua)
+        break
+    endif
+    eval(bIncRegua)
+    return(!lEnd)
 
-static function TTimer2(oMsNewProcess as object,oRTime as object,oProgress as object,lCalcule as logical) as logical
-    local cIncRegua as character
-    local lTTimer   as logical
-    DEFAULT lCalcule:=.T.
-    oRTime:Calcule(lCalcule)
-    cIncRegua:="Processando  :: "
-    cIncRegua+="Final Estimado em"+":["+DtoC(oRTime:GetdEndTime())+"]["+oRTime:GetcEndTime()+"]"
-    cIncRegua+="["+oProgress:Eval()+"]"
-    oMsNewProcess:IncRegua2(cIncRegua)
-    lTTimer:=(!(oMsNewProcess:lEnd))
-    return(lTTimer)
+static function setEmpProc(cEmp as character) as character
+    local cLastEmp as character
+    DEFAULT cEmp:=&("cEmpAnt")
+    DEFAULT cLastEmp:=cEmp
+    __cEmpProc:=cEmp
+    return(cLastEmp)
+
+static function getEmpProc()
+    DEFAULT __cEmpProc:=&("cEmpAnt")
+    return(__cEmpProc)

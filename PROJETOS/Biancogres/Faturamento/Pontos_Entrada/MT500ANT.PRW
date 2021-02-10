@@ -34,11 +34,10 @@ Private oMotCan := Nil
 
 		If Len(aListRes) > 0
 			U_FRRT02EX(SC5->C5_NUM, SC6->C6_ITEM,Nil,"LIB",,,.F.)
-		EndIf 
+		EndIf
 		
 	EndIf
-	
-	
+
 	
 	// Tiago Rossini Coradini - 05/12/16 - OS: 3843-16 - Ranisses Corona - Bloqueio de Eliminação de Residuo
 	If lRet //If Incluído por Gabriel Rossi - 09/07/2018 para garantir o fluxo do fonte
@@ -49,12 +48,12 @@ Private oMotCan := Nil
 	//---------------------------------------------------------------------------------------------------------------------------      
 	If lRet
 		
-		If Len(U_FRTE02LO("", SC5->C5_NUM, SC6->C6_ITEM, "", "")) > 0  
+		If Len(U_FRTE02LO("", SC5->C5_NUM, SC6->C6_ITEM, "", "")) > 0
 			MsgBox("Pedido/Item possui RESERVAS vinculadas, não é possível eliminar Resíduo.","MT500ANT","STOP")
 			lRet := .F.
 		EndIf
 		
-	EndIf                                             
+	EndIf
 
 	
 
@@ -77,7 +76,7 @@ Private oMotCan := Nil
 		
 		EndIf
 			
-	EndIf	
+	EndIf
 
 	
 
@@ -86,14 +85,14 @@ Private oMotCan := Nil
 	//---------------------------------------------------------------------------------------------------------------------------      
 	If lRet
 
-		If SC6->C6_CLI == "010064"		
+		If SC6->C6_CLI == "010064"
 			
 			ELRESLM(cEmpAnt, SC5->C5_NUM, SC6->C6_ITEM)
 			
 			_cPedLM := ""
 			_cPedFilLM := ""
 				  	
-			If !PedidoLM(@_cPedLM, @_cPedFilLM)			
+			If !PedidoLM(@_cPedLM, @_cPedFilLM)
 				
 				U_BIAMsgRun("Aguarde... Excluindo Resíduo na LM. Pedido LM: "+_cPedLM,,{|| lRet := fResLM(_cPedLM, SC6->C6_ITEM, oMotCan:cCodMot, oMotCan:cObsMot, _cPedFilLM) })				
 				
@@ -109,10 +108,23 @@ Private oMotCan := Nil
 				
 			EndIf
 						
-		EndIf		
+		EndIf
 
 	EndIf
 	
+
+
+	//---------------------------------------------------------------------------------------------------------------------------
+	//FILIPE/FACILE em 03/02/2021 -  28398 - o sistema esta deixando o pedido ser cancelado,mesmo ele estando em carga. 	
+	//---------------------------------------------------------------------------------------------------------------------------
+	If lRet
+		if CheckCarga(SC5->C5_NUM, SC6->C6_ITEM)
+			MsgStop("Atenção - MT500ANT, Não será possível eliminar resíduo do pedido <b>"+SC5->C5_NUM+"</b>, pois o item <b>"+SC6->C6_ITEM+"</b> se econtra  em carga.")
+		  lRet := .F.
+		endIf
+	EndIf
+
+
 
 	If lRet
 
@@ -124,7 +136,7 @@ Private oMotCan := Nil
 		// Tiago Rossini Coradini - 09/08/2017 - OS: 4538-16 - Exclui bloqueio comercial do pedido de venda 
 		U_BIAF083(SC5->C5_NUM)
 
-	EndIf	
+	EndIf
 
 	RestArea(cAreaAnt)
 
@@ -181,7 +193,7 @@ Local _lOk := .T.
 
 	SC6->(DbSetOrder(1))
 	If SC6->(DbSeek(XFilial("SC6")+cPedOri+cItOri))
-		If !(AllTrim(SC6->C6_BLQ) == "R") .And. (SC6->C6_QTDVEN - SC6->C6_QTDENT) > 0    
+		If !(AllTrim(SC6->C6_BLQ) == "R") .And. (SC6->C6_QTDVEN - SC6->C6_QTDENT) > 0
 			_lOk := MaResDoFat(SC6->(RecNo()),.T.,.T.,0) 
 
 			If _lOk
@@ -201,7 +213,7 @@ Local _lOk := .T.
 
 		SC6->(DbSetOrder(1))
 		If SC6->(DbSeek(_cPedFilLM+cItOri))
-			If !(AllTrim(SC6->C6_BLQ) == "R") .And. (SC6->C6_QTDVEN - SC6->C6_QTDENT) > 0    
+			If !(AllTrim(SC6->C6_BLQ) == "R") .And. (SC6->C6_QTDVEN - SC6->C6_QTDENT) > 0
 				_lOk := MaResDoFat(SC6->(RecNo()),.T.,.T.,0) 
 
 				If _lOk
@@ -236,7 +248,7 @@ Return(_lOk)
 */
 Static Function PedidoLM(_cPedLM, _cPedFilLM)
 
-	Local ENTER := CHR(13)+CHR(10)  
+	Local ENTER := CHR(13)+CHR(10)
 	Local lRet := .T.
 
 	If cEmpAnt $ '01_03_05_13_14'
@@ -248,11 +260,11 @@ Static Function PedidoLM(_cPedLM, _cPedFilLM)
 			cSQL += "	C5_NUM    = C6_NUM 									" +ENTER
 			cSQL += " WHERE SC5LM.C5_YEMPPED = '"+AllTrim(CEMPANT)+"' AND 	" +ENTER
 			cSQL += " 		SC5LM.C5_YPEDORI = '"+SC5->C5_NUM+"'	 AND 	" +ENTER
-			cSQL += "	  	SC6LM.C6_ITEM = '"+SC6->C6_ITEM+"'	 	 AND	" +ENTER	
-			cSQL += "	  	SC6LM.C6_QTDVEN-SC6LM.C6_QTDENT > 0 	 AND	" +ENTER	
-			cSQL += "	  	SC6LM.C6_BLQ	 <> 'R' 				 AND	" +ENTER	
+			cSQL += "	  	SC6LM.C6_ITEM = '"+SC6->C6_ITEM+"'	 	 AND	" +ENTER
+			cSQL += "	  	SC6LM.C6_QTDVEN-SC6LM.C6_QTDENT > 0 	 AND	" +ENTER
+			cSQL += "	  	SC6LM.C6_BLQ	 <> 'R' 				 AND	" +ENTER
 			cSQL += "	  	SC6LM.D_E_L_E_T_ = '' 					 AND	" +ENTER
-			cSQL += " 		SC5LM.D_E_L_E_T_ = '' 							" +ENTER				
+			cSQL += " 		SC5LM.D_E_L_E_T_ = '' 							" +ENTER
 			TCQUERY cSQL ALIAS "QRY" NEW
 
 			WHILE !QRY->(EOF())
@@ -273,16 +285,16 @@ Static Function PedidoLM(_cPedLM, _cPedFilLM)
 				QRY->(DBSKIP())
 			ENDDO
 
-			QRY->(DbCloseArea())		
-		EndIf                   	
-	EndIf     
+			QRY->(DbCloseArea())
+		EndIf
+	EndIf
 
 Return lRet
 
 
 Static Function CheckElimLM()
 
-	Local ENTER		:= CHR(13)+CHR(10)  
+	Local ENTER		:= CHR(13)+CHR(10)
 	Local lRet		:= .F.
 
 	If cEmpAnt $ '01_03_05_13_14'
@@ -294,18 +306,49 @@ Static Function CheckElimLM()
 			cSQL += "	C5_NUM    = C6_NUM 												" +ENTER
 			cSQL += " WHERE SC5LM.C5_YEMPPED 	= '"+AllTrim(CEMPANT)+"' 		AND 	" +ENTER
 			cSQL += " 		SC5LM.C5_YPEDORI	= '"+SC5->C5_NUM+"'	 			AND 	" +ENTER
-			cSQL += "	  	SC6LM.C6_ITEM 		= '"+SC6->C6_ITEM+"'	 		AND		" +ENTER	
-			cSQL += "	  	SC6LM.C6_BLQ	 	= 'R' 							AND		" +ENTER	
+			cSQL += "	  	SC6LM.C6_ITEM 		= '"+SC6->C6_ITEM+"'	 		AND		" +ENTER
+			cSQL += "	  	SC6LM.C6_BLQ	 	= 'R' 							AND		" +ENTER
 			cSQL += "	  	SC6LM.D_E_L_E_T_ 	= '' 							AND		" +ENTER
-			cSQL += " 		SC5LM.D_E_L_E_T_ 	= '' 									" +ENTER				
+			cSQL += " 		SC5LM.D_E_L_E_T_ 	= '' 									" +ENTER
 			TCQUERY cSQL ALIAS "QRY" NEW
-			
+
 			If !QRY->(EOF())
-				lRet := .T.	
+				lRet := .T.
 			EndIf
-			
-			QRY->(DbCloseArea())		
-		EndIf                   	
-	EndIf     
+
+			QRY->(DbCloseArea())
+		EndIf
+	EndIf
+
+Return lRet
+
+
+
+Static Function CheckCarga(c5Num, c6Item)
+
+	Local cQuery   := ""
+	Local cQry      := GetNextAlias()
+	Local lRet      := .F.
+
+	cQuery += " SELECT ZZW.ZZW_FILIAL, ZZW.ZZW_PEDIDO, ZZW.ZZW_ITEM , ZZW.ZZW_CCLI,  ZZW.ZZW_LCLI, ZZW.ZZW_CARGA " + CRLF
+	cQuery += " FROM  "+RetSQLName("ZZW")+"  ZZW " + CRLF
+
+	cQuery += " INNER JOIN "+RetSQLName("SC6")+" SC6 ON SC6.C6_FILIAL = ZZW.ZZW_FILIAL " + CRLF
+	cQuery += " AND SC6.C6_NUM = ZZW.ZZW_PEDIDO " + CRLF
+	cQuery += " AND SC6.C6_ITEM = ZZW.ZZW_ITEM " + CRLF
+	cQuery += " AND SC6.D_E_L_E_T_ = '' " + CRLF
+
+	cQuery += " WHERE ZZW.ZZW_FILIAL = '"+FWxFilial('SC6')+"' " + CRLF
+	cQuery += " AND ZZW.ZZW_PEDIDO = '"+c5Num+"' " + CRLF
+	cQuery += " AND ZZW.ZZW_ITEM = '"+c6Item+"' " + CRLF
+	cQuery += " AND ZZW.D_E_L_E_T_ = '' " + CRLF
+
+	TcQuery cQuery New Alias (cQry)
+
+	If !EMPTY((cQry)->ZZW_PEDIDO)
+		lRet := .T.
+	EndIf
+
+	(cQry)->(DbCloseArea())
 
 Return lRet

@@ -1,4 +1,5 @@
 #INCLUDE "TOTVS.CH"
+#Include 'FWMVCDef.ch'
 
 /*/{Protheus.doc} MT120FIM
 @description Ponto de entrada no final da gravacao do pedido
@@ -26,7 +27,14 @@ User Function MT120FIM()
 		While SC7->(!Eof()) .And. SC7->(C7_FILIAL+C7_NUM) == cSC7KeySeek
 
 			// Atualiza produto x fornecedor
-			U_BIAF028(SC7->C7_FORNECE, SC7->C7_LOJA, SC7->C7_PRODUTO, SC7->C7_YPRDFOR)
+			U_BIAF028(SC7->C7_FORNECE, SC7->C7_LOJA, SC7->C7_PRODUTO, SC7->C7_YPRDFOR)			
+			
+			// Grava campo de credito INVEST			
+			RecLock("SC7", .F.)
+			
+				SC7->C7_YCREINV := M->C7_YCREINV
+			
+			SC7->(MsUnlock())
 
 			SC7->(DbSkip())
 
@@ -59,3 +67,80 @@ User Function MT120FIM()
 	RestArea(aArea)
 
 Return()
+
+
+
+User Function 460PreNum()
+Local oModel := FWModelActive()
+Local cNum := "000000009"
+
+	oModel:SetValue("TITGERFO2", "A2_COD", cNum)
+
+Return(.T.)
+
+
+User Function FINA460A()
+Local aParam := ParamIxb
+Local xRet := .T.
+Local oObj := ""
+Local cIdPonto := ""
+Local cIdModel := ""
+Local nOp := 0
+Local oStruFO2	:= FWFormStruct(1,"FO2")
+Local aArea := GetArea()
+
+	If !Empty(aParam)
+
+		oObj := aParam[1]
+		cIdPonto := aParam[2]
+		cIdModel := aParam[3]
+		nOp := oObj:GetOperation()
+	
+    // Chamada na ativação do modelo de dados
+    If cIdPonto == "MODELVLDACTIVE"
+
+    	//U_460PreNum()
+
+    	oStruFO2:SetProperty( "FO2_TIPO"	, MODEL_FIELD_VALID, {|| U_460PreNum()  } )
+
+    // Chamada na validação total do modelo
+    ElseIf cIdPonto == "MODELPOS"    
+
+    	//U_460PreNum()
+    	
+    	oStruFO2:SetProperty( "FO2_TIPO"	, MODEL_FIELD_VALID, {|| U_460PreNum()  } )
+
+    // Chamada na validação total do formulário
+    ElseIf cIdPonto == "FORMPOS"
+
+    // Chamada na pré validação da linha do formulário
+    ElseIf cIdPonto == "FORMLINEPRE"
+
+    // Chamada na validação da linha do formulário.
+    ElseIf cIdPonto == "FORMLINEPOS"
+
+    // Chamada após a gravação total do modelo e dentro da transação
+    ElseIf cIdPonto == "MODELCOMMITTTS"
+                
+    // Chamada após a gravação total do modelo e fora da transação
+    ElseIf cIdPonto == "MODELCOMMITNTTS"
+        
+    // Chamada após a gravação da tabela do formulário
+    ElseIf cIdPonto == "FORMCOMMITTTSPRE"
+        
+    // Chamada após a gravação da tabela do formulário
+    ElseIf cIdPonto == "FORMCOMMITTTSPOS"
+
+    // Chamada no Botão Cancelar
+    ElseIf cIdPonto == "MODELCANCEL"
+        
+    // Adicionando Botao na Barra de Botoes (BUTTONBAR)
+    ElseIf cIdPonto == "BUTTONBAR"
+
+    EndIf
+	    
+	EndIf
+	
+	RestArea(aArea)	
+	
+Return(xRet)

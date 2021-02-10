@@ -45,7 +45,8 @@ function u_BIA662Load() as logical
     local aArea         as array
     local aAreaSM0      as array
 
-    local bMsNewProcess as block
+    local bAbort        as block
+    local bActive       as block
 
     local cEmp          as character
     local cFil          as character
@@ -59,7 +60,7 @@ function u_BIA662Load() as logical
 
     local oEmpresas     as object
     local oPergunte     as object
-    local oMsNewProcess as object
+    local otMultProcess as object
 
     nKeepResponse:=(-1)
 
@@ -91,9 +92,10 @@ function u_BIA662Load() as logical
         oEmpresas:GetSelEmp()
         oPergunte:=__TWPCOFiltroPeriodo():Get()
 
-        bMsNewProcess:={|lEnd|MsProcess():ProcRedefine(@oMsNewProcess,nil,0,350,350,.T.,.T.),oMsNewProcess:SetRegua1(0),lRet:=BIA662Load(@oMsNewProcess,@cEmp,@cFil,@oEmpresas,@oPergunte,@lEnd,@nKeepResponse)}
-        oMsNewProcess:=MsNewProcess():New(bMsNewProcess,cCadastro,"Aguarde...",.T.)
-        oMsNewProcess:Activate()
+        bAbort:={|lEnd,otMultProcess|.T.}
+        bActive:={|lEnd,otMultProcess|lRet:=BIA662Load(@otMultProcess,@cEmp,@cFil,@oEmpresas,@oPergunte,@lEnd,@nKeepResponse)}
+        otMultProcess:=tMultProcess():New(bActive,cCadastro,"Aguarde...",bAbort,2)
+        otMultProcess:Activate()
 
     end sequence
 
@@ -104,7 +106,7 @@ function u_BIA662Load() as logical
 
     return(lRet)
 
-static function BIA662Load(oMsNewProcess as object,cEmpDef as character,cFilDef as character,oEmpresas as object,oPergunte as object,lEnd as logical,nKeepResponse as numeric) as logical
+static function BIA662Load(otMultProcess as object,cEmpDef as character,cFilDef as character,oEmpresas as object,oPergunte as object,lEnd as logical,nKeepResponse as numeric) as logical
 
     local aMsg          as array
     local aSM0RecNo     as array
@@ -143,13 +145,13 @@ static function BIA662Load(oMsNewProcess as object,cEmpDef as character,cFilDef 
 
         aMsg:=array(0)
 
-        oMsNewProcess:SetRegua1(SM0->(recCount()))
+        otMultProcess:SetRegua(1,SM0->(recCount()))
 
         aSM0RecNo:=array(0)
         SM0->(dbSetOrder(1))
         SM0->(dbGoTop())
         while SM0->(!eof())
-            oMsNewProcess:IncRegua1()
+            otMultProcess:IncRegua(1)
             SM0->(aAdd(aSM0RecNo,{fieldGet(fieldPos("M0_CODIGO")),fieldGet(fieldPos("M0_CODFIL")),recNo()}))
             SM0->(dbSkip())
         end while
@@ -158,7 +160,7 @@ static function BIA662Load(oMsNewProcess as object,cEmpDef as character,cFilDef 
 
         bError:={|oError|A35():breakError(@oError,@cEmp,@cFil,@cMsg)}
 
-        oMsNewProcess:SetRegua1(nJ)
+        otMultProcess:SetRegua(1,nJ)
 
         for nD:=1 to nJ
 
@@ -180,7 +182,7 @@ static function BIA662Load(oMsNewProcess as object,cEmpDef as character,cFilDef 
             cAnoRef:=left(oPergunte:cAnoRef,getSX3Cache("ZOG_ANOREF","X3_TAMANHO"))
 
             cMsgPrc:="Processando...Empresa:["+cEmp+"] :: Filial:["+cFil+"]"
-            oMsNewProcess:IncRegua1(cMsgPrc)
+            otMultProcess:IncRegua(1,cMsgPrc)
         
             if (lEnd)
                 cMsg:="Operação Cancelada pelo usuário"
@@ -195,7 +197,7 @@ static function BIA662Load(oMsNewProcess as object,cEmpDef as character,cFilDef 
 
                 SM0->(dbGoTo(nSM0RecNo))
 
-                lRet:=ProcBIA662(@oMsNewProcess,@cEmp,@cFil,@cVersao,@cRevisa,@cAnoRef,@cMsg,@nKeepResponse)
+                lRet:=ProcBIA662(@otMultProcess,@cEmp,@cFil,@cVersao,@cRevisa,@cAnoRef,@cMsg,@nKeepResponse)
 
             recover
                 
@@ -247,13 +249,13 @@ static function BIA662Load(oMsNewProcess as object,cEmpDef as character,cFilDef 
             cMsg+=cCRLF
         next nD
         
-        evalBlock():EvalBlock({||eecView(cMsg,&("cCadastro")+" :: Log de Processamento :: ATENÇÃO")},nil,.T.)
+        txtEditMemo():txtFileEdit(cMsg,&("cCadastro")+" :: Log de Processamento :: ATENÇÃO")
 
     endif
 
     return(lRet)
 
-static function ProcBIA662(oMsNewProcess as object,cEmp as character,cFil as character,cVersao as character, cRevisa as character, cAnoRef as character,cMsg as character,nKeepResponse as numeric) as logical
+static function ProcBIA662(otMultProcess as object,cEmp as character,cFil as character,cVersao as character, cRevisa as character, cAnoRef as character,cMsg as character,nKeepResponse as numeric) as logical
 
     local aFieldPos     as array
     local aTmpStruct    as array
@@ -324,7 +326,7 @@ static function ProcBIA662(oMsNewProcess as object,cEmp as character,cFil as cha
                 cMsgNoYes+=" Deseja Reprocessar?"
                 lZOGFound:=ApMsgNoYes(cMsgNoYes,&("cCadastro"))
                 nKeepResponse:=if(lZOGFound,1,0)
-                lZOHFound:=(!lZOHFound)
+                lZOGFound:=(!lZOGFound)
             else
                 lZOGFound:=(nKeepResponse==1)
             endif
@@ -355,10 +357,10 @@ static function ProcBIA662(oMsNewProcess as object,cEmp as character,cFil as cha
 
             nFields:=len(aTmpStruct)
 
-            oMsNewProcess:SetRegua2(nFields)
+            otMultProcess:SetRegua(2,nFields)
 
             for nField:=1 to nFields
-                oMsNewProcess:IncRegua2()
+                otMultProcess:IncRegua(2)
                 nFieldTrg:=ZOG->(fieldPos(aTmpStruct[nField][DBS_NAME]))
                 if (nFieldTrg>0)
                     if ("ZOG_SEQFOR"==aTmpStruct[nField][DBS_NAME])
@@ -374,10 +376,10 @@ static function ProcBIA662(oMsNewProcess as object,cEmp as character,cFil as cha
 
             begin transaction
 
-                oMsNewProcess:SetRegua2(0)
+                otMultProcess:SetRegua(2,0)
 
                 while (cTmpAlias)->(!eof())
-                    oMsNewProcess:IncRegua2()
+                    otMultProcess:IncRegua(2)
                     cZOGConta:=(cTmpAlias)->ZOG_CONTA
                     lZOGFound:=ZOG->(dbSeek(cZOGKeySeek+cZOGConta,.F.))
                     lAddNew:=(!lZOGFound)
@@ -414,12 +416,16 @@ static function ProcBIA662(oMsNewProcess as object,cEmp as character,cFil as cha
 
 static function getQuery(cEmp as character,cFil as character,cVersao as character,cRevisa as character,cAnoRef as character) as character
 
-    local cAlias    as character
+    local cAlias        as character
 
-    local cSQLPath  as character
-    local cSQLFile  as character
-    local cSQLQuery as character
+    local cSQLPath      as character
+    local cSQLFile      as character
+    local cSQLQuery     as character
+    local cZOGSEQFOR    as character
 
+    cZOGSEQFOR:=LTrim(Str(getSX3Cache("ZOG_SEQFOR","X3_TAMANHO")))
+    cZOGSEQFOR:="%"+cZOGSEQFOR+"%"
+    
     if (IsBlind())
         cSQLPath:="\tmp\"
     else
@@ -433,12 +439,33 @@ static function getQuery(cEmp as character,cFil as character,cVersao as characte
     cAlias:=getNextAlias()
 
     beginSQL alias cAlias
-        SELECT %exp:cVersao% AS ZOG_VERSAO
-              ,%exp:cRevisa% AS ZOG_REVISA
-              ,%exp:cAnoRef% AS ZOG_ANOREF
-              ,'000000'      AS ZOG_SEQFOR
-              ,CT1.CT1_CONTA AS ZOG_CONTA
-              ,'0'             AS ZOG_ENABLE
+        SELECT %exp:cVersao%  AS ZOG_VERSAO
+              ,%exp:cRevisa%  AS ZOG_REVISA
+              ,%exp:cAnoRef%  AS ZOG_ANOREF
+              ,RIGHT(
+                        (
+                            CASE LEN(CT1_CONTA) 
+                                WHEN 5 THEN '000000' 
+                                WHEN 4 THEN 'AAAAAA' 
+                                WHEN 3 THEN 'BBBBBB' 
+                                WHEN 2 THEN 'CCCCCC' 
+                                WHEN 1 THEN 'EEEEEE' 
+                                       ELSE 'ZZZZZZ'
+                            END
+                    )+CAST((
+                    ROW_NUMBER() 
+                    OVER (
+                            PARTITION BY CT1.CT1_FILIAL
+                                        ,CT1.CT1_CTASUP 
+                                ORDER BY CT1.CT1_FILIAL
+                                        ,CT1.CT1_CONTA 
+                                DESC
+                        )
+              ) AS varchar),%exp:cZOGSEQFOR%) AS ZOG_SEQFOR
+              ,CT1.CT1_CONTA  AS ZOG_CONTA
+              ,'0'            AS ZOG_ENABLE
+              ,CT1.CT1_CONTA  AS ZOG_MNEMON
+              ,CT1.CT1_CTASUP AS ZOG_ACCUMM
           FROM %table:CT1% CT1
          WHERE CT1.%notDel%
            AND CT1.CT1_FILIAL=%xFilial:CT1%
@@ -460,7 +487,7 @@ procedure U_BIA662Excel()
     local aArea     as array
     local aAreaZOG  as array
     
-    local oPergunte     as object
+    local oPergunte as object
     
     aArea:=getArea()
     aAreaZOG:=ZOG->(getArea())
@@ -497,7 +524,7 @@ static procedure BIA662Excel(oPergunte as object)
     local lDev          as logical
     local lPicture      as logical
     local lX3Titulo     as logical
-    local leecView      as logical
+    local ltxtEditMemo  as logical
 
     local nZOGOrder     as numeric
 
@@ -556,11 +583,11 @@ static procedure BIA662Excel(oPergunte as object)
 
         lPicture:=.T.
         lX3Titulo:=.T.
-        leecView:=.F.
+        ltxtEditMemo:=.F.
 
         ZOG->(dbSeek(cZOGKeySeek,.F.))
 
-        uToXML():QryToXML("ZOG",@cXMLFile,@cExcelTitle,@lPicture,@lX3Titulo,@leecView)
+        uToXML():QryToXML("ZOG",@cXMLFile,@cExcelTitle,@lPicture,@lX3Titulo,@ltxtEditMemo)
 
     endif
 

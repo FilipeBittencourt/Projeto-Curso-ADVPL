@@ -1,23 +1,23 @@
 #include "PROTHEUS.CH"
 #INCLUDE "FWMBROWSE.CH"
 
-/*/{Protheus.doc} FMO4TE03
-@description MO 4.0 Valores Auxiliares - Custo Orçado
-@author Fernando Rocha
-@since 18/04/2020
+/*/{Protheus.doc} FMO4TE05
+@description MO 4.0 Valores Auxiliares - Depreciação Orçada
+@author Ranisses A. Corona
+@since 31/01/2021
 @version 1.0
 @type function
 /*/
-User Function FMO4TE03()
+User Function FMO4TE05()
 
 	Local aArea       := GetArea()
 	Local oBrowse     := nil
 
 	private aRotina   := fMenuDef()
-	private cCadastro := "MO 4.0 Valores Auxiliares - Custo Orçado"
+	private cCadastro := "MO 4.0 Valores Auxiliares - Depreciação Realizada"
 
 	oBrowse := FWMBrowse():New()
-	oBrowse:SetAlias('ZFE')
+	oBrowse:SetAlias('ZFG')
 	oBrowse:SetDescription(cCadastro)
 	oBrowse:Activate()
 

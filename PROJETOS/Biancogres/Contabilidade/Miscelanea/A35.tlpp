@@ -34,26 +34,26 @@ class A35
 
     static method getZOEVariavel(cVariavel as character,cMes as character) as numeric
 
-    static method setValA(cMnemonico as character,aValue as array)
-    static method getValA(cMnemonico as character,aDefault as array) as array
+    static method setValA(cMnemonico as character,aValue as array,cMes as character)
+    static method getValA(cMnemonico as character,cMes as character,aDefault as array) as array
 
-    static method setValB(cMnemonico as character,bValue as block)
-    static method getValB(cMnemonico as character,bDefault as block) as block
+    static method setValB(cMnemonico as character,bValue as block,cMes as character)
+    static method getValB(cMnemonico as character,cMes as character,bDefault as block) as block
 
-    static method setValC(cMnemonico as character,cValue as character)
-    static method getValC(cMnemonico as character,cDefault as character) as character
+    static method setValC(cMnemonico as character,cValue as character,cMes as character)
+    static method getValC(cMnemonico as character,cMes as character,cDefault as character) as character
 
-    static method setValD(cMnemonico as character,dValue as date)
-    static method getValD(cMnemonico as character,dDefault as date) as date
+    static method setValD(cMnemonico as character,dValue as date,cMes as character)
+    static method getValD(cMnemonico as character,cMes as character,dDefault as date) as date
 
-    static method setValL(cMnemonico as character,lValue as logical)
-    static method getValL(cMnemonico as character,lDefault as logical) as logical
+    static method setValL(cMnemonico as character,lValue as logical,cMes as character)
+    static method getValL(cMnemonico as character,cMes as character,lDefault as logical) as logical
 
-    static method setValN(cMnemonico as character,nValue as numeric)
-    static method getValN(cMnemonico as character,nDefault as numeric) as numeric
+    static method setValN(cMnemonico as character,nValue as numeric,cMes as character)
+    static method getValN(cMnemonico as character,cMes as character,nDefault as numeric) as numeric
 
-    static method setValO(cMnemonico as character,oValue as object)
-    static method getValO(cMnemonico as character,oDefault as object) as object
+    static method setValO(cMnemonico as character,oValue as object,cMes as character)
+    static method getValO(cMnemonico as character,cMes as character,oDefault as object) as object
 
     static method setMnemonico(cMnemonico as character,xValue)
     static method getMnemonico(cMnemonico as character,xDefault)
@@ -425,109 +425,137 @@ static method getMnemonico(cMnemonico,xDefault) class A35
     DEFAULT oMnemonicos:=JSONArray():New()
     return(oMnemonicos:Get(cMnemonico,xDefault))
 
-static method setValA(cMnemonico,aValue) class A35
+static method setValA(cMnemonico,aValue,cMes) class A35
     paramtype cMnemonico    as character
     paramtype aValue        as array
+    DEFAULT cMes:=""
+    paramtype cMes          as character optional
     DEFAULT oMnemonicos:=JSONArray():New()
-    return(A35():setMnemonico(cMnemonico,aValue))
+    return(A35():setMnemonico(mesMnemonico(cMnemonico,cMes),aValue))
 
-static method getValA(cMnemonico,aDefault) class A35
+static method getValA(cMnemonico,cMes,aDefault) class A35
     local aValRet   as array
     paramtype cMnemonico    as character
+    DEFAULT cMes:=""
+    paramtype cMes          as character optional
     DEFAULT aDefault:=array(0)
     paramtype aDefault      as array optional
     DEFAULT oMnemonicos:=JSONArray():New()
-    aValRet:=A35():getMnemonico(cMnemonico,aDefault)
+    aValRet:=A35():getMnemonico(mesMnemonico(cMnemonico,cMes),aDefault)
     return(aValRet)
 
-static method setValB(cMnemonico,bValue) class A35
+static method setValB(cMnemonico,bValue,cMes) class A35
     paramtype cMnemonico    as character
     paramtype bValue        as block
+    DEFAULT cMes:=""
+    paramtype cMes          as character optional
     DEFAULT oMnemonicos:=JSONArray():New()
-    return(A35():setMnemonico(cMnemonico,bValue))
+    return(A35():setMnemonico(mesMnemonico(cMnemonico,cMes),bValue))
 
-static method getValB(cMnemonico,bDefault) class A35
+static method getValB(cMnemonico,cMes,bDefault) class A35
     local bValRet   as block
+    DEFAULT cMes:=""
+    paramtype cMes          as character optional
     paramtype cMnemonico    as character
     DEFAULT bDefault:={||}
     paramtype bDefault      as block optional
     DEFAULT oMnemonicos:=JSONArray():New()
-    bValRet:=A35():getMnemonico(cMnemonico,bDefault)
+    bValRet:=A35():getMnemonico(mesMnemonico(cMnemonico,cMes),bDefault)
     return(bValRet)
 
-static method setValC(cMnemonico,cValue) class A35
+static method setValC(cMnemonico,cValue,cMes) class A35
     paramtype cMnemonico    as character
     paramtype cValue        as character
+    DEFAULT cMes:=""
+    paramtype cMes          as character optional
     DEFAULT oMnemonicos:=JSONArray():New()
-    return(A35():setMnemonico(cMnemonico,cValue))
+    return(A35():setMnemonico(mesMnemonico(cMnemonico,cMes),cValue))
 
-static method getValC(cMnemonico,cDefault) class A35
+static method getValC(cMnemonico,cMes,cDefault) class A35
     local cValRet   as character
+    DEFAULT cMes:=""
+    paramtype cMes          as character optional
     paramtype cMnemonico    as character
     DEFAULT cDefault:=""
     paramtype cDefault      as character optional
     DEFAULT oMnemonicos:=JSONArray():New()
-    cValRet:=A35():getMnemonico(cMnemonico,bDefault)
+    cValRet:=A35():getMnemonico(mesMnemonico(cMnemonico,cMes),bDefault)
     return(cValRet)
 
-static method setValD(cMnemonico,dValue) class A35
+static method setValD(cMnemonico,dValue,cMes) class A35
     paramtype cMnemonico    as character
     paramtype dValue        as date
+    DEFAULT cMes:=""
+    paramtype cMes          as character optional
     DEFAULT oMnemonicos:=JSONArray():New()
-    return(A35():setMnemonico(cMnemonico,dValue))
+    return(A35():setMnemonico(mesMnemonico(cMnemonico,cMes),dValue))
 
-static method getValD(cMnemonico,dDefault) class A35
+static method getValD(cMnemonico,cMes,dDefault) class A35
     local dValRet   as date
     paramtype cMnemonico    as character
+    DEFAULT cMes:=""
+    paramtype cMes          as character optional
     DEFAULT dDefault:=CtoD("")
     paramtype dDefault      as date optional
     DEFAULT oMnemonicos:=JSONArray():New()
-    dValRet:=A35():getMnemonico(cMnemonico,dDefault)
+    dValRet:=A35():getMnemonico(mesMnemonico(cMnemonico,cMes),dDefault)
     return(dValRet)
 
-static method setValL(cMnemonico,lValue) class A35
+static method setValL(cMnemonico,lValue,cMes) class A35
     paramtype cMnemonico    as character
     paramtype lValue        as logical
+    DEFAULT cMes:=""
+    paramtype cMes          as character optional
     DEFAULT oMnemonicos:=JSONArray():New()
-    return(A35():setMnemonico(cMnemonico,lValue))
+    return(A35():setMnemonico(mesMnemonico(cMnemonico,cMes),lValue))
 
-static method getValL(cMnemonico,lDefault) class A35
+static method getValL(cMnemonico,cMes,lDefault) class A35
     local lValRet   as logical
+    DEFAULT cMes:=""
+    paramtype cMes          as character optional
     paramtype cMnemonico    as character
     DEFAULT lDefault:=.F.
     paramtype lDefault      as date optional
     DEFAULT oMnemonicos:=JSONArray():New()
-    lValRet:=A35():getMnemonico(cMnemonico,lDefault)
+    lValRet:=A35():getMnemonico(mesMnemonico(cMnemonico,cMes),lDefault)
     return(lValRet)
 
-static method setValN(cMnemonico,nValue) class A35
+static method setValN(cMnemonico,nValue,cMes) class A35
     paramtype cMnemonico    as character
     paramtype nValue        as numeric
+    DEFAULT cMes:=""
+    paramtype cMes          as character optional
     DEFAULT oMnemonicos:=JSONArray():New()
-    return(A35():setMnemonico(cMnemonico,nValue))
+    return(A35():setMnemonico(mesMnemonico(cMnemonico,cMes),nValue))
 
-static method getValN(cMnemonico,nDefault) class A35
+static method getValN(cMnemonico,cMes,nDefault) class A35
     local nValRet   as logical
+    DEFAULT cMes:=""
+    paramtype cMes          as character optional
     paramtype cMnemonico    as character
     DEFAULT nDefault:=0
     paramtype nDefault      as numeric optional
     DEFAULT oMnemonicos:=JSONArray():New()
-    nValRet:=A35():getMnemonico(cMnemonico,nDefault)
+    nValRet:=A35():getMnemonico(mesMnemonico(cMnemonico,cMes),nDefault)
     return(nValRet)
 
-static method setValO(cMnemonico,oValue) class A35
+static method setValO(cMnemonico,oValue,cMes) class A35
     paramtype cMnemonico    as character
     paramtype oValue        as object
+    DEFAULT cMes:=""
+    paramtype cMes          as character optional
     DEFAULT oMnemonicos:=JSONArray():New()
-    return(A35():setMnemonico(cMnemonico,oValue))
+    return(A35():setMnemonico(mesMnemonico(cMnemonico,cMes),oValue))
 
-static method getValO(cMnemonico,oDefault) class A35
+static method getValO(cMnemonico,cMes,oDefault) class A35
     local oValRet   as logical
+    DEFAULT cMes:=""
+    paramtype cMes          as character optional
     paramtype cMnemonico    as character
     DEFAULT oDefault:=JSONArray():New()
     paramtype oDefault      as object optional
     DEFAULT oMnemonicos:=JSONArray():New()
-    oValRet:=A35():getMnemonico(cMnemonico,oDefault)
+    oValRet:=A35():getMnemonico(mesMnemonico(cMnemonico,cMes),oDefault)
     return(oValRet)
 
 static method breakError(oError,cEmp,cFil,cMsg) class A35
@@ -673,3 +701,6 @@ static method getXMLFile(cEmp,cFil,cXMLPath,cProcName,cSeq,cXMLName) class A35
     cXMLFile:=A35():getSQLFile(cEmp,cFil,cXMLPath,cProcName,cSeq,cXMLName)
     cXMLFile:=strTran(cXMLFile,".sql",".xml")
     return(cXMLFile)
+
+static function mesMnemonico(cMnemonico,cMes)
+    return(cMnemonico+if(empty(cMes),cMes,"_"+PadL(cMes,2,"0")))

@@ -85,17 +85,28 @@ Static Function RptDetail()
 			fgVetEXC := {}
 			fgPermDg := .T.
 
+			msCtaPA := ""
+			If cEmpAnt == "01"
+
+				msCtaPA := "11306001"
+
+			ElseIf cEmpAnt == "06"
+
+				msCtaPA := "11306005"
+
+			Else
+
+				MsgINFO("Conta Contábil de PA não configurada para esta empresa. Necessário especificar e ajustar o programa", "BIA747")
+				Return
+
+			EndIf
+
 			// Saidas Normais
 			CT007 := " SELECT ORIGEM, 
 			CT007 += "        DEBITO, 
 			CT007 += "        CREDIT, 
 			CT007 += "        SUM(QUANT) QUANT, 
 			CT007 += "        SUM(CUSTO) CUSTO,
-			//CT007 += "        CASE
-			//CT007 += "            WHEN HIST2 <> ''
-			//CT007 += "            THEN RTRIM(HIST2)
-			//CT007 += "            ELSE RTRIM(HIST)
-			//CT007 += "        END HIST, 
 			CT007 += "        HIST,
 			CT007 += "        CCUSTO, 
 			CT007 += "        ITEMCTA, 
@@ -119,7 +130,7 @@ Static Function RptDetail()
 			CT007 += "                             ELSE '41301001'
 			CT007 += "                         END
 			CT007 += "                END DEBITO, 
-			CT007 += "                '11306001' CREDIT, 
+			CT007 += "                '" + msCtaPA + "' CREDIT, 
 			CT007 += "                SUM(D2_QUANT) QUANT, 
 			CT007 += "                SUM(D2_CUSTO1) CUSTO,
 			CT007 += "                CASE
@@ -189,7 +200,7 @@ Static Function RptDetail()
 			// Remessa para industrialização - PA
 			CT007 += " SELECT 'SD2:2' ORIGEM,
 			CT007 += "        '11306003' DEBITO,
-			CT007 += "        '11306001' CREDIT,
+			CT007 += "        '" + msCtaPA + "' CREDIT,
 			CT007 += "        SUM(D2_QUANT) QUANT,
 			CT007 += "        SUM(D2_CUSTO1) CUSTO,
 			CT007 += "        'VLR CUSTO DE '+RTRIM(X5_DESCRI)+' N/MES' HIST,
@@ -271,7 +282,7 @@ Static Function RptDetail()
 			// Quebras
 			CT007 += " SELECT 'SD3:1' ORIGEM,		
 			CT007 += "        '41301001' DEBITO,
-			CT007 += "        '11306001' CREDIT,
+			CT007 += "        '" + msCtaPA + "' CREDIT,
 			CT007 += "        SUM(D3_QUANT) QUANT,
 			CT007 += "        SUM(D3_CUSTO1) CUSTO,
 			CT007 += "        'VLR QUEBRA DE ESTOQUE N/MES' HIST,
@@ -298,7 +309,7 @@ Static Function RptDetail()
 			// Inventário Saida
 			CT007 += " SELECT 'SD3:2' ORIGEM,
 			CT007 += "        '41301001' DEBITO,
-			CT007 += "        '11306001' CREDIT,
+			CT007 += "        '" + msCtaPA + "' CREDIT,
 			CT007 += "        SUM(D3_QUANT) QUANT,
 			CT007 += "        SUM(D3_CUSTO1) CUSTO,
 			CT007 += "        'VLR REF INVENTARIO SAIDA N/MES' HIST,
@@ -324,7 +335,7 @@ Static Function RptDetail()
 
 			// Inventário Entrada
 			CT007 += " SELECT 'SD3:3' ORIGEM,
-			CT007 += "        '11306001' DEBITO,
+			CT007 += "        '" + msCtaPA + "' DEBITO,
 			CT007 += "        '41301001' CREDIT,
 			CT007 += "        SUM(D3_QUANT) QUANT,
 			CT007 += "        SUM(D3_CUSTO1) CUSTO,
@@ -352,7 +363,7 @@ Static Function RptDetail()
 			// Quebras para uso interno
 			CT007 += " SELECT 'SD3:4' ORIGEM,
 			CT007 += "        '41301001' DEBITO,
-			CT007 += "        '11306001' CREDIT,
+			CT007 += "        '" + msCtaPA + "' CREDIT,
 			CT007 += "        SUM(D3_QUANT) QUANT,
 			CT007 += "        SUM(D3_CUSTO1) CUSTO,
 			CT007 += "        'VLR QUEBRA ESTOQUE P/USO INTERNO N/MES' HIST,
@@ -378,7 +389,7 @@ Static Function RptDetail()
 
 			// Devolução de Vendas
 			CT007 += " SELECT 'SD1:1' ORIGEM,
-			CT007 += "        '11306001' DEBITO,
+			CT007 += "        '" + msCtaPA + "' DEBITO,
 			CT007 += "        CASE C5_YITEMCT  
 			CT007 += "            WHEN 'I0103' THEN '31406006'/*show room*/
 			CT007 += "            WHEN 'I0105' THEN '31406009'/*amostra*/
@@ -437,7 +448,7 @@ Static Function RptDetail()
 
 			// Retorno de Poder de Terceiros - PA
 			CT007 += " SELECT 'SD1:2' ORIGEM,
-			CT007 += "        '11306001' DEBITO,
+			CT007 += "        '" + msCtaPA + "' DEBITO,
 			CT007 += "        '11306003' CREDIT,
 			CT007 += "        SUM(D1_QUANT) QUANT,
 			CT007 += "        SUM(D1_CUSTO) CUSTO,
@@ -483,7 +494,7 @@ Static Function RptDetail()
 
 			// Retorno de Poder de Terceiros - Embalagem
 			CT007 += " SELECT 'SD1:3' ORIGEM,
-			CT007 += "        '11306001' DEBITO,
+			CT007 += "        '" + msCtaPA + "' DEBITO,
 			CT007 += "        CASE
 			CT007 += "          WHEN D1_CONTA = '11303001            ' THEN '11303090            '
 			CT007 += "          ELSE '11303091            '
@@ -533,7 +544,7 @@ Static Function RptDetail()
 
 			// Retorno Poder de Terceiros sem Industrialização - PA
 			CT007 += " SELECT 'SD1:4' ORIGEM,
-			CT007 += "        '11306001' DEBITO,
+			CT007 += "        '" + msCtaPA + "' DEBITO,
 			CT007 += "        '11306003' CREDIT,
 			CT007 += "        SUM(D1_QUANT) QUANT,
 			CT007 += "        SUM(D1_CUSTO) CUSTO,

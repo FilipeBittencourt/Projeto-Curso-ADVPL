@@ -6,11 +6,12 @@
 User Function TSTFIL()
 
   If Select("SX6") <= 0
-    RPCSetEnv("07", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+    RPCSetEnv("07", "05", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
   EndIf
 
   //TSTFIL001() // biaxfunc.prw  - Teste Email SEND
-  TSTFIL002() // Teste pedidos provisionados
+  //TSTFIL002() // Teste pedidos provisionados
+  TSTFIL003()
 
 
 RETURN
@@ -212,3 +213,70 @@ Static Function TSTFIL002()
   Endif
 
 Return
+
+
+Static Function TSTFIL003()
+
+  Local cQuery    := ""
+  Local cQry      := GetNextAlias()
+  Local lRet      := .F.
+  Local c5Num     := "V0339"
+  Local c6Item    := "02"
+
+  cQuery += " SELECT ZZW.ZZW_FILIAL, ZZW.ZZW_PEDIDO, ZZW.ZZW_ITEM , ZZW.ZZW_CCLI,  ZZW.ZZW_LCLI, ZZW.ZZW_CARGA " + CRLF
+  cQuery += " FROM  "+RetSQLName("ZZW")+"  ZZW " + CRLF
+
+  cQuery += " INNER JOIN "+RetSQLName("SC6")+" SC6 ON SC6.C6_FILIAL = ZZW.ZZW_FILIAL " + CRLF
+  cQuery += " AND SC6.C6_NUM = ZZW.ZZW_PEDIDO " + CRLF
+  cQuery += " AND SC6.C6_ITEM = ZZW.ZZW_ITEM " + CRLF
+  cQuery += " AND SC6.D_E_L_E_T_ = '' " + CRLF
+
+  cQuery += " WHERE ZZW.ZZW_FILIAL = '"+FWxFilial('SC6')+"' " + CRLF
+  cQuery += " AND ZZW.ZZW_PEDIDO = '"+c5Num+"' " + CRLF
+  cQuery += " AND ZZW.ZZW_ITEM = '"+c6Item+"' " + CRLF
+  cQuery += " AND ZZW.D_E_L_E_T_ = '' " + CRLF
+
+  TcQuery cQuery New Alias (cQry)
+
+
+  If !EMPTY((cQry)->ZZW_PEDIDO)
+    lRet := .T.
+  EndIf
+
+  (cQry)->(DbCloseArea())
+
+  if lRet
+
+    MSGTXT("Não será possível eliminar resíduo do pedido <b>"+c5Num+"</b>, pois o item <b>"+c6Item+"</b> se econtra  em carga.","Atenção - MT500ANT")
+  EndIf
+
+Return lRet
+
+
+
+
+Static Function MSGTXT(cMensagem,cTitulo)
+
+  Local oDlg
+  Local oGet
+  Local oBtn1
+  Local lRet			:= .F.
+  Private cTexto 		:= ""
+
+  Default cTitulo := "TESTE MSG"
+  Default cMensagem := ""
+
+
+  //cTexto += 'BLOQUEIO POR REGRAS DE NEGÃ“CIO:' +CRLF + CRLF
+  cTexto := cMensagem
+
+  DEFINE MSDIALOG oDlg Title cTitulo From 000,000	To 350,400 Pixel
+
+  @ 005,005 Get oGet VAR cTexto MEMO SIZE 193,150 Of oDlg Pixel READONLY
+  oGet:bRClicked := {||AllwaysTrue()}
+
+  //oBtn1     := TButton():New( 020,160,"Cancelar",oDlg,{|| oDlg:End()},040,012,,,,.T.,,"",,,,.F. )
+
+  ACTIVATE MSDIALOG oDlg CENTER
+
+Return lRet

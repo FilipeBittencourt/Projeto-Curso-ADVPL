@@ -43,10 +43,10 @@ User Function BIA615A()
 		Begin Transaction
 
 			xVerRet := .F.
-			Processa({ || ExistThenD(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Deletando dados...", .F.)
+			Processa({ || ExistThenD(cFilAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, @cMsg) }, "Aguarde...", "Deletando dados...", .F.)
 			If xVerRet
 
-				Processa({ || fProcessa(cEmpAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, oPerg:dDataFech, @cMsg) }, "Aguarde...", "Processando dados...", .F.)
+				Processa({ || fProcessa(cFilAnt, oPerg:cVersao, oPerg:cRevisa, oPerg:cAnoRef, oPerg:dDataFech, @cMsg) }, "Aguarde...", "Processando dados...", .F.)
 				lRet := xVerRet 
 
 			Else
@@ -90,7 +90,7 @@ User Function BIA615A()
 
 Return
 
-Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
+Static Function fProcessa(msFil, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
 
 	Local lRet  := .T.
 	Local cSQL  := ""
@@ -103,8 +103,8 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
 	cSql += "        B9_DATA, "
 	cSql += "        SUM(B9_QINI) B9_QINI, "
 	cSql += "        SUM(B9_VINI1) B9_VINI1 "
-	cSql += " FROM " + RetFullName("SB9", cEmp) + " SB9 (NOLOCK) "
-	cSql += " INNER JOIN " + RetFullName("SB1", cEmp) + " SB1 (NOLOCK) ON "
+	cSql += " FROM " + RetFullName("SB9", cEmpAnt) + " SB9 (NOLOCK) "
+	cSql += " INNER JOIN " + RetFullName("SB1", cEmpAnt) + " SB1 (NOLOCK) ON "
 	cSql += " ( "
 	cSql += " 	SB1.B1_FILIAL   = '" + xFilial("SB1") +  "' AND "
 	cSql += " 	SB1.B1_COD      = B9_COD AND "
@@ -127,7 +127,7 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
 		IncProc("Processando Registros encontrados na base...")
 
 		Reclock("ZOA", .T.)
-		ZOA->ZOA_FILIAL  := cEmp
+		ZOA->ZOA_FILIAL  := xFilial("ZOA")
 		ZOA->ZOA_VERSAO  := cVersao
 		ZOA->ZOA_REVISA  := cRevisa
 		ZOA->ZOA_ANOREF  := cAnoRef
@@ -148,7 +148,7 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, dDataFech, cMsg)
 
 Return(lRet)
 
-Static Function ExistThenD(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
+Static Function ExistThenD(msFil, cVersao, cRevisa, cAnoRef, cMsg)
 
 	Local cSQL  := ""
 	Local cQry  := ""
@@ -160,12 +160,12 @@ Static Function ExistThenD(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 	cQry := GetNextAlias()
 
 	cSql := " SELECT R_E_C_N_O_ RECNO "
-	cSql += " FROM " + RetFullName("ZOA", cEmp) + " ZOA (NOLOCK) "
-	cSql += " WHERE ZOA_FILIAL      = " + ValToSql(cEmp)
-	cSql += " AND ZOA_VERSAO        = " + ValToSql(cVersao)
-	cSql += " AND ZOA_REVISA        = " + ValToSql(cRevisa)
-	cSql += " AND ZOA_ANOREF        = " + ValToSql(cAnoRef)
-	cSql += " AND ZOA.D_E_L_E_T_    = ' ' "
+	cSql += " FROM " + RetFullName("ZOA", cEmpAnt) + " ZOA (NOLOCK) "
+	cSql += " WHERE ZOA_FILIAL = '" + xFilial("ZOA") + "'
+	cSql += "       AND ZOA_VERSAO = " + ValToSql(cVersao)
+	cSql += "       AND ZOA_REVISA = " + ValToSql(cRevisa)
+	cSql += "       AND ZOA_ANOREF = " + ValToSql(cAnoRef)
+	cSql += "       AND ZOA.D_E_L_E_T_ = ' ' "
 
 	TcQuery cSQL New Alias (cQry)
 
@@ -176,7 +176,7 @@ Static Function ExistThenD(cEmp, cVersao, cRevisa, cAnoRef, cMsg)
 
 		If lPerg
 
-			If MsgYesNo("Já existem dados para o tempo orçamentário. Deseja continuar?" + CRLF + CRLF + "Caso clique em sim esses dados serão apagados e gerados novos!", "Empresa: [" + cEmp + "]  - ATENÇÃO")
+			If MsgYesNo("Já existem dados para o tempo orçamentário. Deseja continuar?" + CRLF + CRLF + "Caso clique em sim esses dados serão apagados e gerados novos!", "Empresa: [" + cEmpAnt + "]  - ATENÇÃO")
 
 				lRet := .T.
 

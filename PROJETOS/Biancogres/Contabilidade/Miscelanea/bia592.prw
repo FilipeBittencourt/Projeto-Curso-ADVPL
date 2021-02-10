@@ -16,7 +16,6 @@
 User Function BIA592()
 
 	Local aArea     := GetArea()
-	Local cCondicao := ""
 
 	Private cCadastro 	:= "AtivoFixo CAPEX p/ OrcaFinal"
 	Private aRotina 	:= { {"Pesquisar"  			      ,"AxPesqui"     ,0,1},;
@@ -27,6 +26,8 @@ User Function BIA592()
 	dbSetOrder(1)
 
 	mBrowse(6,1,22,75,"ZBY",,,,,,)
+
+	restArea(aArea)
 
 Return
 
@@ -169,7 +170,6 @@ Return
 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
 Static Function fProcIntMD()
 
-	Local trrhEnter := CHR(13) + CHR(10)
 	Local lvxt
 
 	KS001 := " DELETE " + RetSqlName("ZBZ") + " "

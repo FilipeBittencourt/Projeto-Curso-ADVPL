@@ -13,6 +13,10 @@ User Function MT120TEL
 Local nOpc := ParamIxb[4]
 Local nCount := 0
 
+	Public C7_YCREINV := CriaVar("C7_YCREINV", .F.)
+
+	aAdd(aTitles, "Crédito INVEST")
+
 	// Copia do pedido
 	If nOpc == 6
 	 

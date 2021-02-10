@@ -5,9 +5,9 @@
 @author Wlysses Cerqueira (Facile)
 @since 30/10/2020
 @version 1.0
-@Projet A-35
-@description Consolidação empresas grupo para filial 90. 
-@type Program
+@description Receita Prestadoras - Apura Receita a partir do OrcaFinal 
+@type function
+@Obs Projeto A-35
 /*/
 
 User Function BIA597()
@@ -200,26 +200,26 @@ Static Function fBIA597F()
 
 	BeginSql Alias _cAlias
 
-        SELECT *,
-        (SELECT COUNT(*)
-        FROM %TABLE:ZO2% ZO2
-        WHERE ZO2_FILIAL = %xFilial:ZO2%
-        AND ZO2_VERSAO = %Exp:_cVersao%
-        AND ZO2_REVISA = %Exp:_cRevisa%
-        AND ZO2_ANOREF = %Exp:_cAnoRef%
-        // AND ZO2_DATA = %Exp:_cDataRef%
-        //AND ZO2_ORIPRC = 'CONTABIL'
-        AND ZO2.%NotDel%
-        ) NUMREG
-        FROM %TABLE:ZO2% ZO2
-        WHERE ZO2_FILIAL = %xFilial:ZO2%
-        AND ZO2_VERSAO = %Exp:_cVersao%
-        AND ZO2_REVISA = %Exp:_cRevisa%
-        AND ZO2_ANOREF = %Exp:_cAnoRef%
-        // AND ZO2_DATA = %Exp:_cDataRef%
-        //AND ZO2_ORIPRC = 'CONTABIL'
-        AND ZO2.%NotDel%
-        ORDER BY ZO2_VERSAO, ZO2_REVISA, ZO2_ANOREF, ZO2_LINHA
+		SELECT *,
+		(SELECT COUNT(*)
+		FROM %TABLE:ZO2% ZO2
+		WHERE ZO2_FILIAL = %xFilial:ZO2%
+		AND ZO2_VERSAO = %Exp:_cVersao%
+		AND ZO2_REVISA = %Exp:_cRevisa%
+		AND ZO2_ANOREF = %Exp:_cAnoRef%
+		// AND ZO2_DATA = %Exp:_cDataRef%
+		//AND ZO2_ORIPRC = 'CONTABIL'
+		AND ZO2.%NotDel%
+		) NUMREG
+		FROM %TABLE:ZO2% ZO2
+		WHERE ZO2_FILIAL = %xFilial:ZO2%
+		AND ZO2_VERSAO = %Exp:_cVersao%
+		AND ZO2_REVISA = %Exp:_cRevisa%
+		AND ZO2_ANOREF = %Exp:_cAnoRef%
+		// AND ZO2_DATA = %Exp:_cDataRef%
+		//AND ZO2_ORIPRC = 'CONTABIL'
+		AND ZO2.%NotDel%
+		ORDER BY ZO2_VERSAO, ZO2_REVISA, ZO2_ANOREF, ZO2_LINHA
 
 	EndSql
 
@@ -413,7 +413,7 @@ User Function B597FOK()
 
 		Do Case
 
-		Case Alltrim(cMenVar) == "M->ZO2_DC"
+			Case Alltrim(cMenVar) == "M->ZO2_DC"
 			isDC       := M->ZO2_DC
 			isDEBITO   := GdFieldGet("ZO2_DEBITO",_nAt)
 			isCREDIT   := GdFieldGet("ZO2_CREDIT",_nAt)
@@ -427,7 +427,7 @@ User Function B597FOK()
 			EndIf
 			GdFieldPut("ZO2_ORGLAN" , IIF(isDC == "1", "D", IIF(isDC == "2", "C", IIF(isDC == "3", "P", ""))) , _nAt)
 
-		Case Alltrim(cMenVar) == "M->ZO2_DEBITO"
+			Case Alltrim(cMenVar) == "M->ZO2_DEBITO"
 			isDC       := GdFieldGet("ZO2_DC",_nAt)
 			isDEBITO   := M->ZO2_DEBITO
 			isCREDIT   := GdFieldGet("ZO2_CREDIT",_nAt)
@@ -442,7 +442,7 @@ User Function B597FOK()
 			EndIf
 			GdFieldPut("ZO2_DDEB"     , Posicione("CT1", 1, xFilial("CT1") + isDEBITO, "CT1_DESC01") , _nAt)
 
-		Case Alltrim(cMenVar) == "M->ZO2_CREDIT"
+			Case Alltrim(cMenVar) == "M->ZO2_CREDIT"
 			isDC       := GdFieldGet("ZO2_DC",_nAt)
 			isDEBITO   := GdFieldGet("ZO2_DEBITO",_nAt)
 			isCREDIT   := M->ZO2_CREDIT
@@ -457,7 +457,7 @@ User Function B597FOK()
 			EndIf
 			GdFieldPut("ZO2_DCRD"     , Posicione("CT1", 1, xFilial("CT1") + isCREDIT, "CT1_DESC01") , _nAt)
 
-		Case Alltrim(cMenVar) == "M->ZO2_CLVLDB"
+			Case Alltrim(cMenVar) == "M->ZO2_CLVLDB"
 			isDC       := GdFieldGet("ZO2_DC",_nAt)
 			isDEBITO   := GdFieldGet("ZO2_DEBITO",_nAt)
 			isCREDIT   := GdFieldGet("ZO2_CREDIT",_nAt)
@@ -476,7 +476,7 @@ User Function B597FOK()
 			EndIf
 			GdFieldPut("ZO2_DCVDB"    , Posicione("CTH", 1, xFilial("CTH") + isCLVLDB, "CTH_DESC01") , _nAt)
 
-		Case Alltrim(cMenVar) == "M->ZO2_CLVLCR"
+			Case Alltrim(cMenVar) == "M->ZO2_CLVLCR"
 			isDC       := GdFieldGet("ZO2_DC",_nAt)
 			isDEBITO   := GdFieldGet("ZO2_DEBITO",_nAt)
 			isCREDIT   := GdFieldGet("ZO2_CREDIT",_nAt)
@@ -495,7 +495,7 @@ User Function B597FOK()
 			EndIf
 			GdFieldPut("ZO2_DCVCR"    , Posicione("CTH", 1, xFilial("CTH") + isCLVLCR, "CTH_DESC01") , _nAt)
 
-		Case Alltrim(cMenVar) == "M->ZO2_ITEMD"
+			Case Alltrim(cMenVar) == "M->ZO2_ITEMD"
 			isDC       := GdFieldGet("ZO2_DC",_nAt)
 			isDEBITO   := GdFieldGet("ZO2_DEBITO",_nAt)
 			isCREDIT   := GdFieldGet("ZO2_CREDIT",_nAt)
@@ -507,7 +507,7 @@ User Function B597FOK()
 				Return(.F.)
 			EndIf
 
-		Case Alltrim(cMenVar) == "M->ZO2_ITEMC"
+			Case Alltrim(cMenVar) == "M->ZO2_ITEMC"
 			isDC       := GdFieldGet("ZO2_DC",_nAt)
 			isDEBITO   := GdFieldGet("ZO2_DEBITO",_nAt)
 			isCREDIT   := GdFieldGet("ZO2_CREDIT",_nAt)

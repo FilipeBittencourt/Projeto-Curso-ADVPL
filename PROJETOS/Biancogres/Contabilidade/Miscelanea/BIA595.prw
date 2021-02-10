@@ -5,9 +5,9 @@
 @author Wlysses Cerqueira (Facile)
 @since 26/10/2020
 @version 1.0
-@Projet A-35
-@description Consolidação empresas grupo para filial 90. 
+@description Consolidação das empresas na empresa Consolidada 90 e filial 90. 
 @type function
+@Obs Projeto A-35
 /*/
 
 User Function BIA595()
@@ -22,7 +22,7 @@ User Function BIA595()
 
 	oPerg := TWPCOFiltroPeriodo():New()
 
-	If cEmpAnt == "90"
+	If cEmpAnt == "90" .and. cFilAnt == "90"
 
 		If oPerg:Pergunte()
 
@@ -54,11 +54,11 @@ User Function BIA595()
 
 	Else
 
-		Alert("Rotina exclusiva para empresa 90!")
+		Alert("Rotina exclusiva para Empresa 90 e na Filial 90!")
 
 	EndIf
 
-Return()
+Return
 
 Static Function Processa(cEmp, cVersao, cRevisa, cAnoRef)
 

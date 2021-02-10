@@ -357,15 +357,19 @@ Method _MailEmpenho()  Class TConferenciaPedidoVenda
 	cDestinatario	:= U_MailAtendente(cEmp, SC5->C5_NUM, SC5->C5_VEND1, SC5->C5_CLIENTE, SC5->C5_LOJACLI)
 	
 	ConOut("EMAIL PONTA : "+cDestinatario)	
-	//Envia e-mail
-	aCC = aCC + "; " + U_EmailWF("FROPRT08_WF","","","C")
+	
+	//Envia e-mail com cópia apenas se não foi chamado pelo job (todos outros pontos de entrada poderão enviar email, mas não essa chamada)
+	if !FWIsInCallStack('U_FROPRT08')
+		aCC = aCC + "; " + U_EmailWF("FROPRT08_WF","","","C")
+	endif
+	
 	U_BIAEnvMail(, cDestinatario, cTitulo, cHtml, , , , aCC, aCCO)		
 
 Return
 
 
 Method _MailPed() Class TConferenciaPedidoVenda
-
+	
 	Local cEmpPed	:= ""
 	
 	DbSelectArea("SC5")

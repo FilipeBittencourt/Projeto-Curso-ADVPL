@@ -16,7 +16,6 @@
 User Function BIA590()
 
 	Local aArea     := GetArea()
-	Local cCondicao := ""
 
 	Private cCadastro 	:= "CAPEX Integration"
 	Private aRotina 	:= { {"Pesquisar"  			 ,"AxPesqui"     ,0,1},;
@@ -40,6 +39,8 @@ User Function BIA590()
 		mBrowse(6,1,22,75,"ZBV",,,,,,)
 
 	EndIf
+
+	restArea(aArea)
 
 Return
 

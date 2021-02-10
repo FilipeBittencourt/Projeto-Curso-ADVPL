@@ -186,52 +186,28 @@ Return()
 
 
 Method UpdCustomer() Class TProcessoRocket
+Local aEmp := {"01", "05", "07", "12", "13", "14", "16", "17"}
+Local nCount := 0
 Local cSQL := ""
 
-	cSQL := " UPDATE " + RetFullName("SA1", "01")
-	cSQL += " SET A1_LC = " + ValToSQL(::nLimSug) + ", A1_VENCLC = " + ValToSQL(MonthSum(dDataBase, ::nValLim))  
-	cSQL += " WHERE A1_FILIAL = " + ValToSQL(xFilial("SA1"))
-	cSQL += " AND A1_CGC IN "
-	cSQL += " ( "
-	cSQL += " 	SELECT ZM1_CNPJ "
-	cSQL += " 	FROM " + RetSQLName("ZM1")
-	cSQL += " 	WHERE ZM1_FILIAL = " + ValToSQL(xFilial("ZM1"))
-	cSQL += " 	AND ZM1_CODPRO = " + ValToSQL(::cCodPro)
-	cSQL += " 	AND D_E_L_E_T_ = '' "
-	cSQL += " ) "
-	cSQL += " AND D_E_L_E_T_ = '' "
+	For nCount := 1 To Len(aEmp)
+	
+		cSQL := " UPDATE " + RetFullName("SA1", aEmp[nCount])
+		cSQL += " SET A1_LC = " + ValToSQL(::nLimSug) + ", A1_VENCLC = " + ValToSQL(MonthSum(dDataBase, ::nValLim))  
+		cSQL += " WHERE A1_FILIAL = " + ValToSQL(xFilial("SA1"))
+		cSQL += " AND A1_CGC IN "
+		cSQL += " ( "
+		cSQL += " 	SELECT ZM1_CNPJ "
+		cSQL += " 	FROM " + RetSQLName("ZM1")
+		cSQL += " 	WHERE ZM1_FILIAL = " + ValToSQL(xFilial("ZM1"))
+		cSQL += " 	AND ZM1_CODPRO = " + ValToSQL(::cCodPro)
+		cSQL += " 	AND D_E_L_E_T_ = '' "
+		cSQL += " ) "
+		cSQL += " AND D_E_L_E_T_ = '' "
+	
+		TcSQLExec(cSQL)	
 
-	TcSQLExec(cSQL)
-	
-	cSQL := " UPDATE " + RetFullName("SA1", "05")
-	cSQL += " SET A1_LC = " + ValToSQL(::nLimSug) + ", A1_VENCLC = " + ValToSQL(MonthSum(dDataBase, ::nValLim))  
-	cSQL += " WHERE A1_FILIAL = " + ValToSQL(xFilial("SA1"))
-	cSQL += " AND A1_CGC IN "
-	cSQL += " ( "
-	cSQL += " 	SELECT ZM1_CNPJ "
-	cSQL += " 	FROM " + RetSQLName("ZM1")
-	cSQL += " 	WHERE ZM1_FILIAL = " + ValToSQL(xFilial("ZM1"))
-	cSQL += " 	AND ZM1_CODPRO = " + ValToSQL(::cCodPro)
-	cSQL += " 	AND D_E_L_E_T_ = '' "
-	cSQL += " ) "
-	cSQL += " AND D_E_L_E_T_ = '' "
-	
-	TcSQLExec(cSQL)	
-	
-	cSQL := " UPDATE " + RetFullName("SA1", "07")
-	cSQL += " SET A1_LC = " + ValToSQL(::nLimSug) + ", A1_VENCLC = " + ValToSQL(MonthSum(dDataBase, ::nValLim))  
-	cSQL += " WHERE A1_FILIAL = " + ValToSQL(xFilial("SA1"))
-	cSQL += " AND A1_CGC IN "
-	cSQL += " ( "
-	cSQL += " 	SELECT ZM1_CNPJ "
-	cSQL += " 	FROM " + RetSQLName("ZM1")
-	cSQL += " 	WHERE ZM1_FILIAL = " + ValToSQL(xFilial("ZM1"))
-	cSQL += " 	AND ZM1_CODPRO = " + ValToSQL(::cCodPro)
-	cSQL += " 	AND D_E_L_E_T_ = '' "
-	cSQL += " ) "
-	cSQL += " AND D_E_L_E_T_ = '' "
-
-	TcSQLExec(cSQL)
+	Next
 
 Return()
 

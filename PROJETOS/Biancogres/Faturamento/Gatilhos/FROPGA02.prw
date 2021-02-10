@@ -833,7 +833,7 @@ User Function FROPGA02()
 						EndIf
 					EndIf
 				ElseIf (_aRetLot[10] <> Nil  .And. _aRetLot[10] == .F.)
-					If (ZZ6->ZZ6_LOTEMI > 0)
+					If (ZZ6->ZZ6_LOTEMI > 0 .Or. M->C5_YLINHA == '6')
 						//Saldo 			= _aRetLot[2]
 						//Quantidade Palete = _aRetLot[5]
 						If (!Empty(_aRetLot[2]) .And. _aRetLot[2] <> Nil .And. !Empty(_aRetLot[5]) .And. _aRetLot[5] <> Nil  )
