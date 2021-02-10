@@ -44,11 +44,11 @@ User Function BFATTE01(lObraAc)
 
 	//Legenda
 	Private aCores    := {	{  'Z68_STATUS=="0"'	, 'BR_BRANCO' 	},;
-	{  'Z68_STATUS=="1"'	, 'BR_AMARELO' 	},;
-	{  'Z68_STATUS=="2"'	, 'BR_VERDE' 	},;
-	{  'Z68_STATUS=="3"'	, 'BR_VERMELHO'	},;
-	{  'Z68_STATUS=="4"'	, 'BR_AZUL'		},;
-	{  'Z68_STATUS=="5"'	, 'BR_PRETO'	} }
+		{  'Z68_STATUS=="1"'	, 'BR_AMARELO' 	},;
+		{  'Z68_STATUS=="2"'	, 'BR_VERDE' 	},;
+		{  'Z68_STATUS=="3"'	, 'BR_VERMELHO'	},;
+		{  'Z68_STATUS=="4"'	, 'BR_AZUL'		},;
+		{  'Z68_STATUS=="5"'	, 'BR_PRETO'	} }
 
 	//Filtro pelo cadastro de Obras
 	If (lObraAc)
@@ -65,17 +65,17 @@ User Function BFATTE01(lObraAc)
 	dbGoTop()
 	mBrowse(6,1,22,75, "Z68",,,,,,aCores)
 
-	EndFilBrw("Z68",aIndDAK)
+EndFilBrw("Z68",aIndDAK)
 
 Return
 
 User Function BFTE01LE()
 	Local aLegenda := {	{ 'BR_BRANCO'	,	"Nova Prosposta" 		},;
-	{ 'BR_AMARELO'	,   "Revisada"  			},;
-	{ 'BR_VERDE'	,   "Aprovada"			  	},;
-	{ 'BR_AZUL'		,   "Pedido Gerado"		  	},;
-	{ 'BR_VERMELHO'	,   "Rejeitada"			  	},;
-	{ 'BR_PRETO'	,   "Vencida"			  	} }
+		{ 'BR_AMARELO'	,   "Revisada"  			},;
+		{ 'BR_VERDE'	,   "Aprovada"			  	},;
+		{ 'BR_AZUL'		,   "Pedido Gerado"		  	},;
+		{ 'BR_VERMELHO'	,   "Rejeitada"			  	},;
+		{ 'BR_PRETO'	,   "Vencida"			  	} }
 
 	BRWLEGENDA( cCadastro, "Legenda", aLegenda )
 Return
@@ -84,6 +84,8 @@ User Function BFTE01MA(_cOpca)
 
 	Local _cAliasTmp
 	Local i
+	Local cQry      := GetNextAlias()
+	Local cSQL      := ""
 
 	SetPrvt("WOPCAO,LVISUALIZAR,LINCLUIR,LALTERAR,LEXCLUIR,NOPCE")
 	SetPrvt("NOPCG,COPCAO,NUSADO,AHEADER,ACOLS,I,LCANDEL")
@@ -134,11 +136,25 @@ User Function BFTE01MA(_cOpca)
 	EndIf
 
 	Do Case
-		Case wOpcao == "V" .Or. wOpcao == "T"; lVisualizar := .T. ; nOpcE := 2 ; nOpcG := 2 ; cOpcao := "VISUALIZAR"
-		Case wOpcao == "I" ; lIncluir    := .T. ; nOpcE := 3 ; nOpcG := 3 ; cOpcao := "INCLUIR"
-		Case wOpcao == "A" ; lAlterar    := .T. ; nOpcE := 4 ; nOpcG := 4 ; cOpcao := "ALTERAR"
-		Case wOpcao == "E" ; lExcluir    := .T. ; nOpcE := 2 ; nOpcG := 2 ; cOpcao := "EXCLUIR"
+	Case wOpcao == "V" .Or. wOpcao == "T"; lVisualizar := .T. ; nOpcE := 2 ; nOpcG := 2 ; cOpcao := "VISUALIZAR"
+	Case wOpcao == "I" ; lIncluir    := .T. ; nOpcE := 3 ; nOpcG := 3 ; cOpcao := "INCLUIR"
+	Case wOpcao == "A" ; lAlterar    := .T. ; nOpcE := 4 ; nOpcG := 4 ; cOpcao := "ALTERAR"
+	Case wOpcao == "E" ; lExcluir    := .T. ; nOpcE := 2 ; nOpcG := 2 ; cOpcao := "EXCLUIR"
 	EndCase
+
+	If lIncluir .or. lAlterar .and. !Empty(Alltrim(cRepAtu))
+
+		cSQL := "SELECT TOP 1 ZL4_PARAM, ZL4_CONTEU FROM ZL4010 WHERE ZL4_PARAM = 'REP_BLQPROPENG' AND D_E_L_E_T_ =  '' "
+
+		TcQuery cSQL New Alias (cQry)
+
+		IF (cQry)->(!Eof()) .AND. AllTrim((cQry)->ZL4_CONTEU) == ".F."
+			MsgAlert("Inclusão/Revisão de proposta temporariamente bloqueda pelo setor comercial!","[BIAFG134] - Bloqueio temporário")
+			Return
+
+		EndIf
+
+	EndIf
 
 	If lAlterar .And. !(Z68->Z68_STATUS $ "0#1#2#3#5")   //Revisao
 		MsgAlert("Status não permitido para Revisão!","[BFATTE01] Propostas de Engenharia")
@@ -206,10 +222,10 @@ User Function BFTE01MA(_cOpca)
 			nUsado := nUsado + 1
 
 			aadd(aHeader,{ trim(SX3->X3_TITULO),SX3->X3_CAMPO   , ;
-			SX3->X3_PICTURE     ,SX3->X3_TAMANHO , ;
-			SX3->X3_DECIMAL     ,SX3->X3_VALID , ;
-			SX3->X3_USADO       ,SX3->X3_TIPO    , ;
-			SX3->X3_ARQUIVO     ,SX3->X3_CONTEXT } )
+				SX3->X3_PICTURE     ,SX3->X3_TAMANHO , ;
+				SX3->X3_DECIMAL     ,SX3->X3_VALID , ;
+				SX3->X3_USADO       ,SX3->X3_TIPO    , ;
+				SX3->X3_ARQUIVO     ,SX3->X3_CONTEXT } )
 		End
 		dbSkip()
 	End
@@ -342,7 +358,7 @@ User Function BFTE01MA(_cOpca)
 
 	aButtons := {}
 
-	//If lVisualizar .Or. lAprova	
+	//If lVisualizar .Or. lAprova
 	If U_VALOPER("003",.F.) //Apenas para Diretores e Gerentes
 		aAdd(aButtons , {'',{|| U_BFTE01MC() },'Margem Operacional'} )
 	EndIf
@@ -628,7 +644,7 @@ Static Function fProcessa()
 
 		If lIncluir .And. Empty(cRevisa)
 
-			//Confimando a ultima numeracao na transaction do Salvar 
+			//Confimando a ultima numeracao na transaction do Salvar
 			IF !Z68GetNum(@cNumZ68)
 				DisarmTransaction()
 				Return
@@ -696,13 +712,13 @@ Static Function fProcessa()
 		Z68->Z68_PERD		:= M->Z68_PERD
 		Z68->Z68_YMOTIV		:= M->Z68_YMOTIV
 		Z68->Z68_FRTUNI		:= M->Z68_FRTUNI
-		
+
 		If Z68->(FieldPos("Z68_TPNEG")) > 0
 			Z68->Z68_TPNEG	:= M->Z68_TPNEG
-    	EndIf
-  
-		
-		
+		EndIf
+
+
+
 
 		//Aprovacao - gravar data/hora
 		If lAlterar .And. lAprova
@@ -779,7 +795,7 @@ Static Function RMod3(cTitulo,cAlias1,cAlias2,aMyEncho,cLinOk,cTudoOk,nOpcE,nOpc
 	Local aSize := {}
 	Local _aAltField := Nil
 
-	Local _aSize 		:=	{} 
+	Local _aSize 		:=	{}
 	Local _aObjects		:=	{}
 	Local _aInfo		:=	{}
 	Local _aPosObj		:=	{}
@@ -831,9 +847,9 @@ Static Function RMod3(cTitulo,cAlias1,cAlias2,aMyEncho,cLinOk,cTudoOk,nOpcE,nOpc
 
 	AAdd(_aObjects, {100, 45, .T. , .T. })
 	AAdd(_aObjects, {100, 50, .T. , .T. })
-	AAdd(_aObjects, {100, 5, .T. , .T. })                      
+	AAdd(_aObjects, {100, 5, .T. , .T. })
 
-	_aInfo   := {_aSize[1], _aSize[2], _aSize[3], _aSize[4], 5, 5}	
+	_aInfo   := {_aSize[1], _aSize[2], _aSize[3], _aSize[4], 5, 5}
 
 	_aPosObj := MsObjSize(_aInfo, _aObjects, .T. )
 
@@ -940,8 +956,8 @@ User Function Z68ALQGE()
 	EndIf
 
 	//função int foi usado para resolver um problema de aliquota quebrada
-	//na epoca o codigo do cliente tinha 6 digitos e a forma q foi modelado a função não permitia troca com baixo impacto 
-	
+	//na epoca o codigo do cliente tinha 6 digitos e a forma q foi modelado a função não permitia troca com baixo impacto
+
 	cCodCli := "G"+AllTrim(M->Z68_EST)+"I"+StrZero(INT(M->Z68_ALIQ),2)
 
 	cAliasTmp := GetNextAlias()
@@ -1042,7 +1058,7 @@ User Function BF01PRC()
 	SA1->(DbSetOrder(1))
 	SA1->(DbSeek(XFilial("SA1")+M->Z68_CODCLI+M->Z68_LOJCLI))
 
-	If ( AllTrim(_cEmpFat) <> AllTrim(CEMPANT) ) 
+	If ( AllTrim(_cEmpFat) <> AllTrim(CEMPANT) )
 		//Fernando em 08/07/2016 - executando busca de preco e parametros fiscais na LM porque o pedido de venda seria digitado na LM
 		_aRetPrc := U_FROPCPRO(_cEmpFat,"01","U_BF01PRXX", M->Z68_LINHA, M->Z68_CODCLI, M->Z68_LOJCLI, _cProduto, dDataBase) //Fernando - alterado p/ dDataBase em 29/08 - Se a tabela do produto tiver modificada.
 	Else
@@ -1175,11 +1191,11 @@ User Function BF01GAOP()
 		SB1->(DbSeek(XFilial("SB1")+_cProduto))
 
 		U_FROPMSG("[BFATTE01] PROPOSTA ENGENHARIA",	"PRODUTO: "+AllTrim(_cProduto)+" - "+AllTrim(SB1->B1_DESC)+CRLF+;
-		"Qtde Solicitada: "+AllTrim(Str(_nQuant))+CRLF+CRLF+;
-		"Previsão de Produção: "+CRLF+;
-		"OP: "+_aRetOP[1]+"-"+_aRetOP[2]+"-"+_aRetOP[3]+CRLF+;
-		"Data da entrega: "+DTOC(_aRetOP[4]),;
-		,,"Produto com PrevisÃ£o de Produção")
+			"Qtde Solicitada: "+AllTrim(Str(_nQuant))+CRLF+CRLF+;
+			"Previsão de Produção: "+CRLF+;
+			"OP: "+_aRetOP[1]+"-"+_aRetOP[2]+"-"+_aRetOP[3]+CRLF+;
+			"Data da entrega: "+DTOC(_aRetOP[4]),;
+			,,"Produto com PrevisÃ£o de Produção")
 
 		_dDtRet := Max(U_FROPAD3U(dDataBase), _aRetOP[4])
 		Gdfieldput("Z69_DTDISP",_dDtRet,N)
@@ -1187,8 +1203,8 @@ User Function BF01GAOP()
 	Else
 
 		U_FROPMSG("[BFATTE01] PROPOSTA ENGENHARIA",	"PRODUTO: "+AllTrim(_cProduto)+" - "+AllTrim(SB1->B1_DESC)+CRLF+;
-		"Não existe programação de produção deste produto com a quantidade solicitada disponível.",;
-		,,"Produto sem PrevisÃ£o de Produção")
+			"Não existe programação de produção deste produto com a quantidade solicitada disponível.",;
+			,,"Produto sem PrevisÃ£o de Produção")
 
 		Gdfieldput("Z69_DTDISP",CTOD(" "),N)
 
@@ -1622,7 +1638,7 @@ User Function BFTE01CL
 	Else
 
 		If !MsgNoYes("Tem certeza que deseja associar o Cliente: "+AllTrim(SA1->A1_NOME)+CRLF+;
-		"com a proposta número : "+Z68->Z68_NUM+Z68->Z68_REV,"Definir Cliente da Proposta")
+				"com a proposta número : "+Z68->Z68_NUM+Z68->Z68_REV,"Definir Cliente da Proposta")
 			Return
 		EndIf
 
@@ -1663,7 +1679,7 @@ User Function BF1VPROD
 
 	SB1->(DbSetOrder(1))
 
-	If Alltrim(_cEmpFat) <> "07" 
+	If Alltrim(_cEmpFat) <> "07"
 		If SB1->(DbSeek(XFilial("SB1")+M->Z69_CODPRO)) .And. (SB1->B1_YPCGMR3 $ _cPctLM)
 
 			U_FROPMSG("Proposta Engenharia - Valida Produto", "Produto não permitido para esta Empresa/Cliente."+CRLF+"Favor informar LM no campo 'Empresa NF'.",,2,"Tratamento Especial.")
@@ -1673,7 +1689,7 @@ User Function BF1VPROD
 	EndIf
 
 
-	If lRetorno .And. Alltrim(_cEmpFat) == "07" .And. !Empty(M->Z68_CODCLI) 
+	If lRetorno .And. Alltrim(_cEmpFat) == "07" .And. !Empty(M->Z68_CODCLI)
 
 		If Alltrim(M->Z68_LINHA) == "1" //BIANCO
 			_cTabSA1 := "SA1010"
@@ -1684,13 +1700,13 @@ User Function BF1VPROD
 		CSQL := " SELECT A1_YTRTESP FROM "+_cTabSA1+" WHERE A1_COD = '"+M->Z68_CODCLI+"' AND A1_LOJA = '"+M->Z68_LOJCLI+"' AND D_E_L_E_T_=' ' "
 
 		_cAliasTmp := GetNextAlias()
-		TCQUERY CSQL ALIAS (_cAliasTmp) NEW    
+		TCQUERY CSQL ALIAS (_cAliasTmp) NEW
 		(_cAliasTmp)->(DbGoTop())
 
 		If !(_cAliasTmp)->(Eof()) .And. !(Alltrim((_cAliasTmp)->A1_YTRTESP) == "1")
 
 			SB1->(DbSetOrder(1))
-			If SB1->(DbSeek(XFilial("SB1")+M->Z69_CODPRO)) .And. !(SB1->B1_YPCGMR3 $ _cPctLM) 
+			If SB1->(DbSeek(XFilial("SB1")+M->Z69_CODPRO)) .And. !(SB1->B1_YPCGMR3 $ _cPctLM)
 
 				U_FROPMSG("Proposta Engenharia - Valida Produto", "Produto não permitido para esta Empresa/Cliente."+CRLF+"Favor informar a empresa de Origem no campo 'Empresa NF'.",,2,"Tratamento Especial.")
 				lRetorno := .F.
@@ -1759,7 +1775,7 @@ Static Function Z68GetNum(_cNumero)
 
 	_CSQL := " select NUM = isnull(RIGHT('000000' + convert(varchar(6),convert(int, max(Z68_NUM))+1),6),'000001') from "+RetSQLName("Z68")+" Z68 "
 	_cAliasTmp := GetNextAlias()
-	TCQUERY _CSQL ALIAS (_cAliasTmp) NEW    
+	TCQUERY _CSQL ALIAS (_cAliasTmp) NEW
 	(_cAliasTmp)->(DbGoTop())
 
 	If !(_cAliasTmp)->(Eof())

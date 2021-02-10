@@ -15,7 +15,7 @@ User Function BIAFG134()
 		{"REP_BLQF6"		,"MV_PAR02"	,	'Consulta Estoque'},;
 		{"REP_BLQRDISP"	,"MV_PAR03"	,	'Relatório de Disp.'},;
 		{"REP_BLQREST"	,"MV_PAR04"	,	'Workflow Estoque PA'},;
-		{"REP_BLQPROPOP","MV_PAR05"	,	'Proposta de engenharia'};
+		{"REP_BLQPROPENG","MV_PAR05"	,	'Proposta de engenharia'};
 		}
 
 
@@ -26,6 +26,7 @@ User Function BIAFG134()
 	Else
 		MsgSTOP("Usuário sem permissão para acessar a rotina", "BIAFG134")
 	EndIf
+
 
 
 Return
