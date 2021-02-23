@@ -17,7 +17,7 @@ User Function BIAFG134()
 		{"REP_BLQREST"	,"MV_PAR04"	,	'Workflow Estoque PA'},;
 		{"REP_BLQPROPENG","MV_PAR05"	,	'Proposta de engenharia'};
 		}
-
+	ValidPerg()
 
 	If U_VALOPER('060')
 
@@ -26,6 +26,7 @@ User Function BIAFG134()
 	Else
 		MsgSTOP("Usuário sem permissão para acessar a rotina", "BIAFG134")
 	EndIf
+
 
 
 

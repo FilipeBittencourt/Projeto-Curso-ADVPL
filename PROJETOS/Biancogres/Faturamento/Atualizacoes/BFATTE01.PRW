@@ -142,13 +142,13 @@ User Function BFTE01MA(_cOpca)
 	Case wOpcao == "E" ; lExcluir    := .T. ; nOpcE := 2 ; nOpcG := 2 ; cOpcao := "EXCLUIR"
 	EndCase
 
-	If lIncluir .or. lAlterar .and. !Empty(Alltrim(cRepAtu))
+	If (lIncluir .or. lAlterar) .and. !Empty(Alltrim(cRepAtu))
 
 		cSQL := "SELECT TOP 1 ZL4_PARAM, ZL4_CONTEU FROM ZL4010 WHERE ZL4_PARAM = 'REP_BLQPROPENG' AND D_E_L_E_T_ =  '' "
 
 		TcQuery cSQL New Alias (cQry)
 
-		IF (cQry)->(!Eof()) .AND. AllTrim((cQry)->ZL4_CONTEU) == ".F."
+		IF (cQry)->(!Eof()) .AND. AllTrim((cQry)->ZL4_CONTEU) == ".T."
 			MsgAlert("Inclusão/Revisão de proposta temporariamente bloqueda pelo setor comercial!","[BIAFG134] - Bloqueio temporário")
 			Return
 
