@@ -55,12 +55,7 @@ METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 
 	EndIf
 
-
 	If 	lError == .F.
-
-		If cEmpAnt+cFilAnt != AllTrim(oJSPC["empresa"]["empresaCodigo"])+AllTrim(oJSPC["empresa"]["empresaFilial"])
-			RPCSetEnv(oJSPC["empresa"]["empresaCodigo"], oJSPC["empresa"]["empresaFilial"], NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
-		EndIf
 
 		//Fornecedor
 		oJSPC["fornecedor"] := ::ParseFornecedor(oJson)
@@ -140,9 +135,6 @@ METHOD PedidoCompra(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 
 	EndIf
 
-	If cEmpAnt+cFilAnt != cBKPEmp+cBKPFil
-		RPCSetEnv(cBKPEmp, cBKPFil, NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
-	EndIf
 
 Return oJSRet
 
@@ -185,8 +177,10 @@ Return oJSEmp
 
 Method ParseFornecedor(oJson) Class TIntegracaoMotorAbastecimentoParse
 
-	Local cQuery     := ""
-	Local oJSFor      := JsonObject():New()
+	Local cQuery  := ""
+	Local oJSFor  := JsonObject():New()
+	Local aSM0	  := FWLoadSM0()
+
 
 	cQuery += " SELECT                            " + CRLF
 	cQuery += "      A2_COD                       " + CRLF
@@ -218,6 +212,8 @@ Method ParseFornecedor(oJson) Class TIntegracaoMotorAbastecimentoParse
 	EndIf
 
 	__TRZ->(DbCloseArea())
+
+
 
 Return oJSFor
 
@@ -386,6 +382,13 @@ Method MontaPCompra(oJson) Class TIntegracaoMotorAbastecimentoParse
 	oJSPC["pedidoCompra"]["cab"]["C7_FILENT"]  :=  cFil         	                 // Filial de Entrega
 	oJSPC["pedidoCompra"]["cab"]["C7_FILCEN"]  :=  cFil	                             // Filial de Entrega
 	oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"] :=  oJson["numeroPedido"]             // ID pedido da MOTOR
+
+	//ORIGEM  - Quem está solicitando
+	//DESTINO - Empresa Filial nesse caso é o fornecedor
+
+	oJSPC["pedidoCompra"]["cab"]["EMPRESA_ORIGEM"]  :=  oJson["empresa"]["empresaCodigo"]
+	oJSPC["pedidoCompra"]["cab"]["FILIAL_ORIGEM"]   :=  oJson["empresa"]["empresaFilial"]
+
 
 	For nI := 1 To Len(oJson["itens"])
 

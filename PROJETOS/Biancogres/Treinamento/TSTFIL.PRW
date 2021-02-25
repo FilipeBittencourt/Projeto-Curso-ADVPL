@@ -6,12 +6,13 @@
 User Function TSTFIL()
 
   If Select("SX6") <= 0
-    RPCSetEnv("07", "05", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+    RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
   EndIf
 
   //TSTFIL001() // biaxfunc.prw  - Teste Email SEND
   //TSTFIL002() // Teste pedidos provisionados
-  TSTFIL003()
+  //TSTFIL003()
+  X31UPDTABLE('SC6')
 
 
 RETURN
@@ -222,6 +223,8 @@ Static Function TSTFIL003()
   Local lRet      := .F.
   Local c5Num     := "V0339"
   Local c6Item    := "02"
+
+  X31UPDTABLE('SC6')
 
   cQuery += " SELECT ZZW.ZZW_FILIAL, ZZW.ZZW_PEDIDO, ZZW.ZZW_ITEM , ZZW.ZZW_CCLI,  ZZW.ZZW_LCLI, ZZW.ZZW_CARGA " + CRLF
   cQuery += " FROM  "+RetSQLName("ZZW")+"  ZZW " + CRLF

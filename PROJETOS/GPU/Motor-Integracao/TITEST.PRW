@@ -24,14 +24,14 @@ User Function TITEST1()
   //X31UPDTABLE("SC5")
   //X31UPDTABLE('SC7')
 
-  DbSelectArea("Z42")
+
+
+  DbSelectArea("Z58")
   DbSelectArea("SC5")
   DbSelectArea("SC7")
   //cQuery += " SELECT * from Z42080  "
-  cQuery += " SELECT 10 * from SC5080  "
+  cQuery += " SELECT TOP 1 * from SC5080  "
   //cQuery += " SELECT * from SC7080  "
-
-
 
   If Select("__TRZ") > 0
     __TRZ->(dbCloseArea())
@@ -46,6 +46,7 @@ User Function TITEST1()
 
   EndDo
 
+  X31UPDTABLE('Z58')
 Return
 
 //U_TITEST

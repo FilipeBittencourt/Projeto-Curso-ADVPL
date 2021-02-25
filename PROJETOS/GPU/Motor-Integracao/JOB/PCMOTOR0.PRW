@@ -13,42 +13,57 @@ Autor     : Filipe Bittencourt - Facile
 //U_PCMOTOR0
 User Function  PCMOTOR0(xParam1,xParam2)
 
-  /*
-  Local oError    := ErrorBlock({|e| cError := e:Description})
-  Local cEmMOTOR  :=  ""
-
-  Local cEmp		:= ""
-  Local cFil		:= ""
-
-  Private lMsErroAuto := .F.
-
-  If ValType(xParam1) == "A"
-    cEmp 		:= xParam1[1]
-    cFil 		:= xParam1[2]
-  ElseIf ValType(xParam1) == "C"
-    cEmp 		:= xParam1
-    cFil 		:= xParam2
-  Else
-    ConOut('## ERROR - NÃO FOI INFORMADO EMPRESA E FILIAL ##')
-    ConOut('## ERROR - FIM DO JOB ##')
-    //Return
-  EndIf
-
-  If Empty(cEmp) .OR.  Empty(cEmp)
-    cEmp 		:= "08"
-    cFil 		:= "01"
-  EndIf
- */
-
+  Local cSQL    := ""
+  Local cBKPEmp := ""
+  Local cBKPFil := ""
+  Local aFils   := {}
+  Local cEnv    := GetEnvServer()
+  Local nI      := 0
 
   If Select("SX6") <= 0
-    RPCSetEnv("11", "01", NIL, NIL, "COM", NIL, {"SB1","SF2","Z42"})
+    RPCSetEnv("08", "01", NIL, NIL, "COM", NIL, {"SB1","SF2","SF1"})
   EndIf
 
-  DbSelectArea("Z42")
-  X31UPDTABLE('Z42')
-  X31UPDTABLE('SC5')
-  X31UPDTABLE('SC7')
+  cSQL += " SELECT DISTINCT Z58_EMPORI, Z58_FILORI "
+  cSQL += " FROM Z58080 "
+  cSQL += " WHERE Z58_SYCSC7 = 'N' or  Z58_SYCELE <> 'S' " //PEGA TODOS OS PEDIDOS NÃO SICRONIZADOS ou Não finalizados 100%
+  cSQL += " AND D_E_L_E_T_ = '' "
+  cSQL += " ORDER BY Z58_EMPORI, Z58_FILORI "
 
+  If Select("__TRZ") > 0
+    __TRZ->(dbCloseArea())
+  EndIf
+
+  TcQuery cSQL New Alias "__TRZ"
+  __TRZ->(dbGoTop())
+
+  If !Empty(__TRZ->Z58_EMPORI) .and. !Empty(__TRZ->Z58_FILORI)
+
+    // pego todas a Filiais
+    While __TRZ->(!Eof())
+
+      AADD(aFils,{__TRZ->Z58_EMPORI,__TRZ->Z58_FILORI})
+      __TRZ->(DbSkip())
+
+    EndDo
+
+    RpcClearEnv()
+
+    For nI := 1 to Len(aFils)
+
+      If cBKPEmp+cBKPFil != aFils[nI,1]+aFils[nI,2]
+
+        cBKPEmp := aFils[nI,1]
+        cBKPFil := aFils[nI,2]
+
+        StartJob( "U_PCMOTOR1", cEnv, .F.,  aFils[nI,1] , aFils[nI,2]  )
+        StartJob( "U_PCMOTOR2", cEnv, .F.,  aFils[nI,1] , aFils[nI,2]  )
+        //StartJob( "U_PCMOTOR3", cEnv, .F.,  aFils[nI,1] , aFils[nI,2]  )
+
+      EndIf
+
+    Next nI
+
+  EndIf
 
 Return

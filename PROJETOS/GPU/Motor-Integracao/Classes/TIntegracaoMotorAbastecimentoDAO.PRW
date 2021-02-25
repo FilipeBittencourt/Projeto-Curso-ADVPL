@@ -38,35 +38,39 @@ Method CreatePCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
 
     Begin Transaction
 
-        cNumPC := GetNumSC7()
+        cNumPC := GetSXENum('SC7', 'C7_NUM')
+        ConfirmSX8()
         For nI := 1 To  Len(oJSPC["pedidoCompra"]["itens"])
-            Z42->(RecLock('Z42', .T.))
-            Z42->Z42_FILIAL   :=  FWxFilial("SC7")
-            Z42->Z42_NUM      :=  cNumPC
-            Z42->Z42_EMISSA   :=  oJSPC["pedidoCompra"]["cab"]["C7_EMISSAO"]
-            Z42->Z42_FORNEC   :=  oJSPC["pedidoCompra"]["cab"]["C7_FORNECE"]
-            Z42->Z42_LOJA     :=  oJSPC["pedidoCompra"]["cab"]["C7_LOJA"]
-            Z42->Z42_COND     :=  oJSPC["pedidoCompra"]["cab"]["C7_COND"]
-            Z42->Z42_FILENT   :=  oJSPC["pedidoCompra"]["cab"]["C7_FILENT"]
-            Z42->Z42_YIDCIT   :=  oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]
+            Z58->(RecLock('Z58', .T.))
+            Z58->Z58_FILIAL   :=  ""
+            Z58->Z58_NUM      :=  cNumPC
+            Z58->Z58_EMISSA   :=  oJSPC["pedidoCompra"]["cab"]["C7_EMISSAO"]
+            Z58->Z58_FORNEC   :=  oJSPC["pedidoCompra"]["cab"]["C7_FORNECE"]
+            Z58->Z58_LOJA     :=  oJSPC["pedidoCompra"]["cab"]["C7_LOJA"]
+            Z58->Z58_COND     :=  oJSPC["pedidoCompra"]["cab"]["C7_COND"]
+            Z58->Z58_FILENT   :=  oJSPC["pedidoCompra"]["cab"]["C7_FILENT"]
+            Z58->Z58_YIDCIT   :=  oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]
 
-            Z42->Z42_ITEM     :=  StrZero(nI, TamSX3('C7_ITEM')[01])
-            Z42->Z42_PRODUT   :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_PRODUTO"]
-            Z42->Z42_QUANT    :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]
-            Z42->Z42_LOCAL    :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_LOCAL"]
-            Z42->Z42_PRECO    :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_PRECO"]
-            Z42->Z42_TOTAL    :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_PRECO"] * oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]
-            Z42->Z42_DATPRF   :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_DATPRF"]
-            Z42->Z42_YTIPCM   :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_YTIPCMP"]
-            Z42->Z42_YIDCIT   :=  oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]
-            Z42->Z42_SYCSC7   :=  "N" // INICIA COMO NÃO SINCRONIZADO, JOB
-            Z42->Z42_SYCELE   :=  "N" // INICIA COMO RESIDUO NÃO ELIMNADO,  JOB
-            Z42->Z42_JOBALT   :=  "N" // CONTROLER DE QTD DE JOB DE ALTERACAO
-            Z42->Z42_QTDNOV   :=  0   // CASO HAJA ALTERAÇÃO DA QUANTIDADE
-            // Z42->Z42_DESTINO  :=  0   // CASO HAJA ALTERAÇÃO DA QUANTIDADE
+            Z58->Z58_ITEM     :=  StrZero(nI, TamSX3('C7_ITEM')[01])
+            Z58->Z58_PRODUT   :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_PRODUTO"]
+            Z58->Z58_QUANT    :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]
+            Z58->Z58_LOCAL    :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_LOCAL"]
+            Z58->Z58_PRECO    :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_PRECO"]
+            Z58->Z58_TOTAL    :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_PRECO"] * oJSPC["pedidoCompra"]["itens"][nI]["C7_QUANT"]
+            Z58->Z58_DATPRF   :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_DATPRF"]
+            Z58->Z58_YTIPCM   :=  oJSPC["pedidoCompra"]["itens"][nI]["C7_YTIPCMP"]
+            Z58->Z58_YIDCIT   :=  oJSPC["pedidoCompra"]["cab"]["C7_YIDCITE"]
+            Z58->Z58_SYCSC7   :=  "N" // INICIA COMO NÃO SINCRONIZADO, JOB
+            Z58->Z58_SYCELE   :=  "N" // INICIA COMO RESIDUO NÃO ELIMNADO,  JOB
+            Z58->Z58_JOBALT   :=  "N" // CONTROLER DE QTD DE JOB DE ALTERACAO
+            Z58->Z58_QTDNOV   :=  0   // CASO HAJA ALTERAÇÃO DA QUANTIDADE
+            Z58->Z58_EMPORI   :=  oJSPC["pedidoCompra"]["cab"]["EMPRESA_ORIGEM"]
+            Z58->Z58_FILORI   :=  oJSPC["pedidoCompra"]["cab"]["FILIAL_ORIGEM"]
+            //Z58->Z58_EMPDES   :=  oJSPC["pedidoCompra"]["cab"]["EMPRESA_DESTINO"]
+            //Z58->Z58_FILDES   :=  oJSPC["pedidoCompra"]["cab"]["FILIAL_DESTINO"]
 
 
-            Z42->(MsUnlock())
+            Z58->(MsUnlock())
         Next nI
 
         ErrorBlock(oError)
@@ -91,7 +95,7 @@ Method CreatePCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
             lError := .T.
             nW++
 
-            ::EnviaError(oJSPC, cError, "POST - Pedido de Compra na tabela Z42")
+            ::EnviaError(oJSPC, cError, "POST - Pedido de Compra na tabela Z58")
 
         EndIf
 
@@ -99,8 +103,9 @@ Method CreatePCompra(oJSPC) Class TIntegracaoMotorAbastecimentoDAO
             oJSRet           := JsonObject():New()
             oJSRet["Status"] := 400
             oJSRet["errors"]  := aError
+            RollbackSx8()
         Else
-            ConOut("FIM RECLONK Z42")
+            ConOut("FIM RECLONK Z58")
         EndIf
 
     End Transaction
@@ -120,21 +125,27 @@ METHOD BaixaTotalPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
     Local cError     := ""
     Local oError     := ErrorBlock({|e| cError := e:Description})
 
-    Z42->(DbSetOrder(1)) //Z42_FILIAL, Z42_NUM, Z42_ITEM, R_E_C_N_O_, D_E_L_E_T_
 
-    If Z42->(dbSeek(FWxFilial("Z42")+AllTrim(cCodigoDe)))
+    FAZER UMA QUERY PARA OTIMIZAR
+
+
+    Z58->(DbSetOrder(3)) //Z58_FILIAL+Z58_EMPORI+Z58_FILORI+Z58_NUM+Z58_ITEM
+
+    If Z58->(dbSeek(FWxFilial("Z58")+AllTrim(cCodigoDe)))
 
         Begin Transaction
 
-            While Z42->(!Eof()) .AND. FWxFilial("Z42")+AllTrim(cCodigoDe) == Z42->Z42_FILIAL+AllTrim(Z42->Z42_NUM)
 
-                if   Z42->Z42_SYCELE != 'S' .AND. Z42->Z42_SYCSC7 == 'S'
+            While Z58->(!Eof()) .AND. FWxFilial("Z58")+oJson["empresa"]["empresaCodigo"]+oJson["empresa"]["empresaFilial"]+AllTrim(cCodigoDe) == ;
+                    Z58->Z58_FILIAL+AllTrim(Z58->Z58_EMPORI)+AllTrim(Z58->Z58_FILORI)+AllTrim(Z58->Z58_NUM)
 
-                    Z42->(RecLock('Z42', .F.))
+                if   Z58->Z58_SYCELE != 'S' .AND. Z58->Z58_SYCSC7 == 'S'
 
-                    Z42->Z42_SYCELE   :=  "T"
+                    Z58->(RecLock('Z58', .F.))
 
-                    Z42->(MsUnlock())
+                    Z58->Z58_SYCELE   :=  "T"
+
+                    Z58->(MsUnlock())
 
                 Else
 
@@ -142,13 +153,13 @@ METHOD BaixaTotalPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
                     lError     := .T.
                     AADD(aError,   JsonObject():New())
                     aError[nI]["field"]          := "item["+cValToChar(nI)+"].produto"
-                    aError[nI]["rejectedValue"]  := AllTrim(Z42->Z42_PRODUT)
+                    aError[nI]["rejectedValue"]  := AllTrim(Z58->Z58_PRODUT)
                     aError[nI]["defaultMessage"] := EncodeUtf8("O código do produto informado não foi encontrado ou ainda não foi sincronizado pelo ERP.")
 
 
                 EndIf
 
-                Z42->(DbSkip())
+                Z58->(DbSkip())
 
             EndDo
 
@@ -205,37 +216,37 @@ METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
     Local cError     := ""
     Local oError     := ErrorBlock({|e| cError := e:Description})
 
-    Z42->(DbSetOrder(1)) //Z42_FILIAL, Z42_NUM, Z42_ITEM, R_E_C_N_O_, D_E_L_E_T_
+    Z58->(DbSetOrder(1)) //Z58_FILIAL, Z58_NUM, Z58_ITEM, R_E_C_N_O_, D_E_L_E_T_
 
-    If Z42->(dbSeek(FWxFilial("Z42")+AllTrim(cCodigoDe)))
+    If Z58->(dbSeek(FWxFilial("Z58")+AllTrim(cCodigoDe)))
 
         Begin Transaction
 
-            While Z42->(!Eof()) .AND. FWxFilial("Z42")+AllTrim(cCodigoDe) == Z42->Z42_FILIAL+AllTrim(Z42->Z42_NUM)
+            While Z58->(!Eof()) .AND. FWxFilial("Z58")+AllTrim(cCodigoDe) == Z58->Z58_FILIAL+AllTrim(Z58->Z58_NUM)
 
                 For nI := 1 To Len(oJson["itens"])
 
-                    If oJson["itens"][nI]["produto"] == Z42->Z42_PRODUT .AND. Z42->Z42_SYCELE != 'S' .AND.  Z42->Z42_SYCSC7 == 'S'
+                    If oJson["itens"][nI]["produto"] == Z58->Z58_PRODUT .AND. Z58->Z58_SYCELE != 'S' .AND.  Z58->Z58_SYCSC7 == 'S'
 
                         If oJson["itens"][nI]["quantidade"] == 0
 
-                            Z42->(RecLock('Z42', .F.))
+                            Z58->(RecLock('Z58', .F.))
 
-                            Z42->Z42_SYCELE   :=  "P" // Eliminação DE 100%  de apenas um ÚNICO item do PC
-                            Z42->Z42_QTDNOV   :=  oJson["itens"][nI]["quantidade"] // Nova quantidade
+                            Z58->Z58_SYCELE   :=  "P" // Eliminação DE 100%  de apenas um ÚNICO item do PC
+                            Z58->Z58_QTDNOV   :=  oJson["itens"][nI]["quantidade"] // Nova quantidade
 
-                            Z42->(MsUnlock())
+                            Z58->(MsUnlock())
 
                         Else
 
-                            Z42->(RecLock('Z42', .F.))
+                            Z58->(RecLock('Z58', .F.))
 
-                            Z42->Z42_JOBALT   :=  "S"
-                            Z42->Z42_SYCELE   :=  "A" // Alteração de quantidade de apenas um ÚNICO item do PC
-                            Z42->Z42_QTDNOV   :=  oJson["itens"][nI]["quantidade"] // Nova quantidade
+                            Z58->Z58_JOBALT   :=  "S"
+                            Z58->Z58_SYCELE   :=  "A" // Alteração de quantidade de apenas um ÚNICO item do PC
+                            Z58->Z58_QTDNOV   :=  oJson["itens"][nI]["quantidade"] // Nova quantidade
 
 
-                            Z42->(MsUnlock())
+                            Z58->(MsUnlock())
 
                         EndIf
 
@@ -243,7 +254,7 @@ METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
 
                 Next nI
 
-                Z42->(DbSkip())
+                Z58->(DbSkip())
 
             EndDo
 

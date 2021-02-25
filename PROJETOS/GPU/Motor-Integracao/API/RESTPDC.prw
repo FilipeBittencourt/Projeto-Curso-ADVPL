@@ -13,6 +13,8 @@ WSMETHOD POST WSSERVICE pedidocompra
   Local cBody    := ""
   Local oJson    := JsonObject():New()
   Local oIMAbast := TIntegracaoMotorAbastecimentoParse():New()
+  Local aError     := {}
+  Local oJSEmp    := JsonObject():New()
 
   ::SetContentType("application/json")
 
@@ -20,8 +22,25 @@ WSMETHOD POST WSSERVICE pedidocompra
   conOut('pedidocompra - POST METHOD')
   oJson:FromJson(cBody)  // converte para JsonObject
 
+  oJSEmp := ParseEmpresa(oJson)
+  If Empty(oJSEmp["empresaCnpj"])
 
-  oJson := oIMAbast:PedidoCompra(oJson)
+    AADD(aError,   JsonObject():New())
+    aError[Len(aError)]["field"]          := "codigoEmpresa"
+    aError[Len(aError)]["rejectedValue"]  := oJSEmp["codigoEmpresa"]
+    aError[Len(aError)]["defaultMessage"] := EncodeUtf8("O CNPJ da empresa informada não foi locaizado.")
+    oJSRet["Status"] := 400
+    oJSRet["errors"] := aError
+
+  Else
+
+    RpcClearEnv()
+    RPCSetEnv( oJSEmp["empresaCodigo"], oJSEmp["empresaFilial"], NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+    oJson := oIMAbast:PedidoCompra(oJson)
+
+  EndIf
+
+
   ::SetStatus(oJson["Status"])
   ::SetResponse(oJson:ToJson())
 
@@ -177,3 +196,37 @@ WSMETHOD POST WSSERVICE gerajsontestepc
   ::SetResponse(oJSTest:ToJson())
 
 Return .T.
+
+
+
+Static Function ParseEmpresa(oJson)
+
+  Local oJSEmp  := JsonObject():New()
+  Local nI      := 1
+
+  //Retorna um ARRAY com as informações das filiais disponíveis no arquivo SIGAMAT.EMP  -
+  //https://tdn.totvs.com/display/public/PROT/FWLoadSM0 e https://tdn.totvs.com/display/public/PROT/FWSM0Util
+  Local aSM0	  := FWLoadSM0()
+
+
+  If Len(aSM0) > 0
+
+    For nI := 1 To Len(aSM0)
+
+      If AllTrim(aSM0[nI][18]) == AllTrim(oJson["codigoEmpresa"])
+
+        oJSEmp["empresaCodigo"]      := ALLTRIM(aSM0[nI][1])   //aSM0[nI][1]:"99"
+        oJSEmp["empresaFilial"]      := ALLTRIM(aSM0[nI][2])   //aSM0[nI][2]:"01"
+        oJSEmp["empresaRazaoSocial"] := ALLTRIM(aSM0[nI][6])   //aSM0[nI][6]:"TESTE"
+        oJSEmp["empresaGrupoNome"]   := ALLTRIM(aSM0[nI][7])   //aSM0[nI][7]:"MATRIZ"
+        oJSEmp["empresaCnpj"]        := ALLTRIM(aSM0[nI][18])  //aSM0[nI][18]:"99949078000199"
+
+        Exit
+
+      EndIf
+
+    Next nI
+
+  EndIf
+
+Return oJSEmp
