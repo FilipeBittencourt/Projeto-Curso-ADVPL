@@ -8,11 +8,11 @@ Tipo		  : job
 Descrição	: função Responsável por eliminizar rediduos de forma parcial o PC 
 Autor     : Filipe Bittencourt - Facile
 Retorno 	: .T.
-Obs.      : Z42_SYCSC7 -    
+Obs.      : Z58_SYCSC7 -    
                         N = NÃO SINCRONIZADO COM A SC7                     
                         S = SICRONIZADO COM A SC7
                         
-           Z42_SYCELE -    
+           Z58_SYCELE -    
                         N = Não Eliminado                        
                         T = Eliminado residuo TOTAL 100% de todos os itens
                         P = Eliminação DE 100%  de apenas um ÚNICO item do PC                        
@@ -26,9 +26,8 @@ Obs.      : Z42_SYCSC7 -
 User Function  PCMOTOR3(xParam1,xParam2)
 
 
-
-  Local cEmp		:= ""
-  Local cFil		:= ""
+  PRIVATE cEmp		:= ""
+  PRIVATE cFil		:= ""
 
 
   If ValType(xParam1) == "A"
@@ -44,8 +43,8 @@ User Function  PCMOTOR3(xParam1,xParam2)
   EndIf
 
   If Empty(cEmp) .OR.  Empty(cEmp)
-    cEmp 		:= "08"
-    cFil 		:= "01"
+    cEmp 		:= "11"
+    cFil 		:= "88"
   EndIf
 
 
@@ -86,8 +85,6 @@ Static Function  PutElim()
   Local cError     := ""
   Local oError     := ErrorBlock({|e| cError := e:Description})
   Local cTime      := ""
-  Local cEmp	     := ""
-  Local cFil	     := ""
   Local cEmMOTOR   := SuperGetMv("MV_YMOTOR3",.F., "fsbvieira@gmail.com")  //Parametro MOTOR email de quem ira receber o email de erro ao gerar PC pelo motor de abastecimento.
   Local cQuery     := ""
   Local cFilialX  := FWxFilial("SC7")
@@ -99,12 +96,14 @@ Static Function  PutElim()
 
     cQuery := ""
     cQuery += " SELECT R_E_C_N_O_ AS RECNO ,  * " + CRLF
-    cQuery += " FROM " + RetSqlName("Z42")  + CRLF
-    cQuery += " WHERE  Z42_FILIAL = "+ValToSql(cFilialX)  + CRLF
+    cQuery += " FROM " + RetSqlName("Z58")  + CRLF
+    cQuery += " WHERE  Z58_EMPORI = "+ValToSql(cEmp)  + CRLF
+    cQuery += " AND Z58_FILORI  = "+ValToSql(cFil)  + CRLF
     cQuery += " AND D_E_L_E_T_  = '' "  + CRLF
-    cQuery += " AND  Z42_NUM    = "+ValToSql(AllTrim(aNumPC[nI]))  + CRLF
-    cQuery += " AND  Z42_SYCELE = 'P' " + CRLF
-    cQuery += " ORDER BY Z42_NUM , Z42_ITEM ASC "    + CRLF
+    cQuery += " AND  Z58_NUM    = "+ValToSql(AllTrim(aNumPC[nI]))  + CRLF
+
+    cQuery += " AND  Z58_SYCELE = 'P' " + CRLF
+    cQuery += " ORDER BY Z58_NUM , Z58_ITEM ASC "    + CRLF
 
     If Select("__TRZ") > 0
       __TRZ->(dbCloseArea())
@@ -114,12 +113,12 @@ Static Function  PutElim()
     __TRZ->(dbGoTop())
 
 
-    If (! __TRZ->(EoF()) )
+    If (__TRZ->(!EoF()) )
 
       While __TRZ->(!Eof())
 
-        cCodigoDe  := ALLTRIM(__TRZ->Z42_NUM)
-        cCodigoAte := ALLTRIM(__TRZ->Z42_NUM)
+        cCodigoDe  := ALLTRIM(__TRZ->Z58_NUM)
+        cCodigoAte := ALLTRIM(__TRZ->Z58_NUM)
 
 
 
@@ -142,12 +141,12 @@ Static Function  PutElim()
           While SC7->(!Eof()) .AND. FWxFilial("SC7")+cCodigoDe == SC7->C7_FILIAL+SC7->C7_NUM
 
 
-            If  SC7->C7_RESIDUO != 'S'  .AND.  ALLTRIM(__TRZ->Z42_PRODUT) == ALLTRIM(SC7->C7_PRODUTO)
+            If  SC7->C7_RESIDUO != 'S'  .AND.  ALLTRIM(__TRZ->Z58_PRODUT) == ALLTRIM(SC7->C7_PRODUTO)
 
-              cProdDe    := ALLTRIM(__TRZ->Z42_PRODUT)
-              cProdAte   := ALLTRIM(__TRZ->Z42_PRODUT)
-              cFornDe    := ALLTRIM(__TRZ->Z42_FORNEC)
-              cFornAte   := ALLTRIM(__TRZ->Z42_FORNEC)
+              cProdDe    := ALLTRIM(__TRZ->Z58_PRODUT)
+              cProdAte   := ALLTRIM(__TRZ->Z58_PRODUT)
+              cFornDe    := ALLTRIM(__TRZ->Z58_FORNEC)
+              cFornAte   := ALLTRIM(__TRZ->Z58_FORNEC)
               AADD(aRecSC7, SC7->(Recno()))  //Pegando o recno de todos para processamento
 
             EndIf
@@ -166,10 +165,10 @@ Static Function  PutElim()
               //Eliminando residuo
               MA235PC(nPerc, cTipo, dEmisDe, dEmisAte, cCodigoDe, cCodigoAte, cProdDe, cProdAte, cFornDe, cFornAte, dDatprfde, dDatPrfAte, cItemDe, cItemAte, lConsEIC, aRecSC7)
 
-              Z42->(dbGoTo(__TRZ->RECNO))
-              Z42->(RecLock('Z42', .F.))
-              Z42->Z42_SYCELE   :=  "S"
-              Z42->(MsUnlock())
+              Z58->(dbGoTo(__TRZ->RECNO))
+              Z58->(RecLock('Z58', .F.))
+              Z58->Z58_SYCELE   :=  "S"
+              Z58->(MsUnlock())
 
             End Transaction
 
@@ -208,7 +207,7 @@ Static Function  PutElim()
 
             While SC7->(!Eof()) .AND. FWxFilial("SC7")+cCodigoDe == SC7->C7_FILIAL+SC7->C7_NUM
 
-              If SC7->C7_RESIDUO != 'S'  .AND.  ALLTRIM(__TRZ->Z42_PRODUT) == ALLTRIM(SC7->C7_PRODUTO)
+              If SC7->C7_RESIDUO != 'S'  .AND.  ALLTRIM(__TRZ->Z58_PRODUT) == ALLTRIM(SC7->C7_PRODUTO)
 
                 lGetErro     := .T.
                 cError += EncodeUtf8("O PEDIDO "+cCodigoDe+" com o item: "+SC7->C7_ITEM+"  não foi eliminado.<BR>" )
@@ -262,16 +261,17 @@ Static Function GetNumPC(cSYCELE)
   Local aNumPC   := {}
   Local cFilialX := FWxFilial("SC7")
 
-  cQuery += " SELECT DISTINCT Z42_NUM  " + CRLF
-  cQuery += " FROM " + RetSqlName("Z42")  + CRLF
-  cQuery += " WHERE  Z42_FILIAL = "+ValToSql(cFilialX)  + CRLF
+  cQuery += " SELECT DISTINCT Z58_NUM  " + CRLF
+  cQuery += " FROM " + RetSqlName("Z58")  + CRLF
+  cQuery += " WHERE  Z58_EMPORI = "+ValToSql(cEmp)  + CRLF
+  cQuery += " AND Z58_FILORI  = "+ValToSql(cFil)  + CRLF
   cQuery += " AND D_E_L_E_T_  = '' "  + CRLF
-  cQuery += " AND  Z42_SYCSC7 = 'S' " + CRLF
-  cQuery += " AND  Z42_SYCELE = "+ValToSql(cSYCELE)  + CRLF
+  cQuery += " AND  Z58_SYCSC7 = 'S' " + CRLF
+  cQuery += " AND  Z58_SYCELE = "+ValToSql(cSYCELE)  + CRLF
 
-  //para controle do JOB de alteração da QTD do item . Restorna o PC em que houve alguma alteração em um dos seus itens Z42_JOBALT = 'S' ou  'N' não retorna
+  //para controle do JOB de alteração da QTD do item . Restorna o PC em que houve alguma alteração em um dos seus itens Z58_JOBALT = 'S' ou  'N' não retorna
   if cSYCELE == "A"
-    cQuery  += " AND  Z42_JOBALT = 'S' " + CRLF
+    cQuery  += " AND  Z58_JOBALT = 'S' " + CRLF
   EndIf
 
 
@@ -287,7 +287,7 @@ Static Function GetNumPC(cSYCELE)
 
   While __TRX->(!Eof())
 
-    aAdd(aNumPC,AllTrim(__TRX->Z42_NUM))
+    aAdd(aNumPC,AllTrim(__TRX->Z58_NUM))
 
     __TRX->(DbSkip())
 
@@ -313,20 +313,21 @@ Static Function  PutExec()
 
   Private lMsErroAuto := .F.
 
-  aNumPC := GetNumPC("A") // PEGO UMA LISTA DE PEDIDOS QUE  TIVERAM ITENS ALTERADOS em sua QUANTIDADE Z42_SYCELE = 'A'
+  aNumPC := GetNumPC("A") // PEGO UMA LISTA DE PEDIDOS QUE  TIVERAM ITENS ALTERADOS em sua QUANTIDADE Z58_SYCELE = 'A'
 
 
-  For nI := 1 To  Len(aNumPC) // PEGO os itens de cada pedido com  Z42_SYCELE = 'A'
+  For nI := 1 To  Len(aNumPC) // PEGO os itens de cada pedido com  Z58_SYCELE = 'A'
 
     cQuery  := ""
     cQuery  += " SELECT R_E_C_N_O_ AS RECNO ,  * " + CRLF
-    cQuery  += " FROM " + RetSqlName("Z42")  + CRLF
-    cQuery  += " WHERE  Z42_FILIAL = "+ValToSql(cFilialX)  + CRLF
+    cQuery  += " FROM " + RetSqlName("Z58")  + CRLF
+    cQuery += " WHERE  Z58_EMPORI = "+ValToSql(cEmp)  + CRLF
+    cQuery += " AND Z58_FILORI  = "+ValToSql(cFil)  + CRLF
     cQuery  += " AND D_E_L_E_T_  = '' "  + CRLF
-    cQuery  += " AND Z42_QTDNOV > 0 "  + CRLF
-    cQuery  += " AND Z42_SYCELE  = 'A' "  + CRLF
-    cQuery  += " AND  Z42_NUM    = "+ValToSql(AllTrim(aNumPC[nI]))  + CRLF
-    cQuery  += " ORDER BY Z42_NUM , Z42_ITEM ASC "    + CRLF
+    cQuery  += " AND Z58_QTDNOV > 0 "  + CRLF
+    cQuery  += " AND Z58_SYCELE  = 'A' "  + CRLF
+    cQuery  += " AND  Z58_NUM    = "+ValToSql(AllTrim(aNumPC[nI]))  + CRLF
+    cQuery  += " ORDER BY Z58_NUM , Z58_ITEM ASC "    + CRLF
 
     If Select("__TRZ") > 0
       __TRZ->(dbCloseArea())
@@ -340,16 +341,16 @@ Static Function  PutExec()
 
       aCab    := {}
       aIClone := {}
-      cNumPC  := AllTrim(__TRZ->Z42_NUM)
+      cNumPC  := AllTrim(__TRZ->Z58_NUM)
 
-      aAdd(aCab,	{"C7_FILIAL"    ,AllTrim(__TRZ->Z42_FILIAL)   ,Nil}) // Numero do Pedido
+      aAdd(aCab,	{"C7_FILIAL"    ,AllTrim(__TRZ->Z58_FILIAL)   ,Nil}) // Numero do Pedido
       aAdd(aCab,	{"C7_NUM"       ,cNumPC                       ,Nil}) // Numero do Pedido
-      aAdd(aCab,  {"C7_EMISSAO"	  ,StoD(__TRZ->Z42_EMISSA)      ,Nil})
-      aAdd(aCab,  {"C7_FORNECE"	  ,__TRZ->Z42_FORNEC            ,NIL}) // Fornecedor
-      aAdd(aCab,  {"C7_LOJA"	    ,__TRZ->Z42_LOJA              ,NIL}) // Loja do Fornecedor
-      aAdd(aCab,  {"C7_COND"	    ,__TRZ->Z42_COND              ,NIL}) // Condicao de Pagamento
-      aAdd(aCab,  {"C7_FILENT"	  ,__TRZ->Z42_FILENT            ,NIL}) // Filial de Entrega
-      aAdd(aCab,	{"C7_YIDCITE"	  ,__TRZ->Z42_YIDCIT	          ,NIL}) // ID MOTOR
+      aAdd(aCab,  {"C7_EMISSAO"	  ,StoD(__TRZ->Z58_EMISSA)      ,Nil})
+      aAdd(aCab,  {"C7_FORNECE"	  ,__TRZ->Z58_FORNEC            ,NIL}) // Fornecedor
+      aAdd(aCab,  {"C7_LOJA"	    ,__TRZ->Z58_LOJA              ,NIL}) // Loja do Fornecedor
+      aAdd(aCab,  {"C7_COND"	    ,__TRZ->Z58_COND              ,NIL}) // Condicao de Pagamento
+      aAdd(aCab,  {"C7_FILENT"	  ,__TRZ->Z58_FILENT            ,NIL}) // Filial de Entrega
+      aAdd(aCab,	{"C7_YIDCITE"	  ,__TRZ->Z58_YIDCIT	          ,NIL}) // ID MOTOR
       aAdd(aCab,	{"C7_CONAPRO"	  ,"L"               	          ,NIL})
 
 
@@ -358,22 +359,22 @@ Static Function  PutExec()
       While __TRZ->(!Eof())
 
         aItem := {}
-        aAdd(aItem,	{"C7_FILIAL"      ,AllTrim(__TRZ->Z42_FILIAL)           ,Nil}) // Numero do Pedido
+        aAdd(aItem,	{"C7_FILIAL"      ,AllTrim(__TRZ->Z58_FILIAL)           ,Nil}) // Numero do Pedido
         aAdd(aItem,	{"C7_NUM"         ,cNumPC                               ,Nil}) // Numero do Pedido
-        aAdd(aItem, {"C7_ITEM"        ,AllTrim(__TRZ->Z42_ITEM)             ,NIL})
-        aAdd(aItem, {"C7_PRODUTO"     ,AllTrim(__TRZ->Z42_PRODUT)           ,NIL})
+        aAdd(aItem, {"C7_ITEM"        ,AllTrim(__TRZ->Z58_ITEM)             ,NIL})
+        aAdd(aItem, {"C7_PRODUTO"     ,AllTrim(__TRZ->Z58_PRODUT)           ,NIL})
         aAdd(aItem, {"C7_LOCAL"	      ,"01"                                 ,NIL})
-        aAdd(aItem, {"C7_DATPRF"	    ,StoD(__TRZ->Z42_DATPRF)              ,NIL})
+        aAdd(aItem, {"C7_DATPRF"	    ,StoD(__TRZ->Z58_DATPRF)              ,NIL})
         aAdd(aItem, {"C7_OPER"	      ,"01"			                            ,Nil})
         aAdd(aItem,	{"C7_TIPO"	      ,1                	                  ,NIL})
         aAdd(aItem,	{"C7_CONAPRO"	    ,"L"               	                  ,NIL})
-        aAdd(aItem, {"C7_YTIPCMP"     ,__TRZ->Z42_YTIPCMP		                ,Nil})
-        aAdd(aItem,	{"C7_YIDCITE"	    ,__TRZ->Z42_YIDCIT	                  ,NIL})
+        aAdd(aItem, {"C7_YTIPCMP"     ,__TRZ->Z58_YTIPCMP		                ,Nil})
+        aAdd(aItem,	{"C7_YIDCITE"	    ,__TRZ->Z58_YIDCIT	                  ,NIL})
 
-        If SC7->(dbSeek(FWxFilial("SC7")+cNumPC+AllTrim(__TRZ->Z42_ITEM)))
+        If SC7->(dbSeek(FWxFilial("SC7")+cNumPC+AllTrim(__TRZ->Z58_ITEM)))
 
 
-          If __TRZ->Z42_QTDNOV == 0
+          If __TRZ->Z58_QTDNOV == 0
 
             aAdd(aItem, {"C7_QUANT"	      ,SC7->C7_QUANT                ,NIL})
             aAdd(aItem, {"C7_QTDSOL"	    ,SC7->C7_QTDSOL               ,NIL})
@@ -382,10 +383,10 @@ Static Function  PutExec()
 
           Else
 
-            aAdd(aItem, {"C7_QUANT"	      ,__TRZ->Z42_QTDNOV                    ,NIL})
-            aAdd(aItem, {"C7_QTDSOL"	    ,__TRZ->Z42_QTDNOV                    ,NIL})
-            aAdd(aItem, {"C7_PRECO"	      ,__TRZ->Z42_PRECO                     ,NIL})
-            aAdd(aItem, {"C7_TOTAL"	      ,__TRZ->Z42_PRECO * __TRZ->Z42_QTDNOV ,NIL})
+            aAdd(aItem, {"C7_QUANT"	      ,__TRZ->Z58_QTDNOV                    ,NIL})
+            aAdd(aItem, {"C7_QTDSOL"	    ,__TRZ->Z58_QTDNOV                    ,NIL})
+            aAdd(aItem, {"C7_PRECO"	      ,__TRZ->Z58_PRECO                     ,NIL})
+            aAdd(aItem, {"C7_TOTAL"	      ,__TRZ->Z58_PRECO * __TRZ->Z58_QTDNOV ,NIL})
 
           EndIf
 
@@ -418,17 +419,17 @@ Static Function  PutExec()
           __TRZ->(dbGoTop())
           While __TRZ->(!Eof())
 
-            Z42->(dbGoTo(__TRZ->RECNO))
+            Z58->(dbGoTo(__TRZ->RECNO))
 
-            If   Z42->Z42_SYCELE == 'A'
+            If   Z58->Z58_SYCELE == 'A'
 
-              Z42->(RecLock('Z42', .F.))
+              Z58->(RecLock('Z58', .F.))
 
-              Z42->Z42_QUANT    := __TRZ->Z42_QTDNOV
-              Z42->Z42_QTDNOV   :=  0
-              Z42->Z42_JOBALT   :=  "N"
+              Z58->Z58_QUANT    := __TRZ->Z58_QTDNOV
+              Z58->Z58_QTDNOV   :=  0
+              Z58->Z58_JOBALT   :=  "N"
 
-              Z42->(MsUnlock())
+              Z58->(MsUnlock())
 
             EndIf
 

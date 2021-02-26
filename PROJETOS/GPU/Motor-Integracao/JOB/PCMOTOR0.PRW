@@ -25,7 +25,7 @@ User Function  PCMOTOR0(xParam1,xParam2)
   EndIf
 
   cSQL += " SELECT DISTINCT Z58_EMPORI, Z58_FILORI "
-  cSQL += " FROM Z58080 "
+  cSQL += " FROM  "+ RetSqlName("Z58") + " "
   cSQL += " WHERE Z58_SYCSC7 = 'N' or  Z58_SYCELE <> 'S' " //PEGA TODOS OS PEDIDOS NÃO SICRONIZADOS ou Não finalizados 100%
   cSQL += " AND D_E_L_E_T_ = '' "
   cSQL += " ORDER BY Z58_EMPORI, Z58_FILORI "
@@ -58,7 +58,7 @@ User Function  PCMOTOR0(xParam1,xParam2)
 
         StartJob( "U_PCMOTOR1", cEnv, .F.,  aFils[nI,1] , aFils[nI,2]  )
         StartJob( "U_PCMOTOR2", cEnv, .F.,  aFils[nI,1] , aFils[nI,2]  )
-        //StartJob( "U_PCMOTOR3", cEnv, .F.,  aFils[nI,1] , aFils[nI,2]  )
+        StartJob( "U_PCMOTOR3", cEnv, .F.,  aFils[nI,1] , aFils[nI,2]  )
 
       EndIf
 

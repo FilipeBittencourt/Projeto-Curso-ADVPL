@@ -1,4 +1,5 @@
 #include "protheus.ch"
+#Include "TopConn.ch"
 
 CLASS TIntegracaoMotorAbastecimentoDAO From LongClassName
 
@@ -123,68 +124,61 @@ METHOD BaixaTotalPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
     Local lError     := .F.
     Local aError     := {}
     Local cError     := ""
+    Local cQuery     := ""
     Local oError     := ErrorBlock({|e| cError := e:Description})
 
+    cQuery := " SELECT DISTINCT Z58_EMPORI, Z58_FILORI, Z58_NUM " + CRLF
+    cQuery += " FROM "+ RetSqlName("Z58") + CRLF
+    cQuery += " WHERE Z58_EMPORI = "+ValToSql(oJson["empresa"]["empresaCodigo"])+"   " + CRLF
+    cQuery += " AND Z58_FILORI = "+ValToSql(oJson["empresa"]["empresaFilial"])+"   " + CRLF
+    cQuery += " AND Z58_NUM = "+ValToSql(cCodigoDe)+"   " + CRLF
+    cQuery += " AND D_E_L_E_T_ = '' " + CRLF
+    cQuery += " AND Z58_SYCELE <> 'S' " + CRLF
+    cQuery += " AND Z58_SYCSC7 = 'S' " + CRLF
 
-    FAZER UMA QUERY PARA OTIMIZAR
+    If Select("__TRZ") > 0
+        __TRZ->(dbCloseArea())
+    EndIf
 
+    TcQuery cQuery New Alias "__TRZ"
+    __TRZ->(dbGoTop())
 
-    Z58->(DbSetOrder(3)) //Z58_FILIAL+Z58_EMPORI+Z58_FILORI+Z58_NUM+Z58_ITEM
+    Begin Transaction
 
-    If Z58->(dbSeek(FWxFilial("Z58")+AllTrim(cCodigoDe)))
-
-        Begin Transaction
-
-
-            While Z58->(!Eof()) .AND. FWxFilial("Z58")+oJson["empresa"]["empresaCodigo"]+oJson["empresa"]["empresaFilial"]+AllTrim(cCodigoDe) == ;
-                    Z58->Z58_FILIAL+AllTrim(Z58->Z58_EMPORI)+AllTrim(Z58->Z58_FILORI)+AllTrim(Z58->Z58_NUM)
-
-                if   Z58->Z58_SYCELE != 'S' .AND. Z58->Z58_SYCSC7 == 'S'
-
-                    Z58->(RecLock('Z58', .F.))
-
-                    Z58->Z58_SYCELE   :=  "T"
-
-                    Z58->(MsUnlock())
-
-                Else
-
-                    nI++
-                    lError     := .T.
-                    AADD(aError,   JsonObject():New())
-                    aError[nI]["field"]          := "item["+cValToChar(nI)+"].produto"
-                    aError[nI]["rejectedValue"]  := AllTrim(Z58->Z58_PRODUT)
-                    aError[nI]["defaultMessage"] := EncodeUtf8("O código do produto informado não foi encontrado ou ainda não foi sincronizado pelo ERP.")
+        If (! __TRZ->(EoF()) )
 
 
-                EndIf
+            cQuery := " UPDATE "+ RetSqlName("Z58") + " SET Z58_SYCELE = 'T' " + CRLF
+            cQuery += " WHERE Z58_EMPORI = "+ValToSql(oJson["empresa"]["empresaCodigo"])+"   " + CRLF
+            cQuery += " AND Z58_FILORI = "+ValToSql(oJson["empresa"]["empresaFilial"])+"   " + CRLF
+            cQuery += " AND Z58_NUM = "+ValToSql(cCodigoDe)+"   " + CRLF
+            cQuery += " AND D_E_L_E_T_ = '' " + CRLF
+            cQuery += " AND Z58_SYCELE <> 'S' " + CRLF
+            cQuery += " AND Z58_SYCSC7 = 'S' " + CRLF
+            TCSQLEXEC(cQuery)
 
-                Z58->(DbSkip())
+        Else
 
-            EndDo
-
-        End Transaction
-
-        ErrorBlock(oError)
-
-        If !Empty(cError)
-            nI++
             lError     := .T.
             AADD(aError,   JsonObject():New())
-            aError[nI]["field"]          := "numeroPedidoERP"
-            aError[nI]["rejectedValue"]  := AllTrim(oJson["C7_NUM"])
-            aError[nI]["defaultMessage"] := EncodeUtf8(cError)
+            aError[Len(aError)]["field"]          := "numeroPedidoERP"
+            aError[Len(aError)]["rejectedValue"]  := AllTrim(cCodigoDe)
+            aError[Len(aError)]["defaultMessage"] := EncodeUtf8("O código do pedido de compra não existe para o CNPJ "+oJson["empresa"]["empresaCnpj"] +" .")
 
-        EndIf
 
-    Else
+        EndiF
 
+    End Transaction
+
+    ErrorBlock(oError)
+
+    If !Empty(cError)
         nI++
         lError     := .T.
         AADD(aError,   JsonObject():New())
         aError[nI]["field"]          := "numeroPedidoERP"
         aError[nI]["rejectedValue"]  := AllTrim(oJson["C7_NUM"])
-        aError[nI]["defaultMessage"] := EncodeUtf8("O pedido não foi encontrado.")
+        aError[nI]["defaultMessage"] := EncodeUtf8(cError)
 
     EndIf
 
@@ -208,45 +202,68 @@ Return oJSRet
 
 METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
 
-    Local cCodigoDe  := oJson["C7_NUM"]
+    Local cCodigo  := oJson["C7_NUM"]
+    Local cCHAVE1     := ""
+    Local cCHAVE2    := ""
     Local oJSRet     := JsonObject():New()
     Local nI         := 1
     Local lError     := .F.
     Local aError     := {}
     Local cError     := ""
     Local oError     := ErrorBlock({|e| cError := e:Description})
+    Local cQuery     := ""
 
-    Z58->(DbSetOrder(1)) //Z58_FILIAL, Z58_NUM, Z58_ITEM, R_E_C_N_O_, D_E_L_E_T_
 
-    If Z58->(dbSeek(FWxFilial("Z58")+AllTrim(cCodigoDe)))
+    cQuery := " SELECT * " + CRLF
+    cQuery += " FROM "+ RetSqlName("Z58") + CRLF
+    cQuery += " WHERE Z58_EMPORI = "+ValToSql(oJson["empresa"]["empresaCodigo"])+"   " + CRLF
+    cQuery += " AND Z58_FILORI = "+ValToSql(oJson["empresa"]["empresaFilial"])+"   " + CRLF
+    cQuery += " AND Z58_NUM = "+ValToSql(cCodigo)+"   " + CRLF
+    cQuery += " AND D_E_L_E_T_ = '' " + CRLF
+    cQuery += " AND Z58_SYCELE <> 'S' " + CRLF
+    cQuery += " AND Z58_SYCSC7 = 'S' " + CRLF
 
-        Begin Transaction
+    If Select("__TRZ") > 0
+        __TRZ->(dbCloseArea())
+    EndIf
 
-            While Z58->(!Eof()) .AND. FWxFilial("Z58")+AllTrim(cCodigoDe) == Z58->Z58_FILIAL+AllTrim(Z58->Z58_NUM)
+    TcQuery cQuery New Alias "__TRZ"
+    __TRZ->(dbGoTop())
+
+    Begin Transaction
+
+        If (__TRZ->(!EoF()) )
+
+            While __TRZ->(!Eof())
 
                 For nI := 1 To Len(oJson["itens"])
 
-                    If oJson["itens"][nI]["produto"] == Z58->Z58_PRODUT .AND. Z58->Z58_SYCELE != 'S' .AND.  Z58->Z58_SYCSC7 == 'S'
+                    If oJson["itens"][nI]["produto"] == __TRZ->Z58_PRODUT
 
                         If oJson["itens"][nI]["quantidade"] == 0
 
-                            Z58->(RecLock('Z58', .F.))
-
-                            Z58->Z58_SYCELE   :=  "P" // Eliminação DE 100%  de apenas um ÚNICO item do PC
-                            Z58->Z58_QTDNOV   :=  oJson["itens"][nI]["quantidade"] // Nova quantidade
-
-                            Z58->(MsUnlock())
+                            cQuery := " UPDATE "+ RetSqlName("Z58") + " SET " + CRLF
+                            cQuery += " Z58_SYCELE = 'P' , " + CRLF
+                            cQuery += " Z58_QTDNOV = "+ValToSql(oJson["itens"][nI]["quantidade"])+"   " + CRLF
+                            cQuery += " WHERE Z58_EMPORI = "+ValToSql(oJson["empresa"]["empresaCodigo"])+"   " + CRLF
+                            cQuery += " AND Z58_FILORI = "+ValToSql(oJson["empresa"]["empresaFilial"])+"   " + CRLF
+                            cQuery += " AND Z58_PRODUT = "+ValToSql(__TRZ->Z58_PRODUT)+"   " + CRLF
+                            cQuery += " AND Z58_NUM = "+ValToSql(cCodigo)+"   " + CRLF
+                            cQuery += " AND D_E_L_E_T_ = '' " + CRLF
+                            TCSQLEXEC(cQuery)
 
                         Else
 
-                            Z58->(RecLock('Z58', .F.))
-
-                            Z58->Z58_JOBALT   :=  "S"
-                            Z58->Z58_SYCELE   :=  "A" // Alteração de quantidade de apenas um ÚNICO item do PC
-                            Z58->Z58_QTDNOV   :=  oJson["itens"][nI]["quantidade"] // Nova quantidade
-
-
-                            Z58->(MsUnlock())
+                            cQuery := " UPDATE "+ RetSqlName("Z58") + " SET " + CRLF
+                            cQuery += "  Z58_SYCELE = 'A' , " + CRLF
+                            cQuery += "  Z58_JOBALT = 'S' , " + CRLF
+                            cQuery += " Z58_QTDNOV = "+ValToSql(oJson["itens"][nI]["quantidade"])+"   " + CRLF
+                            cQuery += " WHERE Z58_EMPORI = "+ValToSql(oJson["empresa"]["empresaCodigo"])+"   " + CRLF
+                            cQuery += " AND Z58_FILORI = "+ValToSql(oJson["empresa"]["empresaFilial"])+"   " + CRLF
+                            cQuery += " AND Z58_PRODUT = "+ValToSql(__TRZ->Z58_PRODUT)+"   " + CRLF
+                            cQuery += " AND Z58_NUM = "+ValToSql(cCodigo)+"   " + CRLF
+                            cQuery += " AND D_E_L_E_T_ = '' " + CRLF
+                            TCSQLEXEC(cQuery)
 
                         EndIf
 
@@ -254,11 +271,19 @@ METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
 
                 Next nI
 
-                Z58->(DbSkip())
+                __TRZ->(DbSkip())
 
             EndDo
 
-        End Transaction
+        Else
+
+            lError     := .T.
+            AADD(aError,   JsonObject():New())
+            aError[Len(aError)]["field"]          := "numeroPedidoERP"
+            aError[Len(aError)]["rejectedValue"]  := oJson["C7_NUM"]
+            aError[Len(aError)]["defaultMessage"] := EncodeUtf8("O pedido não foi encontrado.")
+
+        EndIf
 
         ErrorBlock(oError)
 
@@ -272,15 +297,8 @@ METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
 
         EndIf
 
-    Else
+    End Transaction
 
-        lError     := .T.
-        AADD(aError,   JsonObject():New())
-        aError[nI]["field"]          := "numeroPedidoERP"
-        aError[nI]["rejectedValue"]  := oJson["C7_NUM"]
-        aError[nI]["defaultMessage"] := EncodeUtf8("O pedido não foi encontrado.")
-
-    EndIf
 
     If lError
 
@@ -393,6 +411,8 @@ Method CreatePVenda(oJsonPV) Class TIntegracaoMotorAbastecimentoDAO
 
         MSExecAuto({|x,y,z|Mata410(x,y,z)},aCab,aItens,3)
 
+        ErrorBlock(oError)
+
         If !lMsErroAuto
 
             ConOut("Incluido com sucesso o PEDIDO: " + cNumPed )
@@ -403,7 +423,7 @@ Method CreatePVenda(oJsonPV) Class TIntegracaoMotorAbastecimentoDAO
 
         Else
 
-            ErrorBlock(oError)
+
 
             RollbackSx8()
             cError := MostraErro("/dirdoc", "error.log") // ARMAZENA A MENSAGEM DE ERRO
@@ -416,11 +436,11 @@ Method CreatePVenda(oJsonPV) Class TIntegracaoMotorAbastecimentoDAO
             ConOut("Error: "+ cError)
 
             AADD(aError,   JsonObject():New())
-            aError[nw]["field"]          := ""
-            aError[nw]["rejectedValue"]  := ""
-            aError[nw]["defaultMessage"] := EncodeUtf8(cError)
+            aError[LEN(aError)]["field"]          := ""
+            aError[LEN(aError)]["rejectedValue"]  := ""
+            aError[LEN(aError)]["defaultMessage"] := EncodeUtf8(cError)
             lError := .T.
-            nW++
+
 
             cError :=  StrTran( EncodeUtf8(cError), Chr(13) + Chr(10), "<BR>" )
             cHtml  += ' <html> '

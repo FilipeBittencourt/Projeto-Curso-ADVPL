@@ -75,7 +75,7 @@ User Function  PCMOTOR1(xParam1,xParam2)
 
     cQuery := ""
     cQuery += " SELECT R_E_C_N_O_ AS RECNO ,  * " + CRLF
-    cQuery += " FROM  Z58080 "  + CRLF
+    cQuery += " FROM   "+ RetSqlName("Z58") + " "  + CRLF
     cQuery += " WHERE  Z58_EMPORI = "+ValToSql(cEmp)  + CRLF
     cQuery += " AND Z58_FILORI  = "+ValToSql(cFil)  + CRLF
     cQuery += " AND D_E_L_E_T_  = '' "  + CRLF
@@ -174,7 +174,7 @@ User Function  PCMOTOR1(xParam1,xParam2)
 
           // Logica abaixo para marcar o pedido sincronizado
           __TRZ->(dbGoTop())
-          cQuery := " UPDATE Z58080 SET  Z58_SYCSC7 = 'S'   " 
+          cQuery := " UPDATE  "+ RetSqlName("Z58")+ " SET  Z58_SYCSC7 = 'S'   " 
           cQuery += " WHERE Z58_EMPORI = '"+__TRZ->Z58_EMPORI+"' " 
           cQuery += " AND Z58_FILORI   = '"+__TRZ->Z58_FILORI+"' " 
           cQuery += " AND Z58_NUM      = '"+__TRZ->Z58_NUM+"' " 
@@ -229,7 +229,7 @@ Static Function GetNumPC()
   Local aNumPC   := {}
 
   cQuery += " SELECT DISTINCT Z58_NUM  " + CRLF
-  cQuery += " FROM  Z58080 "  + CRLF
+  cQuery += " FROM   "+ RetSqlName("Z58") + "  " + CRLF
   cQuery += " WHERE  Z58_EMPORI = "+ValToSql(cEmp)  + CRLF
   cQuery += " AND Z58_FILORI  = "+ValToSql(cFil)  + CRLF
   cQuery += " AND D_E_L_E_T_  = '' "  + CRLF

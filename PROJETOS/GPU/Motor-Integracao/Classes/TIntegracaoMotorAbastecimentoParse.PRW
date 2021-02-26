@@ -598,10 +598,6 @@ METHOD PedidoVenda(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 
 	If 	lError == .F.
 
-		If cEmpAnt+cFilAnt != AllTrim(oJSPC["empresa"]["empresaCodigo"])+AllTrim(oJSPC["empresa"]["empresaFilial"])
-			RPCSetEnv(oJSPC["empresa"]["empresaCodigo"], oJSPC["empresa"]["empresaFilial"], NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
-		EndIf
-
 		oJSPV["cliente"] := ::ParseCliente(oJson)
 		If Empty(oJSPV["cliente"]["A1_COD"])
 			lError := .T.
@@ -656,10 +652,6 @@ METHOD PedidoVenda(oJson) CLASS TIntegracaoMotorAbastecimentoParse
 
 	EndIf
 
-	If cEmpAnt+cFilAnt != cBKPEmp+cBKPFil
-		RPCSetEnv(cBKPEmp, cBKPFil, NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
-	EndIf
-
 Return oJSRet
 
 
@@ -669,7 +661,7 @@ Method MontaPVenda(oJson) Class TIntegracaoMotorAbastecimentoParse
 	Local oJSPV      := JsonObject():New()
 	Local cFil       := FWxFilial('SC5')
 	Local nI         := 1
-	Local cTES       :=	 ""
+	Local cTES       :=	 "531"
 	Local cOper	     := PadR(u_FnParam("MV_YOPVEND",""),2)
 	Local dDataSol   := iif(substr(time(),1,4) > "18:00",dDatabase+1,dDatabase)
 
@@ -683,7 +675,7 @@ Method MontaPVenda(oJson) Class TIntegracaoMotorAbastecimentoParse
 	oJSPV["pedidoVenda"]["cab"]["C5_EMISSAO"]	:=  dDataBase
 	oJSPV["pedidoVenda"]["cab"]["C5_VEND1"]	    :=  "0001"
 	oJSPV["pedidoVenda"]["cab"]["C5_DESPESA"] 	:=  0
-	oJSPV["pedidoVenda"]["cab"]["C5_CONDPAG"] 	:=  "999"
+	oJSPV["pedidoVenda"]["cab"]["C5_CONDPAG"] 	:=  "001"
 	oJSPV["pedidoVenda"]["cab"]["C5_DESCONT"]	:=  0
 	oJSPV["pedidoVenda"]["cab"]["C5_INDPRES"] 	:=  "2"	//|2 - Significa venda nao presencial -> internet |
 	oJSPV["pedidoVenda"]["cab"]["C5_YEMPFOR"]   := EmpFilArmaz(AllTrim(oJson["itens"][1]["produto"])) //Obtem a empresa e filial do armazem físico
@@ -709,6 +701,10 @@ Method MontaPVenda(oJson) Class TIntegracaoMotorAbastecimentoParse
 		AADD(aJSPV,   JsonObject():New())
 
 		cTES := MaTesInt(2,cOper,oJson["cliente"]["A1_COD"], oJson["cliente"]["A1_LOJA"],"C", AllTrim(oJson["itens"][nI]["produto"]))
+
+		If EMPTY(cTES)
+			cTES := "531"
+		EndIf
 
 		aJSPV[nI]["C6_ITEM"]	:= StrZero(nI,2)
 		aJSPV[nI]["C6_PRODUTO"]	:= AllTrim(oJson["itens"][nI]["produto"])
