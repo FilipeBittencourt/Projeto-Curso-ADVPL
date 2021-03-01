@@ -50,7 +50,8 @@ Class TWOrcamentoClvl From LongClassName
 	Method GDEditableField()
 	Method GDFieldProperty()
 	Method GDFieldData()
-	Method Valid()	
+	Method Valid()
+	Method ValidField()	
 	Method Save()	
 	Method Confirm()
 	Method Cancel(lClose)
@@ -168,6 +169,7 @@ Local nMaxLine := 1000
 	RegToMemory(::cFDTable, ::nFDOpc == 3)
 	
 	::oGD := MsNewGetDados():New(0, 0, 0, 0, GD_INSERT + GD_UPDATE + GD_DELETE, cVldDef, cVldDef, "", ::GDEditableField(),, nMaxLine, cVldDef,, cVldDef, ::oContainer:GetPanel(::cItemBox), ::GDFieldProperty(), ::GDFieldData())
+	::oGD:bFieldOk := {|| ::ValidField() }
 	::oGD:oBrowse:Align := CONTROL_ALIGN_ALLCLIENT
 	::oGD:oBrowse:lVScroll := .T.
 	::oGD:oBrowse:lHScroll := .T.
@@ -213,6 +215,11 @@ Local aRet := {}
 
 	aAdd(aRet, "ZMD_SUBITE")
 	aAdd(aRet, "ZMD_DESC")
+	aAdd(aRet, "ZMD_UNIDAD")
+	aAdd(aRet, "ZMD_QUANT")
+	aAdd(aRet, "ZMD_MOEDA")
+	aAdd(aRet, "ZMD_VALOR")
+	aAdd(aRet, "ZMD_CPENC")
 
 Return(aRet)
 
@@ -223,7 +230,20 @@ Local aRet := {}
 	::oGDField:Clear()
 
 	::oGDField:AddField("ZMD_SUBITE")
+	
 	::oGDField:AddField("ZMD_DESC")
+	::oGDField:FieldName("ZMD_DESC"):nSize := 100
+	::oGDField:FieldName("ZMD_DESC"):cWhen := ".F."
+	
+	::oGDField:AddField("ZMD_UNIDAD")
+	::oGDField:AddField("ZMD_QUANT")
+	
+	::oGDField:AddField("ZMD_MOEDA")
+	::oGDField:FieldName("ZMD_MOEDA"):cValid := "U_BIAF169B()
+	
+	::oGDField:AddField("ZMD_VALOR")
+	::oGDField:AddField("ZMD_TOTAL")
+	::oGDField:AddField("ZMD_CPENC")
 
 	::oGDField:AddField("SPACE")	
 	
@@ -241,7 +261,7 @@ Local cQry := GetNextAlias()
 	
 	::aGDRecNo := {}
 	
-	cSQL := " SELECT ZMD_CODREF, ZMD_SUBITE, ZMD_DESC, R_E_C_N_O_ AS RECNO "
+	cSQL := " SELECT ZMD_CODREF, ZMD_SUBITE, ZMD_DESC, ZMD_UNIDAD, ZMD_QUANT, ZMD_MOEDA, ZMD_VALOR, ZMD_TOTAL, ZMD_CPENC, R_E_C_N_O_ AS RECNO "
 	cSQL += " FROM "+ RetSQLName("ZMD")
 	cSQL += " WHERE ZMD_FILIAL = "+ ValToSQL(xFilial("ZMD"))
 	
@@ -263,7 +283,7 @@ Local cQry := GetNextAlias()
 	
 	While !(cQry)->(Eof())
 
-		aAdd(aRet, {(cQry)->ZMD_SUBITE, (cQry)->ZMD_DESC, Space(1), .F.})
+		aAdd(aRet, {(cQry)->ZMD_SUBITE, (cQry)->ZMD_DESC, (cQry)->ZMD_UNIDAD, (cQry)->ZMD_QUANT, (cQry)->ZMD_MOEDA, (cQry)->ZMD_VALOR, (cQry)->ZMD_TOTAL, (cQry)->ZMD_CPENC, Space(1), .F.})
 		
 		aAdd(::aGDRecNo, (cQry)->RECNO)
 																
@@ -278,7 +298,6 @@ Return(aRet)
 
 Method Valid() Class TWOrcamentoClvl
 Local lRet := .T.
-Local nCount := 0
 Local lExist := .T.
 	
 	lExist := aScan(::oGD:aCols, {|x| !Empty(x[nP_SUBITEM]) .And. x[Len(x)] == .F.}) > 0
@@ -295,6 +314,61 @@ Local lExist := .T.
 	
 	EndIf
 		
+Return(lRet)
+
+
+Method ValidField() Class TWOrcamentoClvl
+Local lRet := .T.
+Local cMField := ReadVar()
+Local cMoeda := GdFieldGet("ZMD_MOEDA", n, .T.)
+Local nValor := GdFieldGet("ZMD_VALOR", n, .T.)
+Local nQuant := GdFieldGet("ZMD_QUANT", n, .T.)
+Local nTotal := 0
+
+	If cMField == "M->ZMD_VALOR" .Or. cMField == "M->ZMD_QUANT" .Or. cMField == "M->ZMD_MOEDA"
+				
+		If cMoeda == "2"
+			
+			nValor := nValor * M->ZMC_DOLAR
+		
+		ElseIf cMoeda == "3"
+		
+			nValor := nValor * M->ZMC_LIBRA
+			
+		ElseIf cMoeda == "4"
+		
+			nValor := nValor * M->ZMC_EURO	
+		
+		EndIf
+		
+		If nValor > 0
+		
+			nTotal := Round(nValor * nQuant, TamSX3("ZMD_TOTAL")[2])
+			
+			GdFieldPut("ZMD_TOTAL", nTotal, n)
+			
+		EndIf
+		
+	ElseIf cMField == "M->ZMD_SUBITE"
+
+		oObjSub := TSubitemProjeto():New()
+
+		oObjSub:cClvl := M->ZMC_CLVL
+		oObjSub:cItemCta := M->ZMC_ITEMCT
+		oObjSub:cSubItem := GdFieldGet("ZMD_SUBITE", n, .T.)
+	
+		If oObjSub:Validate()
+			
+			GdFieldPut("ZMD_DESC", oObjSub:GetDesc(), n)
+			
+		Else
+			
+			lRet := .F.
+		
+		EndIf
+		
+	EndIf	
+			
 Return(lRet)
 
 
@@ -316,7 +390,10 @@ Local nField := 0
 					ZMC->ZMC_CODIGO := M->ZMC_CODIGO
 					ZMC->ZMC_CLVL := M->ZMC_CLVL
 					ZMC->ZMC_ITEMCT := M->ZMC_ITEMCT
-				
+					ZMC->ZMC_DOLAR := M->ZMC_DOLAR
+					ZMC->ZMC_LIBRA := M->ZMC_LIBRA
+					ZMC->ZMC_EURO := M->ZMC_EURO
+									
 				ZMC->(MsUnLock())
 			
 			EndIf					

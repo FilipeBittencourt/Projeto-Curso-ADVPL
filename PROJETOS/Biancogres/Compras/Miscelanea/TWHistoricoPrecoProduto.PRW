@@ -285,6 +285,22 @@ Local cPrd := ""
 			nCount++
 		
 		EndDo
+		
+	ElseIf ::cId == "MATA161" // Analisa Cotação - NOVA
+	
+		oOwner := GetWndDefault()
+		
+		nCount := 1
+		
+		While nCount <= Len(oOwner:aControls) .And. cPrd == ""
+		    
+			If oOwner:aControls[nCount]:ClassName() == "FWBROWSE"
+				cPrd := Eval(oOwner:aControls[nCount]:bSetGet)
+			EndIf
+			
+			nCount++
+		
+		EndDo		
 	
 	ElseIf ::cId == "MATA121" // Pedido de Compra
 	

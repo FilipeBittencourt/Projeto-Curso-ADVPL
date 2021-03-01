@@ -75,7 +75,6 @@ Return()
 
 
 Method UpdProcess() Class TPoliticaCredito
-Local lRet := .F.
 Local cSQL := ""
 Local cQry := GetNextAlias()
 

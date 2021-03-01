@@ -248,7 +248,7 @@ Method LoadAprovador() Class TAprovaPedidoVendaEMail
 		::lEnvMail		:= (ZKL->ZKL_ENVEM == 'S')
 
 		//::cEmailApr		:= 'pedro@facilesistemas.com.br;barbara.madeira@biancogres.com.br'
-		//::cEmailApr		:= 'pablo.nascimento@biancogres.com.br'
+		//::cEmailApr		:= 'thiago.oliveira@biancogres.com.br'//'pablo.nascimento@biancogres.com.br'
 
 		::cCodAprT		:= ""
 		::cEmailAprT 	:= ""
@@ -676,9 +676,10 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 	DbSelectArea('SE4')
 	SE4->(DbSetOrder(1))
 	SE4->(DbSeek(xFilial("SE4")+SC5->C5_CONDPAG))
-
+	
+	//Ticket 30360 - Aumentado o VARCHAR de 1024 para o MAX para contemplar a informação completa
 	cQuery += " SELECT *																	"
-	cQuery += " ,OBSERVACAO=ISNULL(CONVERT(VARCHAR(1024), CONVERT(VARBINARY(1024), ZKL_OBS)), '')	"
+	cQuery += " ,OBSERVACAO=ISNULL(CONVERT(VARCHAR(MAX), CONVERT(VARBINARY(MAX), ZKL_OBS)), '')	"
 	cQuery += "  FROM "+ RetSqlName("ZKL")+"												"
 	cQuery += " WHERE 																		"
 	cQuery += " D_E_L_E_T_ 			= ''													"

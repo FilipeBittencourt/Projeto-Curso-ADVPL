@@ -3225,7 +3225,11 @@ USER FUNCTION fGeraFatura(dtIni,dtFim)
 	cQuery += " 		A.E1_NUM     = C.F2_DOC 		AND " + Enter
 	cQuery += " 		A.E1_CLIENTE = C.F2_CLIENTE		AND " + Enter
 	cQuery += " 		A.E1_LOJA    = C.F2_LOJA		AND " + Enter
-
+	
+	If Alltrim(cEmpAnt) == '01'
+		cQuery += " 		B.A1_YCDGREG <> '000029'		AND " + Enter
+	EndIf
+	
 	cQuery += " 		B.A1_YGERFAT = 'S'				AND " + Enter
 	cQuery += " 		A.D_E_L_E_T_ = ''				AND " + Enter
 	cQuery += " 		B.D_E_L_E_T_ = ''				AND	" + Enter
@@ -6292,7 +6296,7 @@ User Function fDifICM3(cLinha,cSubTp,nCli,nLj,nProd,nIcmsOri,nIcmsDes,nFECP,cDIF
 
 	Local nFator	:= 0
 	Local cUF   	:= Posicione("SA1",1,xFilial("SA1")+nCli+nLj,"A1_EST")
-	Local cSufr 	:= Iif(Alltrim(SA1->A1_CALCSUF)=="S","1","2") //Iif(Empty(Alltrim(SA1->A1_SUFRAMA)),"2","1")
+	Local cSufr 	:= Iif(Alltrim(SA1->A1_CALCSUF) $ "S/I","1","2") //Iif(Empty(Alltrim(SA1->A1_SUFRAMA)),"2","1")
 	Local cContr	:= Alltrim(SA1->A1_CONTRIB)
 	Local cTipo		:= Alltrim(SA1->A1_TIPO)
 	Local cGrpTrib  := Posicione("SB1",1,xFilial("SB1")+nProd,"B1_GRTRIB")
@@ -6427,6 +6431,8 @@ User Function fDifICM3(cLinha,cSubTp,nCli,nLj,nProd,nIcmsOri,nIcmsDes,nFECP,cDIF
 			cSufr := "2"
 		ElseIf __cGRCLI == "043"
 			cSufr := "2"
+		ElseIf __cGRCLI == "044"
+			cSufr := "4"
 		ElseIf __cGRCLI == "045"
 			cSufr := "3"
 		Else
@@ -7184,6 +7190,8 @@ User Function fGetGrTr(cSuframa,lCalcSuf,cTipoCli,cContrib,cInscr,cAtivid,cTPJ)
 		cGrTri := '030'
 	CASE !Empty(AllTrim(cSuframa)) .AND. lCalcSuf == 'S' .AND. cTipoCli == "R" .AND. cContrib == "1"
 		cGrTri := '040'
+	CASE !Empty(AllTrim(cSuframa)) .AND. lCalcSuf == 'I' .AND. cTipoCli $ ("R/S") //.And. A1_YTPCLFI == "1" momentaneamente desnecessario devido a todo IPI ser 0,00
+		cGrTri := '044'
 	CASE !Empty(AllTrim(cSuframa)) .AND. lCalcSuf == 'S' .AND. cTipoCli == "F" .AND. cContrib == "2"
 		cGrTri := '043'
 	CASE !Empty(AllTrim(cSuframa)) .AND. lCalcSuf == 'S' .AND. cTipoCli == "F" .AND. cContrib == "1"
@@ -7478,3 +7486,51 @@ Else
 EndI
 
 Return(cBase)
+
+
+/*/{Protheus.doc} fRegCobr
+@description Funcao para retonar o codigo da Regra de Cobranca
+@author Ranisses A. Corona
+@since 18/02/2021
+@version undefined
+@history 18/02/2021, Ranisses A. Corona, Criacao da funcao de validaçao
+@type function
+/*/
+User Function fRegCobr(xUF,xCPF,xGRPCLI,xCODCLI)
+Local cSQL		:= ''
+Local cQry		:= GetNextAlias()
+Local cCodReg	:= ''
+Local aRet		:= {}
+
+cSQL :="SELECT LEN(REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf)) CPF FROM VETORH.dbo.r034fun WITH (NOLOCK) WHERE REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf) = '"+xCPF+"' "
+TcQuery cSQL New Alias (cQry)
+
+DO CASE
+	CASE (cQry)->CPF == 11 //Funcionario
+		cCodReg := '000023'	
+	CASE xGRPCLI $ ('001500_000252_001486_000010_000938_000380_000026_000036_001435') //Clientes Especiais
+		cCodReg := '000023'
+	CASE xCODCLI $ ('010083_004536_007871_026308_026423_018410_014395_018714_008615_028071') //Clientes Intragrupo
+		cCodReg := '000023'
+	CASE xUF == 'ES' //FIDC
+		cCodReg := '000029'
+	CASE xUF == 'SP'
+		cCodReg := '000025'
+	CASE xUF == 'RJ'
+		cCodReg := '000025'
+	CASE xUF == 'BA'
+		cCodReg := '000028'
+	CASE xUF == 'CE'
+		cCodReg := '000028'
+	CASE xUF == 'PE'
+		cCodReg := '000028'
+	OTHERWISE
+		cCodReg := '000001'
+ENDCASE
+
+aadd(aRet,(cQry)->CPF)	//Funcinario ou nao
+aadd(aRet,cCodReg)		//Codigo Regra
+
+(cQry)->(DbCloseArea())    
+
+Return(aRet)

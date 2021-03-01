@@ -1,0 +1,876 @@
+#include "totvs.ch"
+#include "fwmvcdef.ch"
+
+/*/{Protheus.doc} BIA664
+@author Marinaldo de Jesus (facile)
+@since 09/02/2021
+@version 2.0
+@Projet A-35
+@description BP Consolidado - Atualização Movimentos do Mês.
+@type function
+/*/
+
+procedure u_BIA664()
+
+    local cLote             as character
+    local cSBLote           as character   
+    local cOriPrc           as character
+    local cFilterDefault    as character
+
+    local oFWMBrowse        as object
+
+    // Instanciamento da classe de Browse
+    oFWMBrowse:=FWMBrowse():New()
+
+    //Alias
+    oFWMBrowse:SetAlias("ZBZ")
+
+    private cCadastro as character
+    cCadastro:="BP Consolidado - Atualização Movimentos do Mês"
+
+    // Titulo da Browse
+    oFWMBrowse:SetDescription(cCadastro)
+
+    //Define o menu do Browse
+    if (ApMsgNoYes("Deseja Consultar os dados em GRID?",cCadastro))
+        oFWMBrowse:setMenuDef("BIA664MVCGRID")
+    else
+        oFWMBrowse:setMenuDef("BIA664MVCFORM")
+    endif
+
+    //Habilita o botao para fechar a janela
+    oFWMBrowse:ForceQuitButton()
+
+    cLote:=PadR(left("008000",getSX3Cache("ZBZ_LOTE","X3_TAMANHO")),getSX3Cache("ZBZ_LOTE","X3_TAMANHO"))
+    cSBLote:=PadR(left("001",getSX3Cache("ZBZ_SBLOTE","X3_TAMANHO")),getSX3Cache("ZBZ_SBLOTE","X3_TAMANHO"))
+    cOriPrc:=PadR(left("MOV.BP",getSX3Cache("ZBZ_ORIPRC","X3_TAMANHO")),getSX3Cache("ZBZ_ORIPRC","X3_TAMANHO"))
+
+    //------------------------------------------------------------------------
+    //Define Filtro para carregar apenas tipo 2 carregado por esta rotina
+    //------------------------------------------------------------------------
+    cFilterDefault:="(ZBZ_FILIAL=='"+xFilial("ZBZ")+"')"
+    cFilterDefault+=".and."
+    cFilterDefault+="(ZBZ_ORIPRC=='"+cOriPrc+"')"
+    cFilterDefault+=".and."
+    cFilterDefault+="(ZBZ_LOTE=='"+cLote+"')"
+    cFilterDefault+=".and."
+    cFilterDefault+="(ZBZ_SBLOTE=='"+cSBLote+"')"
+    oFWMBrowse:setFilterDefault(cFilterDefault)
+
+    // Ativacao da classe
+    ZBZ->(oFWMBrowse:Activate())
+
+    return
+
+function U_BIA664Proc()
+    local aArea as array
+    if (!type("cCadastro")=="C")
+        private cCadastro as character
+    cCadastro:="BP Consolidado - Atualização Movimentos do Mês"
+    endif
+    aArea:=getArea()
+    BIA664Proc()
+    restArea(aArea)
+    return(MbrChgLoop(.F.))
+
+static function BIA664Proc() as logical
+
+    local bAbort        as block
+    local bActive       as block
+
+    local cVersao       as character
+    local cRevisa       as character    
+    local cAnoRef       as character
+
+    local lRet          as logical
+
+    local oEmpresa      as object
+    local oPergunte     as object
+    local otMultProcess as object
+
+    oEmpresa:=TLoadEmpresa():New(.T.)
+
+    oPergunte:=TWPCOFiltroPeriodo():New()
+
+    lRet:=oPergunte:Pergunte()
+    
+    if (lRet)
+
+        cVersao:=PadR(Left(oPergunte:cVersao,getSX3Cache("ZBZ_VERSAO","X3_TAMANHO")),getSX3Cache("ZBZ_VERSAO","X3_TAMANHO"))
+        cRevisa:=PadR(Left(oPergunte:cRevisa,getSX3Cache("ZBZ_REVISA","X3_TAMANHO")),getSX3Cache("ZBZ_REVISA","X3_TAMANHO"))
+        cAnoRef:=PadR(Left(oPergunte:cAnoRef,getSX3Cache("ZBZ_ANOREF","X3_TAMANHO")),getSX3Cache("ZBZ_ANOREF","X3_TAMANHO"))
+
+        oEmpresa:GetSelEmp(nil,.T.)
+
+        if (Len(oEmpresa:aEmpSel)>0)
+
+            bAbort:={|lEnd,otMultProcess|.T.}
+            bActive:={|lEnd,otMultProcess|lRet:=BIA664Emp(@otMultProcess,@oEmpresa,@cVersao,@cRevisa,@cAnoRef)}
+            otMultProcess:=tMultProcess():New(bActive,cCadastro,"Aguarde...",bAbort,2)
+            otMultProcess:Activate()
+
+        else
+
+            ApMsgAlert("Nenhuma empresa foi selecionada!",&("cCadastro"))
+
+        endif
+
+    endif
+
+    return
+
+static function BIA664Emp(otMultProcess as object,oEmpresa as character,cVersao as character,cRevisa as character,cAnoRef as character)
+
+    local aMsg          as array
+
+    local cMsg          as character
+    local cEmp          as character
+    local cCRLF         as character
+
+    local nEmpresa      as numeric
+    local nEmpresas     as numeric
+
+    local nKeepResponse as numeric
+
+    local lRet          as logical
+    local lBIA664Emp    as logical
+
+    nEmpresas:=Len(oEmpresa:aEmpSel)
+
+    otMultProcess:SetRegua(1,nEmpresas)
+
+    aMsg:=array(0)
+
+    nKeepResponse:=(-1)
+
+    for nEmpresa := 1 to nEmpresas
+
+        cEmp:=oEmpresa:aEmpSel[nEmpresa][1]
+
+        otMultProcess:IncRegua(1,"Processando Empresa: ["+cEmp+"]")
+
+        begin transaction
+            lRet:=BIA664ExecProc(@otMultProcess,@cEmp,@cVersao,@cRevisa,@cAnoRef,@cMsg,@nKeepResponse)
+            if (!empty(cMsg))
+                aAdd(aMsg,cMsg)
+                cMsg:=""
+            endif
+            if (!lRet)
+                lBIA664Emp:=lRet
+                DisarmTransaction()
+            endif
+        end transaction
+
+    next nEmpresa
+
+    if (!empty(aMsg))
+
+        cMsg:=""
+        cCRLF:=CRLF
+        nEmpresas:=len(aMsg)
+        for nEmpresa:=1 to nEmpresas
+            cMsg+=aMsg[nEmpresa]
+            cMsg+=cCRLF
+        next nEmpresa
+
+        txtEditMemo():txtFileEdit(cMsg,&("cCadastro")+" :: Log de Processamento :: ATENÇÃO")
+
+    endif
+
+    DEFAULT lBIA664Emp:=.T.
+
+    return(lBIA664Emp)
+
+static function BIA664ExecProc(otMultProcess as object,cEmp as character,cVersao as character,cRevisa as character,cAnoRef as character,cMsg as character,nKeepResponse as numeric) as caracter
+
+    local lRet as logical
+
+    otMultProcess:SetRegua(2,0)
+    otMultProcess:IncRegua(2)
+
+    MsAguarde({||lRet:=getQueryBP(@cEmp,@cVersao,@cRevisa,@cAnoRef,@cMsg,@nKeepResponse)},&("cCadastro"),"Aguarde... Obtendo dados no SGBD. Empresa :["+cEmp+"]")
+
+    Return(lRet)
+
+static function getQueryBP(cEmp as character,cVersao as character,cRevisa as character,cAnoRef as character,cMsg as character,nKeepResponse as numeric) as logical
+
+    local cCRLF         as character
+
+    local cZBZTable     as character
+    local cZBZFilial    as character
+
+    local cZODTable     as character
+    local cZODFilial    as character
+
+    local cSQLFile      as character
+    local cSQLPath      as character
+    local cSQLQuery     as character
+
+    local cMsgNoYes     as character
+
+    local lRet          as logical
+    local lZBZSeek      as logical
+    local lZBZFound     as logical
+
+    local nZBZDoc       as numeric
+    local nZBZLinha     as numeric
+    local nZBZVersao    as numeric
+    local nZBZRevisa    as numeric
+    local nZBZAnoRef    as numeric
+    local nZBZAnoAnt    as numeric
+
+    nZBZDoc:=getSX3Cache("ZBZ_DOC","X3_TAMANHO")
+    nZBZLinha:=getSX3Cache("ZBZ_LINHA","X3_TAMANHO")
+    nZBZVersao:=getSX3Cache("ZBZ_VERSAO","X3_TAMANHO")
+    nZBZRevisa:=getSX3Cache("ZBZ_REVISA","X3_TAMANHO")
+    nZBZAnoRef:=getSX3Cache("ZBZ_ANOREF","X3_TAMANHO")
+    nZBZAnoAnt:=getSX3Cache("ZBZ_ANOREF","X3_TAMANHO")
+
+    cCRLF:=CRLF
+    
+    begin sequence
+
+        cZBZTable:=retFullName("ZBZ",cEmp)
+        cZBZFilial:=xFilial("ZBZ")
+
+        cZODTable:=retFullName("ZOD",cEmp)
+        cZODFilial:=xFilial("ZOD")
+
+        lZBZSeek:=ZBZSeek(cZBZFilial,cZBZTable,cVersao,cRevisa,cAnoRef)
+        lZBZFound:=lZBZSeek
+
+        if (lZBZFound)
+            if (nKeepResponse==(-1))
+                cMsgNoYes:="Já Existem dados para este Orçamento."
+                cMsgNoYes+=cCRLF
+                cMsgNoYes+=cCRLF
+                cMsgNoYes+=" Empresa:["+cEmp+"]"
+                cMsgNoYes+=" :: "
+                cMsgNoYes+="["
+                cMsgNoYes+=cVersao
+                cMsgNoYes+="]"
+                cMsgNoYes+="["
+                cMsgNoYes+=cRevisa
+                cMsgNoYes+="]"
+                cMsgNoYes+="["
+                cMsgNoYes+=cAnoRef
+                cMsgNoYes+="]"
+                cMsgNoYes+=cCRLF
+                cMsgNoYes+=" Deseja Reprocessar?"
+                lZBZFound:=ApMsgNoYes(cMsgNoYes,&("cCadastro"))
+                nKeepResponse:=if(lZBZFound,1,0)
+                lZBZFound:=(!lZBZFound)
+            else
+                lZBZFound:=(nKeepResponse==1)
+            endif
+        endif
+
+        cSQLQuery:="DECLARE @SQL varchar(MAX)"+cCRLF
+        cSQLQuery+="DECLARE @nMes int=0"+cCRLF
+        cSQLQuery+="DECLARE @nMeses int=12"+cCRLF
+        cSQLQuery+="DECLARE @tMesAtu varchar(9)"+cCRLF
+        cSQLQuery+="DECLARE @tMesAnt varchar(9)"+cCRLF
+        cSQLQuery+="DECLARE @cMesAtu varchar(2)"+cCRLF
+        cSQLQuery+="DECLARE @cMesAnt varchar(2)"+cCRLF
+        cSQLQuery+="DECLARE @cINAtu varchar(9)"+cCRLF
+        cSQLQuery+="DECLARE @cINAnt varchar(9)"+cCRLF
+        cSQLQuery+="DECLARE @TranName varchar(20)"+cCRLF  
+        cSQLQuery+="DECLARE @ZBZExists bit"+cCRLF
+        cSQLQuery+="DECLARE @ZBZDelete bit"+cCRLF
+        cSQLQuery+="DECLARE @ZBZVersao varchar("+cValToChar(nZBZVersao)+")"+cCRLF
+        cSQLQuery+="DECLARE @ZBZRevisa varchar("+cValToChar(nZBZRevisa)+")"+cCRLF
+        cSQLQuery+="DECLARE @ZBZAnoRef varchar("+cValToChar(nZBZAnoRef)+")"+cCRLF
+        cSQLQuery+="DECLARE @ZBZAnoAnt varchar("+cValToChar(nZBZAnoAnt)+")"+cCRLF
+        cSQLQuery+="SET @TranName='bia664_ZBZtransaction_"+LTrim(cValToChar(ThreadID()))+"'"+cCRLF
+        cSQLQuery+="SET @ZBZVersao='"+cVersao+"'"+cCRLF
+        cSQLQuery+="SET @ZBZRevisa='"+cRevisa+"'"+cCRLF
+        cSQLQuery+="SET @ZBZAnoRef='"+cAnoRef+"'"+cCRLF
+        cSQLQuery+="SET @ZBZAnoAnt='"+cAnoRef+"'"+cCRLF
+        cSQLQuery+="SET @ZBZDelete=1"+cCRLF
+        if (lZBZSeek)
+            cSQLQuery+="  SET @ZBZExists=1"+cCRLF
+        else
+            cSQLQuery+="  SET @ZBZExists=ISNULL(("+cCRLF
+            cSQLQuery+="				SELECT "+cCRLF
+            cSQLQuery+="			  DISTINCT 1 "+cCRLF
+            cSQLQuery+="				  FROM "+cZBZTable+" ZBZ"+cCRLF
+            cSQLQuery+="			    WHERE ZBZ.ZBZ_FILIAL='"+cZBZFilial+"'"+cCRLF
+            cSQLQuery+="			      AND ZBZ.ZBZ_VERSAO=@ZBZVersao"+cCRLF
+            cSQLQuery+=" 			      AND ZBZ.ZBZ_REVISA=@ZBZRevisa"+cCRLF
+            cSQLQuery+="			      AND ZBZ.ZBZ_ANOREF=@ZBZAnoRef"+cCRLF
+            cSQLQuery+="			      AND ZBZ.ZBZ_ORIPRC='MOV.BP'"+cCRLF
+            cSQLQuery+="			      AND ZBZ.ZBZ_LOTE='008000'"+cCRLF
+            cSQLQuery+="			      AND ZBZ.ZBZ_SBLOTE='001'"+cCRLF
+            cSQLQuery+="	   ),0)"+cCRLF
+        endif
+        cSQLQuery+="WHILE(@nMes<@nMeses)"+cCRLF
+        cSQLQuery+="BEGIN"+cCRLF
+        cSQLQuery+="  SET @nMes=@nMes+1"+cCRLF
+        cSQLQuery+="  SET @cMesAtu=RIGHT('00'+cast(@nMes as varchar(2)),2)"+cCRLF
+        cSQLQuery+="  IF (@nMes=1) BEGIN"+cCRLF
+        cSQLQuery+="	SET @cMesAnt='12'"+cCRLF
+        cSQLQuery+="	SET @cINAtu='(''2'')'"+cCRLF
+        cSQLQuery+="	SET @cINAnt='(''1'',''3'')'"+cCRLF
+        cSQLQuery+="    SET @ZBZAnoAnt=@ZBZAnoRef"+cCRLF
+        cSQLQuery+="  END"+cCRLF
+        cSQLQuery+="  ELSE BEGIN"+cCRLF
+        cSQLQuery+="	SET @cMesAnt=RIGHT('00'+cast((@nMes-1) as varchar(2)),2)"+cCRLF
+        cSQLQuery+="	SET @cINAtu='(''2'')'"+cCRLF
+        cSQLQuery+="	SET @cINAnt='(''2'')'"+cCRLF
+        cSQLQuery+="    SET @ZBZAnoAnt=@ZBZAnoRef"+cCRLF
+        cSQLQuery+="  END"+cCRLF
+        cSQLQuery+="  SET @tMesAtu='MES'+RIGHT(+'00'+cast(@nMes as varchar(2)),2)+'ATU'"+cCRLF
+        cSQLQuery+="  SET @tMesAnt='MES'+RIGHT(+'00'+cast(@nMes as varchar(2)),2)+'ANT'"+cCRLF
+        cSQLQuery+="  SET @SQL='"+cCRLF
+        cSQLQuery+="	WITH '+@tMesAtu +' AS ("+cCRLF
+        cSQLQuery+="	SELECT ZOD.ZOD_FILIAL"+cCRLF
+        cSQLQuery+="		  ,ZOD.ZOD_VERSAO"+cCRLF
+        cSQLQuery+="		  ,ZOD.ZOD_REVISA"+cCRLF
+        cSQLQuery+="		  ,ZOD.ZOD_ANOREF"+cCRLF
+        cSQLQuery+="		  ,ZOD.ZOD_DTREF"+cCRLF
+        cSQLQuery+="		  ,ZOD.ZOD_CONTA"+cCRLF
+        cSQLQuery+="		  ,SUM(ZOD.ZOD_SALCTA) ZOD_SALCTA"+cCRLF  
+        cSQLQuery+="	   FROM "+cZODTable+" ZOD"+cCRLF 
+        cSQLQuery+="	  WHERE ZOD.D_E_L_E_T_='' ''"+cCRLF
+        cSQLQuery+="		AND ZOD.ZOD_FILIAL=''"+cZODFilial+"''"+cCRLF
+        cSQLQuery+="		AND ZOD.ZOD_VERSAO='''+@ZBZVersao+'''"+cCRLF
+        cSQLQuery+=" 		AND ZOD.ZOD_REVISA='''+@ZBZRevisa+'''"+cCRLF
+        cSQLQuery+="		AND ZOD.ZOD_ANOREF='''+@ZBZAnoRef+'''"+cCRLF
+        cSQLQuery+="		AND ZOD.ZOD_TIPO IN '+@cINAtu+'"+cCRLF
+        cSQLQuery+="		AND SUBSTRING(ZOD.ZOD_DTREF,5,2)='''+@cMesAtu+'''"+cCRLF
+        cSQLQuery+="	  GROUP BY ZOD.ZOD_FILIAL"+cCRLF
+        cSQLQuery+="			  ,ZOD.ZOD_VERSAO"+cCRLF
+        cSQLQuery+="			  ,ZOD.ZOD_REVISA"+cCRLF
+        cSQLQuery+="			  ,ZOD.ZOD_ANOREF"+cCRLF
+        cSQLQuery+="			  ,ZOD.ZOD_DTREF"+cCRLF
+        cSQLQuery+="			  ,ZOD.ZOD_CONTA"+cCRLF
+        cSQLQuery+="	)"+cCRLF
+        cSQLQuery+="	,"+cCRLF
+        cSQLQuery+="	'+@tMesAnt+' AS ("+cCRLF
+        cSQLQuery+="	SELECT ZOD.ZOD_FILIAL"+cCRLF
+        cSQLQuery+="		  ,ZOD.ZOD_VERSAO"+cCRLF
+        cSQLQuery+="		  ,ZOD.ZOD_REVISA"+cCRLF
+        cSQLQuery+="		  ,ZOD.ZOD_ANOREF"+cCRLF
+        cSQLQuery+="		  ,ZOD.ZOD_DTREF"+cCRLF
+        cSQLQuery+="		  ,ZOD.ZOD_CONTA"+cCRLF
+        cSQLQuery+="		  ,SUM(ZOD.ZOD_SALCTA) ZOD_SALCTA  "+cCRLF
+        cSQLQuery+="	   FROM "+cZODTable+" ZOD"+cCRLF
+        cSQLQuery+="	  WHERE ZOD.D_E_L_E_T_='' ''"+cCRLF
+        cSQLQuery+="		AND ZOD.ZOD_FILIAL=''"+cZODFilial+"''"+cCRLF
+        cSQLQuery+="		AND ZOD.ZOD_VERSAO='''+@ZBZVersao+'''"+cCRLF
+        cSQLQuery+=" 		AND ZOD.ZOD_REVISA='''+@ZBZRevisa+'''"+cCRLF
+        cSQLQuery+="		AND ZOD.ZOD_ANOREF='''+@ZBZAnoAnt+'''"+cCRLF
+        cSQLQuery+="		AND ZOD.ZOD_TIPO IN '+@cINAnt+'"+cCRLF
+        cSQLQuery+="		AND SUBSTRING(ZOD.ZOD_DTREF,5,2)='''+@cMesAnt+'''"+cCRLF
+        cSQLQuery+="	  GROUP BY ZOD.ZOD_FILIAL"+cCRLF
+        cSQLQuery+="			  ,ZOD.ZOD_VERSAO"+cCRLF
+        cSQLQuery+="			  ,ZOD.ZOD_REVISA"+cCRLF
+        cSQLQuery+="			  ,ZOD.ZOD_ANOREF"+cCRLF
+        cSQLQuery+="			  ,ZOD.ZOD_DTREF"+cCRLF
+        cSQLQuery+="			  ,ZOD.ZOD_CONTA"+cCRLF
+        cSQLQuery+="	)"+cCRLF
+        cSQLQuery+="	SELECT '+@tMesAtu +'.ZOD_FILIAL ZBZ_FILIAL"+cCRLF
+        cSQLQuery+="		 ,'+@tMesAtu +'.ZOD_VERSAO  ZBZ_VERSAO"+cCRLF
+        cSQLQuery+=" 		 ,'+@tMesAtu +'.ZOD_REVISA  ZBZ_REVISA"+cCRLF
+        cSQLQuery+="		 ,'+@tMesAtu +'.ZOD_ANOREF  ZBZ_ANOREF"+cCRLF
+        cSQLQuery+="		 ,''MOV.BP''                ZBZ_ORIPRC"+cCRLF
+        cSQLQuery+="		 ,(CASE WHEN (('+@tMesAtu +'.ZOD_SALCTA-'+@tMesAnt +'.ZOD_SALCTA)<0) THEN ''C'' ELSE ''D'' END) ZBZ_ORGLAN /*D=Debito;C=Credito*/"+cCRLF
+        cSQLQuery+="		 ,'+@tMesAtu +'.ZOD_DTREF   ZBZ_DATA"+cCRLF
+        cSQLQuery+="		 ,''008000''                ZBZ_LOTE"+cCRLF
+        cSQLQuery+="		 ,''001''                   ZBZ_SBLOTE"+cCRLF
+        cSQLQuery+="		 ,RIGHT(''"+Replicate("0",nZBZDoc)+"''+CAST((ROW_NUMBER() OVER (PARTITION BY LEFT('+@tMesAtu+'.ZOD_CONTA,5) ORDER BY '+@tMesAtu+'.ZOD_FILIAL,'+@tMesAtu+'.ZOD_VERSAO,'+@tMesAtu+'.ZOD_REVISA,'+@tMesAtu+'.ZOD_ANOREF,'+@tMesAtu+'.ZOD_CONTA)) as varchar("+cValToChar(nZBZDoc)+")),"+cValToChar(nZBZDoc)+") ZBZ_DOC"+cCRLF
+        cSQLQuery+="		 ,RIGHT(''"+Replicate("0",nZBZLinha)+"''+CAST((ROW_NUMBER() OVER (PARTITION BY 1 ORDER BY '+@tMesAtu+'.ZOD_FILIAL,'+@tMesAtu+'.ZOD_VERSAO,'+@tMesAtu+'.ZOD_REVISA,'+@tMesAtu+'.ZOD_ANOREF,'+@tMesAtu+'.ZOD_CONTA)) as varchar("+cValToChar(nZBZLinha)+")),"+cValToChar(nZBZLinha)+") ZBZ_LINHA"+cCRLF
+        cSQLQuery+="		 ,(CASE WHEN (('+@tMesAtu +'.ZOD_SALCTA-'+@tMesAnt +'.ZOD_SALCTA)<0) THEN ''2'' ELSE ''1'' END) ZBZ_DC /*1=Debito;2=Credito*/"+cCRLF
+        cSQLQuery+="		 ,(CASE WHEN (('+@tMesAtu +'.ZOD_SALCTA-'+@tMesAnt +'.ZOD_SALCTA)<0) THEN '+@tMesAtu +'.ZOD_CONTA ELSE '''' END) ZBZ_CREDIT"+cCRLF
+        cSQLQuery+="		 ,(CASE WHEN (('+@tMesAtu +'.ZOD_SALCTA-'+@tMesAnt +'.ZOD_SALCTA)>=0) THEN '+@tMesAtu +'.ZOD_CONTA ELSE '''' END) ZBZ_DEBITO"+cCRLF
+        cSQLQuery+="		 ,'''' ZBZ_CLVLDB"+cCRLF
+        cSQLQuery+="		 ,'''' ZBZ_CLVLCR"+cCRLF	
+        cSQLQuery+="		 ,'''' ZBZ_ITEMD"+cCRLF
+        cSQLQuery+="         ,'''' ZBZ_ITEMC"+cCRLF
+        cSQLQuery+="         ,ABS('+@tMesAtu +'.ZOD_SALCTA-'+@tMesAnt +'.ZOD_SALCTA) ZBZ_VALOR"+cCRLF
+        cSQLQuery+="         ,''VALOR APURACAO BP NO MES'' ZBZ_HIST"+cCRLF
+        cSQLQuery+="         ,''VLR MOV CONTA NO MES''     ZBZ_YHIST"+cCRLF
+        cSQLQuery+="         ,'''' ZBZ_SI"+cCRLF
+        cSQLQuery+="         ,'''' ZBZ_YDELTA"+cCRLF
+        cSQLQuery+="         ,'''' D_E_L_E_T_"+cCRLF
+        cSQLQuery+="         ,(ISNULL((SELECT MAX(ZBZ.R_E_C_N_O_) FROM "+cZBZTable+" ZBZ),0)+ROW_NUMBER() OVER (PARTITION BY 1 ORDER BY '+@tMesAtu+'.ZOD_FILIAL,'+@tMesAtu+'.ZOD_VERSAO,'+@tMesAtu+'.ZOD_REVISA,'+@tMesAtu+'.ZOD_ANOREF,'+@tMesAtu+'.ZOD_CONTA)) R_E_C_N_O_"+cCRLF
+        cSQLQuery+="         ,0 R_E_C_D_E_L_"+cCRLF
+        cSQLQuery+="         ,'''' ZBZ_ORIPR2"+cCRLF
+        cSQLQuery+="         ,'''' ZBZ_APLIC"+cCRLF
+        cSQLQuery+="         ,'''' ZBZ_DRVDB"+cCRLF
+        cSQLQuery+="         ,'''' ZBZ_DRVCR"+cCRLF
+        cSQLQuery+="	FROM '+@tMesAtu+'"+cCRLF
+        cSQLQuery+="		,'+@tMesAnt+'"+cCRLF
+        cSQLQuery+="	WHERE '+@tMesAtu+'.ZOD_FILIAL='+@tMesAnt+'.ZOD_FILIAL"+cCRLF
+        cSQLQuery+="	  AND '+@tMesAtu+'.ZOD_VERSAO='+@tMesAnt+'.ZOD_VERSAO"+cCRLF
+        cSQLQuery+="	  AND '+@tMesAtu+'.ZOD_REVISA='+@tMesAnt+'.ZOD_REVISA"+cCRLF
+        cSQLQuery+="	  AND '+@tMesAtu+'.ZOD_ANOREF='''+@ZBZAnoRef+'''"+cCRLF
+        cSQLQuery+="	  AND '+@tMesAnt+'.ZOD_ANOREF='''+@ZBZAnoAnt+'''"+cCRLF
+        cSQLQuery+="	  AND SUBSTRING('+@tMesAtu+'.ZOD_DTREF,5,2)='''+@cMesAtu+'''"+cCRLF
+        cSQLQuery+="	  AND SUBSTRING('+@tMesAnt+'.ZOD_DTREF,5,2)='''+@cMesAnt+'''"+cCRLF
+        cSQLQuery+="	  AND '+@tMesAtu+'.ZOD_DTREF>'+@tMesAnt+'.ZOD_DTREF"+cCRLF
+        cSQLQuery+="	  AND '+@tMesAtu+'.ZOD_CONTA='+@tMesAnt+'.ZOD_CONTA"+cCRLF
+        cSQLQuery+="      AND ABS('+@tMesAtu +'.ZOD_SALCTA-'+@tMesAnt +'.ZOD_SALCTA)>0"+cCRLF
+        cSQLQuery+="	  AND ("+cCRLF
+        cSQLQuery+="			'+cast(@ZBZExists as varchar(1))+'=1"+cCRLF
+        cSQLQuery+="			OR"+cCRLF 
+        cSQLQuery+="			NOT EXISTS ("+cCRLF
+        cSQLQuery+="					SELECT DISTINCT 1"+cCRLF
+        cSQLQuery+="					  FROM "+cZBZTable+" ZBZ"+cCRLF
+        cSQLQuery+="					 WHERE ZBZ.ZBZ_FILIAL='+@tMesAtu +'.ZOD_FILIAL"+cCRLF
+        cSQLQuery+="					   AND ZBZ.ZBZ_VERSAO='+@tMesAtu +'.ZOD_VERSAO"+cCRLF
+        cSQLQuery+=" 					   AND ZBZ.ZBZ_REVISA='+@tMesAtu +'.ZOD_REVISA"+cCRLF
+        cSQLQuery+="					   AND ZBZ.ZBZ_ANOREF='+@tMesAtu +'.ZOD_ANOREF"+cCRLF
+        cSQLQuery+="					   AND ZBZ.ZBZ_DATA='+@tMesAtu +'.ZOD_DTREF"+cCRLF
+        cSQLQuery+="					   AND ZBZ.ZBZ_ORIPRC=''MOV.BP''"+cCRLF
+        cSQLQuery+="					   AND ZBZ.ZBZ_LOTE=''008000''"+cCRLF
+        cSQLQuery+="					   AND ZBZ.ZBZ_SBLOTE=''001''"+cCRLF
+        cSQLQuery+="			)"+cCRLF
+        cSQLQuery+="	   )'"+cCRLF
+        cSQLQuery+="	BEGIN TRANSACTION @TranName"+cCRLF
+        cSQLQuery+="	    IF ((@ZBZExists=1) AND (@ZBZDelete=1)) BEGIN"+cCRLF
+        cSQLQuery+="	        SET @ZBZDelete=0"+cCRLF
+        cSQLQuery+="	        SET @ZBZExists=0"+cCRLF
+        cSQLQuery+="		    DELETE FROM "+cZBZTable+cCRLF
+        cSQLQuery+="	                  WHERE D_E_L_E_T_=' '"+cCRLF
+        cSQLQuery+="	                    AND ZBZ_FILIAL='"+cZBZFilial+"'"+cCRLF
+        cSQLQuery+="    	                AND ZBZ_VERSAO=@ZBZVersao"+cCRLF
+        cSQLQuery+="	                    AND ZBZ_REVISA=@ZBZRevisa"+cCRLF
+        cSQLQuery+="	                    AND ZBZ_ANOREF=@ZBZAnoRef"+cCRLF
+        cSQLQuery+="			    AND ZBZ_ORIPRC='MOV.BP'"+cCRLF
+        cSQLQuery+="			    AND ZBZ_LOTE='008000'"+cCRLF
+        cSQLQuery+="			    AND ZBZ_SBLOTE='001'"+cCRLF
+        cSQLQuery+="	    END"+cCRLF
+        cSQLQuery+="	    INSERT"+cCRLF
+        cSQLQuery+="	      INTO ["+cZBZTable+"]"+cCRLF
+        cSQLQuery+="		  ([ZBZ_FILIAL]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_VERSAO]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_REVISA]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_ANOREF]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_ORIPRC]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_ORGLAN]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_DATA]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_LOTE]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_SBLOTE]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_DOC]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_LINHA]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_DC]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_CREDIT]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_DEBITO]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_CLVLDB]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_CLVLCR]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_ITEMD]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_ITEMC]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_VALOR]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_HIST]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_YHIST]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_SI]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_YDELTA]"+cCRLF
+        cSQLQuery+="		  ,[D_E_L_E_T_]"+cCRLF
+        cSQLQuery+="		  ,[R_E_C_N_O_]"+cCRLF
+        cSQLQuery+="		  ,[R_E_C_D_E_L_]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_ORIPR2]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_APLIC]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_DRVDB]"+cCRLF
+        cSQLQuery+="		  ,[ZBZ_DRVCR])"+cCRLF
+        cSQLQuery+="	    EXECUTE(@SQL)"+cCRLF
+        cSQLQuery+="	COMMIT TRANSACTION @TranName"+cCRLF
+        cSQLQuery+="END"+cCRLF
+
+        if ((lZBZFound).and.(lZBZSeek))
+            cSQLQuery:=""
+        endif
+
+        DEFAULT cSQLQuery:=""
+
+        cMsg:=cCRLF
+        cMsg+="Empresa:"
+        cMsg+=" "
+        cMsg+=cEmp
+        cMsg+=cCRLF
+        cMsg+="Versao:"
+        cMsg+=" "
+        cMsg+=cVersao
+        cMsg+=cCRLF
+        cMsg+="Revisao:"
+        cMsg+=" "
+        cMsg+=cRevisa
+        cMsg+=cCRLF
+        cMsg+="Referecia:"
+        cMsg+=" "
+        cMsg+=cAnoRef
+        cMsg+=cCRLF
+        cMsg+="Mensagem:"
+        cMsg+=cCRLF
+
+        lRet:=(!empty(cSQLQuery))
+        if (!lRet)
+            cMsg+=cCRLF
+            cMsg+="Nenhum Registro Processado."
+            cMsg+=cCRLF
+            cMsg+=cCRLF
+            break
+        endif
+            
+        lRet:=(TCSQLExec(cSQLQuery)==0)
+
+        if (IsBlind())
+            cSQLPath:="\tmp\"
+        else
+            cSQLPath:=getTempPath()
+            if (!right(cSQLPath,1)=="\")
+                cSQLPath+="\"
+            endif
+        endif
+        cSQLPath+="BIA664\SQL\"
+
+        A35():writeSQLFile(@cSQLQuery,@cEmp,&("cFilAnt"),"bia664","00","qry_final",@cSQLPath,@cSQLFile)
+
+        if (!lRet)
+
+            cMsg+=cCRLF
+            cMsg+=TCSQLError()
+            cMsg+=cCRLF
+            cMsg+=cCRLF
+
+            break
+
+        endif
+
+        cMsg+=cCRLF
+        cMsg+="Registros Processados OK."
+        cMsg+=cCRLF
+        cMsg+=cCRLF
+
+    end sequece
+
+    return(lRet)
+
+static function ZBZSeek(cZBZFilial as character,cZBZTable as character,cVersao as character,cRevisa as character,cAnoRef as character) as logical
+
+    local aArea     as array
+    
+    local cAlias    as character
+    local cTable    as character
+
+    local lFound    as logical
+
+    aArea:=getArea()
+
+    cAlias:=getNextAlias()
+    cTable:="%"+cZBZTable+"%"
+
+    beginSQL alias cAlias
+
+        SELECT DISTINCT 1 AS FOUND
+          FROM %exp:cTable% ZBZ
+         WHERE ZBZ.%notDel%
+           AND ZBZ.ZBZ_FILIAL=%exp:cZBZFilial%
+           AND ZBZ.ZBZ_VERSAO=%exp:cVersao%
+           AND ZBZ.ZBZ_REVISA=%exp:cRevisa%
+           AND ZBZ.ZBZ_ANOREF=%exp:cAnoRef%
+           AND ZBZ.ZBZ_ORIPRC='MOV.BP'
+           AND ZBZ.ZBZ_LOTE='008000'
+           AND ZBZ.ZBZ_SBLOTE='001'
+
+    endSQL
+
+    lFound:=(cAlias)->((!(eof().and.bof())).and.(FOUND==1))
+
+    (cAlias)->(dbCloseArea())
+    dbSelectArea("ZBZ")
+
+    restArea(aArea)
+
+    return(lFound)
+
+procedure U_BIA664Excel()
+    
+    local aArea     as array
+    local aAreaZBZ  as array
+    
+    local oPergunte as object
+    
+    aArea:=getArea()
+    aAreaZBZ:=ZBZ->(getArea())
+    if (__TWPCOFiltroPeriodo():Pergunte())
+        oPergunte:=__TWPCOFiltroPeriodo():Get()
+        BIA664Excel(@oPergunte)
+    endif
+    
+    restArea(aAreaZBZ)
+    restArea(aArea)
+    
+    return
+
+static procedure BIA664Excel(oPergunte as object)
+
+    local aZBZQuery     as array
+
+    local cLote         as character
+    local cSBLote       as character
+    local cOriPrc       as character
+    
+    local cVersao       as character
+    local cRevisa       as character
+    local cAnoRef       as character
+
+    local cXMLPath      as character
+    local cXMLFile      as character
+    local cExcelTitle   as character
+
+    local cServerIP     as character
+    local cEnvServer    as character
+
+    local cZBZOrder     as character
+    local cZBZFilial    as character
+    local cZBZFilter    as character
+    local cZBZKeySeek   as character
+
+    local lDev          as logical
+    local lPicture      as logical
+    local lX3Titulo     as logical
+    local ltxtEditMemo  as logical
+
+    local nZBZOrder     as numeric
+
+    cVersao:=PadR(left(oPergunte:cVersao,getSX3Cache("ZBZ_VERSAO","X3_TAMANHO")),getSX3Cache("ZBZ_VERSAO","X3_TAMANHO"))
+    cRevisa:=PadR(left(oPergunte:cRevisa,getSX3Cache("ZBZ_REVISA","X3_TAMANHO")),getSX3Cache("ZBZ_REVISA","X3_TAMANHO"))
+    cAnoRef:=PadR(left(oPergunte:cAnoRef,getSX3Cache("ZBZ_ANOREF","X3_TAMANHO")),getSX3Cache("ZBZ_ANOREF","X3_TAMANHO"))
+    cOriPrc:=PadR(left("MOV.BP",getSX3Cache("ZBZ_ORIPRC","X3_TAMANHO")),getSX3Cache("ZBZ_ORIPRC","X3_TAMANHO"))
+    
+    cZBZOrder:="ZBZ_FILIAL+ZBZ_VERSAO+ZBZ_REVISA+ZBZ_ANOREF+ZBZ_ORIPRC"
+    nZBZOrder:=retOrder("ZBZ",cZBZOrder)
+
+    ZBZ->(dbSetOrder(nZBZOrder))
+    
+    cZBZFilial:=xFilial("ZBZ")
+    
+    cZBZKeySeek:=cZBZFilial
+    cZBZKeySeek+=cVersao
+    cZBZKeySeek+=cRevisa
+    cZBZKeySeek+=cAnoRef
+    cZBZKeySeek+=cOriPrc
+
+    ZBZ->(dbSeek(cZBZKeySeek,.F.))
+
+    aZBZQuery:=array(0)
+    
+    cLote:=PadR(left("008000",getSX3Cache("ZBZ_LOTE","X3_TAMANHO")),getSX3Cache("ZBZ_LOTE","X3_TAMANHO"))
+    cSBLote:=PadR(left("001",getSX3Cache("ZBZ_SBLOTE","X3_TAMANHO")),getSX3Cache("ZBZ_SBLOTE","X3_TAMANHO"))
+
+    cZBZFilter:="ZBZ_FILIAL=='"+cZBZFilial+"'"
+    cZBZFilter+=".AND."
+    cZBZFilter+="ZBZ_VERSAO=='"+cVersao+"'"
+    cZBZFilter+=".AND."
+    cZBZFilter+="ZBZ_REVISA=='"+cRevisa+"'"
+    cZBZFilter+=".AND."
+    cZBZFilter+="ZBZ_ANOREF=='"+cAnoRef+"'"
+    cZBZFilter+=".AND."
+    cZBZFilter+="ZBZ_ORIPRC=='"+cOriPrc+"'"
+    cZBZFilter+=".AND."
+    cZBZFilter+="ZBZ_LOTE=='"+cLote+"'"
+    cZBZFilter+=".AND."
+    cZBZFilter+="ZBZ_SBLOTE=='"+cSBLote+"'"
+
+    MsAguarde({||FilBrowse("ZBZ",@aZBZQuery,cZBZFilter)},&("cCadastro"),"Obtendo dados no SGBD...")
+
+    cXMLPath:="\tmp\BIA664\XML\"
+    if (dirtools():MakeDir(cXMLPath))
+
+        cXMLFile:=A35():getXMLFile(&("cEmpAnt"),&("cFilAnt"),cXMLPath,"BIA664","00","ZOD")
+        
+        if (type("cCadastro")=="C")
+            cExcelTitle:=&("cCadastro")
+            cExcelTitle+=" :: "
+        else
+            cExcelTitle:=""
+        endif
+
+        cExcelTitle+="Empresa: "+&("cEmpAnt")
+        cExcelTitle+=" :: "
+        cExcelTitle+="Filial:  "+&("cFilAnt")
+        cExcelTitle+=" :: "
+        cExcelTitle+="Ver.: "+cVersao
+        cExcelTitle+=" :: "
+        cExcelTitle+="Rev.: "+cRevisa
+        cExcelTitle+=" :: "
+        cExcelTitle+="Ref.: "+cAnoRef
+        
+        cServerIP:=getServerIP()
+        cEnvServer:=upper(getEnvServer())
+
+        lDev:=((cServerIP=="192.168.20.18").or.("DEV"$cEnvServer))
+        if (lDev)
+            cExcelTitle+=" :: EMITIDO EM AMBIENTE DE DESENVOLVIMENTO ::"    
+        endif
+
+        lPicture:=.T.
+        lX3Titulo:=.T.
+        ltxtEditMemo:=.F.
+
+        ZBZ->(dbSeek(cZBZKeySeek,.F.))
+
+        uToXML():QryToXML("ZBZ",@cXMLFile,@cExcelTitle,@lPicture,@lX3Titulo,@ltxtEditMemo)
+
+    endif
+
+    EndFilBrw("ZBZ",@aZBZQuery)
+
+    return
+
+class BIA664RestModel from FWRestModel
+
+    method new() constructor
+
+    method Activate()
+    method DeActivate()
+    method OnError()
+
+    method SetModel()
+    method ClearModel()
+    method SetName()
+    method GetName()
+    method SetAsXml()
+    method SetAsJson()
+
+    method StartGetFormat()
+    method EscapeGetFormat()
+    method EndGetFormat()
+
+    method SetAlias()
+    method GetAlias()
+    method HasAlias()
+    method Seek()
+    method Skip()
+    method Total()
+    method GetData()
+    method SaveData()
+    method DelData()
+
+    method SetFilter()
+    method GetFilter()
+    method ClearFilter()
+    method DecodePK()
+    method ConvertPK()
+
+    method GetStatusResponse()
+    method SetStatusResponse()
+
+    method SetQueryString()
+    method GetQueryString()
+    method GetQSValue()
+    method GetHttpHeader()
+    method SetFields()
+    method debuger()
+
+endclass
+
+method new() class BIA664RestModel
+    _Super:New()
+    return
+
+method Activate() class BIA664RestModel
+    if (_Super:Activate())
+        self:lActivate:=.T.
+    endif
+    return(self:lActivate)
+
+method DeActivate() class BIA664RestModel
+    return(_Super:DeActivate())
+
+method OnError() class BIA664RestModel
+    return(_Super:OnError())
+
+method SetModel(oModel) class BIA664RestModel
+    return(_Super:SetModel(@oModel))
+
+method ClearModel() class BIA664RestModel
+    return(_Super:ClearModel())
+
+method SetName(cName) class BIA664RestModel
+    return(_Super:SetName(@cName))
+
+method GetName() class BIA664RestModel
+    return(_Super:GetName())
+
+method SetAsXml() class BIA664RestModel
+    return(_Super:SetAsXml())
+
+method SetAsJson() class BIA664RestModel
+    return(_Super:SetAsJson())
+
+method StartGetFormat(nTotal,nCount,nStartIndex) class BIA664RestModel
+    return(_Super:StartGetFormat(@nTotal,@nCount,@nStartIndex))
+
+method EscapeGetFormat() class BIA664RestModel
+    return(_Super:EscapeGetFormat())
+
+method EndGetFormat() class BIA664RestModel
+    return(_Super:EndGetFormat())
+
+method SetAlias(cAlias) class BIA664RestModel
+    return(_Super:SetAlias(cAlias))
+
+method GetAlias() class BIA664RestModel
+    return(_Super:GetAlias())
+
+method HasAlias() class BIA664RestModel
+    return(_Super:HasAlias())
+
+method Seek(cPK) class BIA664RestModel
+    return(_Super:Seek(@cPK))
+
+method Skip(nSkip) class BIA664RestModel
+    return(_Super:Skip(@nSkip))
+
+method Total() class BIA664RestModel
+    return(_Super:Total())
+
+method GetData(lFieldDetail,lFieldVirtual,lFieldEmpty,lFirstLevel,lInternalID) class BIA664RestModel
+    return(_Super:GetData(@lFieldDetail,@lFieldVirtual,@lFieldEmpty,@lFirstLevel,@lInternalID))
+
+method SaveData(cPK,cData,cError) class BIA664RestModel
+    return(_Super:SaveData(@cPK,@cData,@cError))
+
+method DelData(cPK,cError) class BIA664RestModel
+    return(_Super:DelData(@cPK,@cError))
+
+method SetFilter(cFilter) class BIA664RestModel
+    return(_Super:SetFilter(cFilter))
+
+method GetFilter() class BIA664RestModel
+    return(_Super:GetFilter())
+
+method ClearFilter() class BIA664RestModel
+    return(_Super:ClearFilter())
+
+method DecodePK() class BIA664RestModel
+    return(_Super:DecodePK())
+
+method ConvertPK(cPK) class BIA664RestModel
+    return(_Super:ConvertPK(@cPK))
+
+method GetStatusResponse() class BIA664RestModel
+    return(_Super:GetStatusResponse())
+
+method SetStatusResponse(nStatus,cStatus) class BIA664RestModel
+    return(_Super:SetStatusResponse(@nStatus,@cStatus))
+
+method SetQueryString(aQueryString) class BIA664RestModel
+    return(_Super:SetQueryString(@aQueryString))
+
+method GetQueryString() class BIA664RestModel
+    return(_Super:GetQueryString())
+
+method GetQSValue(cKey) class BIA664RestModel
+    return(_Super:GetQSValue(@cKey))
+
+method GetHttpHeader(cParam) class BIA664RestModel
+    return(_Super:GetHttpHeader(@cParam))
+
+method SetFields(aFields) class BIA664RestModel
+    return(_Super:SetFields(@aFields))
+
+method debuger(lDebug) class BIA664RestModel
+    return(_Super:debuger(@lDebug))

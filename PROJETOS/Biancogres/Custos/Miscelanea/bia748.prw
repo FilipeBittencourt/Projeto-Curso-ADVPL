@@ -6,7 +6,7 @@
 @author Marcos Alberto Soprani
 @since 30/10/19
 @version 1.0
-@description Reprocessamento de quantidade e custo unitário para variável em caso de Forecast
+@description Reprocessamento de quantidade e custo unitário para variável em caso de Rev.Orçado
 @type function
 /*/
 
@@ -31,7 +31,7 @@ User Function BIA748()
 
 	Private cMsg        := "Carregando Arquivo..."
 
-	AADD(aSays, OemToAnsi("Rotina para transporte dos dados do ForeCast de Qtd/Vlr p/ C.Variável!"))   
+	AADD(aSays, OemToAnsi("Rotina para transporte dos dados do Rev.Orçado de Qtd/Vlr p/ C.Variável!"))   
 	AADD(aSays, OemToAnsi(""))   
 	AADD(aSays, OemToAnsi("Antes de continuar, verifique os parâmetros!"))   
 	AADD(aSays, OemToAnsi(""))   
@@ -41,7 +41,7 @@ User Function BIA748()
 	AADD(aButtons, { 1,.T.,{|o| lConfirm := .T. , o:oWnd:End()}} )
 	AADD(aButtons, { 2,.T.,{|o| o:oWnd:End() }} )
 
-	FormBatch( OemToAnsi('Integração ForeCast de Qtd/Vlr p/ C.Variável'), aSays, aButtons ,,,500)
+	FormBatch( OemToAnsi('Integração Rev.Orçado de Qtd/Vlr p/ C.Variável'), aSays, aButtons ,,,500)
 
 	If lConfirm
 
@@ -144,9 +144,9 @@ Static Function BIA748G()
 	aAdd( aPergs ,{1,"Versão:"                      ,idVersao   ,"@!","NAOVAZIO()",'ZB5','.T.',070,.F.})	
 	aAdd( aPergs ,{1,"Revisão:"                     ,idRevisa   ,"@!","NAOVAZIO()",''   ,'.T.', 03,.F.})	
 	aAdd( aPergs ,{1,"Ano Orçamentário: "           ,idAnoRef   ,"@!","NAOVAZIO()",''   ,'.T.', 04,.F.})	
-	aAdd( aPergs ,{1,"Ano ForeCast: "               ,miAno      ,"@!","NAOVAZIO()",''   ,'.T.', 04,.F.})	
-	aAdd( aPergs ,{1,"Mês De ForeCast: "            ,miMesDe    ,"@!","NAOVAZIO()",''   ,'.T.', 02,.F.})	
-	aAdd( aPergs ,{1,"Mês Até ForeCast: "           ,miMesAt    ,"@!","NAOVAZIO()",''   ,'.T.', 02,.F.})	
+	aAdd( aPergs ,{1,"Ano Rev.Orçado: "             ,miAno      ,"@!","NAOVAZIO()",''   ,'.T.', 04,.F.})	
+	aAdd( aPergs ,{1,"Mês De Rev.Orçado: "          ,miMesDe    ,"@!","NAOVAZIO()",''   ,'.T.', 02,.F.})	
+	aAdd( aPergs ,{1,"Mês Até Rev.Orçado: "         ,miMesAt    ,"@!","NAOVAZIO()",''   ,'.T.', 02,.F.})	
 	aAdd( aPergs ,{1,"Sequência Original: "         ,miSeqOrg   ,"@!",""          ,''   ,'.T.', 03,.F.})	
 	aAdd( aPergs ,{1,"Sequência Destino: "          ,miSeqDes   ,"@!","NAOVAZIO()",''   ,'.T.', 03,.F.})	
 
@@ -213,7 +213,7 @@ User Function BIA748A()
 					msDataDe := miAno + StrZero(msCtrlMeses,2) + "01"
 					msDataAt := dtos(UltimoDia(stod(miAno + StrZero(msCtrlMeses,2) + "01")))
 
-					RT003 := " WITH FORECASTX "
+					RT003 := " WITH REVORCADOX "
 					RT003 += "      AS (SELECT SUBSTRING(D3_EMISSAO, 1, 6) + '01' EMISSAO, "
 					RT003 += "                 REFPROD, "
 					RT003 += "                 D3_YITCUS ITCUS, "
@@ -249,7 +249,7 @@ User Function BIA748A()
 					RT003 += "                     END, "
 					RT003 += "             FRX.ITCUS ITCUS, "
 					RT003 += "             ROUND(FRX.CUSTO / FRX.QTDRAC, 8) MEDIO "
-					RT003 += "      FROM FORECASTX FRX "
+					RT003 += "      FROM REVORCADOX FRX "
 					RT003 += "           INNER JOIN " + RetSqlName("Z29") + " Z29 ON Z29_COD_IT = FRX.ITCUS "
 					RT003 += "                                    AND Z29_TIPO = 'CV' "
 					RT003 += "                                    AND Z29.D_E_L_E_T_ = ' ' "
@@ -354,7 +354,7 @@ User Function BIA748A()
 				WF004 += "        WHERE Z56_DATARF BETWEEN '" + miAno + StrZero( Val(miMesAt) + 1, 2) + "01' AND '" + miAno + "1231' "
 				WF004 += "              AND Z56_SEQUEN = '" + miSeqOrg + "' "
 				WF004 += "              AND D_E_L_E_T_ = ' ' "
-				U_BIAMsgRun("Aguarde... Convertendo Z56 Forecast (1)... ",,{|| msStaExcQy := TcSQLExec(WF004) })
+				U_BIAMsgRun("Aguarde... Convertendo Z56 Rev.Orçado (1)... ",,{|| msStaExcQy := TcSQLExec(WF004) })
 				If msStaExcQy < 0
 					lOk := .F.
 				EndIf
@@ -419,7 +419,7 @@ User Function BIA748A()
 						UX009 += "        WHERE Z57_DATARF BETWEEN '" + msDataDe + "' AND '" + msDataAt + "' "
 						UX009 += "              AND Z57_SEQUEN = '" + miSeqOrg + "' "
 						UX009 += "              AND D_E_L_E_T_ = ' ' "
-						U_BIAMsgRun("Aguarde... Convertendo Z57 Forecast (1)... ",,{|| msStaExcQy := TcSQLExec(UX009)})
+						U_BIAMsgRun("Aguarde... Convertendo Z57 Rev.Orçado (2)... ",,{|| msStaExcQy := TcSQLExec(UX009)})
 						If msStaExcQy < 0
 							lOk := .F.
 						EndIf
@@ -463,7 +463,7 @@ User Function BIA748A()
 						UX006 += "        WHERE Z57_DATARF BETWEEN '" + miAno + StrZero( Val(miMesAt) + 1, 2) + "01' AND '" + miAno + "1231' "
 						UX006 += "              AND Z57_SEQUEN = '" + miSeqOrg + "' "
 						UX006 += "              AND D_E_L_E_T_ = ' ' "
-						U_BIAMsgRun("Aguarde... Convertendo Z57 Forecast (1)... ",,{|| msStaExcQy := TcSQLExec(UX006)})
+						U_BIAMsgRun("Aguarde... Convertendo Z57 Rev.Orçado (3)... ",,{|| msStaExcQy := TcSQLExec(UX006)})
 						If msStaExcQy < 0
 							lOk := .F.
 						EndIf
@@ -475,7 +475,7 @@ User Function BIA748A()
 							KS008 += "  WHERE Z56.Z56_DATARF BETWEEN '" + miAno + "0101' AND '" + miAno + "1231' "
 							KS008 += "    AND Z56.Z56_SEQUEN = '" + miSeqOrg + "' "
 							KS008 += "    AND Z56.D_E_L_E_T_ = ' ' "
-							U_BIAMsgRun("Aguarde... Convertendo Z56 Forecast (2)... ",,{|| msStaExcQy := TcSQLExec(KS008) })
+							U_BIAMsgRun("Aguarde... Convertendo Z56 Rev.Orçado (4)... ",,{|| msStaExcQy := TcSQLExec(KS008) })
 							If msStaExcQy < 0
 								lOk := .F.
 							EndIf
@@ -487,7 +487,7 @@ User Function BIA748A()
 								KS003 += "  WHERE Z57.Z57_DATARF BETWEEN '" + miAno + "0101' AND '" + miAno + "1231' "
 								KS003 += "    AND Z57.Z57_SEQUEN = '" + miSeqOrg + "' "
 								KS003 += "    AND Z57.D_E_L_E_T_ = ' ' "
-								U_BIAMsgRun("Aguarde... Convertendo Z57 ForeCast... ",,{|| TcSQLExec(KS003) })
+								U_BIAMsgRun("Aguarde... Convertendo Z57 Rev.Orçado (5)... ",,{|| TcSQLExec(KS003) })
 								If msStaExcQy < 0
 									lOk := .F.
 								EndIf

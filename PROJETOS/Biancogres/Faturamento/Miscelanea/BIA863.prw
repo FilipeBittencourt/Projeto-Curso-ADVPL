@@ -147,6 +147,10 @@ Return
 /*/
 Static Function fGravCT1()
 
+	Local cCTAFIDC
+	local cCT1Filial:=xFilial("CT1")
+	local cCVDFilial:=xFilial("CVD")
+
 	If Inclui .Or. Altera
 		IF SUBSTR(ALLTRIM(M->A1_CONTA),9,6) <> ALLTRIM(M->A1_COD) 
 			M->A1_CONTA := SUBSTR(M->A1_CONTA,1,8)+ALLTRIM(M->A1_COD)
@@ -155,55 +159,121 @@ Static Function fGravCT1()
 		ENDIF
 
 		If !Empty(M->A1_CONTA) //.And. M->A1_EST <> "EX"
+			
 			DbSelectArea("CT1")
-			DbSetOrder(2)
-			DbGoBottom()
+			
+			CT1->(DbSetOrder(2))
+			CT1->(DbGoBottom())
 			xCodRe := Soma1(CT1->CT1_RES)
+			
 			DbSelectArea("CT1")
-			DbSetOrder(1)
-			If !DbSeek(xFilial("CT1")+M->A1_CONTA,.F.)
-				RecLock("CT1",.T.)
-				CT1->CT1_FILIAL		:= xFilial("CT1")
-				CT1->CT1_CONTA		:= M->A1_CONTA
-				CT1->CT1_DESC01		:= M->A1_NOME
-				CT1->CT1_CLASSE		:= "2"
-				CT1->CT1_NORMAL		:= "1"
-				CT1->CT1_BLOQ 		:= "2"
-				CT1->CT1_RES    	:= xCodRe
-				CT1->CT1_CTASUP   	:= "11201001"
-				CT1->CT1_GRUPO		:= "1"
-				CT1->CT1_CVD02		:= "5"
-				CT1->CT1_CVD03		:= "5"
-				CT1->CT1_CVD04		:= "5"
-				CT1->CT1_CVD05		:= "5"
-				CT1->CT1_CVC02   	:= "5"
-				CT1->CT1_CVC03   	:= "5"
-				CT1->CT1_CVC04   	:= "5"
-				CT1->CT1_CVC05   	:= "5"
-				CT1->CT1_DC				:= CTBDIGCONT(CT1->CT1_CONTA)
-				CT1->CT1_BOOK			:= "001"
-				CT1->CT1_CCOBRG		:= "2"
-				CT1->CT1_ITOBRG		:= "2"
-				CT1->CT1_CLOBRG		:= "2"
-				CT1->CT1_LALUR		:= "0"
-				CT1->CT1_DTEXIS		:= dDataBase
-				CT1->CT1_INDNAT		:= '1'
-				CT1->CT1_NTSPED		:= "01"
-				CT1->CT1_SPEDST		:= "2"
-				MsUnlock()
+			CT1->(DbSetOrder(1))
+			
+			If CT1->(!DbSeek(cCT1Filial+M->A1_CONTA,.F.))
+			
+				if CT1->(RecLock("CT1",.T.))
+					CT1->CT1_FILIAL		:= cCT1Filial
+					CT1->CT1_CONTA		:= M->A1_CONTA
+					CT1->CT1_DESC01		:= M->A1_NOME
+					CT1->CT1_CLASSE		:= "2"
+					CT1->CT1_NORMAL		:= "1"
+					CT1->CT1_BLOQ 		:= "2"
+					CT1->CT1_RES    	:= xCodRe
+					CT1->CT1_CTASUP   	:= "11201001"
+					CT1->CT1_GRUPO		:= "1"
+					CT1->CT1_CVD02		:= "5"
+					CT1->CT1_CVD03		:= "5"
+					CT1->CT1_CVD04		:= "5"
+					CT1->CT1_CVD05		:= "5"
+					CT1->CT1_CVC02   	:= "5"
+					CT1->CT1_CVC03   	:= "5"
+					CT1->CT1_CVC04   	:= "5"
+					CT1->CT1_CVC05   	:= "5"
+					CT1->CT1_DC				:= CTBDIGCONT(CT1->CT1_CONTA)
+					CT1->CT1_BOOK			:= "001"
+					CT1->CT1_CCOBRG		:= "2"
+					CT1->CT1_ITOBRG		:= "2"
+					CT1->CT1_CLOBRG		:= "2"
+					CT1->CT1_LALUR		:= "0"
+					CT1->CT1_DTEXIS		:= dDataBase
+					CT1->CT1_INDNAT		:= '1'
+					CT1->CT1_NTSPED		:= "01"
+					CT1->CT1_SPEDST		:= "2"
+					CT1->(MsUnlock())
 
-				RECLOCK("CVD",.T.)
-				CVD->CVD_FILIAL	:= XFILIAL("CVD")
-				CVD->CVD_ENTREF	:= "10"
-				CVD->CVD_CODPLA	:= "002"
-				CVD->CVD_CONTA	:=  M->A1_CONTA
-				CVD->CVD_CTAREF	:= "1.01.02.02.01"
-				MSUNLOCK()
+					if CVD->(RECLOCK("CVD",.T.))
+						CVD->CVD_FILIAL	:= cCVDFilial
+						CVD->CVD_ENTREF	:= "10"
+						CVD->CVD_CODPLA	:= "002"
+						CVD->CVD_CONTA	:=  M->A1_CONTA
+						CVD->CVD_CTAREF	:= "1.01.02.02.01"
+						CVD->(MSUNLOCK())
+					endif
 
-				DbCommitAll()
+				endif
+
 			Endif
+            
+            if (FIDC():isFIDCEnabled())
+            
+                cCTAFIDC:="11201013"
+                cCTAFIDC+=subStr(M->A1_CONTA,9)
+            
+                xCodRe:=Soma1(xCodRe)
+            
+                If CT1->(!DbSeek(cCT1Filial+cCTAFIDC,.F.))
+            
+                    if CT1->(RecLock("CT1",.T.))
+                        CT1->CT1_FILIAL		:= cCT1Filial
+                        CT1->CT1_CONTA		:= cCTAFIDC
+                        CT1->CT1_DESC01		:= M->A1_NOME
+                        CT1->CT1_CLASSE		:= "2"
+                        CT1->CT1_NORMAL		:= "2"
+                        CT1->CT1_BLOQ 		:= "2"
+                        CT1->CT1_RES    	:= xCodRe
+                        CT1->CT1_CTASUP   	:= "11201013"
+                        CT1->CT1_GRUPO		:= "1"
+                        CT1->CT1_CVD02		:= "5"
+                        CT1->CT1_CVD03		:= "5"
+                        CT1->CT1_CVD04		:= "5"
+                        CT1->CT1_CVD05		:= "5"
+                        CT1->CT1_CVC02   	:= "5"
+                        CT1->CT1_CVC03   	:= "5"
+                        CT1->CT1_CVC04   	:= "5"
+                        CT1->CT1_CVC05   	:= "5"
+                        CT1->CT1_DC			:= CTBDIGCONT(cCTAFIDC)
+                        CT1->CT1_BOOK		:= "001"
+                        CT1->CT1_CCOBRG		:= "2"
+                        CT1->CT1_ITOBRG		:= "2"
+                        CT1->CT1_CLOBRG		:= "2"
+                        CT1->CT1_LALUR		:= "0"
+                        CT1->CT1_DTEXIS		:= dDataBase
+                        CT1->CT1_INDNAT		:= '1'
+                        CT1->CT1_NTSPED		:= "01"
+                        CT1->CT1_SPEDST		:= "2"
+                        CT1->(MsUnlock())
+
+                        if CVD->(RECLOCK("CVD",.T.))
+                            CVD->CVD_FILIAL	:= cCVDFilial
+                            CVD->CVD_ENTREF	:= "10"
+                            CVD->CVD_CODPLA	:= "002"
+                            CVD->CVD_CONTA	:=  cCTAFIDC
+                            CVD->CVD_CTAREF	:= "1.01.02.02.01"
+                            CVD->(MSUNLOCK())
+                        endif
+
+                    endif
+
+                endif
+            
+            endif
+            
+			DbCommitAll()
+
 		endif
+
 	Endif
+
 Return
 
 /*/

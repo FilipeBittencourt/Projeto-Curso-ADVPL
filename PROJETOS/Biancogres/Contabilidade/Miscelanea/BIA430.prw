@@ -265,7 +265,7 @@ nFlag := 1
 IF  UPPER(ALLTRIM(cUserName)) == 'JECIMAR'           .OR. ;
 	UPPER(ALLTRIM(cUserName)) == 'RENATO'            .OR. ;
 	UPPER(ALLTRIM(cUserName)) == 'ENELCIO'           .OR. ;
-	UPPER(ALLTRIM(cUserName)) == 'MARCELO GUIZZARDI  .OR. ;
+	UPPER(ALLTRIM(cUserName)) == 'MARCELO GUIZZARDI' .OR. ;
 	UPPER(ALLTRIM(cUserName)) == 'MARCELLO'          .OR. ;
 	UPPER(ALLTRIM(cUserName)) == 'ADMINISTRADOR'     .OR. ;
 	UPPER(ALLTRIM(cUserName)) == 'WANISAY'
@@ -286,7 +286,7 @@ nFlag := 3
 IF  UPPER(ALLTRIM(cUserName)) == 'JECIMAR'     	    .OR.;
 	UPPER(ALLTRIM(cUserName)) == 'RENATO'           .OR.;
 	UPPER(ALLTRIM(cUserName)) == 'ENELCIO'          .OR.;
-	UPPER(ALLTRIM(cUserName)) == 'MARCELO GUIZZARDI .OR.;
+	UPPER(ALLTRIM(cUserName)) == 'MARCELO GUIZZARDI'.OR.;
 	UPPER(ALLTRIM(cUserName)) == 'MARCELLO'         .OR.;
 	UPPER(ALLTRIM(cUserName)) == 'ADMINISTRADOR'    .OR.;
 	UPPER(ALLTRIM(cUserName)) == 'WANISAY'
@@ -309,14 +309,14 @@ EndIF
 //旼컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴커
 //� exclusao dos arquivos temporarios usados pela rotina                   �
 //읕컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴켸
-_aP1A->(DbCloseArea("_aP1A")); aeval(directory(_aP1A+"*.*"),{ |aFile| FErase(aFile[1])})
-_aP1B->(DbCloseArea("_aP1B")); aeval(directory(_aP1B+"*.*"),{ |aFile| FErase(aFile[1])})
-_aP1C->(DbCloseArea("_aP1C")); aeval(directory(_aP1C+"*.*"),{ |aFile| FErase(aFile[1])})
-_aP2A->(DbCloseArea("_aP2A")); aeval(directory(_aP2A+".*"),{ |aFile| FErase(aFile[1])})
-_aP2B->(DbCloseArea("_aP2B")); aeval(directory(_aP2B+".*"),{ |aFile| FErase(aFile[1])})
-_aP2C->(DbCloseArea("_aP2C")); aeval(directory(_aP2C+".*"),{ |aFile| FErase(aFile[1])})
-_aP3A->(DbCloseArea("_aP3A")); aeval(directory(_aP3A+".*"),{ |aFile| FErase(aFile[1])})
-_aP4A->(DbCloseArea("_aP4A")); aeval(directory(_aP4A+".*"),{ |aFile| FErase(aFile[1])})
+_aP1A->(DbCloseArea()); aeval(directory(_aP1A+"*.*"),{ |aFile| FErase(aFile[1])})
+_aP1B->(DbCloseArea()); aeval(directory(_aP1B+"*.*"),{ |aFile| FErase(aFile[1])})
+_aP1C->(DbCloseArea()); aeval(directory(_aP1C+"*.*"),{ |aFile| FErase(aFile[1])})
+_aP2A->(DbCloseArea()); aeval(directory(_aP2A+".*"),{ |aFile| FErase(aFile[1])})
+_aP2B->(DbCloseArea()); aeval(directory(_aP2B+".*"),{ |aFile| FErase(aFile[1])})
+_aP2C->(DbCloseArea()); aeval(directory(_aP2C+".*"),{ |aFile| FErase(aFile[1])})
+_aP3A->(DbCloseArea()); aeval(directory(_aP3A+".*"),{ |aFile| FErase(aFile[1])})
+_aP4A->(DbCloseArea()); aeval(directory(_aP4A+".*"),{ |aFile| FErase(aFile[1])})
 RETURN
 
 /*
@@ -342,7 +342,7 @@ _nBytes  := 0                    // Guarda numero da linha
 _nhdl    := Fopen(_cARQ,0)       // Abre o arquivo so leitura
 
 If _nhdl == -1
-	MsgAlert("Erro abertura arquivo "+_cARQ)
+	MsgAlert("Erro abertura arquivo "+_cARQ,)
 	Return
 Endif
 
@@ -1282,7 +1282,7 @@ While lOk
 END
 
 If .Not. fClose(_nhdl)
-	MsgAlert("Erro fechamento do arquivo "+_cIMPORT)
+	MsgAlert("Erro fechamento do arquivo "+_cIMPORT,)
 	Return
 EndIf
 
@@ -4097,7 +4097,7 @@ Static Function fImpExcel()
 
 	Local nTotReg	:=	0
 	local nRegAtu   := 0
-	Local _cBaia	:=	""
+*	Local _cBaia	:=	""
 
 	local cCab1Fon	:= 'Calibri' 
 	local cCab1TamF	:= 8   
@@ -4113,7 +4113,7 @@ Static Function fImpExcel()
 	local nTamFont2	 := 8   
 	local cCorFont2  := '#000000'
 	local cCorFun2	 := '#B8CCE4'
-	Local nConsumo	 :=	0
+*	Local nConsumo	 :=	0
 	Local _nI
 
 	local cEmpresa  := CapitalAce(SM0->M0_NOMECOM)

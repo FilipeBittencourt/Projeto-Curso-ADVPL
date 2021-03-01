@@ -39,17 +39,33 @@ Static Function Rpt321Det()
 	Local msQtdCamp  := 6 // número inicial para o formulário 4
 	Local msDtIni    := Substr(dtos(MV_PAR01), 1, 4) + "-" + Substr(dtos(MV_PAR01), 5, 2) + "-" + Substr(dtos(MV_PAR01), 7, 2)
 	Local msDtFim    := Substr(dtos(MV_PAR02), 1, 4) + "-" + Substr(dtos(MV_PAR02), 5, 2) + "-" + Substr(dtos(MV_PAR02), 7, 2)
+	Local form       := 4 //Prensa
 
 	Local msStaExcQy := 0
 	Local lOk        := .T.
 	Local msGravaErr := ""
 	Local msTmpQry   := "##TMPBIA321_" + __cUserID +"_"+ dtos(Date()) + StrTran(Time(), ":", "")
+	Local nxPlan	 := ""
+
+	//esses numeros são os identificadores dos formularios gerados na base EFORMS, tabela Form
+	if (MV_PAR03 == 1) 
+		form = 4
+		nxPlan := "Inspeção - Prensa"
+		
+	elseif (MV_PAR03 == 2) 
+		form = 14
+		nxPlan := "Inspeção - Laboratório"
+		
+	elseif (MV_PAR03 == 3) 
+		form = 10012
+		nxPlan := "Inspeção - CQPA"
+	endif
 
 	ProcRegua(0)
 
 	oExcel := FWMSEXCEL():New()
 
-	nxPlan := "Inspeção - Prensa"
+	
 	nxTabl := "Registros"
 
 	oExcel:AddworkSheet(nxPlan)
@@ -79,13 +95,13 @@ Static Function Rpt321Det()
 	RT007 += "          ( "
 	RT007 += "              SELECT DISTINCT "
 	RT007 += "                     'C' + RIGHT('000000' + RTRIM(CONVERT(VARCHAR, CAMPO.[ID])), 6) CCAMPO, "
-	RT007 += "                     'C' + RIGHT('000000' + RTRIM(CONVERT(VARCHAR, CAMPO.[ID])), 6) + '-' + CAMPO.[Name] DESCR, "
+	RT007 += "                     'C' + RIGHT('000000' + RTRIM(CONVERT(VARCHAR, CAMPO.[ID])), 6) + '-' + ISNULL(CAMPO.[Label], CAMPO.[Name]) DESCR, "
 	RT007 += "                     CAMPO.[Type] TIPO "
 	RT007 += "              FROM [EFORMS].[dbo].[DataField] DADOS(NOLOCK) "
 	RT007 += "                   INNER JOIN [EFORMS].[dbo].[Field] CAMPO(NOLOCK) ON CAMPO.[ID] = DADOS.[FieldID] "
 	RT007 += "                   INNER JOIN [EFORMS].[dbo].[DataForm] LINKFORM(NOLOCK) ON LINKFORM.[ID] = DADOS.[DataFormID] "
 	RT007 += "                   INNER JOIN [EFORMS].[dbo].[Form] FORMULARIO(NOLOCK) ON FORMULARIO.[ID] = LINKFORM.[FormID] "
-	RT007 += "                                                                          AND LINKFORM.[FormID] = 4 "
+	RT007 += "                                                                          AND LINKFORM.[FormID] = " + STR(form) + ' '"
 	RT007 += "          ) AS TEMP1) "
 	RT007 += "      SELECT CCAMPO, "
 	RT007 += "             DESCRICAO = RTRIM(DESCR), "
@@ -146,7 +162,7 @@ Static Function Rpt321Det()
 	RL005 += "       INNER JOIN [EFORMS].[dbo].[Field] CAMPO(NOLOCK) ON CAMPO.[ID] = DADOS.[FieldID] "
 	RL005 += "       INNER JOIN [EFORMS].[dbo].[DataForm] LINKFORM(NOLOCK) ON LINKFORM.[ID] = DADOS.[DataFormID] "
 	RL005 += "       INNER JOIN [EFORMS].[dbo].[Form] FORMULARIO(NOLOCK) ON FORMULARIO.[ID] = LINKFORM.[FormID] "
-	RL005 += "                                                              AND LINKFORM.[FormID] = 4 "
+	RL005 += "                                                              AND LINKFORM.[FormID] = " + STR(form) + ' '"
 	RL005 += "  WHERE LINKFORM.[InsertDateTime] BETWEEN '" + msDtIni + " 06:00:00.0000000' AND '" + msDtFim + " 05:59:59.9999999' "
 	U_BIAMsgRun("Aguarde... Gerando area de trabalho... ",,{|| msStaExcQy := TcSQLExec(RL005) })
 	If msStaExcQy < 0
@@ -242,9 +258,12 @@ Static Function fValidPerg()
 	cPerg := PADR(fPerg,fTamX1)
 	aRegs:={}
 
+	MV_PAR03 := 1 
+
 	// Grupo/Ordem/Pergunta/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid/Var01/Def01/Cnt01/Var02/Def02/Cnt02/Var03/Def03/Cnt03/Var04/Def04/Cnt04/Var05/Def05/Cnt05/F3
 	aAdd(aRegs,{cPerg,"01","De Data                  ?","","","mv_ch1","D",08,0,0,"G","","mv_par01","","","","","","","","","","","","","","","","","","","","","","","","",""})
 	aAdd(aRegs,{cPerg,"02","Até Data                 ?","","","mv_ch2","D",08,0,0,"G","","mv_par02","","","","","","","","","","","","","","","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"03","Formulário               ?","","","mv_ch3","N",01,0,0,"C","","mv_par03","Prensa","Prensa","Prensa","","","Laboratorio","Laboratorio","Laboratorio","","","","","","","","","","","","","","","","",""})
 	For i := 1 to Len(aRegs)
 		if !dbSeek(cPerg + aRegs[i,2])
 			RecLock("SX1",.t.)

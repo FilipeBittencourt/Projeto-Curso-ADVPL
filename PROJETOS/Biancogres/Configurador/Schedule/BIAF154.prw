@@ -77,7 +77,7 @@ Static Function fMesAtual()
 	MV_PAR29 := 2
 	MV_PAR30 := 1
 	MV_PAR31 := ""
-	MV_PAR32 := "DEV;RA;NDE;BOL;CH;NDC;NCC;JP;PA;TEL;RC;"
+	MV_PAR32 := "RA;JP;" //Ticket 29738 - Alteração de Parametros e Filtros Relatórios automaticos - Power BI
 	MV_PAR33 := 2
 	MV_PAR34 := 2
 	MV_PAR35 := 2
@@ -128,7 +128,7 @@ Static Function fMesFechado()
 	MV_PAR29 := 2
 	MV_PAR30 := 1
 	MV_PAR31 := ""
-	MV_PAR32 := "DEV;RA;NDE;BOL;CH;NDC;NCC;JP;PA;TEL;RC;"
+	MV_PAR32 := "RA;JP;" //Ticket 29738 - Alteração de Parametros e Filtros Relatórios automaticos - Power BI
 	MV_PAR33 := 2
 	MV_PAR34 := 2
 	MV_PAR35 := 2

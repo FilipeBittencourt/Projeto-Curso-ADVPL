@@ -26,6 +26,8 @@ Class TLoadEmpresa From LongClasName
 	Data cCodEmp
 	Data cCodFil
 
+	DATA lEmpAnt
+
 	Data lCliente
 	Data cCodCli
 	Data cLojaCli
@@ -37,15 +39,15 @@ Class TLoadEmpresa From LongClasName
 	Data cCodigosFor
 	Data cCodigosCli
 
-	Method New() Constructor
-	Method Load()
+	Method New(lEmpAnt) Constructor
+	Method Load(lEmpAnt)
 	Method Seek(cCgc)
 	Method SeekForCli(cCodEmp, cCodFil)
 	Method SeekCli(cCodigo, cLoja)
 	Method SeekFor(cCodigo, cLoja)
 	Method GetCodigos()
 
-	Method GetSelEmp()
+	Method GetSelEmp(aEmpOut,lEmpAnt)
 	Method MarcaTodos(lMarca, aVetor, oLbx)
 	Method InvSelecao(aVetor, oLbx)
 	Method RetSelecao(aRet, aVetor)
@@ -54,13 +56,17 @@ Class TLoadEmpresa From LongClasName
 
 EndClass
 
-Method New() Class TLoadEmpresa
+Method New(lEmpAnt) Class TLoadEmpresa
 
-	::Load()
+	DEFAULT lEmpAnt:=.F.
+
+	::Load(lEmpAnt)
 
 Return()
 
-Method Load() Class TLoadEmpresa
+Method Load(lEmpAnt) Class TLoadEmpresa
+
+	DEFAULT lEmpAnt:=.F.
 
 	::cCgc := ""
 	::cUf := ""
@@ -76,6 +82,7 @@ Method Load() Class TLoadEmpresa
 	::cCodigosFor := ""
 	::cCodigosCli := ""
 	::aEmpSel := {}
+	::lEmpAnt:=lEmpAnt
 
 Return()
 
@@ -252,7 +259,7 @@ Method GetCodigos() Class TLoadEmpresa
 
 Return()
 
-Method GetSelEmp(aEmpOut) Class TLoadEmpresa
+Method GetSelEmp(aEmpOut,lEmpAnt) Class TLoadEmpresa
 
 	//---------------------------------------------
 	// Parâmetro  nTipo
@@ -268,12 +275,14 @@ Method GetSelEmp(aEmpOut) Class TLoadEmpresa
 	//---------------------------------------------
 
 	Local   aRet      := {}
+	local   aSM0Query
 	Local   aSalvAmb  := GetArea()
 	Local   aAreaSM0  := SM0->(GetArea())
 	Local   aSalvSM0  := {}
 	Local   aVetor    := {}
 	Local   cMascEmp  := "??"
 	Local   cVar      := ""
+	Local   cSM0Filter
 	Local   lChk      := .F.
 	Local   lTeveMarc := .F.
 	Local   oNo       := LoadBitmap( GetResources(), "LBNO" )
@@ -296,20 +305,30 @@ Method GetSelEmp(aEmpOut) Class TLoadEmpresa
 
 	Local   aMarcadas := {}
 
+	DEFAULT lEmpAnt:=::lEmpAnt
 	Default aEmpOut := {}
+
+	::lEmpAnt:=lEmpAnt
+	if ::lEmpAnt
+		aSM0Query:=array(0)
+		cSM0Filter:="M0_CODIGO=='"+&("cEmpAnt")+"'"
+		cSM0Filter+=".and."
+		cSM0Filter+="M0_CODFIL=='"+PadR(&("cFilAnt"),Len(SM0->M0_CODFIL))+"'"
+		MsAguarde({||FilBrowse("SM0",@aSM0Query,cSM0Filter)},"Empresas","Obtendo dados no SGBD...")
+	endif
 
 	dbSelectArea( "SM0" )
 	aSalvSM0 := SM0->( GetArea() )
 	dbSetOrder( 1 )
 	dbGoTop()
 
-	While !SM0->( EOF() )
+	While SM0->( !EOF() )
 
 		If aScan( aVetor, {|x| x[2] == SM0->M0_CODIGO} ) == 0 .And. aScan( aEmpOut,{|x| AllTrim(x) == AllTrim(SM0->M0_CODIGO)} ) == 0
-			aAdd(  aVetor, { aScan( aMarcadas, {|x| x[1] == SM0->M0_CODIGO .and. x[2] == SM0->M0_CODFIL} ) > 0, SM0->M0_CODIGO, SM0->M0_CODFIL, SM0->M0_NOME, SM0->M0_FILIAL } )
+			aAdd(  aVetor, { aScan( aMarcadas, {|x| x[1] == SM0->M0_CODIGO .and. x[2] == SM0->M0_CODFIL} ) > 0, SM0->M0_CODIGO, SM0->M0_CODFIL, SM0->M0_NOME, SM0->M0_FILIAL , SM0->(RecNo()) } )
 		EndIf
 
-		dbSkip()
+		SM0->(dbSkip())
 	End
 
 	RestArea( aSalvSM0 )
@@ -356,10 +375,15 @@ Method GetSelEmp(aEmpOut) Class TLoadEmpresa
 
 	Activate MSDialog  oDlg Center
 
+	::aEmpSel := aRet
+
+	if ::lEmpAnt
+		dbSelectArea("SM0")
+		SET FILTER TO
+	endif
+
 	RestArea(aSalvAmb)
 	RestArea(aAreaSM0)
-
-	::aEmpSel := aRet
 
 Return(aRet)
 
@@ -393,7 +417,7 @@ Method RetSelecao( aRet, aVetor ) Class TLoadEmpresa
 	aRet := {}
 	For nI := 1 To Len( aVetor )
 		If aVetor[nI][1]
-			aAdd( aRet, { aVetor[nI][2] , aVetor[nI][3], aVetor[nI][2] +  aVetor[nI][3] } )
+			aAdd( aRet,{aVetor[nI][2],aVetor[nI][3],aVetor[nI][2]+aVetor[nI][3],aVetor[nI][4],aVetor[nI][5],aVetor[nI][6]} )
 		EndIf
 	Next nI
 

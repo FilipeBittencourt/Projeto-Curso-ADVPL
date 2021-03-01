@@ -184,7 +184,7 @@ Static Function RptDetail()
 	SetKey(VK_F7,{|| BIA255G()})
 	SetKey(VK_F9,{|| BIA255I()})
 
-	oDlgSC2:bInit := {||EnchoiceBar(oDlgSC2, {|| ExecBlock("BIA255F",.F.,.F.), oDlgSC2:End() }, {|| df_Fch := MsgYESNO("Confirma cancelamento das Alterações?"), IIf(df_Fch, oDlgSC2:End(), ) }, , {{"NOTE",{|| ExecBlock("BIA255J",.F.,.F.) },"Legenda"}} )}
+	oDlgSC2:bInit := {||EnchoiceBar(oDlgSC2, {|| ExecBlock("BIA255F",.F.,.F.), oDlgSC2:End() }, {|| df_Fch := .F., Iif(Len(aProdalt) > 0, MSGINFO("As quantidades de alguns produtos foram alteradas, portanto somente a opção confirmar poderá ser utilizada!"), df_Fch := MsgYESNO("Confirma cancelamento das Alterações?")), IIf(df_Fch, oDlgSC2:End(), ) }, , {{"NOTE",{|| ExecBlock("BIA255J",.F.,.F.) },"Legenda"}} )}
 	oDlgSC2:Activate(,,,.T.)
 
 	If Len(aProdAlt) > 0
@@ -344,126 +344,132 @@ User Function BIA255D
 		EndIf
 
 	ElseIf Alltrim(__readvar) == "M->C2_QUANT" 
-		If !Empty(GdFieldGet("C2_NUM",n))
-			vh_Abatim :=  M->C2_QUANT - GdFieldGet("C2_QUANT",n)
-
-			VL007 := "   WITH EMPENH AS (SELECT '1' CHV, SUM(PZ0_QUANT) QUANT
-			VL007 += "                     FROM " + RetSqlName("PZ0")
-			VL007 += "                    WHERE PZ0_FILIAL = '"+xFilial("PZ0")+"'
-			VL007 += "                      AND PZ0_OPNUM = '"+GdFieldGet("C2_NUM",n)+"'
-			VL007 += "                      AND PZ0_CODPRO = '"+GdFieldGet("C2_PRODUTO",n)+"'
-			VL007 += "                      AND D_E_L_E_T_ = ' ')
-			VL007 += "      ,
-			VL007 += "        SALDOP AS (SELECT '1' CHV, C2_QUANT - C2_QUJE SALDO
-			VL007 += "                     FROM " + RetSqlName("SC2")
-			VL007 += "                    WHERE C2_FILIAL = '"+xFilial("SC2")+"'
-			VL007 += "                      AND C2_NUM = '"+GdFieldGet("C2_NUM",n)+"'
-			VL007 += "                      AND C2_PRODUTO = '"+GdFieldGet("C2_PRODUTO",n)+"'
-			VL007 += "                      AND D_E_L_E_T_ = ' ')
-			VL007 += " SELECT SLP.SALDO , EPH.QUANT
-			VL007 += "   FROM EMPENH EPH
-			VL007 += "  INNER JOIN SALDOP SLP ON SLP.CHV = EPH.CHV
-			VLIndex := CriaTrab(Nil,.f.)
-			dbUseArea(.T.,"TOPCONN",TcGenQry(,,VL007),'VL07',.T.,.T.)
-			dbSelectArea("VL07")
-			dbGoTop()
-			msCartei  := VL07->QUANT
-			msSaldoP  := VL07->SALDO + vh_Abatim - VL07->QUANT
-			msSaldoD  := VL07->SALDO +  vh_Abatim
-			VL07->(dbCloseArea())
-			Ferase(VLIndex+GetDBExtension())
-			Ferase(VLIndex+OrdBagExt())
-			
-			// Tratamento para controle de empenho de OP para Carteira de Vendas e Quantidade já entregue - Por Marcos Alberto Soprani - em 30/01/15 - conforme OS effettivo 0409-15
-			If vh_Abatim < 0 .And. msSaldoP < 0
-				MsgINFO("Não é permitido ajustar a quantidade da maneira que se pretende, porque irá afetar a disponibilidade do saldo versus o empenho da OP na carteira " + Transform(msCartei, "@E 999,999.99")+ "!!!")
-				gk_Retn := .F.
-			EndIf
-			
-			If gk_Retn
-				_nPSegOp	:=	fGetPSeg(GdFieldGet("C2_PRODUTO",n))
-					
-				If _nPsegOp	== 0
-					MsgInfo("O Produto " + GdFieldGet("C2_PRODUTO",n) + " e seu formato não possuem % de segurança cadastrado!")
-				EndIf
+		If aScan(aProdAlt,{|x| x[1] == GdFieldGet("C2_NUM",n) .And. x[2] == GdFieldGet("C2_ITEM",n);
+			.And. x[3] == GdFieldGet("C2_SEQUEN",n) .And. x[4] == GdFieldGet("C2_PRODUTO",n)})
+			MsgINFO("Não é permitido ajustar a quantidade novamente para essa OP! Para tal, utilize o botão confirmar e em seguida abra novamente a rotina e realize a alteração.")					
+			gk_Retn := .F.
+		Else
+			If !Empty(GdFieldGet("C2_NUM",n))
+				vh_Abatim :=  M->C2_QUANT - GdFieldGet("C2_QUANT",n)
+	
+				VL007 := "   WITH EMPENH AS (SELECT '1' CHV, SUM(PZ0_QUANT) QUANT
+				VL007 += "                     FROM " + RetSqlName("PZ0")
+				VL007 += "                    WHERE PZ0_FILIAL = '"+xFilial("PZ0")+"'
+				VL007 += "                      AND PZ0_OPNUM = '"+GdFieldGet("C2_NUM",n)+"'
+				VL007 += "                      AND PZ0_CODPRO = '"+GdFieldGet("C2_PRODUTO",n)+"'
+				VL007 += "                      AND D_E_L_E_T_ = ' ')
+				VL007 += "      ,
+				VL007 += "        SALDOP AS (SELECT '1' CHV, C2_QUANT - C2_QUJE SALDO
+				VL007 += "                     FROM " + RetSqlName("SC2")
+				VL007 += "                    WHERE C2_FILIAL = '"+xFilial("SC2")+"'
+				VL007 += "                      AND C2_NUM = '"+GdFieldGet("C2_NUM",n)+"'
+				VL007 += "                      AND C2_PRODUTO = '"+GdFieldGet("C2_PRODUTO",n)+"'
+				VL007 += "                      AND D_E_L_E_T_ = ' ')
+				VL007 += " SELECT SLP.SALDO , EPH.QUANT
+				VL007 += "   FROM EMPENH EPH
+				VL007 += "  INNER JOIN SALDOP SLP ON SLP.CHV = EPH.CHV
+				VLIndex := CriaTrab(Nil,.f.)
+				dbUseArea(.T.,"TOPCONN",TcGenQry(,,VL007),'VL07',.T.,.T.)
+				dbSelectArea("VL07")
+				dbGoTop()
+				msCartei  := VL07->QUANT
+				msSaldoP  := VL07->SALDO + vh_Abatim - VL07->QUANT
+				msSaldoD  := VL07->SALDO +  vh_Abatim
+				VL07->(dbCloseArea())
+				Ferase(VLIndex+GetDBExtension())
+				Ferase(VLIndex+OrdBagExt())
 				
-				If msCartei/msSaldoD * 100 > _nPSegOp
-					MsgInfo("Esta OP ficará com " + Alltrim(Str(Round(msCartei/msSaldoD * 100,2))) + "% de Ocupação. Sendo o percentual de segurança cadastrado de " + Alltrim(Str(_nPSegOp))+"%")
-				EndIf
-			EndIf
-
-			If gk_Retn
-
-				If MsgNOYES("Devido exigências técnicas esta alteração será gravada imediatamente na base de dados independentemente do botão <Confirmar> da tela do Painel de Controle. Confirma a alteração?")
-
-					nPerc   := vh_Abatim/GdFieldGet("C2_QUANT",n)
-					If Alltrim(GdFieldGet("C2_ITEM",n)) == "01" .And. Alltrim(GdFieldGet("C2_SEQUEN",n)) == "001" 
-						aAdd(aProdAlt,{;
-						GdFieldGet("C2_NUM",n),										;	//01-Numero da OP
-						GdFieldGet("C2_ITEM",n),									;	//02-Item
-						GdFieldGet("C2_SEQUEN",n),									;	//03-Sequencia
-						GdFieldGet("C2_PRODUTO",n), 								;	//04-Cod Produto
-						GdFieldGet("B1_DESC",n),									;	//05-Desc Produto
-						GdFieldGet("C2_QUANT",n),									;	//06-Quant Original
-						GdFieldGet("C2_QUANT",n)+ GdFieldGet("C2_QUANT",n) * nPerc,	;	//07-Quant Final
-						GdFieldGet("C2_DATPRI",n),									;	//08-Data Inicio
-						GdFieldGet("C2_DATPRI",n),									;	//09-Nova Data Inicio
-						GdFieldGet("C2_DATPRF",n),									;	//10-Data Fim
-						GdFieldGet("C2_DATPRF",n)})										//11-Nova Data Fim
-
-					EndIf
-					If nPerc <> 0
-						//A0001 := " UPDATE " + RetSqlName("SC2")
-						//A0001 += "    SET C2_QUANT = ROUND(C2_QUANT + (C2_QUANT * "+Alltrim(Str(nPerc))+"),2) "
-						A0001 := "  SELECT R_E_C_N_O_ REG , ROUND(C2_QUANT + (C2_QUANT * "+Alltrim(Str(nPerc))+"),2) QTD "
-						A0001 += "  FROM " + RetSqlName("SC2") + " WITH(NOLOCK) "
-						A0001 += "  WHERE C2_FILIAL = '"+xFilial("SC2")+"' "
-						A0001 += "    AND C2_NUM = '"+GdFieldGet("C2_NUM",n)+"' "
-						A0001 += "    AND D_E_L_E_T_ = ' ' "
-						MscIndex := CriaTrab(Nil,.f.)
-						dbUseArea(.T.,"TOPCONN",TcGenQry(,,A0001),'A001',.F.,.T.)
-						dbSelectArea("A001")
-						dbGoTop()
-						While A001->(!EOF())
-							SC2->(DbGoTo(A001->REG))
-							Reclock("SC2",.F.)
-							SC2->C2_QUANT 	:= A001->QTD
-							SC2->(MsUnlock())						
-							A001->(DbSkip())
-						End
-						A001->(dbCloseArea())
-						Ferase(MscIndex+GetDBExtension())     //arquivo de trabalho
-						Ferase(MscIndex+OrdBagExt())          //indice gerado
-
-						//A0003 := " UPDATE "+RetSqlName("SD4")
-						A0003 := "	 SELECT R_E_C_N_O_ as REG, ROUND(D4_QUANT + (D4_QUANT * "+Alltrim(Str(nPerc))+"),2) QTD, "
-						A0003 += "         ROUND(D4_QTDEORI + (D4_QTDEORI * "+Alltrim(Str(nPerc))+"),2) QTDORI"
-						A0003 += "   FROM " + RetSqlName("SD4") + " WITH(NOLOCK) "
-						A0003 += "   WHERE D4_FILIAL = '"+xFilial("SD4")+"' "
-						A0003 += "     AND SUBSTRING(D4_OP,1,6) = '"+GdFieldGet("C2_NUM",n)+"'
-						A0003 += "     AND D_E_L_E_T_ = ' ' "
-						MscIndex := CriaTrab(Nil,.f.)
-						dbUseArea(.T.,"TOPCONN",TcGenQry(,,A0003),'A003',.F.,.T.)
-						dbSelectArea("A003")
-						dbGoTop()
-						While A003->(!EOF())
-							SD4->(DbGoTo(A003->REG))
-							Reclock("SD4",.F.)
-							SD4->D4_QUANT 	:= A003->QTD
-							SD4->D4_QTDEORI	:= A003->QTDORI
-							SD4->(MsUnlock())						
-							A003->(DbSkip())
-						End
-						A003->(dbCloseArea())
-						Ferase(MscIndex+GetDBExtension())     //arquivo de trabalho
-						Ferase(MscIndex+OrdBagExt())          //indice gerado
-
-					EndIf
-
-				Else
+				// Tratamento para controle de empenho de OP para Carteira de Vendas e Quantidade já entregue - Por Marcos Alberto Soprani - em 30/01/15 - conforme OS effettivo 0409-15
+				If vh_Abatim < 0 .And. msSaldoP < 0
+					MsgINFO("Não é permitido ajustar a quantidade da maneira que se pretende, porque irá afetar a disponibilidade do saldo versus o empenho da OP na carteira " + Transform(msCartei, "@E 999,999.99")+ "!!!")
 					gk_Retn := .F.
 				EndIf
-
+				
+				If gk_Retn
+					_nPSegOp	:=	fGetPSeg(GdFieldGet("C2_PRODUTO",n))
+						
+					If _nPsegOp	== 0
+						MsgInfo("O Produto " + GdFieldGet("C2_PRODUTO",n) + " e seu formato não possuem % de segurança cadastrado!")
+					EndIf
+					
+					If msCartei/msSaldoD * 100 > _nPSegOp
+						MsgInfo("Esta OP ficará com " + Alltrim(Str(Round(msCartei/msSaldoD * 100,2))) + "% de Ocupação. Sendo o percentual de segurança cadastrado de " + Alltrim(Str(_nPSegOp))+"%")
+					EndIf
+				EndIf
+	
+				If gk_Retn
+	
+					If MsgNOYES("Devido exigências técnicas esta alteração será gravada imediatamente na base de dados independentemente do botão <Confirmar> da tela do Painel de Controle. Confirma a alteração?")
+	
+						nPerc   := vh_Abatim/GdFieldGet("C2_QUANT",n)
+						If Alltrim(GdFieldGet("C2_ITEM",n)) == "01" .And. Alltrim(GdFieldGet("C2_SEQUEN",n)) == "001" 
+							aAdd(aProdAlt,{;
+							GdFieldGet("C2_NUM",n),										;	//01-Numero da OP
+							GdFieldGet("C2_ITEM",n),									;	//02-Item
+							GdFieldGet("C2_SEQUEN",n),									;	//03-Sequencia
+							GdFieldGet("C2_PRODUTO",n), 								;	//04-Cod Produto
+							GdFieldGet("B1_DESC",n),									;	//05-Desc Produto
+							GdFieldGet("C2_QUANT",n),									;	//06-Quant Original
+							GdFieldGet("C2_QUANT",n)+ GdFieldGet("C2_QUANT",n) * nPerc,	;	//07-Quant Final
+							GdFieldGet("C2_DATPRI",n),									;	//08-Data Inicio
+							GdFieldGet("C2_DATPRI",n),									;	//09-Nova Data Inicio
+							GdFieldGet("C2_DATPRF",n),									;	//10-Data Fim
+							GdFieldGet("C2_DATPRF",n)})										//11-Nova Data Fim
+	
+						EndIf
+						If nPerc <> 0
+							//A0001 := " UPDATE " + RetSqlName("SC2")
+							//A0001 += "    SET C2_QUANT = ROUND(C2_QUANT + (C2_QUANT * "+Alltrim(Str(nPerc))+"),2) "
+							A0001 := "  SELECT R_E_C_N_O_ REG , ROUND(C2_QUANT + (C2_QUANT * "+Alltrim(Str(nPerc))+"),2) QTD "
+							A0001 += "  FROM " + RetSqlName("SC2") + " WITH(NOLOCK) "
+							A0001 += "  WHERE C2_FILIAL = '"+xFilial("SC2")+"' "
+							A0001 += "    AND C2_NUM = '"+GdFieldGet("C2_NUM",n)+"' "
+							A0001 += "    AND D_E_L_E_T_ = ' ' "
+							MscIndex := CriaTrab(Nil,.f.)
+							dbUseArea(.T.,"TOPCONN",TcGenQry(,,A0001),'A001',.F.,.T.)
+							dbSelectArea("A001")
+							dbGoTop()
+							While A001->(!EOF())
+								SC2->(DbGoTo(A001->REG))
+								Reclock("SC2",.F.)
+								SC2->C2_QUANT 	:= A001->QTD
+								SC2->(MsUnlock())						
+								A001->(DbSkip())
+							End
+							A001->(dbCloseArea())
+							Ferase(MscIndex+GetDBExtension())     //arquivo de trabalho
+							Ferase(MscIndex+OrdBagExt())          //indice gerado
+	
+							//A0003 := " UPDATE "+RetSqlName("SD4")
+							A0003 := "	 SELECT R_E_C_N_O_ as REG, ROUND(D4_QUANT + (D4_QTDEORI * "+Alltrim(Str(nPerc))+"),2) QTD, "
+							A0003 += "         ROUND(D4_QTDEORI + (D4_QTDEORI * "+Alltrim(Str(nPerc))+"),2) QTDORI"
+							A0003 += "   FROM " + RetSqlName("SD4") + " WITH(NOLOCK) "
+							A0003 += "   WHERE D4_FILIAL = '"+xFilial("SD4")+"' "
+							A0003 += "     AND SUBSTRING(D4_OP,1,6) = '"+GdFieldGet("C2_NUM",n)+"'
+							A0003 += "     AND D_E_L_E_T_ = ' ' "
+							MscIndex := CriaTrab(Nil,.f.)
+							dbUseArea(.T.,"TOPCONN",TcGenQry(,,A0003),'A003',.F.,.T.)
+							dbSelectArea("A003")
+							dbGoTop()
+							While A003->(!EOF())
+								SD4->(DbGoTo(A003->REG))
+								Reclock("SD4",.F.)
+								SD4->D4_QUANT 	:= A003->QTD
+								SD4->D4_QTDEORI	:= A003->QTDORI
+								SD4->(MsUnlock())						
+								A003->(DbSkip())
+							End
+							A003->(dbCloseArea())
+							Ferase(MscIndex+GetDBExtension())     //arquivo de trabalho
+							Ferase(MscIndex+OrdBagExt())          //indice gerado
+	
+						EndIf
+	
+					Else
+						gk_Retn := .F.
+					EndIf
+	
+				EndIf
 			EndIf
 		EndIf
 	ElseIf Alltrim(__readvar) == "M->C2_YQTRTFC" 

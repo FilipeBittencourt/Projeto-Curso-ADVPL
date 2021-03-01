@@ -1,0 +1,48 @@
+#include "totvs.ch"
+#include "parmtype.ch"
+
+static oTContaContabil
+
+class TSContaContabil
+	static method SetContaContabil(cCad as character,cCliFor as character,cLoja as character,cTipo as character,lFIDC as logical) as character
+    static method GetContaContabil(cCad as character,cCliFor as character,cLoja as character,cTipo as character,lFIDC as logical) as array
+end class
+
+static method SetContaContabil(cCad,cCliFor,cLoja,cTipo,lFIDC) class TSContaContabil
+    
+    local cCTAFIDC          as character
+    local cContaContabil    as character
+    
+    paramtype cCad      as character
+    paramtype cCliFor   as character
+    paramtype cLoja     as character
+    paramtype cTipo     as character
+    paramtype lFIDC     as logical optional
+    
+    DEFAULT oTContaContabil:=TContaContabil():New()
+    
+    cContaContabil:=oTContaContabil:SetContContab(cCad,cCliFor,cLoja,cTipo)
+    if (lFIDC)
+        cCTAFIDC:="11201013"
+        cCTAFIDC+=subStr(cContaContabil,9)
+        cContaContabil:=cCTAFIDC
+    endif
+    
+    return(cContaContabil)
+    
+static method GetContaContabil(cCad,cCliFor,cLoja,cTipo,lFIDC) class TSContaContabil
+
+    local aContaContabil as array
+    
+    paramtype cCad      as character
+    paramtype cCliFor   as character
+    paramtype cLoja     as character
+    paramtype cTipo     as character
+    paramtype lFIDC     as logical optional
+
+    DEFAULT oTContaContabil:=TContaContabil():New()
+    TSContaContabil():SetContaContabil(cCad,cCliFor,cLoja,cTipo,lFIDC)
+
+    aContaContabil:=oTContaContabil:Create(cCad)
+
+    return(aContaContabil)

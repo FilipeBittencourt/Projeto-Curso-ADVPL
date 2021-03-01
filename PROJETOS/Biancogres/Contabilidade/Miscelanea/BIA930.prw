@@ -35,6 +35,8 @@ dta_fin := SF2->F2_EMISSAO
 
 Processa( {|| fEntrFut() } , "SF2", "Contabilizando ICMS Frete Autonomo")
 
+RETURN
+
 /*/
 北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北北
 Funcao    := fEntrFut
@@ -81,7 +83,7 @@ While !Eof()
 	lPadrao := VerPadrao( cPadrao )
 	If lPadrao
 		If !lCabecalho
-			a370Cabecalho(@nHdlPrv,@cArquivo)
+			a370Cabecalho()
 		Endif
 		nTotal  := nTotal + DetProva(nHdlPrv,cPadrao ,"CONTABIL",cLote)
 		cult := .F.

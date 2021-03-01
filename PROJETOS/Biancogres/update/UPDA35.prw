@@ -229,7 +229,7 @@ Static Function FSTProc( lEnd, aMarcadas, lAuto )
 				AutoGrLog( " Usuário TOTVS .....: " + __cUserId + " " +  cUserName )
 				AutoGrLog( " Computer Name......: " + GetComputerName() )
 
-				aInfo   := GetUserInfo()
+				aInfo   := GetUserInfoArray()
 				If ( nPos    := aScan( aInfo,{ |x,y| x[3] == ThreadId() } ) ) > 0
 					AutoGrLog( " " )
 					AutoGrLog( " Dados Thread" )
@@ -403,7 +403,7 @@ Static Function FSAtuSX2()
 	'RATEIO ORCAMENTO ADM'													, ; //X2_NOME
 	'RATEIO ORCAMENTO ADM'													, ; //X2_NOMESPA
 	'RATEIO ORCAMENTO ADM'													, ; //X2_NOMEENG
-	'C'																		, ; //X2_MODO
+	'E'																		, ; //X2_MODO
 	''																		, ; //X2_TTS
 	''																		, ; //X2_ROTINA
 	''																		, ; //X2_PYME
@@ -414,8 +414,8 @@ Static Function FSAtuSX2()
 	''																		, ; //X2_POSLGT
 	''																		, ; //X2_CLOB
 	''																		, ; //X2_AUTREC
-	'C'																		, ; //X2_MODOEMP
-	'C'																		, ; //X2_MODOUN
+	'E'																		, ; //X2_MODOEMP
+	'E'																		, ; //X2_MODOUN
 	0																		} ) //X2_MODULO
 
 //
@@ -428,7 +428,7 @@ Static Function FSAtuSX2()
 	'RECEITA PRESTADORAS'													, ; //X2_NOME
 	'RECEITA PRESTADORAS'													, ; //X2_NOMESPA
 	'RECEITA PRESTADORAS'													, ; //X2_NOMEENG
-	'C'																		, ; //X2_MODO
+	'E'																		, ; //X2_MODO
 	''																		, ; //X2_TTS
 	''																		, ; //X2_ROTINA
 	''																		, ; //X2_PYME
@@ -439,8 +439,8 @@ Static Function FSAtuSX2()
 	''																		, ; //X2_POSLGT
 	''																		, ; //X2_CLOB
 	''																		, ; //X2_AUTREC
-	'C'																		, ; //X2_MODOEMP
-	'C'																		, ; //X2_MODOUN
+	'E'																		, ; //X2_MODOEMP
+	'E'																		, ; //X2_MODOUN
 	0																		} ) //X2_MODULO
 
 //
@@ -453,7 +453,7 @@ Static Function FSAtuSX2()
 	'RECEITA PRESTADORAS % REC PIS/COFINS'									, ; //X2_NOME
 	'RECEITA PRESTADORAS % REC PIS/COFINS'									, ; //X2_NOMESPA
 	'RECEITA PRESTADORAS % REC PIS/COFINS'									, ; //X2_NOMEENG
-	'C'																		, ; //X2_MODO
+	'E'																		, ; //X2_MODO
 	''																		, ; //X2_TTS
 	''																		, ; //X2_ROTINA
 	''																		, ; //X2_PYME
@@ -464,8 +464,8 @@ Static Function FSAtuSX2()
 	''																		, ; //X2_POSLGT
 	''																		, ; //X2_CLOB
 	''																		, ; //X2_AUTREC
-	'C'																		, ; //X2_MODOEMP
-	'C'																		, ; //X2_MODOUN
+	'E'																		, ; //X2_MODOEMP
+	'E'																		, ; //X2_MODOUN
 	0																		} ) //X2_MODULO
 
 //
@@ -489,8 +489,8 @@ Static Function FSAtuSX2()
 	''																		, ; //X2_POSLGT
 	''																		, ; //X2_CLOB
 	''																		, ; //X2_AUTREC
-	'C'																		, ; //X2_MODOEMP
-	'C'																		, ; //X2_MODOUN
+	'E'																		, ; //X2_MODOEMP
+	'E'																		, ; //X2_MODOUN
 	0																		} ) //X2_MODULO
 
 //
@@ -503,7 +503,7 @@ Static Function FSAtuSX2()
 	'KARDEX - PESO RATEIO - FORMATO PROD'									, ; //X2_NOME
 	'KARDEX - PESO RATEIO - FORMATO PROD'									, ; //X2_NOMESPA
 	'KARDEX - PESO RATEIO - FORMATO PROD'									, ; //X2_NOMEENG
-	'C'																		, ; //X2_MODO
+	'E'																		, ; //X2_MODO
 	''																		, ; //X2_TTS
 	''																		, ; //X2_ROTINA
 	''																		, ; //X2_PYME
@@ -514,8 +514,8 @@ Static Function FSAtuSX2()
 	''																		, ; //X2_POSLGT
 	''																		, ; //X2_CLOB
 	''																		, ; //X2_AUTREC
-	'C'																		, ; //X2_MODOEMP
-	'C'																		, ; //X2_MODOUN
+	'E'																		, ; //X2_MODOEMP
+	'E'																		, ; //X2_MODOUN
 	0																		} ) //X2_MODULO
 
 //
@@ -528,7 +528,7 @@ Static Function FSAtuSX2()
 	'RAC ORCADA - PROC. CUSTO UNIT. FIXO'									, ; //X2_NOME
 	'RAC ORCADA - PROC. CUSTO UNIT. FIXO'									, ; //X2_NOMESPA
 	'RAC ORCADA - PROC. CUSTO UNIT. FIXO'									, ; //X2_NOMEENG
-	'C'																		, ; //X2_MODO
+	'E'																		, ; //X2_MODO
 	''																		, ; //X2_TTS
 	''																		, ; //X2_ROTINA
 	''																		, ; //X2_PYME
@@ -539,8 +539,8 @@ Static Function FSAtuSX2()
 	''																		, ; //X2_POSLGT
 	''																		, ; //X2_CLOB
 	''																		, ; //X2_AUTREC
-	'C'																		, ; //X2_MODOEMP
-	'C'																		, ; //X2_MODOUN
+	'E'																		, ; //X2_MODOEMP
+	'E'																		, ; //X2_MODOUN
 	0																		} ) //X2_MODULO
 
 //
@@ -553,7 +553,7 @@ Static Function FSAtuSX2()
 	'KARDEX ORCADO - SALDOS INICIAIS'										, ; //X2_NOME
 	'KARDEX ORCADO - SALDOS INICIAIS'										, ; //X2_NOMESPA
 	'KARDEX ORCADO - SALDOS INICIAIS'										, ; //X2_NOMEENG
-	'C'																		, ; //X2_MODO
+	'E'																		, ; //X2_MODO
 	''																		, ; //X2_TTS
 	''																		, ; //X2_ROTINA
 	''																		, ; //X2_PYME
@@ -564,8 +564,8 @@ Static Function FSAtuSX2()
 	''																		, ; //X2_POSLGT
 	''																		, ; //X2_CLOB
 	''																		, ; //X2_AUTREC
-	'C'																		, ; //X2_MODOEMP
-	'C'																		, ; //X2_MODOUN
+	'E'																		, ; //X2_MODOEMP
+	'E'																		, ; //X2_MODOUN
 	0																		} ) //X2_MODULO
 
 //
@@ -578,7 +578,7 @@ Static Function FSAtuSX2()
 	'KARDEX ORCADO - MOVIMENTACOES'										, ; //X2_NOME
 	'KARDEX ORCADO - MOVIMENTACOES'										, ; //X2_NOMESPA
 	'KARDEX ORCADO - MOVIMENTACOES'										, ; //X2_NOMEENG
-	'C'																		, ; //X2_MODO
+	'E'																		, ; //X2_MODO
 	''																		, ; //X2_TTS
 	''																		, ; //X2_ROTINA
 	''																		, ; //X2_PYME
@@ -589,8 +589,8 @@ Static Function FSAtuSX2()
 	''																		, ; //X2_POSLGT
 	''																		, ; //X2_CLOB
 	''																		, ; //X2_AUTREC
-	'C'																		, ; //X2_MODOEMP
-	'C'																		, ; //X2_MODOUN
+	'E'																		, ; //X2_MODOEMP
+	'E'																		, ; //X2_MODOUN
 	0																		} ) //X2_MODULO
 
 //
@@ -603,7 +603,7 @@ Static Function FSAtuSX2()
 	'DRE - PERC. / VALOR'													, ; //X2_NOME
 	'DRE - PERC. / VALOR'													, ; //X2_NOMESPA
 	'DRE - PERC. / VALOR'													, ; //X2_NOMEENG
-	'C'																		, ; //X2_MODO
+	'E'																		, ; //X2_MODO
 	''																		, ; //X2_TTS
 	''																		, ; //X2_ROTINA
 	''																		, ; //X2_PYME
@@ -614,8 +614,8 @@ Static Function FSAtuSX2()
 	''																		, ; //X2_POSLGT
 	''																		, ; //X2_CLOB
 	''																		, ; //X2_AUTREC
-	'C'																		, ; //X2_MODOEMP
-	'C'																		, ; //X2_MODOUN
+	'E'																		, ; //X2_MODOEMP
+	'E'																		, ; //X2_MODOUN
 	0																		} ) //X2_MODULO
 
 //
@@ -628,7 +628,7 @@ Static Function FSAtuSX2()
 	'BP CONSOLIDADO'														, ; //X2_NOME
 	'BP CONSOLIDADO'														, ; //X2_NOMESPA
 	'BP CONSOLIDADO'														, ; //X2_NOMEENG
-	'C'																		, ; //X2_MODO
+	'E'																		, ; //X2_MODO
 	''																		, ; //X2_TTS
 	''																		, ; //X2_ROTINA
 	''																		, ; //X2_PYME
@@ -639,8 +639,8 @@ Static Function FSAtuSX2()
 	''																		, ; //X2_POSLGT
 	''																		, ; //X2_CLOB
 	''																		, ; //X2_AUTREC
-	'C'																		, ; //X2_MODOEMP
-	'C'																		, ; //X2_MODOUN
+	'E'																		, ; //X2_MODOEMP
+	'E'																		, ; //X2_MODOUN
 	0																		} ) //X2_MODULO
 
 //
@@ -678,7 +678,7 @@ Static Function FSAtuSX2()
 	'CONSOLIDADO - PREVISÃO DE CONTAS A RECEBER'							, ; //X2_NOME
 	'CONSOLIDADO - PREVISÃO DE CONTAS A RECEBER'							, ; //X2_NOMESPA
 	'CONSOLIDADO - PREVISÃO DE CONTAS A RECEBER'							, ; //X2_NOMEENG
-	'C'																		, ; //X2_MODO
+	'E'																		, ; //X2_MODO
 	''																		, ; //X2_TTS
 	''																		, ; //X2_ROTINA
 	''																		, ; //X2_PYME
@@ -689,8 +689,8 @@ Static Function FSAtuSX2()
 	''																		, ; //X2_POSLGT
 	''																		, ; //X2_CLOB
 	''																		, ; //X2_AUTREC
-	'C'																		, ; //X2_MODOEMP
-	'C'																		, ; //X2_MODOUN
+	'E'																		, ; //X2_MODOEMP
+	'E'																		, ; //X2_MODOUN
 	0																		} ) //X2_MODULO
 
 //
@@ -12720,7 +12720,7 @@ Static Function FSAtuSIX()
 	aAdd( aSIX, { ;
 		'ZOC'																						, ; //INDICE
 	'1'																							, ; //ORDEM
-	'ZO2_FILIAL+ZO2_VERSAO+ZO2_REVISA+ZO2_ANOREF+ZO2_CTAREC+ZO2_LINHA'	, ; //CHAVE
+	'ZOC_FILIAL+ZOC_VERSAO+ZOC_REVISA+ZOC_ANOREF+ZOC_LINHA'	, ; //CHAVE
 	'Versao+Revisao+Ano Ref.+Linha+Conta Receb.'									, ; //DESCRICAO
 	'Versao+Revisao+Ano Ref.+Linha+Conta Receb.'									, ; //DESCSPA
 	'Versao+Revisao+Ano Ref.+Linha+Conta Receb.'									, ; //DESCENG
@@ -13571,7 +13571,7 @@ aAdd( aSX2, { ;
 	'RUBRICAS BP'												        	, ; //X2_NOME
 	'RUBRICAS BP'													        , ; //X2_NOMESPA
 	'RUBRICAS BP'													        , ; //X2_NOMEENG
-	'C'																		, ; //X2_MODO
+	'E'																		, ; //X2_MODO
 	''																		, ; //X2_TTS
 	''																		, ; //X2_ROTINA
 	''																		, ; //X2_PYME
@@ -13582,8 +13582,8 @@ aAdd( aSX2, { ;
 	''																		, ; //X2_POSLGT
 	''																		, ; //X2_CLOB
 	''																		, ; //X2_AUTREC
-	'C'																		, ; //X2_MODOEMP
-	'C'																		, ; //X2_MODOUN
+	'E'																		, ; //X2_MODOEMP
+	'E'																		, ; //X2_MODOUN
 	0																		} ) //X2_MODULO
 
 //

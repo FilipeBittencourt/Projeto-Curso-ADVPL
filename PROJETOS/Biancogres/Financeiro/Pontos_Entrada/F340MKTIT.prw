@@ -56,27 +56,28 @@ User Function BF340CMP()
 		EndIf
 	
 	ElseIf PARAMIXB[1] == 3 // Estorno da compensacao - Debito
-	
-		DBSelectArea("SA2")
-		SA2->(DBSetOrder(1)) // A2_FILIAL, A2_COD, A2_LOJA, R_E_C_N_O_, D_E_L_E_T_
-		
-		If SA2->(DBSeek(xFilial("SA2") + SE5->E5_CLIFOR + SE5->E5_LOJA))
-
-			cConta := SA2->A2_YCTAADI
-					
-		EndIf
-		
-	ElseIf PARAMIXB[1] == 4 // Estorno da compensacao - Credito
 
 		DBSelectArea("SA2")
 		SA2->(DBSetOrder(1)) // A2_FILIAL, A2_COD, A2_LOJA, R_E_C_N_O_, D_E_L_E_T_
 		
 		If SA2->(DBSeek(xFilial("SA2") + SE5->E5_FORNADT + SE5->E5_LOJAADT))
 
-			cConta := SA2->A2_CONTA
+			cConta := SA2->A2_YCTAADI
 					
 		EndIf		
 		
+	ElseIf PARAMIXB[1] == 4 // Estorno da compensacao - Credito
+
+
+		DBSelectArea("SA2")
+		SA2->(DBSetOrder(1)) // A2_FILIAL, A2_COD, A2_LOJA, R_E_C_N_O_, D_E_L_E_T_
+		
+		If SA2->(DBSeek(xFilial("SA2") + SE5->E5_CLIFOR + SE5->E5_LOJA))
+
+			cConta := SA2->A2_CONTA
+					
+		EndIf
+
 	EndIf
 	
 	RestArea(aAreaSA2)

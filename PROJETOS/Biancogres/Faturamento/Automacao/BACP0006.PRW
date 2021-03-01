@@ -101,6 +101,7 @@ Static Function LoadZKL()
 	Local aLinha		:= {}
 *	Local nI			:= 0
 	Local cRegras		:= ""
+	Local cObs as character
 	Local aRegras		:= {}
 
 	If (ZKL->(DbSeek(cFilPed+cNumPed)))
@@ -122,6 +123,7 @@ Static Function LoadZKL()
 	
 			Next nI
 			
+			cObs := PSHtml2TXT():PSHtml2TXT(ctools():NoAccent(ZKL->ZKL_OBS))
 			
 			aLinha := {;
 			ZKL->ZKL_APROV,;
@@ -132,7 +134,7 @@ Static Function LoadZKL()
 			ZKL->ZKL_ORDEM,;
 			ZKL->ZKL_ORIGEM,;
 			ZKL->ZKL_STATUS,;
-			ZKL->ZKL_OBS,;
+			cObs,;
 			cRegras,;
 			.F.;
 			}

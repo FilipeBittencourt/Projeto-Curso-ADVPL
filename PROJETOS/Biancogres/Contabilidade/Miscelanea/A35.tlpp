@@ -61,6 +61,7 @@ class A35
     static method breakError(oError as object,cEmp as character,cFil as character,cMsg as character) 
 
     static method tmpTableName(cTableName) as character
+    static method tmpTableDrop(cTableName) as character
     
     static method getSQLFile(cEmp as character,cFil as character,cSQLPath as character,cProcName as character,cSeq as character,cSQLName as character) as character
     static method writeSQLFile(cSQLQuery as character,cEmp as character,cFil as character,cProcName as character,cSeq as character,cSQLName as character,cSQLPath as character,cSQLFile as character) as logical
@@ -400,7 +401,7 @@ static method getZOEVariavel(cVariavel,cMes) class A35
 
             ZOE->(MsGoTo(nZOERecNo))
 
-            aZOEData:=ZOE->(__ArrayUtils():RegToArray("ZOE",nZOERecNo))
+            aZOEData:=ZOE->(aUtils():RegToArray("ZOE",nZOERecNo))
 
             ZOE->(aAdd(aZOEStack,aZOEData))
             nAT:=Len(aZOEStack)
@@ -603,6 +604,42 @@ static method tmpTableName(cTableName) class A35
 	cTmpTableName+=cValtoChar(Randomize(1,999))
 
     return(cTmpTableName)
+
+static method tmpTableDrop(cTableName) class A35
+
+    local cCRLF         as character
+    local cSQLQuery     as character
+    local cTCSQLError   as character
+
+    cCRLF:=CRLF
+
+    cSQLQuery:="IF OBJECT_ID('"+cTableName+"') IS NOT NULL"
+    cSQLQuery+=cCRLF
+    cSQLQuery+="BEGIN"
+    cSQLQuery+=cCRLF
+    cSQLQuery+="    DROP TABLE "+cTableName
+    cSQLQuery+=cCRLF
+    cSQLQuery+="END"
+    cSQLQuery+=cCRLF
+    if (TCSQLExec(cSQLQuery)<0)
+        cTCSQLError:=TCSQLError()
+    endif        
+    
+    cSQLQuery:="IF OBJECT_ID('tempdb.."+cTableName+"') IS NOT NULL
+    cSQLQuery+=cCRLF
+    cSQLQuery+="BEGIN"
+    cSQLQuery+=cCRLF
+    cSQLQuery+="    DROP TABLE "+cTableName
+    cSQLQuery+=cCRLF
+    cSQLQuery+="END"
+    cSQLQuery+=cCRLF
+    if (TCSQLExec(cSQLQuery)<0)
+        cTCSQLError:=TCSQLError()
+    endif        
+
+    DEFAULT cTCSQLError:=""
+
+    return(cTCSQLError)
 
 static method getSQLFile(cEmp,cFil,cSQLPath,cProcName,cSeq,cSQLName) class A35
 

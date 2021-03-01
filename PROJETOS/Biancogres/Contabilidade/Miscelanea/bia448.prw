@@ -342,7 +342,7 @@ Static Function RptDetail()
 	msZ56Seq := ""
 	XR009 := " SELECT ISNULL(MAX(Z56_SEQUEN), '   ') SEQUENCIA "
 	XR009 += "   FROM " + RetSqlName("Z56") + " Z56(NOLOCK) "
-	XR009 += "  WHERE Z56_FILIAL = '" + xFilial("Z56") + "' " "
+	XR009 += "  WHERE Z56_FILIAL = '" + xFilial("Z56") + "' "
 	XR009 += "    AND Z56_DATARF BETWEEN '" + Substr(dtos(gtDtRef),1,4) + "0101' AND '" + Substr(dtos(gtDtRef),1,4) + "1231' "
 	XR009 += "    AND Z56.D_E_L_E_T_ = ' ' "
 	XRIndex := CriaTrab(Nil,.f.)
@@ -357,7 +357,8 @@ Static Function RptDetail()
 	msSequenc := ""
 	XP001 := " SELECT ISNULL(MAX(ZBF_SEQUEN), '   ') SEQUENCIA "
 	XP001 += " FROM " + RetSqlName("ZBF") + " ZBF(NOLOCK) "
-	XP001 += " WHERE ZBF_DATA BETWEEN '" + Substr(dtos(gtDtRef),1,4) + "0101' AND '" + Substr(dtos(gtDtRef),1,4) + "1231' "
+	XP001 += " WHERE ZBF_FILIAL = '" + xFilial("ZBF") + "' "
+	XP001 += "       AND ZBF_DATA BETWEEN '" + Substr(dtos(gtDtRef),1,4) + "0101' AND '" + Substr(dtos(gtDtRef),1,4) + "1231' "
 	XP001 += "       AND ZBF.D_E_L_E_T_ = ' ' "
 	XPIndex := CriaTrab(Nil,.f.)
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,XP001),'XP01',.T.,.T.)
@@ -370,9 +371,10 @@ Static Function RptDetail()
 
 	KS001 := " DELETE " + RetSqlName("ZBF") + " "
 	KS001 += "   FROM " + RetSqlName("ZBF") + " ZBF "
-	KS001 += "  WHERE ZBF.ZBF_DATA = '" + dtos(gtDtRef) +  "' "
-	KS001 += "    AND ZBF.ZBF_ORGLAN LIKE '%AJUSTADO-C.VARI%' "
-	KS001 += "    AND ZBF.D_E_L_E_T_ = ' ' "
+	KS001 += "  WHERE ZBF.ZBF_FILIAL = '" + xFilial("ZBF") + "' "
+	KS001 += "        AND ZBF.ZBF_DATA = '" + dtos(gtDtRef) +  "' "
+	KS001 += "        AND ZBF.ZBF_ORGLAN LIKE '%AJUSTADO-C.VARI%' "
+	KS001 += "        AND ZBF.D_E_L_E_T_ = ' ' "
 	U_BIAMsgRun("Aguarde... Apagando registros ZBF... ",,{|| TcSQLExec(KS001) })
 
 	msContad := .F.
@@ -402,9 +404,11 @@ Static Function RptDetail()
 	RT005 += "                                        AND Z57_PRODUT = Z56_COD "
 	RT005 += "                                        AND Z57_SEQUEN = Z56_SEQUEN "
 	RT005 += "                                        AND Z57.D_E_L_E_T_ = ' ' "
-	RT005 += "                LEFT JOIN " + RetSqlName("ZZ6") + " ZZ6(NOLOCK) ON ZZ6_COD = SUBSTRING(Z56_COD, 1, 2) "
+	RT005 += "                LEFT JOIN " + RetSqlName("ZZ6") + " ZZ6(NOLOCK) ON ZZ6_FILIAL = '" + xFilial("ZZ6") + "' "
+	RT005 += "                                        AND ZZ6_COD = SUBSTRING(Z56_COD, 1, 2) "
 	RT005 += "                                        AND ZZ6.D_E_L_E_T_ = ' ' "
-	RT005 += "               INNER JOIN " + RetSqlName("CT1") + " CT1(NOLOCK) ON CT1_CONTA = Z56_CONTA "
+	RT005 += "               INNER JOIN " + RetSqlName("CT1") + " CT1(NOLOCK) ON CT1_FILIAL = '" + xFilial("CT1") + "' "
+	RT005 += "                                        AND CT1_CONTA = Z56_CONTA "
 	RT005 += "                                        AND CT1.D_E_L_E_T_ = ' ' "
 	RT005 += "          WHERE Z56_FILIAL = '" + xFilial("Z56") + "' "
 	RT005 += "                AND Z56_DATARF = '" + dtos(gtDtRef) + "' "
@@ -423,8 +427,8 @@ Static Function RptDetail()
 	RT005 += "                     ZBF_CLVLDB CLVL, "
 	RT005 += "                     ISNULL(SUM(ZBF_VALOR), 0) VALOR "
 	RT005 += "              FROM " + RetSqlName("ZBF") + " ZBF(NOLOCK) "
-	RT005 += "              WHERE ZBF_DATA = '" + dtos(gtDtRef) + "' "
-	//RT005 += "                    AND ZBF_ORGLAN <> 'AJUSTADO       ' "
+	RT005 += "              WHERE ZBF_FILIAL = '" + xFilial("ZBF") + "' "
+	RT005 += "                    AND ZBF_DATA = '" + dtos(gtDtRef) + "' "
 	RT005 += "                    AND ZBF_SEQUEN = '" + msSequenc + "' "
 	RT005 += "                    AND ZBF_DEBITO <> '' "
 	RT005 += "                    AND ZBF_CLVLDB <> '' "
@@ -436,8 +440,8 @@ Static Function RptDetail()
 	RT005 += "                     ZBF_CLVLCR CLVL, "
 	RT005 += "                     ISNULL(SUM(ZBF_VALOR), 0) * (-1) VALOR "
 	RT005 += "              FROM " + RetSqlName("ZBF") + " ZBF(NOLOCK) "
-	RT005 += "              WHERE ZBF_DATA = '" + dtos(gtDtRef) + "' "
-	//RT005 += "                    AND ZBF_ORGLAN <> 'AJUSTADO       ' "
+	RT005 += "              WHERE ZBF_FILIAL = '" + xFilial("ZBF") + "' "
+	RT005 += "                    AND ZBF_DATA = '" + dtos(gtDtRef) + "' "
 	RT005 += "                    AND ZBF_SEQUEN = '" + msSequenc + "' "
 	RT005 += "                    AND ZBF_CREDIT <> '' "
 	RT005 += "                    AND ZBF_CLVLCR <> '' "
@@ -452,7 +456,8 @@ Static Function RptDetail()
 	RT005 += "                                   AND Z50_CONTA = TBL.CONTA "
 	RT005 += "                                   AND Z50_M" + Substr(dtos(gtDtRef),5,2) + " <> 0 "
 	RT005 += "                                   AND Z50.D_E_L_E_T_ = ' ' "
-	RT005 += "          INNER JOIN " + RetSqlName("CT1") + " CT1(NOLOCK) ON CT1_CONTA = CONTA "
+	RT005 += "          INNER JOIN " + RetSqlName("CT1") + " CT1(NOLOCK) ON CT1_FILIAL = '" + xFilial("CT1") + "' "
+	RT005 += "                                           AND CT1_CONTA = CONTA "
 	RT005 += "                                           AND CT1.D_E_L_E_T_ = ' ' "
 	RT005 += "          GROUP BY CONTA, "
 	RT005 += "                   CT1_DESC01, " 
@@ -470,20 +475,20 @@ Static Function RptDetail()
 	RT005 += "          ( "
 	RT005 += "              SELECT ISNULL(SUM(ZBF_VALOR), 0) VALOR "
 	RT005 += "              FROM " + RetSqlName("ZBF") + " ZBF(NOLOCK) "
-	RT005 += "              WHERE ZBF_DEBITO = A.CONTA "
+	RT005 += "              WHERE ZBF_FILIAL = '" + xFilial("ZBF") + "' "
+	RT005 += "                    AND ZBF_DEBITO = A.CONTA "
 	RT005 += "                    AND ZBF_CLVLDB = A.CLVL "
 	RT005 += "                    AND ZBF_DATA = A.DATARF "
-	//RT005 += "                    AND ZBF_ORGLAN <> 'AJUSTADO       ' "
 	RT005 += "                    AND ZBF_SEQUEN = '" + msSequenc + "' "
 	RT005 += "                    AND D_E_L_E_T_ = ' ' "
 	RT005 += "          ) DEBITO, "
 	RT005 += "          ( "
 	RT005 += "              SELECT ISNULL(SUM(ZBF_VALOR), 0) VALOR "
 	RT005 += "              FROM " + RetSqlName("ZBF") + " ZBF(NOLOCK) "
-	RT005 += "              WHERE ZBF_CREDIT = A.CONTA "
+	RT005 += "              WHERE ZBF_FILIAL = '" + xFilial("ZBF") + "' "
+	RT005 += "                    AND ZBF_CREDIT = A.CONTA "
 	RT005 += "                    AND ZBF_CLVLCR = A.CLVL "
 	RT005 += "                    AND ZBF_DATA = A.DATARF "
-	//RT005 += "                    AND ZBF_ORGLAN <> 'AJUSTADO       ' "
 	RT005 += "                    AND ZBF_SEQUEN = '" + msSequenc + "' "
 	RT005 += "                    AND D_E_L_E_T_ = ' ' "
 	RT005 += "          ) CREDITO "
@@ -589,7 +594,8 @@ Static Function RptrDetail()
 	msSequenc := ""
 	XP001 := " SELECT ISNULL(MAX(ZBF_SEQUEN), '   ') SEQUENCIA "
 	XP001 += " FROM " + RetSqlName("ZBF") + " ZBF "
-	XP001 += " WHERE ZBF_DATA BETWEEN '" + Substr(dtos(gtDtRef),1,4) + "0101' AND '" + Substr(dtos(gtDtRef),1,4) + "1231' "
+	XP001 += " WHERE ZBF_FILIAL = '" + xFilial("ZBF") + "' "
+	XP001 += "       AND ZBF_DATA BETWEEN '" + Substr(dtos(gtDtRef),1,4) + "0101' AND '" + Substr(dtos(gtDtRef),1,4) + "1231' "
 	XP001 += "       AND ZBF.D_E_L_E_T_ = ' ' "
 	XPIndex := CriaTrab(Nil,.f.)
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,XP001),'XP01',.T.,.T.)
@@ -602,9 +608,10 @@ Static Function RptrDetail()
 
 	KS001 := " DELETE " + RetSqlName("ZBF") + " "
 	KS001 += "   FROM " + RetSqlName("ZBF") + " ZBF "
-	KS001 += "  WHERE ZBF.ZBF_DATA = '" + dtos(gtDtRef) +  "' "
-	KS001 += "    AND ZBF.ZBF_ORGLAN LIKE '%AJUSTADO-RECEIT%' "
-	KS001 += "    AND ZBF.D_E_L_E_T_ = ' ' "
+	KS001 += "  WHERE ZBF.ZBF_FILIAL = '" + xFilial("ZBF") + "' "
+	KS001 += "        AND ZBF.ZBF_DATA = '" + dtos(gtDtRef) +  "' "
+	KS001 += "        AND ZBF.ZBF_ORGLAN LIKE '%AJUSTADO-RECEIT%' "
+	KS001 += "        AND ZBF.D_E_L_E_T_ = ' ' "
 	U_BIAMsgRun("Aguarde... Apagando registros ZBF... ",,{|| TcSQLExec(KS001) })
 
 	RT005 := " WITH REALREC "
@@ -666,7 +673,8 @@ Static Function RptrDetail()
 	RT005 += "                 SUM(ZBH_TOTAL) / SUM(ZBH_QUANT) VALOR, "
 	RT005 += "                 SUM(ZBH_TOTAL) TOTAL "
 	RT005 += "          FROM ZBH010 ZBH "
-	RT005 += "          WHERE ZBH.ZBH_VERSAO = '" + gtVerca + "' "
+	RT005 += "          WHERE ZBH.ZBH_FILIAL = '" + xFilial("ZBH") + "' "
+	RT005 += "                AND ZBH.ZBH_VERSAO = '" + gtVerca + "' "
 	RT005 += "                AND ZBH.ZBH_REVISA = '" + gtRevis + "' "
 	RT005 += "                AND ZBH.ZBH_ANOREF = '" + gtAnoRf + "' "
 	RT005 += "                AND ZBH.ZBH_PERIOD <> '00' "
@@ -723,7 +731,8 @@ Static Function RptrDetail()
 	FK004 += "                 ZBZ_ORIPR2 MARCA, "
 	FK004 += "                 SUM(ZBZ_VALOR) VALOR "
 	FK004 += "          FROM " + RetSqlName("ZBZ") + " "
-	FK004 += "          WHERE ZBZ_VERSAO = '" + gtVerca + "' "
+	FK004 += "          WHERE ZBZ_FILIAL = '" + xFilial("ZBZ") + "' "
+	FK004 += "                AND ZBZ_VERSAO = '" + gtVerca + "' "
 	FK004 += "                AND ZBZ_REVISA = '" + gtRevis + "' "
 	FK004 += "                AND ZBZ_ANOREF = '" + gtAnoRf + "' "
 	FK004 += "                AND ZBZ_DEBITO IN('31401020', '31401024', '31403001') "
@@ -738,7 +747,8 @@ Static Function RptrDetail()
 	FK004 += "                 ZBZ_ORIPR2 MARCA, "
 	FK004 += "                 SUM(ZBZ_VALOR) * (-1) VALOR "
 	FK004 += "          FROM " + RetSqlName("ZBZ") + " "
-	FK004 += "          WHERE ZBZ_VERSAO = '" + gtVerca + "' "
+	FK004 += "          WHERE ZBZ_FILIAL = '" + xFilial("ZBZ") + "' "
+	FK004 += "                AND ZBZ_VERSAO = '" + gtVerca + "' "
 	FK004 += "                AND ZBZ_REVISA = '" + gtRevis + "' "
 	FK004 += "                AND ZBZ_ANOREF = '" + gtAnoRf + "' "
 	FK004 += "                AND ZBZ_CREDIT IN('31401020', '31401024', '31403001') "
@@ -833,7 +843,8 @@ Static Function B448Driver(ctBusca)
 
 	OZ007 := " SELECT ZBE_DRIVER "
 	OZ007 += "   FROM " + RetSqlName("ZBE") +  " "
-	OZ007 += "  WHERE ZBE_VERSAO = '" + gtVerca + "' "
+	OZ007 += "  WHERE ZBE_FILIAL = '" + xFilial("ZBE") + "' "
+	OZ007 += "    AND ZBE_VERSAO = '" + gtVerca + "' "
 	OZ007 += "    AND ZBE_REVISA = '" + gtRevis + "' "
 	OZ007 += "    AND ZBE_ANOREF = '" + gtAnoRf + "' "
 	OZ007 += "    AND ZBE_APLDEF = '" + ctBusca + "' "
@@ -866,6 +877,10 @@ User Function BIA448P()
 
 	MsgINFO("Será processado o Ajuste PARADA!!!", "Ajuste PARADA")
 
+	MsgSTOP("Antes de prosseguir é necessário procuara a TI!!!", "Ajuste PARADA")
+	Return
+
+
 	msVERSAO      := 'ORCA_20'
 	msREVISA      := '002'
 	msANOREF      := '2020'
@@ -896,7 +911,8 @@ User Function BIA448P()
 	msSEQUEN := ""
 	XP001 := " SELECT ISNULL(MAX(ZBF_SEQUEN), '   ') SEQUENCIA "
 	XP001 += " FROM " + RetSqlName("ZBF") + " ZBF "
-	XP001 += " WHERE ZBF_DATA BETWEEN '" + msDTFIM + "0101' AND '" + msDTFIM + "1231'  "
+	XP001 += " WHERE ZBF_FILIAL = '" + xFilial("ZBF") + "' "
+	XP001 += "       AND ZBF_DATA BETWEEN '" + msDTFIM + "0101' AND '" + msDTFIM + "1231'  "
 	XP001 += "       AND ZBF.D_E_L_E_T_ = ' ' "
 	XPIndex := CriaTrab(Nil,.f.)
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,XP001),'XP01',.T.,.T.)
@@ -909,9 +925,10 @@ User Function BIA448P()
 
 	KS001 := " DELETE ZBF "
 	KS001 += "   FROM " + RetSqlName("ZBF") + " ZBF "
-	KS001 += "  WHERE ZBF.ZBF_DATA = '" + msDTFIM +  "' "
-	KS001 += "    AND ZBF.ZBF_ORGLAN LIKE '%AJUSTADO-PARADA%' "
-	KS001 += "    AND ZBF.D_E_L_E_T_ = ' ' "
+	KS001 += "  WHERE ZBF.ZBF_FILIAL = '" + xFilial("ZBF") + "' "
+	KS001 += "        AND ZBF.ZBF_DATA = '" + msDTFIM +  "' "
+	KS001 += "        AND ZBF.ZBF_ORGLAN LIKE '%AJUSTADO-PARADA%' "
+	KS001 += "        AND ZBF.D_E_L_E_T_ = ' ' "
 	U_BIAMsgRun("Aguarde... Apagando registros ZBF... ",,{|| TcSQLExec(KS001) })
 
 	JH007 := Alltrim(" INSERT INTO ZBF010 ") + xrEnter

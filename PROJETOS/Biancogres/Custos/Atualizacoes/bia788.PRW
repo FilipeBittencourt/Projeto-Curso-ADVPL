@@ -707,9 +707,10 @@ Static Function RptDetail()
 	fRecModEsm()
 	ConOut("HORA: "+TIME()+" - RECALCULO MOD - TINTA - ROTINA BIA788ANALISE")
 	fRecModTin()
+	ConOut("HORA: "+TIME()+" - RECALCULO MOD - DEFLOCULANTE - ROTINA BIA788ANALISE")
+	fRecModDef()
 	ConOut("HORA: "+TIME()+" - RECALCULO MOD - OUTROS - ROTINA BIA788ANALISE")
 	fCOutros()
-
 
 	oLogProc:LogFimProc()
 
@@ -1142,6 +1143,7 @@ Static Function fRecModMas()
 				SD3->(MsUnlock())
 			EndIf
 			(_cAliasIt)->(DbSkip())
+
 		EndDo
 
 		(_cAliasIt)->(DbCloseArea())
@@ -1248,7 +1250,9 @@ Static Function fRecModEsm()
 				SD3->(MsUnlock())
 			EndIf
 			(_cAliasIt)->(DbSkip())
+
 		EndDo
+
 		(_cAliasIt)->(DbCloseArea())
 
 		(_cAlias)->(DbSkip())
@@ -1363,22 +1367,102 @@ Static Function fRecModTin()
 
 Return
 
-User Function ufRecmod()
+Static Function fRecModDef()
 
-	RpcSetType(3)
-	RpcSetEnv("01","01")
+	Local _cAlias	:=	GetNextAlias()
+	Local _cAliasIt		
+	Local _cDtIni	:=	DtoS(kjDtINI)
+	Local _cDtFim	:=	DtoS(kjDtFIM)
+	Local _nTotMod
 
-	kjDtINI := Stod('20200501')
-	kjDtFIM := Stod('20200531')
-	ConOut("HORA: "+TIME()+" - RECALCULO MOD - MASSA - ROTINA BIA788ANALISE")
-	fRecModMas()
-	ConOut("HORA: "+TIME()+" - RECALCULO ESMALTE - MASSA - ROTINA BIA788ANALISE")
-	fRecModEsm()
-	ConOut("HORA: "+TIME()+" - RECALCULO MOD - TINTA - ROTINA BIA788ANALISE")
-	fRecModTin()
-	ConOut("HORA: "+TIME()+" - RECALCULO MOD - OUTROS - ROTINA BIA788ANALISE")
-	fCOutros()
-	RpcClearEnv()
+	BeginSql Alias _cAlias
+
+		%NoParser%
+
+		WITH AJUSTE
+		AS (
+		SELECT CASE 
+		WHEN SUBSTRING(D3_CLVL,1,2) = '31'
+		THEN 'MOD161101004'
+		ELSE 'MOD261101004'
+	END CODMOD
+	,ABS(SUM(CASE 
+	WHEN D3_TM >= '500'
+	THEN D3_QUANT * (- 1)
+	ELSE D3_QUANT
+	END)) QTDAJUS
+	FROM %TABLE:SD3% SD3
+	WHERE D3_EMISSAO BETWEEN %Exp:_cDtIni%
+	AND %Exp:_cDtFim%
+	AND D3_OP = ''
+	AND D3_CONTA = '61101004'
+	AND D3_ESTORNO = ' '
+	AND D3_CF NOT IN('DE4','RE4','DE3','RE3','DE7','RE7')
+	AND SD3.%NotDel%
+	GROUP BY SUBSTRING(D3_CLVL,1,2)
+	)
+	,MODS
+	AS (
+	SELECT D3_COD
+	,ABS(SUM(CASE 
+	WHEN D3_TM >= '500'
+	THEN D3_QUANT * (- 1)
+	ELSE D3_QUANT
+	END)) TOTMOD
+	FROM %TABLE:SD3% SD3
+	WHERE D3_EMISSAO BETWEEN %Exp:_cDtIni%
+	AND %Exp:_cDtFim%
+	AND D3_COD IN (
+	'MOD161101004'
+	,'MOD261101004'
+	)
+	AND D3_ESTORNO = ' '
+	AND SD3.%NotDel%
+	GROUP BY D3_COD
+	)
+	SELECT CODMOD, QTDAJUS, TOTMOD
+	FROM AJUSTE A
+	JOIN MODS B ON A.CODMOD = B.D3_COD
+
+	EndSql
+
+	While (_cAlias)->(!EOF())
+
+		_cAliasIt	:=	GetNextAlias()		
+
+		BeginSql Alias _cAliasIt
+
+			SELECT R_E_C_N_O_ REC
+			FROM %TABLE:SD3% SD3
+			WHERE D3_EMISSAO BETWEEN %Exp:_cDtIni%
+			AND %Exp:_cDtFim%
+			AND D3_COD = %Exp:(_cAlias)->CODMOD%
+			AND D3_ESTORNO = ' '
+			AND SD3.%NotDel%
+
+		EndSql
+
+		While (_cAliasIt)->(!EOF())
+
+			SD3->(DbGoTo((_cAliasIt)->REC))
+			If SD3->(!EOF())
+				_nTotMod	:=	SD3->D3_QUANT/(_cAlias)->TOTMOD * (_cAlias)->QTDAJUS 
+				Reclock("SD3",.F.)
+				SD3->D3_QUANT	:=	_nTotMod
+				SD3->D3_QTSEGUM	:=	_nTotMod
+				SD3->(MsUnlock())
+			EndIf
+			(_cAliasIt)->(DbSkip())
+
+		EndDo
+
+		(_cAliasIt)->(DbCloseArea())
+
+		(_cAlias)->(DbSkip())
+
+	EndDo
+
+	(_cAlias)->(DbCloseArea())
 
 Return
 
@@ -1395,11 +1479,13 @@ Static Function fCOutros()
 	})
 	*/
 
+	/* -- Retirado em 22/02/21 porque foi substituida pela função fRecModDef
 	aAdd(_aMods,{;
 	"MOD161101004",;
 	"MOD261101004",;
 	"61101004";
 	})
+	*/
 
 	aAdd(_aMods,{;
 	"MOD161107",;
@@ -1411,26 +1497,6 @@ Static Function fCOutros()
 	"MOD161110003",;
 	"MOD261110003",;
 	"61110003";
-	})
-
-	For _nI	:=	1 to Len(_aMods)
-
-		fRecModGen(_aMods[_nI])
-
-	Next _nI
-
-Return
-
-Static Function fDadMod()
-
-	Local _aMods	:= {}
-	Local _nI
-
-
-	aAdd(_aMods,{;
-	"MODFAB1",;
-	"MODFAB2",;
-	"CONTAMOD";
 	})
 
 	For _nI	:=	1 to Len(_aMods)
@@ -1532,5 +1598,7 @@ Static Function fRecModGen(_aMods)
 
 		(_cAlias)->(DbSkip())
 	EndDo
+
 	(_cAlias)->(DbCloseArea())
+
 Return

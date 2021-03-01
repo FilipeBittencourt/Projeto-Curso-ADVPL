@@ -624,6 +624,8 @@ Static Function Markbrow()
 	// Tiago Rossini Coradini - 02/05/16 - OS: 4647-15 - Vagner Amaro - Consulta CCB
 	@ 078,347 BUTTON "Consulta CCB"		SIZE 55,12 PIXEL ACTION U_BIAF033(sCodigo, sLoja)
 
+	@ 093,347 BUTTON "Politica de Crédito" SIZE 55,12 PIXEL ACTION U_BIAF148(sCodigo, sLoja)		
+
 	@ 57,03	To 165 ,343  COLOR CLR_BLACK PIXEL  // SEGUNDO FRAME FRAME
 
 	@ 64,140 SAY "INFORMAÇÕES GERAIS" COLOR CLR_BLACK PIXEL

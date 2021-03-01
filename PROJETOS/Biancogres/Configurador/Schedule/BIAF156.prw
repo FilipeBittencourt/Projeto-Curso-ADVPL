@@ -77,7 +77,7 @@ Static Function fMesAtual()
 	MV_PAR26 := Space(3)
 	MV_PAR27 := Replicate("Z", 3)
 	MV_PAR28 := ""
-	MV_PAR29 := "DEV;RA;NDE;BOL;CH;NDC;NCC;JP;PA;TEL;RC;"
+	MV_PAR29 := "RA;JP;" //Ticket 29738 - Alteração de Parametros e Filtros Relatórios automaticos - Power BI
 	MV_PAR30 := 2
 	MV_PAR31 := cToD("01/01/90")
 	MV_PAR32 := cToD("31/12/35")
@@ -130,7 +130,7 @@ Local dDatBkp := dDataBase
 	MV_PAR26 := Space(3)
 	MV_PAR27 := Replicate("Z", 3)
 	MV_PAR28 := ""
-	MV_PAR29 := "DEV;RA;NDE;BOL;CH;NDC;NCC;JP;PA;TEL;RC;"
+	MV_PAR29 := "RA;JP;" //Ticket 29738 - Alteração de Parametros e Filtros Relatórios automaticos - Power BI
 	MV_PAR30 := 2
 	MV_PAR31 := cToD("01/01/90")
 	MV_PAR32 := cToD("31/12/35")

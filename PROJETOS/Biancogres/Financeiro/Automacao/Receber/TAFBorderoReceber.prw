@@ -39,15 +39,15 @@ Return()
 
 Method Create() Class TAFBorderoReceber
 
-	local cBanco		as character
-	local cAgencia		as character
-	local cConta		as character
+	local cBanco			as character
+	local cAgencia			as character
+	local cConta			as character
 
-	Local nCount		as numeric
-	Local cKey			as character
-	Local bKey			as block
+	Local nCount			as numeric
+	Local cKey				as character
+	Local bKey				as block
 
-	Local nSE1RecNo		as numeric
+	Local nSE1RecNo			as numeric
 
 	nCount:=1
 	cKey:=""
@@ -101,6 +101,20 @@ Method Create() Class TAFBorderoReceber
 					SE1->E1_NUMBOR  := ::oLst:GetItem(nCount):cNumBor					
 					SE1->E1_NUMBCO  := ::oLst:GetItem(nCount):cNumBco
 					
+					if (FIDC():isFIDCEnabled())					
+						FIDC():setFIDCVar("cBanco",cBanco)
+						FIDC():setFIDCVar("cAgencia",cAgencia)
+						FIDC():setFIDCVar("cConta",cConta)
+						if (FIDC():BCOIsFIDC())
+							SE1->E1_YFDCPER:=FIDC():percentualDesconto() 
+							SE1->E1_YFDCVAL:=FIDC():calculaDesconto(SE1->E1_VALOR,SE1->E1_VENCTO)
+						else
+							::oLst:GetItem(nCount):cCHVNFE:=""
+						endif
+					else
+						::oLst:GetItem(nCount):cCHVNFE:=""
+					endif
+
 					//solicitação Nadine
 					If (AllTrim(::oLst:GetItem(nCount):cBanco) == '021') //apenas banco banestes
 						If (Len(AllTrim(::oLst:GetItem(nCount):cNumBco)) == 8)//nosso numero banestes 8 caracteres e sem digito
@@ -204,14 +218,9 @@ Method CleanBorSE1(nSE1RecNo,cStatus,cCodBar) Class TAFBorderoReceber
 
 	Local aArea 		as array
 
-	local cBanco		as character
-	local cAgencia		as character
-	local cConta		as character
 	local cPadrao		as character
 
 	local cSA1IdxKey	as character
-
-	Local oJSONArray	as object
 
 	aArea:=SE1->(GetArea())
 
@@ -236,19 +245,26 @@ Method CleanBorSE1(nSE1RecNo,cStatus,cCodBar) Class TAFBorderoReceber
 				SA1->(dbSetOrder(retOrder("SA1",cSA1IdxKey)))
 				if (SA1->(MsSeek(xFilial("SA1")+SE1->E1_CLIENTE+SE1->E1_LOJA)))
 					//Contabilizacao FIDC
-					cPadrao:=getNewPar("BIA_FIDCLP","FDC")
+					cPadrao:=FIDC():getBiaPar("FIDC_LP_BORDERO","FBO")
 					if (!empty(cPadrao))
-						cBanco:=SE1->E1_PORTADO
-						cAgencia:=SE1->E1_AGEDEP
-						cConta:=SE1->E1_CONTA
-						oJSONArray:=JSONArray():New()
-						oJSONArray:Set("cPadrao",cPadrao)
-						oJSONArray:Set("nSE1RecNo",nSE1RecNo)
-						oJSONArray:Set("nSA1RecNo",SA1->(recNo()))
-						oJSONArray:Set("cBanco",cBanco)
-						oJSONArray:Set("cAgencia",cAgencia)
-						oJSONArray:Set("cConta",cConta)
-						FIDC():ctbFIDC(@oJSONArray)
+						FIDC():setFIDCVar("lCTBFIDC",.T.)
+						FIDC():setFIDCVar("cCTBStack","CleanBorSE1")
+						FIDC():setFIDCVar("cPadrao",cPadrao)
+						FIDC():setFIDCVar("nSE1RecNo",nSE1RecNo)
+						FIDC():setFIDCVar("nSA1RecNo",SA1->(recNo()))
+						FIDC():setFIDCVar("cBanco",SE1->E1_PORTADO)
+						FIDC():setFIDCVar("cAgencia",SE1->E1_AGEDEP)
+						FIDC():setFIDCVar("cConta",SE1->E1_CONTA)
+						FIDC():setFIDCVar("lUsaFlag",SuperGetMV("MV_CTBFLAG",.F./*lHelp*/,.F./*cPadrao*/))
+						if (FIDC():getFIDCVar("lUsaFlag",.F.))
+							FIDC():setFIDCVar("aFlagCTB",{"E1_LA","S","SE1",nSE1RecNo,0,0,0})
+						endif
+						FIDC():setFIDCVar("lDiario",(FindFunction("UsaSeqCor").and.UsaSeqCor()))
+						if (FIDC():getFIDCVar("lDiario",.F.))
+							FIDC():setFIDCVar("aDiario",{"SE1",nSE1RecNo,SE1->E1_DIACTB,"E1_NODIA","E1_DIACTB"})
+						endif
+						SE1->(FIDC():ctbFIDC())
+						FIDC():resetFIDCVars()
 					endif
 				endif
 			endif

@@ -667,15 +667,10 @@ Method ExecMovFin(oObj, nValor, cNat, cHist) Class TAFBaixaReceber
 	Local dDataDisp := If(oObj:cBanco $ "237", If(Empty(oObj:dDtCred), DataValida(oObj:dDtLiq + 1), oObj:dDtCred), oObj:dDtLiq)
 	Local _cFilBkp := cFilAnt
 
-	Local cBanco
-	Local cAgencia
-	Local cConta
-
 	Local cPadrao
+	Local nSE1RecNo
 
 	Local cSA1IdxKey
-	
-	local oJSONArray
 
 	Private lMsErroAuto := .F.
 	Private lMsHelpAuto := .T.
@@ -735,19 +730,28 @@ Method ExecMovFin(oObj, nValor, cNat, cHist) Class TAFBaixaReceber
 			SA1->(dbSetOrder(retOrder("SA1",cSA1IdxKey)))
 			if (SA1->(MsSeek(xFilial("SA1")+SE1->E1_CLIENTE+SE1->E1_LOJA)))
 				//Contabilizacao FIDC
-				cPadrao:=getNewPar("BIA_FIDCLP","FDC")
+				cPadrao:=FIDC():getBiaPar("FIDC_LP_MOVFIN",""/*FMF*/)
 				if (!empty(cPadrao))
-					cBanco:=SE1->E1_PORTADO
-					cAgencia:=SE1->E1_AGEDEP
-					cConta:=SE1->E1_CONTA
-					oJSONArray:=JSONArray():New()
-					oJSONArray:Set("cPadrao",cPadrao)
-					oJSONArray:Set("nSE1RecNo",SE1->(recNo()))
-					oJSONArray:Set("nSA1RecNo",SA1->(recNo()))
-					oJSONArray:Set("cBanco",cBanco)
-					oJSONArray:Set("cAgencia",cAgencia)
-					oJSONArray:Set("cConta",cConta)
-					FIDC():ctbFIDC(@oJSONArray)
+					nSE1RecNo:=SE1->(recNo())
+					FIDC():setFIDCVar("lCTBFIDC",.T.)
+					FIDC():setFIDCVar("cCTBStack","ExecMovFin")
+					FIDC():setFIDCVar("cPadrao",cPadrao)
+					FIDC():setFIDCVar("nSE1RecNo",nSE1RecNo)
+					FIDC():setFIDCVar("nSA1RecNo",SA1->(recNo()))
+					FIDC():setFIDCVar("cBanco",SE1->E1_PORTADO)
+					FIDC():setFIDCVar("cAgencia",SE1->E1_AGEDEP)
+					FIDC():setFIDCVar("cConta",SE1->E1_CONTA)
+					FIDC():setFIDCVar("cCodOco",oObj:cCodOco)
+					FIDC():setFIDCVar("lUsaFlag",SuperGetMV("MV_CTBFLAG",.F./*lHelp*/,.F./*cPadrao*/))
+					if (FIDC():getFIDCVar("lUsaFlag",.F.))
+						FIDC():setFIDCVar("aFlagCTB",{"E1_LA","S","SE1",nSE1RecNo,0,0,0})
+					endif
+					FIDC():setFIDCVar("lDiario",(FindFunction("UsaSeqCor").and.UsaSeqCor()))
+					if (FIDC():getFIDCVar("lDiario",.F.))
+						FIDC():setFIDCVar("aDiario",{"SE1",nSE1RecNo,SE1->E1_DIACTB,"E1_NODIA","E1_DIACTB"})
+					endif
+					SE1->(FIDC():ctbFIDC())
+					FIDC():resetFIDCVars()
 				endif
 			endif
 		endif
@@ -788,11 +792,16 @@ Return(!lMsErroAuto)
 
 
 Method ExecBaixaCR(oObj, cMotBx) Class TAFBaixaReceber
+	
 	Local aTit := {}
 	Local aAutoErro := {}
 	Local cLogTxt := ""
 	Local aPerg := {}
 	Local _cFilBkp := cFilAnt
+
+	Local cPadrao
+	Local cSA1IdxKey
+	Local nSE1RecNo
 
 	Private lMsErroAuto := .F.
 	Private lMsHelpAuto := .T.
@@ -833,6 +842,35 @@ Method ExecBaixaCR(oObj, cMotBx) Class TAFBaixaReceber
 		ConOut("TAFBaixaReceber >>> BAIXA AUTOMATICA (BAIXA - SUCESSO) - (PREF+NUM+PARC+TIPO) = "+(SE1->E1_PREFIXO+SE1->E1_NUM+SE1->E1_PARCELA+SE1->E1_TIPO))
 
 		::UpdStatus(oObj:nID, "2")
+
+		if (FIDC():isFIDCEnabled())
+			cSA1IdxKey:="A1_FILIAL+A1_COD+A1_LOJA"
+			SA1->(dbSetOrder(retOrder("SA1",cSA1IdxKey)))
+			if (SA1->(MsSeek(xFilial("SA1")+SE1->E1_CLIENTE+SE1->E1_LOJA)))
+				//Contabilizacao FIDC
+				cPadrao:=FIDC():getBiaPar("FIDC_LP_BAIXA","FBX")
+				if (!empty(cPadrao))
+					nSE1RecNo:=SE1->(recNo())
+					FIDC():setFIDCVar("cPadrao",cPadrao)
+					FIDC():setFIDCVar("nSE1RecNo",nSE1RecNo)
+					FIDC():setFIDCVar("nSA1RecNo",SA1->(recNo()))
+					FIDC():setFIDCVar("cBanco",SE1->E1_PORTADO)
+					FIDC():setFIDCVar("cAgencia",SE1->E1_AGEDEP)
+					FIDC():setFIDCVar("cConta",SE1->E1_CONTA)
+					FIDC():setFIDCVar("cCodOco",oObj:cCodOco)
+					FIDC():setFIDCVar("lUsaFlag",SuperGetMV("MV_CTBFLAG",.F./*lHelp*/,.F./*cPadrao*/))
+					if (FIDC():getFIDCVar("lUsaFlag",.F.))
+						FIDC():setFIDCVar("aFlagCTB",{"E1_LA","S","SE1",nSE1RecNo,0,0,0})
+					endif
+					FIDC():setFIDCVar("lDiario",(FindFunction("UsaSeqCor").and.UsaSeqCor()))
+					if (FIDC():getFIDCVar("lDiario",.F.))
+						FIDC():setFIDCVar("aDiario",{"SE1",nSE1RecNo,SE1->E1_DIACTB,"E1_NODIA","E1_DIACTB"})
+					endif
+					SE1->(FIDC():ctbFIDC())
+					FIDC():resetFIDCVars()
+				endif
+			endif
+		endif
 
 	Else
 

@@ -42,7 +42,12 @@ User Function BIA864()
 		"Setor p/ GMCD 2.0",;
 		"Linha de Fabricação",;
 		"Critério Rateio CtaContábil",;
-		"Critério Rateio CLVL";			
+		"Critério Rateio CLVL",;
+		"Base-Tipologia",;
+		"Acabamento",;
+		"Espessura",;
+		"Tipo Versão Contábil",;
+		"Versão Contábil";			
 		SIZE 150,10 OF oDlg PIXEL
 
 		DEFINE SBUTTON FROM 255,085 TYPE 1 ENABLE OF oDlg ACTION (nOpca := 1, oDlg:End())
@@ -99,6 +104,21 @@ User Function BIA864()
 
 			ElseIf nRadio == 16
 				BIA864_16()					// Critério Rateio CLVL
+
+			ElseIf nRadio == 17
+				BIA864_17()					// Base-Tipologia
+
+			ElseIf nRadio == 18
+				BIA864_18()					// Acabamento
+
+			ElseIf nRadio == 19
+				BIA864_19()					// Espessura
+
+			ElseIf nRadio == 20
+				BIA864_20()					// Tipo Versão Contábil
+
+			ElseIf nRadio == 21
+				BIA864_21()					// Versão Contábil
 
 			EndIf
 
@@ -221,6 +241,38 @@ Return
 Static Function BIA864_16()
 
 	AXCADASTRO("ZF2","Critério Rateio CLVL")
+
+Return
+
+//Base-Tipologia
+Static Function BIA864_17()
+
+	AXCADASTRO("Z32","Base-Tipologia")
+
+Return
+
+//Base-Tipologia
+Static Function BIA864_18()
+
+	AXCADASTRO("Z33","Acabamento")
+
+Return
+
+Static Function BIA864_19()
+
+	AXCADASTRO("Z34","Espessura")
+
+Return
+
+Static Function BIA864_20()
+
+	AXCADASTRO("ZOX","Tipo Versão Contábil")
+
+Return
+
+Static Function BIA864_21()
+
+	AXCADASTRO("ZOY","Versão Contábil")
 
 Return
 

@@ -16,23 +16,27 @@ User Function SD1100I()
 	/*/
 
 	Local fpArea := GetArea()
+	Local _oMd	:=	TBiaControleMD():New()
+	Local _cSolic	:=	""
+	
 	Public xd_NumPrc := Space(6)
 
 	If !Empty(SD1->D1_PEDIDO)
 		CSQL := "UPDATE "+RETSQLNAME("ZCN")+" "
-		CSQL += "SET ZCN_SOLIC =  "
-		CSQL += "				ISNULL((SELECT MAX(SUBSTRING(NOMFUN,1,30)) "
-		CSQL += "				FROM "+RETSQLNAME("SC7")+" SC7 "
-		CSQL += "				INNER JOIN VW_BG_COLABORADOR  "
-		CSQL += "				        ON C7_YMAT =  (REPLICATE('0',6-LEN(LTRIM(NUMCAD))) + CAST (NUMCAD AS VARCHAR(6))) "
-		CSQL += "				       AND NUMEMP = "+ Subst(cEmpAnt,2,1)
-		CSQL += "				WHERE	C7_NUM   = '"+SD1->D1_PEDIDO+"' AND "
-		CSQL += "						C7_PRODUTO = '"+SD1->D1_COD+"'    AND "
-		CSQL += "						C7_ITEM    = '"+SD1->D1_ITEMPC+"' AND "
-		CSQL += "						SC7.D_E_L_E_T_ = '' ),'') "
-		CSQL += "WHERE ZCN_COD = '"+SD1->D1_COD+"' "
-		CSQL += "	AND ZCN_LOCAL = '"+SD1->D1_LOCAL+"'  "
-		CSQL += "	AND D_E_L_E_T_ = ''  "
+		CSQL += "   SET ZCN_SOLIC =  "
+		CSQL += "	  ISNULL((SELECT MAX(SUBSTRING(NOMFUN,1,30))           "
+		CSQL += "				FROM "+RETSQLNAME("SC7")+" SC7             "
+		CSQL += "			   INNER JOIN VETORH..R034FUN                  "
+		CSQL += "				  ON NUMEMP = "+ Subst(cEmpAnt,2,1)        "
+		CSQL += "                AND TIPCOL = 1                            "
+		CSQL += "				 AND NUMCAD = CASE WHEN LEN(LTRIM(RTRIM(C7_YMAT))) = 8 THEN SUBSTRING(C7_YMAT,3,6) ELSE C7_YMAT END "		 
+		CSQL += "			   WHERE C7_NUM     = '"+SD1->D1_PEDIDO+"' AND "
+		CSQL += "					 C7_PRODUTO = '"+SD1->D1_COD+"'    AND "
+		CSQL += "					 C7_ITEM    = '"+SD1->D1_ITEMPC+"' AND "
+		CSQL += "					 SC7.D_E_L_E_T_ = '' ),'')             "
+		CSQL += " WHERE ZCN_COD    = '"+SD1->D1_COD+"' "
+		CSQL += "	AND ZCN_LOCAL  = '"+SD1->D1_LOCAL+"' "
+		CSQL += "	AND D_E_L_E_T_ = '' "
 
 		TCSQLEXEC(CSQL)
 	EndIf
@@ -167,6 +171,12 @@ User Function SD1100I()
 		EndIf
 	EndIf
 
+	If Alltrim(SD1->D1_TIPO) == 'N' .And. _oMd:CheckMD(SD1->D1_COD,SD1->D1_LOCAL)
+	    _cSolic	:=	_oMd:GetSolicNFE(SD1->D1_DOC,SD1->D1_SERIE,SD1->D1_FORNECE,SD1->D1_LOJA,SD1->D1_ITEM)
+	    _oMd:InsereMovimentacao(SD1->D1_FILIAL,SD1->D1_DOC,SD1->D1_SERIE,SD1->D1_FORNECE,SD1->D1_LOJA,SD1->D1_ITEM,SD1->D1_COD,SD1->D1_QUANT,SD1->D1_LOCAL,;
+	    									"001",_cSolic,cUserName,"MATA103",SD1->D1_DTDIGIT,"SD1",SD1->(RECNO())) //Insere Movimentação na Tabela	
+			
+	EndIf
 	RestArea(fpArea)
 
 	//TESTE CONEXAO INICIO

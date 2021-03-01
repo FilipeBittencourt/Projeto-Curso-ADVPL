@@ -32,6 +32,7 @@ Data lReproc // Reprocessamento
 Data oFat // Fatura a receber
 Data oRcb // Objeto de regras de comunicacao bancaria
 Data oBor // Objeto de regras de bordero de recebimento
+Data lFIDC // FIDC	
 
 Method New() Constructor
 Method Get()
@@ -49,21 +50,22 @@ Method New() Class TAFMovimentoRemessaReceber
 
 	_Super:New()
 
-	::dEmissaoDe := STOD("20181217")
-	::dEmissaoAte := dDataBase - 2
-	::nDia := 10
-	::lReenvBord := .F.
-	::cBorDe := ""
-	::cBorAte := ""
-	::cCliente := ""
-	::cLoja := ""
-	::cCliExc := GetNewPar("MV_YAPICEX", "000481|005885|999999|022551|026423|026308|007871|004536|010083|008615|010064|025633|025634|025704|018410|014395|001042")
-	::cPedido := ""
-	::cIDProc := ""
-	::lReproc := .F.	
-	::oFat := TAFFaturaReceber():New()
-	::oRcb := TAFRegraComunicacaoBancaria():New()
-	::oBor := TAFBorderoReceber():New()
+	::dEmissaoDe 	:= STOD("20181217")
+	::dEmissaoAte	:= dDataBase - 2
+	::nDia 			:= 10
+	::lReenvBord	:= .F.
+	::cBorDe 		:= ""
+	::cBorAte 		:= ""
+	::cCliente 		:= ""
+	::cLoja 		:= ""
+	::cCliExc 		:= GetNewPar("MV_YAPICEX", "000481|005885|999999|022551|026423|026308|007871|004536|010083|008615|010064|025633|025634|025704|018410|014395|001042")
+	::cPedido 		:= ""
+	::cIDProc 		:= ""
+	::lReproc 		:= .F.	
+	::oFat 			:= TAFFaturaReceber():New()
+	::oRcb 			:= TAFRegraComunicacaoBancaria():New()
+	::oBor 			:= TAFBorderoReceber():New()
+	::lFIDC			:= .F.
 
 Return()
 
@@ -93,6 +95,23 @@ Method Get() Class TAFMovimentoRemessaReceber
 		EndIf
 
 	EndIf
+	
+	If (::lFIDC)
+	
+		//SEGUNDA: Filtrar os títulos com emissão menor que a QUINTA anterior (anterior a 4 dias)
+		//TERÇA: Filtrar os títulos com emissão menor que a SEXTA anterior (anterior a 4 dias)
+		//QUARTA: Filtrar os títulos com emissão menor a SEGUNDA (anterior a 2 dias)
+		//QUINTA: Filtrar os títulos com emissão menor a TERÇA (anterior a 2 dias)
+		//SEXTA: Filtrar os títulos com emissão menor a QUARTA (anterior a 2 dias)
+		
+		If (DOW(dDataBase) == 2 .Or. DOW(dDataBase) == 3) // segunda
+			::dEmissaoAte	:= dDataBase - 4
+		Else
+			::dEmissaoAte	:= dDataBase - 2
+		EndIf
+		
+	EndIf
+	
 
 	cSQL := " SELECT E1_PREFIXO, E1_NUM, E1_PARCELA, E1_TIPO, E1_CLIENTE, E1_LOJA, E1_VALOR, E1_SALDO, E1_DECRESC, E1_PORCJUR, E1_EMISSAO, E1_VENCTO, E1_VENCREA, "
 	cSQL += " E1_NUMBOR, E1_NUMBCO, E1_IDCNAB, E1_PEDIDO, E1_PORTADO, E1_AGEDEP, E1_CONTA, E1_SITUACA, E1_YCDGREG, E1_YCLASSE, E1_YEMP, E1_YUFCLI, SE1.R_E_C_N_O_ AS SE1_RECNO, "
@@ -205,9 +224,50 @@ Method Get() Class TAFMovimentoRemessaReceber
 	cSQL += " AND SE1.E1_SALDO > 0 "
 	cSQL += " AND SE1.D_E_L_E_T_ = '' "
 	cSQL += " AND SA1.D_E_L_E_T_ = '' "
+	
+	
+	cSQL += " AND											"
+	cSQL += " (												"
+	cSQL += " select top 1 A6_YTPINTB from "+ RetSQLName("ZK0") + " ZK0				"
+	cSQL += " join "+ RetSQLName("ZK1") + " ZK1 on 							"
+	cSQL += " 	ZK0_FILIAL			= ZK1_FILIAL			"
+	cSQL += " 	AND  ZK0_CODREG		= ZK1_CODREG 			"
+	cSQL += " 	AND ZK1.D_E_L_E_T_	= ''					"
+	cSQL += " join "+ RetSQLName("SA6") + "  SA6 on 		"
+	cSQL += " 	A6_FILIAL			= ZK1_FILIAL 			"
+	cSQL += " 	AND A6_COD			= ZK1_BANCO 			"
+	cSQL += " 	AND A6_AGENCIA		= ZK1_AGENCI 			"
+	cSQL += " 	AND A6_NUMCON		= ZK1_CONTA 			"
+	cSQL += " 	AND SA6.D_E_L_E_T_	= ''					"
+	cSQL += " where ZK0_CODGRU = A1_YCDGREG					"
+	cSQL += " AND ZK0_FILIAL = ''							"
+	cSQL += " AND ZK0.D_E_L_E_T_ = ''						"
+	cSQL += " )	= "+IIf(::lFIDC, '1', "''")+"				"
+	
+	//cSQL += " AND NOT (E1_TIPO = 'FT' AND A1_YCDGREG = '000029')"
+	/*
+	cSQL += " AND											"
+	cSQL += " NOT ((										"
+	cSQL += " select top 1 A6_YTPINTB from "+ RetSQLName("ZK0") + " ZK0				"
+	cSQL += " join "+ RetSQLName("ZK1") + "  ZK1 on 							"
+	cSQL += " 	ZK0_FILIAL			= ZK1_FILIAL			"
+	cSQL += " 	AND  ZK0_CODREG		= ZK1_CODREG 			"
+	cSQL += " 	AND ZK1.D_E_L_E_T_	= ''					"
+	cSQL += " join "+ RetSQLName("SA6") + " SA6 on 			"
+	cSQL += " 	A6_FILIAL			= ZK1_FILIAL 			"
+	cSQL += " 	AND A6_COD			= ZK1_BANCO 			"
+	cSQL += " 	AND A6_AGENCIA		= ZK1_AGENCI 			"
+	cSQL += " 	AND A6_NUMCON		= ZK1_CONTA 			"
+	cSQL += " 	AND SA6.D_E_L_E_T_	= ''					"
+	cSQL += " where ZK0_CODGRU = A1_YCDGREG					"
+	cSQL += " AND ZK0_FILIAL = ''							"
+	cSQL += " AND ZK0.D_E_L_E_T_ = ''						"
+	cSQL += " )	= '1' AND E1_NATUREZ = '1230'	)			"	
+	*/
+	
 	cSQL += " ORDER BY E1_CLIENTE, A1_YCDGREG "
-
-
+	
+	
 	TcQuery cSQL New Alias (cQry)
 
 	While (cQry)->(!Eof())
@@ -254,18 +314,21 @@ Method Get() Class TAFMovimentoRemessaReceber
 		// Calculo do valor total do boleto
 		oObj:nValorBol := oObj:nSaldo + oObj:nJuros - oObj:nAbat //(oObj:nAbat + oObj:nDesc) + oObj:nAcre
 
+		/*
 		// Tratamento de mensagens livres
 		oObj:cMsgLiv1 := If(Empty(oObj:cMsgLiv1), oObj:cMsgLiv1, oObj:cMsgLiv1 + " ") + "VÁLIDO PARA PAGAMENTO SOMENTE ATÉ O DIA " + dToC(oObj:dVencto)
 
-		If oObj:nDiaProt > 0
+		/*If oObj:nDiaProt > 0
 
 			oObj:cMsgLiv1 := If(Empty(oObj:cMsgLiv1), oObj:cMsgLiv1, oObj:cMsgLiv1 + " ") + "PROTESTAR APOS " + cValToChar(oObj:nDiaProt) + " DIAS ÚTEIS "
 
 		EndIf
+		*/
 
 		If oObj:nJurosDia > 0
 
-			oObj:cMsgLiv2 := If(Empty(oObj:cMsgLiv2), oObj:cMsgLiv2, oObj:cMsgLiv2 + " ") + "JUROS POR DIA: R$ " + Alltrim(Transform(oObj:nJurosDia, "@E 99,999,999.99"))
+			oObj:cMsgLiv1 := If(Empty(oObj:cMsgLiv2), oObj:cMsgLiv2, oObj:cMsgLiv2 + " ") + "JUROS POR DIA DE ATRASO: R$ " + Alltrim(Transform(oObj:nJurosDia, "@E 99,999,999.99"))
+			//oObj:cMsgLiv2 := If(Empty(oObj:cMsgLiv2), oObj:cMsgLiv2, oObj:cMsgLiv2 + " ") + "JUROS POR DIA DE ATRASO: R$ " + Alltrim(Transform(oObj:nJurosDia, "@E 99,999,999.99"))
 
 		EndIf
 
@@ -310,6 +373,19 @@ Method Get() Class TAFMovimentoRemessaReceber
 		if (FIDC():isFIDCEnabled())
 			oObj:cCHVNFE:=(cQry)->F2_CHVNFE
 		endif
+		
+		//TODO FIDC INICIO - Provisório
+		
+		//FIDC - tratamento de recebimento antecipado 
+		If (AllTrim((cQry)->E1_YUFCLI) == 'ES' .And. AllTrim((cQry)->A1_YCDGREG) == '000029' .And. oObj:cPrefixo $ 'PR')
+			oObj:cGRCB := '000028'
+		EndIf
+		
+		//FIDC - tratamento de fatura
+		If (AllTrim((cQry)->E1_YUFCLI) == 'ES' .And. AllTrim((cQry)->A1_YCDGREG) == '000029' .And. AllTrim(oObj:cTipo) == 'FT')
+			oObj:cGRCB := '000028'
+		EndIf
+		// FIDC FIM - Provisório
 
 		::oLst:Add(oObj)
 
@@ -449,8 +525,7 @@ Return()
 Method GetAcre(cGNRE, cClasse, cEmpTit, cUFCli) Class TAFMovimentoRemessaReceber
 	Local nRet := 0
 
-
-	If cGNRE == "S"
+	If cGNRE == "S" .And. !::lFIDC
 
 		If cClasse == "1"
 

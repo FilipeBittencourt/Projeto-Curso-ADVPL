@@ -1515,13 +1515,20 @@ While lContinua
 				SE1->(dbSkip())
 				Loop
 			Endif
-			
+			//Ticket 29738
+			/*
 			If SE1->E1_HIST == "FUNCIONARIO              "
 				SE1->(dbSkip())
 				Loop
 			Endif
-
+			*/
 			If SE1->E1_TIPO $ MVRECANT+"/"+MV_CRNEG .and. mv_par26 == 2
+				SE1->(dbSkip())
+				Loop
+			Endif
+			
+			//Ticket 29738
+			If AT("PR",SE1->E1_PREFIXO) > 0
 				SE1->(dbSkip())
 				Loop
 			Endif

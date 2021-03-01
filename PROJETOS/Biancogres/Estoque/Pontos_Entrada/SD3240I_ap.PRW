@@ -11,6 +11,8 @@
 User Function SD3240I()
 
 	Local x
+	Local _oMd	:=	TBiaControleMD():New()
+
 
 	SetPrvt("AAREA,X,WP_COD,")
 	Private cArqSB2	:= ""
@@ -21,8 +23,17 @@ User Function SD3240I()
 
 	aArea:=GetArea()
 
+	If SD3->D3_TM > '500' .And. _oMd:CheckMd(SD3->D3_COD,SD3->D3_LOCAL)
+	
+		_oMd:InsereMovimentacao(SD3->D3_FILIAL,SD3->D3_DOC,"","","","",SD3->D3_COD,SD3->D3_QUANT,SD3->D3_LOCAL,;
+			    									"501",SD3->D3_YMATRIC,cUserName,Alltrim(funname()),SD3->D3_EMISSAO,"SD3",SD3->(RECNO())) //Insere Movimentação na Tabela	
+
+		
+	EndIf
+
 	//VARIAVEL CRIADA PARA TESTAR SE ESTA EXECUTANDO VIA EXECAUTO - MATA241
 	IF Type("_ExecAutoII") <> "U" 
+		RestArea(aArea)
 		Return
 	ENDIF
 
@@ -114,4 +125,4 @@ User Function SD3240I()
 
 	RestArea(aArea)
 
-Return
+Returns

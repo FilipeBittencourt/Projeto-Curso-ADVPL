@@ -127,7 +127,7 @@ Static Function ExecLoopCli()
 					_cEmail += ";"
 				EndIf
 				
-				_cRetEmail := EmailAtendente((Qry)->(C6_NUM), _cCli, _cRep, _sCli)
+				_cRetEmail := EmailAtendente((Qry)->(C6_NUM), _cCli, _cRep, _sCli, (Qry)->EMPRESA)
 				_cRetEmail := AllTrim(_cRetEmail)
 				If (!(_cRetEmail $ _cEmail))
 					_cEmail += _cRetEmail
@@ -170,27 +170,19 @@ Static Function GetData()
 	TcQuery cSQL New Alias (Qry)
 Return()
 
-Static Function EmailAtendente(_cPedido, _Cliente, _cVendedor, _cSegmento)
+Static Function EmailAtendente(_cPedido, _Cliente, _cVendedor, _cSegmento, _cMarca)
 	
 	Local cAliasTemp	:= GetNextAlias()
 	Local cEmail 		:= ""
 	Local cQuery		:= ""
-	
-	cQuery := "select top 1 C5_YEMP from " + RetSqlName("SC5") + "  where C5_NUM = '"+_cPedido+"' AND C5_FILIAL = '"+xFilial('SC5')+"' AND D_E_L_E_T_ = ''"
-	TcQuery cQuery New Alias (cAliasTemp)
-	
-	If (!(cAliasTemp)->(Eof()))
-		cMarca := (cAliasTemp)->C5_YEMP
-	EndIf
-	(cAliasTemp)->(DbCloseArea())
-	
+		
 	DbSelectArea("SA1")
 	SA1->(DbSetOrder(1))
 	
 	If SA1->(DbSeek(xFilial("SA1") + _Cliente))
 
 		cAliasTemp	:= GetNextAlias()
-		cQuery := "SELECT EMAILATEN FROM [dbo].[GET_ZKP] ('"+_cSegmento+"', '"+cMarca+"', '"+SA1->A1_EST+"', '"+_cVendedor+"', '"+SA1->A1_YCAT+"', '"+SA1->A1_GRPVEN+"')"
+		cQuery := "SELECT EMAILATEN FROM [dbo].[GET_ZKP] ('"+_cSegmento+"', '"+_cMarca+"', '"+SA1->A1_EST+"', '"+_cVendedor+"', '"+SA1->A1_YCAT+"', '"+SA1->A1_GRPVEN+"')"
 		TcQuery cQuery New Alias (cAliasTemp)
 		
 		If (!(cAliasTemp)->(Eof()))

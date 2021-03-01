@@ -36,6 +36,8 @@ Class TWPainelPoliticaCredito From LongClassName
 
 	Data oGDRet // Grid - MsNewGetDados
 	Data oGDRetField // Estrutura dos campos do grid - TGDField
+	
+	Data lF10 // Consulta F10
 
 	Method New() Constructor
 	Method LoadInterface()	
@@ -80,6 +82,8 @@ Method New() Class TWPainelPoliticaCredito
 	::oGDRet := Nil
 	::oGDRetField := TGDField():New()	 
 
+	::lF10 := .F.
+
 Return()
 
 
@@ -119,11 +123,21 @@ Method LoadContainer() Class TWPainelPoliticaCredito
 	
 	::cPolBox := ::oContainer:CreateHorizontalBox(20)
 	
-	::cVarBox := ::oContainer:CreateHorizontalBox(25)
+	If !::lF10
 	
-	::cProBox := ::oContainer:CreateHorizontalBox(35)
-
-	::cRetBox := ::oContainer:CreateHorizontalBox(20)	
+		::cVarBox := ::oContainer:CreateHorizontalBox(25)
+		
+		::cProBox := ::oContainer:CreateHorizontalBox(35)
+	
+		::cRetBox := ::oContainer:CreateHorizontalBox(20)
+	
+	Else
+	
+		::cVarBox := ::oContainer:CreateHorizontalBox(60)
+	
+		::cRetBox := ::oContainer:CreateHorizontalBox(20)		
+	
+	EndIf	
 	
 	::oContainer:Activate(::oWindow:GetPanelMain(), .T.)
 		
@@ -149,12 +163,16 @@ Local nMaxLine := 1000
 	
 	::oGDVar:Disable()
 
-	::oGDPro := MsNewGetDados():New(0, 0, 0, 0, GD_UPDATE, cVldDef, cVldDef, "", ::EditableField(),, nMaxLine, cVldDef,, cVldDef, ::oContainer:GetPanel(::cProBox), ::ProFieldProperty(), ::ProFieldData())
-	::oGDPro:oBrowse:Align := CONTROL_ALIGN_ALLCLIENT
-	::oGDPro:oBrowse:lVScroll := .T.
-	::oGDPro:oBrowse:lHScroll := .T.
+	If !::lF10
 	
-	::oGDPro:Disable()
+		::oGDPro := MsNewGetDados():New(0, 0, 0, 0, GD_UPDATE, cVldDef, cVldDef, "", ::EditableField(),, nMaxLine, cVldDef,, cVldDef, ::oContainer:GetPanel(::cProBox), ::ProFieldProperty(), ::ProFieldData())
+		::oGDPro:oBrowse:Align := CONTROL_ALIGN_ALLCLIENT
+		::oGDPro:oBrowse:lVScroll := .T.
+		::oGDPro:oBrowse:lHScroll := .T.
+		
+		::oGDPro:Disable()
+		
+	EndIf
 	
 	::oGDREt := MsNewGetDados():New(0, 0, 0, 0, GD_UPDATE, cVldDef, cVldDef, "", ::EditableField(),, nMaxLine, cVldDef,, cVldDef, ::oContainer:GetPanel(::cREtBox), ::RetFieldProperty(), ::RetFieldData())
 	::oGDREt:oBrowse:Align := CONTROL_ALIGN_ALLCLIENT

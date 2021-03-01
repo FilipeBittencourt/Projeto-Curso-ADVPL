@@ -13,16 +13,18 @@ User Function BIAFG127(_nRecno)
 
 	Local _cAlias	:=	GetNextAlias()
 	Local msAlias	:=	GetNextAlias()
-	Local _cRecno	:= "%'%" + Alltrim(Str(_nRecno)) + "%'%"
+	Local _cRecnoF	:= "%'%F1%" + Alltrim(Str(_nRecno)) + "%'%"
+	Local _cRecnoD	:= "%'%D1%" + Alltrim(Str(_nRecno)) + "%'%"
 	Local _lRet		:=	.T.	
 	Local msEnter   := CHR(13) + CHR(10)
-
+	
 	BEGINSQL Alias _cAlias
 		%NoParser%
 		SELECT COUNT(*) QTD
 		FROM BZINTEGRACAO (NOLOCK)
 		WHERE PROCESSO_NOME = 'RM'
-		AND RECNO_RETORNO LIKE %Exp:_cRecno%
+		AND RECNO_RETORNO LIKE %Exp:_cRecnoF%
+		AND RECNO_RETORNO NOT LIKE %Exp:_cRecnoD%
 	ENDSQL
 
 	If (_cAlias)->QTD > 0
@@ -38,7 +40,8 @@ User Function BIAFG127(_nRecno)
 			AS (SELECT COUNT(*) QTD
 			FROM BZINTEGRACAO (NOLOCK)
 			WHERE PROCESSO_NOME = 'RM'
-			AND RECNO_RETORNO LIKE %Exp:_cRecno%
+			AND RECNO_RETORNO LIKE %Exp:_cRecnoF%
+			AND RECNO_RETORNO NOT LIKE %Exp:_cRecnoD%
 			AND STATUS = 'CN'
 			UNION ALL
 			SELECT COUNT(*) QTD
@@ -49,7 +52,8 @@ User Function BIAFG127(_nRecno)
 			SELECT PROCESSO_BIZAGI
 			FROM BZINTEGRACAO (NOLOCK)
 			WHERE PROCESSO_NOME = 'RM'
-			AND RECNO_RETORNO LIKE %Exp:_cRecno%
+			AND RECNO_RETORNO LIKE %Exp:_cRecnoF%
+			AND RECNO_RETORNO NOT LIKE %Exp:_cRecnoD%
 			)
 			AND STATUS = 'IB'
 			AND RTRIM(DADOS_RETORNO) IN('NÃO PROCESSADO', 'ERRO CLASSIFICACAO')
@@ -57,7 +61,8 @@ User Function BIAFG127(_nRecno)
 			SELECT COUNT(*) QTD
 			FROM BZINTEGRACAO  (NOLOCK)
 			WHERE PROCESSO_NOME = 'RM'
-			AND RECNO_RETORNO LIKE %Exp:_cRecno%
+			AND RECNO_RETORNO LIKE %Exp:_cRecnoF%
+			AND RECNO_RETORNO NOT LIKE %Exp:_cRecnoD%
 			AND STATUS = 'IM'
 			AND DADOS_RETORNO = 'PROCESSADO COM SUCESSO'
 			AND GETDATE() - CONVERT(DATETIME, DATA_INTEGRACAO_PROTHEUS) > '1900-01-01 00:30:00.00')
@@ -75,7 +80,8 @@ User Function BIAFG127(_nRecno)
 				SELECT PROCESSO_BIZAGI NUMPROC
 				FROM BZINTEGRACAO(NOLOCK)
 				WHERE PROCESSO_NOME = 'RM'
-				AND RECNO_RETORNO LIKE %Exp:_cRecno%			
+				AND RECNO_RETORNO LIKE %Exp:_cRecnoF%
+				AND RECNO_RETORNO NOT LIKE %Exp:_cRecnoD%			
 
 			ENDSQL
 

@@ -1,5 +1,5 @@
 #include "totvs.ch"
-#include "topconn.ch"
+#include "fwmvcdef.ch"
 
 /*/{Protheus.doc} BIA636
 @author Marinaldo de Jesus (facile)
@@ -12,7 +12,9 @@
 
 procedure u_BIA636()
 
-    local oFWMBrowse   as object
+	local cFilterDefault	as character
+
+    local oFWMBrowse		as object
 
     // Instanciamento da classe de Browse
     oFWMBrowse:=FWMBrowse():New()
@@ -27,15 +29,25 @@ procedure u_BIA636()
     oFWMBrowse:SetDescription(cCadastro)
 
     //Define o menu do Browse
-    oFWMBrowse:setMenuDef("BIA636MVC")
+    if (ApMsgNoYes("Deseja Consultar os dados em GRID?",cCadastro))
+		oFWMBrowse:setMenuDef("BIA636MVCGRID")
+	else
+		oFWMBrowse:setMenuDef("BIA636MVCFORM")
+	endif
 
     //Habilita o botao para fechar a janela
     oFWMBrowse:ForceQuitButton()
 
+    //------------------------------------------------------------------------
+    //Define Filtro para carregar apenas tipo 2 carregado por esta rotina
+    //------------------------------------------------------------------------
+	cFilterDefault:="(ZOD_FILIAL=='"+xFilial("ZOD")+"')"
+	cFilterDefault+=".and."
+	cFilterDefault+="(ZOD_TIPO=='2')"
+	oFWMBrowse:setFilterDefault(cFilterDefault)
+
     // Ativacao da classe
     ZOD->(oFWMBrowse:Activate())
-
-    freeObj(oFWMBrowse)
 
     return
 
@@ -48,7 +60,7 @@ procedure U_BIA636Proc()
 	aArea:=getArea()
 	BIA636Proc()
 	restArea(aArea)
-	return
+	return(MbrChgLoop(.F.))
 
 static function BIA636Proc() as logical
 
@@ -73,9 +85,9 @@ static function BIA636Proc() as logical
 	
 	if (lRet)
 
-		cVersao:=PadR(oPergunte:cVersao,getSX3Cache("ZOH_VERSAO","X3_TAMANHO"))
-		cRevisa:=PadR(oPergunte:cRevisa,getSX3Cache("ZOH_REVISA","X3_TAMANHO"))
-		cAnoRef:=PadR(oPergunte:cAnoRef,getSX3Cache("ZOH_ANOREF","X3_TAMANHO"))
+		cVersao:=PadR(Left(oPergunte:cVersao,getSX3Cache("ZOH_VERSAO","X3_TAMANHO")),getSX3Cache("ZOH_VERSAO","X3_TAMANHO"))
+		cRevisa:=PadR(Left(oPergunte:cRevisa,getSX3Cache("ZOH_REVISA","X3_TAMANHO")),getSX3Cache("ZOH_REVISA","X3_TAMANHO"))
+		cAnoRef:=PadR(Left(oPergunte:cAnoRef,getSX3Cache("ZOH_ANOREF","X3_TAMANHO")),getSX3Cache("ZOH_ANOREF","X3_TAMANHO"))
 
 		oEmpresa:GetSelEmp()
 
@@ -252,10 +264,11 @@ static function getQueryBP(cEmp as character,cVersao as character,cRevisa as cha
 			cSQLQuery+="	  ,BP.CONTA					AS ZOD_CONTA"+cCRLF
 			cSQLQuery+="	  ,BP.SALDOATU				AS ZOD_SALCTA"+cCRLF
 			cSQLQuery+="	  ,' '						AS D_E_L_E_T_"+cCRLF
-			cSQLQuery+="	  ,(ISNULL((SELECT MAX(ZOD.R_E_C_N_O_) FROM "+cZODTable+" ZOD),0)+ROW_NUMBER() OVER (PARTITION BY 1 ORDER BY BP.EMPRESA,BP.DATARF,BP.CONTA)) AS R_E_C_N_O_"+cCRLF
+			cSQLQuery+="	  ,(ISNULL((SELECT MAX(ZOD.R_E_C_N_O_) FROM "+cZODTable+" ZOD),0)+ROW_NUMBER() OVER (PARTITION BY 1 ORDER BY BP.EMPRESA,BP.FILIAL,BP.DATARF,BP.CONTA)) AS R_E_C_N_O_"+cCRLF
 			cSQLQuery+="	  ,0						AS R_E_C_D_E_L_"+cCRLF
 			cSQLQuery+="  FROM dbo.VW_BI_F_BALANCOPATRIMONIAL BP WITH (NOLOCK)"+cCRLF
 			cSQLQuery+=" WHERE BP.EMPRESA="+valtoSQL(cEmp)+cCRLF
+			cSQLQuery+="   AND BP.FILIAL="+valtoSQL(cZODFilial)+cCRLF
 			cSQLQuery+="   AND BP.DATARF BETWEEN "+valtoSQL(dIDataRef)+" AND  "+valtoSQL(dFDataRef)+cCRLF
 			cSQLQuery+="   AND NOT EXISTS ("+cCRLF
 			cSQLQuery+="						SELECT DISTINCT 1 AS FOUND"+cCRLF 
@@ -271,8 +284,9 @@ static function getQueryBP(cEmp as character,cVersao as character,cRevisa as cha
 		elseif ((!lZODFound).and.(lZODSeek))
 			cSQLQuery:="UPDATE ZOD SET ZOD.ZOD_SALCTA=BP.SALDOATU"+cCRLF
 			cSQLQuery+="  FROM dbo.VW_BI_F_BALANCOPATRIMONIAL BP WITH (NOLOCK)"+cCRLF
-			cSQLQuery+=","+cZODTable+" ZOD WITH (NOLOCK)"+cCRLF
+			cSQLQuery+="       ,"+cZODTable+" ZOD WITH (NOLOCK)"+cCRLF
 			cSQLQuery+=" WHERE BP.EMPRESA="+valtoSQL(cEmp)+cCRLF
+			cSQLQuery+="   AND BP.FILIAL="+valtoSQL(cZODFilial)+cCRLF
 			cSQLQuery+="   AND BP.DATARF BETWEEN "+valtoSQL(dIDataRef)+" AND  "+valtoSQL(dFDataRef)+cCRLF
 			cSQLQuery+="   AND ZOD.ZOD_VERSAO="+valtoSQL(cVersao)+cCRLF
 			cSQLQuery+="   AND ZOD.ZOD_REVISA="+valtoSQL(cRevisa)+cCRLF
@@ -434,9 +448,9 @@ static procedure BIA636Excel(oPergunte as object)
 
     local nZODOrder     as numeric
 
-    cVersao:=left(oPergunte:cVersao,getSX3Cache("ZOD_VERSAO","X3_TAMANHO"))
-    cRevisa:=left(oPergunte:cRevisa,getSX3Cache("ZOD_REVISA","X3_TAMANHO"))
-    cAnoRef:=left(oPergunte:cAnoRef,getSX3Cache("ZOD_ANOREF","X3_TAMANHO"))
+    cVersao:=PadR(Left(oPergunte:cVersao,getSX3Cache("ZOD_VERSAO","X3_TAMANHO")),getSX3Cache("ZOD_VERSAO","X3_TAMANHO"))
+    cRevisa:=PadR(Left(oPergunte:cRevisa,getSX3Cache("ZOD_REVISA","X3_TAMANHO")),getSX3Cache("ZOD_REVISA","X3_TAMANHO"))
+    cAnoRef:=PadR(Left(oPergunte:cAnoRef,getSX3Cache("ZOD_ANOREF","X3_TAMANHO")),getSX3Cache("ZOD_ANOREF","X3_TAMANHO"))
 
     cZODOrder:="ZOD_FILIAL+ZOD_VERSAO+ZOD_REVISA+ZOD_ANOREF+ZOD_TIPO+DTOS(ZOD_DTREF)+ZOD_CONTA"
     nZODOrder:=retOrder("ZOD",cZODOrder)
@@ -453,7 +467,16 @@ static procedure BIA636Excel(oPergunte as object)
     ZOD->(dbSeek(cZODKeySeek,.F.))
 
     aZODQuery:=array(0)
-    cZODFilter:="ZOD_FILIAL=='"+cZODFilial+"' .AND. ZOD_VERSAO=='"+cVersao+"' .AND. ZOD_REVISA=='"+cRevisa+"' .AND. ZOD_ANOREF=='"+cAnoRef+"'"
+	
+	cZODFilter:="ZOD_FILIAL=='"+cZODFilial+"'"
+	cZODFilter+=".AND."
+	cZODFilter+="ZOD_VERSAO=='"+cVersao+"'"
+	cZODFilter+=".AND."
+	cZODFilter+="ZOD_REVISA=='"+cRevisa+"'"
+	cZODFilter+=".AND."
+	cZODFilter+="ZOD_ANOREF=='"+cAnoRef+"'"
+	cZODFilter+=".AND."
+	cZODFilter+="ZOD_TIPO=='2'"
 
     MsAguarde({||FilBrowse("ZOD",@aZODQuery,cZODFilter)},&("cCadastro"),"Obtendo dados no SGBD...")
 
@@ -500,3 +523,159 @@ static procedure BIA636Excel(oPergunte as object)
     EndFilBrw("ZOD",@aZODQuery)
 
     return
+
+class BIA636RestModel from FWRestModel
+
+    method new() constructor
+
+    method Activate()
+    method DeActivate()
+    method OnError()
+
+    method SetModel()
+    method ClearModel()
+    method SetName()
+    method GetName()
+    method SetAsXml()
+    method SetAsJson()
+
+    method StartGetFormat()
+    method EscapeGetFormat()
+    method EndGetFormat()
+
+    method SetAlias()
+    method GetAlias()
+    method HasAlias()
+    method Seek()
+    method Skip()
+    method Total()
+    method GetData()
+    method SaveData()
+    method DelData()
+
+    method SetFilter()
+    method GetFilter()
+    method ClearFilter()
+    method DecodePK()
+    method ConvertPK()
+
+    method GetStatusResponse()
+    method SetStatusResponse()
+
+    method SetQueryString()
+    method GetQueryString()
+    method GetQSValue()
+    method GetHttpHeader()
+    method SetFields()
+    method debuger()
+
+endclass
+
+method new() class BIA636RestModel
+    _Super:New()
+    return
+
+method Activate() class BIA636RestModel
+    if (_Super:Activate())
+        self:lActivate:=.T.
+    endif
+    return(self:lActivate)
+
+method DeActivate() class BIA636RestModel
+    return(_Super:DeActivate())
+
+method OnError() class BIA636RestModel
+    return(_Super:OnError())
+
+method SetModel(oModel) class BIA636RestModel
+    return(_Super:SetModel(@oModel))
+
+method ClearModel() class BIA636RestModel
+    return(_Super:ClearModel())
+
+method SetName(cName) class BIA636RestModel
+    return(_Super:SetName(@cName))
+
+method GetName() class BIA636RestModel
+    return(_Super:GetName())
+
+method SetAsXml() class BIA636RestModel
+    return(_Super:SetAsXml())
+
+method SetAsJson() class BIA636RestModel
+    return(_Super:SetAsJson())
+
+method StartGetFormat(nTotal,nCount,nStartIndex) class BIA636RestModel
+    return(_Super:StartGetFormat(@nTotal,@nCount,@nStartIndex))
+
+method EscapeGetFormat() class BIA636RestModel
+    return(_Super:EscapeGetFormat())
+
+method EndGetFormat() class BIA636RestModel
+    return(_Super:EndGetFormat())
+
+method SetAlias(cAlias) class BIA636RestModel
+    return(_Super:SetAlias(cAlias))
+
+method GetAlias() class BIA636RestModel
+    return(_Super:GetAlias())
+
+method HasAlias() class BIA636RestModel
+    return(_Super:HasAlias())
+
+method Seek(cPK) class BIA636RestModel
+    return(_Super:Seek(@cPK))
+
+method Skip(nSkip) class BIA636RestModel
+    return(_Super:Skip(@nSkip))
+
+method Total() class BIA636RestModel
+    return(_Super:Total())
+
+method GetData(lFieldDetail,lFieldVirtual,lFieldEmpty,lFirstLevel,lInternalID) class BIA636RestModel
+    return(_Super:GetData(@lFieldDetail,@lFieldVirtual,@lFieldEmpty,@lFirstLevel,@lInternalID))
+
+method SaveData(cPK,cData,cError) class BIA636RestModel
+    return(_Super:SaveData(@cPK,@cData,@cError))
+
+method DelData(cPK,cError) class BIA636RestModel
+    return(_Super:DelData(@cPK,@cError))
+
+method SetFilter(cFilter) class BIA636RestModel
+    return(_Super:SetFilter(cFilter))
+
+method GetFilter() class BIA636RestModel
+    return(_Super:GetFilter())
+
+method ClearFilter() class BIA636RestModel
+    return(_Super:ClearFilter())
+
+method DecodePK() class BIA636RestModel
+    return(_Super:DecodePK())
+
+method ConvertPK(cPK) class BIA636RestModel
+    return(_Super:ConvertPK(@cPK))
+
+method GetStatusResponse() class BIA636RestModel
+    return(_Super:GetStatusResponse())
+
+method SetStatusResponse(nStatus,cStatus) class BIA636RestModel
+    return(_Super:SetStatusResponse(@nStatus,@cStatus))
+
+method SetQueryString(aQueryString) class BIA636RestModel
+    return(_Super:SetQueryString(@aQueryString))
+
+method GetQueryString() class BIA636RestModel
+    return(_Super:GetQueryString())
+
+method GetQSValue(cKey) class BIA636RestModel
+    return(_Super:GetQSValue(@cKey))
+
+method GetHttpHeader(cParam) class BIA636RestModel
+    return(_Super:GetHttpHeader(@cParam))
+
+method SetFields(aFields) class BIA636RestModel
+    return(_Super:SetFields(@aFields))
+
+method debuger(lDebug) class BIA636RestModel
+    return(_Super:debuger(@lDebug))

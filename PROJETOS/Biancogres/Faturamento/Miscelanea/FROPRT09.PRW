@@ -36,14 +36,29 @@ Static Function ProcRT09()
 
 	Private cAliasTmp
 
+	//Ticket 29694 - Pablo S. Nascimento - consulta alterada para trazer codigos cliente e vendedor para buscar atendente
 	cAliasTmp := GetNextAlias()
 	BeginSql Alias cAliasTmp
 		%NOPARSER%
 
-		select EMPRESA = ZZ7_EMP,C0_EMISSAO, C0_NUM, C0_YPEDIDO, C0_YITEMPV, C0_PRODUTO, B1_DESC, C0_SOLICIT, C0_DOCRES, C0_OBS, C0_LOTECTL, C0_QUANT
+		select EMPRESA = ZZ7_EMP,C0_EMISSAO, C0_NUM, C0_YPEDIDO, C0_YITEMPV, C0_PRODUTO, B1_DESC, C0_SOLICIT, C0_DOCRES, C0_OBS, C0_LOTECTL, C0_QUANT, 
+		CASE WHEN SC5_7.C5_NUM IS NOT NULL THEN		SA1_1.A1_COD	ELSE SA1_2.A1_COD		END AS COD_CLI,
+		CASE WHEN SC5_7.C5_NUM IS NOT NULL THEN		SA3_1.A3_COD	ELSE SA3_2.A3_COD		END AS COD_VEN,
+		CASE WHEN SC5_7.C5_NUM IS NOT NULL THEN		SA1_1.A1_LOJA	ELSE SA1_2.A1_LOJA		END AS LOJA_CLI
+		
 		from %TABLE:SC0% SC0
 		join %TABLE:SB1% SB1 on B1_COD = C0_PRODUTO
 		join %TABLE:ZZ7% ZZ7 on ZZ7_COD = B1_YLINHA and ZZ7_LINSEQ = B1_YLINSEQ
+		
+		LEFT JOIN %TABLE:SC5% SC5 with(nolock) ON (SC0.C0_YPEDIDO	=  SC5.C5_NUM	AND	SC0.C0_FILIAL = SC5.C5_FILIAL		AND	SC5.D_E_L_E_T_ = '') 
+		LEFT JOIN SC5070 SC5_7 with(nolock) ON (SC0.C0_YPEDIDO	=  SC5_7.C5_YPEDORI	AND	SC0.C0_FILIAL = SC5_7.C5_FILIAL	AND	SC5_7.D_E_L_E_T_ = '' AND SC5_7.C5_YEMPPED = '01' AND SC0.C0_YPEDIDO <> '')
+		
+		LEFT JOIN SA1010 SA1_1 with(nolock) ON (SC5_7.C5_CLIENTE		=  SA1_1.A1_COD		AND SC5_7.C5_LOJACLI	= SA1_1.A1_LOJA	AND SA1_1.D_E_L_E_T_ = '')
+		LEFT JOIN SA1010 SA1_2 with(nolock) ON (SC5.C5_CLIENTE		=  SA1_2.A1_COD		AND SC5.C5_LOJACLI		= SA1_2.A1_LOJA	AND SA1_2.D_E_L_E_T_ = '')
+		
+		LEFT JOIN SA3010 SA3_1 with(nolock) ON (SC5_7.C5_VEND1		=  SA3_1.A3_COD	AND SA3_1.D_E_L_E_T_ = '')
+		LEFT JOIN SA3010 SA3_2 with(nolock) ON (SC5.C5_VEND1			=  SA3_2.A3_COD	AND SA3_2.D_E_L_E_T_ = '')
+		
 		where
 		C0_FILIAL = '01'
 		and C0_VALIDA <> ''
@@ -70,6 +85,9 @@ Static Function ProcRT09()
 		AAdd(aAux,(cAliasTmp)->C0_OBS)
 		AAdd(aAux,(cAliasTmp)->C0_LOTECTL)
 		AAdd(aAux,(cAliasTmp)->C0_QUANT)
+		AAdd(aAux,(cAliasTmp)->COD_CLI)
+		AAdd(aAux,(cAliasTmp)->COD_VEN)
+		AAdd(aAux,(cAliasTmp)->LOJA_CLI)
 
 		If (cAliasTmp)->EMPRESA == "0101"
 			AAdd(aDadRes01,aAux)         
@@ -139,7 +157,7 @@ Static Function MailProc(_aDados, _cEmp)
 
 	For I := 1 To Len(_aDados)
 
-		GetItems(_aDados[I])
+		GetItems(_aDados[I], _cEmp)
 
 	Next I
 
@@ -183,36 +201,57 @@ Static Function GetColumnHeader()
 	cHtml += '         <p/>
 	cHtml += '         <table align="center" width="1200" border="1" cellspacing="0" cellpadding="1">
 	cHtml += '            <tr align=center>                                            
-	cHtml += '               <th class = "cabtab" width="10" scope="col"> Dt.Emis. </th>
-	cHtml += '               <th class = "cabtab" width="10" scope="col"> Reserva </th>
-	cHtml += '               <th class = "cabtab" width="30" scope="col"> Pedido </th>
+	cHtml += '               <th class = "cabtab" width="15" scope="col"> Dt.Emis. </th>
+	cHtml += '               <th class = "cabtab" width="20" scope="col"> Pedido </th>
 	cHtml += '               <th class = "cabtab" width="20" scope="col"> Item </th>
-	cHtml += '               <th class = "cabtab" width="15" scope="col"> Produto </th>
-	cHtml += '               <th class = "cabtab" width="15" scope="col"> Descricao </th>
-	cHtml += '               <th class = "cabtab" width="15" scope="col"> Solicitante </th>
-	cHtml += '               <th class = "cabtab" width="15" scope="col"> Documento </th>
+	cHtml += '               <th class = "cabtab" width="20" scope="col"> Produto </th>
+	cHtml += '               <th class = "cabtab" width="100" scope="col"> Descricao </th>
+	cHtml += '               <th class = "cabtab" width="20" scope="col"> Lote </th>
+	cHtml += '               <th class = "cabtab" width="20" scope="col"> Qtde. </th>
+	cHtml += '               <th class = "cabtab" width="15" scope="col"> Reserva </th>
+	cHtml += '               <th class = "cabtab" width="20" scope="col"> Solicitante </th>
+	cHtml += '               <th class = "cabtab" width="20" scope="col"> Documento </th>
 	cHtml += '               <th class = "cabtab" width="20" scope="col"> Obs. </th>
-	cHtml += '               <th class = "cabtab" width="15" scope="col"> Lote </th>
-	cHtml += '               <th class = "cabtab" width="10" scope="col"> Qtde. </th>
+	cHtml += '               <th class = "cabtab" width="20" scope="col"> Vendedor </th>
+	cHtml += '               <th class = "cabtab" width="30" scope="col"> Atendente </th>
 	cHtml += '            </tr>
 
 	Return()
 
 
-	Static Function GetItems(_aDados)
+	Static Function GetItems(_aDados, _cEmp)
+
+	Local cRetNome := ""
+	
+	oGerenteAtendente	:= TGerenteAtendente():New()
+	
+	//se cod_cliente e cod_vendedor não forem nulos, buscar o atendente
+	//if (!Empty(AllTrim(_aDados[12])) .And. !Empty(AllTrim(_aDados[13])))
+		oResult 			:= oGerenteAtendente:GetCliente(_cEmp+"01", AllTrim(_aDados[12]), AllTrim(_aDados[14]), AllTrim(_aDados[13]))
+	//endif
+	
+	If(!Empty(oResult:cAtendente))
+		PswOrder(1)
+		If (PswSeek(oResult:cAtendente, .T.))
+			aUser		:= Pswret(1)  
+			cRetNome	:= AllTrim(aUser[1][2])
+		EndIf
+	EndIf
 
 	cHtml += " 			<tr align=center>                                                   
-	cHtml += "          	<td class='style12' width='100'scope='col'>"+ _aDados[1] +"</td>
-	cHtml += "          	<td class='style12' width='100'scope='col'>"+ _aDados[2] +"</td>
+	cHtml += "          	<td class='style12' width='15'scope='col'>"+ _aDados[1] +"</td>
 	cHtml += "          	<td class='style12' width='20'scope='col'>"+ _aDados[3] +"</td>
 	cHtml += "          	<td class='style12' width='20'scope='col'>"+ _aDados[4] +"</td>
 	cHtml += "          	<td class='style12' width='20'scope='col'>"+ _aDados[5] +"</td>
-	cHtml += "              <td class='style12' width='40'scope='col'>"+ AllTrim(_aDados[6]) +"</td>
+	cHtml += "              <td class='style12' width='100'scope='col'>"+ AllTrim(_aDados[6]) +"</td>
+	cHtml += "          	<td class='style12' width='20'scope='col'>"+ AllTrim(_aDados[10]) +"</td>
+	cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform(_aDados[11],"@E 999,999.99") +"</td>
+	cHtml += "          	<td class='style12' width='15'scope='col'>"+ _aDados[2] +"</td>
 	cHtml += "          	<td class='style12' width='20'scope='col'>"+ _aDados[7] +"</td>
 	cHtml += "          	<td class='style12' width='20'scope='col'>"+ _aDados[8] +"</td>
 	cHtml += "          	<td class='style12' width='20'scope='col'>"+ AllTrim(_aDados[9]) +"</td>
-	cHtml += "          	<td class='style12' width='20'scope='col'>"+ AllTrim(_aDados[10]) +"</td>
-	cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform(_aDados[11],"@E 999,999.99") +"</td>
+	cHtml += "          	<td class='style12' width='20'scope='col'>"+ AllTrim(_aDados[13]) +"</td>
+	cHtml += "          	<td class='style12' width='30'scope='col'>" + if(!Empty(AllTrim(_aDados[12])), oResult:cAtendente+" - "+cRetNome, '') + "</td>
 	cHtml += "          </tr>
 
 	Return()
@@ -244,7 +283,7 @@ Static Function GetColumnHeader()
 	cTo := U_EmailWF("FROPRT09",_cEmp)
 	cCC := ""
 
-	cBody := cHtml
+	cBody := cHtml	
 	cAttach := ""
 
 	_lRet := U_BIAEnvMail(, cTo, cSubject, cBody, '', cAttach, , cCC)

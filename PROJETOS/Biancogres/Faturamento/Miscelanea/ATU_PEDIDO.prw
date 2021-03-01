@@ -72,7 +72,7 @@ USER FUNCTION ATU_PEDIDO()
 
 	// OS: 0652-14 - Usuário: Elaine Cristina Sales
 	// U_BIAMsgRun("Atualizando Itens...", "Aguarde!", {|| U_BIAF008(oGetDad) })	
-
+	LLRETORNO := ""
 	IF ALLTRIM(__READVAR) = 'M->C5_YLINHA'
 		LLRETORNO := M->C5_YLINHA
 

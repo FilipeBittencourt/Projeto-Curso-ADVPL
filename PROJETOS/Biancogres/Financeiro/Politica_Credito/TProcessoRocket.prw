@@ -41,6 +41,7 @@ Class TProcessoRocket From LongClassName
 	Data nVarAum // Variação percentual de aumento
 	Data nValLim // validade do limite de credito, em meses
 	Data cParCli // Parecer da analise do cliente
+	Data cPorte // Porte do cliente
 	Data lEnvProd // Ambiente de Producao
 	
 	Method New() Constructor
@@ -54,7 +55,10 @@ Class TProcessoRocket From LongClassName
 	Method FlowExecution()
 	Method FlowStatus()
 	Method HttpPost()
-
+	Method GetRisk()
+	Method FirstPurchase(cCustomer)
+	Method MaxRisk()
+	
 EndClass
 
 
@@ -90,6 +94,7 @@ Method New() Class TProcessoRocket
 	::nVarAum := 0
 	::nValLim := 0
 	::cParCli := ""
+	::cPorte := ""
 	::lEnvProd := If (Upper(AllTrim(GetEnvserver())) $ "PRODUCAO/SCHEDULE/REMOTO/COMP-TIAGO", .T., .F.)
 
 Return()
@@ -179,6 +184,7 @@ Method AddReturn() Class TProcessoRocket
 		ZM4->ZM4_VLVA := ::nVarAum
 		ZM4->ZM4_DTVLC := MonthSum(dDataBase, ::nValLim)
 		ZM4->ZM4_PAC := ::cParCli
+		ZM4->ZM4_PORTE := ::cPorte
 
 	ZM4->(MsUnLock())
 
@@ -187,13 +193,21 @@ Return()
 
 Method UpdCustomer() Class TProcessoRocket
 Local aEmp := {"01", "05", "07", "12", "13", "14", "16", "17"}
+Local cRisk := ::GetRisk()
 Local nCount := 0
 Local cSQL := ""
 
 	For nCount := 1 To Len(aEmp)
 	
 		cSQL := " UPDATE " + RetFullName("SA1", aEmp[nCount])
-		cSQL += " SET A1_LC = " + ValToSQL(::nLimSug) + ", A1_VENCLC = " + ValToSQL(MonthSum(dDataBase, ::nValLim))  
+		cSQL += " SET A1_LC = " + ValToSQL(If (::nLimApr > 0, ::nLimApr, ::nLimSug)) + ", A1_VENCLC = " + ValToSQL(MonthSum(dDataBase, ::nValLim))
+		
+		If !Empty(cRisk)
+		
+			cSQL += ", A1_RISCO = " + ValToSQL(cRisk)
+		
+		EndIf
+		
 		cSQL += " WHERE A1_FILIAL = " + ValToSQL(xFilial("SA1"))
 		cSQL += " AND A1_CGC IN "
 		cSQL += " ( "
@@ -295,51 +309,55 @@ Local nCount := 1
 		
 			If oXml[nCount]:_NOME:TEXT == "LIMITE_ATUAL"
 				
-				::nLimAtu := Val(oXml[nCount]:_VALOR:TEXT)
+				::nLimAtu := Round(Val(oXml[nCount]:_VALOR:TEXT), 2)
 			
 			ElseIf oXml[nCount]:_NOME:TEXT == "LIMITE_SOLICITADO"
 			
-				::nLimSol := Val(oXml[nCount]:_VALOR:TEXT)
+				::nLimSol := Round(Val(oXml[nCount]:_VALOR:TEXT), 2)
 				
 			ElseIf oXml[nCount]:_NOME:TEXT == "LIMITE_ANALISTA"
 			
-				::nLimApr := Val(oXml[nCount]:_VALOR:TEXT)
+				::nLimApr := Round(Val(oXml[nCount]:_VALOR:TEXT), 2)
 				
 			ElseIf oXml[nCount]:_NOME:TEXT == "LIMITE_SUGERIDO"
 				
-				::nLimSug := Val(oXml[nCount]:_VALOR:TEXT)
+				::nLimSug := Round(Val(oXml[nCount]:_VALOR:TEXT), 2)
 			
 			ElseIf oXml[nCount]:_NOME:TEXT == "RISCO_SUGERIDO"
 			
-				::nRisSug := Val(oXml[nCount]:_VALOR:TEXT)
+				::nRisSug := Round(Val(oXml[nCount]:_VALOR:TEXT), 2)
 			
 			ElseIf oXml[nCount]:_NOME:TEXT == "RISCO_ANALISTA"
 			
-				::nRisDef := Val(oXml[nCount]:_VALOR:TEXT)
+				::nRisDef := Round(Val(oXml[nCount]:_VALOR:TEXT), 2)
 			
 			ElseIf oXml[nCount]:_NOME:TEXT == "RATING_CALCULADO"
 				
-				::nRatCal := Val(oXml[nCount]:_VALOR:TEXT)
+				::nRatCal := Round(Val(oXml[nCount]:_VALOR:TEXT), 2)
 			
 			ElseIf oXml[nCount]:_NOME:TEXT == "RATING_ANALISTA"
 				
-				::nRatDef := Val(oXml[nCount]:_VALOR:TEXT)
+				::nRatDef := Round(Val(oXml[nCount]:_VALOR:TEXT), 2)
 			
 			ElseIf oXml[nCount]:_NOME:TEXT == "MAIOR_ACUMULO"
 				
-				::nMaiAcu := Val(oXml[nCount]:_VALOR:TEXT)
+				::nMaiAcu := Round(Val(oXml[nCount]:_VALOR:TEXT), 2)
 			
 			ElseIf oXml[nCount]:_NOME:TEXT == "VARIACAO_AUMENTO"
 			
-				::nVarAum := Val(oXml[nCount]:_VALOR:TEXT)
+				::nVarAum := Round(Val(oXml[nCount]:_VALOR:TEXT), 2)
 				
 			ElseIf oXml[nCount]:_NOME:TEXT == "VALIDADE_LIMITE"
 				
-				::nValLim := Val(oXml[nCount]:_VALOR:TEXT)
+				::nValLim := Round(Val(oXml[nCount]:_VALOR:TEXT), 2)
 				
 			ElseIf oXml[nCount]:_NOME:TEXT == "PARECER_ANALISE"
 			
 				::cParCli := oXml[nCount]:_VALOR:TEXT
+				
+			ElseIf oXml[nCount]:_NOME:TEXT == "PORTE_CLIENTE"
+			
+				::cPorte := oXml[nCount]:_VALOR:TEXT	
 			
 			EndIf
 			
@@ -481,3 +499,109 @@ Local cWarning := ''
 	EndIf 
 	
 Return(lRet)
+
+
+Method GetRisk() Class TProcessoRocket
+Local cRet := ""
+Local cSQL := ""
+Local cQry := GetNextAlias()
+	
+	cSQL := " SELECT A1_COD, A1_YTIPOLC "
+	cSQL += " FROM "+ RetSQLName("SA1")
+	cSQL += " WHERE A1_FILIAL = " + ValToSQL(xFilial("SA1"))
+	cSQL += " AND A1_COD IN "
+	cSQL += " ( "
+	cSQL += " 	SELECT ZM1_CLIENT "
+	cSQL += " 	FROM " + RetSQLName("ZM1")
+	cSQL += " 	WHERE ZM1_FILIAL = " + ValToSQL(xFilial("ZM1"))
+	cSQL += " 	AND ZM1_CODPRO = " + ValToSQL(::cCodPro)
+	cSQL += " 	AND ZM1_TIPINT = '1' "
+	cSQL += " 	AND D_E_L_E_T_ = '' "
+	cSQL += " ) "
+	cSQL += " AND D_E_L_E_T_ = ''	
+	
+	TcQuery cSQL New Alias (cQry)
+	
+	If (cQry)->A1_YTIPOLC == "C" .And. !::FirstPurchase((cQry)->A1_COD)
+		
+		cRet := "D"
+	
+	ElseIf (cQry)->A1_YTIPOLC == "G"
+	
+		cRet := ::MaxRisk()
+		
+	EndIf 
+	
+	(cQry)->(DbCloseArea())
+
+Return(cRet)
+
+
+Method FirstPurchase(cCustomer) Class TProcessoRocket
+Local lRet := .F.
+Local cSQL := ""
+Local cQry := GetNextAlias()
+	
+	cSQL := " SELECT MIN(A1_PRICOM) AS A1_PRICOM "
+	cSQL += " FROM
+	cSQL += " (
+	cSQL += " 	SELECT A1_PRICOM "
+	cSQL += " 	FROM "+ RetFullName("SA1", "01")
+	cSQL += " 	WHERE A1_FILIAL = " + ValToSQL(xFilial("SA1"))
+	cSQL += " 	AND A1_COD = " + ValToSQL(cCustomer)
+	cSQL += " 	AND D_E_L_E_T_ = '' "		
+
+	cSQL += " 	UNION ALL "
+
+	cSQL += " 	SELECT A1_PRICOM "
+	cSQL += " 	FROM "+ RetFullName("SA1", "05")
+	cSQL += " 	WHERE A1_FILIAL = " + ValToSQL(xFilial("SA1"))
+	cSQL += " 	AND A1_COD = " + ValToSQL(cCustomer)
+	cSQL += " 	AND D_E_L_E_T_ = '' "		
+
+	cSQL += " 	UNION ALL "
+
+	cSQL += " 	SELECT A1_PRICOM "
+	cSQL += " 	FROM "+ RetFullName("SA1", "07")
+	cSQL += " 	WHERE A1_FILIAL = " + ValToSQL(xFilial("SA1"))
+	cSQL += " 	AND A1_COD = " + ValToSQL(cCustomer)
+	cSQL += " 	AND D_E_L_E_T_ = '' "		
+
+	cSQL += "	) _SA1 "
+	cSQL += "	WHERE A1_PRICOM <> '' "
+
+	TcQuery cSQL New Alias (cQry)
+	
+	lRet := !Empty((cQry)->A1_PRICOM)
+
+	(cQry)->(DbCloseArea())
+
+Return(lRet)
+
+
+Method MaxRisk() Class TProcessoRocket
+Local cRet := ""
+Local cSQL := ""
+Local cQry := GetNextAlias()
+	
+	cSQL := " SELECT MAX(A1_RISCO) AS A1_RISCO "
+	cSQL += " FROM "+ RetSQLName("SA1")
+	cSQL += " WHERE A1_FILIAL = " + ValToSQL(xFilial("SA1"))
+	cSQL += " AND A1_CGC IN "
+	cSQL += " ( "
+	cSQL += " 	SELECT ZM1_CNPJ "
+	cSQL += " 	FROM " + RetSQLName("ZM1")
+	cSQL += " 	WHERE ZM1_FILIAL = " + ValToSQL(xFilial("ZM1"))
+	cSQL += " 	AND ZM1_CODPRO = " + ValToSQL(::cCodPro)
+	cSQL += " 	AND ZM1_TIPINT = '2' "
+	cSQL += " 	AND D_E_L_E_T_ = '' "
+	cSQL += " ) "
+	cSQL += " AND D_E_L_E_T_ = ''	
+	
+	TcQuery cSQL New Alias (cQry)
+	
+	cRet := (cQry)->A1_RISCO
+
+	(cQry)->(DbCloseArea())
+
+Return(cRet)

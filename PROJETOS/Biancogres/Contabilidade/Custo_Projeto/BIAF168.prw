@@ -433,6 +433,31 @@ aAdd( aSX2, { ;
 	'C'																		, ; //X2_MODOEMP
 	'C'																		, ; //X2_MODOUN
 	0																		} ) //X2_MODULO
+	
+//
+// Tabela ZME
+//
+aAdd( aSX2, { ;
+	'ZME'																	, ; //X2_CHAVE
+	cPath																	, ; //X2_PATH
+	'ZME010'																, ; //X2_ARQUIVO
+	'Unidade Medida Contrato'												, ; //X2_NOME
+	'Unidade Medida Contrato'												, ; //X2_NOMESPA
+	'Unidade Medida Contrato'												, ; //X2_NOMEENG
+	'C'																		, ; //X2_MODO
+	''																		, ; //X2_TTS
+	''																		, ; //X2_ROTINA
+	''																		, ; //X2_PYME
+	''																		, ; //X2_UNICO
+	''																		, ; //X2_DISPLAY
+	''																		, ; //X2_SYSOBJ
+	''																		, ; //X2_USROBJ
+	''																		, ; //X2_POSLGT
+	''																		, ; //X2_CLOB
+	''																		, ; //X2_AUTREC
+	'C'																		, ; //X2_MODOEMP
+	'C'																		, ; //X2_MODOUN
+	0																		} ) //X2_MODULO	
 
 //
 // Atualizando dicionário
@@ -756,12 +781,12 @@ aAdd( aSX3, { ;
 	{ 'N'																	, .T. }, ; //X3_TIPO
 	{ 6																		, .T. }, ; //X3_TAMANHO
 	{ 2																		, .T. }, ; //X3_DECIMAL
-	{ 'Dólar ($)'															, .T. }, ; //X3_TITULO
-	{ 'Dólar ($)'															, .T. }, ; //X3_TITSPA
-	{ 'Dólar ($)'															, .T. }, ; //X3_TITENG
-	{ 'Dólar ($)'															, .T. }, ; //X3_DESCRIC
-	{ 'Dólar ($)'															, .T. }, ; //X3_DESCSPA
-	{ 'Dólar ($)'															, .T. }, ; //X3_DESCENG
+	{ 'Dólar'															, .T. }, ; //X3_TITULO
+	{ 'Dólar'															, .T. }, ; //X3_TITSPA
+	{ 'Dólar'															, .T. }, ; //X3_TITENG
+	{ 'Dólar'															, .T. }, ; //X3_DESCRIC
+	{ 'Dólar'															, .T. }, ; //X3_DESCSPA
+	{ 'Dólar'															, .T. }, ; //X3_DESCENG
 	{ '@E 999.99'															, .T. }, ; //X3_PICTURE
 	{ ''																	, .T. }, ; //X3_VALID
 	{ Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
@@ -805,12 +830,12 @@ aAdd( aSX3, { ;
 	{ 'N'																	, .T. }, ; //X3_TIPO
 	{ 6																		, .T. }, ; //X3_TAMANHO
 	{ 2																		, .T. }, ; //X3_DECIMAL
-	{ 'Libra (£)'															, .T. }, ; //X3_TITULO
-	{ 'Libra (£)'															, .T. }, ; //X3_TITSPA
-	{ 'Libra (£)'															, .T. }, ; //X3_TITENG
-	{ 'Libra (£)'															, .T. }, ; //X3_DESCRIC
-	{ 'Libra (£)'															, .T. }, ; //X3_DESCSPA
-	{ 'Libra (£)'															, .T. }, ; //X3_DESCENG
+	{ 'Libra'															, .T. }, ; //X3_TITULO
+	{ 'Libra'															, .T. }, ; //X3_TITSPA
+	{ 'Libra'															, .T. }, ; //X3_TITENG
+	{ 'Libra'															, .T. }, ; //X3_DESCRIC
+	{ 'Libra'															, .T. }, ; //X3_DESCSPA
+	{ 'Libra'															, .T. }, ; //X3_DESCENG
 	{ '@E 999.99'															, .T. }, ; //X3_PICTURE
 	{ ''																	, .T. }, ; //X3_VALID
 	{ Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
@@ -854,12 +879,12 @@ aAdd( aSX3, { ;
 	{ 'N'																	, .T. }, ; //X3_TIPO
 	{ 6																		, .T. }, ; //X3_TAMANHO
 	{ 2																		, .T. }, ; //X3_DECIMAL
-	{ 'Euro (€)'															, .T. }, ; //X3_TITULO
-	{ 'Euro (€)'															, .T. }, ; //X3_TITSPA
-	{ 'Euro (€)'															, .T. }, ; //X3_TITENG
-	{ 'Euro (€)'															, .T. }, ; //X3_DESCRIC
-	{ 'Euro (€)'															, .T. }, ; //X3_DESCSPA
-	{ 'Euro (€)'															, .T. }, ; //X3_DESCENG
+	{ 'Euro'															, .T. }, ; //X3_TITULO
+	{ 'Euro'															, .T. }, ; //X3_TITSPA
+	{ 'Euro'															, .T. }, ; //X3_TITENG
+	{ 'Euro'															, .T. }, ; //X3_DESCRIC
+	{ 'Euro'															, .T. }, ; //X3_DESCSPA
+	{ 'Euro'															, .T. }, ; //X3_DESCENG
 	{ '@E 999.99'															, .T. }, ; //X3_PICTURE
 	{ ''																	, .T. }, ; //X3_VALID
 	{ Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
@@ -1016,7 +1041,7 @@ aAdd( aSX3, { ;
 	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
 	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
 	{ ''																	, .T. }, ; //X3_RELACAO
-	{ 'SUBPRJ'																, .T. }, ; //X3_F3
+	{ 'ZMB'																	, .T. }, ; //X3_F3
 	{ 0																		, .T. }, ; //X3_NIVEL
 	{ Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
 	{ ''																	, .T. }, ; //X3_CHECK
@@ -1100,7 +1125,7 @@ aAdd( aSX3, { ;
 	{ '05'																	, .T. }, ; //X3_ORDEM
 	{ 'ZMD_UNIDAD'															, .T. }, ; //X3_CAMPO
 	{ 'C'																	, .T. }, ; //X3_TIPO
-	{ 1																		, .T. }, ; //X3_TAMANHO
+	{ 2																		, .T. }, ; //X3_TAMANHO
 	{ 0																		, .T. }, ; //X3_DECIMAL
 	{ 'Unidade'																, .T. }, ; //X3_TITULO
 	{ 'Unidade'																, .T. }, ; //X3_TITSPA
@@ -1114,7 +1139,7 @@ aAdd( aSX3, { ;
 	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
 	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
 	{ ''																	, .T. }, ; //X3_RELACAO
-	{ ''																	, .T. }, ; //X3_F3
+	{ 'ZME'																	, .T. }, ; //X3_F3
 	{ 0																		, .T. }, ; //X3_NIVEL
 	{ Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
 	{ ''																	, .T. }, ; //X3_CHECK
@@ -1124,13 +1149,13 @@ aAdd( aSX3, { ;
 	{ 'A'																	, .T. }, ; //X3_VISUAL
 	{ 'R'																	, .T. }, ; //X3_CONTEXT
 	{ '€'																	, .T. }, ; //X3_OBRIGAT
-	{ 'Pertence("123")'														, .T. }, ; //X3_VLDUSER
-	{ '1=VB;2=Diária;3=Meses'												, .T. }, ; //X3_CBOX
+	{ 'ExistCpo("ZME")'														, .T. }, ; //X3_VLDUSER
+	{ ''																	, .T. }, ; //X3_CBOX
 	{ ''																	, .T. }, ; //X3_CBOXSPA
 	{ ''																	, .T. }, ; //X3_CBOXENG
 	{ ''																	, .T. }, ; //X3_PICTVAR
 	{ ''																	, .T. }, ; //X3_WHEN
-	{ '"1"'																	, .T. }, ; //X3_INIBRW
+	{ ''																	, .T. }, ; //X3_INIBRW
 	{ ''																	, .T. }, ; //X3_GRPSXG
 	{ ''																	, .T. }, ; //X3_FOLDER
 	{ ''																	, .T. }, ; //X3_CONDSQL
@@ -1222,8 +1247,8 @@ aAdd( aSX3, { ;
 	{ 'A'																	, .T. }, ; //X3_VISUAL
 	{ 'R'																	, .T. }, ; //X3_CONTEXT
 	{ '€'																	, .T. }, ; //X3_OBRIGAT
-	{ 'Pertence("123")'														, .T. }, ; //X3_VLDUSER
-	{ '1=Dólar;2=Libra;3=Euro'												, .T. }, ; //X3_CBOX
+	{ 'Pertence("1234")'													, .T. }, ; //X3_VLDUSER
+	{ '1=Real;2=Dolar;3=Libra;4=Euro'										, .T. }, ; //X3_CBOX
 	{ ''																	, .T. }, ; //X3_CBOXSPA
 	{ ''																	, .T. }, ; //X3_CBOXENG
 	{ ''																	, .T. }, ; //X3_PICTVAR
@@ -1371,6 +1396,156 @@ aAdd( aSX3, { ;
 	{ '€'																	, .T. }, ; //X3_OBRIGAT
 	{ 'Pertence("SN")'														, .T. }, ; //X3_VLDUSER
 	{ 'S=Sim;N=Não'															, .T. }, ; //X3_CBOX
+	{ ''																	, .T. }, ; //X3_CBOXSPA
+	{ ''																	, .T. }, ; //X3_CBOXENG
+	{ ''																	, .T. }, ; //X3_PICTVAR
+	{ ''																	, .T. }, ; //X3_WHEN
+	{ ''																	, .T. }, ; //X3_INIBRW
+	{ ''																	, .T. }, ; //X3_GRPSXG
+	{ ''																	, .T. }, ; //X3_FOLDER
+	{ ''																	, .T. }, ; //X3_CONDSQL
+	{ ''																	, .T. }, ; //X3_CHKSQL
+	{ ''																	, .T. }, ; //X3_IDXSRV
+	{ 'N'																	, .T. }, ; //X3_ORTOGRA
+	{ ''																	, .T. }, ; //X3_TELA
+	{ ''																	, .T. }, ; //X3_POSLGT
+	{ 'N'																	, .T. }, ; //X3_IDXFLD
+	{ ''																	, .T. }, ; //X3_AGRUP
+	{ ''																	, .T. }, ; //X3_MODAL
+	{ ''																	, .T. }} ) //X3_PYME
+
+//
+// Campos Tabela ZME
+//
+aAdd( aSX3, { ;
+	{ 'ZME'																	, .T. }, ; //X3_ARQUIVO
+	{ '01'																	, .T. }, ; //X3_ORDEM
+	{ 'ZME_FILIAL'															, .T. }, ; //X3_CAMPO
+	{ 'C'																	, .T. }, ; //X3_TIPO
+	{ 2																		, .T. }, ; //X3_TAMANHO
+	{ 0																		, .T. }, ; //X3_DECIMAL
+	{ 'Filial'																, .T. }, ; //X3_TITULO
+	{ 'Sucursal'															, .T. }, ; //X3_TITSPA
+	{ 'Branch'																, .T. }, ; //X3_TITENG
+	{ 'Filial do Sistema'													, .T. }, ; //X3_DESCRIC
+	{ 'Sucursal'															, .T. }, ; //X3_DESCSPA
+	{ 'Branch of the System'												, .T. }, ; //X3_DESCENG
+	{ '@!'																	, .T. }, ; //X3_PICTURE
+	{ ''																	, .T. }, ; //X3_VALID
+	{ Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128)					, .T. }, ; //X3_USADO
+	{ ''																	, .T. }, ; //X3_RELACAO
+	{ ''																	, .T. }, ; //X3_F3
+	{ 1																		, .T. }, ; //X3_NIVEL
+	{ Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+	{ ''																	, .T. }, ; //X3_CHECK
+	{ ''																	, .T. }, ; //X3_TRIGGER
+	{ 'U'																	, .T. }, ; //X3_PROPRI
+	{ 'N'																	, .T. }, ; //X3_BROWSE
+	{ ''																	, .T. }, ; //X3_VISUAL
+	{ ''																	, .T. }, ; //X3_CONTEXT
+	{ ''																	, .T. }, ; //X3_OBRIGAT
+	{ ''																	, .T. }, ; //X3_VLDUSER
+	{ ''																	, .T. }, ; //X3_CBOX
+	{ ''																	, .T. }, ; //X3_CBOXSPA
+	{ ''																	, .T. }, ; //X3_CBOXENG
+	{ ''																	, .T. }, ; //X3_PICTVAR
+	{ ''																	, .T. }, ; //X3_WHEN
+	{ ''																	, .T. }, ; //X3_INIBRW
+	{ '033'																	, .T. }, ; //X3_GRPSXG
+	{ ''																	, .T. }, ; //X3_FOLDER
+	{ ''																	, .T. }, ; //X3_CONDSQL
+	{ ''																	, .T. }, ; //X3_CHKSQL
+	{ ''																	, .T. }, ; //X3_IDXSRV
+	{ ''																	, .T. }, ; //X3_ORTOGRA
+	{ ''																	, .T. }, ; //X3_TELA
+	{ ''																	, .T. }, ; //X3_POSLGT
+	{ ''																	, .T. }, ; //X3_IDXFLD
+	{ ''																	, .T. }, ; //X3_AGRUP
+	{ ''																	, .T. }, ; //X3_MODAL
+	{ ''																	, .T. }} ) //X3_PYME
+
+aAdd( aSX3, { ;
+	{ 'ZME'																	, .T. }, ; //X3_ARQUIVO
+	{ '02'																	, .T. }, ; //X3_ORDEM
+	{ 'ZME_UM'																, .T. }, ; //X3_CAMPO
+	{ 'C'																	, .T. }, ; //X3_TIPO
+	{ 2																		, .T. }, ; //X3_TAMANHO
+	{ 0																		, .T. }, ; //X3_DECIMAL
+	{ 'Codigo UM'															, .T. }, ; //X3_TITULO
+	{ 'Codigo UM'															, .T. }, ; //X3_TITSPA
+	{ 'Codigo UM'															, .T. }, ; //X3_TITENG
+	{ 'Codigo Unidade Medida'												, .T. }, ; //X3_DESCRIC
+	{ 'Codigo Unidade Medida'												, .T. }, ; //X3_DESCSPA
+	{ 'Codigo Unidade Medida'												, .T. }, ; //X3_DESCENG
+	{ ''																	, .T. }, ; //X3_PICTURE
+	{ ''																	, .T. }, ; //X3_VALID
+	{ Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+	{ ''																	, .T. }, ; //X3_RELACAO
+	{ ''																	, .T. }, ; //X3_F3
+	{ 0																		, .T. }, ; //X3_NIVEL
+	{ Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+	{ ''																	, .T. }, ; //X3_CHECK
+	{ ''																	, .T. }, ; //X3_TRIGGER
+	{ 'U'																	, .T. }, ; //X3_PROPRI
+	{ 'S'																	, .T. }, ; //X3_BROWSE
+	{ 'A'																	, .T. }, ; //X3_VISUAL
+	{ 'R'																	, .T. }, ; //X3_CONTEXT
+	{ '€'																	, .T. }, ; //X3_OBRIGAT
+	{ 'ExistChav("ZME",M->ZME_UM)'											, .T. }, ; //X3_VLDUSER
+	{ ''																	, .T. }, ; //X3_CBOX
+	{ ''																	, .T. }, ; //X3_CBOXSPA
+	{ ''																	, .T. }, ; //X3_CBOXENG
+	{ ''																	, .T. }, ; //X3_PICTVAR
+	{ ''																	, .T. }, ; //X3_WHEN
+	{ ''																	, .T. }, ; //X3_INIBRW
+	{ ''																	, .T. }, ; //X3_GRPSXG
+	{ ''																	, .T. }, ; //X3_FOLDER
+	{ ''																	, .T. }, ; //X3_CONDSQL
+	{ ''																	, .T. }, ; //X3_CHKSQL
+	{ ''																	, .T. }, ; //X3_IDXSRV
+	{ 'N'																	, .T. }, ; //X3_ORTOGRA
+	{ ''																	, .T. }, ; //X3_TELA
+	{ ''																	, .T. }, ; //X3_POSLGT
+	{ 'N'																	, .T. }, ; //X3_IDXFLD
+	{ ''																	, .T. }, ; //X3_AGRUP
+	{ ''																	, .T. }, ; //X3_MODAL
+	{ ''																	, .T. }} ) //X3_PYME
+
+aAdd( aSX3, { ;
+	{ 'ZME'																	, .T. }, ; //X3_ARQUIVO
+	{ '03'																	, .T. }, ; //X3_ORDEM
+	{ 'ZME_DESC'															, .T. }, ; //X3_CAMPO
+	{ 'C'																	, .T. }, ; //X3_TIPO
+	{ 30																	, .T. }, ; //X3_TAMANHO
+	{ 0																		, .T. }, ; //X3_DECIMAL
+	{ 'Descrição'															, .T. }, ; //X3_TITULO
+	{ 'Descrição'															, .T. }, ; //X3_TITSPA
+	{ 'Descrição'															, .T. }, ; //X3_TITENG
+	{ 'Descrição'															, .T. }, ; //X3_DESCRIC
+	{ 'Descrição'															, .T. }, ; //X3_DESCSPA
+	{ 'Descrição'															, .T. }, ; //X3_DESCENG
+	{ ''																	, .T. }, ; //X3_PICTURE
+	{ ''																	, .T. }, ; //X3_VALID
+	{ Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+	{ ''																	, .T. }, ; //X3_RELACAO
+	{ ''																	, .T. }, ; //X3_F3
+	{ 0																		, .T. }, ; //X3_NIVEL
+	{ Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+	{ ''																	, .T. }, ; //X3_CHECK
+	{ ''																	, .T. }, ; //X3_TRIGGER
+	{ 'U'																	, .T. }, ; //X3_PROPRI
+	{ 'S'																	, .T. }, ; //X3_BROWSE
+	{ 'A'																	, .T. }, ; //X3_VISUAL
+	{ 'R'																	, .T. }, ; //X3_CONTEXT
+	{ '€'																	, .T. }, ; //X3_OBRIGAT
+	{ ''																	, .T. }, ; //X3_VLDUSER
+	{ ''																	, .T. }, ; //X3_CBOX
 	{ ''																	, .T. }, ; //X3_CBOXSPA
 	{ ''																	, .T. }, ; //X3_CBOXENG
 	{ ''																	, .T. }, ; //X3_PICTVAR
@@ -1588,6 +1763,21 @@ aAdd( aSIX, { ;
 	''																		, ; //F3
 	''																		, ; //NICKNAME
 	'S'																		} ) //SHOWPESQ
+	
+//
+// Tabela ZME
+//
+aAdd( aSIX, { ;
+	'ZME'																	, ; //INDICE
+	'1'																		, ; //ORDEM
+	'ZME_FILIAL+ZME_UM'														, ; //CHAVE
+	'Codigo UM'																, ; //DESCRICAO
+	'Codigo UM'																, ; //DESCSPA
+	'Codigo UM'																, ; //DESCENG
+	'U'																		, ; //PROPRI
+	''																		, ; //F3
+	''																		, ; //NICKNAME
+	'S'																		} ) //SHOWPESQ	
 
 //
 // Atualizando dicionário
@@ -1731,6 +1921,75 @@ aAdd( aSXB, { ;
 	''																		, ; //XB_DESCENG
 	''																		, ; //XB_WCONTEM
 	'@#U_BIAF163()'															} ) //XB_CONTEM
+	
+//
+// Consulta ZME
+//
+aAdd( aSXB, { ;
+	'ZME'																	, ; //XB_ALIAS
+	'1'																		, ; //XB_TIPO
+	'01'																	, ; //XB_SEQ
+	'DB'																	, ; //XB_COLUNA
+	'Unid Medida Contrato'													, ; //XB_DESCRI
+	'Unid Medida Contrato'													, ; //XB_DESCSPA
+	'Unid Medida Contrato'													, ; //XB_DESCENG
+	''																		, ; //XB_WCONTEM
+	'ZME'																	} ) //XB_CONTEM
+
+aAdd( aSXB, { ;
+	'ZME'																	, ; //XB_ALIAS
+	'2'																		, ; //XB_TIPO
+	'01'																	, ; //XB_SEQ
+	'01'																	, ; //XB_COLUNA
+	'Codigo Um'																, ; //XB_DESCRI
+	'Codigo Um'																, ; //XB_DESCSPA
+	'Codigo Um'																, ; //XB_DESCENG
+	''																		, ; //XB_WCONTEM
+	''																		} ) //XB_CONTEM
+
+aAdd( aSXB, { ;
+	'ZME'																	, ; //XB_ALIAS
+	'3'																		, ; //XB_TIPO
+	'01'																	, ; //XB_SEQ
+	'01'																	, ; //XB_COLUNA
+	'Cadastra Novo'															, ; //XB_DESCRI
+	'Incluye Nuevo'															, ; //XB_DESCSPA
+	'Add New'																, ; //XB_DESCENG
+	''																		, ; //XB_WCONTEM
+	'01'																	} ) //XB_CONTEM
+
+aAdd( aSXB, { ;
+	'ZME'																	, ; //XB_ALIAS
+	'4'																		, ; //XB_TIPO
+	'01'																	, ; //XB_SEQ
+	'01'																	, ; //XB_COLUNA
+	'Codigo UM'																, ; //XB_DESCRI
+	'Codigo UM'																, ; //XB_DESCSPA
+	'Codigo UM'																, ; //XB_DESCENG
+	''																		, ; //XB_WCONTEM
+	'ZME_UM'																} ) //XB_CONTEM
+
+aAdd( aSXB, { ;
+	'ZME'																	, ; //XB_ALIAS
+	'4'																		, ; //XB_TIPO
+	'01'																	, ; //XB_SEQ
+	'02'																	, ; //XB_COLUNA
+	'Descrição'																, ; //XB_DESCRI
+	'Descrição'																, ; //XB_DESCSPA
+	'Descrição'																, ; //XB_DESCENG
+	''																		, ; //XB_WCONTEM
+	'ZME_DESC'																} ) //XB_CONTEM
+
+aAdd( aSXB, { ;
+	'ZME'																	, ; //XB_ALIAS
+	'5'																		, ; //XB_TIPO
+	'01'																	, ; //XB_SEQ
+	''																		, ; //XB_COLUNA
+	''																		, ; //XB_DESCRI
+	''																		, ; //XB_DESCSPA
+	''																		, ; //XB_DESCENG
+	''																		, ; //XB_WCONTEM
+	'ZME->ZME_UM'															} ) //XB_CONTEM	
 
 //
 // Atualizando dicionário

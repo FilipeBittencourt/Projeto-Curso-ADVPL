@@ -38,10 +38,7 @@ User Function BIA501()
 		@ 17,07 TO 110, 140 OF oDlg  PIXEL
 
 		@ 25,10 Radio 	oRadio VAR nRadio;
-		ITEMS "Capacidade Produtiva",;
-		"Base-Tipologia",;
-		"Acabamento",;
-		"Espessura";
+		ITEMS "Capacidade Produtiva";
 		SIZE 110,10 OF oDlg PIXEL
 
 		DEFINE SBUTTON FROM 115,085 TYPE 1 ENABLE OF oDlg ACTION (nOpca := 1, oDlg:End())
@@ -53,15 +50,6 @@ User Function BIA501()
 
 			If nRadio == 1
 				BIA501Brw("Z42", nRadio)					// Capacidade Produtiva
-
-			ElseIf nRadio == 2
-				BIA501Brw("Z32", nRadio)					// Base-Tipologia
-
-			ElseIf nRadio == 3
-				BIA501Brw("Z33", nRadio)					// Acabamento
-
-			ElseIf nRadio == 4
-				BIA501Brw("Z34", nRadio)					// Espessura
 
 			EndIf
 
@@ -329,17 +317,20 @@ Return
 /*___________________________________________________________________________
 ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
 ¦¦+-----------------------------------------------------------------------+¦¦
-¦¦¦Função    ¦ BIA501OPR  ¦ Autor ¦ Marcos Alberto S    ¦ Data ¦ 07.08.15 ¦¦¦
+¦¦¦Função    ¦ BIA501OP  ¦ Autor ¦ Marcos Alberto S    ¦ Data ¦ 07.08.15 ¦¦¦
 ¦¦+-----------------------------------------------------------------------+¦¦
 ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
-User Function BIA501OPR()
+User Function BIA501OP()
 
 	Processa({|| RptoDetail()})
 
 Return
 
 Static Function RptoDetail()
+
+	Local msStaExcQy  := 0
+	Local lOk         := .T.
 
 	fPerg := "BIA501OP"
 	fTamX1 := IIF(Alltrim(oApp:cVersion) == "MP8.11", 6, 10)
@@ -356,67 +347,120 @@ Static Function RptoDetail()
 	hsFimDt := dtos(MV_PAR01-1)
 	hsDiaMs := MV_PAR02 - MV_PAR01 + 1
 
-	//                               Zera Valores para que não ocorra erros em caso se reprocessamento
-	**************************************************************************************************
-	ZP003 := " DELETE " + RetSqlName("Z42") + " "
-	ZP003 += "   FROM " + RetSqlName("Z42") + " WITH (NOLOCK) "
-	ZP003 += "  WHERE Z42_FILIAL = '" + xFilial("Z42") + "' "
-	ZP003 += "    AND Z42_FINALI = 'R' "
-	ZP003 += "    AND Z42_DTFIM BETWEEN '" + dtos(MV_PAR01) + "' AND '" + dtos(MV_PAR02) + "' "
-	ZP003 += "    AND D_E_L_E_T_ = ' ' "
-	U_BIAMsgRun("Aguarde... Zerando valores...",,{|| TCSQLExec(ZP003)})
+	Begin Transaction
 
-	QT008 := " INSERT INTO " + RetSqlName("Z42") + " "
-	QT008 += " (Z42_FILIAL , "
-	QT008 += "  Z42_DTINI  , "
-	QT008 += "  Z42_DTFIM  , "
-	QT008 += "  Z42_LINHA  , "
-	QT008 += "  Z42_FORMAT , "
-	QT008 += "  Z42_BASE   , "
-	QT008 += "  Z42_ACABAM , "
-	QT008 += "  Z42_CAPACI , "
-	QT008 += "  Z42_TPPROD , "
-	QT008 += "  D_E_L_E_T_ , "
-	QT008 += "  R_E_C_N_O_ , "
-	QT008 += "  Z42_PSECO  , "
-	QT008 += "  Z42_DNMES  , "
-	QT008 += "  Z42_FINALI , "
-	QT008 += "  Z42_ESPESS , "
-	QT008 += "  Z42_DISTRI , "
-	QT008 += "  Z42_VERSAO , "
-	QT008 += "  Z42_REVISA , "
-	QT008 += "  Z42_ANOREF ) "
-	QT008 += " SELECT Z42_FILIAL , "
-	QT008 += "        '" + dtos(MV_PAR01) + "' Z42_DTINI  , "
-	QT008 += "        '" + dtos(MV_PAR02) + "' Z42_DTFIM  , "
-	QT008 += "        Z42_LINHA  , "
-	QT008 += "        Z42_FORMAT , "
-	QT008 += "        Z42_BASE   , "
-	QT008 += "        Z42_ACABAM , "
-	QT008 += "        Z42_CAPACI , "
-	QT008 += "        Z42_TPPROD , "
-	QT008 += "        D_E_L_E_T_ , "
-	QT008 += "        (SELECT MAX(R_E_C_N_O_) FROM " + RetSqlName("Z42") + ") + ROW_NUMBER() OVER(ORDER BY R_E_C_N_O_) AS R_E_C_N_O_ , "
-	QT008 += "        Z42_PSECO  , "
-	QT008 += "        '" + Alltrim(Str(hsDiaMs)) + "' Z42_DNMES  , "
-	QT008 += "        'R' Z42_FINALI, "
-	QT008 += "        Z42_ESPESS, "
-	QT008 += "        1 Z42_DISTRI, "
-	QT008 += "        Z42_VERSAO, "
-	QT008 += "        Z42_REVISA, "
-	QT008 += "        Z42_ANOREF "
-	QT008 += "   FROM " + RetSqlName("Z42") + " "
-	QT008 += "  WHERE Z42_FILIAL = '"+xFilial("Z42")+"' "
-	QT008 += "    AND Z42_DTFIM BETWEEN '" + hsIniDt + "' AND '" + hsFimDt + "' "
-	QT008 += "    AND Z42_CAPACI <> 0 "
-	QT008 += "    AND Z42_FINALI IN('R') "
-	QT008 += "    AND Z42_VERSAO = '" + MV_PAR03 + "' "
-	QT008 += "    AND Z42_REVISA = '" + MV_PAR04 + "' "
-	QT008 += "    AND Z42_ANOREF = '" + MV_PAR05 + "' "
-	QT008 += "   AND D_E_L_E_T_ = ' ' "
-	TCSQLExec(QT008)
+		//                               Zera Valores para que não ocorra erros em caso se reprocessamento
+		**************************************************************************************************
+		ZP003 := " DELETE " + RetSqlName("Z42") + " "
+		ZP003 += "   FROM " + RetSqlName("Z42") + " WITH (NOLOCK) "
+		ZP003 += "  WHERE Z42_FILIAL = '" + xFilial("Z42") + "' "
+		ZP003 += "    AND Z42_FINALI = 'R' "
+		ZP003 += "    AND Z42_DTFIM BETWEEN '" + dtos(MV_PAR01) + "' AND '" + dtos(MV_PAR02) + "' "
+		ZP003 += "    AND D_E_L_E_T_ = ' ' "
+		U_BIAMsgRun("Aguarde... Apagando registros ... ",,{|| msStaExcQy := TcSQLExec(ZP003) })
+		If msStaExcQy < 0
+			lOk := .F.
+		EndIf
 
-	Aviso('BIA501OPR','Rotina realizada!!!',{'Ok'})
+		If lOk
+
+			QT008 := " INSERT INTO " + RetSqlName("Z42") + " "
+			QT008 += " (Z42_FILIAL, "
+			QT008 += "  Z42_DTINI, "
+			QT008 += "  Z42_DTFIM, "
+			QT008 += "  Z42_LINHA, "
+			QT008 += "  Z42_FORMAT, "
+			QT008 += "  Z42_BASE, "
+			QT008 += "  Z42_ACABAM, "
+			QT008 += "  Z42_CAPACI, "
+			QT008 += "  Z42_TPPROD, "
+			QT008 += "  D_E_L_E_T_, "
+			QT008 += "  R_E_C_N_O_, "
+			QT008 += "  Z42_PSECO, "
+			QT008 += "  Z42_DNMES, "
+			QT008 += "  Z42_FINALI, "
+			QT008 += "  Z42_ESPESS, "
+			QT008 += "  Z42_DISTRI, "
+			QT008 += "  Z42_VERSAO, "
+			QT008 += "  Z42_REVISA, "
+			QT008 += "  Z42_ANOREF) "
+			QT008 += " SELECT Z42_FILIAL, "
+			QT008 += "        '" + dtos(MV_PAR01) + "' Z42_DTINI, "
+			QT008 += "        '" + dtos(MV_PAR02) + "' Z42_DTFIM, "
+			QT008 += "        Z42_LINHA, "
+			QT008 += "        Z42_FORMAT, "
+			QT008 += "        Z42_BASE, "
+			QT008 += "        Z42_ACABAM, "
+			QT008 += "        Z42_CAPACI, "
+			QT008 += "        Z42_TPPROD, "
+			QT008 += "        D_E_L_E_T_, "
+			QT008 += "        (SELECT MAX(R_E_C_N_O_) FROM " + RetSqlName("Z42") + ") + ROW_NUMBER() OVER(ORDER BY R_E_C_N_O_) AS R_E_C_N_O_, "
+			QT008 += "        Z42_PSECO, "
+			QT008 += "        '" + Alltrim(Str(hsDiaMs)) + "' Z42_DNMES, "
+			QT008 += "        'R' Z42_FINALI, "
+			QT008 += "        Z42_ESPESS, "
+			QT008 += "        1 Z42_DISTRI, "
+			QT008 += "        '" + MV_PAR03 + "' Z42_VERSAO, "
+			QT008 += "        '" + MV_PAR04 + "' Z42_REVISA, "
+			QT008 += "        '" + MV_PAR05 + "' Z42_ANOREF "
+			QT008 += "   FROM " + RetSqlName("Z42") + " (NOLOCK) "
+			QT008 += "  WHERE Z42_FILIAL = '" + xFilial("Z42") + "' "
+
+			If Substr(dtos(MV_PAR01), 5, 2) == "01"
+
+				QT008 += "    AND Z42_DTFIM BETWEEN '" + dtos(MV_PAR01) + "' AND '" + dtos(MV_PAR02) + "' "
+				QT008 += "    AND Z42_CAPACI <> 0 "
+				QT008 += "    AND Z42_FINALI IN('O') "
+				QT008 += "    AND Z42_VERSAO = '" + MV_PAR03 + "' "
+				QT008 += "    AND Z42_REVISA = '" + MV_PAR04 + "' "
+				QT008 += "    AND Z42_ANOREF = '" + MV_PAR05 + "' "
+
+			Else
+
+				QT008 += "    AND Z42_DTFIM BETWEEN '" + hsIniDt + "' AND '" + hsFimDt + "' "
+				QT008 += "    AND Z42_CAPACI <> 0 "
+				QT008 += "    AND Z42_FINALI IN('R') "
+				QT008 += "    AND Z42_VERSAO + Z42_REVISA + Z42_ANOREF IN "
+				QT008 += "    ( "
+				QT008 += "        SELECT MAX(Z42_VERSAO + Z42_REVISA + Z42_ANOREF) "
+				QT008 += "        FROM " + RetSqlName("Z42") + " "
+				QT008 += "        WHERE Z42_FILIAL = '"+xFilial("Z42")+"' "
+				QT008 += "              AND Z42_DTFIM BETWEEN '" + hsIniDt + "' AND '" + hsFimDt + "' "
+				QT008 += "              AND Z42_CAPACI <> 0 "
+				QT008 += "              AND Z42_FINALI IN('R') "
+				QT008 += "        AND D_E_L_E_T_ = ' ' "
+				QT008 += "    ) "
+
+			EndIf
+
+			QT008 += "   AND D_E_L_E_T_ = ' ' "
+
+			U_BIAMsgRun("Gravando ...",,{|| msStaExcQy := TcSQLExec(QT008)})
+
+			If msStaExcQy < 0
+				lOk := .F.
+			EndIf
+
+		EndIf
+
+		If !lOk
+
+			msGravaErr := TCSQLError()
+			DisarmTransaction()
+
+		EndIf
+
+	End Transaction 
+
+	If lOk
+
+		Aviso('BIA501OP', 'Rotina realizada!!! Favor verificar se foram gerados registros para o período do processamento.',{'Ok'})
+
+	Else
+
+		Aviso('Problema de Processamento', "Erro na execução do processamento: " + msrhEnter + msrhEnter + msrhEnter + msGravaErr + msrhEnter + msrhEnter + msrhEnter + msrhEnter + "Processo Cancelado!!!" + msrhEnter + msrhEnter + msrhEnter, {'Fecha'}, 3 )
+
+	EndIf
 
 Return
 
@@ -516,7 +560,7 @@ static function fOpcoes(cAlias,nReg,nOpc)
 			AxDeleta(cAlias,nReg,nOpc)
 		endif	
 		case nOpc == 6
-		ExecBlock("BIA501OPR",.F.,.F.)
+		ExecBlock("BIA501OP",.F.,.F.)
 	endcase
 
 return

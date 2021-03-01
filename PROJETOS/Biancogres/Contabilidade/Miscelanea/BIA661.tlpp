@@ -36,8 +36,6 @@ procedure u_BIA661()
     // Ativacao da classe
     ZOF->(oFWMBrowse:Activate())
 
-    freeObj(oFWMBrowse)
-
     return
 
 function u_BIA661Excel() as logical
@@ -81,7 +79,7 @@ function u_BIA661Proc() as logical
 
     begin sequence
 
-        oEmpresas:=TLoadEmpresa():New()
+        oEmpresas:=TLoadEmpresa():New(.T.)
 
         lMesAno:=.F.
         lDataFech:=.F.
@@ -98,7 +96,7 @@ function u_BIA661Proc() as logical
             lShowXML:=ApMsgNoYes("Deseja consultar os dados gerados ao final de cada processo?",cCadastro)
         endif
 
-        oEmpresas:GetSelEmp()
+        oEmpresas:GetSelEmp(nil,.T.)
         oPergunte:=__TWPCOFiltroPeriodo():Get()
 
         bAbort:={|lEnd,otMultProcess|.T.}
@@ -113,12 +111,13 @@ function u_BIA661Proc() as logical
     restArea(aAreaSM0)
     restArea(aArea)
 
+    MbrChgLoop(.F.)
+
     return(lRet)
 
 static function BIA661Proc(otMultProcess as object,cEmpDef as character,cFilDef as character,oEmpresas as object,oPergunte as object,lEnd as logical,lShowXML as logical,nKeepResponse as numeric) as logical
 
     local aMsg          as array
-    local aSM0RecNo     as array
 
     local bError        as block
     local bErrorBlock   as block
@@ -139,7 +138,6 @@ static function BIA661Proc(otMultProcess as object,cEmpDef as character,cFilDef 
     local nD            as numeric
     local nJ            as numeric
 
-    local nSM0AT        as numeric
     local nSM0RecNo     as numeric
 
     lRet:=.T.
@@ -155,17 +153,6 @@ static function BIA661Proc(otMultProcess as object,cEmpDef as character,cFilDef 
 
         aMsg:=array(0)
 
-        otMultProcess:SetRegua(1,SM0->(recCount()))
-
-        aSM0RecNo:=array(0)
-        SM0->(dbSetOrder(1))
-        SM0->(dbGoTop())
-        while SM0->(!eof())
-            otMultProcess:IncRegua(1)
-            SM0->(aAdd(aSM0RecNo,{fieldGet(fieldPos("M0_CODIGO")),fieldGet(fieldPos("M0_CODFIL")),recNo()}))
-            SM0->(dbSkip())
-        end while
-
         ProcRegua(if(nJ<=1,0,nJ))
 
         bError:={|oError|A35():breakError(@oError,@cEmp,@cFil,@cMsg)}
@@ -175,24 +162,17 @@ static function BIA661Proc(otMultProcess as object,cEmpDef as character,cFilDef 
         for nD:=1 to nJ
 
             cEmp:=oEmpresas:aEmpSel[nD][1]
-            
-            nSM0AT:=aScan(aSM0RecNo,{|e|e[1]==cEmp})
-            if (nSM0AT==0)
-                loop
-            endif
-            
-            cFil:=rTrim(aSM0RecNo[nSM0AT][2])
-            
-            nSM0RecNo:=aSM0RecNo[nSM0AT][3]
+            cFil:=rTrim(oEmpresas:aEmpSel[nD][2])
+            nSM0RecNo:=oEmpresas:aEmpSel[nD][6]
 
             SM0->(dbGoTo(nSM0RecNo))
 
-            cVersao:=left(oPergunte:cVersao,getSX3Cache("ZOF_VERSAO","X3_TAMANHO"))
-            cRevisa:=left(oPergunte:cRevisa,getSX3Cache("ZOF_REVISA","X3_TAMANHO"))
-            cAnoRef:=left(oPergunte:cAnoRef,getSX3Cache("ZOF_ANOREF","X3_TAMANHO"))
-            cTipoRef:=left(oPergunte:cTipoRef,getSX3Cache("ZOF_TIPO","X3_TAMANHO"))
+            cVersao:=PadR(Left(oPergunte:cVersao,getSX3Cache("ZOF_VERSAO","X3_TAMANHO")),getSX3Cache("ZOF_VERSAO","X3_TAMANHO"))
+            cRevisa:=PadR(Left(oPergunte:cRevisa,getSX3Cache("ZOF_REVISA","X3_TAMANHO")),getSX3Cache("ZOF_REVISA","X3_TAMANHO"))
+            cAnoRef:=PadR(Left(oPergunte:cAnoRef,getSX3Cache("ZOF_ANOREF","X3_TAMANHO")),getSX3Cache("ZOF_ANOREF","X3_TAMANHO"))
+            cTipoRef:=PadR(Left(oPergunte:cTipoRef,getSX3Cache("ZOF_TIPO","X3_TAMANHO")),getSX3Cache("ZOF_TIPO","X3_TAMANHO"))
             if (empty(cTipoRef))
-                cTipoRef:="2"
+                cTipoRef:=PadR("2",getSX3Cache("ZOF_TIPO","X3_TAMANHO"))
             endif
 
             cMsgPrc:="Processando...Empresa:["+cEmp+"] :: Filial:["+cFil+"]"
@@ -289,8 +269,6 @@ static function ProcBIA661(otMultProcess as object,cEmp as character,cFil as cha
     local cEnvServer    as character
     local cTmp_Table    as character
     local cExcelTitle   as character
-
-    local cSQLQuery     as character
 
     local cZOFOrder     as character
     local cZOFINDICA    as character
@@ -516,29 +494,8 @@ static function ProcBIA661(otMultProcess as object,cEmp as character,cFil as cha
 
         nTables:=len(aTmpTables)
         for nTable:=1 to nTables
-        
             cTmp_Table:=StrTran(aTmpTables[nTable],"%","")
-            
-            cSQLQuery:="IF OBJECT_ID('"+cTmp_Table+"') IS NOT NULL"
-            cSQLQuery+=CRLF
-            cSQLQuery+="BEGIN"
-            cSQLQuery+=CRLF
-            cSQLQuery+="    DROP TABLE "+cTmp_Table
-            cSQLQuery+=CRLF
-            cSQLQuery+="END"
-            cSQLQuery+=CRLF
-            TCSQLExec(cSQLQuery)
-            
-            cSQLQuery:="IF OBJECT_ID('tempdb.."+cTmp_Table+"') IS NOT NULL
-            cSQLQuery+=CRLF
-            cSQLQuery+="BEGIN"
-            cSQLQuery+=CRLF
-            cSQLQuery+="    DROP TABLE "+cTmp_Table
-            cSQLQuery+=CRLF
-            cSQLQuery+="END"
-            cSQLQuery+=CRLF
-            TCSQLExec(cSQLQuery)
-        
+            A35():tmpTableDrop(cTmp_Table)
         next nTable
 
     endif
@@ -1729,3 +1686,159 @@ static function getQueryNW(cEmp as character,cFil as character,cVersao as charac
     A35():writeSQLFile(@cSQLQuery,@cEmp,@cFil,"bia661","05","qry_final",@cSQLPath,@aSQLFiles[5])
 
     return(cAlias)
+
+class BIA661RestModel from FWRestModel
+
+    method new() constructor
+
+    method Activate()
+    method DeActivate()
+    method OnError()
+
+    method SetModel()
+    method ClearModel()
+    method SetName()
+    method GetName()
+    method SetAsXml()
+    method SetAsJson()
+
+    method StartGetFormat()
+    method EscapeGetFormat()
+    method EndGetFormat()
+
+    method SetAlias()
+    method GetAlias()
+    method HasAlias()
+    method Seek()
+    method Skip()
+    method Total()
+    method GetData()
+    method SaveData()
+    method DelData()
+
+    method SetFilter()
+    method GetFilter()
+    method ClearFilter()
+    method DecodePK()
+    method ConvertPK()
+
+    method GetStatusResponse()
+    method SetStatusResponse()
+
+    method SetQueryString()
+    method GetQueryString()
+    method GetQSValue()
+    method GetHttpHeader()
+    method SetFields()
+    method debuger()
+
+endclass
+
+method new() class BIA661RestModel
+    _Super:New()
+    return
+
+method Activate() class BIA661RestModel
+    if (_Super:Activate())
+        self:lActivate:=.T.
+    endif
+    return(self:lActivate)
+
+method DeActivate() class BIA661RestModel
+    return(_Super:DeActivate())
+
+method OnError() class BIA661RestModel
+    return(_Super:OnError())
+
+method SetModel(oModel) class BIA661RestModel
+    return(_Super:SetModel(@oModel))
+
+method ClearModel() class BIA661RestModel
+    return(_Super:ClearModel())
+
+method SetName(cName) class BIA661RestModel
+    return(_Super:SetName(@cName))
+
+method GetName() class BIA661RestModel
+    return(_Super:GetName())
+
+method SetAsXml() class BIA661RestModel
+    return(_Super:SetAsXml())
+
+method SetAsJson() class BIA661RestModel
+    return(_Super:SetAsJson())
+
+method StartGetFormat(nTotal,nCount,nStartIndex) class BIA661RestModel
+    return(_Super:StartGetFormat(@nTotal,@nCount,@nStartIndex))
+
+method EscapeGetFormat() class BIA661RestModel
+    return(_Super:EscapeGetFormat())
+
+method EndGetFormat() class BIA661RestModel
+    return(_Super:EndGetFormat())
+
+method SetAlias(cAlias) class BIA661RestModel
+    return(_Super:SetAlias(cAlias))
+
+method GetAlias() class BIA661RestModel
+    return(_Super:GetAlias())
+
+method HasAlias() class BIA661RestModel
+    return(_Super:HasAlias())
+
+method Seek(cPK) class BIA661RestModel
+    return(_Super:Seek(@cPK))
+
+method Skip(nSkip) class BIA661RestModel
+    return(_Super:Skip(@nSkip))
+
+method Total() class BIA661RestModel
+    return(_Super:Total())
+
+method GetData(lFieldDetail,lFieldVirtual,lFieldEmpty,lFirstLevel,lInternalID) class BIA661RestModel
+    return(_Super:GetData(@lFieldDetail,@lFieldVirtual,@lFieldEmpty,@lFirstLevel,@lInternalID))
+
+method SaveData(cPK,cData,cError) class BIA661RestModel
+    return(_Super:SaveData(@cPK,@cData,@cError))
+
+method DelData(cPK,cError) class BIA661RestModel
+    return(_Super:DelData(@cPK,@cError))
+
+method SetFilter(cFilter) class BIA661RestModel
+    return(_Super:SetFilter(cFilter))
+
+method GetFilter() class BIA661RestModel
+    return(_Super:GetFilter())
+
+method ClearFilter() class BIA661RestModel
+    return(_Super:ClearFilter())
+
+method DecodePK() class BIA661RestModel
+    return(_Super:DecodePK())
+
+method ConvertPK(cPK) class BIA661RestModel
+    return(_Super:ConvertPK(@cPK))
+
+method GetStatusResponse() class BIA661RestModel
+    return(_Super:GetStatusResponse())
+
+method SetStatusResponse(nStatus,cStatus) class BIA661RestModel
+    return(_Super:SetStatusResponse(@nStatus,@cStatus))
+
+method SetQueryString(aQueryString) class BIA661RestModel
+    return(_Super:SetQueryString(@aQueryString))
+
+method GetQueryString() class BIA661RestModel
+    return(_Super:GetQueryString())
+
+method GetQSValue(cKey) class BIA661RestModel
+    return(_Super:GetQSValue(@cKey))
+
+method GetHttpHeader(cParam) class BIA661RestModel
+    return(_Super:GetHttpHeader(@cParam))
+
+method SetFields(aFields) class BIA661RestModel
+    return(_Super:SetFields(@aFields))
+
+method debuger(lDebug) class BIA661RestModel
+    return(_Super:debuger(@lDebug))

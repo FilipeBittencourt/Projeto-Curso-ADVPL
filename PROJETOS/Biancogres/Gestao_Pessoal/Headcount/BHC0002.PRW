@@ -237,7 +237,7 @@ Static Function fGrava()
 
 	MsgInfo("Dados Atualizados com Sucesso!")
 
-	_aCols	:=	fMontaCols(_cMatricula)
+	_aCols	:=	fMontaCols(_cMatricula, _dDtIni, _dDtFim)
 
 	_oGetDados:aCols	:=	_aCols
 

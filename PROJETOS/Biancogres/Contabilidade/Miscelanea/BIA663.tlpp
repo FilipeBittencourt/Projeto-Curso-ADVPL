@@ -43,19 +43,19 @@ procedure u_BIA663()
     //Define chave para realizar o filtro no browse, e nao trazer registros
     //repetidos, pois esta tabela nao e cabecalho e itens
     //------------------------------------------------------------------------
+    cFilterDefault:="(ZOH_FILIAL=='"+xFilial("ZOH")+"')"
     if (stackTools():IsInCallStack("u_BIA662"))
-        cFilterDefault:="(ZOH_VERSAO=='"+ZOG->ZOG_VERSAO+"')"
+        cFilterDefault+=".and."
+        cFilterDefault+="(ZOH_VERSAO=='"+ZOG->ZOG_VERSAO+"')"
         cFilterDefault+=".and."
         cFilterDefault+="(ZOH_REVISA=='"+ZOG->ZOG_REVISA+"')"
         cFilterDefault+=".and."
         cFilterDefault+="(ZOH_ANOREF=='"+ZOG->ZOG_ANOREF+"')"
-        oFWMBrowse:setFilterDefault(cFilterDefault)
     endif
+    oFWMBrowse:setFilterDefault(cFilterDefault)
 
     // Ativacao da classe
     ZOH->(oFWMBrowse:Activate())
-
-    freeObj(oFWMBrowse)
 
     return
 
@@ -97,7 +97,7 @@ function u_BIA663Calc() as logical
 
     begin sequence
 
-        oEmpresas:=TLoadEmpresa():New()
+        oEmpresas:=TLoadEmpresa():New(.T.)
 
         lMesAno:=.F.
         lDataFech:=.F.
@@ -109,7 +109,7 @@ function u_BIA663Calc() as logical
             break
         endif
 
-        oEmpresas:GetSelEmp()
+        oEmpresas:GetSelEmp(nil,.T.)
         oPergunte:=__TWPCOFiltroPeriodo():Get()
 
         bAbort:={|lEnd,otMultProcess|if(InTransact(),evalBlock():EvalBlock({||DisarmTransaction()},nil,.F.),.T.)}
@@ -129,7 +129,6 @@ function u_BIA663Calc() as logical
 static function BIA663Calc(otMultProcess as object,cEmpDef as character,cFilDef as character,oEmpresas as object,oPergunte as object,nKeepResponse as numeric) as logical
 
     local aMsg           as array
-    local aSM0RecNo      as array
 
     local bError         as block
     local bErrorBlock    as block
@@ -155,7 +154,6 @@ static function BIA663Calc(otMultProcess as object,cEmpDef as character,cFilDef 
     local nD            as numeric
     local nJ            as numeric
 
-    local nSM0AT        as numeric
     local nSM0RecNo     as numeric
 
     local nSetRegua     as numeric
@@ -175,22 +173,6 @@ static function BIA663Calc(otMultProcess as object,cEmpDef as character,cFilDef 
 
         aMsg:=array(0)
 
-        nSetRegua:=SM0->(recCount())
-
-        otMultProcess:SetRegua(1,nSetRegua)
-        otMultProcess:SetRegua(2,nSetRegua)
-
-        aSM0RecNo:=array(0)
-        SM0->(dbSetOrder(1))
-        SM0->(dbGoTop())
-        while (SM0->(!eof()))
-            SM0->(setEmpProc(fieldGet(fieldPos("M0_CODIGO"))))
-            TTimer(@otMultProcess,1,.T.,"Empresa ["+getEmpProc()+"]")
-            TTimer(@otMultProcess,2,.T.,"Obtendo Registros:")
-            SM0->(aAdd(aSM0RecNo,{fieldGet(fieldPos("M0_CODIGO")),fieldGet(fieldPos("M0_CODFIL")),recNo()}))
-            SM0->(dbSkip())
-        end while
-
         bError:={|oError|A35():breakError(@oError,@cEmp,@cFil,@cMsg)}
 
         nSetRegua:=nJ
@@ -202,25 +184,18 @@ static function BIA663Calc(otMultProcess as object,cEmpDef as character,cFilDef 
             cIniCalc:=Time()
 
             cEmp:=oEmpresas:aEmpSel[nD][1]
+            cFil:=rTrim(oEmpresas:aEmpSel[nD][2])
+            nSM0RecNo:=oEmpresas:aEmpSel[nD][6]
             
+            SM0->(dbGoTo(nSM0RecNo))
+
             setEmpProc(cEmp)
 
             TTimer(@otMultProcess,1,.T.,"Empresa ["+getEmpProc()+"]["+DToC(dIniCalc)+"|"+cIniCalc+"]")
-
-            nSM0AT:=aScan(aSM0RecNo,{|e|e[1]==cEmp})
-            if (nSM0AT==0)
-                loop
-            endif
-            
-            cFil:=rTrim(aSM0RecNo[nSM0AT][2])
-            
-            nSM0RecNo:=aSM0RecNo[nSM0AT][3]
-
-            SM0->(dbGoTo(nSM0RecNo))
-
-            cVersao:=left(oPergunte:cVersao,getSX3Cache("ZOH_VERSAO","X3_TAMANHO"))
-            cRevisa:=left(oPergunte:cRevisa,getSX3Cache("ZOH_REVISA","X3_TAMANHO"))
-            cAnoRef:=left(oPergunte:cAnoRef,getSX3Cache("ZOH_ANOREF","X3_TAMANHO"))
+           
+            cVersao:=PadR(Left(oPergunte:cVersao,getSX3Cache("ZOH_VERSAO","X3_TAMANHO")),getSX3Cache("ZOH_VERSAO","X3_TAMANHO"))
+            cRevisa:=PadR(Left(oPergunte:cRevisa,getSX3Cache("ZOH_REVISA","X3_TAMANHO")),getSX3Cache("ZOH_REVISA","X3_TAMANHO"))
+            cAnoRef:=PadR(Left(oPergunte:cAnoRef,getSX3Cache("ZOH_ANOREF","X3_TAMANHO")),getSX3Cache("ZOH_ANOREF","X3_TAMANHO"))
         
             if (otMultProcess:lEnd)
                 cMsg:="Operação Cancelada pelo usuário"
@@ -509,14 +484,14 @@ static function ProcBIA663(otMultProcess as object,cEmp as character,cFil as cha
         oJSONArray:=Array(#)
         oJSONArray[#"RecNos"]:=aRecNos
         
-        nSetRegua:=0
+        nRecNos:=0
         while ((cTmpAlias)->(!eof()))
-            nSetRegua++
+            nRecNos++
             (cTmpAlias)->(dbSkip())
         end while
-        
-        cRecNos:=cValToChar(nSetRegua)
+        cRecNos:=cValToChar(nRecNos)
 
+        nSetRegua:=nRecNos
         nSetRegua:=((nSetRegua*3)+(nMeses*3))
         
         otMultProcess:SetRegua(2,nSetRegua,.T.)
@@ -531,7 +506,6 @@ static function ProcBIA663(otMultProcess as object,cEmp as character,cFil as cha
         while ((cTmpAlias)->(!eof()))
 
             TTimer(@otMultProcess,1,.T.,"Empresa ["+getEmpProc()+"]["+cDIniCalc+"|"+cHIniCalc+"]")
-            TTimer(@otMultProcess,2,.T.,"Fórmulas:")
 
             nZOGRecNo:=(cTmpAlias)->ZOGRECNO
             ZOG->(dbGoTo(nZOGRecNo))
@@ -555,6 +529,8 @@ static function ProcBIA663(otMultProcess as object,cEmp as character,cFil as cha
             
             nRecNo:=oJSONArray:AddItem("RecNos",Array(#))
 
+            TTimer(@otMultProcess,2,.T.,"Fórmulas ("+cRecNo+"/"+cRecNos+")["+cValToChar((nRecNo/nRecNos)*100)+"%]")
+
             cRecNo:=cValToChar(nRecNo)
             
             oJSONArray[#"RecNos"][nRecNo][#"nZOGRecNo"]:=nZOGRecNo
@@ -571,7 +547,7 @@ static function ProcBIA663(otMultProcess as object,cEmp as character,cFil as cha
                 cMes:=strZero(nMes,2)
 
                 TTimer(@otMultProcess,1,.T.,"Empresa ["+getEmpProc()+"]["+cDIniCalc+"|"+cHIniCalc+"]")
-                TTimer(@otMultProcess,2,.T.,"Fórmulas ("+cRecNo+"/"+cRecNos+")["+cMes+"/"+cMeses+"]")
+                TTimer(@otMultProcess,2,.T.,"Fórmulas ("+cRecNo+"/"+cRecNos+")["+cValToChar((nRecNo/nRecNos)*100)+"%]("+cMes+"/"+cMeses+")["+cValToChar((nMes/nMeses)*100)+"%]")
             
                 aMeses[nMes][1]:=cMes
 
@@ -632,7 +608,7 @@ static function ProcBIA663(otMultProcess as object,cEmp as character,cFil as cha
             cMes:=aMeses[nMes][1]
 
             TTimer(@otMultProcess,1,.T.)
-            TTimer(@otMultProcess,2,.T.,"Calculando ("+cMes+"/"+cMeses+"):")
+            TTimer(@otMultProcess,2,.T.,"Calculando ("+cMes+"/"+cMeses+")["+cValToChar((nMes/nMeses)*100)+"%]:")
 
             cZOGField:=("ZOG_MES"+cMes)
             cZOHField:=("ZOH_MES"+cMes)
@@ -642,7 +618,7 @@ static function ProcBIA663(otMultProcess as object,cEmp as character,cFil as cha
                 cRecNo:=cValToChar(nRecNo)
 
                 TTimer(@otMultProcess,1,.T.,"Empresa ["+getEmpProc()+"]["+cDIniCalc+"|"+cHIniCalc+"]")
-                TTimer(@otMultProcess,2,.T.,"Calculando ("+cMes+"/"+cMeses+")["+cRecNo+"/"+cRecNos+"]")
+                TTimer(@otMultProcess,2,.T.,"Calculando ("+cMes+"/"+cMeses+")["+cValToChar((nMes/nMeses)*100)+"%]("+cRecNo+"/"+cRecNos+")["+cValToChar((nRecNo/nRecNos)*100)+"%]")
 
                 lFormula:=oJSONArray[#"RecNos"][nRecNo][#cZOGField][#"lFormula"]
                 if (!lFormula)
@@ -721,7 +697,7 @@ static function ProcBIA663(otMultProcess as object,cEmp as character,cFil as cha
                 cRecNo:=cValToChar(nRecNo)
 
                 TTimer(@otMultProcess,1,.T.)
-                TTimer(@otMultProcess,2,.T.,"Totalizando/Gravando ("+cRecNo+"/"+cRecNos+"):")
+                TTimer(@otMultProcess,2,.T.,"Totalizando/Gravando ("+cRecNo+"/"+cRecNos+")["+cValToChar((nRecNo/nRecNos)*100)+"%]:")
 
                 lFormulaTotal:=oJSONArray[#"RecNos"][nRecNo][#"lFormulaTotal"]
 
@@ -770,7 +746,7 @@ static function ProcBIA663(otMultProcess as object,cEmp as character,cFil as cha
                         cMes:=aMeses[nMes][1]
 
                         TTimer(@otMultProcess,1,.T.)
-                        TTimer(@otMultProcess,2,.T.,"Totalizando/Gravando ("+cRecNo+"/"+cRecNos+")["+cMes+"/"+cMeses+"]")
+                        TTimer(@otMultProcess,2,.T.,"Totalizando/Gravando ("+cRecNo+"/"+cRecNos+")["+cValToChar((nRecNo/nRecNos)*100)+"%]("+cMes+"/"+cMeses+")["+cValToChar((nMes/nMeses)*100)+"%]")
 
                         dZODDtRef:=aMeses[nMes][2]
                         cZODDtRef:=aMeses[nMes][3]
@@ -904,9 +880,9 @@ static procedure BIA663Excel(oPergunte as object)
 
     local nZOHOrder     as numeric
 
-    cVersao:=left(oPergunte:cVersao,getSX3Cache("ZOH_VERSAO","X3_TAMANHO"))
-    cRevisa:=left(oPergunte:cRevisa,getSX3Cache("ZOH_REVISA","X3_TAMANHO"))
-    cAnoRef:=left(oPergunte:cAnoRef,getSX3Cache("ZOH_ANOREF","X3_TAMANHO"))
+    cVersao:=PadR(Left(oPergunte:cVersao,getSX3Cache("ZOH_VERSAO","X3_TAMANHO")),getSX3Cache("ZOH_VERSAO","X3_TAMANHO"))
+    cRevisa:=PadR(Left(oPergunte:cRevisa,getSX3Cache("ZOH_REVISA","X3_TAMANHO")),getSX3Cache("ZOH_REVISA","X3_TAMANHO"))
+    cAnoRef:=PadR(Left(oPergunte:cAnoRef,getSX3Cache("ZOH_ANOREF","X3_TAMANHO")),getSX3Cache("ZOH_ANOREF","X3_TAMANHO"))
 
     cZOHOrder:="ZOH_FILIAL+ZOH_VERSAO+ZOH_REVISA+ZOH_ANOREF+ZOH_CONTA"
     nZOHOrder:=retOrder("ZOH",cZOHOrder)
@@ -971,15 +947,19 @@ static procedure BIA663Excel(oPergunte as object)
     
     return
 
-static function TTimer(otMultProcess as object,nMeter as numeric,lCalcule as logical,cMsgProc as character) as logical
+static function TTimer(otMultProcess as object,nMeter as numeric,lCalcule as logical,cMsgProc as character,lRefresh  as logical) as logical
     local bIncRegua as block
     local cIncRegua as character
     local lEnd      as logical
     DEFAULT cMsgProc:="Empresa ["+getEmpProc()+"]"
     DEFAULT lCalcule:=.T.
+    DEFAULT lRefresh:=.T.
     cIncRegua:=cMsgProc
     lEnd:=(otMultProcess:lEnd)
-    bIncRegua:={||otMultProcess:IncRegua(nMeter,cIncRegua,lEnd,lCalcule)}
+    if (lEnd)
+        lRefresh:=.T.
+    endif
+    bIncRegua:={||otMultProcess:IncRegua(nMeter,cIncRegua,lRefresh,lCalcule)}
     if (lEnd)
         cIncRegua:="Operação Cancelada pelo usuário..."
         eval(bIncRegua)
@@ -998,3 +978,159 @@ static function setEmpProc(cEmp as character) as character
 static function getEmpProc()
     DEFAULT __cEmpProc:=&("cEmpAnt")
     return(__cEmpProc)
+
+class BIA663RestModel from FWRestModel
+
+    method new() constructor
+
+    method Activate()
+    method DeActivate()
+    method OnError()
+
+    method SetModel()
+    method ClearModel()
+    method SetName()
+    method GetName()
+    method SetAsXml()
+    method SetAsJson()
+
+    method StartGetFormat()
+    method EscapeGetFormat()
+    method EndGetFormat()
+
+    method SetAlias()
+    method GetAlias()
+    method HasAlias()
+    method Seek()
+    method Skip()
+    method Total()
+    method GetData()
+    method SaveData()
+    method DelData()
+
+    method SetFilter()
+    method GetFilter()
+    method ClearFilter()
+    method DecodePK()
+    method ConvertPK()
+
+    method GetStatusResponse()
+    method SetStatusResponse()
+
+    method SetQueryString()
+    method GetQueryString()
+    method GetQSValue()
+    method GetHttpHeader()
+    method SetFields()
+    method debuger()
+
+endclass
+
+method new() class BIA663RestModel
+    _Super:New()
+    return
+
+method Activate() class BIA663RestModel
+    if (_Super:Activate())
+        self:lActivate:=.T.
+    endif
+    return(self:lActivate)
+
+method DeActivate() class BIA663RestModel
+    return(_Super:DeActivate())
+
+method OnError() class BIA663RestModel
+    return(_Super:OnError())
+
+method SetModel(oModel) class BIA663RestModel
+    return(_Super:SetModel(@oModel))
+
+method ClearModel() class BIA663RestModel
+    return(_Super:ClearModel())
+
+method SetName(cName) class BIA663RestModel
+    return(_Super:SetName(@cName))
+
+method GetName() class BIA663RestModel
+    return(_Super:GetName())
+
+method SetAsXml() class BIA663RestModel
+    return(_Super:SetAsXml())
+
+method SetAsJson() class BIA663RestModel
+    return(_Super:SetAsJson())
+
+method StartGetFormat(nTotal,nCount,nStartIndex) class BIA663RestModel
+    return(_Super:StartGetFormat(@nTotal,@nCount,@nStartIndex))
+
+method EscapeGetFormat() class BIA663RestModel
+    return(_Super:EscapeGetFormat())
+
+method EndGetFormat() class BIA663RestModel
+    return(_Super:EndGetFormat())
+
+method SetAlias(cAlias) class BIA663RestModel
+    return(_Super:SetAlias(cAlias))
+
+method GetAlias() class BIA663RestModel
+    return(_Super:GetAlias())
+
+method HasAlias() class BIA663RestModel
+    return(_Super:HasAlias())
+
+method Seek(cPK) class BIA663RestModel
+    return(_Super:Seek(@cPK))
+
+method Skip(nSkip) class BIA663RestModel
+    return(_Super:Skip(@nSkip))
+
+method Total() class BIA663RestModel
+    return(_Super:Total())
+
+method GetData(lFieldDetail,lFieldVirtual,lFieldEmpty,lFirstLevel,lInternalID) class BIA663RestModel
+    return(_Super:GetData(@lFieldDetail,@lFieldVirtual,@lFieldEmpty,@lFirstLevel,@lInternalID))
+
+method SaveData(cPK,cData,cError) class BIA663RestModel
+    return(_Super:SaveData(@cPK,@cData,@cError))
+
+method DelData(cPK,cError) class BIA663RestModel
+    return(_Super:DelData(@cPK,@cError))
+
+method SetFilter(cFilter) class BIA663RestModel
+    return(_Super:SetFilter(cFilter))
+
+method GetFilter() class BIA663RestModel
+    return(_Super:GetFilter())
+
+method ClearFilter() class BIA663RestModel
+    return(_Super:ClearFilter())
+
+method DecodePK() class BIA663RestModel
+    return(_Super:DecodePK())
+
+method ConvertPK(cPK) class BIA663RestModel
+    return(_Super:ConvertPK(@cPK))
+
+method GetStatusResponse() class BIA663RestModel
+    return(_Super:GetStatusResponse())
+
+method SetStatusResponse(nStatus,cStatus) class BIA663RestModel
+    return(_Super:SetStatusResponse(@nStatus,@cStatus))
+
+method SetQueryString(aQueryString) class BIA663RestModel
+    return(_Super:SetQueryString(@aQueryString))
+
+method GetQueryString() class BIA663RestModel
+    return(_Super:GetQueryString())
+
+method GetQSValue(cKey) class BIA663RestModel
+    return(_Super:GetQSValue(@cKey))
+
+method GetHttpHeader(cParam) class BIA663RestModel
+    return(_Super:GetHttpHeader(@cParam))
+
+method SetFields(aFields) class BIA663RestModel
+    return(_Super:SetFields(@aFields))
+
+method debuger(lDebug) class BIA663RestModel
+    return(_Super:debuger(@lDebug))

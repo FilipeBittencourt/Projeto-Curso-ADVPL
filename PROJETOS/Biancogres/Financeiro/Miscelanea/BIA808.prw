@@ -28,7 +28,7 @@ cInd := IndexOrd()
 cReg := Recno()
 
 //Apenas titulos de ST
-If SA1->A1_YTFGNRE == "S" //Apenas para clientes com cobranca de GNRE
+If SA1->A1_YTFGNRE == "S"  .And. SE1->E1_YFDCVAL == 0 //Apenas para clientes com cobranca de GNRE
 	If SE1->E1_YCLASSE == "1" 
 		
 		oTafNFRE	:= TAFTarifaGNRE():New()

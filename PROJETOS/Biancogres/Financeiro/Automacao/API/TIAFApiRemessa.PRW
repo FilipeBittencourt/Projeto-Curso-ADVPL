@@ -94,7 +94,8 @@ Local oBol := Nil
 		oBol:EmailCed	:= "S"
 		
 		// Reimprimir segunda via do boleto
-		oBol:Reimpr	:= ::cReimpr		
+		oBol:Reimpr		:= ::cReimpr	
+		oBol:ChaveNFE	:= oLst:GetItem(nCount):cCHVNFE		
 
 		// Campos nao mapeados
 		/*

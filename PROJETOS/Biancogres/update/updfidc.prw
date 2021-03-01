@@ -248,6 +248,7 @@ If ( lOpen := MyOpenSm0(.T.) )
 			// Atualiza o dicionário SX3
 			//------------------------------------
 			FSAtuSX3()
+			FSAtuSX3E1()
 
 			oProcess:IncRegua1( "Dicionário de dados" + " - " + SM0->M0_CODIGO + " " + SM0->M0_NOME + " ..." )
 			oProcess:IncRegua2( "Atualizando campos/índices" )
@@ -292,12 +293,7 @@ If ( lOpen := MyOpenSm0(.T.) )
 			//------------------------------------
 			oProcess:IncRegua1( "Helps de Campo" + " - " + SM0->M0_CODIGO + " " + SM0->M0_NOME + " ..." )
 			FSAtuHlp()
-
-			//------------------------------------
-			// Atualiza o dicionário SX6
-			//------------------------------------
-			oProcess:IncRegua1( "Dicionário de parâmetros" + " - " + SM0->M0_CODIGO + " " + SM0->M0_NOME + " ..." )
-			FSAtuSX6()
+			FSAtuHlpE1()
 
 			AutoGrLog( Replicate( "-", 128 ) )
 			AutoGrLog( " Data / Hora Final.: " + DtoC( Date() ) + " / " + Time() )
@@ -422,9 +418,9 @@ aAdd( aSX3, { ;
 	{ 'R'																	, .T. }, ; //X3_CONTEXT
 	{ ''																	, .T. }, ; //X3_OBRIGAT
 	{ 'Vazio().or.Pertence("1")'											, .T. }, ; //X3_VLDUSER
-	{ '1=FDIC'																, .T. }, ; //X3_CBOX
-	{ '1=FDIC'																, .T. }, ; //X3_CBOXSPA
-	{ '1=FDIC'																, .T. }, ; //X3_CBOXENG
+	{ '1=FIDC'																, .T. }, ; //X3_CBOX
+	{ '1=FIDC'																, .T. }, ; //X3_CBOXSPA
+	{ '1=FIDC'																, .T. }, ; //X3_CBOXENG
 	{ ''																	, .T. }, ; //X3_PICTVAR
 	{ ''																	, .T. }, ; //X3_WHEN
 	{ ''																	, .T. }, ; //X3_INIBRW
@@ -982,407 +978,372 @@ FT_FUSE()
 Return cRet
 
 
-/////////////////////////////////////////////////////////////////////////////
-
 //--------------------------------------------------------------------
-/*/{Protheus.doc} FSAtuSX6
-Função de processamento da gravação do SX6 - Parâmetros
+/*/{Protheus.doc} FSAtuSX3
+Função de processamento da gravação do SX3 - Campos
 
 @author TOTVS Protheus
-@since  20/01/21
+@since  10/02/21
 @obs    Gerado por EXPORDIC - V.6.6.1.5 EFS / Upd. V.5.1.0 EFS
 @version 1.0
 /*/
 //--------------------------------------------------------------------
-Static Function FSAtuSX6()
+Static Function FSAtuSX3E1()
 Local aEstrut   := {}
-Local aSX6      := {}
+Local aSX3      := {}
 Local cAlias    := ""
+Local cAliasAtu := ""
 Local cMsg      := ""
-Local lContinua := .T.
-Local lReclock  := .T.
+Local cSeqAtu   := ""
+Local cX3Campo  := ""
+Local cX3Dado   := ""
 Local lTodosNao := .F.
 Local lTodosSim := .F.
 Local nI        := 0
 Local nJ        := 0
 Local nOpcA     := 0
-Local nTamFil   := Len( SX6->X6_FIL )
-Local nTamVar   := Len( SX6->X6_VAR )
+Local nPosArq   := 0
+Local nPosCpo   := 0
+Local nPosOrd   := 0
+Local nPosSXG   := 0
+Local nPosTam   := 0
+Local nPosVld   := 0
+Local nSeqAtu   := 0
+Local nTamSeek  := Len( SX3->X3_CAMPO )
 
-AutoGrLog( "Ínicio da Atualização" + " SX6" + CRLF )
+AutoGrLog( "Ínicio da Atualização" + " SX3" + CRLF )
 
-aEstrut := { "X6_FIL"    , "X6_VAR"    , "X6_TIPO"   , "X6_DESCRIC", "X6_DSCSPA" , "X6_DSCENG" , "X6_DESC1"  , ;
-             "X6_DSCSPA1", "X6_DSCENG1", "X6_DESC2"  , "X6_DSCSPA2", "X6_DSCENG2", "X6_CONTEUD", "X6_CONTSPA", ;
-             "X6_CONTENG", "X6_PROPRI" , "X6_VALID"  , "X6_INIT"   , "X6_DEFPOR" , "X6_DEFSPA" , "X6_DEFENG" , ;
-             "X6_PYME"   }
+aEstrut := { { "X3_ARQUIVO", 0 }, { "X3_ORDEM"  , 0 }, { "X3_CAMPO"  , 0 }, { "X3_TIPO"   , 0 }, { "X3_TAMANHO", 0 }, { "X3_DECIMAL", 0 }, { "X3_TITULO" , 0 }, ;
+             { "X3_TITSPA" , 0 }, { "X3_TITENG" , 0 }, { "X3_DESCRIC", 0 }, { "X3_DESCSPA", 0 }, { "X3_DESCENG", 0 }, { "X3_PICTURE", 0 }, { "X3_VALID"  , 0 }, ;
+             { "X3_USADO"  , 0 }, { "X3_RELACAO", 0 }, { "X3_F3"     , 0 }, { "X3_NIVEL"  , 0 }, { "X3_RESERV" , 0 }, { "X3_CHECK"  , 0 }, { "X3_TRIGGER", 0 }, ;
+             { "X3_PROPRI" , 0 }, { "X3_BROWSE" , 0 }, { "X3_VISUAL" , 0 }, { "X3_CONTEXT", 0 }, { "X3_OBRIGAT", 0 }, { "X3_VLDUSER", 0 }, { "X3_CBOX"   , 0 }, ;
+             { "X3_CBOXSPA", 0 }, { "X3_CBOXENG", 0 }, { "X3_PICTVAR", 0 }, { "X3_WHEN"   , 0 }, { "X3_INIBRW" , 0 }, { "X3_GRPSXG" , 0 }, { "X3_FOLDER" , 0 }, ;
+             { "X3_CONDSQL", 0 }, { "X3_CHKSQL" , 0 }, { "X3_IDXSRV" , 0 }, { "X3_ORTOGRA", 0 }, { "X3_TELA"   , 0 }, { "X3_POSLGT" , 0 }, { "X3_IDXFLD" , 0 }, ;
+             { "X3_AGRUP"  , 0 }, { "X3_MODAL"  , 0 }, { "X3_PYME"   , 0 } }
 
-aAdd( aSX6, { ;
-	'01'																	, ; //X6_FIL
-	'BIA_CTBC01'															, ; //X6_VAR
-	'C'																		, ; //X6_TIPO
-	'FORMULA CONTA CONTABIL CREDITO PARA BIA_CTBC01'						, ; //X6_DESCRIC
-	''																		, ; //X6_DSCSPA
-	''																		, ; //X6_DSCENG
-	''																		, ; //X6_DESC1
-	''																		, ; //X6_DSCSPA1
-	''																		, ; //X6_DSCENG1
-	''																		, ; //X6_DESC2
-	''																		, ; //X6_DSCSPA2
-	''																		, ; //X6_DSCENG2
-	'FD3'																	, ; //X6_CONTEUD
-	''																		, ; //X6_CONTSPA
-	''																		, ; //X6_CONTENG
-	''																		, ; //X6_PROPRI
-	''																		, ; //X6_VALID
-	''																		, ; //X6_INIT
-	''																		, ; //X6_DEFPOR
-	''																		, ; //X6_DEFSPA
-	''																		, ; //X6_DEFENG
-	''																		} ) //X6_PYME
+aEval( aEstrut, { |x| x[2] := SX3->( FieldPos( x[1] ) ) } )
 
-aAdd( aSX6, { ;
-	'01'																	, ; //X6_FIL
-	'BIA_CTBC02'															, ; //X6_VAR
-	'C'																		, ; //X6_TIPO
-	'FORMULA CONTA CONTABIL CREDITO PARA BIA_CTBC02'						, ; //X6_DESCRIC
-	''																		, ; //X6_DSCSPA
-	''																		, ; //X6_DSCENG
-	''																		, ; //X6_DESC1
-	''																		, ; //X6_DSCSPA1
-	''																		, ; //X6_DSCENG1
-	''																		, ; //X6_DESC2
-	''																		, ; //X6_DSCSPA2
-	''																		, ; //X6_DSCENG2
-	'FD4'																	, ; //X6_CONTEUD
-	''																		, ; //X6_CONTSPA
-	''																		, ; //X6_CONTENG
-	''																		, ; //X6_PROPRI
-	''																		, ; //X6_VALID
-	''																		, ; //X6_INIT
-	''																		, ; //X6_DEFPOR
-	''																		, ; //X6_DEFSPA
-	''																		, ; //X6_DEFENG
-	''																		} ) //X6_PYME
+//
+// --- ATENÇÃO ---
+// Coloque .F. na 2a. posição de cada elemento do array, para os dados do SX3
+// que não serão atualizados quando o campo já existir.
+//
 
-aAdd( aSX6, { ;
-	'01'																	, ; //X6_FIL
-	'BIA_CTBD01'															, ; //X6_VAR
-	'C'																		, ; //X6_TIPO
-	'FORMULA CONTA CONTABIL DEBITO PARA BIA_CTBD01'							, ; //X6_DESCRIC
-	''																		, ; //X6_DSCSPA
-	''																		, ; //X6_DSCENG
-	''																		, ; //X6_DESC1
-	''																		, ; //X6_DSCSPA1
-	''																		, ; //X6_DSCENG1
-	''																		, ; //X6_DESC2
-	''																		, ; //X6_DSCSPA2
-	''																		, ; //X6_DSCENG2
-	'FD1'																	, ; //X6_CONTEUD
-	''																		, ; //X6_CONTSPA
-	''																		, ; //X6_CONTENG
-	''																		, ; //X6_PROPRI
-	''																		, ; //X6_VALID
-	''																		, ; //X6_INIT
-	''																		, ; //X6_DEFPOR
-	''																		, ; //X6_DEFSPA
-	''																		, ; //X6_DEFENG
-	''																		} ) //X6_PYME
+//
+// Campos Tabela SE1
+//
+aAdd( aSX3, { ;
+	{ 'SE1'																	, .T. }, ; //X3_ARQUIVO
+	{ 'GO'																	, .T. }, ; //X3_ORDEM
+	{ 'E1_YFDCPER'															, .T. }, ; //X3_CAMPO
+	{ 'N'																	, .T. }, ; //X3_TIPO
+	{ 7																		, .T. }, ; //X3_TAMANHO
+	{ 3																		, .T. }, ; //X3_DECIMAL
+	{ '% JUROS FIDC'														, .T. }, ; //X3_TITULO
+	{ '% JUROS FIDC'														, .T. }, ; //X3_TITSPA
+	{ '% JUROS FIDC'														, .T. }, ; //X3_TITENG
+	{ '% JUROS FIDC'														, .T. }, ; //X3_DESCRIC
+	{ '% JUROS FIDC'														, .T. }, ; //X3_DESCSPA
+	{ '% JUROS FIDC'														, .T. }, ; //X3_DESCENG
+	{ '@E 999.999'															, .T. }, ; //X3_PICTURE
+	{ ''																	, .T. }, ; //X3_VALID
+	{ Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+	{ ''																	, .T. }, ; //X3_RELACAO
+	{ ''																	, .T. }, ; //X3_F3
+	{ 0																		, .T. }, ; //X3_NIVEL
+	{ Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+	{ ''																	, .T. }, ; //X3_CHECK
+	{ ''																	, .T. }, ; //X3_TRIGGER
+	{ 'U'																	, .T. }, ; //X3_PROPRI
+	{ 'N'																	, .T. }, ; //X3_BROWSE
+	{ 'A'																	, .T. }, ; //X3_VISUAL
+	{ 'R'																	, .T. }, ; //X3_CONTEXT
+	{ ''																	, .T. }, ; //X3_OBRIGAT
+	{ ''																	, .T. }, ; //X3_VLDUSER
+	{ ''																	, .T. }, ; //X3_CBOX
+	{ ''																	, .T. }, ; //X3_CBOXSPA
+	{ ''																	, .T. }, ; //X3_CBOXENG
+	{ ''																	, .T. }, ; //X3_PICTVAR
+	{ ''																	, .T. }, ; //X3_WHEN
+	{ ''																	, .T. }, ; //X3_INIBRW
+	{ ''																	, .T. }, ; //X3_GRPSXG
+	{ ''																	, .T. }, ; //X3_FOLDER
+	{ ''																	, .T. }, ; //X3_CONDSQL
+	{ ''																	, .T. }, ; //X3_CHKSQL
+	{ ''																	, .T. }, ; //X3_IDXSRV
+	{ 'N'																	, .T. }, ; //X3_ORTOGRA
+	{ ''																	, .T. }, ; //X3_TELA
+	{ ''																	, .T. }, ; //X3_POSLGT
+	{ 'N'																	, .T. }, ; //X3_IDXFLD
+	{ ''																	, .T. }, ; //X3_AGRUP
+	{ ''																	, .T. }, ; //X3_MODAL
+	{ ''																	, .T. }} ) //X3_PYME
 
-aAdd( aSX6, { ;
-	'01'																	, ; //X6_FIL
-	'BIA_CTBD02'															, ; //X6_VAR
-	'C'																		, ; //X6_TIPO
-	'FORMULA CONTA CONTABIL DEBITO PARA BIA_CTBD02'							, ; //X6_DESCRIC
-	''																		, ; //X6_DSCSPA
-	''																		, ; //X6_DSCENG
-	''																		, ; //X6_DESC1
-	''																		, ; //X6_DSCSPA1
-	''																		, ; //X6_DSCENG1
-	''																		, ; //X6_DESC2
-	''																		, ; //X6_DSCSPA2
-	''																		, ; //X6_DSCENG2
-	'FD2'																	, ; //X6_CONTEUD
-	''																		, ; //X6_CONTSPA
-	''																		, ; //X6_CONTENG
-	''																		, ; //X6_PROPRI
-	''																		, ; //X6_VALID
-	''																		, ; //X6_INIT
-	''																		, ; //X6_DEFPOR
-	''																		, ; //X6_DEFSPA
-	''																		, ; //X6_DEFENG
-	''																		} ) //X6_PYME
+aAdd( aSX3, { ;
+	{ 'SE1'																	, .T. }, ; //X3_ARQUIVO
+	{ 'GP'																	, .T. }, ; //X3_ORDEM
+	{ 'E1_YFDCVAL'															, .T. }, ; //X3_CAMPO
+	{ 'N'																	, .T. }, ; //X3_TIPO
+	{ 16																	, .T. }, ; //X3_TAMANHO
+	{ 2																		, .T. }, ; //X3_DECIMAL
+	{ 'JUROS FIDC'															, .T. }, ; //X3_TITULO
+	{ 'JUROS FIDC'															, .T. }, ; //X3_TITSPA
+	{ 'JUROS FIDC'															, .T. }, ; //X3_TITENG
+	{ 'JUROS FIDC'															, .T. }, ; //X3_DESCRIC
+	{ 'JUROS FIDC'															, .T. }, ; //X3_DESCSPA
+	{ 'JUROS FIDC'															, .T. }, ; //X3_DESCENG
+	{ '@E 9,999,999,999,999.99'												, .T. }, ; //X3_PICTURE
+	{ ''																	, .T. }, ; //X3_VALID
+	{ Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+	{ ''																	, .T. }, ; //X3_RELACAO
+	{ ''																	, .T. }, ; //X3_F3
+	{ 0																		, .T. }, ; //X3_NIVEL
+	{ Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+	{ ''																	, .T. }, ; //X3_CHECK
+	{ ''																	, .T. }, ; //X3_TRIGGER
+	{ 'U'																	, .T. }, ; //X3_PROPRI
+	{ 'N'																	, .T. }, ; //X3_BROWSE
+	{ 'A'																	, .T. }, ; //X3_VISUAL
+	{ 'R'																	, .T. }, ; //X3_CONTEXT
+	{ ''																	, .T. }, ; //X3_OBRIGAT
+	{ ''																	, .T. }, ; //X3_VLDUSER
+	{ ''																	, .T. }, ; //X3_CBOX
+	{ ''																	, .T. }, ; //X3_CBOXSPA
+	{ ''																	, .T. }, ; //X3_CBOXENG
+	{ ''																	, .T. }, ; //X3_PICTVAR
+	{ ''																	, .T. }, ; //X3_WHEN
+	{ ''																	, .T. }, ; //X3_INIBRW
+	{ ''																	, .T. }, ; //X3_GRPSXG
+	{ ''																	, .T. }, ; //X3_FOLDER
+	{ ''																	, .T. }, ; //X3_CONDSQL
+	{ ''																	, .T. }, ; //X3_CHKSQL
+	{ ''																	, .T. }, ; //X3_IDXSRV
+	{ 'N'																	, .T. }, ; //X3_ORTOGRA
+	{ ''																	, .T. }, ; //X3_TELA
+	{ ''																	, .T. }, ; //X3_POSLGT
+	{ 'N'																	, .T. }, ; //X3_IDXFLD
+	{ ''																	, .T. }, ; //X3_AGRUP
+	{ ''																	, .T. }, ; //X3_MODAL
+	{ ''																	, .T. }} ) //X3_PYME
 
-aAdd( aSX6, { ;
-	'01'																	, ; //X6_FIL
-	'BIA_CTBHC1'															, ; //X6_VAR
-	'C'																		, ; //X6_TIPO
-	'FORMULA HIST. CONTABIL PARA BIA_CTBHC1'								, ; //X6_DESCRIC
-	''																		, ; //X6_DSCSPA
-	''																		, ; //X6_DSCENG
-	''																		, ; //X6_DESC1
-	''																		, ; //X6_DSCSPA1
-	''																		, ; //X6_DSCENG1
-	''																		, ; //X6_DESC2
-	''																		, ; //X6_DSCSPA2
-	''																		, ; //X6_DSCENG2
-	'FD9'																	, ; //X6_CONTEUD
-	''																		, ; //X6_CONTSPA
-	''																		, ; //X6_CONTENG
-	''																		, ; //X6_PROPRI
-	''																		, ; //X6_VALID
-	''																		, ; //X6_INIT
-	''																		, ; //X6_DEFPOR
-	''																		, ; //X6_DEFSPA
-	''																		, ; //X6_DEFENG
-	''																		} ) //X6_PYME
-
-aAdd( aSX6, { ;
-	'01'																	, ; //X6_FIL
-	'BIA_CTBHC2'															, ; //X6_VAR
-	'C'																		, ; //X6_TIPO
-	'FORMULA HIST. CONTABIL PARA BIA_CTBHC2'								, ; //X6_DESCRIC
-	''																		, ; //X6_DSCSPA
-	''																		, ; //X6_DSCENG
-	''																		, ; //X6_DESC1
-	''																		, ; //X6_DSCSPA1
-	''																		, ; //X6_DSCENG1
-	''																		, ; //X6_DESC2
-	''																		, ; //X6_DSCSPA2
-	''																		, ; //X6_DSCENG2
-	'FDA'																	, ; //X6_CONTEUD
-	''																		, ; //X6_CONTSPA
-	''																		, ; //X6_CONTENG
-	''																		, ; //X6_PROPRI
-	''																		, ; //X6_VALID
-	''																		, ; //X6_INIT
-	''																		, ; //X6_DEFPOR
-	''																		, ; //X6_DEFSPA
-	''																		, ; //X6_DEFENG
-	''																		} ) //X6_PYME
-
-aAdd( aSX6, { ;
-	'01'																	, ; //X6_FIL
-	'BIA_CTBHD1'															, ; //X6_VAR
-	'C'																		, ; //X6_TIPO
-	'FORMULA HIST. CONTABIL PARA BIA_CTBHD1'								, ; //X6_DESCRIC
-	''																		, ; //X6_DSCSPA
-	''																		, ; //X6_DSCENG
-	''																		, ; //X6_DESC1
-	''																		, ; //X6_DSCSPA1
-	''																		, ; //X6_DSCENG1
-	''																		, ; //X6_DESC2
-	''																		, ; //X6_DSCSPA2
-	''																		, ; //X6_DSCENG2
-	'FD7'																	, ; //X6_CONTEUD
-	''																		, ; //X6_CONTSPA
-	''																		, ; //X6_CONTENG
-	''																		, ; //X6_PROPRI
-	''																		, ; //X6_VALID
-	''																		, ; //X6_INIT
-	''																		, ; //X6_DEFPOR
-	''																		, ; //X6_DEFSPA
-	''																		, ; //X6_DEFENG
-	''																		} ) //X6_PYME
-
-aAdd( aSX6, { ;
-	'01'																	, ; //X6_FIL
-	'BIA_CTBHD2'															, ; //X6_VAR
-	'C'																		, ; //X6_TIPO
-	'FORMULA HIST. CONTABIL PARA BIA_CTBHD2'								, ; //X6_DESCRIC
-	''																		, ; //X6_DSCSPA
-	''																		, ; //X6_DSCENG
-	''																		, ; //X6_DESC1
-	''																		, ; //X6_DSCSPA1
-	''																		, ; //X6_DSCENG1
-	''																		, ; //X6_DESC2
-	''																		, ; //X6_DSCSPA2
-	''																		, ; //X6_DSCENG2
-	'FD8'																	, ; //X6_CONTEUD
-	''																		, ; //X6_CONTSPA
-	''																		, ; //X6_CONTENG
-	''																		, ; //X6_PROPRI
-	''																		, ; //X6_VALID
-	''																		, ; //X6_INIT
-	''																		, ; //X6_DEFPOR
-	''																		, ; //X6_DEFSPA
-	''																		, ; //X6_DEFENG
-	''																		} ) //X6_PYME
-
-aAdd( aSX6, { ;
-	'01'																	, ; //X6_FIL
-	'BIA_CTBVC1'															, ; //X6_VAR
-	'C'																		, ; //X6_TIPO
-	'FORMULA CONTA CONTABIL VALOR PARA BIA_CTBVC1'							, ; //X6_DESCRIC
-	''																		, ; //X6_DSCSPA
-	''																		, ; //X6_DSCENG
-	''																		, ; //X6_DESC1
-	''																		, ; //X6_DSCSPA1
-	''																		, ; //X6_DSCENG1
-	''																		, ; //X6_DESC2
-	''																		, ; //X6_DSCSPA2
-	''																		, ; //X6_DSCENG2
-	'FDB'																	, ; //X6_CONTEUD
-	''																		, ; //X6_CONTSPA
-	''																		, ; //X6_CONTENG
-	''																		, ; //X6_PROPRI
-	''																		, ; //X6_VALID
-	''																		, ; //X6_INIT
-	''																		, ; //X6_DEFPOR
-	''																		, ; //X6_DEFSPA
-	''																		, ; //X6_DEFENG
-	''																		} ) //X6_PYME
-
-aAdd( aSX6, { ;
-	'01'																	, ; //X6_FIL
-	'BIA_CTBVC2'															, ; //X6_VAR
-	'C'																		, ; //X6_TIPO
-	'FORMULA CONTA CONTABIL VALOR PARA BIA_CTBVC2'							, ; //X6_DESCRIC
-	''																		, ; //X6_DSCSPA
-	''																		, ; //X6_DSCENG
-	''																		, ; //X6_DESC1
-	''																		, ; //X6_DSCSPA1
-	''																		, ; //X6_DSCENG1
-	''																		, ; //X6_DESC2
-	''																		, ; //X6_DSCSPA2
-	''																		, ; //X6_DSCENG2
-	'FDC'																	, ; //X6_CONTEUD
-	''																		, ; //X6_CONTSPA
-	''																		, ; //X6_CONTENG
-	''																		, ; //X6_PROPRI
-	''																		, ; //X6_VALID
-	''																		, ; //X6_INIT
-	''																		, ; //X6_DEFPOR
-	''																		, ; //X6_DEFSPA
-	''																		, ; //X6_DEFENG
-	''																		} ) //X6_PYME
-
-aAdd( aSX6, { ;
-	'01'																	, ; //X6_FIL
-	'BIA_CTBVD1'															, ; //X6_VAR
-	'C'																		, ; //X6_TIPO
-	'FORMULA CONTA CONTABIL VALOR PARA BIA_CTBVD1'							, ; //X6_DESCRIC
-	''																		, ; //X6_DSCSPA
-	''																		, ; //X6_DSCENG
-	''																		, ; //X6_DESC1
-	''																		, ; //X6_DSCSPA1
-	''																		, ; //X6_DSCENG1
-	''																		, ; //X6_DESC2
-	''																		, ; //X6_DSCSPA2
-	''																		, ; //X6_DSCENG2
-	'FD5'																	, ; //X6_CONTEUD
-	''																		, ; //X6_CONTSPA
-	''																		, ; //X6_CONTENG
-	''																		, ; //X6_PROPRI
-	''																		, ; //X6_VALID
-	''																		, ; //X6_INIT
-	''																		, ; //X6_DEFPOR
-	''																		, ; //X6_DEFSPA
-	''																		, ; //X6_DEFENG
-	''																		} ) //X6_PYME
-
-aAdd( aSX6, { ;
-	'01'																	, ; //X6_FIL
-	'BIA_CTBVD2'															, ; //X6_VAR
-	'C'																		, ; //X6_TIPO
-	'FORMULA CONTA CONTABIL VALOR PARA BIA_CTBVD2'							, ; //X6_DESCRIC
-	''																		, ; //X6_DSCSPA
-	''																		, ; //X6_DSCENG
-	''																		, ; //X6_DESC1
-	''																		, ; //X6_DSCSPA1
-	''																		, ; //X6_DSCENG1
-	''																		, ; //X6_DESC2
-	''																		, ; //X6_DSCSPA2
-	''																		, ; //X6_DSCENG2
-	'FD6'																	, ; //X6_CONTEUD
-	''																		, ; //X6_CONTSPA
-	''																		, ; //X6_CONTENG
-	''																		, ; //X6_PROPRI
-	''																		, ; //X6_VALID
-	''																		, ; //X6_INIT
-	''																		, ; //X6_DEFPOR
-	''																		, ; //X6_DEFSPA
-	''																		, ; //X6_DEFENG
-	''																		} ) //X6_PYME
 
 //
 // Atualizando dicionário
 //
-oProcess:SetRegua2( Len( aSX6 ) )
+nPosArq := aScan( aEstrut, { |x| AllTrim( x[1] ) == "X3_ARQUIVO" } )
+nPosOrd := aScan( aEstrut, { |x| AllTrim( x[1] ) == "X3_ORDEM"   } )
+nPosCpo := aScan( aEstrut, { |x| AllTrim( x[1] ) == "X3_CAMPO"   } )
+nPosTam := aScan( aEstrut, { |x| AllTrim( x[1] ) == "X3_TAMANHO" } )
+nPosSXG := aScan( aEstrut, { |x| AllTrim( x[1] ) == "X3_GRPSXG"  } )
+nPosVld := aScan( aEstrut, { |x| AllTrim( x[1] ) == "X3_VALID"   } )
 
-dbSelectArea( "SX6" )
-dbSetOrder( 1 )
+aSort( aSX3,,, { |x,y| x[nPosArq][1]+x[nPosOrd][1]+x[nPosCpo][1] < y[nPosArq][1]+y[nPosOrd][1]+y[nPosCpo][1] } )
 
-For nI := 1 To Len( aSX6 )
-	lContinua := .F.
-	lReclock  := .F.
+oProcess:SetRegua2( Len( aSX3 ) )
 
-	If !SX6->( dbSeek( PadR( aSX6[nI][1], nTamFil ) + PadR( aSX6[nI][2], nTamVar ) ) )
-		lContinua := .T.
-		lReclock  := .T.
-		AutoGrLog( "Foi incluído o parâmetro " + aSX6[nI][1] + aSX6[nI][2] + " Conteúdo [" + AllTrim( aSX6[nI][13] ) + "]" )
-	Else
-		lContinua := .T.
-		lReclock  := .F.
-		If !StrTran( SX6->X6_CONTEUD, " ", "" ) == StrTran( aSX6[nI][13], " ", "" )
+dbSelectArea( "SX3" )
+dbSetOrder( 2 )
+cAliasAtu := ""
 
-			cMsg := "O parâmetro " + aSX6[nI][2] + " está com o conteúdo" + CRLF + ;
-			"[" + RTrim( StrTran( SX6->X6_CONTEUD, " ", "" ) ) + "]" + CRLF + ;
-			", que é será substituido pelo NOVO conteúdo " + CRLF + ;
-			"[" + RTrim( StrTran( aSX6[nI][13]   , " ", "" ) ) + "]" + CRLF + ;
-			"Deseja substituir ? "
+For nI := 1 To Len( aSX3 )
 
-			If      lTodosSim
-				nOpcA := 1
-			ElseIf  lTodosNao
-				nOpcA := 2
-			Else
-				nOpcA := Aviso( "ATUALIZAÇÃO DE DICIONÁRIOS E TABELAS", cMsg, { "Sim", "Não", "Sim p/Todos", "Não p/Todos" }, 3, "Diferença de conteúdo - SX6" )
-				lTodosSim := ( nOpcA == 3 )
-				lTodosNao := ( nOpcA == 4 )
-
-				If lTodosSim
-					nOpcA := 1
-					lTodosSim := MsgNoYes( "Foi selecionada a opção de REALIZAR TODAS alterações no SX6 e NÃO MOSTRAR mais a tela de aviso." + CRLF + "Confirma a ação [Sim p/Todos] ?" )
-				EndIf
-
-				If lTodosNao
-					nOpcA := 2
-					lTodosNao := MsgNoYes( "Foi selecionada a opção de NÃO REALIZAR nenhuma alteração no SX6 que esteja diferente da base e NÃO MOSTRAR mais a tela de aviso." + CRLF + "Confirma esta ação [Não p/Todos]?" )
-				EndIf
-
+	//
+	// Verifica se o campo faz parte de um grupo e ajusta tamanho
+	//
+	If !Empty( aSX3[nI][nPosSXG][1] )
+		SXG->( dbSetOrder( 1 ) )
+		If SXG->( MSSeek( aSX3[nI][nPosSXG][1] ) )
+			If aSX3[nI][nPosTam][1] <> SXG->XG_SIZE
+				aSX3[nI][nPosTam][1] := SXG->XG_SIZE
+				AutoGrLog( "O tamanho do campo " + aSX3[nI][nPosCpo][1] + " NÃO atualizado e foi mantido em [" + ;
+				AllTrim( Str( SXG->XG_SIZE ) ) + "]" + CRLF + ;
+				" por pertencer ao grupo de campos [" + SXG->XG_GRUPO + "]" + CRLF )
 			EndIf
-
-			lContinua := ( nOpcA == 1 )
-
-			If lContinua
-				AutoGrLog( "Foi alterado o parâmetro " + aSX6[nI][1] + aSX6[nI][2] + " de [" + ;
-				AllTrim( SX6->X6_CONTEUD ) + "]" + " para [" + AllTrim( aSX6[nI][13] ) + "]" )
-			EndIf
-
-		Else
-			lContinua := .F.
 		EndIf
 	EndIf
 
-	If lContinua
-		If !( aSX6[nI][1] $ cAlias )
-			cAlias += aSX6[nI][1] + "/"
+	SX3->( dbSetOrder( 2 ) )
+
+	If !( aSX3[nI][nPosArq][1] $ cAlias )
+		cAlias += aSX3[nI][nPosArq][1] + "/"
+		aAdd( aArqUpd, aSX3[nI][nPosArq][1] )
+	EndIf
+
+	If !SX3->( dbSeek( PadR( aSX3[nI][nPosCpo][1], nTamSeek ) ) )
+
+		//
+		// Busca ultima ocorrencia do alias
+		//
+		If ( aSX3[nI][nPosArq][1] <> cAliasAtu )
+			cSeqAtu   := "00"
+			cAliasAtu := aSX3[nI][nPosArq][1]
+
+			dbSetOrder( 1 )
+			SX3->( dbSeek( cAliasAtu + "ZZ", .T. ) )
+			dbSkip( -1 )
+
+			If ( SX3->X3_ARQUIVO == cAliasAtu )
+				cSeqAtu := SX3->X3_ORDEM
+			EndIf
+
+			nSeqAtu := Val( RetAsc( cSeqAtu, 3, .F. ) )
 		EndIf
 
-		RecLock( "SX6", lReclock )
-		For nJ := 1 To Len( aSX6[nI] )
-			If FieldPos( aEstrut[nJ] ) > 0
-				FieldPut( FieldPos( aEstrut[nJ] ), aSX6[nI][nJ] )
+		nSeqAtu++
+		cSeqAtu := RetAsc( Str( nSeqAtu ), 2, .T. )
+
+		RecLock( "SX3", .T. )
+		For nJ := 1 To Len( aSX3[nI] )
+			If     nJ == nPosOrd  // Ordem
+				SX3->( FieldPut( FieldPos( aEstrut[nJ][1] ), cSeqAtu ) )
+
+			ElseIf aEstrut[nJ][2] > 0
+				SX3->( FieldPut( FieldPos( aEstrut[nJ][1] ), aSX3[nI][nJ][1] ) )
+
 			EndIf
 		Next nJ
+
 		dbCommit()
 		MsUnLock()
+
+		AutoGrLog( "Criado campo " + aSX3[nI][nPosCpo][1] )
+
+	Else
+
+		//
+		// Verifica se o campo faz parte de um grupo e ajsuta tamanho
+		//
+		If !Empty( SX3->X3_GRPSXG ) .AND. SX3->X3_GRPSXG <> aSX3[nI][nPosSXG][1]
+			SXG->( dbSetOrder( 1 ) )
+			If SXG->( MSSeek( SX3->X3_GRPSXG ) )
+				If aSX3[nI][nPosTam][1] <> SXG->XG_SIZE
+					aSX3[nI][nPosTam][1] := SXG->XG_SIZE
+					AutoGrLog( "O tamanho do campo " + aSX3[nI][nPosCpo][1] + " NÃO atualizado e foi mantido em [" + ;
+					AllTrim( Str( SXG->XG_SIZE ) ) + "]"+ CRLF + ;
+					"   por pertencer ao grupo de campos [" + SX3->X3_GRPSXG + "]" + CRLF )
+				EndIf
+			EndIf
+		EndIf
+
+		//
+		// Verifica todos os campos
+		//
+		For nJ := 1 To Len( aSX3[nI] )
+
+			//
+			// Se o campo estiver diferente da estrutura
+			//
+			If aSX3[nI][nJ][2]
+				cX3Campo := AllTrim( aEstrut[nJ][1] )
+				cX3Dado  := SX3->( FieldGet( aEstrut[nJ][2] ) )
+
+				If  aEstrut[nJ][2] > 0 .AND. ;
+					PadR( StrTran( AllToChar( cX3Dado ), " ", "" ), 250 ) <> ;
+					PadR( StrTran( AllToChar( aSX3[nI][nJ][1] ), " ", "" ), 250 ) .AND. ;
+					!cX3Campo == "X3_ORDEM"
+
+					cMsg := "O campo " + aSX3[nI][nPosCpo][1] + " está com o " + cX3Campo + ;
+					" com o conteúdo" + CRLF + ;
+					"[" + RTrim( AllToChar( cX3Dado ) ) + "]" + CRLF + ;
+					"que será substituído pelo NOVO conteúdo" + CRLF + ;
+					"[" + RTrim( AllToChar( aSX3[nI][nJ][1] ) ) + "]" + CRLF + ;
+					"Deseja substituir ? "
+
+					If      lTodosSim
+						nOpcA := 1
+					ElseIf  lTodosNao
+						nOpcA := 2
+					Else
+						nOpcA := Aviso( "ATUALIZAÇÃO DE DICIONÁRIOS E TABELAS", cMsg, { "Sim", "Não", "Sim p/Todos", "Não p/Todos" }, 3, "Diferença de conteúdo - SX3" )
+						lTodosSim := ( nOpcA == 3 )
+						lTodosNao := ( nOpcA == 4 )
+
+						If lTodosSim
+							nOpcA := 1
+							lTodosSim := MsgNoYes( "Foi selecionada a opção de REALIZAR TODAS alterações no SX3 e NÃO MOSTRAR mais a tela de aviso." + CRLF + "Confirma a ação [Sim p/Todos] ?" )
+						EndIf
+
+						If lTodosNao
+							nOpcA := 2
+							lTodosNao := MsgNoYes( "Foi selecionada a opção de NÃO REALIZAR nenhuma alteração no SX3 que esteja diferente da base e NÃO MOSTRAR mais a tela de aviso." + CRLF + "Confirma esta ação [Não p/Todos]?" )
+						EndIf
+
+					EndIf
+
+					If nOpcA == 1
+						AutoGrLog( "Alterado campo " + aSX3[nI][nPosCpo][1] + CRLF + ;
+						"   " + PadR( cX3Campo, 10 ) + " de [" + AllToChar( cX3Dado ) + "]" + CRLF + ;
+						"            para [" + AllToChar( aSX3[nI][nJ][1] )           + "]" + CRLF )
+
+						RecLock( "SX3", .F. )
+						FieldPut( FieldPos( aEstrut[nJ][1] ), aSX3[nI][nJ][1] )
+						MsUnLock()
+					EndIf
+
+				EndIf
+
+			EndIf
+
+		Next
+
 	EndIf
 
-	oProcess:IncRegua2( "Atualizando Arquivos (SX6)..." )
+	oProcess:IncRegua2( "Atualizando Campos de Tabelas (SX3)..." )
 
 Next nI
 
-AutoGrLog( CRLF + "Final da Atualização" + " SX6" + CRLF + Replicate( "-", 128 ) + CRLF )
+AutoGrLog( CRLF + "Final da Atualização" + " SX3" + CRLF + Replicate( "-", 128 ) + CRLF )
 
 Return NIL
+
+
+//--------------------------------------------------------------------
+/*/{Protheus.doc} FSAtuHlp
+Função de processamento da gravação dos Helps de Campos
+
+@author TOTVS Protheus
+@since  10/02/21
+@obs    Gerado por EXPORDIC - V.6.6.1.5 EFS / Upd. V.5.1.0 EFS
+@version 1.0
+/*/
+//--------------------------------------------------------------------
+Static Function FSAtuHlpE1()
+Local aHlpPor   := {}
+Local aHlpEng   := {}
+Local aHlpSpa   := {}
+
+AutoGrLog( "Ínicio da Atualização" + " " + "Helps de Campos" + CRLF )
+
+
+oProcess:IncRegua2( "Atualizando Helps de Campos ..." )
+
+//
+// Helps Tabela SE1
+//
+aHlpPor := {}
+aAdd( aHlpPor, '% JUROS FIDC' )
+
+aHlpEng := {}
+
+aHlpSpa := {}
+
+PutSX1Help( "PE1_YFDCPER", aHlpPor, aHlpEng, aHlpSpa, .T.,,.T. )
+AutoGrLog( "Atualizado o Help do campo " + "E1_YFDCPER" )
+
+aHlpPor := {}
+aAdd( aHlpPor, 'JUROS FIDC' )
+
+aHlpEng := {}
+
+aHlpSpa := {}
+
+PutSX1Help( "PE1_YFDCVAL", aHlpPor, aHlpEng, aHlpSpa, .T.,,.T. )
+AutoGrLog( "Atualizado o Help do campo " + "E1_YFDCVAL" )
+
+AutoGrLog( CRLF + "Final da Atualização" + " " + "Helps de Campos" + CRLF + Replicate( "-", 128 ) + CRLF )
+
+Return {}

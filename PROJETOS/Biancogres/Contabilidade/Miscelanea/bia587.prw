@@ -4,7 +4,7 @@
 @author Marcos Alberto Soprani
 @since 28/01/21
 @version 1.0
-@description Tela para lançamento das ajustes orçamentário na tabela geral de Orçamento ZOZ (FORECAST/PROJETADO)
+@description Tela para lançamento das ajustes orçamentário na tabela geral de Orçamento ZOZ (FORECAST)
 @type function
 /*/
 
@@ -40,6 +40,7 @@ User Function BIA587()
 	Private _oGDataRef
 	Private _cHistFil	:= SPACE(TAMSX3("ZOZ_HIST")[1])
 	Private _oGHistFil
+	Private _msCtrlAlt := .T.
 
 	aAdd(_aButtons,{"PRODUTO" ,{|| U_BIA393("E")}, "Layout Integração" , "Layout Integração"})
 	aAdd(_aButtons,{"PEDIDO"  ,{|| U_B587IEXC() }, "Importa Arquivo"   , "Importa Arquivo"})
@@ -160,10 +161,10 @@ Static Function fBIA587F()
 
 	xfMensCompl := ""
 	xfMensCompl += "Tipo Orçamento igual CONTABIL" + msrhEnter
-	xfMensCompl += "Status igual Aberto" + msrhEnter
-	xfMensCompl += "Data Digitação diferente de branco e menor ou igual DataBase" + msrhEnter
-	xfMensCompl += "Data Conciliação igual branco" + msrhEnter
-	xfMensCompl += "Data Encerramento igual branco" + msrhEnter
+	xfMensCompl += "Status igual Fechado" + msrhEnter
+	xfMensCompl += "Data Digitação diferente de branco" + msrhEnter
+	xfMensCompl += "Data Conciliação diferente de branco" + msrhEnter
+	xfMensCompl += "Data Encerramento diferente de branco e menor ou igual DataBase" + msrhEnter
 
 	BeginSql Alias M001
 		SELECT COUNT(*) CONTAD
@@ -173,18 +174,24 @@ Static Function fBIA587F()
 		AND ZB5.ZB5_REVISA = %Exp:_cRevisa%
 		AND ZB5.ZB5_ANOREF = %Exp:_cAnoRef%
 		AND RTRIM(ZB5.ZB5_TPORCT) = 'CONTABIL'
-		AND ZB5.ZB5_STATUS = 'A'
+		AND ZB5.ZB5_STATUS = 'F'
 		AND ZB5.ZB5_DTDIGT <> ''
-		AND ZB5.ZB5_DTDIGT <= %Exp:dtos(Date())%
-		AND ZB5.ZB5_DTCONS = ''
-		AND ZB5.ZB5_DTENCR = ''
+		AND ZB5.ZB5_DTCONS <> ''
+		AND ZB5.ZB5_DTENCR <= %Exp:dtos(Date())%
 		AND ZB5.%NotDel%
 	EndSql
 	(M001)->(dbGoTop())
 	If (M001)->CONTAD <> 1
 		MsgALERT("A versão informada não está ativa para execução deste processo." + msrhEnter + msrhEnter + "Favor verificar o preenchimento dos campos no tabela de controle de versão conforme abaixo:" + msrhEnter + msrhEnter + xfMensCompl + msrhEnter + msrhEnter + "Favor verificar com o responsável pelo processo Orçamentário!!!")
-		(M001)->(dbCloseArea())
-		Return .F.
+		_msCtrlAlt := .F.
+		_oGetDados:lInsert := .F.
+		_oGetDados:lUpdate := .F.
+		_oGetDados:lDelete := .F.
+	Else
+		_msCtrlAlt := .T.
+		_oGetDados:lInsert := .T.
+		_oGetDados:lUpdate := .T.
+		_oGetDados:lDelete := .T.
 	EndIf	
 	(M001)->(dbCloseArea())
 
@@ -204,7 +211,7 @@ Static Function fBIA587F()
 				AND ZOZ_VERSAO = %Exp:_cVersao%
 				AND ZOZ_REVISA = %Exp:_cRevisa%
 				AND ZOZ_ANOREF = %Exp:_cAnoRef%
-				AND ZOZ_ORIPRC = 'CONTABIL'
+				AND ZOZ_ORIPRC = 'FORECAST-M'
 				AND ZOZ.%NotDel%
 				) NUMREG
 				FROM %TABLE:ZOZ% ZOZ
@@ -212,7 +219,7 @@ Static Function fBIA587F()
 				AND ZOZ_VERSAO = %Exp:_cVersao%
 				AND ZOZ_REVISA = %Exp:_cRevisa%
 				AND ZOZ_ANOREF = %Exp:_cAnoRef%
-				AND ZOZ_ORIPRC = 'CONTABIL'
+				AND ZOZ_ORIPRC = 'FORECAST-M'
 				AND ZOZ.%NotDel%
 				ORDER BY ZOZ_VERSAO, ZOZ_REVISA, ZOZ_ANOREF, ZOZ_DATA, ZOZ_DOC, ZOZ_LINHA
 			EndSql
@@ -230,7 +237,7 @@ Static Function fBIA587F()
 				AND ZOZ_VERSAO = %Exp:_cVersao%
 				AND ZOZ_REVISA = %Exp:_cRevisa%
 				AND ZOZ_ANOREF = %Exp:_cAnoRef%
-				AND ZOZ_ORIPRC = 'CONTABIL'
+				AND ZOZ_ORIPRC = 'FORECAST-M'
 				AND %Exp:_cLkHistFil%
 				AND ZOZ.%NotDel%
 				) NUMREG
@@ -239,7 +246,7 @@ Static Function fBIA587F()
 				AND ZOZ_VERSAO = %Exp:_cVersao%
 				AND ZOZ_REVISA = %Exp:_cRevisa%
 				AND ZOZ_ANOREF = %Exp:_cAnoRef%
-				AND ZOZ_ORIPRC = 'CONTABIL'
+				AND ZOZ_ORIPRC = 'FORECAST-M'
 				AND %Exp:_cLkHistFil%
 				AND ZOZ.%NotDel%
 				ORDER BY ZOZ_VERSAO, ZOZ_REVISA, ZOZ_ANOREF, ZOZ_DATA, ZOZ_DOC, ZOZ_LINHA
@@ -263,7 +270,7 @@ Static Function fBIA587F()
 				AND ZOZ_REVISA = %Exp:_cRevisa%
 				AND ZOZ_ANOREF = %Exp:_cAnoRef%
 				AND ZOZ_DATA = %Exp:_cDataRef%
-				AND ZOZ_ORIPRC = 'CONTABIL'
+				AND ZOZ_ORIPRC = 'FORECAST-M'
 				AND ZOZ.%NotDel%
 				) NUMREG
 				FROM %TABLE:ZOZ% ZOZ
@@ -272,7 +279,7 @@ Static Function fBIA587F()
 				AND ZOZ_REVISA = %Exp:_cRevisa%
 				AND ZOZ_ANOREF = %Exp:_cAnoRef%
 				AND ZOZ_DATA = %Exp:_cDataRef%
-				AND ZOZ_ORIPRC = 'CONTABIL'
+				AND ZOZ_ORIPRC = 'FORECAST-M'
 				AND ZOZ.%NotDel%
 				ORDER BY ZOZ_VERSAO, ZOZ_REVISA, ZOZ_ANOREF, ZOZ_DATA, ZOZ_DOC, ZOZ_LINHA
 			EndSql
@@ -291,7 +298,7 @@ Static Function fBIA587F()
 				AND ZOZ_REVISA = %Exp:_cRevisa%
 				AND ZOZ_ANOREF = %Exp:_cAnoRef%
 				AND ZOZ_DATA = %Exp:_cDataRef%
-				AND ZOZ_ORIPRC = 'CONTABIL'
+				AND ZOZ_ORIPRC = 'FORECAST-M'
 				AND %Exp:_cLkHistFil%
 				AND ZOZ.%NotDel%
 				) NUMREG
@@ -301,7 +308,7 @@ Static Function fBIA587F()
 				AND ZOZ_REVISA = %Exp:_cRevisa%
 				AND ZOZ_ANOREF = %Exp:_cAnoRef%
 				AND ZOZ_DATA = %Exp:_cDataRef%
-				AND ZOZ_ORIPRC = 'CONTABIL'
+				AND ZOZ_ORIPRC = 'FORECAST-M'
 				AND %Exp:_cLkHistFil%
 				AND ZOZ.%NotDel%
 				ORDER BY ZOZ_VERSAO, ZOZ_REVISA, ZOZ_ANOREF, ZOZ_DATA, ZOZ_DOC, ZOZ_LINHA
@@ -385,75 +392,79 @@ Static Function fGrvDados()
 
 	Local nPosDel	:=	Len(_oGetDados:aHeader) + 1	
 
-	dbSelectArea('ZOZ')
-	For _nI	:=	1 to Len(_oGetDados:aCols)
+	If _msCtrlAlt
 
-		If _oGetDados:aCols[_nI,nPosRec] > 0
+		dbSelectArea('ZOZ')
+		For _nI	:=	1 to Len(_oGetDados:aCols)
 
-			ZOZ->(dbGoTo(_oGetDados:aCols[_nI,nPosRec]))
-			Reclock("ZOZ",.F.)
-			If !_oGetDados:aCols[_nI,nPosDel]
+			If _oGetDados:aCols[_nI,nPosRec] > 0
 
-				For _msc := 1 to Len(_oGetDados:aHeader)
+				ZOZ->(dbGoTo(_oGetDados:aCols[_nI,nPosRec]))
+				Reclock("ZOZ",.F.)
+				If !_oGetDados:aCols[_nI,nPosDel]
 
-					If _oGetDados:aHeader[_msc][10] == "R" .and. _oGetDados:aHeader[_msc][8] <> "D" 
+					For _msc := 1 to Len(_oGetDados:aHeader)
 
-						nPosColG := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == Alltrim(_oGetDados:aHeader[_msc][2])})
-						&("ZOZ->" + Alltrim(_oGetDados:aHeader[_msc][2])) := _oGetDados:aCols[_nI, nPosColG]
+						If _oGetDados:aHeader[_msc][10] == "R" .and. _oGetDados:aHeader[_msc][8] <> "D" 
 
-					ElseIf _oGetDados:aHeader[_msc][10] == "R" .and. _oGetDados:aHeader[_msc][8] == "D"
+							nPosColG := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == Alltrim(_oGetDados:aHeader[_msc][2])})
+							&("ZOZ->" + Alltrim(_oGetDados:aHeader[_msc][2])) := _oGetDados:aCols[_nI, nPosColG]
 
-						nPosColG := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == Alltrim(_oGetDados:aHeader[_msc][2])})
-						&("ZOZ->" + Alltrim(_oGetDados:aHeader[_msc][2])) := IIF( Valtype(_oGetDados:aCols[_nI, nPosColG]) == "D", _oGetDados:aCols[_nI, nPosColG], ctod(_oGetDados:aCols[_nI, nPosColG]) )
+						ElseIf _oGetDados:aHeader[_msc][10] == "R" .and. _oGetDados:aHeader[_msc][8] == "D"
 
-					EndIf
+							nPosColG := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == Alltrim(_oGetDados:aHeader[_msc][2])})
+							&("ZOZ->" + Alltrim(_oGetDados:aHeader[_msc][2])) := IIF( Valtype(_oGetDados:aCols[_nI, nPosColG]) == "D", _oGetDados:aCols[_nI, nPosColG], ctod(_oGetDados:aCols[_nI, nPosColG]) )
 
-				Next _msc
+						EndIf
 
-			Else
+					Next _msc
 
-				ZOZ->(DbDelete())
+				Else
 
-			EndIf
+					ZOZ->(DbDelete())
 
-			ZOZ->(MsUnlock())
-
-		Else
-
-			If !_oGetDados:aCols[_nI,nPosDel]
-
-				Reclock("ZOZ",.T.)
-
-				ZOZ->ZOZ_FILIAL  := xFilial("ZOZ")
-				ZOZ->ZOZ_VERSAO  := _cVersao
-				ZOZ->ZOZ_REVISA  := _cRevisa
-				ZOZ->ZOZ_ANOREF  := _cAnoRef
-				ZOZ->ZOZ_ORIPRC  := "CONTABIL"
-				ZOZ->ZOZ_LOTE    := "004100"
-				ZOZ->ZOZ_SBLOTE  := "001"
-				For _msc := 1 to Len(_oGetDados:aHeader)
-
-					If _oGetDados:aHeader[_msc][10] == "R" .and. _oGetDados:aHeader[_msc][8] <> "D"
-
-						nPosColG := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == Alltrim(_oGetDados:aHeader[_msc][2])})
-						&("ZOZ->" + Alltrim(_oGetDados:aHeader[_msc][2])) := _oGetDados:aCols[_nI, nPosColG]
-
-					ElseIf _oGetDados:aHeader[_msc][10] == "R" .and. _oGetDados:aHeader[_msc][8] == "D"
-
-						nPosColG := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == Alltrim(_oGetDados:aHeader[_msc][2])})
-						&("ZOZ->" + Alltrim(_oGetDados:aHeader[_msc][2])) := IIF( Valtype(_oGetDados:aCols[_nI, nPosColG]) == "D", _oGetDados:aCols[_nI, nPosColG], ctod(_oGetDados:aCols[_nI, nPosColG]) )
-
-					EndIf
-
-				Next _msc
+				EndIf
 
 				ZOZ->(MsUnlock())
 
+			Else
+
+				If !_oGetDados:aCols[_nI,nPosDel]
+
+					Reclock("ZOZ",.T.)
+
+					ZOZ->ZOZ_FILIAL  := xFilial("ZOZ")
+					ZOZ->ZOZ_VERSAO  := _cVersao
+					ZOZ->ZOZ_REVISA  := _cRevisa
+					ZOZ->ZOZ_ANOREF  := _cAnoRef
+					ZOZ->ZOZ_ORIPRC  := "FORECAST-M"
+					ZOZ->ZOZ_LOTE    := "004100"
+					ZOZ->ZOZ_SBLOTE  := "001"
+					For _msc := 1 to Len(_oGetDados:aHeader)
+
+						If _oGetDados:aHeader[_msc][10] == "R" .and. _oGetDados:aHeader[_msc][8] <> "D"
+
+							nPosColG := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == Alltrim(_oGetDados:aHeader[_msc][2])})
+							&("ZOZ->" + Alltrim(_oGetDados:aHeader[_msc][2])) := _oGetDados:aCols[_nI, nPosColG]
+
+						ElseIf _oGetDados:aHeader[_msc][10] == "R" .and. _oGetDados:aHeader[_msc][8] == "D"
+
+							nPosColG := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == Alltrim(_oGetDados:aHeader[_msc][2])})
+							&("ZOZ->" + Alltrim(_oGetDados:aHeader[_msc][2])) := IIF( Valtype(_oGetDados:aCols[_nI, nPosColG]) == "D", _oGetDados:aCols[_nI, nPosColG], ctod(_oGetDados:aCols[_nI, nPosColG]) )
+
+						EndIf
+
+					Next _msc
+
+					ZOZ->(MsUnlock())
+
+				EndIf
+
 			EndIf
 
-		EndIf
+		Next
 
-	Next
+	EndIf
 
 	_cVersao        := SPACE(TAMSX3("ZOZ_VERSAO")[1])
 	_cRevisa        := SPACE(TAMSX3("ZOZ_REVISA")[1])
@@ -464,7 +475,15 @@ Static Function fGrvDados()
 	_oGetDados:Refresh()
 	_oDlg:Refresh()
 
-	MsgInfo("Registro Incluído com Sucesso!")
+	If _msCtrlAlt
+
+		MsgInfo("Registro Incluído com Sucesso!")
+
+	Else
+
+		MsgALERT("Nenhum registro foi atualizado!")
+
+	EndIf
 
 Return
 

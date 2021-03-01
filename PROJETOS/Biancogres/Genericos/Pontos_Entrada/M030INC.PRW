@@ -6,20 +6,15 @@
 @since 14/07/17
 @version 1.0
 @description Atualiza variavel publica cCliBZ com o código do Cliente cadastrado para o processo BIZAGI
-@obs Alteração e unificacao na funcao que define o Grupo de Tributacao
+@history 18/02/2021, Ranisses A. Corona, Alteração e unificacao na funcao que define o Grupo de Tributacao
+@history 18/02/2021, Ranisses A. Corona, Criacao da funcao de fRegCobr
 @type function
 /*/
 
 User Function M030INC()    
+Local aCodReg := {}
 
 CONOUT('Iniciando o M030INC...')
-
-/*
-If !Type("M->A1_COD") == "U" .And. cCliBZ <> M->A1_COD
-	cCliBZ := M->A1_COD //Codigo do Cliente para o Sistema BIZAGI
-	CONOUT('Gravando cCliBZ=>'+cCliBZ)	
-EndIf
-*/
 
 //Grava variaveis adicionais no cadastro de cliente
 If !Type("M->A1_COD") == "U"  
@@ -40,12 +35,9 @@ If !Type("M->A1_COD") == "U"
 EndIf
 
 If PARAMIXB <> 3
-	If SA1->A1_GRPVEN $ ('000010|000938|000380|000026|001307') .Or. SA1->A1_COD $ ('010083|004536|007871|026308|026423|018410|014395|018714|008615|028071')
-		SA1->A1_YCDGREG := "000023"
-	ElseIf SA1->A1_EST $ ('SP|RJ')
-		SA1->A1_YCDGREG := "000025"
-	EndIf
-	SA1->A1_YFORMA := U_valYFORMA(cEmpAnt, SA1->A1_YCDGREG)
+	aCodReg			:= U_fRegCobr(Alltrim(M->A1_EST),Alltrim(M->A1_CGC),Alltrim(M->A1_GRPVEN),Alltrim(M->A1_COD))			
+	SA1->A1_YCDGREG	:= aCodReg[2]
+	SA1->A1_YFORMA	:= U_valYFORMA(cEmpAnt, aCodReg[2])
 EndIf
 
 Return

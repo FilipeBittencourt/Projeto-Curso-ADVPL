@@ -14,6 +14,7 @@ User Function BIAF169()
 Private aRotina := {}
 Private cCadastro := "Orçamento Clvl"
 Private cAlias := "ZMC"
+Private oObj := TWOrcamentoClvl():New()
 
 	aAdd(aRotina, {"Pesquisar" , "PesqBrw", 0, 1})
 	aAdd(aRotina, {"Visualizar", "U_BIAF169A", 0, 2})
@@ -30,13 +31,12 @@ Return()
 
 
 User Function BIAF169A(cAlias, nRecno, nOpc)
-Local oObj := TWOrcamentoClvl():New()
 		
 	If nOpc == 2 .Or. nOpc == 4 .Or. nOpc == 5 
 
-		oObj:cCodigo := ZMA->ZMA_CODIGO
-		oObj:cClvl := ZMA->ZMA_CLVL
-		oObj:cItemCta := ZMA->ZMA_ITEMCT
+		oObj:cCodigo := ZMC->ZMC_CODIGO
+		oObj:cClvl := ZMC->ZMC_CLVL
+		oObj:cItemCta := ZMC->ZMC_ITEMCT
 			
 	EndIf
 	
@@ -45,3 +45,58 @@ Local oObj := TWOrcamentoClvl():New()
 	oObj:Activate()
 		
 Return()
+
+
+User Function BIAF169B()
+Local lRet := .T.
+Local cMField := ReadVar()
+Local cMoeda := GdFieldGet("ZMD_MOEDA", n, .T.)
+Local nValor := GdFieldGet("ZMD_VALOR", n, .T.)
+Local nQuant := GdFieldGet("ZMD_QUANT", n, .T.)
+Local nTotal := 0
+
+	If cMField == "M->ZMD_VALOR" .Or. cMField == "M->ZMD_QUANT" .Or. cMField == "M->ZMD_MOEDA"
+				
+		If cMoeda == "2"
+			
+			nValor := nValor * M->ZMC_DOLAR
+		
+		ElseIf cMoeda == "3"
+		
+			nValor := nValor * M->ZMC_LIBRA
+			
+		ElseIf cMoeda == "4"
+		
+			nValor := nValor * M->ZMC_EURO	
+		
+		EndIf
+		
+		If nValor > 0
+		
+			nTotal := Round(nValor * nQuant, TamSX3("ZMD_TOTAL")[2])
+			
+			GdFieldPut("ZMD_TOTAL", nTotal, n)
+			
+		EndIf
+		
+	ElseIf cMField == "M->ZMD_SUBITE"
+
+		oObjSub := TSubitemProjeto():New()
+
+		oObjSub:cClvl := M->ZMC_CLVL
+		oObjSub:cItemCta := M->ZMC_ITEMCT
+		oObjSub:cSubItem := GdFieldGet("ZMD_SUBITE", n, .T.)
+	
+		If oObjSub:Validate()
+			
+			GdFieldPut("ZMD_DESC", oObjSub:GetDesc(), n)
+			
+		Else
+			
+			lRet := .F.
+		
+		EndIf
+		
+	EndIf	
+			
+Return(lRet)

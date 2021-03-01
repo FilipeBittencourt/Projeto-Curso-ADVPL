@@ -397,10 +397,10 @@ Return()
 User Function B597FOK()
 
 	Local cMenVar    := ReadVar()
-	Local vfArea     := GetArea()
-	Local _cAlias
+*	Local vfArea     := GetArea()
+*	Local _cAlias
 	Local _nAt       := _oGetDados:nAt
-	Local _nI
+*	Local _nI
 	Local isDC       := ""
 	Local isDEBITO   := ""
 	Local isCREDIT   := ""
@@ -975,8 +975,8 @@ Static Function fProcImport()
 	Local cTabImp			:= 'ZO2'
 	Local aItem 			:= {}
 	Local aLinha			:= {}
-	Local aErro				:= {}
-	Local cErro 			:= ''
+*	Local aErro				:= {}
+*	Local cErro 			:= ''
 	Local nImport			:= 0
 	Local cConteudo			:= ''
 	Local nTotLin			:= 0
@@ -1105,3 +1105,11 @@ Static Function fProcImport()
 	RestArea(aArea)
 
 Return()
+
+static procedure __Dummy()
+	if (.F.)
+		__Dummy()
+		fBIA597D()
+		fBIA597G()
+	endif
+	return

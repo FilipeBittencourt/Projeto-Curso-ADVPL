@@ -1,0 +1,92 @@
+#include "totvs.ch"
+#include "fwmvcdef.ch"
+
+function u_BIA636MVCGRID()
+    local aParameter    as array
+    local xRet
+    begin sequence
+        if (!type("ParamIXB")=="A")
+            break
+        endif
+        aParameter:=&("ParamIXB")
+        xRet:=BIA636MVCGRID(aParameter)
+    end sequence
+    DEFAULT xRet:=.T.
+    return(xRet)
+
+static function BIA636MVCGRID(aParameter as array)
+
+    local cIdPonto      as character
+    local cIdModel      as character
+
+    local nOperation    as numeric
+
+    local oObj          as object
+
+    local xRet
+
+    begin sequence
+
+        oObj:=aParameter[1]
+        cIdPonto:=aParameter[2]
+        cIdModel:=aParameter[3]
+
+        if (cIdPonto=="MODELPOS")
+            nOperation:=oObj:GetOperation()
+            if (nOperation==5)
+                break
+            endif
+            xRet:=.T.
+            break
+        endif
+
+        if (cIdPonto=="FORMPOS")
+            xRet:=.T.
+            break
+        endif
+
+        if (cIdPonto=="FORMLINEPRE")
+            if ((len(aParameter)>=5).and.(aParameter[5]=="DELETE"))
+                xRet:=.T.
+            endif
+            break
+        endif
+
+        if (cIdPonto=="FORMLINEPOS")
+            xRet:=.T.
+            break
+        endif
+
+        if (cIdPonto=="MODELCOMMITTTS")
+            xRet:=.T.
+            break
+        endif
+
+        if (cIdPonto=="MODELCOMMITNTTS")
+            xRet:=.T.
+            break
+        endif
+
+        if (cIdPonto=="FORMCOMMITTTSPRE")
+            xRet:=.T.
+            break
+        endif
+
+        if (cIdPonto=="FORMCOMMITTTSPOS")
+            xRet:=.T.
+            break
+        endif
+
+        if (cIdPonto=="MODELCANCEL")
+            xRet:=.T.
+            break
+        endif
+
+        if (cIdPonto=="BUTTONBAR")
+            xRet:=array(0)
+            break
+        endif
+
+    end sequence
+
+    return(xRet)

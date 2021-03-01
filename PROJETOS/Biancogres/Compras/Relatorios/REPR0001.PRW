@@ -123,6 +123,7 @@ Static Function MontaLinhas()
 	cQuery += "       AND ZI_EMISSAO BETWEEN '" + DTOS(dDataDe) + "' AND '" + DTOS(dDataAte) + "' "
 	cQuery += "       AND ZI_DOC BETWEEN '" + cDocDe + "' AND '" + cDocAte + "' "
 	cQuery += "       AND ZI_MATRIC BETWEEN '" + cMatDe + "' AND '" + cMatAte + "' "
+	cQuery += "       AND (LEN(ZI.ZI_RFIDCAL) < 15)	"
 	cQuery += " ORDER BY ZI_EMISSAO "
 
 	TcQuery cQuery New Alias (cAliasTemp)

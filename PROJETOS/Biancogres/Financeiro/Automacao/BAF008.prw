@@ -10,23 +10,47 @@
 @type function
 /*/
 
-User Function BAF008()
-Local oParam := TParBAF008():New()
-Local oObj := TAFRemessaReceber():New()
+Function U_BAF008()
 	
-	oParam:dEmissaoDe := oObj:oMrr:dEmissaoDe
-	oParam:dEmissaoAte := oObj:oMrr:dEmissaoAte
+	Local aArea		as array
+	Local aAreaSA1	as array
+
+	Local cSA1Order	as character
 	
-	//oParam:dEmissaoDe := STOD("20191201")
-	//oParam:dEmissaoAte := STOD("20191214")
-	//oObj:oMrr:lReproc := .T.
+	Local nSA1Order	as numeric
+
+	Local oObj		as object
+	Local oParam	as object
+
+	aArea:=getArea()
+	aAreaSA1:=SA1->(getArea())
 			
-	If oParam:Box()
-					
+	oObj:=TAFRemessaReceber():New()
+
+	oParam:=TParBAF008():New()
+
+	oParam:dEmissaoDe:=oObj:oMrr:dEmissaoDe
+	oParam:dEmissaoAte:=oObj:oMrr:dEmissaoAte
+
+	If (oParam:Box())
+
+		if (FIDC():isFIDCEnabled())
+			cSA1Order:="A1_FILIAL+A1_COD+A1_LOJA"
+			nSA1Order:=RetOrder("SA1",cSA1Order)
+			SA1->(dbSetOrder(nSA1Order))
+			if (SA1->(MsSeek(xFilial("SA1")+oParam:cCliente+oParam:cLoja)))
+				FIDC():setFIDCVar("A1_YCDGREG",SA1->A1_YCDGREG)
+				oObj:oMrr:lFIDC:=FIDC():regrabcoIsFIDC()
+			endif
+		endif
+
 		U_BIAMsgRun("Processando remessa de títulos - [API Facile.Net]...", "Aguarde!", {|| fProcess(oParam, oObj) })
 				
 	EndIf
-	
+
+	restArea(aAreaSA1)
+	restArea(aArea)
+
 Return()
 
 

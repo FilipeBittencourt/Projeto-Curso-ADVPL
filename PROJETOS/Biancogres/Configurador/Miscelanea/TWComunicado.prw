@@ -8,6 +8,7 @@
 @description Classe para envio de comunicados
 @obs Ticket: 11376
 @history 12/11/2019, Ranisses A. Corona, Melhoria para considerar o envio do e-mail para somente os cliente ativos.
+@history 19/02/2021, Ranisses A. Corona, Envio comunicado FIDC.
 @type class
 /*/
 
@@ -296,9 +297,9 @@ Local cQry := GetNextAlias()
 
 	While !(cQry)->(Eof())	
 		
-		::oMail:cTo := AllTrim((cQry)->EMAIL)
-		::oMail:cSubject := ::cTitle
-		::oMail:cBody := ::GetHtml()
+		::oMail:cTo			:= AllTrim((cQry)->EMAIL)
+		::oMail:cSubject	:= ::cTitle
+		::oMail:cBody		:= ::GetHtml()
 	
 		::oMail:Send()		
 
@@ -321,30 +322,33 @@ Local cSQL := ""
 		cSQL += " WITH TBLCLIENTE AS "
 		cSQL += " (SELECT E1_CLIENTE AS CLIENTE, E1_LOJA AS LOJA "
 		cSQL += " FROM SE1010 WITH (NOLOCK) " 
-		cSQL += " WHERE E1_EMISSAO >= CONVERT(varchar,DATEADD(d,-365,GETDATE()),112) AND "
+		//cSQL += " WHERE E1_EMISSAO >= CONVERT(varchar,DATEADD(d,-365,GETDATE()),112) AND "
+		cSQL += " WHERE E1_EMISSAO >= CONVERT(varchar,DATEADD(d,-90,GETDATE()),112) AND "
 		cSQL += " 	  E1_TIPO IN ('NF','FT') AND "
 		cSQL += " 	  D_E_L_E_T_ = '' "
 		cSQL += " GROUP BY E1_CLIENTE, E1_LOJA "
 		cSQL += " UNION "
 		cSQL += " SELECT E1_CLIENTE, E1_LOJA "
 		cSQL += " FROM SE1050 WITH (NOLOCK) "
-		cSQL += " WHERE E1_EMISSAO >= CONVERT(varchar,DATEADD(d,-365,GETDATE()),112) AND "
+		//cSQL += " WHERE E1_EMISSAO >= CONVERT(varchar,DATEADD(d,-365,GETDATE()),112) AND "
+		cSQL += " WHERE E1_EMISSAO >= CONVERT(varchar,DATEADD(d,-90,GETDATE()),112) AND "		
 		cSQL += " 	  E1_TIPO IN ('NF','FT') AND "
 		cSQL += " 	  D_E_L_E_T_ = '' "
 		cSQL += " GROUP BY E1_CLIENTE, E1_LOJA "
 		cSQL += " UNION "
 		cSQL += " SELECT E1_CLIENTE, E1_LOJA "
 		cSQL += " FROM SE1070 WITH (NOLOCK) "
-		cSQL += " WHERE E1_EMISSAO >= CONVERT(varchar,DATEADD(d,-365,GETDATE()),112) AND " 
+		//cSQL += " WHERE E1_EMISSAO >= CONVERT(varchar,DATEADD(d,-365,GETDATE()),112) AND "
+		cSQL += " WHERE E1_EMISSAO >= CONVERT(varchar,DATEADD(d,-90,GETDATE()),112) AND "		 
 		cSQL += " 	  E1_TIPO IN ('NF','FT') AND "
 		cSQL += " 	  D_E_L_E_T_ = '' "
 		cSQL += " GROUP BY E1_CLIENTE, E1_LOJA) "	
-		cSQL += " SELECT LOWER(RTRIM(LTRIM(A1_EMAIL))) AS EMAIL "
+		cSQL += " SELECT LOWER(RTRIM(LTRIM(A1_YEMABOL))) AS EMAIL "
 		cSQL += " FROM " + RetSQLName("SA1") + " INNER JOIN TBLCLIENTE ON A1_COD = CLIENTE AND A1_LOJA = LOJA "
-		cSQL += " WHERE A1_MSBLQL <> '1' "
-		cSQL += " AND A1_EMAIL <> '' " "
-		cSQL += " AND D_E_L_E_T_ = '' "
-		cSQL += " GROUP BY A1_EMAIL "
+		//cSQL += " WHERE A1_MSBLQL <> '1' AND A1_EMAIL <> '' AND D_E_L_E_T_ = '' "
+		cSQL += " WHERE A1_YCDGREG = '000029' AND A1_MSBLQL <> '1' AND A1_YEMABOL <> '' AND D_E_L_E_T_ = '' "
+		//cSQL += " GROUP BY A1_EMAIL "
+		cSQL += " GROUP BY A1_YEMABOL "
 		
 	ElseIf cSelOpt == "2"
 

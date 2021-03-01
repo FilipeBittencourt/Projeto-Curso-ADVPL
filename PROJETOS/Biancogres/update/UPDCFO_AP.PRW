@@ -84,11 +84,11 @@ Return
 */
 Static Function AtuCfoP()
 
-Local cQuery    := ""
+*Local cQuery    := ""
 Local cFiltro   := ""
 Local cIndex    := ""
 Local nIndex
-Local cAliasSC6 := ""
+*Local cAliasSC6 := ""
 Local aArea := GetArea()
 
 dbSelectArea("SC6")
@@ -160,3 +160,12 @@ ProcRegua(RecCount())
 RestArea(aArea)
 	
 Return
+
+static procedure __Dummy()
+
+	if (.F.)
+		__Dummy()
+		FisProcCfo()
+	endif
+
+	return	

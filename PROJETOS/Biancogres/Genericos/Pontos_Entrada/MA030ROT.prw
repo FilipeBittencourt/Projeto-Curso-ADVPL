@@ -23,6 +23,8 @@ User Function MA030ROT()
 		// Tiago Rossini Coradini - 02/05/16 - OS: 4647-15 - Vagner Amaro - Consulta CCB
 		aAdd(aRetorno, {"Consulta CCB", "U_BIAF033(SA1->A1_COD, SA1->A1_LOJA)", 2, 0})
 		
+		aAdd(aRetorno, {"Politica de Crédito", "U_BIAF148(SA1->A1_COD, SA1->A1_LOJA)", 2, 0})
+		
 	EndIf
 	
 

@@ -95,6 +95,7 @@ Static Function RptDetail()
 	A0001 += "               AND D3_COD = B1_COD
 	A0001 += "               AND D3_EMISSAO BETWEEN '"+dtos(MV_PAR05)+"' AND '"+dtos(MV_PAR06)+"'
 	A0001 += "               AND D3_TM <= '500'
+	A0001 += "               AND D3_CF <> 'DE4'
 	A0001 += "               AND D3_LOCAL IN ("+xLike+")
 	A0001 += "               AND D3_ESTORNO <> 'S'
 	A0001 += "               AND SD3.D_E_L_E_T_ = ' '), 0)
@@ -124,6 +125,7 @@ Static Function RptDetail()
 	A0001 += "               AND D3_COD = B1_COD
 	A0001 += "               AND D3_EMISSAO BETWEEN '"+dtos(MV_PAR05)+"' AND '"+dtos(MV_PAR06)+"'
 	A0001 += "               AND D3_TM > '500'
+	A0001 += "               AND D3_CF <> 'RE4'
 	A0001 += "               AND D3_LOCAL IN ("+xLike+")
 	A0001 += "               AND D3_ESTORNO <> 'S'
 	A0001 += "               AND SD3.D_E_L_E_T_ = ' '), 0)
@@ -143,6 +145,74 @@ Static Function RptDetail()
 		A0001 += "                                                          AND SD3.D_E_L_E_T_ = ' '), 0) 
 	EndIf
 	A0001 += " MI_SAI, "
+	If MV_PAR08 == 1
+		A0001 += "        ISNULL((SELECT SUM(D3_QUANT)
+	Else
+		A0001 += "        ISNULL((SELECT SUM(D3_CUSTO1)
+	EndIf
+	A0001 += "              FROM "+RetSqlName("SD3")+" SD3
+	A0001 += "             WHERE D3_FILIAL = '"+xFilial("SD3")+"'
+	A0001 += "               AND D3_COD = B1_COD
+	A0001 += "               AND D3_EMISSAO BETWEEN '"+dtos(MV_PAR05)+"' AND '"+dtos(MV_PAR06)+"'
+	A0001 += "               AND D3_TM <= '500'
+	A0001 += "               AND D3_CF = 'DE4'	
+    A0001 += "    			 AND NOT ( D3_COD < '2'
+    A0001 += "    			 AND D3_TIPO NOT IN('PP', 'PA', 'MC', 'OI', 'PC', 'ME'))
+	A0001 += "               AND D3_LOCAL IN ("+xLike+")
+	A0001 += "               AND D3_ESTORNO <> 'S'
+	A0001 += "               AND SD3.D_E_L_E_T_ = ' '), 0)
+	A0001 += " TR_ENT, "
+	If MV_PAR08 == 1
+		A0001 += "        ISNULL((SELECT SUM(D3_QUANT)
+	Else
+		A0001 += "        ISNULL((SELECT SUM(D3_CUSTO1)
+	EndIf
+	A0001 += "              FROM "+RetSqlName("SD3")+" SD3
+	A0001 += "             WHERE D3_FILIAL = '"+xFilial("SD3")+"'
+	A0001 += "               AND D3_COD = B1_COD
+	A0001 += "               AND D3_EMISSAO BETWEEN '"+dtos(MV_PAR05)+"' AND '"+dtos(MV_PAR06)+"'
+	A0001 += "               AND D3_TM > '500'
+	A0001 += "               AND D3_CF = 'RE4'	
+    A0001 += "    			 AND NOT ( D3_COD < '2'
+    A0001 += "    			 AND D3_TIPO NOT IN('PP', 'PA', 'MC', 'OI', 'PC', 'ME'))
+	A0001 += "               AND D3_LOCAL IN ("+xLike+")
+	A0001 += "               AND D3_ESTORNO <> 'S'
+	A0001 += "               AND SD3.D_E_L_E_T_ = ' '), 0)
+	A0001 += " TR_SAI, "
+	If MV_PAR08 == 1
+		A0001 += "        ISNULL((SELECT SUM(D3_QUANT)
+	Else
+		A0001 += "        ISNULL((SELECT SUM(D3_CUSTO1)
+	EndIf
+	A0001 += "              FROM "+RetSqlName("SD3")+" SD3
+	A0001 += "             WHERE D3_FILIAL = '"+xFilial("SD3")+"'
+	A0001 += "               AND D3_COD = B1_COD
+	A0001 += "               AND D3_EMISSAO BETWEEN '"+dtos(MV_PAR05)+"' AND '"+dtos(MV_PAR06)+"'
+	A0001 += "               AND D3_TM <= '500'
+	A0001 += "               AND D3_CF = 'DE4'	
+    A0001 += "    			 AND D3_COD < '2'
+    A0001 += "    			 AND D3_TIPO NOT IN('PP', 'PA', 'MC', 'OI', 'PC', 'ME')
+	A0001 += "               AND D3_LOCAL IN ("+xLike+")
+	A0001 += "               AND D3_ESTORNO <> 'S'
+	A0001 += "               AND SD3.D_E_L_E_T_ = ' '), 0)
+	A0001 += " ADC_ENT, "
+	If MV_PAR08 == 1
+		A0001 += "        ISNULL((SELECT SUM(D3_QUANT)
+	Else
+		A0001 += "        ISNULL((SELECT SUM(D3_CUSTO1)
+	EndIf
+	A0001 += "              FROM "+RetSqlName("SD3")+" SD3
+	A0001 += "             WHERE D3_FILIAL = '"+xFilial("SD3")+"'
+	A0001 += "               AND D3_COD = B1_COD
+	A0001 += "               AND D3_EMISSAO BETWEEN '"+dtos(MV_PAR05)+"' AND '"+dtos(MV_PAR06)+"'
+	A0001 += "               AND D3_TM > '500'
+	A0001 += "               AND D3_CF = 'RE4'	
+    A0001 += "    			 AND D3_COD < '2'
+    A0001 += "    			 AND D3_TIPO NOT IN('PP', 'PA', 'MC', 'OI', 'PC', 'ME')
+	A0001 += "               AND D3_LOCAL IN ("+xLike+")
+	A0001 += "               AND D3_ESTORNO <> 'S'
+	A0001 += "               AND SD3.D_E_L_E_T_ = ' '), 0)
+	A0001 += " ADC_SAI, "
 	If MV_PAR08 == 1
 		A0001 += "        ISNULL((SELECT SUM(D1_QUANT)
 	Else
@@ -255,9 +325,11 @@ Static Function RptDetail()
 			Next hhi
 		EndIf
 
-		ko_SalAtu := gh_SalAnt + A001->MI_ENT - A001->MI_SAI + A001->NF_ENT - A001->NF_SAI
-		If gh_SalAnt <> 0 .or. A001->MI_ENT <> 0 .or. A001->MI_SAI <> 0 .or. A001->NF_ENT <> 0 .or. A001->NF_SAI <> 0 .Or. A001->SAL_FECH
-
+		ko_SalAtu := gh_SalAnt + A001->MI_ENT - A001->MI_SAI + A001->NF_ENT - A001->NF_SAI + A001->TR_ENT - A001->TR_SAI; 
+			+ A001->ADC_ENT - A001->ADC_SAI
+		If gh_SalAnt <> 0 .or. A001->MI_ENT <> 0 .or. A001->MI_SAI <> 0 .or. A001->NF_ENT <> 0 .or. A001->NF_SAI <> 0 .Or. A001->SAL_FECH ;
+			.Or. A001->TR_ENT <> 0 .or. A001->TR_SAI <> 0 .OR. A001->ADC_ENT <> 0 .Or. A001->ADC_SAI <> 0
+ 
 			aAdd(aDados2, { "DE "+dtoc(MV_PAR05)+" ATÉ "+dtoc(MV_PAR06),;
 			IIF(ValType(A001->PRODUTO) == "C", A001->PRODUTO, A001->PRODUTO),;
 			A001->DESCRIC,;
@@ -267,6 +339,10 @@ Static Function RptDetail()
 			Transform(gh_SalAnt   ,"@E 999,999,999.99999999"),;
 			Transform(A001->MI_ENT,"@E 999,999,999.99999999"),;
 			Transform(A001->MI_SAI,"@E 999,999,999.99999999"),;
+			Transform(A001->TR_ENT,"@E 999,999,999.99999999"),;
+			Transform(A001->TR_SAI,"@E 999,999,999.99999999"),;
+			Transform(A001->ADC_ENT,"@E 999,999,999.99999999"),;
+			Transform(A001->ADC_SAI,"@E 999,999,999.99999999"),;
 			Transform(A001->NF_ENT,"@E 999,999,999.99999999"),;
 			Transform(A001->NF_SAI,"@E 999,999,999.99999999"),;
 			Transform(ko_SalAtu   ,"@E 999,999,999.99999999"),;

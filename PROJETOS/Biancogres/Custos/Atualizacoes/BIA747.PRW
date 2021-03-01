@@ -86,7 +86,7 @@ Static Function RptDetail()
 			fgPermDg := .T.
 
 			msCtaPA := ""
-			If cEmpAnt == "01"
+			If cEmpAnt $ "01/05/07/13/14"
 
 				msCtaPA := "11306001"
 

@@ -105,6 +105,7 @@ Static Function fBIA386A()
 			stod(ZB5_DTCONS),;
 			stod(ZB5_DTENCR),;
 			ZB5_DRVATV,;
+			ZB5_VERCON,;
 			"ZB5",;
 			R_E_C_N_O_,;
 			.F.	}))
@@ -138,6 +139,7 @@ Static Function fGrvDados()
 	Local _mDTCONS := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZB5_DTCONS"})
 	Local _mDTENCR := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZB5_DTENCR"})
 	Local _mDRVATV := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZB5_DRVATV"})
+	Local _mVERCON := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZB5_VERCON"})
 
 	Local nPosDel	:=	Len(_oGetDados:aHeader) + 1	
 
@@ -158,6 +160,7 @@ Static Function fGrvDados()
 				ZB5->ZB5_DTCONS := _oGetDados:aCols[_nI,_mDTCONS]
 				ZB5->ZB5_DTENCR := _oGetDados:aCols[_nI,_mDTENCR]
 				ZB5->ZB5_DRVATV := _oGetDados:aCols[_nI,_mDRVATV]
+				ZB5->ZB5_VERCON := _oGetDados:aCols[_nI,_mVERCON]
 				ZB5->ZB5_TPORCT := Alltrim(_nComboBox1)
 
 			Else
@@ -182,6 +185,7 @@ Static Function fGrvDados()
 				ZB5->ZB5_DTCONS := _oGetDados:aCols[_nI,_mDTCONS]
 				ZB5->ZB5_DTENCR := _oGetDados:aCols[_nI,_mDTENCR]
 				ZB5->ZB5_DRVATV := _oGetDados:aCols[_nI,_mDRVATV]
+				ZB5->ZB5_VERCON := _oGetDados:aCols[_nI,_mVERCON]
 				ZB5->ZB5_TPORCT := Alltrim(_nComboBox1)
 				ZB5->(MsUnlock())
 
@@ -213,9 +217,28 @@ User Function B386FOK()
 	Local _gbANOREF := ""
 	Local _gbStatus := GdFieldGet("ZB5_STATUS",_nAt)
 
-	If _gbStatus == "F" .and. !(Alltrim(cMenVar) == "M->ZB5_DRVATV" .AND. Alltrim(_nComboBox1) == "CONTABIL")
+	If Alltrim(_nComboBox1) == "CONTABIL" .and. Alltrim(cMenVar) == "M->ZB5_VERCON"
 
-		MsgSTOP("Status da versão orçamentária fechado por rotina automática. Não é permitido reabrí-lo!!!")
+		If _gbStatus <> "F" 
+
+			MsgSTOP("Não é permitida alteração neste campo enquanto a Versão estiver aberta!!!", "BIA386(a)")
+			Return .F.
+
+		Else
+
+			ZOY->(dbSetORder(1))
+			If !ZOY->(dbSeek(xFilial("ZOY") + M->ZB5_VERCON))
+
+				MsgSTOP("Versão contábil inexistente. Favor solecionar um registros válido!!!", "BIA386(b)")
+				Return .F.
+
+			EndIf
+
+		EndIf
+
+	ElseIf _gbStatus == "F" .and. !(Alltrim(cMenVar) == "M->ZB5_DRVATV" .AND. Alltrim(_nComboBox1) == "CONTABIL")
+
+		MsgSTOP("Status da versão orçamentária fechado por rotina automática. Não é permitido reabrí-lo!!!", "BIA386(c)")
 		Return .F.
 
 	Else

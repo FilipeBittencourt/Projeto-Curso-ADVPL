@@ -1,6 +1,12 @@
 #INCLUDE "TOTVS.CH"
 #INCLUDE "TOPCONN.CH"
 
+function u_dummy637()
+	if (.F.)
+		BIA637()
+	endif
+	return
+
 /*/{Protheus.doc} BIA637
 @author Wlysses Cerqueira (Facile)
 @since 18/12/2020
@@ -10,7 +16,7 @@
 @type function
 /*/
 
-User Function BIA637()
+static Function BIA637()
 
 	Local oEmp 	:= Nil
 	Local nW	:= 0

@@ -58,6 +58,7 @@ Class TAFApiBoleto from LongClassName
 	Data MsgLiv3 
 	
 	Data RecAnt
+	Data ChaveNFE
 	
 	//VETOR DE CONVERSAO PROPRIEDADE PARA NOME LONGO API
 	Data aLstFields
@@ -113,6 +114,7 @@ Method New(cCodBanco, oCedente) Class TAFApiBoleto
 	::MsgLiv2 		:= Nil
 	::MsgLiv3 		:= Nil
 	::RecAnt  		:= .F.
+	::ChaveNFE		:= ""
 	
 	::aLstFields	:= TAFApiListFields():New
 
@@ -161,6 +163,7 @@ Method New(cCodBanco, oCedente) Class TAFApiBoleto
 	::aLstFields:AddField("MsgLiv3"		, "MensagemLivreLinha3")	
 	
 	::aLstFields:AddField("RecAnt"		, "RecebimentoAntecipado")
+	::aLstFields:AddField("ChaveNFE"		, "ChaveNFE")
 	
 	
 Return()

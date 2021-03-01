@@ -109,7 +109,7 @@ class tMultProcess
 
     private method addMeter() as numeric
     private method SetMeter(nMeter as numeric,nSet as numeric) as numeric
-	private method IncMeter(nMeter as numeric,nSet as numeric,lCalctime as logical) as numeric
+	private method IncMeter(nMeter as numeric,nSet as numeric,lRefresh as logical) as numeric
 
     public method __Break(lbAbort as logical)
     
@@ -344,10 +344,12 @@ method SetRegua(nMeter,nSet,lCalcTime) class tMultProcess
     endif
     return(nSet)
 
-method IncMeter(nMeter,nSet) class tMultProcess
+method IncMeter(nMeter,nSet,lRefresh) class tMultProcess
 
-    paramtype nMeter as numeric
-    paramtype nSet   as numeric
+    paramtype nMeter    as numeric
+    paramtype nSet      as numeric
+    DEFAULT lRefresh:=.T.
+    paramtype lRefresh  as logical
 
     if (self:lEnd)
         SysRefresh()
@@ -359,8 +361,8 @@ method IncMeter(nMeter,nSet) class tMultProcess
     else
         self:aMeters[nMeter][3]:Set(++nSet)
     endif
-    
-    if ((self:ltxtMultProcess).or.((nSet%10)==0))
+
+    if (lRefresh)
         self:aMeters[nMeter][3]:Refresh()
         SysRefresh()
     endif
@@ -374,7 +376,7 @@ method IncRegua(nMeter,cMsg,lRefresh,lCalctime) class tMultProcess
 
     paramtype nMeter    as numeric
     paramtype cMsg      as character optional
-    DEFAULT lRefresh:=.F.
+    DEFAULT lRefresh:=.T.
     paramtype lRefresh  as logical optional
     DEFAULT lCalctime:=if(self:lCalctime,.T.,.F.)
     paramtype lCalctime as logical optional
@@ -399,7 +401,7 @@ method IncRegua(nMeter,cMsg,lRefresh,lCalctime) class tMultProcess
         self:aMeters[nMeter][2]:=cMsg
         if (self:ltxtMultProcess)
             self:aMeters[nMeter][1]:Refresh()
-        elseif ((lRefresh).or.((self:aMeters[nMeter][5]==0).or.((self:aMeters[nMeter][5]%10)==0)))
+        elseif (lRefresh)
             self:aMeters[nMeter][1]:Refresh()
         endif
         self:IncMeter(@nMeter,@self:aMeters[nMeter][5])
@@ -411,7 +413,7 @@ method IncRegua(nMeter,cMsg,lRefresh,lCalctime) class tMultProcess
     return(nInc)
 
 method EvalAbort(bAbort) class tMultProcess
-    paramtype bAction as block
+    paramtype bAbort as block
     if (stackTools():IsInCallStack("EvalAction"))
         eval(bAbort,@self:lEnd,@self)
         self:__Break(.F.)

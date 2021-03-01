@@ -21,8 +21,13 @@ User Function BIAFG130()
 	Private mslOk       := .T.
 	Private msGravaErr  := ""
 
-	If cEmpAnt <> "90" .and. cFilAnt <> "90"
-		Msgbox("Esta rotina poderá ser utilizada somente na empresa 90 - Grupo Consolidado, filial 90.", "BIAFG130", "STOP")
+	If cEmpAnt <> "90"
+		Msgbox("Esta rotina poderá ser utilizada somente na empresa 90 - Grupo Consolidado.", "BIAFG130", "STOP")
+		Return
+	EndIf
+
+	If cEmpAnt == "90" .and. cFilAnt <> "01"
+		Msgbox("Esta rotina poderá ser utilizada somente na empresa 90 - Grupo Consolidado, Filial 01, devido as amarrações com as tabelas origens.", "BIAFG130", "STOP")
 		Return
 	EndIf
 
@@ -862,6 +867,9 @@ Static Function bRptFG130()
 					ZN3->ZN3_TPLANC	:=	ROTEIRO->ZN0_TPLANC	
 					ZN3->ZN3_VALOR	:=	_aRet[1]
 					ZN3->ZN3_FLAG	:=	"N"
+					ZN3->ZN3_EMPORI	:=	nEmpOri  // Verificar como mudar estas regras para os proximos meses. Em 07/02/21, por Marcos A.
+					ZN3->ZN3_EMPDES	:=	nEmpDes  // Verificar como mudar estas regras para os proximos meses. Em 07/02/21, por Marcos A.
+					ZN3->ZN3_TIPVAL	:=	""       // Verificar como mudar estas regras para os proximos meses. Em 07/02/21, por Marcos A.
 					ZN3->(MSUnlock())
 
 				EndIf
@@ -905,6 +913,9 @@ Static Function bRptFG130()
 					ZN3->ZN3_TPLANC	:=	ROTEIRO->ZN0_TPLANC	
 					ZN3->ZN3_VALOR	:=	_aRet[1]
 					ZN3->ZN3_FLAG	:=	"N"
+					ZN3->ZN3_EMPORI	:=	EMP->ZN4_EMPDES  // Verificar como mudar estas regras para os proximos meses. Em 07/02/21, por Marcos A.
+					ZN3->ZN3_EMPDES	:=	EMP->ZN4_EMPDES  // Verificar como mudar estas regras para os proximos meses. Em 07/02/21, por Marcos A.
+					ZN3->ZN3_TIPVAL	:=	""               // Verificar como mudar estas regras para os proximos meses. Em 07/02/21, por Marcos A.
 					ZN3->(MSUnlock())
 
 					//Estorna o Laçamento de Estono, no mes seguinte
@@ -925,6 +936,9 @@ Static Function bRptFG130()
 					ZN3->ZN3_TPLANC	:=	nTpLanc	
 					ZN3->ZN3_VALOR	:=	_aRet[1]
 					ZN3->ZN3_FLAG	:=	"N"
+					ZN3->ZN3_EMPORI	:=	EMP->ZN4_EMPDES  // Verificar como mudar estas regras para os proximos meses. Em 07/02/21, por Marcos A.
+					ZN3->ZN3_EMPDES	:=	EMP->ZN4_EMPDES  // Verificar como mudar estas regras para os proximos meses. Em 07/02/21, por Marcos A.
+					ZN3->ZN3_TIPVAL	:=	""               // Verificar como mudar estas regras para os proximos meses. Em 07/02/21, por Marcos A.
 					ZN3->(MSUnlock())
 
 				EndIf
@@ -953,6 +967,7 @@ Static Function cRptFG130()
 
 	Local nQtdReg  := 0
 	Local nEmpresa := ""
+	Local msCtrlCT := .F.
 
 	fPerg := "BIAFG130"
 	fTamX1 := IIF(Alltrim(oApp:cVersion) == "MP8.11", 6, 10)
@@ -1023,31 +1038,57 @@ Static Function cRptFG130()
 		IncProc("Contabilizando Expurgos... " + nEmpresa)
 
 		If nFilEmp <> CONSOL->ZN3_EMP .Or. 	DtLanc <> CONSOL->ZN3_DTLANC
+
+			msFilOld := nFilEmp //Em 07/02/21, por Marcos A.
+			nFilEmp  := "90"    //Em 07/02/21, por Marcos A.
 			StartJob( "U_fCtResul", GetEnvServer(), .T., cEmpAnt, nFilEmp, fgLanPad, fgLotCtb, fgVetCtb, Stod(DtLanc))
 			fgVetCtb := {}
+			nFilEmp  := msFilOld //Em 07/02/21, por Marcos A.
+
+			msCtrlCT := .T.
+
 		EndIf
 
 		nFilEmp	:= CONSOL->ZN3_EMP
 		DtLanc	:= CONSOL->ZN3_DTLANC
 
-		Aadd(fgVetCtb, {CONSOL->ZN3_TPLANC, CONSOL->ZN3_CONTA, Abs(CONSOL->ZN3_VALOR), "VLR. REF. CONSOLIDACAO EMPRESA", "P04 " + CONSOL->ZN3_TIPO + " " + CONSOL->ZN3_TPPROD})
+		msTIPO   := AllTrim(CONSOL->ZN3_TIPO)   + Space( TamSX3("ZN3_TIPO")[1] - Len(AllTrim(CONSOL->ZN3_TIPO)))
+		msTPPROD := AllTrim(CONSOL->ZN3_TPPROD) + Space( TamSX3("ZN3_TPPROD")[1] - Len(AllTrim(CONSOL->ZN3_TPPROD)))
+		msEMPORI := AllTrim(CONSOL->ZN3_EMPORI) + Space( TamSX3("ZN3_EMPORI")[1] - Len(AllTrim(CONSOL->ZN3_EMPORI)))
+		msEMPDES := AllTrim(CONSOL->ZN3_EMPDES) + Space( TamSX3("ZN3_EMPDES")[1] - Len(AllTrim(CONSOL->ZN3_EMPDES)))
+		Aadd(fgVetCtb, {CONSOL->ZN3_TPLANC, CONSOL->ZN3_CONTA, Abs(CONSOL->ZN3_VALOR), "VLR. REF. CONSOLIDACAO EMPRESA", "P04 " + msTIPO + " " + msTPPROD + " " + "EMPORI: " + msEMPORI + " " + "EMPDES: " + msEMPDES })
 
 		CONSOL->(dbSkip())
 	End
 
 	If nFilEmp <> CONSOL->ZN3_EMP .Or. 	DtLanc <> CONSOL->ZN3_DTLANC
+
+		msFilOld := nFilEmp //Em 07/02/21, por Marcos A.
+		nFilEmp  := "90"    //Em 07/02/21, por Marcos A.
 		StartJob( "U_fCtResul", GetEnvServer(), .T., cEmpAnt, nFilEmp, fgLanPad, fgLotCtb, fgVetCtb, Stod(DtLanc))
 		fgVetCtb := {}
+		nFilEmp  := msFilOld //Em 07/02/21, por Marcos A.
+
+		msCtrlCT := .T.
+
 	EndIf
 
-	cSql := " UPDATE " + RetSqlName("ZN3") + " SET ZN3_FLAG = 'S' "
-	cSql += " WHERE ZN3_FILIAL = '" + xFilial("ZN3") + "' "
-	cSql += "       AND ZN3_MESANO = '" + nMesAnoD + "' "
-	cSql += "       AND ZN3_FLAG = 'N' "
-	cSql += "       AND D_E_L_E_T_ = ' ' "
-	U_BIAMsgRun("Aguarde... Gravando como processado... ",,{|| TcSQLExec(cSql) })
+	If msCtrlCT
 
-	Msgbox("Contabilização dos Expurgos finalizada com sucesso.", "BIAFG130", "INFO")
+		cSql := " UPDATE " + RetSqlName("ZN3") + " SET ZN3_FLAG = 'S' "
+		cSql += " WHERE ZN3_FILIAL = '" + xFilial("ZN3") + "' "
+		cSql += "       AND ZN3_MESANO = '" + nMesAnoD + "' "
+		cSql += "       AND ZN3_FLAG = 'N' "
+		cSql += "       AND D_E_L_E_T_ = ' ' "
+		U_BIAMsgRun("Aguarde... Gravando como processado... ",,{|| TcSQLExec(cSql) })
+
+		Msgbox("Contabilização dos Expurgos finalizada com sucesso.", "BIAFG130", "INFO")
+
+	Else 
+
+		MsgSTOP("Nenhum registros de Contabilização dos Expurgos foi efetuado. Favor verificar as etapas anteriores deste processamento.", "BIAFG130")
+
+	EndIf
 
 Return
 
@@ -1202,4 +1243,4 @@ static function __Dummy()
 		Menudef()
 		__Dummy()
 	endif
-	return(.F.)
+return(.F.)

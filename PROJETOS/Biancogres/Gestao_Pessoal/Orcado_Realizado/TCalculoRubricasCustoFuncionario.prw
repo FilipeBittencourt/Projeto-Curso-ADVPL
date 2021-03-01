@@ -696,7 +696,7 @@ Method Report() Class TCalculoRubricasCustoFuncionario
 
 	cSQL := " SELECT 'Realizado' ORIGEM, " + cFields + StrTran(cSelect, "ZBA_", "ZBO_")
 	cSQL += "   FROM " + RetSQLName("ZBO") + " ZBO(NOLOCK) "
-	cSQL += "  INNER JOIN " + RetSQLName("SRA") + " SRA(NOLOCK) ON RA_FILIAL = " + ValToSQL(xFilial("SRA"))
+	cSQL += "  LEFT JOIN " + RetSQLName("SRA") + " SRA(NOLOCK) ON RA_FILIAL = " + ValToSQL(xFilial("SRA"))
 	cSQL += "                                 AND SRA.RA_MAT = ZBO.ZBO_MATR "
 	cSQL += "                                 AND SRA.D_E_L_E_T_ = '' "
 	cSQL += "  WHERE ZBO_FILIAL = " + ValToSQL(xFilial("ZBO"))
