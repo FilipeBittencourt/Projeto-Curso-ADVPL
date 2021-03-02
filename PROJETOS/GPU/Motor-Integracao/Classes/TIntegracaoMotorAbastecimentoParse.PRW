@@ -675,7 +675,7 @@ Method MontaPVenda(oJson) Class TIntegracaoMotorAbastecimentoParse
 	oJSPV["pedidoVenda"]["cab"]["C5_EMISSAO"]	:=  dDataBase
 	oJSPV["pedidoVenda"]["cab"]["C5_VEND1"]	    :=  "0001"
 	oJSPV["pedidoVenda"]["cab"]["C5_DESPESA"] 	:=  0
-	oJSPV["pedidoVenda"]["cab"]["C5_CONDPAG"] 	:=  "001"
+	oJSPV["pedidoVenda"]["cab"]["C5_CONDPAG"] 	:=  "999"
 	oJSPV["pedidoVenda"]["cab"]["C5_DESCONT"]	:=  0
 	oJSPV["pedidoVenda"]["cab"]["C5_INDPRES"] 	:=  "2"	//|2 - Significa venda nao presencial -> internet |
 	oJSPV["pedidoVenda"]["cab"]["C5_YEMPFOR"]   := EmpFilArmaz(AllTrim(oJson["itens"][1]["produto"])) //Obtem a empresa e filial do armazem físico

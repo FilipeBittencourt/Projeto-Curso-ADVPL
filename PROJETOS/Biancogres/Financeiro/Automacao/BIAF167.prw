@@ -3,7 +3,7 @@
 
 /*/{Protheus.doc} BIAF167
 @author Filipe Bittencourt
-@since 02/09/2018
+@since 02/12/2020
 @project Automacao Financeira
 @version 1.0
 @description Processa os titulos a receber do banco do brasil para não gerar diariamente
@@ -27,8 +27,12 @@ User Function BIAF167()
 
   Private lMsErroAuto    := .F.
 
-  cQry      := GetNextAlias()
-  oError    := ErrorBlock({|e| cError := e:Description})
+  If Select("SX6") <= 0
+    RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+  EndIf
+
+  cQry   := GetNextAlias()
+  oError := ErrorBlock({|e| cError := e:Description})
   dDtIni := FirstDate(Date()) //CToD("01/01/19")
   dDtFin := LastDate(Date()) //CToD("31/01/19")
 
@@ -45,7 +49,7 @@ User Function BIAF167()
     cSQL += " AND ZK4_BANCO    = '001' " + CRLF
     cSQL += " AND ZK4_VLTAR  > 0 " + CRLF
     cSQL += " AND D_E_L_E_T_   =  '' " + CRLF
-    //cSQL += " AND ZK4_DTLIQ BETWEEN " + ValToSQL(dDtIni) + " AND " + ValToSQL(dDtFin) + CRLF
+    cSQL += " AND ZK4_DTLIQ BETWEEN " + ValToSQL(dDtIni) + " AND " + ValToSQL(dDtFin) + CRLF
     cSQL += "group by ZK4_BANCO,  ZK4_AGENCI, ZK4_CONTA"  + CRLF
     cSQL += "ORDER BY  ZK4_BANCO,  ZK4_AGENCI, ZK4_CONTA" + CRLF
 
@@ -106,7 +110,8 @@ User Function BIAF167()
 
           ErrorBlock(oError)
           cError := MostraErro("/dirdoc", "error.log") //ARMAZENA A MENSAGEM DE ERRO
-          FwAlertError(cError,'Error')
+          //FwAlertError(cError,'Error')
+          U_BIAEnvMail(,cMail,'Error Subject - BIAF167',cErro)
 
         EndIf
 
