@@ -304,9 +304,9 @@ Method ParseProduto(oJson) Class TIntegracaoMotorAbastecimentoParse
 				SB1->(DbSetOrder(1))
 				If SB1->(dbSeek(FWxFilial("SB1")+oJson["itens"][nI]["produto"] ))
 
-					/*
+
 					IF oJson["origem"] == "SC7"
-          
+
 						If ALLTRIM(SB1->B1_YCOMPRA) == "2"
 							aJSPro[nI]["erro"]  := "PRODUTO BLOQUEADO (B1_YCOMPRA) == '2') PARA COMPRAS (LINHA COMPRAR NAO)."
 							lErro := .T.
@@ -332,7 +332,7 @@ Method ParseProduto(oJson) Class TIntegracaoMotorAbastecimentoParse
 						EndIf
 
 					EndIf
-					*/
+
 
 					if lErro == .F.
 

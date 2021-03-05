@@ -291,9 +291,9 @@ METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
 
             lError     := .T.
             AADD(aError,   JsonObject():New())
-            aError[nI]["field"]          := "numeroPedidoERP"
-            aError[nI]["rejectedValue"]  := oJson["C7_NUM"]
-            aError[nI]["defaultMessage"] := EncodeUtf8(cError)
+            aError[Len(aError)]["field"]          := "numeroPedidoERP"
+            aError[Len(aError)]["rejectedValue"]  := oJson["C7_NUM"]
+            aError[Len(aError)]["defaultMessage"] := EncodeUtf8(cError)
 
         EndIf
 

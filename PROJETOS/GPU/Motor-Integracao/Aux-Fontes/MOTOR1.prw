@@ -2523,9 +2523,9 @@ Função de processamento abertura do SM0 modo exclusivo
 Static Function MyOpenSM0(lShared)
   Local lOpen := .F.
   Local nLoop := 0
+  lShared := .T.
 
-
-  If FindFunction( "OpenSM0Excl" )
+  If FindFunction( "_OpenSM0Excl" )
     For nLoop := 1 To 20
       If OpenSM0Excl(,.F.)
         lOpen := .T.

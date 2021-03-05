@@ -51,13 +51,13 @@ User Function  PCMOTOR1(xParam1,xParam2)
   Else
     ConOut('## ERROR - NÃO FOI INFORMADO EMPRESA E FILIAL ##')
     ConOut('## ERROR - FIM DO JOB ##')
-    //Return
+    //  Return
 
   EndIf
 
   If Empty(cEmp) .OR.  Empty(cFil)
-    cEmp 		:= "11"
-    cFil 		:= "84"
+    cEmp 		:= "08"
+    cFil 		:= "01"
   EndIf
 
   ConOut("INICIO do JOB PCMOTOR1 "+cEmp+" / "+cFil)
@@ -192,15 +192,26 @@ User Function  PCMOTOR1(xParam1,xParam2)
           cHtml  += ' <html> '
           cHtml  += ' <body> '
           cHtml  += ' <h3>JOB EXECAUTO - Pedido de Compra MOTOR - '+ cNumPC+'</h3><BR>'
-          cHtml  += ' '+cError+'<BR> '
+          cHtml  += ' '+cError+'<BR><BR><BR> '
+          cHtml  += ' <h2>**** O MESMO SERÁ DELETADO ****</h2><BR> '
           cHtml  += ' </body> '
           cHtml  += ' </html> '
-
+          
           if !Empty(cEmMOTOR)
 
             U_EnvEmail(cEmMOTOR," Erro no motor de abastecimento MOTOR: "+ SM0->M0_CODIGO+'/'+SM0->M0_CODFIL+' - '+SM0->M0_NOME , cHtml)
 
+            // DELETANDO O REGISTRO NA Z58, para não ficar enviando email de erro
+            __TRZ->(dbGoTop())
+            cQuery := " UPDATE  "+ RetSqlName("Z58")+ " SET D_E_L_E_T_ = '*' , R_E_C_D_E_L_ = R_E_C_N_O_   " 
+            cQuery += " WHERE Z58_EMPORI = '"+__TRZ->Z58_EMPORI+"' " 
+            cQuery += " AND Z58_FILORI   = '"+__TRZ->Z58_FILORI+"' " 
+            cQuery += " AND Z58_NUM      = '"+__TRZ->Z58_NUM+"' " 
+            TCSQLEXEC(cQuery) 
+
           EndIf
+
+
 
         EndIf
 

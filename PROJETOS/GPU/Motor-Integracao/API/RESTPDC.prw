@@ -59,6 +59,8 @@ WSMETHOD POST WSSERVICE pedidocomprabaixatotal
   Local cBody    := ""
   Local oJson    := JsonObject():New()
   Local oIMAbast := TIntegracaoMotorAbastecimentoParse():New()
+  Local aError     := {}
+  Local oJSEmp    := JsonObject():New()
 
   ::SetContentType("application/json")
 
@@ -66,11 +68,29 @@ WSMETHOD POST WSSERVICE pedidocomprabaixatotal
   conOut('pedidocomprabaixatotal - POST METHOD')
   oJson:FromJson(cBody)  // converte para JsonObject
 
-  oJson := oIMAbast:BaixaTotalPC(oJson)
+
+  oJSEmp := ParseEmpresa(oJson)
+  If Empty(oJSEmp["empresaCnpj"])
+
+    AADD(aError,   JsonObject():New())
+    aError[Len(aError)]["field"]          := "codigoEmpresa"
+    aError[Len(aError)]["rejectedValue"]  := oJSEmp["codigoEmpresa"]
+    aError[Len(aError)]["defaultMessage"] := EncodeUtf8("O CNPJ da empresa informada não foi locaizado.")
+    oJSRet["Status"] := 400
+    oJSRet["errors"] := aError
+
+  Else
+
+    RpcClearEnv()
+    RPCSetEnv( oJSEmp["empresaCodigo"], oJSEmp["empresaFilial"], NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+    oJson := oIMAbast:BaixaTotalPC(oJson)
+
+  Endif
+
   ::SetStatus(oJson["Status"])
   ::SetResponse(oJson:ToJson())
 
-  FreeObj(oJson)
+
 
 Return .T.
 
@@ -85,6 +105,8 @@ WSMETHOD POST WSSERVICE pedidocomprabaixaparcial
   Local cBody    := ""
   Local oJson    := JsonObject():New()
   Local oIMAbast := TIntegracaoMotorAbastecimentoParse():New()
+  Local aError     := {}
+  Local oJSEmp    := JsonObject():New()
 
   ::SetContentType("application/json")
 
@@ -92,11 +114,29 @@ WSMETHOD POST WSSERVICE pedidocomprabaixaparcial
   conOut('pedidocomprabaixaparcial - POST METHOD')
   oJson:FromJson(cBody)  // converte para JsonObject
 
-  oJson := oIMAbast:BaixaParcialPC(oJson)
+
+  oJSEmp := ParseEmpresa(oJson)
+  If Empty(oJSEmp["empresaCnpj"])
+
+    AADD(aError,   JsonObject():New())
+    aError[Len(aError)]["field"]          := "codigoEmpresa"
+    aError[Len(aError)]["rejectedValue"]  := oJSEmp["codigoEmpresa"]
+    aError[Len(aError)]["defaultMessage"] := EncodeUtf8("O CNPJ da empresa informada não foi locaizado.")
+    oJSRet["Status"] := 400
+    oJSRet["errors"] := aError
+
+  Else
+
+    RpcClearEnv()
+    RPCSetEnv( oJSEmp["empresaCodigo"], oJSEmp["empresaFilial"], NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+    oJson := oIMAbast:BaixaParcialPC(oJson)
+
+  EndIf
+
   ::SetStatus(oJson["Status"])
   ::SetResponse(oJson:ToJson())
 
-  FreeObj(oJson)
+
 
 Return .T.
 
