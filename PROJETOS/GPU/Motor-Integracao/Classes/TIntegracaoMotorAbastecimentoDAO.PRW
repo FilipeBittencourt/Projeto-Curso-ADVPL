@@ -212,7 +212,7 @@ METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
     Local cError     := ""
     Local oError     := ErrorBlock({|e| cError := e:Description})
     Local cQuery     := ""
-
+    Local cVar
 
     cQuery := " SELECT * " + CRLF
     cQuery += " FROM "+ RetSqlName("Z58") + CRLF
@@ -230,6 +230,8 @@ METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
     TcQuery cQuery New Alias "__TRZ"
     __TRZ->(dbGoTop())
 
+
+
     Begin Transaction
 
         If (__TRZ->(!EoF()) )
@@ -240,7 +242,8 @@ METHOD BaixaParcialPC(oJson) CLASS TIntegracaoMotorAbastecimentoDAO
 
                     If oJson["itens"][nI]["produto"] == __TRZ->Z58_PRODUT
 
-                        If oJson["itens"][nI]["quantidade"] == 0
+                        cVar:=cValToChar(oJson["itens"][nI]["quantidade"])
+                        If  val(cVar) == 0
 
                             cQuery := " UPDATE "+ RetSqlName("Z58") + " SET " + CRLF
                             cQuery += " Z58_SYCELE = 'P' , " + CRLF

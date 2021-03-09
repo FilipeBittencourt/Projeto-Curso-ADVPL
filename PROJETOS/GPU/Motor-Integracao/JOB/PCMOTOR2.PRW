@@ -154,33 +154,22 @@ User Function  PCMOTOR2(xParam1,xParam2)
 
       EndIf
 
-      ErrorBlock(oError)
+      // VERIFICO SE O RESIUDO FOI ELIMINADO de fato, PARA NÃO CORRER O RISCO DE NÃO ESTAR POSICIONADO  o registro
+      SC7->(DbSetOrder(1))
+      If SC7->(dbSeek(FWxFilial("SC7")+cCodigoDe))
 
-      If !Empty(cError)
+        While SC7->(!Eof()) .AND. FWxFilial("SC7")+cCodigoDe == SC7->C7_FILIAL+SC7->C7_NUM
 
-        cError += " - Pedido: "+__TRZ->Z58_NUM
-        lGetErro     := .T.
+          If SC7->C7_RESIDUO != 'S'
 
-      Else
+            lGetErro     := .T.
+            cError += EncodeUtf8("O PEDIDO "+cCodigoDe+" com o item: "+SC7->C7_ITEM+"  não foi eliminado. Função Totvs MA235PC.<BR>" )
 
-        // VERIFICO SE O RESIUDO FOI ELIMINADO de fato, PARA NÃO CORRER O RISCO DE NÃO ESTAR POSICIONADO  o registro
-        SC7->(DbSetOrder(1))
-        If SC7->(dbSeek(FWxFilial("SC7")+cCodigoDe))
+          EndIf
 
-          While SC7->(!Eof()) .AND. FWxFilial("SC7")+cCodigoDe == SC7->C7_FILIAL+SC7->C7_NUM
+          SC7->(DbSkip())
 
-            If SC7->C7_RESIDUO != 'S'
-
-              lGetErro     := .T.
-              cError += EncodeUtf8("O PEDIDO "+cCodigoDe+" com o item: "+SC7->C7_ITEM+"  não foi eliminado.<BR>" )
-
-            EndIf
-
-            SC7->(DbSkip())
-
-          EndDo
-
-        EndIf
+        EndDo
 
       EndIf
 
