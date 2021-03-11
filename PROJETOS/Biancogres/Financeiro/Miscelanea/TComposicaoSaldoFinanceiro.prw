@@ -331,34 +331,31 @@ A SP300 (empresa 11) é uma exceção e não deve lista no Saldo F9 os lançamentos d
 pois é lançado diretamente pela Tesouraria.
 */
 Method GetRecEmp() Class TComposicaoSaldoFinanceiro
-	Local cSQL := ""
-	Local aEmp := {}
-	Local cCodFor := ""
-	Local nCount := 0
-	Local cDsc := "'
-	Local cSEA := ""
-	Local cSE2 := ""
-	Local cBankData := ""
+Local cSQL := ""
+Local aEmp := {}
+Local cCodFor := ""
+Local nCount := 0
+Local cDsc := "'
+Local cSEA := ""
+Local cSE2 := ""
+Local cAgency := ""
+Local cAccount := ""
+Local cBankData := ""
 
 	//Ticket 26225 - Restringir do Saldo no F9 lançamentos da SP300 referentes a recebimentos das outras empresas já feitos pela Tesouraria (Pablo Nascimento)
 	if(cEmpAnt == "11")
 		return cSQL
 	endif
+	
+	cAgency := Replace(AllTrim(::cAgency), ".", Space(0))
+	cAgency := Replace(cAgency, "-", Space(0))
 
+	cAccount := Replace(AllTrim(::cAccount), ".", Space(0))
+	cAccount := Replace(cAccount, "-", Space(0))
+	
 	cBankData := Alltrim(::cBank) + Alltrim(::cAgency) + Alltrim(::cAccount)
 	cBankData := Replace(cBankData, ".", Space(0))
 	cBankData := Replace(cBankData, "-", Space(0))
-
-	// Ticket: 26873
-	// Controle de recebimentos entre as empresas do grupo
-	// If (cEmpAnt == "01" .And. cBankData == "00134312550973") .Or. ; // Recebimento da Biancogress somente sera executado para o banco do brasil na agencia: 34312 e conta: 55.097-3
-	// 	(cEmpAnt == "05" .And. cBankData == "0013431256669") .Or. ; // Recebimento da Incesa somente sera executado para o banco do brasil na agencia: 34312 e conta: 5.666-9
-	// 	(cEmpAnt == "06" .And. cBankData == "00134312550981") .Or. ; // Recebimento da JK somente sera executado para o banco do brasil na agencia: 34312 e conta: 55.098-1
-	// 	(cEmpAnt == "07" .And. cBankData == "0013431252868") .Or. ; // Recebimento da LM somente sera executado para o banco do brasil na agencia: 34312 e conta: 52868
-	// 	(cEmpAnt == "11" .And. cBankData == "0013431253295") .Or. ; // Folha de pagamento da SP300 somente sera executado para o banco do brasil na agencia: 34312 e conta: 53295
-	// 	(cEmpAnt == "12" .And. cBankData == "0013431254968") .Or. ; // Recebimento da ST Gestão somente sera executado para o banco do brasil na agencia: 34312 e conta: 54968
-	// 	(cEmpAnt == "13" .And. cBankData == "0013431254666") .Or. ; // Recebimento da Mundi somente sera executado para o banco do brasil na agencia: 34312 e conta: 54666
-	// 	(cEmpAnt == "14" .And. cBankData == "001343148755") // Recebimento da Vitcer somente sera executado para o banco do brasil na agencia: 3431 e conta: 48755
 
 	If !cEmpAnt == "01"
 		aAdd(aEmp, "01")
@@ -429,26 +426,6 @@ Method GetRecEmp() Class TComposicaoSaldoFinanceiro
 		cSQL += " 	AND E2_TIPO = EA_TIPO "
 		cSQL += " 	AND E2_FORNECE = EA_FORNECE "
 		cSQL += " 	AND E2_LOJA = EA_LOJA "
-		//cSQL += " 	WHERE EA_PORTADO = "+ ValToSQL(::cBank)
-
-		// Tratamento especifico para Vitcer, pois a agencia é diferente das demais empresas do grupo
-		// If cEmpAnt == "14"
-
-		// 	cSQL += "  	AND EA_AGEDEP = '34312' "
-
-		// ElseIf aEmp[nCount] == "14"
-
-		// 	cSQL += "  	AND EA_AGEDEP = '3431' "
-
-		// Else
-
-		// 	cSQL += "		AND EA_AGEDEP = "+ ValToSQL(::cAgency)
-
-		// EndIf
-
-		// Ticket: 26873 - Da forma que estava, fazia a query de titulos pagos na filial origem passando apenas banco e agencia.
-		// que no caso eram todas banco do brasil, agora tem outros bancos.
-
 		cSQL += " 	AND EXISTS "
 		cSQL += " 	( "
 		cSQL += "		SELECT NULL "
@@ -456,9 +433,9 @@ Method GetRecEmp() Class TComposicaoSaldoFinanceiro
 		cSQL += "		WHERE A2_FILIAL = " + ValToSQL(xFilial("SA2"))
 		cSQL += " 		AND A2_COD = EA_FORNECE "
 		cSQL += " 		AND A2_LOJA = EA_LOJA "
-		cSQL += " 		AND REPLICATE('0', 20 - LEN(REPLACE(REPLACE(RTRIM(LTRIM(A2_BANCO))		, '.', ''), '-', ''))) + REPLACE(REPLACE(RTRIM(LTRIM(A2_BANCO))		, '.', ''), '-', '') = " + ValToSQL(PADL(Replace(Replace(AllTrim(::cBank)		, ".", Space(0)), "-", Space(0)), 20, '0'))
-		cSQL += " 		AND REPLICATE('0', 20 - LEN(REPLACE(REPLACE(RTRIM(LTRIM(A2_AGENCIA))	, '.', ''), '-', ''))) + REPLACE(REPLACE(RTRIM(LTRIM(A2_AGENCIA))	, '.', ''), '-', '') = " + ValToSQL(PADL(Replace(Replace(AllTrim(::cAgency)		, ".", Space(0)), "-", Space(0)), 20, '0'))
-		cSQL += " 		AND REPLICATE('0', 20 - LEN(REPLACE(REPLACE(RTRIM(LTRIM(A2_NUMCON))		, '.', ''), '-', ''))) + REPLACE(REPLACE(RTRIM(LTRIM(A2_NUMCON))	, '.', ''), '-', '') = " + ValToSQL(PADL(Replace(Replace(AllTrim(::cAccount)	, ".", Space(0)), "-", Space(0)), 20, '0'))
+		cSQL += " 		AND A2_BANCO = " + ValToSQL(AllTrim(::cBank))
+		cSQL += " 		AND (A2_AGENCIA = "+ ValToSQL(cAgency) +" OR A2_AGENCIA LIKE "+ ValToSQL("%" + cAgency + "%") +")"
+		cSQL += " 		AND (A2_NUMCON = "+ ValToSQL(cAccount) +" OR A2_NUMCON LIKE "+ ValToSQL("%" + cAccount + "%") +")"
 		cSQL += " 		AND SA2.D_E_L_E_T_ = '' "
 		cSQL += " 	) "
 

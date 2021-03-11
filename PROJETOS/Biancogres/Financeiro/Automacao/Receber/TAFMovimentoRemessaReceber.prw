@@ -377,7 +377,7 @@ Method Get() Class TAFMovimentoRemessaReceber
 		//TODO FIDC INICIO - Provisório
 		
 		//FIDC - tratamento de recebimento antecipado 
-		If (AllTrim((cQry)->E1_YUFCLI) == 'ES' .And. AllTrim((cQry)->A1_YCDGREG) == '000029' .And. oObj:cPrefixo $ 'PR')
+		If (AllTrim((cQry)->E1_YUFCLI) == 'ES' .And. AllTrim((cQry)->A1_YCDGREG) == '000029' .And. SubStr(oObj:cPrefixo, 1, 2) $ 'PR')
 			oObj:cGRCB := '000028'
 		EndIf
 		

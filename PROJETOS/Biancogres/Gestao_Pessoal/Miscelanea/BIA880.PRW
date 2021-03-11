@@ -244,9 +244,10 @@ Static Function fBIA880A()
 				TG003 += Alltrim("                              WHEN t.perins = 40                                                           ") + msrhEnter
 				TG003 += Alltrim("                              THEN '4'                                                                     ") + msrhEnter
 				TG003 += Alltrim("                              ELSE '1'                                                                     ") + msrhEnter
-				TG003 += Alltrim("                           END                                                                             ") + msrhEnter
+				TG003 += Alltrim("                           END,                                                                            ") + msrhEnter
+				TG003 += Alltrim("                 DPTOSR = [dbo].[FNC_BI_GETDEPART](" + cEmpAnt + ", a.numcad, '" + dtos(MV_PAR04) + "')    ") + msrhEnter
 				TG003 += Alltrim("          FROM VETORH.dbo.r034fun a(NOLOCK)                                                                ") + msrhEnter
-				TG003 += Alltrim("               LEFT JOIN VW_BG_GESTOR_IMEDIATO v ON v.NUMEMP = a.numemp                         ") + msrhEnter
+				TG003 += Alltrim("               LEFT JOIN VW_BG_GESTOR_IMEDIATO v ON v.NUMEMP = a.numemp                                    ") + msrhEnter
 				TG003 += Alltrim("                                                         AND v.TIPCOL = a.tipcol                           ") + msrhEnter
 				TG003 += Alltrim("                                                         AND v.NUMCAD = a.numcad                           ") + msrhEnter
 				TG003 += Alltrim("               LEFT JOIN VETORH.DBO.r162ass b(NOLOCK) ON b.numemp = a.numemp                               ") + msrhEnter
@@ -327,6 +328,7 @@ Static Function fBIA880A()
 					ZO0->ZO0_SEMAIL := TG03->SEMAIL
 					ZO0->ZO0_ADCPER := TG03->ADCPER
 					ZO0->ZO0_ADCINS := TG03->ADCINS
+					ZO0->ZO0_DPTOSR := TG03->DPTOSR
 					MsUnLock()
 
 					dbSelectArea("TG03")

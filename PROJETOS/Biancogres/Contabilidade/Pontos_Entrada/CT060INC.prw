@@ -11,7 +11,7 @@
 @type function
 /*/
 
-user function CT060INC()
+User Function CT060INC()
 
 	cExiste := ""
 
@@ -20,11 +20,11 @@ user function CT060INC()
 	SQB->(DBGOTOP())
 	cExiste := SQB->(DBSEEK(CTH->CTH_FILIAL+CTH->CTH_CLVL))	
 	
-	IF INCLUI .AND. !cExiste
+	If INCLUI .AND. !cExiste
 		
 		RECLOCK("SQB",.T.)
 		
-			SQB->QB_DEPTO   := CTH->CTH_CLVL
+			SQB->QB_DEPTO := CTH->CTH_CLVL
 			SQB->QB_DESCRIC := CTH->CTH_DESC01
 		
 		SQB->(MSUNLOCK())
@@ -33,11 +33,73 @@ user function CT060INC()
 	
 		RECLOCK("SQB",.T.)
 		
-			SQB->QB_DEPTO   := CTH->CTH_CLVL
+			SQB->QB_DEPTO := CTH->CTH_CLVL
 			SQB->QB_DESCRIC := CTH->CTH_DESC01
 		
 		SQB->(MSUNLOCK())
 	
 	ENDIF
 	
-Return
+	If Inclui 
+	
+		If SubStr(CTH->CTH_CLVL, 1, 1) == "8"
+	
+			fAddItem(CTH->CTH_CLVL)
+			
+		EndIf
+	
+	EndIf
+	
+Return()
+
+
+User Function fAddItem(cClvl)
+
+	Begin Transaction
+	
+		fAdd(cClvl)
+	
+	End Transaction
+				
+Return()
+
+
+Static Function fAdd(cClvl)
+Local cCodRef := ""
+Local cSQL := ""
+Local cQry := GetNextAlias()
+
+	cSQL := " SELECT * "
+	cSQL += " FROM _SUBITEM_PADRAO "
+	
+	TcQuery cSQL New Alias (cQry)
+	
+	While !(cQry)->(Eof())
+
+		RecLock("ZMA", .T.)
+		
+			cCodRef := GetSxEnum('ZMA', 'ZMA_CODIGO')
+
+			ZMA->ZMA_FILIAL := xFilial("ZMA")
+			ZMA->ZMA_CODIGO := cCodRef
+			ZMA->ZMA_CLVL := cClvl
+			ZMA->ZMA_ITEMCT := (cQry)->ITEMCT
+			
+		ZMA->(MsUnLock())
+	
+		RecLock("ZMB", .T.)
+		
+			ZMB->ZMB_FILIAL := xFilial("ZMB")
+			ZMB->ZMB_CODREF := cCodRef
+			ZMB->ZMB_SUBITE := (cQry)->SUBITE
+			ZMB->ZMB_DESC := (cQry)->DESCR
+		
+		ZMB->(MsUnLock())
+
+		(cQry)->(DbSkip())
+		
+	EndDo()
+				
+	(cQry)->(DbCloseArea())
+			
+Return()

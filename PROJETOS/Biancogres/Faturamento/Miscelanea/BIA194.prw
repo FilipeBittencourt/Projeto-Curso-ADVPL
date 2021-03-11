@@ -19,7 +19,7 @@ User Function BIA194()
 Local lRet := .T.    
 Local aArea := GetArea()
 Local cGrupo := "" 
-Local cSQL 
+Local cSQL
 
 //Tratamento especial para Replcacao de pedido LM
 If AllTrim(FunName()) $ GetNewPar("FA_XPEDRPC","BFATRT01###FCOMRT01###BFVCXPED###FCOMXPED###TESTEF1###RPC") .OR. AllTrim(FunName()) $ GetNewPar("FA_XPEDRQC","FRQCTE01###FRQCRT02")
@@ -56,8 +56,10 @@ If lRet
 			lRet := .F.
 		EndIf
 	Else
-		IF(M->C5_YPRZINC > 45)
-			MSGSTOP("Não Permitido Valor Maior que 45 dias","BIA194")
+		//ticket 30743 - parâmetro criado devido a alterações comuns no valor.
+		limMax := GetMV("MV_YMAXINC")
+		IF(M->C5_YPRZINC > limMax)
+			MSGSTOP("Não Permitido Valor Maior que " + Alltrim(STR(limMax)) + " dias","BIA194")
 			lRet := .F.
 		EndIf
 	EndIf

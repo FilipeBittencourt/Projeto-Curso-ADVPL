@@ -25,6 +25,8 @@ Local nCount := 0
 	oObj:oMrr:lFIDC			:= .T.
 	oObj:oMrr:dEmissaoAte	:= dDataBase
 	oObj:Send()
+	
+	U_FIDCXML()
 							
 	ConOut("TAF => BAF003 - [REGISTRO ON-LINE NORMAL FIDC - REENVIO/QUEDA] - FIM do Processo - DATE: "+DTOC(Date())+" TIME: "+Time())	
 			

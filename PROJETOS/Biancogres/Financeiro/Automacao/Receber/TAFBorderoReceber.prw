@@ -240,7 +240,7 @@ Method CleanBorSE1(nSE1RecNo,cStatus,cCodBar) Class TAFBorderoReceber
 				SE1->(MSUnlock())
 			endif
 
-			if (FIDC():isFIDCEnabled())
+			if (FIDC():isFIDCEnabled().and.FIDC():getBiaPar("FIDC_CTB_LP_BORDERO_ONLINE",.T.))
 				cSA1IdxKey:="A1_FILIAL+A1_COD+A1_LOJA"
 				SA1->(dbSetOrder(retOrder("SA1",cSA1IdxKey)))
 				if (SA1->(MsSeek(xFilial("SA1")+SE1->E1_CLIENTE+SE1->E1_LOJA)))

@@ -12,7 +12,8 @@ User Function TSTFIL()
   //TSTFIL001() // biaxfunc.prw  - Teste Email SEND
   //TSTFIL002() // Teste pedidos provisionados
   //TSTFIL003()
-  X31UPDTABLE('SC6')
+  DbSelectArea("ZDJ")
+  X31UPDTABLE('ZDJ')
 
 
 RETURN

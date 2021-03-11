@@ -103,6 +103,7 @@ Static Function LoadZKL()
 	Local cRegras		:= ""
 	Local cObs as character
 	Local aRegras		:= {}
+	Local aObs
 
 	If (ZKL->(DbSeek(cFilPed+cNumPed)))
 
@@ -123,7 +124,10 @@ Static Function LoadZKL()
 	
 			Next nI
 			
-			cObs := PSHtml2TXT():PSHtml2TXT(ctools():NoAccent(ZKL->ZKL_OBS))
+			cObs:=SQLStripHTML():StripHTML(ZKL->ZKL_OBS)
+			aObs:=StrToKArr2(cObs,CRLF)
+			cObs:=""
+			aEval(aObs,{|c|if(!empty(c),cObs+=(c+CRLF),nil)})
 			
 			aLinha := {;
 			ZKL->ZKL_APROV,;

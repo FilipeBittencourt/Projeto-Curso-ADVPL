@@ -101,8 +101,9 @@ User Function BIA408()
 				// de placas cerâmicas para produção própria de rodapé e soleira.
 				If cEmpAnt == "14" .and. Alltrim(cCFOP) == "101" .and. cTpProd == "PA"
 					cConta := "11304006"
+				//Thiago Haagensen - Ticket 29518 - ERRO NA CONTABILIZAÇAO NF DE ENTREGA FUTURA
 				Else
-					cConta := SD1->D1_CONTA
+					cConta := IIF(ALLTRIM(SD1->D1_CF) $ "1922/2922","16501080",SD1->D1_CONTA) //Para compra e entraga futura cair na conta de adiantamento a fornecedor (Dentro e Fora do estado)
 				EndIf
 			ENDIF
 		ENDIF
@@ -169,6 +170,10 @@ User Function BIA408()
 			If Substr(SD1->D1_CF,2,3) $ "911,949,910" .and. SF4->F4_DUPLIC == "N"
 				cConta := "41501005"
 			EndIf
+			//Thiago Haagensen - Ticket 29518 - ERRO NA CONTABILIZAÇAO NF DE ENTREGA FUTURA
+			If Substr(SD1->D1_CF,2,3) $ "551/406" .and.  SF4->F4_DUPLIC == "N" //Tratamento para nota fiscal de remessa de venda futura para matar a operacao.
+				cConta := "16501080"
+			Endif
 		EndIf
 
 		// Em 24/08/17... Por Marcos Alberto Soprani... conforme OS effettivo 3096-17

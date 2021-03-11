@@ -753,9 +753,9 @@ Static Function gxApAtPr( xRecbAcl )
 	//        Acumula os valores do vetor num ArqTmp para faciliar a tratativa de agrupamento
 	*****************************************************************************************
 	For sd := 1 To Len(xRecbAcl)
-	
+
 		If xRecbAcl[sd][1] == "BR_VERDE"
-		
+
 			If xRecbAcl[sd][13] == 1 .or. xRecbAcl[sd][13] == 20                  // Etiqueta BOA
 				*********************************************************************************
 
@@ -825,9 +825,9 @@ Static Function gxApAtPr( xRecbAcl )
 				MsUnLock()
 
 			EndIf
-			
+
 		EndIf
-		
+
 	Next sd
 
 	//                                                 Apontamento de Produção - Etiqueta BOA
@@ -1265,7 +1265,7 @@ Static Function gxApAtPr( xRecbAcl )
 						EndIf
 
 						skQtde := ZH07->D3_QUANT * fmPerct
-						If gtRetGrpB1 == "104B"
+						If gtRetGrpB1 == "104B" .or. gtRetGrpB1 == "104C" 
 							skQtde := Round(skQtde, 0)
 							If skQtde == 0
 								skQtde := 1
@@ -1311,7 +1311,7 @@ Static Function gxApAtPr( xRecbAcl )
 					Else
 						fmDocD3 := UPPER( NextNumero("SD3", 2, "D3_DOC", .T.) )
 					EndIf
-					
+
 					//                                                         Preenche Cabecalho
 					*****************************************************************************
 					_aCab1 :=	{	{"D3_DOC"     ,fmDocD3                , NIL},;

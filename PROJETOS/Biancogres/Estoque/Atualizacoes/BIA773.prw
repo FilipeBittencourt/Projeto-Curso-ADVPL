@@ -1181,7 +1181,7 @@ User Function B773ETS()
 			UP004 += "                           SB1.B1_UM UM, "
 			UP004 += "                           ZCN.ZCN_POLIT POLITICA, "
 			UP004 += "                           SX5.X5_DESCRI DPOLITICA, "
-			UP004 += "                           ZCN.ZCN_ESTSEG ESTSEG, "
+			UP004 += "                           ZCN.ZCN_P8ESEG ESTSEG, "
 			UP004 += "                           ZCN.ZCN_P8PE PE, "
 			UP004 += "                           ISNULL(SUBSTRING(ZCP.ZCP_MES,5,2),'01') MES, "
 			UP004 += "                           ISNULL(CASE "
@@ -1403,7 +1403,7 @@ User Function B773PPD()
 			UP007 += "                       AND SB1.D_E_L_E_T_ = ' ' "
 			UP007 += "  WHERE ZCN_FILIAL = '" + xFilial("ZCN") + "' "
 			UP007 += "    AND ZCN_POLIT = '8' "
-			UP007 += "    AND ZCN_ESTSEG = 0 "
+			UP007 += "    AND ZCN_P8ESEG = 0 "
 			UP007 += "    AND ZCN.D_E_L_E_T_ = ' ' "
 			U_BIAMsgRun("Aguarde... Atualizando ZCN_P8PPED(2)!!!",,{|| TcSqlExec(UP007) })
 

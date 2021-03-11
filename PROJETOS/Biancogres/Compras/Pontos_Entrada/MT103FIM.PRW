@@ -23,13 +23,14 @@ User Function MT103FIM()
 	Local nOpcao := paramixb[1] // se 4 - classificando NF
 	Local lwConf := PARAMIXB[2] // Por Marcos Alberto Soprani em 22/12/15
 	Local oObjCompen := TCompensacaoReceber():New()
+	Local _oMd	:=	TBiaControleMD():New()
 	
-	If !FwIsInCallStack('U_GATI001') .Or. (FwIsInCallStack('U_GATI001') .And. !l103Auto) .And. PARAMIXB[2] <> 0
+	If (!FwIsInCallStack('U_GATI001') .Or. (FwIsInCallStack('U_GATI001') .And. !l103Auto)) .And. PARAMIXB[2] <> 0
 		//Tratamento para Totvs Colaboracao 2.0
 		If GetMv("MV_COMCOL1") <> 2 .And. Upper(Alltrim(FUNNAME())) == "SCHEDCOMCOL"  
 			Return
 		EndIf
-
+	
 		oObjCompen:Devolucao()
 
 		If lwConf <> 0

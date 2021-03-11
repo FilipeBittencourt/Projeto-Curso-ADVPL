@@ -1109,7 +1109,7 @@ Static Function gxApAtPr( xRecbAcl )
 						EndIf
 
 						skQtde := ZH07->D3_QUANT * fmPerct
-						If gtRetGrpB1 == "104B"
+						If gtRetGrpB1 == "104B" .or.gtRetGrpB1 == "104C" 
 							skQtde := Round(skQtde, 0)
 							If skQtde == 0
 								skQtde := 1

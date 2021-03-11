@@ -35,11 +35,15 @@
 #DEFINE nc_EMPENHO	15
 
 User Function BIAEC001()
-	Local aCores 		:= {}
+	Local aCores 		  := {}
 	Local lUsaCarga		:=	GetNewPar("MV_YUSACAR",.F.)  //Define se utiliza a rotina de
 	Private _cEmpFil	:= ""
 	Private aCampos1
 	Private Enter1 		:= CHR(13)+CHR(10)
+
+	Private dDtAgOld   := NIL //data do agendamento antes da alteração
+	Private cHrAgOld   := NIL //HORA do agendamento antes da alteração
+	Private cTpAgOld   := NIL //Tipo de agendamento antes da alteração
 
 	Public __BECDTLORI
 	Public __nRAStatus
@@ -173,77 +177,77 @@ User Function BIAECID()
 		Alert("<font size='3' color='red'>Código carga vazio.</font>")
 		Return
 	EndIf
-	
+
 	If (GetNewPar("MV_YVCONFC", .F.))
 		If AllTrim(ZZV->ZZV_SCONF) == '2'
 			Alert("<font size='3' color='red'>Carga conferida com erro no coletor, favor informar os responsáveis.</font>")
 			/*If (!MSGYESNO("Desejar continuar o processo?", "Informação" ))
 				Return
-			EndIf*/
+		EndIf*/
 			Return
-		EndIf
 	EndIf
+EndIf
 	
 
-	If AllTrim(ZZV->ZZV_CONF) == 'S'
+If AllTrim(ZZV->ZZV_CONF) == 'S'
 
-		If (!Empty(ZZV->ZZV_TICKET))
+	If (!Empty(ZZV->ZZV_TICKET))
 
-			If (lLEcoNE)
+		If (lLEcoNE)
 
 				//lRet := U_BIA249VE(ZZV->ZZV_TICKET, .F., .F.)
 
 				U_FPRCARGA(ZZV->ZZV_CARGA)
 
-			Else
+		Else
 
 				/*lRet := U_BIA249VE(ZZV->ZZV_TICKET, .F.)
 
-				If (!lRet)
+			If (!lRet)
 
-					If (MSGYESNO("Realizar a impressão mesmo com a carga não finalizada no ECOSIS?", "Informação" ))
+				If (MSGYESNO("Realizar a impressão mesmo com a carga não finalizada no ECOSIS?", "Informação" ))
 
 						U_FPRCARGA(ZZV->ZZV_CARGA)
 
-					EndIf
+				EndIf
 
-				Else
+			Else
 
 					U_FPRCARGA(ZZV->ZZV_CARGA)
 
-				EndIf
+			EndIf
 				*/
-				
-				U_FPRCARGA(ZZV->ZZV_CARGA)
-			EndIf
-
-			DbSelectArea("ZZV")
-			ZZV->(dbSetOrder(1))
-			If ZZV->(DbSeek(xFilial("ZZV")+ZZV->ZZV_CARGA))
-				If (ZZV->(FieldPos("ZZV_SCECOS")) > 0)
-					If (Empty(ZZV->ZZV_SCECOS))
-						Reclock("ZZV", .F.)
-						ZZV->ZZV_SCECOS	:= IIF(lRet, 'S', 'N')
-						ZZV->(MsUnLock())
-					EndIf
-				EndIf
-			EndIf
-
-			//U_FPRCARGA(ZZV->ZZV_CARGA)
-
-		Else
 
 			U_FPRCARGA(ZZV->ZZV_CARGA)
-
 		EndIf
+
+		DbSelectArea("ZZV")
+		ZZV->(dbSetOrder(1))
+		If ZZV->(DbSeek(xFilial("ZZV")+ZZV->ZZV_CARGA))
+			If (ZZV->(FieldPos("ZZV_SCECOS")) > 0)
+				If (Empty(ZZV->ZZV_SCECOS))
+					Reclock("ZZV", .F.)
+					ZZV->ZZV_SCECOS	:= IIF(lRet, 'S', 'N')
+					ZZV->(MsUnLock())
+				EndIf
+			EndIf
+		EndIf
+
+		//U_FPRCARGA(ZZV->ZZV_CARGA)
 
 	Else
 
-		Alert("<font size='3' color='red'>Carga não conferida.</font>")
+		U_FPRCARGA(ZZV->ZZV_CARGA)
 
 	EndIf
 
-	RestArea(aArea)
+Else
+
+	Alert("<font size='3' color='red'>Carga não conferida.</font>")
+
+EndIf
+
+RestArea(aArea)
 
 Return()
 
@@ -257,20 +261,20 @@ User Function BIALCONE()
 			If ZZV->(DbSeek(xFilial("ZZV")+ZZV->ZZV_CARGA))
 				If (ZZV->(FieldPos("ZZV_SCONF")) > 0)
 					//If (Empty(ZZV->ZZV_SCONF))
-						Reclock("ZZV", .F.)
-						ZZV->ZZV_SCONF	:= '8'
-						ZZV->(MsUnLock())
-						MsgInfo ("Liberação realizada com sucesso", "")
+					Reclock("ZZV", .F.)
+					ZZV->ZZV_SCONF	:= '8'
+					ZZV->(MsUnLock())
+					MsgInfo ("Liberação realizada com sucesso", "")
 					//EndIf
 				EndIf
 			EndIf
 		EndIf
 	Else
 		MsgInfo ("Usuário não tem permissão para essa ação.", "")
-	EndIf	
-	
+	EndIf
+
 	RestArea(aArea)
-	
+
 Return
 
 User Function BIAECVAL()
@@ -279,7 +283,7 @@ User Function BIAECVAL()
 	Local lLEcoNE	:= GetNewPar("MV_YLECONE", .F.)
 	Local aArea		:= GetArea()
 
-	
+
 	If AllTrim(ZZV->ZZV_CONF) == 'S'
 
 		If (GetNewPar("MV_YVCONFC", .F.))
@@ -287,68 +291,68 @@ User Function BIAECVAL()
 				Alert("<font size='3' color='red'>Carga conferida com erro no coletor, favor informar os responsáveis.</font>")
 				/*If (!MSGYESNO("Desejar continuar o processo?", "Informação" ))
 					Return
-				EndIf*/
+			EndIf*/
 				Return
-			EndIf
 		EndIf
+	EndIf
 	
-		If (!Empty(ZZV->ZZV_TICKET))
+	If (!Empty(ZZV->ZZV_TICKET))
 
-			If (lLEcoNE)
+		If (lLEcoNE)
 
 				//lRet := U_BIA249VE(ZZV->ZZV_TICKET, .F., .F.)
 
 				U_BIAEC003()
 
-			Else
+		Else
 
 				/*lRet := U_BIA249VE(ZZV->ZZV_TICKET, .F.)
 
-				If (!lRet)
+			If (!lRet)
 
-					If (MSGYESNO("Realizar a impressão mesmo com a carga não finalizada?", "Informação" ))
+				If (MSGYESNO("Realizar a impressão mesmo com a carga não finalizada?", "Informação" ))
 
 						U_BIAEC003()
 
-					EndIf
+				EndIf
 
-				Else
+			Else
 
 					U_BIAEC003()
 
-				EndIf
+			EndIf
 				*/
-				
-				U_BIAEC003()
-			EndIf
-
-			DbSelectArea("ZZV")
-			ZZV->(dbSetOrder(1))
-			If ZZV->(DbSeek(xFilial("ZZV")+ZZV->ZZV_CARGA))
-				If (ZZV->(FieldPos("ZZV_SCECOS")) > 0)
-					If (Empty(ZZV->ZZV_SCECOS))
-						Reclock("ZZV", .F.)
-						ZZV->ZZV_SCECOS	:= IIF(lRet, 'S', 'N')
-						ZZV->(MsUnLock())
-					EndIf
-				EndIf
-			EndIf
-
-			//U_BIAEC003()
-
-		Else
 
 			U_BIAEC003()
-
 		EndIf
+
+		DbSelectArea("ZZV")
+		ZZV->(dbSetOrder(1))
+		If ZZV->(DbSeek(xFilial("ZZV")+ZZV->ZZV_CARGA))
+			If (ZZV->(FieldPos("ZZV_SCECOS")) > 0)
+				If (Empty(ZZV->ZZV_SCECOS))
+					Reclock("ZZV", .F.)
+					ZZV->ZZV_SCECOS	:= IIF(lRet, 'S', 'N')
+					ZZV->(MsUnLock())
+				EndIf
+			EndIf
+		EndIf
+
+		//U_BIAEC003()
 
 	Else
 
-		Alert("<font size='3' color='red'>Carga não conferida.</font>")
+		U_BIAEC003()
 
 	EndIf
 
-	RestArea(aArea)
+Else
+
+	Alert("<font size='3' color='red'>Carga não conferida.</font>")
+
+EndIf
+
+RestArea(aArea)
 
 Return()
 
@@ -383,6 +387,7 @@ User Function BEC01MAN(nOpc)
 	Private VISUAL :=  nOpca == 2
 	Private INCLUI :=  nOpca == 3
 	Private ALTERA :=  nOpca == 4
+
 
 	//BOTOES DA ENCHOICEBAR
 	IF (nOpca == 3 .OR. nOpca == 4)
@@ -469,6 +474,7 @@ Static Function fEnchoice()
 	Local aFields := {"ZZV_CARGA","ZZV_TICKET","ZZV_TICKEX", "ZZV_PLACA","ZZV_CODMOT","ZZV_MOTOR","ZZV_DOCMOT","ZZV_PL_UF","ZZV_PL_MUN","ZZV_PL_DMU","ZZV_TRANSP","ZZV_NTRANS","ZZV_OBS","ZZV_CFRETE","NOUSER","ZZV_TPAGEN", "ZZV_DATAAG","ZZV_HORAAG", "ZZV_GALPAO", "ZZV_OBSNF1"}
 	Local aAlterFields
 
+
 	IF nOpca == 6
 		aAlterFields := {"ZZV_PLACA","ZZV_CODMOT","ZZV_DOCMOT","ZZV_PL_UF","ZZV_PL_MUN", "ZZV_OBSNF1"}
 	ELSE
@@ -482,6 +488,10 @@ Static Function fEnchoice()
 	Else
 		oEnchoice := MsMGet():New("ZZV",0,nOpca,,,,aFields,{14,0,117,aSize[3]-5},aAlterFields,,,,,oDlgCarga,,.T.)
 	EndIf
+
+	dDtAgOld := M->ZZV_DATAAG
+	cHrAgOld := M->ZZV_HORAAG
+	cTpAgOld := M->ZZV_TPAGEN
 
 Return
 
@@ -727,6 +737,7 @@ Static Function Salvar()
 
 	Local lRet := .T.
 
+
 	IF nOpca == 2
 		Return(.T.)
 	ENDIF
@@ -751,7 +762,67 @@ Static Function Salvar()
 	//	Return(.F.)
 	//EndIf
 
+
+
+
+	/*
+		@description Projeto C-22
+		@author Filipe Bittencourt
+		@since 10/03/2021
+		@version 1.0
+	*/
+	if (lRet .AND. nOpca == 4) .AND. !EMPTY(M->ZZV_DATAAG)
+		if(M->ZZV_DATAAG <= dDataBase)
+			PC22001()
+		EndIf
+	EndIf
+
 Return(lRet)
+
+Static Function PC22001()
+
+	Local cTime := FwTimeStamp()
+	Local cSeq  := "001"
+	Local cUser := Alltrim(UsrRetName(__CUSERID))
+	Local cQuery := ""
+	Local aArea := ZDJ->(GetArea())
+
+
+	cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+" "+SubStr(cTime,9,2)+':'+SubStr(cTime,11,2)+':'+SubStr(cTime,13,2)
+	cQuery := " SELECT TOP 1 * " + CRLF
+	cQuery += " FROM  "+  RetSqlName("ZDJ") + " "  + CRLF
+	cQuery += " WHERE ZDJ_FILIAL = '"+FWxFilial("ZZV")+"' "  + CRLF
+	cQuery += " AND ZDJ_CARGA  = '"+M->ZZV_CARGA+"' "  + CRLF
+	cQuery += " AND D_E_L_E_T_ = '' " + CRLF
+	cQuery += " ORDER BY ZDJ_SEQUEN DESC " + CRLF
+
+	If Select("__TRZ") > 0
+		__TRZ->(dbCloseArea())
+	EndIf
+
+	TcQuery cQuery New Alias "__TRZ"
+
+	If (__TRZ->(!EoF()))
+
+		cSeq  := val(__TRZ->ZDJ_SEQUEN)+1
+		cSeq  := PadL( AllTrim(cValToChar(cSeq)) , 3 , "0")
+
+	EndIf
+
+	RecLock('ZDJ', .T.)
+	ZDJ->ZDJ_FILIAL  := FWxFilial("ZZV")
+	ZDJ->ZDJ_CARGA   := M->ZZV_CARGA
+	ZDJ->ZDJ_SEQUEN  := cSeq
+	ZDJ->ZDJ_TPAGEN  := cTpAgOld
+	ZDJ->ZDJ_DATAAG  := dDtAgOld
+	ZDJ->ZDJ_HORAAG  := cHrAgOld
+	ZDJ->ZDJ_DTHRIN  := cTime
+	ZDJ->ZDJ_USERIN  := cUser
+	ZDJ->(MsUnlock())
+
+	RestArea(aArea)
+Return
+
 
 Static Function CheckTipoAgen()
 
@@ -1226,7 +1297,7 @@ Static Function AtuGalpao(cCarga)
 	Local nI			:= 0
 
 	If (AllTrim(cEmpAnt) $ '01/05/13')
-	
+
 		If(AllTrim(cEmpAnt) == '01')
 			cBanco		:= "DADOSEOS"
 		ElseIf(AllTrim(cEmpAnt) == '05')
@@ -1234,8 +1305,8 @@ Static Function AtuGalpao(cCarga)
 		ElseIf(AllTrim(cEmpAnt) == '13')
 			cBanco		:= "DADOS_13_EOS"
 		EndIf
-	
-	
+
+
 		cQuery += "SELECT 																																		"
 		cQuery += "	DISTINCT GALPAO=T3.dsc_local 																												"
 		cQuery += "	FROM ["+cBanco+"].[dbo].[cep_etiqueta_pallet] T1																							"
@@ -1251,23 +1322,23 @@ Static Function AtuGalpao(cCarga)
 		cQuery += "	WHERE 																									"
 		cQuery += "	nf_numero = ''																							"
 		cQuery += "	AND etiq_cancelada <> 1
-	
+
 		cAliasTrab 	:= GetNextAlias()
 		TCQUERY cQuery NEW ALIAS (cAliasTrab)
-	
+
 		While !((cAliasTrab)->(Eof()))
 			cDesc	+= AllTrim((cAliasTrab)->GALPAO)+"#"
 			(cAliasTrab)->(DbSkip())
 		EndDo
 		(cAliasTrab)->(DbCloseArea())
-	
+
 		aLista	:= StrTokArr( AllTrim(cDesc), "#")
 		cDesc	:= ""
-	
+
 		For nI:=1 To Len (aLista)
-	
+
 			If (!Empty(aLista[nI]))
-	
+
 				cDesc += aLista[nI]
 				If (nI == Len(aLista)-1)
 					cDesc := AllTrim(cDesc)
@@ -1277,12 +1348,12 @@ Static Function AtuGalpao(cCarga)
 				ElseIf (nI < Len(aLista))
 					cDesc += " "
 				EndIf
-	
+
 			EndIf
-	
+
 		Next nI
 	EndIf
-	
+
 
 Return cDesc
 

@@ -591,6 +591,22 @@ User Function M410AGRV()
 
 		EndIf
 
+		//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+		//GRAVA COMISSAO ZERO E VEND1 999999 PARA PEDIDOS DE VENDA DA LM PARA FARBICA
+		//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+		If Alltrim(cempant) $ "01_05_13" .And. 	M->C5_CLIENTE == "010064"
+			M->C5_VEND1		:= "999999"
+			M->C5_VEND2		:= ""
+			M->C5_VEND3		:= ""
+			M->C5_VEND4		:= ""
+			M->C5_VEND5		:= ""
+			M->C5_COMIS1	:= 0
+			M->C5_COMIS2	:= 0
+			M->C5_COMIS3	:= 0
+			M->C5_COMIS4	:= 0
+			M->C5_COMIS5	:= 0
+		EndIf
+
 		//Procura o Cliente
 		DbSelectArea("SA1")
 		DbSetOrder(1)
@@ -643,54 +659,69 @@ User Function M410AGRV()
 					Gdfieldput("C6_YRESUL2",M->C5_YRESUL2,i)
 					Gdfieldput("C6_YEMISSA",M->C5_EMISSAO,i)
 
-					//Acerta Itens Comissão
-					Gdfieldput("C6_COMIS1",M->C5_COMIS1,i)
-					Gdfieldput("C6_COMIS2",M->C5_COMIS2,i)
-					Gdfieldput("C6_COMIS3",M->C5_COMIS3,i)
-					Gdfieldput("C6_COMIS4",M->C5_COMIS4,i)
-					Gdfieldput("C6_COMIS5",M->C5_COMIS5,i)
+					//Ajusta Itens Comissão
+					//Grava comissao zero para os Pedidos de Venda LM
+					If Alltrim(cempant) $ "01_05_13" .And. 	M->C5_CLIENTE == "010064" 
 
-					//Posiciona no Produto
-					SB1->(DbSetOrder(1))
-					SB1->(DbSeek(xFilial("SB1")+nProd))
+						ConOut("M410AGRV => ACERTA COMISSAO CLIENTE LM")
 
-					//Acrescimo de Comissão - 17/04/13 - RANISSES
-					If SB1->B1_YACRCOM <> 0
-						If Gdfieldget("C6_COMIS1",i) <> 0
-							Gdfieldput("C6_COMIS1",M->C5_COMIS1+SB1->B1_YACRCOM,i)
-						EndIf
-						If Gdfieldget("C6_COMIS2",i) <> 0
-							Gdfieldput("C6_COMIS2",M->C5_COMIS2+SB1->B1_YACRCOM,i)
-						EndIf
-						If Gdfieldget("C6_COMIS3",i) <> 0
-							Gdfieldput("C6_COMIS3",M->C5_COMIS3+SB1->B1_YACRCOM,i)
-						EndIf
-						If Gdfieldget("C6_COMIS4",i) <> 0
-							Gdfieldput("C6_COMIS4",M->C5_COMIS4+SB1->B1_YACRCOM,i)
-						EndIf
-						If Gdfieldget("C6_COMIS5",i) <> 0
-							Gdfieldput("C6_COMIS5",M->C5_COMIS5+SB1->B1_YACRCOM,i)
-						EndIf
-					EndIf
-
-					//Comissão variavel - Linha Vitoria - 11/12/09 - WANISAY
-					If SB1->B1_YPERCOM <> 0
-						Gdfieldput("C6_COMIS1",M->C5_COMIS1+(M->C5_COMIS1*SB1->B1_YPERCOM/100),i)
-						Gdfieldput("C6_COMIS2",M->C5_COMIS2+(M->C5_COMIS2*SB1->B1_YPERCOM/100),i)
-						Gdfieldput("C6_COMIS3",M->C5_COMIS3+(M->C5_COMIS3*SB1->B1_YPERCOM/100),i)
-						Gdfieldput("C6_COMIS4",M->C5_COMIS4+(M->C5_COMIS4*SB1->B1_YPERCOM/100),i)
-						Gdfieldput("C6_COMIS5",M->C5_COMIS5+(M->C5_COMIS5*SB1->B1_YPERCOM/100),i)
-					EndIf
-
-					//Comissão Mundiali
-					If SB1->B1_COMIS <> 0
-						If Gdfieldget("C6_COMIS1",i) <> 0
-							Gdfieldput("C6_COMIS1",SB1->B1_COMIS,i)
-						EndIf
+						Gdfieldput("C6_COMIS1",0,i)
 						Gdfieldput("C6_COMIS2",0,i)
 						Gdfieldput("C6_COMIS3",0,i)
 						Gdfieldput("C6_COMIS4",0,i)
 						Gdfieldput("C6_COMIS5",0,i)
+					
+					Else
+						
+						Gdfieldput("C6_COMIS1",M->C5_COMIS1,i)
+						Gdfieldput("C6_COMIS2",M->C5_COMIS2,i)
+						Gdfieldput("C6_COMIS3",M->C5_COMIS3,i)
+						Gdfieldput("C6_COMIS4",M->C5_COMIS4,i)
+						Gdfieldput("C6_COMIS5",M->C5_COMIS5,i)
+
+						//Posiciona no Produto
+						SB1->(DbSetOrder(1))
+						SB1->(DbSeek(xFilial("SB1")+nProd))
+
+						//Acrescimo de Comissão - 17/04/13 - RANISSES
+						If SB1->B1_YACRCOM <> 0
+							If Gdfieldget("C6_COMIS1",i) <> 0
+								Gdfieldput("C6_COMIS1",M->C5_COMIS1+SB1->B1_YACRCOM,i)
+							EndIf
+							If Gdfieldget("C6_COMIS2",i) <> 0
+								Gdfieldput("C6_COMIS2",M->C5_COMIS2+SB1->B1_YACRCOM,i)
+							EndIf
+							If Gdfieldget("C6_COMIS3",i) <> 0
+								Gdfieldput("C6_COMIS3",M->C5_COMIS3+SB1->B1_YACRCOM,i)
+							EndIf
+							If Gdfieldget("C6_COMIS4",i) <> 0
+								Gdfieldput("C6_COMIS4",M->C5_COMIS4+SB1->B1_YACRCOM,i)
+							EndIf
+							If Gdfieldget("C6_COMIS5",i) <> 0
+								Gdfieldput("C6_COMIS5",M->C5_COMIS5+SB1->B1_YACRCOM,i)
+							EndIf
+						EndIf
+
+						//Comissão variavel - Linha Vitoria - 11/12/09 - WANISAY
+						If SB1->B1_YPERCOM <> 0
+							Gdfieldput("C6_COMIS1",M->C5_COMIS1+(M->C5_COMIS1*SB1->B1_YPERCOM/100),i)
+							Gdfieldput("C6_COMIS2",M->C5_COMIS2+(M->C5_COMIS2*SB1->B1_YPERCOM/100),i)
+							Gdfieldput("C6_COMIS3",M->C5_COMIS3+(M->C5_COMIS3*SB1->B1_YPERCOM/100),i)
+							Gdfieldput("C6_COMIS4",M->C5_COMIS4+(M->C5_COMIS4*SB1->B1_YPERCOM/100),i)
+							Gdfieldput("C6_COMIS5",M->C5_COMIS5+(M->C5_COMIS5*SB1->B1_YPERCOM/100),i)
+						EndIf
+
+						//Comissão Mundiali
+						If SB1->B1_COMIS <> 0
+							If Gdfieldget("C6_COMIS1",i) <> 0
+								Gdfieldput("C6_COMIS1",SB1->B1_COMIS,i)
+							EndIf
+							Gdfieldput("C6_COMIS2",0,i)
+							Gdfieldput("C6_COMIS3",0,i)
+							Gdfieldput("C6_COMIS4",0,i)
+							Gdfieldput("C6_COMIS5",0,i)
+						EndIf
+
 					EndIf
 
 					//Grava variavel de desconto %Outros

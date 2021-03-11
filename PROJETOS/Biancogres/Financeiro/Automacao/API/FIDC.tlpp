@@ -1,7 +1,7 @@
 #include "totvs.ch"
 #include "parmtype.ch"
 
-/*/{???????Protheus.doc}??????? FIDC
+/*/{Protheus.doc} FIDC
 @author Marinaldo de Jesus
 @since 01/02/2021
 @project FIDC
@@ -22,6 +22,8 @@ class FIDC
 
 	static method bcoIsFIDC() as logical
 	static method getbcoFIDC(lClear as logical) as array
+
+	static method retbcoFIDC() as array
 
 	static method regrabcoIsFIDC() as logical
 	static method getregrabcoIsFIDC(lClear as logical) as array
@@ -150,6 +152,50 @@ static method getbcoFIDC(lClear) class FIDC
 	if (lClear)
 		aSize(aBCOIsFIDC,0)
 	endif
+	return(aBCOIsFIDC)
+
+static method retbcoFIDC() class FIDC
+	
+	local cEmp		as character
+	local cFil		as character
+	local cBanco	as character
+	local cAgencia	as character
+	local cConta	as character
+	local cTmpAlias	as character
+
+	local nSA6RecNo	as numeric
+
+	cTmpAlias:=getNextAlias()
+
+	beginSQL alias cTmpAlias
+		SELECT SA6.R_E_C_N_O_ SA6RECNO
+		  FROM %table:SA6% SA6
+		 WHERE SA6.%notDel%
+		   AND SA6.A6_FILIAL=%xFilial:SA6%
+		   AND SA6.A6_YTPINTB='1'
+	endSQL
+
+	DEFAULT aBCOIsFIDC:=array(0)
+
+	cEmp:=&("cEmpAnt")
+	cFil:=&("cFilAnt")
+
+	DEFAULT aBCOIsFIDC:=array(0)
+	bBCOIsFIDC:={|e|(e[1]==cEmp).and.(e[2]==cFil).and.(e[3]==cBanco).and.(e[4]==cAgencia).and.(e[5]==cConta)}
+
+	while (cTmpAlias)->(!eof())
+		nSA6RecNo:=(cTmpAlias)->SA6RECNO
+		SA6->(dbGoTo(nSA6RecNo))
+		cBanco:=SA6->A6_COD
+		cAgencia:=SA6->A6_AGENCIA
+		cConta:=SA6->A6_NUMCON
+		nBCOIsFIDC:=aScan(aBCOIsFIDC,bBCOIsFIDC)
+		if (nBCOIsFIDC==0)
+			aAdd(aBCOIsFIDC,{cEmp,cFil,cBanco,cAgencia,cConta,nSA6RecNo})
+		endif
+		(cTmpAlias)->(dbSkip())
+	end while
+
 	return(aBCOIsFIDC)
 
 static method regrabcoIsFIDC() class FIDC
@@ -395,7 +441,19 @@ static method isctbFIDC() class FIDC
 			FIDC():setFIDCVar("cCTBStack","ExecMovFin")
 			break
 		endif
-		
+
+		lCTBFIDC:=Stacktools():IsInCallStack("ExecBaixaCR")
+		if (lCTBFIDC)
+			FIDC():setFIDCVar("cCTBStack","ExecBaixaCR")
+			break
+		endif
+
+		lCTBFIDC:=Stacktools():IsInCallStack("ctbFIDCOffLine")
+		if (lCTBFIDC)
+			FIDC():setFIDCVar("cCTBStack","ctbFIDCOffLine")
+			break
+		endif
+
 		if (Stacktools():IsInCallStack("FINA070"))
 			FIDC():setFIDCVar("cCTBStack","FINA070")
 			FIDC():setFIDCVar("lFINA070",.T.)
@@ -428,6 +486,11 @@ static method isLPctbFIDC(cPadrao) class FIDC
 			break
 		endif
 
+		lisLPctbFIDC:=(cPadrao$"520|521|527")
+		if (lisLPctbFIDC)
+			break
+		endif
+
 	end sequence
 
 	return(lisLPctbFIDC)
@@ -441,7 +504,10 @@ static method ctbFIDCOffLine() class FIDC
 	local bAction			as block
 
 	local cPadrao			as character
+	local cPadraoBX			as character
 	local cParamTit     	as character
+
+	local dSvDataBase		as date
 
 	local lPadrao			as logical
 	local lParamBox			as logical
@@ -452,6 +518,8 @@ static method ctbFIDCOffLine() class FIDC
 	local otMultProcess		as object
 
 	aArea:=getArea()
+
+	dSvDataBase:=&("dDataBase")
 
     saveInter()
 	
@@ -465,9 +533,9 @@ static method ctbFIDCOffLine() class FIDC
 		aAdd(aParamBox,array(9))
 		nPBoxAT:=Len(aParamBox)
 		aParamBox[nPBoxAT][1]:=1//[1]:1 - MsGet
-		aParamBox[nPBoxAT][2]:="Bordero De"//[2]:Descricao
+		aParamBox[nPBoxAT][2]:="Número Borderô De"//[2]:Descricao
 		aParamBox[nPBoxAT][3]:=Space(GetSx3Cache("E1_NUMBOR","X3_TAMANHO"))//[3]:String contendo o inicializador do campo
-		aParamBox[nPBoxAT][4]:=""//[4]:String contendo a Picture do campo
+		aParamBox[nPBoxAT][4]:=GetSx3Cache("E1_NUMBOR","X3_PICTURE")//[4]:String contendo a Picture do campo
 		aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
 		aParamBox[nPBoxAT][6]:=""//[6]:Consulta F3
 		aParamBox[nPBoxAT][7]:="AllWaysTrue()"//[7]:String contendo a validacao When
@@ -478,9 +546,9 @@ static method ctbFIDCOffLine() class FIDC
 		aAdd(aParamBox,array(9))
 		nPBoxAT:=Len(aParamBox)
 		aParamBox[nPBoxAT][1]:=1//[1]:1 - MsGet
-		aParamBox[nPBoxAT][2]:="Bordero Ate"//[2]:Descricao
+		aParamBox[nPBoxAT][2]:="Número Borderô Ate"//[2]:Descricao
 		aParamBox[nPBoxAT][3]:=Space(GetSx3Cache("E1_NUMBOR","X3_TAMANHO"))//[3]:String contendo o inicializador do campo
-		aParamBox[nPBoxAT][4]:=""//[4]:String contendo a Picture do campo
+		aParamBox[nPBoxAT][4]:=GetSx3Cache("E1_NUMBOR","X3_PICTURE")//[4]:String contendo a Picture do campo
 		aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
 		aParamBox[nPBoxAT][6]:=""//[6]:Consulta F3
 		aParamBox[nPBoxAT][7]:="AllWaysTrue()"//[7]:String contendo a validacao When
@@ -491,26 +559,26 @@ static method ctbFIDCOffLine() class FIDC
 		aAdd(aParamBox,array(9))
 		nPBoxAT:=Len(aParamBox)
 		aParamBox[nPBoxAT][1]:=1//[1]:1 - MsGet
-		aParamBox[nPBoxAT][2]:="Emissao De"//[2]:Descricao
+		aParamBox[nPBoxAT][2]:="Data Borderô De"//[2]:Descricao
 		aParamBox[nPBoxAT][3]:=CtoD("")//[3]:String contendo o inicializador do campo
 		aParamBox[nPBoxAT][4]:="@D"//[4]:String contendo a Picture do campo
 		aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
 		aParamBox[nPBoxAT][6]:=""//[6]:Consulta F3
 		aParamBox[nPBoxAT][7]:="AllWaysTrue()"//[7]:String contendo a validacao When
-		aParamBox[nPBoxAT][8]:=GetSx3Cache("E1_EMISSAO","X3_TAMANHO")//[8]:Tamanho do MsGet
+		aParamBox[nPBoxAT][8]:=GetSx3Cache("E1_DATABOR","X3_TAMANHO")//[8]:Tamanho do MsGet
 		aParamBox[nPBoxAT][9]:=.F.//[9]:Flag .T./.F. Parametro Obrigatorio ?
 
 		//04----------------------------------------------------------------------------------------------
 		aAdd(aParamBox,array(9))
 		nPBoxAT:=Len(aParamBox)
 		aParamBox[nPBoxAT][1]:=1//[1]:1 - MsGet
-		aParamBox[nPBoxAT][2]:="Emissao Ate"//[2]:Descricao
+		aParamBox[nPBoxAT][2]:="Data Borderô Ate"//[2]:Descricao
 		aParamBox[nPBoxAT][3]:=date()//[3]:String contendo o inicializador do campo
 		aParamBox[nPBoxAT][4]:="@D"//[4]:String contendo a Picture do campo
 		aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
 		aParamBox[nPBoxAT][6]:=""//[6]:Consulta F3
 		aParamBox[nPBoxAT][7]:="AllWaysTrue()"//[7]:String contendo a validacao When
-		aParamBox[nPBoxAT][8]:=GetSx3Cache("E1_EMISSAO","X3_TAMANHO")//[8]:Tamanho do MsGet
+		aParamBox[nPBoxAT][8]:=GetSx3Cache("E1_DATABOR","X3_TAMANHO")//[8]:Tamanho do MsGet
 		aParamBox[nPBoxAT][9]:=.T.//[9]:Flag .T./.F. Parametro Obrigatorio ?
 
 		//05----------------------------------------------------------------------------------------------
@@ -519,11 +587,26 @@ static method ctbFIDCOffLine() class FIDC
 		aParamBox[nPBoxAT][1]:=1//[1]:1 - MsGet
 		aParamBox[nPBoxAT][2]:="Lançamento Padrão"//[2]:Descricao
 		aParamBox[nPBoxAT][3]:=FIDC():getBiaPar("FIDC_LP_BORDERO",Space(GetSx3Cache("CT5_LANPAD","X3_TAMANHO")))//[3]:String contendo o inicializador do campo
-		aParamBox[nPBoxAT][4]:="@D"//[4]:String contendo a Picture do campo
+		aParamBox[nPBoxAT][4]:=GetSx3Cache("CT5_LANPAD","X3_PICTURE")//[4]:String contendo a Picture do campo
 		aParamBox[nPBoxAT][5]:="ExistCpo('CT5')" //[5]:String contendo a validacao
 		aParamBox[nPBoxAT][6]:="CT5"//[6]:Consulta F3
 		aParamBox[nPBoxAT][7]:="AllWaysTrue()"//[7]:String contendo a validacao When
 		aParamBox[nPBoxAT][8]:=GetSx3Cache("CT5_LANPAD","X3_TAMANHO")//[8]:Tamanho do MsGet
+		aParamBox[nPBoxAT][9]:=.T.//[9]:Flag .T./.F. Parametro Obrigatorio ?
+
+		cPadraoBX:=FIDC():getBiaPar("FIDC_LP_BAIXA","FBX")
+
+		//06----------------------------------------------------------------------------------------------
+		aAdd(aParamBox,array(9))
+		nPBoxAT:=Len(aParamBox)
+		aParamBox[nPBoxAT][1]:=1//[1]:1 - MsGet
+		aParamBox[nPBoxAT][2]:="Data Retorno (Baixa)"//[2]:Descricao
+		aParamBox[nPBoxAT][3]:=Date()//[3]:String contendo o inicializador do campo
+		aParamBox[nPBoxAT][4]:="@D"//[4]:String contendo a Picture do campo
+		aParamBox[nPBoxAT][5]:="" //[5]:String contendo a validacao
+		aParamBox[nPBoxAT][6]:=""//[6]:Consulta F3
+		aParamBox[nPBoxAT][7]:="'"+cPadraoBX+"'$MV_PAR05"//[7]:String contendo a validacao When
+		aParamBox[nPBoxAT][8]:=GetSx3Cache("E1_DATABOR","X3_TAMANHO")//[8]:Tamanho do MsGet
 		aParamBox[nPBoxAT][9]:=.T.//[9]:Flag .T./.F. Parametro Obrigatorio ?
 
         cParamTit:="CTB FIDC OffLine"
@@ -560,6 +643,8 @@ static method ctbFIDCOffLine() class FIDC
 	
 	restInter()
 
+	&("dDataBase"):=dSvDataBase
+
 	restArea(aArea)
 
 	return(lctbFIDCOffLine)
@@ -567,8 +652,10 @@ static method ctbFIDCOffLine() class FIDC
 static function ctbFIDCOffLine(otMultProcess as object,aParamRet as array) as logical
 
 	local aSE1RecNos		as array
+	local aZK4RecNos		as array
 	
 	local cPadrao			as character
+	local cPadraoBX			as character	
 	
 	local cTmpAlias			as character
 	
@@ -577,57 +664,125 @@ static function ctbFIDCOffLine(otMultProcess as object,aParamRet as array) as lo
 	
 	local cE1NUMBORDe		as character
 	local cE1NUMBORAte		as character
-	local cE1EMISSAODe		as character
-	local cE1EMISSAOAte		as character
+	local cE1DATABORDe		as character
+	local cE1DATABORAte		as character
 
-	local dE1EMISSAODe		as date
-	local dE1EMISSAOAte		as date
+	local cZK4Data			as character
+
+	local dE1DATABORDe		as date
+	local dE1DATABORAte		as date
+
+	local dZK4Data			as date
 	
+	local lBaixa 			as logical
 	local lUsaFlag			as logical
 	local lUsaSeqCor		as logical
 	local lctbFIDCOffLine	as logical
 
 	local nRecNo			as numeric
 	local nRecNos			as numeric
+	
 	local nSA1RecNo			as numeric
 	local nSE1RecNo			as numeric
+	local nZK4RecNo			as numeric
+	
 	local nSA1IdxKey		as numeric
 
 	begin sequence
 
-		cE1NUMBORDe:=aParamRet[1]
-		cE1NUMBORAte:=aParamRet[2]
-
-		dE1EMISSAODe:=aParamRet[3]
-		dE1EMISSAOAte:=aParamRet[4]
-
-		cE1EMISSAODe:=DToS(dE1EMISSAODe)
-		cE1EMISSAOAte:=DToS(dE1EMISSAOAte)
+		cPadrao:=aParamRet[5]
+		cPadraoBX:=FIDC():getBiaPar("FIDC_LP_BAIXA","FBX")
 
 		cTmpAlias:=getNextAlias()
 		
-		beginSQL alias cTmpAlias
-			SELECT SE1.R_E_C_N_O_ SE1RECNO
-			FROM %table:SE1% SE1 (NOLOCK)
-				,%table:SA6% SA6 (NOLOCK)
-			WHERE SE1.%notDel%
-			  AND SE1.E1_FILIAL=%xFilial:SE1%
-			  AND SE1.E1_LA<>'S'
-			  AND SE1.E1_PORTADO=SA6.A6_COD
-			  AND SE1.E1_CONTA=SA6.A6_NUMCON
-			  AND SE1.E1_AGEDEP=SA6.A6_AGENCIA
-			  AND SE1.E1_NUMBOR BETWEEN %exp:cE1NUMBORDe% AND %exp:cE1NUMBORAte%
-			  AND SE1.E1_EMISSAO BETWEEN %exp:cE1EMISSAODe% AND %exp:cE1EMISSAOAte%
-			  AND SA6.%notDel%
-			  AND SA6.A6_FILIAL=%xFilial:SA6%
-			  AND SA6.A6_YTPINTB='1'
-		endSQL
+		lBaixa:=(cPadrao==cPadraoBX)
+		if (lBaixa)
+
+			cE1NUMBORDe:=Space(GetSX3Cache("E1_NUMBOR","X3_TAMANHO"))
+			cE1NUMBORAte:=Replicate("Z",GetSX3Cache("E1_NUMBOR","X3_TAMANHO"))
+
+			cE1DATABORDe:=Space(GetSX3Cache("E1_DATABOR","X3_TAMANHO"))
+			cE1DATABORAte:=Replicate("Z",GetSX3Cache("E1_DATABOR","X3_TAMANHO"))
+
+			dZK4Data:=aParamRet[6]
+			cZK4Data:=DToS(dZK4Data)
+
+			beginSQL alias cTmpAlias
+				SELECT SE1.R_E_C_N_O_ SE1RECNO
+				      ,ZK4.R_E_C_N_O_ ZK4RECNO
+				  FROM %table:SE1% SE1 (NOLOCK)
+				  JOIN %table:ZK4% ZK4 (NOLOCK) 
+				    ON (
+							SE1.E1_PORTADO=ZK4.ZK4_BANCO
+				    	AND SE1.E1_AGEDEP=ZK4.ZK4_AGENCI
+				    	AND SE1.E1_CONTA=ZK4.ZK4_CONTA
+						AND SE1.E1_NUM+E1_PARCELA=ZK4.ZK4_NUMERO
+				    	AND SE1.E1_NUMBCO=SUBSTRING(ZK4.ZK4_NOSNUM,1,11)
+				    	AND SE1.E1_VENCTO=ZK4.ZK4_DTVENC
+					)				 
+					,%table:SA6% SA6 (NOLOCK)
+				WHERE SE1.%notDel%
+				  AND ZK4.%notDel%
+				  AND SE1.E1_FILIAL=%xFilial:SE1%
+				  AND ZK4.ZK4_FILIAL=%xFilial:ZK4%
+				  AND ZK4.ZK4_DATA=%exp:cZK4Data%
+				  AND ZK4.ZK4_CODOCO='06'
+				  AND ZK4.ZK4_TIPO='R'
+				  AND SE1.E1_LA<>'S'
+				  AND SE1.E1_PORTADO=SA6.A6_COD
+				  AND SE1.E1_CONTA=SA6.A6_NUMCON
+				  AND SE1.E1_AGEDEP=SA6.A6_AGENCIA
+				  AND SE1.E1_NUMBOR BETWEEN %exp:cE1NUMBORDe% AND %exp:cE1NUMBORAte%
+				  AND SE1.E1_DATABOR BETWEEN %exp:cE1DATABORDe% AND %exp:cE1DATABORAte%
+				  AND SA6.%notDel%
+				  AND SA6.A6_FILIAL=%xFilial:SA6%
+				  AND SA6.A6_YTPINTB='1'
+				  AND SE1.E1_YSITAPI='2'
+			endSQL
+
+		else
+
+			cE1NUMBORDe:=aParamRet[1]
+			cE1NUMBORAte:=aParamRet[2]
+
+			dE1DATABORDe:=aParamRet[3]
+			dE1DATABORAte:=aParamRet[4]
+
+			cE1DATABORDe:=DToS(dE1DATABORDe)
+			cE1DATABORAte:=DToS(dE1DATABORAte)
+
+			beginSQL alias cTmpAlias
+				SELECT SE1.R_E_C_N_O_ SE1RECNO
+				  FROM %table:SE1% SE1 (NOLOCK)
+				   	  ,%table:SA6% SA6 (NOLOCK)
+				 WHERE SE1.%notDel%
+				   AND SE1.E1_FILIAL=%xFilial:SE1%
+				   AND SE1.E1_LA<>'S'
+				   AND SE1.E1_PORTADO=SA6.A6_COD
+				   AND SE1.E1_CONTA=SA6.A6_NUMCON
+				   AND SE1.E1_AGEDEP=SA6.A6_AGENCIA
+				   AND SE1.E1_NUMBOR BETWEEN %exp:cE1NUMBORDe% AND %exp:cE1NUMBORAte%
+				   AND SE1.E1_DATABOR BETWEEN %exp:cE1DATABORDe% AND %exp:cE1DATABORAte%
+				   AND SA6.%notDel%
+				   AND SA6.A6_FILIAL=%xFilial:SA6%
+				   AND SA6.A6_YTPINTB='1'
+				   AND SE1.E1_YSITAPI='2'
+			endSQL
+
+		endif
 
 		aSE1RecNos:=array(0)
+		if (lBaixa)
+			aZK4RecNos:=array(0)
+		endif
 
 		while (cTmpAlias)->(!eof())
 			nSE1RecNo:=(cTmpAlias)->SE1RECNO
 			aAdd(aSE1RecNos,nSE1RecNo)
+			if (lBaixa)
+				nZK4RecNo:=(cTmpAlias)->ZK4RECNO
+				aAdd(aZK4RecNos,nZK4RecNo)
+			endif
 			(cTmpAlias)->(dbSkip())
 		end while
 
@@ -646,9 +801,16 @@ static function ctbFIDCOffLine(otMultProcess as object,aParamRet as array) as lo
 		lUsaSeqCor:=FindFunction("UsaSeqCor")
 
 		for nRecNo:=1 to nRecNos
-			otMultProcess:IncRegua(1,"FIDC :: Contabilizando. Aguarde...")
+			otMultProcess:IncRegua(1,"FIDC :: Contabilizando ["+cPadrao+"]. Aguarde...")
 			nSE1RecNo:=aSE1RecNos[nRecNo]
 			SE1->(dbGoTo(nSE1RecNo))
+			if (lBaixa)
+				nZK4RecNo:=aZK4RecNos[nRecNo]
+				ZK4->(dbGoTo(nZK4RecNo))
+				&("dDataBase"):=ZK4->ZK4_DTLIQ
+			else
+				&("dDataBase"):=SE1->E1_DATABOR
+			endif
 			SA1->(dbSetOrder(nSA1IdxKey))
 			if (SA1->(!MsSeek(cSA1Filial+SE1->E1_CLIENTE+SE1->E1_LOJA)))
 				loop
@@ -711,9 +873,9 @@ static method txFIDCOffLine() class FIDC
 		aAdd(aParamBox,array(9))
 		nPBoxAT:=Len(aParamBox)
 		aParamBox[nPBoxAT][1]:=1//[1]:1 - MsGet
-		aParamBox[nPBoxAT][2]:="Bordero De"//[2]:Descricao
+		aParamBox[nPBoxAT][2]:="Número Borderô De"//[2]:Descricao
 		aParamBox[nPBoxAT][3]:=Space(GetSx3Cache("E1_NUMBOR","X3_TAMANHO"))//[3]:String contendo o inicializador do campo
-		aParamBox[nPBoxAT][4]:=""//[4]:String contendo a Picture do campo
+		aParamBox[nPBoxAT][4]:=GetSx3Cache("E1_NUMBOR","X3_PICTURE")//[4]:String contendo a Picture do campo
 		aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
 		aParamBox[nPBoxAT][6]:=""//[6]:Consulta F3
 		aParamBox[nPBoxAT][7]:="AllWaysTrue()"//[7]:String contendo a validacao When
@@ -724,9 +886,9 @@ static method txFIDCOffLine() class FIDC
 		aAdd(aParamBox,array(9))
 		nPBoxAT:=Len(aParamBox)
 		aParamBox[nPBoxAT][1]:=1//[1]:1 - MsGet
-		aParamBox[nPBoxAT][2]:="Bordero Ate"//[2]:Descricao
+		aParamBox[nPBoxAT][2]:="Número Borderô Ate"//[2]:Descricao
 		aParamBox[nPBoxAT][3]:=Space(GetSx3Cache("E1_NUMBOR","X3_TAMANHO"))//[3]:String contendo o inicializador do campo
-		aParamBox[nPBoxAT][4]:=""//[4]:String contendo a Picture do campo
+		aParamBox[nPBoxAT][4]:=GetSx3Cache("E1_NUMBOR","X3_PICTURE")//[4]:String contendo a Picture do campo
 		aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
 		aParamBox[nPBoxAT][6]:=""//[6]:Consulta F3
 		aParamBox[nPBoxAT][7]:="AllWaysTrue()"//[7]:String contendo a validacao When
@@ -737,9 +899,9 @@ static method txFIDCOffLine() class FIDC
 		aAdd(aParamBox,array(9))
 		nPBoxAT:=Len(aParamBox)
 		aParamBox[nPBoxAT][1]:=1//[1]:1 - MsGet
-		aParamBox[nPBoxAT][2]:="Emissao De"//[2]:Descricao
+		aParamBox[nPBoxAT][2]:="Data Borderô De"//[2]:Descricao
 		aParamBox[nPBoxAT][3]:=CtoD("")//[3]:String contendo o inicializador do campo
-		aParamBox[nPBoxAT][4]:="@D"//[4]:String contendo a Picture do campo
+		aParamBox[nPBoxAT][4]:=GetSx3Cache("E1_EMISSAO","X3_PICTURE")//[4]:String contendo a Picture do campo
 		aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
 		aParamBox[nPBoxAT][6]:=""//[6]:Consulta F3
 		aParamBox[nPBoxAT][7]:="AllWaysTrue()"//[7]:String contendo a validacao When
@@ -750,9 +912,9 @@ static method txFIDCOffLine() class FIDC
 		aAdd(aParamBox,array(9))
 		nPBoxAT:=Len(aParamBox)
 		aParamBox[nPBoxAT][1]:=1//[1]:1 - MsGet
-		aParamBox[nPBoxAT][2]:="Emissao Ate"//[2]:Descricao
+		aParamBox[nPBoxAT][2]:="Data Borderô Ate"//[2]:Descricao
 		aParamBox[nPBoxAT][3]:=date()//[3]:String contendo o inicializador do campo
-		aParamBox[nPBoxAT][4]:="@D"//[4]:String contendo a Picture do campo
+		aParamBox[nPBoxAT][4]:=GetSx3Cache("E1_EMISSAO","X3_PICTURE")//[4]:String contendo a Picture do campo
 		aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
 		aParamBox[nPBoxAT][6]:=""//[6]:Consulta F3
 		aParamBox[nPBoxAT][7]:="AllWaysTrue()"//[7]:String contendo a validacao When
@@ -789,11 +951,11 @@ static function txFIDCOffLine(otMultProcess as object,aParamRet as array) as log
 
 	local cE1NUMBORDe		as character
 	local cE1NUMBORAte		as character
-	local cE1EMISSAODe		as character
-	local cE1EMISSAOAte		as character
+	local cE1DATABORDe		as character
+	local cE1DATABORAte		as character
 
-	local dE1EMISSAODe		as date
-	local dE1EMISSAOAte		as date
+	local dE1DATABORDe		as date
+	local dE1DATABORAte		as date
 	
 	local ltxFIDCOffLine	as logical
 
@@ -806,11 +968,11 @@ static function txFIDCOffLine(otMultProcess as object,aParamRet as array) as log
 		cE1NUMBORDe:=aParamRet[1]
 		cE1NUMBORAte:=aParamRet[2]
 
-		dE1EMISSAODe:=aParamRet[3]
-		dE1EMISSAOAte:=aParamRet[4]
+		dE1DATABORDe:=aParamRet[3]
+		dE1DATABORAte:=aParamRet[4]
 
-		cE1EMISSAODe:=DToS(dE1EMISSAODe)
-		cE1EMISSAOAte:=DToS(dE1EMISSAOAte)
+		cE1DATABORDe:=DToS(dE1DATABORDe)
+		cE1DATABORAte:=DToS(dE1DATABORAte)
 
 		cTmpAlias:=getNextAlias()
 		
@@ -824,7 +986,7 @@ static function txFIDCOffLine(otMultProcess as object,aParamRet as array) as log
 			  AND SE1.E1_CONTA=SA6.A6_NUMCON
 			  AND SE1.E1_AGEDEP=SA6.A6_AGENCIA
 			  AND SE1.E1_NUMBOR BETWEEN %exp:cE1NUMBORDe% AND %exp:cE1NUMBORAte%
-			  AND SE1.E1_EMISSAO BETWEEN %exp:cE1EMISSAODe% AND %exp:cE1EMISSAOAte%
+			  AND SE1.E1_DATABOR BETWEEN %exp:cE1DATABORDe% AND %exp:cE1DATABORAte%
 			  AND SA6.%notDel%
 			  AND SA6.A6_FILIAL=%xFilial:SA6%
 			  AND SA6.A6_YTPINTB='1'
@@ -906,14 +1068,24 @@ static method calculaDesconto(nValor,dVencimento,dReferencia) class FIDC
 	paramtype dVencimento	as date
 	paramtype dReferencia	as date optional
 
-	dToday				:=Date()
-	DEFAULT dReferencia	:=dToday
-	nFIDCPercentual		:=FIDC():percentualDesconto() 
-	dDataValida			:=DataValida(DataValida(dVencimento)+1)
-	nDiasCalculo		:=(dDataValida-dReferencia)
-	nFatorCalculo		:=(((nFIDCPercentual+1)^(nDiasCalculo/30))-1)
-	nValorDesconto		:=(nValor*nFatorCalculo)
-	nValorDesconto		:=Round(nValorDesconto,2)
+	dToday:=Date()
+	DEFAULT dReferencia:=dToday
+	
+	nFIDCPercentual:=FIDC():percentualDesconto() 
+	FIDC():setFIDCVar("nFIDCPercentual",nFIDCPercentual)
+	
+	dDataValida:=DataValida(DataValida(dVencimento)+1)
+	FIDC():setFIDCVar("dDataValida",dDataValida)
+	
+	nDiasCalculo:=(dDataValida-dReferencia)
+	FIDC():setFIDCVar("nDiasCalculo",nDiasCalculo)
+	
+	nFatorCalculo:=(((nFIDCPercentual+1)^(nDiasCalculo/30))-1)
+	FIDC():setFIDCVar("nFatorCalculo",nFatorCalculo)
+	
+	nValorDesconto:=(nValor*nFatorCalculo)
+	nValorDesconto:=Round(nValorDesconto,2)
+	FIDC():setFIDCVar("nValorDesconto",nValorDesconto)
 
 	return(nValorDesconto)
 

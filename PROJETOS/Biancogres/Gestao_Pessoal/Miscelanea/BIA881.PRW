@@ -513,7 +513,8 @@ Static Function BIA881A()
 	HR007 += Alltrim("                                   WHERE NUMCAD = CONVERT(NUMERIC, ZO0_MAT)), '    ' + CASE                          ") + msrhEnter
 	HR007 += Alltrim("                                                                           WHEN SUBSTRING(ZO0_ADMISS,5,2) = '12' THEN '01'                                                                                                                 ") + msrhEnter
 	HR007 += Alltrim("                                                                           ELSE REPLICATE('0', 2 - LEN(CONVERT(CHAR, CONVERT(NUMERIC, SUBSTRING(ZO0_ADMISS,5,2)) + 1))) + CONVERT(CHAR, CONVERT(NUMERIC, SUBSTRING(ZO0_ADMISS,5,2)) + 1)   ") + msrhEnter
-	HR007 += Alltrim("                                                                         END + '  '), 5, 2)                          ") + msrhEnter
+	HR007 += Alltrim("                                                                         END + '  '), 5, 2),                         ") + msrhEnter
+	HR007 += Alltrim("       ZO0.ZO0_DPTOSR DPTOSR                                                                                         ") + msrhEnter
 	HR007 += Alltrim("  FROM " + RetSqlName("ZO0") + " ZO0                                                                                 ") + msrhEnter
 	HR007 += Alltrim("  LEFT JOIN " + RetSqlName("ZB4") + " ZB4 ON ZB4.ZB4_FILIAL = '" + xFilial("ZB4") + "'                               ") + msrhEnter
 	HR007 += Alltrim("                      AND ZB4.ZB4_CATEGF = ZO0.ZO0_CTGFUN                                                            ") + msrhEnter
@@ -669,6 +670,7 @@ Static Function BIA881A()
 			ZBA->ZBA_TMPCAS  := HR07->TMPCASA
 			ZBA->ZBA_DPRVFR  := stod(HR07->DPRVFR)
 			ZBA->ZBA_MESFER  := HR07->MESFER
+			ZBA->ZBA_DPTOSR  := HR07->DPTOSR
 			ZBA->ZBA_CSTFUN  := &(msCustFun)
 			ZBA->(MsUnlock())
 
@@ -831,6 +833,7 @@ Static Function BIA881A()
 		UP006 += Alltrim("                AND ZBA.D_E_L_E_T_ = ' ')                                                                       ") + msrhEnter
 		UP006 += Alltrim("      UPDATE ZBA SET                                                                                            ") + msrhEnter
 		UP006 += Alltrim("             ZBA_TNOTRA = SMT.ZBA_TNOTRA,                                                                       ") + msrhEnter
+		UP006 += Alltrim("             ZBA_FUNCAO = SMT.ZBA_FUNCAO,                                                                       ") + msrhEnter
 		UP006 += Alltrim("             ZBA_CATGFU = SMT.ZBA_CATGFU,                                                                       ") + msrhEnter
 		UP006 += Alltrim("             ZBA_SALARI = SMT.ZBA_SALARI,                                                                       ") + msrhEnter
 		UP006 += Alltrim("             ZBA_PPERIC = SMT.ZBA_PPERIC,                                                                       ") + msrhEnter
@@ -897,7 +900,7 @@ Static Function BIA881A()
 		UP006 += Alltrim("             ZBA_13INSA = SMT.ZBA_13INSA,                                                                       ") + msrhEnter
 		UP006 += Alltrim("             ZBA_13SENA = SMT.ZBA_13SENA,                                                                       ") + msrhEnter
 		UP006 += Alltrim("             ZBA_13SESA = SMT.ZBA_13SESA,                                                                       ") + msrhEnter
-		UP006 += Alltrim("             ZBA_BNADC  = SMT.ZBA_BNADC,                                                                         ") + msrhEnter
+		UP006 += Alltrim("             ZBA_BNADC  = SMT.ZBA_BNADC,                                                                        ") + msrhEnter
 		UP006 += Alltrim("             ZBA_TMPCAS = SMT.ZBA_TMPCAS,                                                                       ") + msrhEnter
 		UP006 += Alltrim("             ZBA_MULTAF = SMT.ZBA_MULTAF,                                                                       ") + msrhEnter
 		UP006 += Alltrim("             ZBA_DMTDAA = ' ',                                                                                  ") + msrhEnter
@@ -908,7 +911,8 @@ Static Function BIA881A()
 		UP006 += Alltrim("             ZBA_MESFER = '',                                                                                   ") + msrhEnter
 		UP006 += Alltrim("             ZBA_AJDCBD = SMT.ZBA_AJDCBD,                                                                       ") + msrhEnter
 		UP006 += Alltrim("             ZBA_CFCCCH = SMT.ZBA_CFCCCH,                                                                       ") + msrhEnter
-		UP006 += Alltrim("             ZBA_CSTFUN = " + msCstFuQr + "                                                                     ") + msrhEnter
+		UP006 += Alltrim("             ZBA_CSTFUN = " + msCstFuQr + ",                                                                    ") + msrhEnter
+		UP006 += Alltrim("             ZBA_DPTOSR = SMT.ZBA_DPTOSR                                                                        ") + msrhEnter
 		UP006 += Alltrim("      FROM " + RetSqlName("ZBA") + " ZBA                                                                        ") + msrhEnter
 		UP006 += Alltrim("           INNER JOIN SEMELHANTE SMT ON SMT.ZBA_MATR = ZBA.ZBA_SEMELH                                           ") + msrhEnter
 		UP006 += Alltrim("      WHERE ZBA.ZBA_FILIAL = '" + xFilial("ZBA") + "'                                                           ") + msrhEnter

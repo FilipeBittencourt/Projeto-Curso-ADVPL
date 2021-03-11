@@ -36,6 +36,7 @@ User Function BIAF153A()
 	Private msEnter     := CHR(13) + CHR(10)
 	Private msTblTemp   := '##TMP_ARQ_BIAF153' + cEmpAnt + __cUserID + strzero(seconds()*3500,10)
 	Private ms2TbTemp   := '##TMP_AR2_BIAF153' + cEmpAnt + __cUserID + strzero(seconds()*3500,10)
+	Private ms3TbTemp   := '##TMP_AR3_BIAF153' + cEmpAnt + __cUserID + strzero(seconds()*3500,10)
 	Private msVersao    := Space(10)
 	Private msRevisa    := Space(03)
 	Private msAnoRef    := Space(04)	
@@ -44,6 +45,7 @@ User Function BIAF153A()
 	Private mslOk       := .T.
 	Private msGravaErr  := ""
 	Private msPivotCmp  := ""
+	Private mskQry07
 
 	If oParam:Box() .And. oParam:lConfirm
 
@@ -534,83 +536,124 @@ Static Function msGrvEvent()
 
 	If mslOk
 
-		GV002 := Alltrim(" SELECT *,                                                                                      ") + msEnter
-		GV002 += Alltrim("        CLVL =                                                                                  ") + msEnter
-		GV002 += Alltrim(" (                                                                                              ") + msEnter
-		GV002 += Alltrim("     SELECT codccu                                                                              ") + msEnter
-		GV002 += Alltrim("     FROM VETORH.dbo.r038hcc a                                                                  ") + msEnter
-		GV002 += Alltrim("     WHERE a.numemp = tmp.numemp                                                                ") + msEnter
-		GV002 += Alltrim("           AND a.tipcol = tmp.tipcol                                                            ") + msEnter
-		GV002 += Alltrim("           AND a.numcad = tmp.numcad                                                            ") + msEnter
-		GV002 += Alltrim("           AND a.datalt IN                                                                      ") + msEnter
-		GV002 += Alltrim("     (                                                                                          ") + msEnter
-		GV002 += Alltrim("         SELECT MAX(datalt)                                                                     ") + msEnter
-		GV002 += Alltrim("         FROM VETORH.dbo.r038hcc b                                                              ") + msEnter
-		GV002 += Alltrim("         WHERE b.numemp = a.numemp                                                              ") + msEnter
-		GV002 += Alltrim("               AND b.tipcol = a.tipcol                                                          ") + msEnter
-		GV002 += Alltrim("               AND b.numcad = a.numcad                                                          ") + msEnter
-		GV002 += Alltrim("               AND EOMONTH('" + msAnoRef + "-" + msPeriod + "-01 00:00:00.000') >= b.datalt     ") + msEnter
-		GV002 += Alltrim("     )                                                                                          ") + msEnter
-		GV002 += Alltrim(" )                                                                                              ") + msEnter
-		GV002 += Alltrim(" FROM " + ms2TbTemp + " tmp;                                                                    ") + msEnter	
-		GVIndex := CriaTrab(Nil,.f.)
-		dbUseArea(.T.,"TOPCONN",TcGenQry(,,GV002),'GV02',.T.,.T.)
-		dbSelectArea("GV02")
+		U_BIAMsgRun("Aguarde... Criando Terceiro arquivo de Trabalho... ",,{|| msStaExcQy := TcSQLExec(mskQry07) })
+		If msStaExcQy < 0
+			mslOk := .F.
+		EndIf
 
-		Begin Transaction
+		If mslOk
 
-			ET001 := Alltrim(" DELETE ZBO                                               ") + msEnter
-			ET001 += Alltrim(" FROM " + RetSqlName("ZBO") + " ZBO                       ") + msEnter
-			ET001 += Alltrim(" WHERE ZBO_FILIAL = '" + xFilial("ZBO") + "'              ") + msEnter
-			ET001 += Alltrim("       AND ZBO_VERSAO = '" + msVersao + "'                ") + msEnter
-			ET001 += Alltrim("       AND ZBO_REVISA = '" + msRevisa + "'                ") + msEnter
-			ET001 += Alltrim("       AND ZBO_ANOREF = '" + msAnoRef + "'                ") + msEnter
-			ET001 += Alltrim("       AND ZBO_PERIOD = '" + msPeriod + "'                ") + msEnter
-			ET001 += Alltrim("       AND ZBO.D_E_L_E_T_ = ' '                           ") + msEnter
-			U_BIAMsgRun("Aguarde... Zerando processsamento anterior... ",,{|| msStaExcQy := TcSQLExec(ET001) })
-			If msStaExcQy < 0
-				mslOk := .F.
-			EndIf
+			msDiaRef := substr(dtos(UltimoDia(stod(msAnoRef + msPeriod + "01"))), 7, 2)
+			GV002 := Alltrim(" SELECT *,                                                                                                       ") + msEnter
+			GV002 += Alltrim("        CLVL =                                                                                                   ") + msEnter
+			GV002 += Alltrim(" (                                                                                                               ") + msEnter
+			GV002 += Alltrim("     SELECT codccu                                                                                               ") + msEnter
+			GV002 += Alltrim("     FROM VETORH.dbo.r038hcc a                                                                                   ") + msEnter
+			GV002 += Alltrim("     WHERE a.numemp = tmp.numemp                                                                                 ") + msEnter
+			GV002 += Alltrim("           AND a.tipcol = tmp.tipcol                                                                             ") + msEnter
+			GV002 += Alltrim("           AND a.numcad = tmp.numcad                                                                             ") + msEnter
+			GV002 += Alltrim("           AND a.datalt IN                                                                                       ") + msEnter
+			GV002 += Alltrim("     (                                                                                                           ") + msEnter
+			GV002 += Alltrim("         SELECT MAX(datalt)                                                                                      ") + msEnter
+			GV002 += Alltrim("         FROM VETORH.dbo.r038hcc b                                                                               ") + msEnter
+			GV002 += Alltrim("         WHERE b.numemp = a.numemp                                                                               ") + msEnter
+			GV002 += Alltrim("               AND b.tipcol = a.tipcol                                                                           ") + msEnter
+			GV002 += Alltrim("               AND b.numcad = a.numcad                                                                           ") + msEnter
+			GV002 += Alltrim("               AND EOMONTH('" + msAnoRef + "-" + msPeriod + "-" + msDiaRef + " 00:00:00.000') >= b.datalt        ") + msEnter
+			GV002 += Alltrim("     )                                                                                                           ") + msEnter
+			GV002 += Alltrim(" ),                                                                                                              ") + msEnter
+			GV002 += Alltrim("        [dbo].[FNC_BI_GETDEPART](numemp, numcad, '" + msAnoRef + msPeriod + msDiaRef + "') DPTOSR,               ") + msEnter 
+			GV002 += Alltrim("        [dbo].FNC_BI_GETCARGO(numemp, numcad, '" + msAnoRef + msPeriod + msDiaRef + "') CARGO,                   ") + msEnter
+			GV002 += Alltrim("        NOME =                                                                                                   ") + msEnter
+			GV002 += Alltrim(" (                                                                                                               ") + msEnter
+			GV002 += Alltrim("     SELECT nomfun                                                                                               ") + msEnter
+			GV002 += Alltrim("     FROM VETORH.dbo.r034fun FUN                                                                                 ") + msEnter
+			GV002 += Alltrim("     WHERE FUN.tipcol = 1                                                                                        ") + msEnter
+			GV002 += Alltrim("           AND FUN.numemp = tmp.numemp                                                                           ") + msEnter
+			GV002 += Alltrim("           AND FUN.numcad = tmp.numcad                                                                           ") + msEnter
+			GV002 += Alltrim(" ),                                                                                                              ") + msEnter
+			GV002 += Alltrim("        XXX.*                                                                                                    ") + msEnter
+			GV002 += Alltrim(" FROM " + ms2TbTemp + " tmp                                                                                      ") + msEnter	
+			GV002 += Alltrim("      LEFT JOIN " + ms3TbTemp + " XXX ON D3_YMATRIC = NUMCAD                                                     ") + msEnter	
+			GVIndex := CriaTrab(Nil,.f.)
+			dbUseArea(.T.,"TOPCONN",TcGenQry(,,GV002),'GV02',.T.,.T.)
+			dbSelectArea("GV02")
 
-			If mslOk
+			Begin Transaction
 
-				GV02->(dbGoTop())
-				While !GV02->(Eof())
+				ET001 := Alltrim(" DELETE ZBO                                               ") + msEnter
+				ET001 += Alltrim(" FROM " + RetSqlName("ZBO") + " ZBO                       ") + msEnter
+				ET001 += Alltrim(" WHERE ZBO_FILIAL = '" + xFilial("ZBO") + "'              ") + msEnter
+				ET001 += Alltrim("       AND ZBO_VERSAO = '" + msVersao + "'                ") + msEnter
+				ET001 += Alltrim("       AND ZBO_REVISA = '" + msRevisa + "'                ") + msEnter
+				ET001 += Alltrim("       AND ZBO_ANOREF = '" + msAnoRef + "'                ") + msEnter
+				ET001 += Alltrim("       AND ZBO_PERIOD = '" + msPeriod + "'                ") + msEnter
+				ET001 += Alltrim("       AND ZBO.D_E_L_E_T_ = ' '                           ") + msEnter
+				U_BIAMsgRun("Aguarde... Zerando processsamento anterior... ",,{|| msStaExcQy := TcSQLExec(ET001) })
+				If msStaExcQy < 0
+					mslOk := .F.
+				EndIf
 
-					Reclock("ZBO",.T.)
-					ZBO->ZBO_FILIAL  := xFilial("ZBO")  
-					ZBO->ZBO_VERSAO  := msVersao
-					ZBO->ZBO_REVISA  := msRevisa
-					ZBO->ZBO_ANOREF  := msAnoRef
-					ZBO->ZBO_PERIOD  := msPeriod
-					ZBO->ZBO_CLVL    := GV02->CLVL
-					ZBO->ZBO_MATR    := StrZero(GV02->numcad,6)
+				If mslOk
 
-					SQ07->(dbGoTop())
-					While !SQ07->(Eof())
+					GV02->(dbGoTop())
+					While !GV02->(Eof())
 
-						&("ZBO->" + SQ07->GRAVACAO) := &("GV02->" + SQ07->LEITURA)
-						SQ07->(dbSkip())
+						Reclock("ZBO",.T.)
+						ZBO->ZBO_FILIAL  := xFilial("ZBO")  
+						ZBO->ZBO_VERSAO  := msVersao
+						ZBO->ZBO_REVISA  := msRevisa
+						ZBO->ZBO_ANOREF  := msAnoRef
+						ZBO->ZBO_PERIOD  := msPeriod
+						ZBO->ZBO_CLVL    := GV02->CLVL
+						ZBO->ZBO_MATR    := StrZero(GV02->numcad,6)
+						ZBO->ZBO_DPTOSR  := GV02->DPTOSR
+						ZBO->ZBO_FUNCAO  := GV02->CARGO
+						ZBO->ZBO_NOME    := GV02->NOME
+
+						SQ07->(dbGoTop())
+						While !SQ07->(Eof())
+
+							If "VLREPI" $ Alltrim(SQ07->GRAVACAO) 
+
+								&("ZBO->" + SQ07->GRAVACAO) := GV02->D3_VLREPI
+
+							ElseIf "VLRUNI" $ Alltrim(SQ07->GRAVACAO)
+
+								&("ZBO->" + SQ07->GRAVACAO) := GV02->D3_VLRUNI
+
+							Else
+
+								&("ZBO->" + SQ07->GRAVACAO) := &("GV02->" + SQ07->LEITURA)
+
+							EndIf
+							SQ07->(dbSkip())
+
+						End
+						ZBO->(MsUnlock())
+
+						GV02->(dbSkip())
 
 					End
-					ZBO->(MsUnlock())
 
-					GV02->(dbSkip())
+				Else
 
-				End
+					msGravaErr := TCSQLError()
+					DisarmTransaction()
 
-			Else
+				EndIf
 
-				msGravaErr := TCSQLError()
-				DisarmTransaction()
+				GV02->(dbCloseArea())
+				Ferase(GVIndex+GetDBExtension())
+				Ferase(GVIndex+OrdBagExt())
 
-			EndIf
+			End Transaction 	
 
-			GV02->(dbCloseArea())
-			Ferase(GVIndex+GetDBExtension())
-			Ferase(GVIndex+OrdBagExt())
+		Else
 
-		End Transaction 	
+			msGravaErr := TCSQLError()
+
+		EndIf
 
 	Else
 
@@ -677,3 +720,10 @@ Static Function fAborta()
 	Close( oEntra )
 
 Return
+
+//Static Function fGrvNwSD3()
+
+//	frd := mskQry07
+//	fgsdgs := 1
+
+//Return

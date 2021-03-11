@@ -399,7 +399,7 @@ Method ProcessaGuardiam() Class TPesagemIntegracao
      
 	
 	conout('Processando pesagem')
-	conout(cQuery)
+	//conout(cQuery)
 
 	//verificar placar diferente OCR
 	

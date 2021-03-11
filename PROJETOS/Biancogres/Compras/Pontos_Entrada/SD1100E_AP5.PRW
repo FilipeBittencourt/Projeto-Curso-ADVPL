@@ -14,8 +14,12 @@
 /*/
 
 User Function SD1100E()
-
+	Local _oMd	:=	TBiaControleMD():New()
 	//Fernando/Facile em 06/02/2015 - baixa de OP Vitcer
 	U_FOPVCR03()
+
+	If Alltrim(SF1->F1_TIPO) == 'N' .And. _oMd:CheckMD(SD1->D1_COD,SD1->D1_LOCAL) .AND. _oMd:MovimentaEstoque(SD1->D1_TES)
+		_oMd:EstornaMovimentacao(SD1->D1_DOC,SD1->D1_SERIE,SD1->D1_FORNECE,SD1->D1_LOJA,SD1->D1_ITEM,SD1->D1_COD,SD1->D1_LOCAL,FunName(),"SD1",cUserName)
+	EndIf	
 
 Return

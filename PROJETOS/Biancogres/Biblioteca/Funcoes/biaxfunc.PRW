@@ -5349,6 +5349,7 @@ User Function BIAATUSBZ()
 	Public xBZCusUsr := .F. // Custos
 	Public xBZIndUsr := .F. // Industrial
 	Public xBZEstUsr := .F. // Estoque/Suprimentos
+	Public xBZLabUsr := .F. //Laboratório
 
 	If U_VALOPER("033") // Almoxarifado
 		xBZAlmUsr := .T.
@@ -5364,6 +5365,9 @@ User Function BIAATUSBZ()
 	EndIf
 	If U_VALOPER("037") // Estoque/Suprimentos
 		xBZEstUsr := .T.
+	EndIf
+	If U_VALOPER("Z52") // Laboratório
+		xBZLabUsr := .T.
 	EndIf
 
 Return

@@ -1,0 +1,60 @@
+#include "totvs.ch"
+
+namespace bia.tlpp.loadFun
+
+class loadFun
+    static method load()
+end class
+
+static method load() class loadFun
+    
+    Local aArea as array 
+
+    aArea:=getArea()
+
+    saveInter()
+    
+        loadFun()
+
+    restInter()
+
+    restArea(aArea)
+    
+    return
+
+static function loadFun()
+
+    Local cGetForm as character
+
+    Local nJanLarg as numeric
+    Local nJanAltu as numeric
+    Local nJanMeio as numeric
+    Local nTamBtn  as numeric
+
+    Local oDlgForm as object
+    Local oGrpForm as object
+    Local oGetForm as object
+    Local oGrpAco  as object
+    Local oBtnExec as object
+
+    private cCadastro as character
+    cCadastro:=ProcName()
+
+    cGetForm:=Space(255)
+    nJanLarg:=500
+    nJanAltu:=120
+    nJanMeio:=((nJanLarg/2)/2)
+    nTamBtn:=048
+
+    DEFINE MSDIALOG oDlgForm TITLE "Execução de Funções" FROM 000, 000  TO nJanAltu, nJanLarg COLORS 0,16777215 PIXEL
+	
+        @ 003,003 GROUP oGrpForm TO 30,((nJanLarg/2)-1) PROMPT "Função: " OF oDlgForm COLOR 0,16777215 PIXEL
+        @ 010,006 MSGET oGetForm VAR cGetForm PICTURE "@S250" SIZE (nJanLarg/2)-9,013 OF oDlgForm COLORS 0,16777215 PIXEL
+
+        @ ((nJanAltu/2)-30),003 GROUP oGrpAco TO (nJanAltu/2)-3, (nJanLarg/2)-1 PROMPT "Ações: " OF oDlgForm COLOR 0,16777215 PIXEL
+        @ ((nJanAltu/2)-24),(nJanMeio-(nTamBtn/2)) BUTTON oBtnExec PROMPT "&Executar" SIZE nTamBtn, 018 OF oDlgForm ACTION (evalBlock():Execute(cGetForm,.T.)) PIXEL
+		
+    ACTIVATE MSDIALOG oDlgForm CENTERED
+	
+    Return
+

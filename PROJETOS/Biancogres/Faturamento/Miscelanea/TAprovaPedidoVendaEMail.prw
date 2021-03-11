@@ -645,6 +645,8 @@ Return(cRet)
 Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 
 	Local aArea			:= GetArea()
+	
+	Local cCRLF
 	Local cAliasTmp 	:= GetNextAlias()
 	Local cQuery		:= ""
 	Local cHTML			:= ""
@@ -652,10 +654,11 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 	Local cLinkRecusar	:= ""
 	Local cLinkRevisar	:= ""
 	Local cSubTp		:= ""
+	Local cObservacao	:= ""
 	Local nSomaQuant 	:= 0
 	Local nSomaPreco	:= 0
 	Local nSomaValor	:= 0
-
+	Local nZKLRecNo
 
 	DbSelectArea('SC5')
 	SC5->(DbSetOrder(1))
@@ -677,17 +680,16 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 	SE4->(DbSetOrder(1))
 	SE4->(DbSeek(xFilial("SE4")+SC5->C5_CONDPAG))
 	
+	cCRLF:=CRLF
+
 	//Ticket 30360 - Aumentado o VARCHAR de 1024 para o MAX para contemplar a informação completa
-	cQuery += " SELECT *																	"
-	cQuery += " ,OBSERVACAO=ISNULL(CONVERT(VARCHAR(MAX), CONVERT(VARBINARY(MAX), ZKL_OBS)), '')	"
-	cQuery += "  FROM "+ RetSqlName("ZKL")+"												"
-	cQuery += " WHERE 																		"
-	cQuery += " D_E_L_E_T_ 			= ''													"
-	cQuery += "	AND ZKL_PEDIDO		= '"+::cNumPed+"'										"
-	cQuery += "	AND ZKL_FILIAL		= '"+xFilial('ZKL')+"'									"
-	
-	cQuery += "	AND ZKL_STATUS		= '2'													"
-	cQuery += "	ORDER BY R_E_C_N_O_															"
+	cQuery += "SELECT ZKL.R_E_C_N_O_ ZKLRECNO "+cCRLF
+	cQuery += "  FROM "+ RetSqlName("ZKL")+" ZKL "+cCRLF
+	cQuery += " WHERE ZKL.D_E_L_E_T_=''"+cCRLF
+	cQuery += "	  AND ZKL.ZKL_PEDIDO= '"+::cNumPed+"'"+cCRLF
+	cQuery += "	  AND ZKL.ZKL_FILIAL= '"+xFilial('ZKL')+"'"+cCRLF
+	cQuery += "	  AND ZKL.ZKL_STATUS='2'"+cCRLF
+	cQuery += "	ORDER BY ZKL.R_E_C_N_O_	"+cCRLF
 
 	TcQuery cQuery New Alias (cAliasTmp)
 
@@ -1124,7 +1126,7 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 	cHtml += '							 <tr>
 	cHtml += '								<td class="tblItensPedido-border-left" colspan="3">Totais: </td>
 	cHtml += '								<td align="right" class="tblItensPedido-border-left">'+ TRANSFORM(nSomaQuant	,"@E 999,999,999.99") +'</td>
-	cHtml += '								<td align="right" class="tblItensPedido-border-left">'+ TRANSFORM(nSomaPreco	,"@E 999,999,999.99") +'</td>
+	cHtml += '								<td align="right" class="tblItensPedido-border-left">    </td>
 	cHtml += '								<td align="right" class="tblItensPedido-border-left">'+ TRANSFORM(nSomaValor, "@E 999,999,999.99") +'</td>
 	cHtml += '								<td align="right" class="tblItensPedido-border-left"></td>
 
@@ -1178,7 +1180,7 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 	cHTML += ' 			<tr>                                                                                                                                                                                    '
 	cHTML += ' 				<td colspan="3" valign="top">
 
-	If (!(cAliasTmp)->(Eof()))
+	If ((cAliasTmp)->(!Eof()))
 
 		cHTML += ' 					<table class="tblDadosItens">                                                                                                                                                   '
 		cHTML += ' 						<tr class="titleTable"><th>Log Bloqueio do Pedido</th></tr>                                                                                                               '
@@ -1197,16 +1199,25 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 		cHTML += ' 		                                                                                                                                                                                            '
 
 		//ITENS
-		While !(cAliasTmp)->(Eof())
+		While (cAliasTmp)->(!Eof())
+
+			nZKLRecNo:=(cAliasTmp)->ZKLRECNO
+			ZKL->(dbGoTo(nZKLRecNo))
+
+			cObservacao:=ZKL->ZKL_OBS
+			cObservacao:=SQLStripHTML():StripHTML(cObservacao)
+			aObservacao:=StrToKArr2(cObservacao,CRLF)
+			cObservacao:=""
+			aEval(aObservacao,{|c|if(!empty(c),cObservacao+=(c+CRLF),nil)})
 
 			cHtml += '							 <tr>
-			cHtml += '								<td class="tblItensPedido-border-left">'+ Alltrim(UsrRetName((cAliasTmp)->ZKL_APROV)) +'</td>
-			cHtml += '								<td class="tblItensPedido-border-left">'+ DTOC(STOD((cAliasTmp)->ZKL_DATA)) +'</td>
-			cHtml += '								<td class="tblItensPedido-border-left">'+ Alltrim((cAliasTmp)->ZKL_HORA) +'</td>
-			cHtml += '								<td class="tblItensPedido-border-left">'+ AllTrim(NGRetSX3Box("ZKL_ACAO", (cAliasTmp)->ZKL_ACAO)) +'</td>
-			cHtml += '								<td class="tblItensPedido-border-left">'+ AllTrim((cAliasTmp)->ZKL_ORDEM) +'</td>
-			cHtml += '								<td class="tblItensPedido-border-left">'+ AllTrim(NGRetSX3Box("ZKL_NIVEL", (cAliasTmp)->ZKL_NIVEL))+' </td>
-			cHtml += '								<td class="tblItensPedido-border-right">'+ AllTrim((cAliasTmp)->OBSERVACAO)+' </td>
+			cHtml += '								<td class="tblItensPedido-border-left">'+ Alltrim(UsrRetName(ZKL->ZKL_APROV)) +'</td>
+			cHtml += '								<td class="tblItensPedido-border-left">'+ DTOC(ZKL->ZKL_DATA) +'</td>
+			cHtml += '								<td class="tblItensPedido-border-left">'+ Alltrim(ZKL->ZKL_HORA) +'</td>
+			cHtml += '								<td class="tblItensPedido-border-left">'+ AllTrim(NGRetSX3Box("ZKL_ACAO", ZKL->ZKL_ACAO)) +'</td>
+			cHtml += '								<td class="tblItensPedido-border-left">'+ AllTrim(ZKL->ZKL_ORDEM) +'</td>
+			cHtml += '								<td class="tblItensPedido-border-left">'+ AllTrim(NGRetSX3Box("ZKL_NIVEL",ZKL->ZKL_NIVEL))+' </td>
+			cHtml += '								<td class="tblItensPedido-border-right">'+ AllTrim(cObservacao)+' </td>
 			cHtml += '							 </tr>'
 
 			(cAliasTmp)->(DbSkip())

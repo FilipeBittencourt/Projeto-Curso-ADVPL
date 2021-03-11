@@ -725,7 +725,7 @@ Method ExecMovFin(oObj, nValor, cNat, cHist) Class TAFBaixaReceber
 		//Atualizar Status ZK4
 		::UpdStatus(oObj:nID, "2")
 
-		if (FIDC():isFIDCEnabled())
+		if (FIDC():isFIDCEnabled().and.FIDC():getBiaPar("FIDC_CTB_LP_MOVFIN_ONLINE",.F.))
 			cSA1IdxKey:="A1_FILIAL+A1_COD+A1_LOJA"
 			SA1->(dbSetOrder(retOrder("SA1",cSA1IdxKey)))
 			if (SA1->(MsSeek(xFilial("SA1")+SE1->E1_CLIENTE+SE1->E1_LOJA)))
@@ -843,7 +843,7 @@ Method ExecBaixaCR(oObj, cMotBx) Class TAFBaixaReceber
 
 		::UpdStatus(oObj:nID, "2")
 
-		if (FIDC():isFIDCEnabled())
+		if (FIDC():isFIDCEnabled().and.FIDC():getBiaPar("FIDC_CTB_LP_BAIXA_ONLINE",.T.))
 			cSA1IdxKey:="A1_FILIAL+A1_COD+A1_LOJA"
 			SA1->(dbSetOrder(retOrder("SA1",cSA1IdxKey)))
 			if (SA1->(MsSeek(xFilial("SA1")+SE1->E1_CLIENTE+SE1->E1_LOJA)))

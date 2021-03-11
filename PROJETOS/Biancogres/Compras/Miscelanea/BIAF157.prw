@@ -96,7 +96,7 @@ Private cCodigo
 			M->B1_CEST 		:= '1000700'
 		EndIf
 		
-		SB1->B1_GRTRIB := cGrTrib
+		M->B1_GRTRIB := cGrTrib
 		
 		M->B1_ATIVO  := 'S'
 		IF SUBSTR(M->B1_COD,8,1) == '5' .OR. SUBSTR(M->B1_DESC,1,4) == 'CACO'
@@ -226,7 +226,7 @@ Private cCodigo
 			M->B1_CEST 		:= '1000700'
 		EndIf
 
-		SB1->B1_GRTRIB := cGrTrib
+		M->B1_GRTRIB := cGrTrib
 
 		IF SB1->B1_TIPO == 'PA'
 			DbSelectArea("ZZ6")
@@ -417,13 +417,13 @@ Private cCodigo
 	ElseIf ALTERA
 
 		If SB1->B1_TIPO == "PA" .and. Empty(SB1->B1_YCLASSE) .and. Substr(SB1->B1_COD,4,3) <> "000"
-			SB1->B1_RASTRO  := "N"
-			SB1->B1_LOCALIZ := "N"
+			M->B1_RASTRO  := "N"
+			M->B1_LOCALIZ := "N"
 		EndIf
 		// Ajustado programa em 25/04/13 por Marcos Alberto Soprani, pois quando o usuário utiliza a opção "copiar" a partir do produto sem classificação, ele não estava observando a regra de Localização e Rastro.
 		If SB1->B1_TIPO == "PA" .and. !Empty(SB1->B1_YCLASSE) .and. Substr(SB1->B1_COD,4,3) == "000"
-			SB1->B1_RASTRO  := "L"
-			SB1->B1_LOCALIZ := "S"
+			M->B1_RASTRO  := "L"
+			M->B1_LOCALIZ := "S"
 		EndIf
 
 	EndIf

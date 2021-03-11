@@ -470,12 +470,15 @@ User Function FCOMXPED(cPedido, cEmpDest, _cRepAtu, _cUserName, cFilOri, lMatriz
 	EndIf
 
 	aAdd(aCabPV,  {"C5_CONDPAG"		, _cCondPag					,Nil})
+
+	//Correção da Comissão para Pedidos do Cliente LM
 	aAdd(aCabPV,  {"C5_VEND1"		,"999999"					,Nil})
 	aAdd(aCabPV,  {"C5_COMIS1"		,0							,Nil})
 	aAdd(aCabPV,  {"C5_COMIS2"		,0							,Nil})
 	aAdd(aCabPV,  {"C5_COMIS3"		,0							,Nil})
 	aAdd(aCabPV,  {"C5_COMIS4"		,0							,Nil})
 	aAdd(aCabPV,  {"C5_COMIS5"		,0							,Nil})
+
 	aAdd(aCabPV,  {"C5_EMISSAO"		,dDataBase					,Nil})
 
 	//Preenchimento dos Campos Customizados - Cabecalho
@@ -783,24 +786,29 @@ User Function FCOMXPED(cPedido, cEmpDest, _cRepAtu, _cUserName, cFilOri, lMatriz
 					SC5->C5_YNOUTAI := (cAliasTmp)->C5_YNOUTAI
 				EndIf
 
-
-				//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-				//GRAVA COMISSAO ZERO E VEND1 999999 PARA PEDIDOS DE VENDA DA LM PARA FARBICA
-				//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-
-				If Alltrim(cempant) $ "01_05_13" .And. 	SC5->C5_CLIENTE == "010064"
-					SC5->C5_VEND2		:= ""
-					SC5->C5_VEND3		:= ""
-					SC5->C5_VEND4		:= ""
-					SC5->C5_VEND5		:= ""
-					SC5->C5_COMIS2	:= 0
-					SC5->C5_COMIS3	:= 0
-					SC5->C5_COMIS4	:= 0
-					SC5->C5_COMIS5	:= 0
-				EndIf
-
 				SC5->(MsUnlock())
 
+			EndIf
+
+			//GRAVA COMISSAO ZERO PARA PEDIDOS DE VENDA DA LM PARA FARBICA
+			If Alltrim(cEmpAnt) $ "01_05_13" .And. 	SC5->C5_CLIENTE == "010064"
+				ConOut("FCOMRT01 => ACERTA COMISSAO CLIENTE LM")
+
+				SC6->(DbSetOrder(1))
+				If SC6->(DbSeek(XFilial("SC6")+SC5->C5_NUM))
+					While !SC6->(Eof()) .And. SC6->(C6_FILIAL+C6_NUM) == (XFilial("SC6")+SC5->C5_NUM)					
+							RecLock("SC6",.F.)
+							SC6->C6_COMIS1 := 0
+							SC6->C6_COMIS2 := 0
+							SC6->C6_COMIS3 := 0
+							SC6->C6_COMIS4 := 0
+							SC6->C6_COMIS5 := 0 
+							SC6->(MsUnlock())
+						
+					SC6->(DbSkip())
+					EndDo
+				EndIf
+				
 			EndIf
 
 			If !lMatriz

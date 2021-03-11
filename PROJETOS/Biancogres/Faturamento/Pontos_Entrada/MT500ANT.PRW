@@ -338,9 +338,23 @@ Static Function CheckCarga(c5Num, c6Item)
 	cQuery += " AND SC6.C6_ITEM = ZZW.ZZW_ITEM " + CRLF
 	cQuery += " AND SC6.D_E_L_E_T_ = '' " + CRLF
 
+	cQuery += " INNER JOIN "+RetSQLName("SC9")+" SC9 ON SC9.C9_FILIAL = ZZW.ZZW_FILIAL		"+ CRLF
+	cQuery += " AND SC9.C9_PEDIDO = ZZW.ZZW_PEDIDO  										"+ CRLF
+	cQuery += " AND SC9.C9_ITEM = ZZW.ZZW_ITEM  											"+ CRLF
+	cQuery += " AND SC9.C9_SEQUEN = ZZW.ZZW_SEQUEN 											"+ CRLF
+	cQuery += " AND SC9.D_E_L_E_T_ = ''  													"+ CRLF
+
+
 	cQuery += " WHERE ZZW.ZZW_FILIAL = '"+FWxFilial('SC6')+"' " + CRLF
 	cQuery += " AND ZZW.ZZW_PEDIDO = '"+c5Num+"' " + CRLF
 	cQuery += " AND ZZW.ZZW_ITEM = '"+c6Item+"' " + CRLF
+	
+	
+	cQuery += " AND C9_NFISCAL 	<>  '' " + CRLF
+	cQuery += " AND C9_BLEST 	<>  '10' " + CRLF
+	cQuery += " AND C9_BLCRED 	<>  '10' " + CRLF
+
+	
 	cQuery += " AND ZZW.D_E_L_E_T_ = '' " + CRLF
 
 	TcQuery cQuery New Alias (cQry)

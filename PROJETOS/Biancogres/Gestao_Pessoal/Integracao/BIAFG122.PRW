@@ -11,25 +11,23 @@
 
 User Function BIAFG122(_aProds,_cMat,lWs)
 
-RpcSetType(3)
-RpcSetEnv('01','01')
+	RpcSetType(3)
+	RpcSetEnv('01','01')
 
-fProcessa(_aProds,_cMat,lWs)
+	fProcessa(_aProds,_cMat,lWs)
 
-RpcClearEnv()
+	RpcClearEnv()
 
 Return
 
 Static Function fPRocessa(_aProds,_cMat,lWs)
 
-Local _cClvl	:=	fGetClVl(SUBSTR(_cMat,3))
-Local _nI
-Local _cErro	:=	""
-Local _cSql
+	Local _cClvl	:=	fGetClVl(SUBSTR(_cMat,3))
+	Local _nI
+	Local _cErro	:=	""
+	Local _cSql
 
-Default lWs	:=	.F.
-
-
+	Default lWs	:=	.F.
 
 	If Empty(_cClvl)
 		oRespPrq:lOk	:=	.F.
@@ -42,7 +40,7 @@ Default lWs	:=	.F.
 		oRespPrq:cErro	:=	"Não Existem Produtos para Serem geradas Pré-Requisições"
 		Return	
 	EndIf
-	
+
 	DbSelectArea("ZZY")
 	ZZY->(DbSetOrder(3))
 	If ZZY->(DbSeek(xFilial("ZZY")+_cMat))
@@ -62,9 +60,9 @@ Default lWs	:=	.F.
 			SZI->ZI_INTSR	:=	"1"
 			SZI->ZI_STTSREQ :=	"I"
 			SZI->(MsUnlock())
-			
+
 			For _nI	:= 1 to Len(_aProds)
-			
+
 				Reclock("SZJ",.T.)
 				SZJ->ZJ_FILIAL	:=	xFilial("SZJ")
 				SZJ->ZJ_DOC		:=	SZI->ZI_DOC
@@ -81,8 +79,11 @@ Default lWs	:=	.F.
 				SZJ->ZJ_CLVL	:=	SZI->ZI_CLVL
 				SZJ->ZJ_YPARADA	:=	"N"
 				SZJ->ZJ_QTAPROV	:=	SZJ->ZJ_QUANT
+				SZJ->ZJ_YDRIVER	:=	U_BFG81DPD()
+				SZJ->ZJ_YJTDRV	:=	"DRIVER PREENCHIDO ATRAVES DAS REQUISICAO AUTOMATIZADA"
+
 				SZJ->(MsUnlock())				
-			
+
 				ZDC->(DbSetOrder(1))
 				If ZDC->(DbSeek(xFilial("ZDC")+PADR(_aProds[_nI,1],TamSx3("ZDC_COD")[1])))
 					_cErro	+=	"Produto: "+ Alltrim(SZJ->ZJ_COD)+ " é um Kit e não poderá ser requisitado!" + CRLF
@@ -99,8 +100,9 @@ Default lWs	:=	.F.
 				EndIf
 				_cSql := "UPDATE "+RetSqlName("SB2")+" SET B2_RESERVA = B2_RESERVA + "+Alltrim(Str(SZJ->ZJ_QTAPROV))+" WHERE B2_COD = '"+SZJ->ZJ_COD+"' AND B2_LOCAL = '"+SZJ->ZJ_LOCAL+"' AND D_E_L_E_T_ = '' "
 				TcSQLExec(_cSql)
-				
+
 			Next
+			
 			If !Empty(_cErro)
 				oRespPrq:lOk	:=	.F.
 				oRespPrq:cErro	:=	_cErro
@@ -109,16 +111,19 @@ Default lWs	:=	.F.
 			Else
 				oRespPrq:lOk	:=	.T.
 				oRespPrq:cErro	:=	""
-				
+
 				ConfirmSx8()				
 			EndIf
+
 		END TRANSACTION
+
 	Else
+
 		oRespPrq:lOk	:=	.F.
 		oRespPrq:cErro	:=	"Matrícula Inexistente no Cadastro de Requisitantes!"
 		Return
-	EndIf
 
+	EndIf
 
 Return
 
@@ -131,12 +136,12 @@ Static Function fGetClVl(_cMat)
 	BeginSql Alias _cAlias
 
 		%NoParser%
-		
+
 		SELECT codccu RA_CLVL
 		FROM VETORH..r034fun A
 		WHERE numemp = 1
-			AND tipcol = 1
-			AND numcad = %Exp:_nMat%
+		AND tipcol = 1
+		AND numcad = %Exp:_nMat%
 
 	EndSql
 
@@ -144,6 +149,7 @@ Static Function fGetClVl(_cMat)
 		_cClvl	:=	Alltrim((_cAlias)->RA_CLVL)
 	EndIF
 	(_cAlias)->(DbCloseArea())
+
 Return _cClVl
 
 Static Function fRetCm(_cCod,_cLocal)
@@ -164,4 +170,5 @@ Static Function fRetCm(_cCod,_cLocal)
 	_nCm	:=	(_cAlias)->B2_CM1
 
 	(_cAlias)->(DbCloseArea())
+
 Return _nCm

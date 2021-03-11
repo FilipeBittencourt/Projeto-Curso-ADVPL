@@ -93,6 +93,19 @@ User Function A650OPI()
 		SC2->(dbGoTo(uoRegSc2))
 	EndIf
 
+	// Não pode gerar OPs filhas para PI quando oriundo de OP MAE (principal) de PI
+	If SC2->C2_SEQUEN == "001"
+		SB1->(dbSetOrder(1))
+		SB1->(dbSeek(xFilial("SB1") + SC2->C2_PRODUTO))
+		If SB1->B1_TIPO == "PI" 
+			SB1->(dbSetOrder(1))
+			SB1->(dbSeek(xFilial("SB1") + SG1->G1_COD))
+			If SB1->B1_TIPO == "PI" .and. !SB1->B1_GRUPO $ "PI01"
+				ik_GerOk := .F.
+			EndIf
+		EndIf
+	EndIf
+
 	RestArea(iksfArea)
 
 Return( ik_GerOk )

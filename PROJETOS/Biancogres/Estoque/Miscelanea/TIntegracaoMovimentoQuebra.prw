@@ -14,13 +14,12 @@ User Function PROCQUEB()
 
     Local oObj := Nil
 
- //   RpcSetEnv("01", "01")
+   // RpcSetEnv("01", "01")
 
     oObj := TIntegracaoMovimentoQuebra():New()
 
-     oObj:Processa()
+    oObj:Processa()
 
- //   RpcClearEnv()
 
 Return()
 
@@ -80,7 +79,7 @@ Method Processa(cRec) Class TIntegracaoMovimentoQuebra
 
     DBSelectArea("ZL8")
 
-    cSQL := " SELECT TOP 1 * "
+    cSQL := " SELECT  * "
     cSQL += " FROM " + RetSqlName("ZL8") + " A "
     cSQL += " WHERE A.ZL8_CODEMP = " + ValToSql(cEmpAnt)
     cSQL += " AND A.ZL8_CODFIL   = " + ValToSql(cFilAnt)
@@ -90,7 +89,10 @@ Method Processa(cRec) Class TIntegracaoMovimentoQuebra
     	cSQL += " AND A.R_E_C_N_O_   = '"+cValToChar(cRec)+"' " 
     Else
     	cSQL += " AND A.ZL8_STATUS   = 'A' " // A=Aguard. Processamento;P=Processado;B=Bloqueado;E=Erro
+    	cSQL += " AND A.ZL8_DATA >= '20210301' "
     EndIf
+    
+    // 
     
     cSQL += " ORDER BY ZL8_CODEMP, ZL8_CODFIL, ZL8_ETIQUE "
     
@@ -432,7 +434,7 @@ Method ProcSC9(cQry, bValid) Class TIntegracaoMovimentoQuebra
 
                         Else
 
-                            ::Workflow(cQrySC9)
+                            ::Workflow(cQrySC9, cQry)
 
                         EndIf
 
@@ -548,7 +550,7 @@ Method GravaLog() Class TIntegracaoMovimentoQuebra
     
 Return()
 
-Method Workflow(cQrySC9) Class TIntegracaoMovimentoQuebra
+Method Workflow(cQrySC9, cQry) Class TIntegracaoMovimentoQuebra
 	
 	Local aArea	:= GetArea()
     Local cHtml := ""
@@ -566,6 +568,10 @@ Method Workflow(cQrySC9) Class TIntegracaoMovimentoQuebra
 	Local cCat			:= ""	 
 	Local cGrupo		:= ""
 	Local cSeg			:= "" 
+	
+	Local nQtdReq 		:= cValToChar((cQry)->ZL8_QUANT)
+    Local nQtdLib 		:= cValToChar(SC9->C9_QTDLIB)
+	
 	
 	
 	DbSelectArea('SC5')
@@ -658,6 +664,16 @@ Method Workflow(cQrySC9) Class TIntegracaoMovimentoQuebra
     cHtml += '         <td><strong>Produto</strong></td>'
     cHtml += '         <td colspan="2">' + (cQrySC9)->C9_PRODUTO + '</td>'
     cHtml += '      </tr>'
+    
+    cHtml += '      <tr>'
+    cHtml += '         <td><strong>Qtd. Liberação</strong></td>'
+    cHtml += '         <td colspan="2">' + nQtdLib + '</td>'
+    cHtml += '      </tr>'
+    cHtml += '      <tr>'
+    cHtml += '         <td><strong>Qtd. Requerida</strong></td>'
+    cHtml += '         <td colspan="2">' + nQtdReq + '</td>'
+    cHtml += '      </tr>'
+    
     cHtml += '      <tr>'
     cHtml += '         <td><strong>Processo</strong></td>'
     cHtml += '         <td colspan="2">Quebra</td>'

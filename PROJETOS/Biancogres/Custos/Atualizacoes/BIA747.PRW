@@ -387,6 +387,51 @@ Static Function RptDetail()
 			CT007 += "           D3_CLVL
 			CT007 += "  UNION ALL
 
+			// FORMAÇÃO DE JAZIDA E BAIXA PROVISÃO DE CUSTO
+			CT007 += " SELECT 'SD3:5' ORIGEM,
+			CT007 += "        CASE
+			CT007 += "            WHEN D3_TIPO = 'PA'
+			CT007 += "            THEN '21106020'
+			CT007 += "            ELSE '11307010'
+			CT007 += "        END DEBITO,
+			CT007 += "        CASE
+			CT007 += "            WHEN D3_TIPO = 'PA'
+			CT007 += "            THEN '11307010'
+			CT007 += "            ELSE '11306005'
+			CT007 += "        END CREDIT, 
+			CT007 += "        SUM(D3_QUANT) QUANT, 
+			CT007 += "        SUM(D3_CUSTO1) CUSTO,
+			CT007 += "        CASE
+			CT007 += "            WHEN D3_TIPO = 'PA'
+			CT007 += "            THEN 'BX PROVISAO CUSTO N/MES'
+			CT007 += "            ELSE 'CUSTO FORMACAO JAZIDA N/MES'
+			CT007 += "        END HIST, 
+			CT007 += "        D3_CC CCUSTO, 
+			CT007 += "        D3_ITEMCTA ITEMCTA, 
+			CT007 += "        D3_CLVL CLVL, 
+			CT007 += "        ' ' C5_YSUBTP, 
+			CT007 += "        ' ' C5_YSI
+			CT007 += " FROM " + RetSqlName("SD3") + " SD3(NOLOCK)
+			CT007 += "      INNER JOIN " + RetSqlName("SC2") + " SC2(NOLOCK) ON C2_FILIAL = D3_FILIAL
+			CT007 += "                                       AND C2_NUM = SUBSTRING(D3_OP, 1, 6)
+			CT007 += "                                       AND C2_ITEM = SUBSTRING(D3_OP, 7, 2)
+			CT007 += "                                       AND C2_SEQUEN = SUBSTRING(D3_OP, 9, 3)
+			CT007 += "                                       AND SC2.D_E_L_E_T_ = ' '
+			CT007 += "      INNER JOIN " + RetSqlName("SB1") + " SB1(NOLOCK) ON B1_FILIAL = '" + xFilial("SB1") + "'
+			CT007 += "                                       AND B1_COD = C2_PRODUTO
+			CT007 += "                                       AND B1_GRUPO = '108A'
+			CT007 += "                                       AND SB1.D_E_L_E_T_ = ' '
+			CT007 += " WHERE D3_FILIAL = '" + xFilial("SD3") + "'
+			CT007 += "       AND D3_EMISSAO BETWEEN '" + dtos(MV_PAR01) + "' AND '" + dtos(MV_PAR02) + "'
+			CT007 += "       AND D3_TIPO IN('PA', 'MP')
+			CT007 += "       AND D3_CLVL = '3804'
+			CT007 += "      AND SD3.D_E_L_E_T_ = ' '
+			CT007 += " GROUP BY D3_TIPO, 
+			CT007 += "          D3_CC, 
+			CT007 += "          D3_ITEMCTA, 
+			CT007 += "          D3_CLVL
+			CT007 += "  UNION ALL
+
 			// Devolução de Vendas
 			CT007 += " SELECT 'SD1:1' ORIGEM,
 			CT007 += "        '" + msCtaPA + "' DEBITO,

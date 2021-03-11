@@ -135,6 +135,7 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMesRef, cMsg)
 	MP007 += "    AND ZOZ.ZOZ_REVISA = '" + cRevisa + "' "
 	MP007 += "    AND ZOZ.ZOZ_ANOREF = '" + cAnoRef + "' "
 	MP007 += "    AND ZOZ.ZOZ_VERCON = 'D" + cMesRef + "' "
+	MP007 += "    AND ZOZ.ZOZ_ORIPRC <> 'FORECAST-M' "
 	MP007 += "    AND ZOZ.D_E_L_E_T_ = ' ' "
 	MPIndex := CriaTrab(Nil,.f.)
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,MP007),'MP07',.T.,.T.)
@@ -147,7 +148,8 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMesRef, cMsg)
 			msMsgCtrl := "Já existem registros gravados para a Versão Orçamentária informada." + msEnter + msEnter
 			msMsgCtrl += "Deseja prosseguir?" + msEnter + msEnter
 			msMsgCtrl += "Se confirmar, o sistema efetuará de deleção de todos os registros desta Versão, inclusive os ajustes/expurgos manuais" + msEnter + msEnter
-			msMsgCtrl += "Sabendo desta prerrogativa, ainda assim deseja prosseguir?" + msEnter + msEnter
+			msMsgCtrl += "Sabendo desta prerrogativa, ainda assim deseja prosseguir?" + msEnter + msEnter + msEnter + msEnter
+			msMsgCtrl += "Empresa  ===>>>  " + cEmp + msEnter + msEnter
 
 			If MsgYESNO(msMsgCtrl, "BIA692")
 
@@ -157,6 +159,7 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMesRef, cMsg)
 				UP007 += "       AND ZOZ.ZOZ_REVISA = " + ValToSQL(cRevisa)
 				UP007 += "       AND ZOZ.ZOZ_ANOREF = " + ValToSQL(cAnoRef)
 				UP007 += "       AND ZOZ.ZOZ_VERCON = 'D" + cMesRef + "' "
+				UP007 += "       AND ZOZ.ZOZ_ORIPRC <> 'FORECAST-M' "
 				UP007 += "       AND ZOZ.D_E_L_E_T_ = ' ' "
 				U_BIAMsgRun("Aguarde... Zerando registros ZOZ... ",,{|| msStaExcQy := TcSQLExec(UP007) })
 				If !msStaExcQy < 0

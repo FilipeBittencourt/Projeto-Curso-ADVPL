@@ -404,6 +404,7 @@ Method BuildSD3(cTable) Class TCalculoRubricasCustoFuncionario
 	Local cSep := ","
 	Local cFields := "D3_YMATRIC"
 	Local cSum := ""
+	Local cSum2 := ""
 	Local cCase := ""
 	Local cWhere := ""
 
@@ -414,7 +415,8 @@ Method BuildSD3(cTable) Class TCalculoRubricasCustoFuncionario
 
 	While !(cQry)->(Eof())
 
-		cSum += cSep + Space(1) +"SUM("+ (cQry)->CAMPO +") AS "+ (cQry)->CAMPO
+		cSum  += cSep + Space(1) +"SUM("+ (cQry)->CAMPO +") AS "+ (cQry)->CAMPO
+		cSum2 += cSep + Space(1) +"SUM("+ (cQry)->CAMPO +") AS "+ "D3" + substr((cQry)->CAMPO, 4, 7)
 
 		cCase += cSep + Space(1) +"CASE "
 		cCase += " WHEN "+ ::GetCaseFilter(cTable, "1", (cQry)->CAMPO) +" THEN D3_CUSTO1 "
@@ -443,6 +445,21 @@ Method BuildSD3(cTable) Class TCalculoRubricasCustoFuncionario
 	::cSQLSD3 += " AND D_E_L_E_T_ = '' "
 	::cSQLSD3 += " ) AS SD3 "
 	::cSQLSD3 += " GROUP BY " + cFields
+
+	mskQry07 := " SELECT " + cFields
+	mskQry07 += cSum2 + " INTO " + ms3TbTemp
+	mskQry07 += " FROM "
+	mskQry07 += " ( "
+	mskQry07 += " SELECT SUBSTRING("+ cFields +", 3, 6) AS " + cFields
+	mskQry07 += cCase
+	mskQry07 += " FROM " + RetSQLName("SD3") + " SD3(NOLOCK) "
+	mskQry07 += " WHERE D3_FILIAL = " + ValToSQL(xFilial("SD3"))
+	mskQry07 += " AND SUBSTRING(D3_EMISSAO, 1, 6) = " + ValToSQL(::cAno + ::cPeriodo)
+	mskQry07 += " AND D3_YMATRIC <> '' "
+	mskQry07 += " AND (" + cWhere + ")"
+	mskQry07 += " AND D_E_L_E_T_ = '' "
+	mskQry07 += " ) AS SD3 "
+	mskQry07 += " GROUP BY " + cFields
 
 Return()
 

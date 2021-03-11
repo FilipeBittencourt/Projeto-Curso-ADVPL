@@ -47,6 +47,13 @@ User Function A250ARD4()
 				EndIf
 			EndIf
 
+			// Em 01/03/21, incluída regra de arredondamento para o grupo de SacoPlastico - Ticket30543
+			If gtRetGrpB1 == "104C"
+				If Round(_aRetEmp[1][fk][2], 0) == 0
+					_aRetEmp[1][fk][2]  := 1
+				EndIf
+			EndIf
+
 			// Ajuste efetuado em 06/10/16 para corrigir perda na estrutura prevista para orçamento... Por Marcos Alberto Soprani
 			If gtRetGrpB1 == "104A"
 				gtB1Conv := Posicione("SB1", 1, xFilial("SB1") + SC2->C2_PRODUTO, "B1_CONV")

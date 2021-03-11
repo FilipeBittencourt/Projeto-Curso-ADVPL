@@ -627,7 +627,7 @@ Static Function GeraSql()
 	cSQL += "		 " + Enter 
 	cSQL += "		FROM " + RETSQLNAME("SB1") + "  SB1  " + Enter 
 	cSQL += "	 " + Enter 
-	cSQL += "		INNER JOIN " + RETSQLNAME("ZZ7") +"  ZZ7 ON (SB1.B1_YLINHA		= ZZ7.ZZ7_COD AND SB1.B1_YLINSEQ = ZZ7.ZZ7_LINSEQ)  " + Enter 
+	cSQL += "		INNER JOIN " + RETSQLNAME("ZZ7") +"  ZZ7 with(nolock) ON (SB1.B1_YLINHA		= ZZ7.ZZ7_COD AND SB1.B1_YLINSEQ = ZZ7.ZZ7_LINSEQ)  " + Enter 
 	cSQL += "		INNER JOIN ( " + Enter 
 	
 	If lAmostra
@@ -652,7 +652,7 @@ Static Function GeraSql()
 		
 	EndIf
 	cSQL += "		) SBF ON (SB1.B1_COD = SBF.BF_PRODUTO ) " + Enter 
-	cSQL += "		INNER JOIN " + RETSQLNAME("ZZ9") +" ZZ9 ON (SBF.BF_PRODUTO  = ZZ9.ZZ9_PRODUT AND SBF.BF_LOTECTL  = ZZ9.ZZ9_LOTE)  " + Enter 
+	cSQL += "		INNER JOIN " + RETSQLNAME("ZZ9") +" ZZ9 with(nolock) ON (SBF.BF_PRODUTO  = ZZ9.ZZ9_PRODUT AND SBF.BF_LOTECTL  = ZZ9.ZZ9_LOTE)  " + Enter 
 	cSQL += "	 " + Enter 
 	cSQL += "		WHERE   " + Enter 
 	cSQL += "		SB1.B1_FILIAL	= '  '		AND	 " + Enter 
@@ -676,7 +676,7 @@ Static Function GeraSql()
 	
 	cSQL += "	) " + Enter 
 	cSQL += "	PROD " + Enter 
-	cSQL += "	LEFT JOIN " + RETSQLNAME("ZZ8") +" ZZ8 ON PROD.B1_YCLASSE = ZZ8.ZZ8_COD 			 " + Enter 
+	cSQL += "	LEFT JOIN " + RETSQLNAME("ZZ8") +" ZZ8 with(nolock) ON PROD.B1_YCLASSE = ZZ8.ZZ8_COD 			 " + Enter 
 	cSQL += "	GROUP BY B1_YCLASSE, ZZ8.ZZ8_DESC, DESCRICAO, B1_COD, B1_COD, B1_LOCAL, LOTE, LOTE_ORI  " + Enter 
 	cSQL += "	 " + Enter 
 	cSQL += "	 " + Enter 
@@ -709,9 +709,9 @@ Static Function GeraSql()
 	EndIf
 	
 	cSQL += "	FROM " + RETSQLNAME("SB1") +" SB1 WITH(NOLOCK)  " + Enter 
-	cSQL += "	LEFT JOIN  " + RETSQLNAME("ZZ8") +" ZZ8 ON SB1.B1_YCLASSE = ZZ8.ZZ8_COD and ZZ8.D_E_L_E_T_= ''                                                     " + Enter 
+	cSQL += "	LEFT JOIN  " + RETSQLNAME("ZZ8") +" ZZ8 with(nolock) ON SB1.B1_YCLASSE = ZZ8.ZZ8_COD and ZZ8.D_E_L_E_T_= ''                                                     " + Enter 
 	cSQL += "	INNER JOIN " + RETSQLNAME("ZZ6") +" ZZ6 WITH(NOLOCK) ON ZZ6.ZZ6_COD = SB1.B1_YFORMAT AND ZZ6.D_E_L_E_T_ = ''	 " + Enter 
-	cSQL += "	INNER JOIN " + RETSQLNAME("ZZ7") +" ZZ7 ON (SB1.B1_YLINHA		= ZZ7.ZZ7_COD AND SB1.B1_YLINSEQ = ZZ7.ZZ7_LINSEQ)  " + Enter 
+	cSQL += "	INNER JOIN " + RETSQLNAME("ZZ7") +" ZZ7 with(nolock) ON (SB1.B1_YLINHA		= ZZ7.ZZ7_COD AND SB1.B1_YLINSEQ = ZZ7.ZZ7_LINSEQ)  " + Enter 
 	cSQL += "			            			     " + Enter 
 	cSQL += "	WHERE   " + Enter 
 	cSQL += "	SB1.D_E_L_E_T_ = ''			AND " + Enter 
@@ -727,7 +727,7 @@ Static Function GeraSql()
 	
 	cSQL += "	ISNULL(( " + Enter 
 	cSQL += "		SELECT SUM(BF_QUANT - BF_EMPENHO)                                                                                                  " + Enter 
-	cSQL += "	 		FROM SBF010	SBF                                                                                                          " + Enter 
+	cSQL += "	 		FROM SBF010	SBF with(nolock)                                                                                                         " + Enter 
 	cSQL += "		WHERE  " + Enter 
 
 	If lAmostra
@@ -748,7 +748,7 @@ Static Function GeraSql()
 	If cEmpresa $ "05_13"
 		cSQL += "	ISNULL(( " + Enter 
 		cSQL += "		SELECT SUM(BF_QUANT - BF_EMPENHO)                                                                                                  " + Enter 
-		cSQL += "	 		FROM  " + RETSQLNAME("SBF") +"	SBF                                                                                                          " + Enter 
+		cSQL += "	 		FROM  " + RETSQLNAME("SBF") +"	SBF with(nolock)                                                                                                         " + Enter 
 		cSQL += "	 	WHERE  " + Enter 
 
 		If lAmostra
@@ -768,14 +768,15 @@ Static Function GeraSql()
 	EndIf
 	
 	If cEmpresa != "07"
-		cSQL += "	dbo.FN_SALDOPEDIDO('01' ,B1_COD) <= 0		AND          		 " + Enter 
 	
-		If cEmpresa $ "05_13"
-			cSQL += "	dbo.FN_SALDOPEDIDO('"+AllTrim(CEMPANT)+"' ,B1_COD) <= 0       AND    		 " + Enter 
-		EndIf
+		cSQL += " NOT (ISNULL((select COUNT(*) from SBF010 with(nolock) where D_E_L_E_T_ = '' AND  BF_LOCAL IN ('02','04') AND BF_LOCALIZ IN ('ZZZZ','P. DEVOL') AND BF_PRODUTO = SB1.B1_COD), 0) > 0) AND " + Enter
+		cSQL += " NOT (ISNULL((select COUNT(*) from SBF050 with(nolock) where D_E_L_E_T_ = '' AND  BF_LOCAL IN ('02','04') AND BF_LOCALIZ IN ('ZZZZ','P. DEVOL') AND BF_PRODUTO = SB1.B1_COD), 0) > 0) AND " + Enter
+		cSQL += " NOT (ISNULL((select COUNT(*) from SBF130 with(nolock) where D_E_L_E_T_ = '' AND  BF_LOCAL IN ('02','04') AND BF_LOCALIZ IN ('ZZZZ','P. DEVOL') AND BF_PRODUTO = SB1.B1_COD), 0) > 0) AND " + Enter
 	
 	Else
-		cSQL += "	dbo.FN_SALDOPEDIDO('07' ,B1_COD) <= 0		AND          		 " + Enter 
+	
+		cSQL += " NOT (ISNULL((select COUNT(*) from SBF070 with(nolock) where D_E_L_E_T_ = '' AND  BF_LOCAL IN ('02','04') AND BF_LOCALIZ IN ('ZZZZ','P. DEVOL') AND BF_PRODUTO = SB1.B1_COD), 0) > 0) AND " + Enter
+		
 	EndIf
 	
 	cSQL += "	ZZ7_EMP in "+cInMarca+" " + Enter 
@@ -786,22 +787,22 @@ Static Function GeraSql()
 	cSQL += " LEFT JOIN
 	If cEmpAnt $ "01_05"
 		cSQL += " ((SELECT '01' EMP, B8_PRODUTO, B8_LOTECTL, MIN(B8_DATA) AS DTPRILOTE ,MAX(B8_DATA) AS DTULTIMOLOTE 					"  + Enter
-		cSQL += "  FROM  SB8010 																										"  + Enter
+		cSQL += "  FROM  SB8010 with(nolock)																							"  + Enter
 		cSQL += " WHERE D_E_L_E_T_ = ''																									"  + Enter
 		cSQL += " GROUP BY B8_PRODUTO, B8_LOTECTL	)																					"  + Enter
 		cSQL += " UNION 																												"  + Enter
 		cSQL += " (SELECT '05' EMP, B8_PRODUTO, B8_LOTECTL, MIN(B8_DATA) AS DTPRILOTE ,MAX(B8_DATA) AS DTULTIMOLOTE 					"  + Enter
-		cSQL += "  FROM  SB8050   																										"  + Enter
+		cSQL += "  FROM  SB8050  with(nolock) 																							"  + Enter
 		cSQL += " WHERE D_E_L_E_T_ = ''																									"  + Enter
 		cSQL += " GROUP BY B8_PRODUTO, B8_LOTECTL	)																					"  + Enter
 		cSQL += " UNION 																												"  + Enter
 		cSQL += " (SELECT '13' EMP, B8_PRODUTO, B8_LOTECTL, MIN(B8_DATA) AS DTPRILOTE ,MAX(B8_DATA) AS DTULTIMOLOTE 					"  + Enter
-		cSQL += "  FROM  SB8130   																										"  + Enter
+		cSQL += "  FROM  SB8130  with(nolock) 																							"  + Enter
 		cSQL += " WHERE D_E_L_E_T_ = ''																									"  + Enter
 		cSQL += " GROUP BY B8_PRODUTO, B8_LOTECTL	))SB8																				"  + Enter
 	Else
 		cSQL += " (SELECT '"+cEmpAnt+"' EMP, B8_PRODUTO, B8_LOTECTL, MIN(B8_DATA) AS DTPRILOTE ,MAX(B8_DATA) AS DTULTIMOLOTE 			"  + Enter
-		cSQL += " FROM " +RETSQLNAME("SB8") + "																							"  + Enter
+		cSQL += " FROM " +RETSQLNAME("SB8") + "	with(nolock)																			"  + Enter
 		cSQL += " WHERE D_E_L_E_T_ = '' 																								"  + Enter
 		cSQL += " GROUP BY B8_PRODUTO, B8_LOTECTL	)SB8																				"  + Enter
 	EndIf

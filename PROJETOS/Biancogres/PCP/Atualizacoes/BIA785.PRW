@@ -189,6 +189,8 @@ User Function BIA785()
 		oBtn2      := TButton()  :New( nLin*.392,nCol*.420,"Carga"       ,oDlg1,{|| fh_Esc := .T., ExecBlock("BCAR785"   ,.F.,.F.)     },nLin*.040,nCol*.010,,,,.T.,,"",,,,.F. ) // Monta a Carga
 		oBtn6      := TButton()  :New( nLin*.417,nCol*.340,"<< Separar"  ,oDlg1,{|| fh_Esc := .T., ExecBlock("BFIR785"   ,.F.,.F.,"3") },nLin*.040,nCol*.008,,,,.T.,,"",,,,.F. ) // Transfere o status da OP para Separadas
 		oBtn5      := TButton()  :New( nLin*.392,nCol*.340,"Composição"  ,oDlg1,{|| fh_Esc := .T., ExecBlock("BIASP785"  ,.F.,.F.)     },nLin*.040,nCol*.010,,,,.T.,,"",,,,.F. ) // Lista a composição da formula gravada no Empenho
+		//adição do botão Aproveitar: ticket 30651
+		oBt10      := TButton()  :New( nLin*.392,nCol*.260,"Aproveitar"  ,oDlg1,{|| fh_Esc := .T., ExecBlock("B785APRO"  ,.F.,.F.)     },nLin*.040,nCol*.010,,,,.T.,,"",,,,.F. )
 		oBtn17     := TButton()  :New( nLin*.392,nCol*.220,"Adicionar"   ,oDlg1,{|| fh_Esc := .T., ExecBlock("B785ADIC"  ,.F.,.F.)     },nLin*.040,nCol*.010,,,,.T.,,"",,,,.F. )
 		oBtn9      := TButton()  :New( nLin*.392,nCol*.140,"Ajustar"     ,oDlg1,{|| fh_Esc := .T., ExecBlock("BSCOR785"  ,.F.,.F.)     },nLin*.040,nCol*.010,,,,.T.,,"",,,,.F. )
 	EndIf
@@ -2089,6 +2091,11 @@ User Function BBXA785()
 
 				kjQuant := U_BIA686()
 
+				If kjQuant <= 0
+					MsgSTOP("Necessário verificar com a TI um processo de investigação porque a quantidade deste apontamento está retornando ZERO.")
+					Return
+				EndIf
+
 				If SC2->C2_YSTAOPR <> "4"
 					vs_VetM250 :={ {  "D3_TM"       , "010"              ,NIL},;
 					{                 "D3_COD"      , SC2->C2_PRODUTO    ,NIL},;
@@ -2314,7 +2321,6 @@ User Function BBXA785()
 		oDlg1:End()
 
 	END SEQUENCE
-
 
 	ErrorBlock( bErro )
 
@@ -3737,8 +3743,6 @@ Static Function ValidPerg()
 	dbSelectArea(_sAlias)
 
 Return
-
-
 
 Static Function fCriaSem(_cLocal)
 

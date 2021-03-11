@@ -34,10 +34,10 @@ Static Function RptDetail()
 		Aviso('Data de Fechamento!!!', 'Favor verificar o intervalo de datas informado, pois as movimentações de estoque estão bloqueadas para este período!!!.',{'Ok'})
 		Return
 	EndIf
-	
+
 	oLogProc := TBiaLogProc():New()
 	oLogProc:LogIniProc("BIA784",fPerg)
-	
+
 	oExcel := FWMSEXCEL():New()
 
 	nxPlan := "Planilha 01"
@@ -131,7 +131,7 @@ Static Function RptDetail()
 		jh_Quant := 0
 
 		// Ajuste efetuado para atender a OS effettivo 4368-16
-		If gtRetGrpB1 == "104B"
+		If gtRetGrpB1 == "104B" .or. gtRetGrpB1 == "104C"
 
 			SF002 := " SELECT COUNT(*) CONTAD
 			SF002 += "   FROM " + RetSqlName("Z18")
@@ -239,7 +239,7 @@ Static Function RptDetail()
 		oExcel:WorkBooks:Open( "C:\TEMP\"+xArqTemp+".xml" ) // Abre uma planilha
 		oExcel:SetVisible(.T.)
 	EndIf
-	
+
 	oLogProc:LogFimProc()
 Return
 

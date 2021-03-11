@@ -589,6 +589,7 @@ Static Function BIA396A()
 
 					ZBA->ZBA_DPRVFR  := stod(MQ07->ZBA_DPRVFR)
 					ZBA->ZBA_MESFER  := MQ07->ZBA_MESFER
+					ZBA->ZBA_DPTOSR  := MQ07->ZBA_DPTOSR
 					ZBA->ZBA_CSTFUN  := &(msCustFun)
 
 					ZBA->(MsUnlock())

@@ -568,6 +568,7 @@ Static Function BFG103A()
 
 					ZBG->ZBG_DPRVFR  := stod(MQ07->ZBA_DPRVFR)
 					ZBG->ZBG_MESFER  := MQ07->ZBA_MESFER
+					ZBG->ZBG_DPTOSR  := MQ07->ZBA_DPTOSR
 					ZBG->ZBG_CSTFUN  := &(msCustFun)
 
 					ZBG->(MsUnlock())

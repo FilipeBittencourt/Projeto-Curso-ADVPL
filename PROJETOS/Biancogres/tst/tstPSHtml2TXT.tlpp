@@ -1,5 +1,0 @@
-#include "totvs.ch"
-user function tstPSHtml2TXT()
-    local cRead:=ctools():NoAccent(MemoRead("c:\tmp\tst1.html"))
-    cRead:=PSHtml2TXT():PSHtml2TXT(cRead)
-    return(Msginfo(cRead,"tstPSHtml2TXT"))

@@ -623,6 +623,7 @@ Static Function fReplCli()
 			_SA1->A1_YLOTRES	:= M->A1_YLOTRES 	//Ticket 9335
 			_SA1->A1_YCDGREG	:= M->A1_YCDGREG
 			_SA1->A1_YSUMCE		:= M->A1_YSUMCE
+			_SA1->A1_YCTAADI	:= M->A1_YCTAADI	//Conta Adiantamento RA
 			
 			_SA1->A1_YFORMA 	:= U_valYFORMA(__EMPRESA, M->A1_YCDGREG)
 

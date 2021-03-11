@@ -999,7 +999,14 @@ Static Function fAutoPed(_nI)
 			oGdPed:aCols[_nI,_nPosPed]	:= SC7->C7_NUM
 			oGdPed:aCols[_nI,_nPosErr]	:= ""
 
-
+			//Posicionar na Solicitação de Compras
+			DbSelectArea("SC1")
+			SC1->(DbSetOrder(1))
+			If SC1->(DbSeek(xFilial("SC1")+oGdPed:aCols[_nI,_nPosSol]+oGdPed:aCols[_nI,_nPosIte]))
+				Reclock("SC1",.F.)
+				SC1->C1_IMPORT = ''
+				SC1->(MsUnlock())
+			EndIf
 		EndIf
 	Else
 		oGdPed:aCols[_nI,1] 		:= "BR_VERMELHO

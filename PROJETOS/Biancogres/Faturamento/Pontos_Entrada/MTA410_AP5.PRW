@@ -51,6 +51,10 @@ User Function MTA410()
 	Private nDescInc            := 0 // Por Marcos Alberto Soprani para auxiliar na integração com a validação da CLVL - BIA555
 
 	//MSGALERT("MTA410")
+	
+	IF  !u_VALIDQTDPC()
+		Return .F.
+	Endif	
 
 	//Tratamento especial para Replcacao de pedido LM
 	If AllTrim(FunName()) $ GetNewPar("FA_XPEDRPC","BFATRT01###FCOMRT01###BFVCXPED###FCOMXPED###TESTEF1###RPC") .OR. AllTrim(FunName()) $ GetNewPar("FA_XPEDRQC","FRQCTE01###FRQCRT02")
@@ -1174,3 +1178,30 @@ Static Function fLibCont()
 	EndIf 
 
 Return(lRet)
+
+//Thiago Haagensen - Ticket 30399 - Tornar campo obrigatório para pedido M não dar divergencia de estoque
+USER FUNCTION VALIDQTDPC()
+
+LOCAL CTIPOVENDA :=""
+LOCAL NQTDPECAS := 0
+LOCAL Lzero := .T.
+LOCAL CITEM  :=""
+
+CTIPOVENDA := M->C5_YSUBTP
+
+FOR NX := 1 TO LEN (ACOLS)
+	
+	IF ALLTRIM(CTIPOVENDA) == "M"
+		NQTDPECAS := acols[NX,aScan(aHEADER,{|x| alltrim(x[2])=="C6_YQTDPC"})]
+		IF  NQTDPECAS==0
+			Lzero:=.F.
+			CITEM := acols[NX,aScan(aHEADER,{|x| alltrim(x[2])=="C6_ITEM"})]
+			AVISO("PREENCHER QUANTIDADE","Atenção! Favor preencher o campo Qtde. em PC do item " +CITEM + ", tipo M são obrigatórios!" ,;
+			{"Fechar"},2)
+		ENDIF
+	
+	ENDIF
+
+NEXT
+ 
+RETURN Lzero

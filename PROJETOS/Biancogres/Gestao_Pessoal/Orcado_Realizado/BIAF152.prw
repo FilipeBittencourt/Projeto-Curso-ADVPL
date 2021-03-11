@@ -87,7 +87,7 @@ User Function BXF152A()
 		UP0054 += " WHERE ZBW_VERSAO = '" + MV_PAR01 + "' "
 		UP0054 += "       AND ZBW_REVISA = '" + MV_PAR02 + "' "
 		UP0054 += "       AND ZBW_ANOREF = '" + MV_PAR03 + "' "
-		UP0054 += "       AND ZBW_EVENTO <> '' "
+		UP0054 += "       AND (ZBW_EVENTO <> '' OR ZBW_TABELA = '3') "
 		UP0054 += "       AND ZBW_EVENTO NOT IN
 		UP0054 += " (
 		UP0054 += "     SELECT XXX.ZBW_EVENTO

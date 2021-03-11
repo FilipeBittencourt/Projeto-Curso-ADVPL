@@ -9,11 +9,12 @@
 @description Gatilho para verificação de Tabela de Custo de Produtos de OP
 @type function
 /*/
-
+//Ticket 30466 - RETIRAR A TRAVA QUE BLOQUEIA O LANÇAMENTO DE ORDEM DE PRODUÇÃO CASO O PA NÃO TENHA CUSTO PADRÃO CADASTRADO.
 
 User Function BIAFG039()
 
-	Local _lRet	:=	.F.
+	Local _lRet	:=	.T.
+/*
 	Local _aArea	:=	GetArea()
 	
 	DbSelectArea("ZZ5")
@@ -26,4 +27,5 @@ User Function BIAFG039()
 	EndIf	
 	
 	RestArea(_aArea)
+*/
 Return _lRet

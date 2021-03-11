@@ -21,7 +21,7 @@ User Function BIA587()
 	Local cSeek	        := xFilial("ZOZ") + SPACE(TAMSX3("ZOZ_VERSAO")[1]) + SPACE(TAMSX3("ZOZ_REVISA")[1]) + SPACE(TAMSX3("ZOZ_ANOREF")[1])
 	Local bWhile	    := {|| ZOZ_FILIAL + ZOZ_VERSAO + ZOZ_REVISA + ZOZ_ANOREF }   
 
-	Local aNoFields     := {"ZOZ_VERSAO", "ZOZ_REVISA", "ZOZ_ANOREF", "ZOZ_ORIPRC", "ZOZ_LOTE", "ZOZ_SBLOTE"}
+	Local aNoFields     := {"ZOZ_VERSAO", "ZOZ_REVISA", "ZOZ_ANOREF", "ZOZ_ORIPRC", "ZOZ_LOTE", "ZOZ_SBLOTE", "ZOZ_VERCON"}
 
 	Local oFont         := TFont():New("Arial",9,14,.T.,.T.,5,.T.,5,.T.,.F.)
 	Local _nOpcA	    := 0
@@ -36,10 +36,13 @@ User Function BIA587()
 	Private _oGRevisa
 	Private _cAnoRef	:= SPACE(TAMSX3("ZOZ_ANOREF")[1])
 	Private _oGAnoRef
+	Private _cVersCont	:= SPACE(TAMSX3("ZOZ_VERCON")[1])
+	Private _oVersCont
 	Private _cDataRef	:= ctod("  /  /  ")
 	Private _oGDataRef
 	Private _cHistFil	:= SPACE(TAMSX3("ZOZ_HIST")[1])
 	Private _oGHistFil
+
 	Private _msCtrlAlt := .T.
 
 	aAdd(_aButtons,{"PRODUTO" ,{|| U_BIA393("E")}, "Layout Integração" , "Layout Integração"})
@@ -60,19 +63,22 @@ User Function BIA587()
 	Define MsDialog _oDlg Title "Lançamentos Contábeis p/ Orçamento" From _aSize[7],0 To _aSize[6],_aSize[5] Of oMainWnd Pixel
 
 	@ 050,010 SAY "Versão:" SIZE 55, 11 OF _oDlg PIXEL FONT oFont
-	@ 048,050 MSGET _oGVersao VAR _cVersao Picture "@!" F3 "ZB5" SIZE 50, 11 OF _oDlg PIXEL VALID fBIA587A()
+	@ 048,050 MSGET _oGVersao VAR _cVersao Picture "@!" F3 "ZB5"    SIZE 050, 11 OF _oDlg PIXEL VALID fBIA587A()
 
 	@ 050,110 SAY "Revisão:" SIZE 55, 11 OF _oDlg PIXEL FONT oFont
-	@ 048,150 MSGET _oGRevisa VAR _cRevisa  SIZE 50, 11 OF _oDlg PIXEL VALID fBIA587B()
+	@ 048,150 MSGET _oGRevisa VAR _cRevisa                          SIZE 050, 11 OF _oDlg PIXEL VALID fBIA587B()
 
 	@ 050,210 SAY "AnoRef:" SIZE 55, 11 OF _oDlg PIXEL FONT oFont
-	@ 048,250 MSGET _oGAnoRef VAR _cAnoRef  SIZE 50, 11 OF _oDlg PIXEL VALID fBIA587C()
+	@ 048,250 MSGET _oGAnoRef VAR _cAnoRef                          SIZE 050, 11 OF _oDlg PIXEL VALID fBIA587C()
 
-	@ 050,310 SAY "DataRef:" SIZE 55, 11 OF _oDlg PIXEL FONT oFont
-	@ 048,350 MSGET _oGDataRef VAR _cDataRef  SIZE 50, 11 OF _oDlg PIXEL VALID fBIA587D()
+	@ 050,310 SAY "Ver.Cont.:" SIZE 55, 11 OF _oDlg PIXEL FONT oFont
+	@ 048,350 MSGET _oVersCont VAR _cVersCont Picture "@!" F3 "ZOYFOR" SIZE 050, 11 OF _oDlg PIXEL VALID fBIA587H()
 
-	@ 050,410 SAY "HistFiltro:" SIZE 55, 11 OF _oDlg PIXEL FONT oFont
-	@ 048,450 MSGET _oGHistFil VAR _cHistFil  SIZE 100, 11 OF _oDlg PIXEL VALID fBIA587G()
+	@ 050,410 SAY "DataRef:" SIZE 55, 11 OF _oDlg PIXEL FONT oFont
+	@ 048,450 MSGET _oGDataRef VAR _cDataRef                        SIZE 050, 11 OF _oDlg PIXEL VALID fBIA587D()
+
+	@ 050,510 SAY "HistFiltro:" SIZE 55, 11 OF _oDlg PIXEL FONT oFont
+	@ 048,550 MSGET _oGHistFil VAR _cHistFil                        SIZE 100, 11 OF _oDlg PIXEL VALID fBIA587G()
 
 	_oGetDados := MsNewGetDados():New(_aPosObj[2,1], _aPosObj[2,2], _aPosObj[2,3], _aPosObj[2,4], 7, "U_B587LOK()" /*[ cLinhaOk]*/, /*[ cTudoOk]*/, "+++ZOZ_LINHA" /*[ cIniCpos]*/, /*Acpos*/, /*[ nFreeze]*/, 99999 /*[ nMax]*/, "U_B587FOK()" /*cFieldOK*/, /*[ cSuperDel]*/,"U_B587DOK()" /*[ cDelOk]*/, _oDlg, _aHeader, _aCols)
 
@@ -90,7 +96,7 @@ Static Function fBIA587A()
 	_cAnoRef := ZB5->ZB5_ANOREF
 
 	If !MsgYesNo("Deseja filtrar por data antes de prosseguir?", "Atenção")
-		If !Empty(_cVersao) .and. !Empty(_cRevisa) .and. !Empty(_cAnoRef)
+		If !Empty(_cVersao) .and. !Empty(_cRevisa) .and. !Empty(_cAnoRef) .and. !Empty(_cVersCont)
 			_oGetDados:oBrowse:SetFocus()
 			Processa({ || cMsg := fBIA587F() }, "Aguarde...", "Carregando dados...",.F.)
 		EndIf
@@ -105,7 +111,7 @@ Static Function fBIA587B()
 		Return .F.
 	EndIf
 	If !MsgYesNo("Deseja filtrar por data antes de prosseguir?", "Atenção")
-		If !Empty(_cVersao) .and. !Empty(_cRevisa) .and. !Empty(_cAnoRef)
+		If !Empty(_cVersao) .and. !Empty(_cRevisa) .and. !Empty(_cAnoRef) .and. !Empty(_cVersCont)
 			_oGetDados:oBrowse:SetFocus()
 			Processa({ || cMsg := fBIA587F() }, "Aguarde...", "Carregando dados...",.F.)
 		EndIf
@@ -120,7 +126,22 @@ Static Function fBIA587C()
 		Return .F.
 	EndIf
 	If !MsgYesNo("Deseja filtrar por data antes de prosseguir?", "Atenção")
-		If !Empty(_cVersao) .and. !Empty(_cRevisa) .and. !Empty(_cAnoRef)
+		If !Empty(_cVersao) .and. !Empty(_cRevisa) .and. !Empty(_cAnoRef) .and. !Empty(_cVersCont)
+			_oGetDados:oBrowse:SetFocus()
+			Processa({ || cMsg := fBIA587F() }, "Aguarde...", "Carregando dados...",.F.)
+		EndIf
+	EndIf
+
+Return
+
+Static Function fBIA587H()
+
+	If Empty(_cVersCont)
+		MsgInfo("O preenchimento do campo VersãoContábil é Obrigatório!!!")
+		Return .F.
+	EndIf
+	If !MsgYesNo("Deseja filtrar por data antes de prosseguir?", "Atenção")
+		If !Empty(_cVersao) .and. !Empty(_cRevisa) .and. !Empty(_cAnoRef) .and. !Empty(_cVersCont)
 			_oGetDados:oBrowse:SetFocus()
 			Processa({ || cMsg := fBIA587F() }, "Aguarde...", "Carregando dados...",.F.)
 		EndIf
@@ -130,7 +151,7 @@ Return
 
 Static Function fBIA587D()
 
-	If !Empty(_cVersao) .and. !Empty(_cRevisa) .and. !Empty(_cAnoRef)
+	If !Empty(_cVersao) .and. !Empty(_cRevisa) .and. !Empty(_cAnoRef) .and. !Empty(_cVersCont)
 		_oGetDados:oBrowse:SetFocus()
 		Processa({ || cMsg := fBIA587F() }, "Aguarde...", "Carregando dados...",.F.)
 	EndIf
@@ -139,7 +160,7 @@ Return
 
 Static Function fBIA587G()
 
-	If !Empty(_cVersao) .and. !Empty(_cRevisa) .and. !Empty(_cAnoRef)
+	If !Empty(_cVersao) .and. !Empty(_cRevisa) .and. !Empty(_cAnoRef) .and. !Empty(_cVersCont)
 		_oGetDados:oBrowse:SetFocus()
 		Processa({ || cMsg := fBIA587F() }, "Aguarde...", "Carregando dados...",.F.)
 	EndIf
@@ -211,6 +232,7 @@ Static Function fBIA587F()
 				AND ZOZ_VERSAO = %Exp:_cVersao%
 				AND ZOZ_REVISA = %Exp:_cRevisa%
 				AND ZOZ_ANOREF = %Exp:_cAnoRef%
+				AND ZOZ_VERCON = %Exp:_cVersCont%
 				AND ZOZ_ORIPRC = 'FORECAST-M'
 				AND ZOZ.%NotDel%
 				) NUMREG
@@ -219,6 +241,7 @@ Static Function fBIA587F()
 				AND ZOZ_VERSAO = %Exp:_cVersao%
 				AND ZOZ_REVISA = %Exp:_cRevisa%
 				AND ZOZ_ANOREF = %Exp:_cAnoRef%
+				AND ZOZ_VERCON = %Exp:_cVersCont%
 				AND ZOZ_ORIPRC = 'FORECAST-M'
 				AND ZOZ.%NotDel%
 				ORDER BY ZOZ_VERSAO, ZOZ_REVISA, ZOZ_ANOREF, ZOZ_DATA, ZOZ_DOC, ZOZ_LINHA
@@ -237,6 +260,7 @@ Static Function fBIA587F()
 				AND ZOZ_VERSAO = %Exp:_cVersao%
 				AND ZOZ_REVISA = %Exp:_cRevisa%
 				AND ZOZ_ANOREF = %Exp:_cAnoRef%
+				AND ZOZ_VERCON = %Exp:_cVersCont%
 				AND ZOZ_ORIPRC = 'FORECAST-M'
 				AND %Exp:_cLkHistFil%
 				AND ZOZ.%NotDel%
@@ -246,6 +270,7 @@ Static Function fBIA587F()
 				AND ZOZ_VERSAO = %Exp:_cVersao%
 				AND ZOZ_REVISA = %Exp:_cRevisa%
 				AND ZOZ_ANOREF = %Exp:_cAnoRef%
+				AND ZOZ_VERCON = %Exp:_cVersCont%
 				AND ZOZ_ORIPRC = 'FORECAST-M'
 				AND %Exp:_cLkHistFil%
 				AND ZOZ.%NotDel%
@@ -269,6 +294,7 @@ Static Function fBIA587F()
 				AND ZOZ_VERSAO = %Exp:_cVersao%
 				AND ZOZ_REVISA = %Exp:_cRevisa%
 				AND ZOZ_ANOREF = %Exp:_cAnoRef%
+				AND ZOZ_VERCON = %Exp:_cVersCont%
 				AND ZOZ_DATA = %Exp:_cDataRef%
 				AND ZOZ_ORIPRC = 'FORECAST-M'
 				AND ZOZ.%NotDel%
@@ -278,6 +304,7 @@ Static Function fBIA587F()
 				AND ZOZ_VERSAO = %Exp:_cVersao%
 				AND ZOZ_REVISA = %Exp:_cRevisa%
 				AND ZOZ_ANOREF = %Exp:_cAnoRef%
+				AND ZOZ_VERCON = %Exp:_cVersCont%
 				AND ZOZ_DATA = %Exp:_cDataRef%
 				AND ZOZ_ORIPRC = 'FORECAST-M'
 				AND ZOZ.%NotDel%
@@ -297,6 +324,7 @@ Static Function fBIA587F()
 				AND ZOZ_VERSAO = %Exp:_cVersao%
 				AND ZOZ_REVISA = %Exp:_cRevisa%
 				AND ZOZ_ANOREF = %Exp:_cAnoRef%
+				AND ZOZ_VERCON = %Exp:_cVersCont%
 				AND ZOZ_DATA = %Exp:_cDataRef%
 				AND ZOZ_ORIPRC = 'FORECAST-M'
 				AND %Exp:_cLkHistFil%
@@ -307,6 +335,7 @@ Static Function fBIA587F()
 				AND ZOZ_VERSAO = %Exp:_cVersao%
 				AND ZOZ_REVISA = %Exp:_cRevisa%
 				AND ZOZ_ANOREF = %Exp:_cAnoRef%
+				AND ZOZ_VERCON = %Exp:_cVersCont%
 				AND ZOZ_DATA = %Exp:_cDataRef%
 				AND ZOZ_ORIPRC = 'FORECAST-M'
 				AND %Exp:_cLkHistFil%
@@ -437,6 +466,7 @@ Static Function fGrvDados()
 					ZOZ->ZOZ_VERSAO  := _cVersao
 					ZOZ->ZOZ_REVISA  := _cRevisa
 					ZOZ->ZOZ_ANOREF  := _cAnoRef
+					ZOZ->ZOZ_VERCON  := _cVersCont
 					ZOZ->ZOZ_ORIPRC  := "FORECAST-M"
 					ZOZ->ZOZ_LOTE    := "004100"
 					ZOZ->ZOZ_SBLOTE  := "001"
@@ -469,6 +499,9 @@ Static Function fGrvDados()
 	_cVersao        := SPACE(TAMSX3("ZOZ_VERSAO")[1])
 	_cRevisa        := SPACE(TAMSX3("ZOZ_REVISA")[1])
 	_cAnoRef        := SPACE(TAMSX3("ZOZ_ANOREF")[1])
+	_cVersCont      := SPACE(TAMSX3("ZOZ_VERCON")[1])
+	_cDataRef	    := ctod("  /  /  ")
+	_cHistFil	    := SPACE(TAMSX3("ZOZ_HIST")[1])
 	_oGetDados:aCols	:=	aClone(_aColsBkp)
 	_oGVersao:SetFocus()
 	_oGVersao:Refresh()

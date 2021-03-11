@@ -66,6 +66,12 @@ User Function BFG81DPD()
 
 	EndIf
 
+	If IsInCallsTack("BIAFG122")
+
+		_cDriver := fGetDrvPad(Date(),"RH")
+
+	EndIf
+
 	RestArea(_aArea)
 
 Return _cDriver

@@ -275,7 +275,18 @@ Static Function fQryDados()
 	RL002 += Alltrim("                    AND XZ97.D_E_L_E_T_ = ' '                                                                                                                                  ") + msEnter
 	RL002 += Alltrim("          ), 0))) QTD_ACUM,                                                                                                                                                    ") + msEnter
 	RL002 += Alltrim("                 Z97_DOC DOCUMEN,                                                                                                                                              ") + msEnter
-	RL002 += Alltrim("                 ISNULL(CT1_YITCUS, '') ITCUS                                                                                                                                  ") + msEnter
+	RL002 += Alltrim("                 CASE                                                                                                                                                          ") + msEnter
+	RL002 += Alltrim("                     WHEN Z97_TM = '010'                                                                                                                                       ") + msEnter
+	RL002 += Alltrim("                     THEN '001'                                                                                                                                                ") + msEnter
+	RL002 += Alltrim("                     WHEN Z97_TM = '999'                                                                                                                                       ") + msEnter
+	RL002 += Alltrim("                          AND SB1.B1_TIPO = 'PP'                                                                                                                               ") + msEnter
+	RL002 += Alltrim("                     THEN '060'                                                                                                                                                ") + msEnter
+	RL002 += Alltrim("                     WHEN Z97_TM = '999'                                                                                                                                       ") + msEnter
+	RL002 += Alltrim("                          AND SB1.B1_TIPO = 'PA'                                                                                                                               ") + msEnter
+	RL002 += Alltrim("                     THEN '065'                                                                                                                                                ") + msEnter
+	RL002 += Alltrim("                     ELSE ISNULL(CT1_YITCUS, '')                                                                                                                               ") + msEnter
+	RL002 += Alltrim("                 END ITCUS                                                                                                                                                     ") + msEnter
+	//RL002 += Alltrim("                 ISNULL(CT1_YITCUS, '') ITCUS                                                                                                                                  ") + msEnter
 	RL002 += Alltrim("          FROM " + RetSqlName("Z97") + " Z97                                                                                                                                   ") + msEnter
 	RL002 += Alltrim("               INNER JOIN " + RetSqlName("SB1") + " SB1 WITH(NOLOCK) ON SB1.B1_FILIAL = '" + xFilial("SB1") + "'                                                               ") + msEnter
 	RL002 += Alltrim("                                                     AND SB1.B1_COD = Z97.Z97_COD                                                                                              ") + msEnter
@@ -322,7 +333,18 @@ Static Function fQryDados()
 	RL002 += Alltrim("                    AND ZZD3.D_E_L_E_T_ = ' '                                                                                                                                  ") + msEnter
 	RL002 += Alltrim("          ) QTD_ACUM,                                                                                                                                                          ") + msEnter
 	RL002 += Alltrim("                 D3_DOC DOCUMEN,                                                                                                                                               ") + msEnter
-	RL002 += Alltrim("                 D3_YITCUS ITCUS                                                                                                                                               ") + msEnter
+	RL002 += Alltrim("                 CASE                                                                                                                                                          ") + msEnter
+	RL002 += Alltrim("                     WHEN SD3.D3_TM = '010'                                                                                                                                    ") + msEnter
+	RL002 += Alltrim("                     THEN '001'                                                                                                                                                ") + msEnter
+	RL002 += Alltrim("                     WHEN SD3.D3_TM = '999'                                                                                                                                    ") + msEnter
+	RL002 += Alltrim("                          AND SD3.D3_CONTA = '11301020'                                                                                                                        ") + msEnter
+	RL002 += Alltrim("                     THEN '005'                                                                                                                                                ") + msEnter
+	RL002 += Alltrim("                     WHEN SD3.D3_TM = '999'                                                                                                                                    ") + msEnter
+	RL002 += Alltrim("                          AND SD3.D3_CONTA = '11302020'                                                                                                                        ") + msEnter
+	RL002 += Alltrim("                     THEN '015'                                                                                                                                                ") + msEnter
+	RL002 += Alltrim("                     ELSE D3_YITCUS                                                                                                                                            ") + msEnter
+	RL002 += Alltrim("                 END ITCUS                                                                                                                                                     ") + msEnter
+	//RL002 += Alltrim("                 D3_YITCUS ITCUS                                                                                                                                               ") + msEnter
 	RL002 += Alltrim("          FROM " + RetSqlName("SD3") + " SD3 WITH(NOLOCK)                                                                                                                      ") + msEnter
 	RL002 += Alltrim("               INNER JOIN " + RetSqlName("SC2") + " SC2 WITH(NOLOCK) ON SC2.C2_FILIAL = '" + xFilial("SC2") + "'                                                               ") + msEnter
 	RL002 += Alltrim("                                                     AND SC2.C2_NUM = SUBSTRING(SD3.D3_OP, 1, 6)                                                                               ") + msEnter
@@ -380,9 +402,19 @@ Static Function fQryDados()
 	RL002 += Alltrim("                    AND ZZD3.D_E_L_E_T_ = ' '                                                                                                                                  ") + msEnter
 	RL002 += Alltrim("          ) QTD_ACUM,                                                                                                                                                          ") + msEnter
 	RL002 += Alltrim("                 SD3.D3_DOC DOCUMEN,                                                                                                                                           ") + msEnter
-	RL002 += Alltrim("                 SD3.D3_YITCUS ITCUS                                                                                                                                           ") + msEnter
+	RL002 += Alltrim("                 CASE                                                                                                                                                          ") + msEnter
+	RL002 += Alltrim("                     WHEN SD3.D3_TM = '711'                                                                                                                                    ") + msEnter
+	RL002 += Alltrim("                     THEN '001'                                                                                                                                                ") + msEnter
+	RL002 += Alltrim("                     WHEN SD3.D3_TM = '211'                                                                                                                                    ") + msEnter
+	RL002 += Alltrim("                     THEN CT1.CT1_YITCUS                                                                                                                                       ") + msEnter
+	RL002 += Alltrim("                     ELSE D3_YITCUS                                                                                                                                            ") + msEnter
+	RL002 += Alltrim("                 END ITCUS                                                                                                                                                     ") + msEnter
+	//RL002 += Alltrim("                 SD3.D3_YITCUS ITCUS                                                                                                                                           ") + msEnter
 	RL002 += Alltrim("          FROM " + RetSqlName("SD3") + " SD3 WITH(NOLOCK)                                                                                                                      ") + msEnter
 	RL002 += Alltrim("               INNER JOIN CANPROD CAN ON CAN.RFCUST = SD3.D3_YRFCUST                                                                                                           ") + msEnter
+	RL002 += Alltrim("               LEFT JOIN " + RetSqlName("CT1") + " CT1 WITH(NOLOCK) ON CT1.CT1_FILIAL = '" + xFilial("CT1") + "'                                                               ") + msEnter
+	RL002 += Alltrim("                                                    AND CT1_CONTA = SD3.D3_CONTA                                                                                               ") + msEnter
+	RL002 += Alltrim("                                                    AND CT1.D_E_L_E_T_ = ' '                                                                                                   ") + msEnter
 	RL002 += Alltrim("          WHERE SD3.D3_FILIAL = '" + xFilial("SD3") + "'                                                                                                                       ") + msEnter
 	RL002 += Alltrim("                AND SUBSTRING(SD3.D3_EMISSAO, 1, 6) BETWEEN '" + MV_PAR01 + "' AND '" + MV_PAR02 + "'                                                                          ") + msEnter
 	RL002 += Alltrim("                AND SD3.D3_TM IN('711', '211')                                                                                                                                 ") + msEnter
@@ -556,28 +588,28 @@ Static Function fQryDados()
 		oExcel:AddLinha(14) 
 		oExcel:AddCelula()
 
-		oExcel:AddCelula( RL02->TABELA		,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( RL02->CODPAI		,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( RL02->DESCPAI		,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( RL02->FORMATO		,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( RL02->PERIODO		,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( RL02->TM			,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( RL02->CF			,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( RL02->CONTA		,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( RL02->DESCONTA	,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( RL02->CODITE		,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( RL02->DESCIT		,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( RL02->TPITC		,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( RL02->CODFIL		,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( RL02->DESFIL		,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->TABELA		        ,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->CODPAI		        ,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->DESCPAI		        ,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->FORMATO		        ,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->PERIODO		        ,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->TM			        ,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->CF			        ,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->CONTA		        ,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->DESCONTA	        ,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->CODITE		        ,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->DESCIT		        ,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->TPITC		        ,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->CODFIL		        ,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->DESFIL		        ,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
 		oExcel:AddCelula( RL02->QUANT * _nFator		,8		 					,'R',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( RL02->CUSTO		,4		 					,'R',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( RL02->QTDAPON 		,8		 					,'R',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( RL02->QTDPON * _nFator		,8		 					,'R',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( RL02->CUSPON		,4		 					,'R',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( RL02->QTD_ACUM	,8		 					,'R',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->CUSTO		        ,4		 					,'R',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->QTDAPON 		    ,8		 					,'R',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->QTDPON * _nFator	,8		 					,'R',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->CUSPON		        ,4		 					,'R',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->QTD_ACUM	        ,8		 					,'R',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
 		oExcel:AddCelula( RL02->QTDACUM * _nFator 	,8		 					,'R',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( RL02->CUSACUM	    ,4		 					,'R',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( RL02->CUSACUM	            ,4		 					,'R',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
 
 		IncProc("Gerando Relatorio - Status: " + IIF((nRegAtu/nTotReg)*100 <= 99, StrZero((nRegAtu/nTotReg)*100,2), STRZERO(99,2)) + "%")
 
