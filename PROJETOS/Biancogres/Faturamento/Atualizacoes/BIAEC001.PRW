@@ -772,7 +772,7 @@ Static Function Salvar()
 		@version 1.0
 	*/
 	if (lRet .AND. nOpca == 4) .AND. !EMPTY(M->ZZV_DATAAG)
-		if(M->ZZV_DATAAG <= dDataBase)
+		if(dDtAgOld <= dDataBase) .AND. dDtAgOld != M->ZZV_DATAAG
 			PC22001()
 		EndIf
 	EndIf

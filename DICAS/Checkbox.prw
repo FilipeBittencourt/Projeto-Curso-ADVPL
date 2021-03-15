@@ -1,5 +1,5 @@
 #include "protheus.ch"
-
+//U_Checkbox
 User Function Checkbox()
     Local _stru:={}
     Local aCpoBro := {}
@@ -13,7 +13,7 @@ User Function Checkbox()
     //Cria um arquivo de Apoio
 
     If Select("SX6") <= 0
-        RPCSetEnv("99", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+        RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
     EndIf
     cMark   := GetMark()
 
