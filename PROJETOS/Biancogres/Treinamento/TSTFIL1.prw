@@ -1,6 +1,7 @@
 //Bibliotecas
 #Include 'Protheus.ch'
 #Include 'FWMVCDef.ch'
+#INCLUDE "TOPCONN.CH"
 
 
 /*/{Protheus.doc} TSTFIL1
@@ -8,60 +9,59 @@ Exemplo de Modelo 1 para cadastro de Artistas
 /*/
 // U_TSTFIL1()
 User Function TSTFIL1()
-	Local aArea   := GetArea()
-	Local oBrowse
-	Local cFunBkp := FunName()
-	/* Favor não alterar a ordem
-		1   Tela do Tempo Carr.
-		2   Tela do No Show.
-		3   Tela do Saúde Est.
-		4   Tela do Estoque
-		5   Tela do Cumpr.Prz.Disp.
-	*/
 
-	Private oJSTela := 	TSTFIL001()
-	Private cTitulo := "Metas Dashboard Logística tipo: "+UPPER(oJSTela["NomeOpcao"])
-
-
-	SetFunName("TSTFIL1")
-
-	//Instânciando FWMBrowse - Somente com dicionário de dados
-	oBrowse := FWMBrowse():New()
-
-	//Setando a tabela de cadastro de Autor/Interprete
-	oBrowse:SetAlias("ZDL")
-
-	//Setando a descrição da rotina
-	oBrowse:SetDescription(cTitulo)
-
-	oBrowse:SetFilterDefault("ZDL->ZDL_TIPO == "+UPPER(oJSTela["CodigoSX3"])+"")
-	//Ativa a Browse
-	oBrowse:Activate()
-
-	SetFunName(cFunBkp)
-	RestArea(aArea)
-Return Nil
-
-
-
-Static Function TSTFIL001()
-
+	Local aArea       := GetArea()
+	Local oBrowse     := Nil
+	Local cFunBkp     := FunName()
 	Local aRet        := {}
+	Local lParam      := .T.
 	Local aOpSX3      := {"Tempo Carr.","No Show","Saúde Est","Estoque","Cumpr.Prz.Disp"}
-	Local oJSParam    := JsonObject():New()
+
+
+	Private oJSTela   := JsonObject():New()
 	Private aParamBox := {}
+	Private cTitulo   := " "
 
 	aAdd(aParamBox,{3,"Tipo de cadastros",1,aOpSX3,50,"",.F.})
 
-	If ParamBox(aParamBox,"Escolha o tipo de Meta que deseja cadastrar",@aRet)
+	while lParam == .T.
 
-		oJSParam["Indice"]    := aRet[1]
-		oJSParam["NomeOpcao"] := aParamBox[1,4,aRet[1]]
-		oJSParam["CodigoSX3"]  := PadL(AllTrim(cValToChar(aRet[1])) , 2 , "0")
+		If ParamBox(aParamBox,"Escolha o tipo de Meta que deseja cadastrar",@aRet)
 
-	Endif
+			oJSTela["Indice"]    := aRet[1]
+			oJSTela["NomeOpcao"]  := aParamBox[1,4,aRet[1]]
+			oJSTela["CodigoSX3"]  := PadL(AllTrim(cValToChar(aRet[1])) , 2 , "0")
 
-Return oJSParam
+			cTitulo := "Metas Dashboard Logística tipo: "+UPPER(oJSTela["NomeOpcao"])
+
+			SetFunName("TSTFIL1")
+
+			//Instânciando FWMBrowse - Somente com dicionário de dados
+			oBrowse := FWMBrowse():New()
+
+			//Setando a tabela de cadastro de Autor/Interprete
+			oBrowse:SetAlias("ZDL")
+
+			//Setando a descrição da rotina
+			oBrowse:SetDescription(cTitulo)
+
+			oBrowse:SetFilterDefault("ZDL->ZDL_TIPO == "+UPPER(oJSTela["CodigoSX3"])+"")
+			//Ativa a Browse
+			oBrowse:Activate()
+
+		Else
+
+			lParam := .F.
+
+		Endif
+
+	endDo
+
+
+	SetFunName(cFunBkp)
+	RestArea(aArea)
+
+Return Nil
 
 
 /*---------------------------------------------------------------------*
@@ -113,8 +113,9 @@ Static Function ModelDef()
 
 
   //Instanciando o modelo, não é recomendado colocar nome da user function (por causa do u_), respeitando 10 caracteres
-	oModel := MPFormModel():New("TSTFIL1M",/*bPre*/, /*bPos*/,/*bCommit*/,/*bCancel*/)  
-//	oModel := MPFormModel():New('TSTFIL1M', {|oModel| fPreValidCad(oModel)},{|oModel| fTudoOK(oModel)},{|oModel| fCommit(oModel)},{|oModel| fCancel(oModel)} )
+	
+	oModel := MPFormModel():New("TSTFIL1M",/*bPreValid*/,{|oModel| fTdOk(oModel)},/*<bCommit >*/,/*bCancel*/)  
+  
 
 	//Atribuindo formulários para o modelo
 	oModel:AddFields("FORMZDL",/*cOwner*/,oStZDL)
@@ -166,7 +167,7 @@ Static Function ViewDef()
 	//oView:EnableTitleView('VIEW_ZDL', 'Dados - '+cTitulo )  
 	
 	//Força o fechamento da janela na confirmação
-	oView:SetCloseOnOk({||.T.})
+	//oView:SetCloseOnOk({||.T.})
 	
 	//O formulário da interface será colocado dentro do container
 	oView:SetOwnerView("VIEW_ZDL","TELA")
@@ -174,12 +175,54 @@ Static Function ViewDef()
 Return oView
 
 
-/*User Function zMod1Leg()
-	Local aLegenda := {}
+Static Function fTdOk(oModel)
 
-	//Monta as cores
-	AADD(aLegenda,{"BR_VERDE",		"Menor ou igual a 5"  })
-	AADD(aLegenda,{"BR_VERMELHO",	"Maior que 5"})
+	Local lRet   := .T.	
+	Local cQuery := ""
+	Local dDTINI := oModel:GetModel("FORMZDL"):GetValue('ZDL_DTINI')	
+	Local dDTFIM := oModel:GetModel("FORMZDL"):GetValue('ZDL_DTFIM')	
+	Local cQry   := GetNextAlias()
 
-	BrwLegenda(cTitulo, "Status", aLegenda)
-Return*/
+	If  EMPTY(dDTINI) .OR.EMPTY(dDTINI)
+    	Help(,,"Help",,"Favor informar as datas de inicio e fim.", 1, 0,,,,,,{" "})
+			RETURN .F.
+	EndIf
+
+	If oJSTela["CodigoSX3"] == "01"
+		If EMPTY(oModel:GetModel("FORMZDL"):GetValue('ZDL_MODVEI'))
+			Help(,,"Help",,"Favor informar o modelo do veículo.", 1, 0,,,,,,{" "})
+			RETURN .F.
+		EndIf
+	EndIf
+
+	If oJSTela["CodigoSX3"] $ "04#05"
+		If EMPTY(oModel:GetModel("FORMZDL"):GetValue('ZDL_FORNO'))
+    	Help(,,"Help",,"Favor informar o tipo do forno.", 1, 0,,,,,,{" "})
+			RETURN .F.
+		EndIf
+	EndIf
+
+	cQuery += " select * from ZDL010 "  + CRLF
+	cQuery += " WHERE D_E_L_E_T_ = '' "  + CRLF
+	cQuery += " AND ZDL_TIPO = "+ValToSql(oJSTela["CodigoSX3"])+ " "+ CRLF
+	cQuery += " AND ZDL_DTFIM BETWEEN  "+ValToSql(dDTINI)+" AND " +ValToSql(dDTFIM)+" " + CRLF
+
+	If oJSTela["CodigoSX3"] $ '04#05'
+		
+		cQuery += " AND ZDL_FORNO = "+ValToSql(oJSTela["CodigoSX3"])+ " "+ CRLF
+
+	ElseIf oJSTela["CodigoSX3"] $ '01'
+
+	  cQuery += " AND ZDL_MODVEI = "+ValToSql(oJSTela["CodigoSX3"])+ " "+ CRLF
+
+	EndIf
+
+	TcQuery cQuery New Alias (cQry)
+
+	If !EMPTY((cQry)->ZDL_TIPO)
+    lRet := .F.
+		Help(NIL, NIL, "Help", NIL, "Já existe dados cadastrados com essas informações.", 1, 0,,,,,,{"Mude as datas de inicio e fim"})
+	EndIf
+
+
+Return (lRet)

@@ -4,17 +4,24 @@
 
 // U_TSTFIL
 User Function TSTFIL()
+  Local cvarSx3 := "01"
 
-  If Select("SX6") <= 0
-    RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+
+
+
+  if cvarSx3 $ '01#04#05'
+    alert('ok')
   EndIf
+  /*If Select("SX6") <= 0
+    RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+EndIf*/
 
   //TSTFIL001() // biaxfunc.prw  - Teste Email SEND
   //TSTFIL002() // Teste pedidos provisionados
   //TSTFIL003()
 
-  DbSelectArea("ZDL")
-  X31UPDTABLE('ZDL')
+  //DbSelectArea("ZDL")
+  //X31UPDTABLE('ZDL')
 
 
 RETURN
