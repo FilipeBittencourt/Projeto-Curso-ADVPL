@@ -19,6 +19,6 @@ User Function MT120LEG()
 	Local nI 		:= 0
 
 	nPos := aScan(aLegend, {|x|AllTrim(x[1]) == 'BR_AZUL'}) //Legenda de pedido Bloqueado
-	
-	aLegend[nPos, 2] := 'Pedido pendente/Não enviado ao fornecedor' 
+
+	aLegend[nPos, 2] := 'Pedido pendente/Nao enviado ao fornecedor'
 Return aLegend

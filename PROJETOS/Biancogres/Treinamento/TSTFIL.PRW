@@ -4,14 +4,20 @@
 
 // U_TSTFIL
 User Function TSTFIL()
-  Local cvarSx3 := "01"
+  Local cHora := "8:00"
 
 
 
-
-  if cvarSx3 $ '01#04#05'
-    alert('ok')
+  If M->ZZV_TPAGEN == "A"
+    cHora := M->ZZV_HORAAG
+    cHora := SubStr(cHora, 1, 2)
+    IF  val(cHora) > 17  .OR. val(cHora) < 7
+      FwAlertWarning('Por favor informar a hora entre 07:00 às 17:59','Warning')
+      Return(.F.)
+    EndIf
   EndIf
+
+
   /*If Select("SX6") <= 0
     RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
 EndIf*/

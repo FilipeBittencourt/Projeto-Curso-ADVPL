@@ -736,6 +736,7 @@ Return
 Static Function Salvar()
 
 	Local lRet := .T.
+	Local cHora := ""
 
 
 	IF nOpca == 2
@@ -749,6 +750,16 @@ Static Function Salvar()
 	IF !Obrigatorio(aGets,aTela) /*Valida o cabecalho*/
 		Return(.F.)
 	ENDIF
+
+
+	IF (nOpca == 4 .OR. nOpca == 3) .AND.  M->ZZV_TPAGEN == "A"
+		cHora := M->ZZV_HORAAG
+		cHora := SubStr(cHora, 1, 2)
+		IF  val(cHora) > 17  .OR. val(cHora) < 7
+			FwAlertWarning('Por favor informar a hora entre 07:00 às 17:59','Warning')
+			Return(.F.)
+		EndIf
+	EndIf
 
 	//__oSemaforo				:=	tBiaSemaforo():New()
 	//__oSemaforo:cGrupo		:=	"FATURAMENTO"
