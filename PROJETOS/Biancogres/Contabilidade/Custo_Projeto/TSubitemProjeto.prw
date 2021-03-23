@@ -20,6 +20,7 @@ Class TSubitemProjeto From LongClassName
 	Method Validate()
 	Method Exist()
 	Method GetCod()
+	Method GetDesc()	
 	
 EndClass
 
@@ -86,6 +87,32 @@ Local cQry := GetNextAlias()
 	TcQuery cSQL New Alias (cQry)
 	
 	cRet := (cQry)->ZMA_CODIGO
+			
+	(cQry)->(DbCloseArea())	
+		
+Return(cRet)
+
+
+Method GetDesc() Class TSubitemProjeto
+Local cRet := ""
+Local cSQL := ""
+Local cQry := GetNextAlias()	
+
+	cSQL := " SELECT ZMB_DESC " 
+	cSQL += " FROM "+ RetSQLName("ZMA") + " ZMA "
+	cSQL += " INNER JOIN "+ RetSQLName("ZMB") + " ZMB "
+	cSQL += " ON ZMA_CODIGO = ZMB_CODREF
+	cSQL += " WHERE ZMA_FILIAL = "+ ValToSQL(xFilial("ZMA"))
+	cSQL += " AND ZMA_CLVL = "+ ValToSQL(::cClvl)
+	cSQL += " AND ZMA_ITEMCT = "+ ValToSQL(::cItemCta)
+	cSQL += " AND ZMA.D_E_L_E_T_ = '' "
+	cSQL += " AND ZMB_FILIAL = "+ ValToSQL(xFilial("ZMB"))
+	cSQL += " AND ZMB_SUBITE = "+ ValToSQL(::cSubItem)
+	cSQL += " AND ZMB.D_E_L_E_T_ = '' "
+	
+	TcQuery cSQL New Alias (cQry)
+	
+	cRet := (cQry)->ZMB_DESC
 			
 	(cQry)->(DbCloseArea())	
 		

@@ -12,6 +12,14 @@
 @version 12 revisado por Fernando Rocha
 /*/
 USER FUNCTION M410LIOK()
+    
+    local lRet      as logical
+
+    lRet:=M410LIOK()
+
+    return(lRet)
+
+static function M410LIOK()
 
 	//Local aArea := GetArea()
 	Local lRetorno 	:= .T.

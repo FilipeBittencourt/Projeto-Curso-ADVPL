@@ -71,6 +71,7 @@ Static Function ProcRT07()
 		,TIPO_RES = C6_YTPEST
 		,ENTREGA = C6_ENTREG
 		,DT_NECESSIDADE = C6_YDTNECE
+		,DT_NECES_REAL = C6_YDTNERE
 		,NOME_PROD = SB1.B1_DESC 
 
 		,LOG_RES_SC0 = 
@@ -133,7 +134,8 @@ Static Function ProcRT07()
 		,LINHA = C5_YLINHA
 		,TIPO_RES = C6_YTPEST
 		,ENTREGA = C6_ENTREG
-		,DT_NECESSIDADE = C6_YDTNECE 
+		,DT_NECESSIDADE = C6_YDTNECE
+		,DT_NECES_REAL = C6_YDTNERE 
 		,NOME_PROD = SB1.B1_DESC 
 
 		,LOG_RES_SC0 = 
@@ -197,6 +199,7 @@ Static Function ProcRT07()
 		,TIPO_RES = C6_YTPEST
 		,ENTREGA = C6_ENTREG
 		,DT_NECESSIDADE = C6_YDTNECE
+		,DT_NECES_REAL = C6_YDTNERE
 		,NOME_PROD = SB1.B1_DESC 
 
 		,LOG_RES_SC0 = 
@@ -351,6 +354,7 @@ Static Function ProcExcel(cAliasAux)
 	oFWExcel:AddColumn(cWorkSheet, cTable, "TIPO_RES"		, 1, 1)
 	oFWExcel:AddColumn(cWorkSheet, cTable, "ENTREGA"		, 1, 1)
 	oFWExcel:AddColumn(cWorkSheet, cTable, "DT_NECESSIDADE"	, 1, 1)
+	oFWExcel:AddColumn(cWorkSheet, cTable, "DT_NECES_REAL"	, 1, 1)
 	oFWExcel:AddColumn(cWorkSheet, cTable, "ATENDENTE"		, 1, 1)
 	oFWExcel:AddColumn(cWorkSheet, cTable, "Log Exclusao SC0", 1, 1)
 	oFWExcel:AddColumn(cWorkSheet, cTable, "Log Exclusao PZ0", 1, 1)
@@ -376,7 +380,8 @@ Static Function ProcExcel(cAliasAux)
 		AAdd(aAux, (cAliasAux)->LINHA)     
 		AAdd(aAux, (cAliasAux)->TIPO_RES)     
 		AAdd(aAux, DTOC(STOD((cAliasAux)->ENTREGA)))     
-		AAdd(aAux, DTOC(STOD((cAliasAux)->DT_NECESSIDADE)))   
+		AAdd(aAux, DTOC(STOD((cAliasAux)->DT_NECESSIDADE)))
+		AAdd(aAux, DTOC(STOD((cAliasAux)->DT_NECES_REAL)))     
 
 
 		AAdd(aAux, U_FCHKATEN((cAliasAux)->PEDIDO, (cAliasAux)->CODEMP) )  //atendente

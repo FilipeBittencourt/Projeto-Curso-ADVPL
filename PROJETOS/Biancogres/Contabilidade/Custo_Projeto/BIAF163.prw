@@ -22,17 +22,17 @@ Local oObj := TSubitemProjeto():New()
 		
 		Case cField == "M->D3_YSUBITE"
 		
-		If ISINCALLSTACK("MATA241") // Movimentos Múltiplos
-		
-			cClvl	:= aCV[1][2]	
-			cItemCta := GdFieldGet("D3_ITEMCTA", n)
+			If ISINCALLSTACK("MATA241") // Movimentos Múltiplos
 			
-		Else
-		
-			cClvl	:= M->D3_CLVL
-			cItemCta := M->D3_ITEMCTA 
-			 
-		EndIf
+				cClvl	:= aCV[1][2]	
+				cItemCta := GdFieldGet("D3_ITEMCTA", n)
+				
+			Else
+			
+				cClvl	:= M->D3_CLVL
+				cItemCta := M->D3_ITEMCTA 
+				 
+			EndIf
 		
 		Case cField == "M->D1_YSUBITE"
 			
@@ -78,11 +78,16 @@ Local oObj := TSubitemProjeto():New()
 
 			cClvl	:= GdFieldGet("C3_YCLVL", n)
 			cItemCta := GdFieldGet("C3_YITEMCT", n)
+	
+		Case cField == "M->ZMD_SUBITE"
+
+			cClvl	:= M->ZMC_CLVL
+			cItemCta := M->ZMC_ITEMCT			
 
 	EndCase
 
 	oObj:cClvl := cClvl
-	oObj:cItemCta := cItemCta	
+	oObj:cItemCta := cItemCta
 	
 	cCodRef := oObj:GetCod()
 	

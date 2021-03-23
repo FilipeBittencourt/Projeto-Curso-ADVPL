@@ -61,12 +61,12 @@ User Function SF2520E()
 		//Ticket 24250 - Pablo S. Nascimento: solicitação do Claudeir para remover emails e adicionar um.
 		//Ticket 24618 - Pablo S. Nascimento: solicitação do Breno Barbieri para removê-lo da listagem do email.
 		CASE cEmpAnt == '01'
-		cEmail   := 'tatiane.perpetua@biancogres.com.br;dalvina.ferreira@biancogres.com.br;barbara.madeira@biancogres.com.br'
+		cEmail   := 'tatiane.perpetua@biancogres.com.br;dalvina.ferreira@biancogres.com.br'
 		CASE cEmpAnt == '05'
 		cEmail   := 'william.pernes@biancogres.com.br;tatiane.perpetua@biancogres.com.br'
 		CASE cEmpAnt == '07'
 		IF ALLTRIM(SF2->F2_SERIE) == '1'
-			cEmail := 'dalvina.ferreira@biancogres.com.br;barbara.madeira@biancogres.com.br'
+			cEmail := 'dalvina.ferreira@biancogres.com.br'
 		ELSE
 			cEmail := 'william.pernes@biancogres.com.br;tatiane.perpetua@biancogres.com.br'
 		ENDIF

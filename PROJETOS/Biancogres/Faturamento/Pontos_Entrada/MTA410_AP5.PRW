@@ -21,8 +21,21 @@
 
 
 User Function MTA410()
+	
+	Local lRet := .T.
+
+	If (!stackTools():IsInStackCall({"ProcPedido","ProcessaDevolucao"}))
+		lRet:= MTA410()
+	Else
+		lRet := .T.
+	EndIf
+
+Return(lRet)
+
+Static Function MTA410()
+
 	Local lRet					:= .T.
-	Local nRet					:= "00"
+	Local nRet					:= "00
 	Local cSql					:= ""
 	Local Enter					:= CHR(13)+CHR(10)
 	Local TOTAL_RA				:= 0
@@ -51,10 +64,10 @@ User Function MTA410()
 	Private nDescInc            := 0 // Por Marcos Alberto Soprani para auxiliar na integração com a validação da CLVL - BIA555
 
 	//MSGALERT("MTA410")
-	
+
 	IF  !u_VALIDQTDPC()
 		Return .F.
-	Endif	
+	Endif
 
 	//Tratamento especial para Replcacao de pedido LM
 	If AllTrim(FunName()) $ GetNewPar("FA_XPEDRPC","BFATRT01###FCOMRT01###BFVCXPED###FCOMXPED###TESTEF1###RPC") .OR. AllTrim(FunName()) $ GetNewPar("FA_XPEDRQC","FRQCTE01###FRQCRT02")
@@ -111,7 +124,7 @@ User Function MTA410()
 	EndIf
 
 
-	//Permite o uso do Pedido Original uma UNICA VEZ para a chave PEDIDO ORIGINAL + EMPRESA PEDIDO //RANISSES EM 10/09/2015  
+	//Permite o uso do Pedido Original uma UNICA VEZ para a chave PEDIDO ORIGINAL + EMPRESA PEDIDO //RANISSES EM 10/09/2015
 	If cEmpAnt == "07" .And. !Empty(Alltrim(M->C5_YPEDORI))
 
 		cSql := "SELECT COUNT(*) QUANT FROM "+RetSqlName("SC5")+" WHERE C5_FILIAL = "+xFilial("SC5")+" AND C5_YPEDORI = '"+M->C5_YPEDORI+"' AND C5_YEMPPED = '"+M->C5_YEMPPED+"' AND D_E_L_E_T_ = '' "
@@ -121,7 +134,7 @@ User Function MTA410()
 		TCQUERY cSql ALIAS "_RAC" NEW
 
 		If _RAC->QUANT > 1
-			nEmpPed := Iif(M->C5_YEMPPED=="01","Biancogres","Incesa")	
+			nEmpPed := Iif(M->C5_YEMPPED=="01","Biancogres","Incesa")
 			Msgbox("O Pedido Origem "+M->C5_YPEDORI+" já foi utilizado na empresa "+nEmpPed+". Favor verificar antes de continuar.","MTA410","STOP")
 			Return(.F.)
 		EndIf
@@ -199,7 +212,7 @@ User Function MTA410()
 	//Fernando/Facile em 25/07/2016 - Projeto Contratos de Verba
 	If cEmpAnt $ ("01_05_07_13")
 
-		If SC5->(FieldPos("C5_YCTRVER")) > 0 
+		If SC5->(FieldPos("C5_YCTRVER")) > 0
 
 			If Alltrim(M->C5_YITEMCT) == "I0202" .And. ( U_FCTVCHEK() ) .And. Empty(M->C5_YCTRVER)
 				Msgbox("O campo 'Ctr. Verba' deve se preenchido para pedidos de Verbas Contratuais!","MTA410 - NUMERO DO CONTRATO DE VERBA","STOP")
@@ -352,8 +365,8 @@ User Function MTA410()
 			CSQL := "SELECT COUNT(*) QUANT" + ENTER
 			CSQL += "FROM "+RETSQLNAME("SC6")+" SC6 WITH (NOLOCK) " + ENTER
 			CSQL += "WHERE	C6_FILIAL	= '"+xFilial("SC6")+"'	AND "+ ENTER
-			CSQL += "		C6_CLI		= '"+M->C5_CLIENTE+"' 	AND " + ENTER		
-			CSQL += "		C6_LOJA 	= '"+M->C5_LOJACLI+"' 	AND " + ENTER		
+			CSQL += "		C6_CLI		= '"+M->C5_CLIENTE+"' 	AND " + ENTER
+			CSQL += "		C6_LOJA 	= '"+M->C5_LOJACLI+"' 	AND " + ENTER
 			CSQL += "		C6_PRODUTO	= '"+nProd+"' 			AND " + ENTER
 			CSQL += "		C6_QTDVEN - C6_QTDENT > 0 			AND " + ENTER
 			CSQL += "		C6_BLQ 		<> 'R' 					AND " + ENTER
@@ -398,27 +411,27 @@ User Function MTA410()
 			If M->C5_YLINHA == "4"
 				__cYEmp	:= "1399"
 			ElseIf M->C5_YLINHA == "6"
-				__cYEmp	:= "1302"	
+				__cYEmp	:= "1302"
 			Else
 				__cYEmp	:= "1301"
-			EndIf	
+			EndIf
 		Else
 			Do Case
 				Case M->C5_YLINHA == "1"
-				__cYEmp	:= "0101"
+					__cYEmp	:= "0101"
 				Case M->C5_YLINHA == "2"
-				__cYEmp	:= "0501"
+					__cYEmp	:= "0501"
 				Case M->C5_YLINHA == "3"
-				__cYEmp	:= "0599"
+					__cYEmp	:= "0599"
 				Case M->C5_YLINHA == "4"
-				__cYEmp	:= "1399"
+					__cYEmp	:= "1399"
 				Case M->C5_YLINHA == "5"
-				__cYEmp	:= "0199"
+					__cYEmp	:= "0199"
 				Case M->C5_YLINHA == "6"
-				__cYEmp	:= "1302"
+					__cYEmp	:= "1302"
 			EndCase
 		EndIf
-		
+
 		oGerenteAtendente	:= TGerenteAtendente():New()
 		oResult 			:= oGerenteAtendente:GetCliente(__cYEmp, M->C5_CLIENTE, M->C5_LOJACLI, M->C5_VEND1)
 
@@ -566,7 +579,7 @@ User Function MTA410()
 	//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 	If SE4->E4_TIPO == '9'
 
-		//Total das Parcelas do Pedido 
+		//Total das Parcelas do Pedido
 		nTotParc := 0
 
 		//Obriga digitação de Valor/Percentual e Vencimento para pedidos com Condição do Tipo 9
@@ -575,14 +588,14 @@ User Function MTA410()
 			cCampoData := "C5_DATA" +Subs(cParcela,nCont,1)
 			If ( !Empty(M->&(cCampoVal)) .And. Empty(M->&(cCampoData)) ) .Or. ( Empty(M->&(cCampoVal)) .And. !Empty(M->&(cCampoData)) )
 				MsgBox("Favor informar as datas e vencimentos dos títulos para esta Condição de Pagamento.","MTA410","ALERT")
-				Return(.F.)		
-			EndIf		    	
+				Return(.F.)
+			EndIf
 			//Armazena o valor das parcelas
-			nTotParc += M->&(cCampoVal)			
+			nTotParc += M->&(cCampoVal)
 		Next
 
-		//Testa se os valores das parcelas preenchidas estão conferindo com o valor total do pedido / 100 %              
-		If AllTrim(SE4->E4_COND) == '0' 
+		//Testa se os valores das parcelas preenchidas estão conferindo com o valor total do pedido / 100 %
+		If AllTrim(SE4->E4_COND) == '0'
 			If nTotParc <> M->C5_YVLTOTP
 				MsgBox("O valor total das parcelas está diferente do valor total do pedido.","MTA410","ALERT")
 				Return(.F.)
@@ -591,16 +604,16 @@ User Function MTA410()
 			If nTotParc <> 100
 				MsgBox("A soma dos % percentuais das parcelas tem que ser igual a 100%.","MTA410","ALERT")
 				Return(.F.)
-			EndIf	
+			EndIf
 		EndIf
 
 		/*
 		If (Empty(M->C5_PARC1) .And. !Empty(M->C5_DATA1)) .Or. (!Empty(M->C5_PARC1).And. Empty(M->C5_DATA1)) .Or.;
 		(Empty(M->C5_PARC2) .And. !Empty(M->C5_DATA2)) .Or. (!Empty(M->C5_PARC2).And. Empty(M->C5_DATA2)) .Or.;
 		(Empty(M->C5_PARC3) .And. !Empty(M->C5_DATA3)) .Or. (!Empty(M->C5_PARC3).And. Empty(M->C5_DATA3)) .Or.;
-		(Empty(M->C5_PARC4) .And. !Empty(M->C5_DATA4)) .Or. (!Empty(M->C5_PARC4).And. Empty(M->C5_DATA4)) 											
+		(Empty(M->C5_PARC4) .And. !Empty(M->C5_DATA4)) .Or. (!Empty(M->C5_PARC4).And. Empty(M->C5_DATA4))
 		MsgBox("Favor informar as datas e vencimentos dos títulos para esta Condição de Pagamento.","MTA410","ALERT")
-		Return(.F.)		
+		Return(.F.)
 		EndIf
 
 		If AllTrim(SE4->E4_COND) <> '%' .And. (M->C5_PARC1 + M->C5_PARC2 + M->C5_PARC3 + M->C5_PARC4) <> M->C5_YVLTOTP
@@ -612,18 +625,18 @@ User Function MTA410()
 		//Total das Parcelas para Contrato
 		nTotParc := 0
 
-		// Caso seja um CONTRATO //VALIDAÇÃO SOMENTE A PARTIR DE 01/08/2015 PARA A NOVA MODALIDADE DE CONTRATO	
+		// Caso seja um CONTRATO //VALIDAÇÃO SOMENTE A PARTIR DE 01/08/2015 PARA A NOVA MODALIDADE DE CONTRATO
 		If M->C5_YFORMA == "4" .And. DTOS(M->C5_EMISSAO) >= "20150801" .And. fLibCont() //Ticket 2027
 
 			//Z60->(DbSetOrder(1))
-			//If Z60->(DbSeek(xFilial("Z60")+M->C5_NUM))		
-			Z60->(DbSetOrder(2))			
-			If Z60->(DbSeek(xFilial("Z60")+M->C5_YCHVRES))				
+			//If Z60->(DbSeek(xFilial("Z60")+M->C5_NUM))
+			Z60->(DbSetOrder(2))
+			If Z60->(DbSeek(xFilial("Z60")+M->C5_YCHVRES))
 
 				For nCont := 1 To nMaxParcela
 
 					cCampoVal := "Z60_PARC" +Subs(cParcela,nCont,1)
-					cCampoData := "Z60_DATA" +Subs(cParcela,nCont,1)					
+					cCampoData := "Z60_DATA" +Subs(cParcela,nCont,1)
 
 					If ( !Empty(Z60->&(cCampoVal)) .And. Empty(Z60->&(cCampoData)) ) .Or. ( Empty(Z60->&(cCampoVal)) .And. !Empty(Z60->&(cCampoData)) )
 						MsgBox("Favor informar a Data e Vencimento corretamente da parcela "+cValToChar(nCont)+".","MTA410","ALERT")
@@ -648,7 +661,7 @@ User Function MTA410()
 						dDatUltPar := Z60->&(cCampoData)
 
 						// Regra não utilzada pela Vitcer
-						If cEmpAnt <> "14"	
+						If cEmpAnt <> "14"
 
 							If Z60->&(cCampoVal) < nParcMin
 								MsgBox("A Parcela "+cValToChar(nCont)+" está com valor abaixo do mínimo permitido - R$ "+cValToChar(nParcMin)+".","MTA410","ALERT")
@@ -659,7 +672,7 @@ User Function MTA410()
 
 					EndIf
 
-					nTotParc += Z60->&(cCampoVal)					
+					nTotParc += Z60->&(cCampoVal)
 
 				Next
 
@@ -778,9 +791,9 @@ User Function MTA410()
 
 	If lRet .And. cEmpAnt <> "06" //conforme OS 0756-13
 
-		If !M->C5_CLIENTE == "010064" //conforme 3228-16	
+		If !M->C5_CLIENTE == "010064" //conforme 3228-16
 
-			If M->C5_YFORMA <> '4' .AND. M->C5_CONDPAG == '142' 
+			If M->C5_YFORMA <> '4' .AND. M->C5_CONDPAG == '142'
 				MSGBOX("Favor conferir o campo Tipo Pagto pois deve ser preenchido como Contrato.","MTA410","STOP")
 				Return(.F.)
 			EndIf
@@ -804,8 +817,8 @@ User Function MTA410()
 				If I > 1 .And. !Empty(Gdfieldget('C6_YEMPPED',I)) .And. Gdfieldget('C6_YEMPPED',I) <> __cEmpPed
 
 					U_FROPMSG("MTA410 - PBI", 	"Pedido contem produtos com estoque em empresas diferentes."+CRLF+;
-					"Necessário colocar em pedidos diferentes.",;
-					,,"Estoque em empresa diferente.")
+						"Necessário colocar em pedidos diferentes.",;
+						,,"Estoque em empresa diferente.")
 					Return(.F.)
 
 				EndIf
@@ -859,49 +872,49 @@ User Function MTA410()
 
 				EndIf
 
-				//Pedidos de Engenharia 
-				If Alltrim(M->C5_YTPCRED) == "5" 		
+				//Pedidos de Engenharia
+				If Alltrim(M->C5_YTPCRED) == "5"
 					If lRet
 						//Pedido de Engenharia Liberado
 						M->C5_YCRDENG := "01" //Iif(INCLUI,"01",M->C5_YCRDENG)
-						MsgBox("Para o canal de ENGENHARIA, não será feito análise de crédito durante a inclusão do Pedido!","MTA410","ALERT")	
+						MsgBox("Para o canal de ENGENHARIA, não será feito análise de crédito durante a inclusão do Pedido!","MTA410","ALERT")
 						MsgBox("Para realizar a montagem de Carga, o crédito deverá ser analisado e liberado pelo Setor de Crédito e Cobrança!","MTA410","ALERT")
 					Else
 						//Pedido de Engenharia Bloqueado
 						M->C5_YCRDENG := "03" //Iif(INCLUI,"03",M->C5_YCRDENG)
 
 						If VldSolCr()
-							MsgBox("Para o canal de ENGENHARIA, não será feito análise de crédito durante a inclusão do Pedido!","MTA410","ALERT")	
-						Else        			    			
-							MsgBox("Para o canal de ENGENHARIA, não será feito análise de crédito durante a inclusão do Pedido, porém este Cliente apresenta restrições e será obrigatório o preenchimento da Solicitação de Crédito a seguir:","MTA410","ALERT")								
-							
+							MsgBox("Para o canal de ENGENHARIA, não será feito análise de crédito durante a inclusão do Pedido!","MTA410","ALERT")
+						Else
+							MsgBox("Para o canal de ENGENHARIA, não será feito análise de crédito durante a inclusão do Pedido, porém este Cliente apresenta restrições e será obrigatório o preenchimento da Solicitação de Crédito a seguir:","MTA410","ALERT")
+
 							//Chama tela de inclusão de Solicitação de Crédito
 							StaticCall(SOLI_CRE, uNOVO, nCli, M->C5_NUM, M->C5_YVLTOTP, 0, M->C5_CONDPAG, M->C5_YCHVRES)
-							
+
 						EndIf
 
 						//Valida se a Solicitação foi incluida
-						lRet := VldSolCr()	 
+						lRet := VldSolCr()
 						If lRet
 							MsgBox("Para realizar a montagem de Carga, o crédito deverá ser analisado e liberado pelo Setor de Crédito e Cobrança!","MTA410","ALERT")
 						Else
 							MsgBox("Para finalizar este pedido, é obrigatório a inclusão da Solicitação de Crédito. Favor confirmar a inclusão da Solicitação de Crédito","MTA410","ALERT")
-						EndIf									
+						EndIf
 
-					EndIf				
+					EndIf
 				EndIf
 
 			ElseIf Alltrim(M->C5_YTPCRED) == "2"	//Pedidos de Contrato
-				lRet := .T.	
-				MsgBox("Para Pedidos de Venda de Contrato, não será feito nálise de crédito na Inclusão do Pedido!","Atenção","ALERT")	
+				lRet := .T.
+				MsgBox("Para Pedidos de Venda de Contrato, não será feito nálise de crédito na Inclusão do Pedido!","Atenção","ALERT")
 				MsgBox("Para realizar a montagem de Carga, o crédito deverá ser analisado e liberado pelo Setor de Crédito e Cobrança!","Atenção","ALERT")
 			ElseIf Alltrim(M->C5_YTPCRED) == "3"	//Pedidos de Del Crédere
 				lRet := .T.
-				MsgBox("Para Pedidos de Venda de Del Crédere, não será feito análise de crédito na Inclusão do Pedido!","Atenção","ALERT")	
+				MsgBox("Para Pedidos de Venda de Del Crédere, não será feito análise de crédito na Inclusão do Pedido!","Atenção","ALERT")
 				MsgBox("Para realizar a montagem de Carga, é necessário que o documento assinado com firma reconhecida em cartório, esteja em poder do setor de Crédito para liberação do mesmo!","Atenção","ALERT")
 			ElseIf Alltrim(M->C5_YTPCRED) == "4"	//Pedidos de Termo Resp.
 				lRet := .T.
-				MsgBox("Para Pedidos de Venda de Termo Resp., não será feito análise de crédito na Inclusão do Pedido!","Atenção","ALERT")	
+				MsgBox("Para Pedidos de Venda de Termo Resp., não será feito análise de crédito na Inclusão do Pedido!","Atenção","ALERT")
 				MsgBox("Para realizar a montagem de Carga é necessário que o documento assinado com firma reconhecida em cartório, esteja em poder do setor de Crédito para liberação do mesmo!","Atenção","ALERT")
 			EndIf
 		EndIf
@@ -988,7 +1001,7 @@ Static Function VldSolCr()
 	EndIf
 	TcQuery cSql ALIAS "_SZU" NEW
 
-	If _SZU->QUANT > 0	
+	If _SZU->QUANT > 0
 		lRet := .T.
 	EndIf
 
@@ -1002,8 +1015,8 @@ Return(lRet)
 /*
 +===========================================================================
 +Função para Calcular o Total do Pedido de Venda com Impostos
-+ lSaldo:  .T. Considera Saldo do Pedido / .F. Considera o Total do Pedido  
-+ lAtuImp: .T. Atualiza os impostos / .F. Não atualiza o valor dos impostos                                                                    
++ lSaldo:  .T. Considera Saldo do Pedido / .F. Considera o Total do Pedido
++ lAtuImp: .T. Atualiza os impostos / .F. Não atualiza o valor dos impostos
 +===========================================================================
 */
 User Function fValPed(lSaldo,lAtuImp)
@@ -1016,7 +1029,7 @@ User Function fValPed(lSaldo,lAtuImp)
 
 	If lAtuImp
 		//Calcula o valor do impostos para TODOS os Itens do Pedido
-		aColsImp := U_fItImpos(0,{"IT_BASEPS2","IT_BASECF2","IT_VALPS2","IT_VALCF2","IT_VALICM","IT_VALIPI","IT_ALIQPS2","IT_ALIQCF2","IT_VALMERC","IT_DESCZF","IT_VALSOL","IT_BASEICM","IT_BASEIPI"})	
+		aColsImp := U_fItImpos(0,{"IT_BASEPS2","IT_BASECF2","IT_VALPS2","IT_VALCF2","IT_VALICM","IT_VALIPI","IT_ALIQPS2","IT_ALIQCF2","IT_VALMERC","IT_DESCZF","IT_VALSOL","IT_BASEICM","IT_BASEIPI"})
 	EndIf
 
 	For i := 1 To Len(aCols)
@@ -1027,16 +1040,16 @@ User Function fValPed(lSaldo,lAtuImp)
 			nPIS     := aColsImp[i][3]
 			nCOFINS  := aColsImp[i][4]
 			nICMS	 := aColsImp[i][5]
-			nIPI 	 := aColsImp[i][6]	
+			nIPI 	 := aColsImp[i][6]
 			nPercPIS := aColsImp[i][7]
-			nPercCOF := aColsImp[i][8]  
-			nValMerc := aColsImp[i][9]  
-			nDescZF	 := aColsImp[i][10]  	
+			nPercCOF := aColsImp[i][8]
+			nValMerc := aColsImp[i][9]
+			nDescZF	 := aColsImp[i][10]
 			nValST	 := aColsImp[i][11]
 			nBaseICM := aColsImp[i][12]
 			nBaseIPI := aColsImp[i][13]
 
-			//Grava o valor dos impostos nos itens do Pedido de Venda 
+			//Grava o valor dos impostos nos itens do Pedido de Venda
 			U_fAtuImp(I,nBasePIS,nBaseCOF,nPIS,nCOFINS,nICMS,nIPI,nPercPIS,nPercCOF,nValMerc,nDescZF,nValST,nBaseICM,nBaseIPI)
 		EndIf
 
@@ -1055,7 +1068,7 @@ User Function fValPed(lSaldo,lAtuImp)
 				nQtdVen	:= Gdfieldget("C6_QTDVEN",I)
 
 				If Alltrim(cBlqRes) <> "R" .And. nQtdVen-nQtdEnt > 0
-					nValPed += Round((nQtdVen-nQtdEnt)/nQtdVen*Gdfieldget("C6_YVLIMP",I),2)		
+					nValPed += Round((nQtdVen-nQtdEnt)/nQtdVen*Gdfieldget("C6_YVLIMP",I),2)
 				EndIf
 			EndIf
 		EndIf
@@ -1073,9 +1086,9 @@ Static Function fDescVrb(_cNumAI, _nOpc)
 
 	Local i		:= 0
 	Local aArea	:= GetArea()
-	Local lRet	:= .T.	
+	Local lRet	:= .T.
 	Local _nVDescVer
-	Local _nSldAO	
+	Local _nSldAO
 
 	_nSldAO := U_AO_SALDO(_cNumAI, M->C5_NUM,,!INCLUI)
 	_nVDescVer := fGTotVerba(_nOpc)
@@ -1083,9 +1096,9 @@ Static Function fDescVrb(_cNumAI, _nOpc)
 	If ( _nVDescVer > 0 .And. _nVDescVer > _nSldAO )
 		lRet := .F.
 		MsgAlert("Desconto de "+IIF(_nOpc==1,"AO","Outras AIs")+" total é maior que o saldo da AI informada."+CRLF+;
-		"AI: "+IIF(_nOpc==1,M->C5_YNUMSI,M->C5_YNOUTAI)+" - Saldo (R$): "+Transform(_nSldAO,"@E 999,999.99")+CRLF+;
-		"Total de desconto aplicado (R$): "+Transform(_nVDescVer,"@E 999,999.99");		
-		,"ATENÇÃO! DESCONTO DE AI -> MTA410")
+			"AI: "+IIF(_nOpc==1,M->C5_YNUMSI,M->C5_YNOUTAI)+" - Saldo (R$): "+Transform(_nSldAO,"@E 999,999.99")+CRLF+;
+			"Total de desconto aplicado (R$): "+Transform(_nVDescVer,"@E 999,999.99");
+			,"ATENÇÃO! DESCONTO DE AI -> MTA410")
 	EndIf
 
 	RestArea(aArea)
@@ -1102,7 +1115,7 @@ Static Function fGTotVerba(_nOpc)
 	Local oDesconto := TBiaPoliticaDesconto():New()
 	Local _nFatEnt := 1
 
-	_nVDescVer := 0 
+	_nVDescVer := 0
 
 	For i := 1 To Len(aCols)
 		If !GdDeleted(i)
@@ -1118,36 +1131,36 @@ Static Function fGTotVerba(_nOpc)
 						_nFatEnt := ( SC6->C6_QTDENT / SC6->C6_QTDVEN )
 					EndIf
 
-				EndIf				
+				EndIf
 
 			EndIf
 
 			IF (AllTrim(M->C5_YSUBTP) == "B")
 
-				_nPrcTab := Gdfieldget("C6_VALOR",I)				
+				_nPrcTab := Gdfieldget("C6_VALOR",I)
 				_nVDescVer += _nPrcTab * _nFatEnt
 
 			ELSE
-			
+
 				IF (AllTrim(M->C5_YSUBTP) <> "O")
 
 					_nPrcTab := Gdfieldget("C6_YPRCTAB",I)
 					_nDescVer := 0
 					oDesconto:LoadParMem(i)  //Carrega todos os parametros necessarios para a busca da politica das variaveis na tela do pedido
 					If oDesconto:GetPolitica()
-	
+
 						If (_nOpc == 1)
 							_nDescVer := oDesconto:CalVlDACO(_nPrcTab)
 						Else
 							_nDescVer := oDesconto:CalVlDAI(_nPrcTab)
-						EndIf			
-	
+						EndIf
+
 					EndIf
-	
+
 					_nVDescVer += ( _nDescVer * Gdfieldget("C6_QTDVEN",I) ) * _nFatEnt
-					
+
 				EndIf
-				
+
 			ENDIF
 
 		EndIf
@@ -1161,7 +1174,7 @@ Static Function FVldNorma()
 
 	If M->C5_YCONF == "S" .And. aScan(aCols, {|x| x[GdFieldPos("C6_YDNV")] > 0 }) > 0 .And. Posicione("SE4", 1, xFilial("SE4") + M->C5_CONDPAG, "E4_YMEDIA") > 56
 
-		MsgBox("Pedido com desconto em norma e prazo acima de 56 dias, favor informar ao gerente.", "MTA410", "ALERT")		
+		MsgBox("Pedido com desconto em norma e prazo acima de 56 dias, favor informar ao gerente.", "MTA410", "ALERT")
 
 	EndIf
 
@@ -1169,39 +1182,44 @@ Static Function FVldNorma()
 
 Return()
 
-//Libera validação dos pedidos de contrato, devido alteração no formato. - Ticket 2027 
+//Libera validação dos pedidos de contrato, devido alteração no formato. - Ticket 2027
 Static Function fLibCont()
-	Local lRet := .T. 
+	Local lRet := .T.
 
-	If (cEmpAnt == "01" .And. Alltrim(M->C5_NUM) $ ("D22578_D23393_RABTO4_D16992_D23939_D18808_D23167_D15408") ) .Or. ( cEmpAnt == "07" .And. Alltrim(M->C5_NUM) $ ("D29435_D30566_RABLEF_D21509_D31335_X48597_D30262_D19314") )  
+	If (cEmpAnt == "01" .And. Alltrim(M->C5_NUM) $ ("D22578_D23393_RABTO4_D16992_D23939_D18808_D23167_D15408") ) .Or. ( cEmpAnt == "07" .And. Alltrim(M->C5_NUM) $ ("D29435_D30566_RABLEF_D21509_D31335_X48597_D30262_D19314") )
 		lRet := .F.
-	EndIf 
+	EndIf
 
 Return(lRet)
 
 //Thiago Haagensen - Ticket 30399 - Tornar campo obrigatório para pedido M não dar divergencia de estoque
 USER FUNCTION VALIDQTDPC()
 
-LOCAL CTIPOVENDA :=""
-LOCAL NQTDPECAS := 0
-LOCAL Lzero := .T.
-LOCAL CITEM  :=""
+	LOCAL CTIPOVENDA :=""
+	LOCAL NQTDPECAS := 0
+	LOCAL Lzero := .T.
+	LOCAL CITEM  :=""
+	Local nX as numeric
 
-CTIPOVENDA := M->C5_YSUBTP
+	if (!stackTools():IsInStackCall({"ProcPedido","ProcessaDevolucao"}))
 
-FOR NX := 1 TO LEN (ACOLS)
-	
-	IF ALLTRIM(CTIPOVENDA) == "M"
-		NQTDPECAS := acols[NX,aScan(aHEADER,{|x| alltrim(x[2])=="C6_YQTDPC"})]
-		IF  NQTDPECAS==0
-			Lzero:=.F.
-			CITEM := acols[NX,aScan(aHEADER,{|x| alltrim(x[2])=="C6_ITEM"})]
-			AVISO("PREENCHER QUANTIDADE","Atenção! Favor preencher o campo Qtde. em PC do item " +CITEM + ", tipo M são obrigatórios!" ,;
-			{"Fechar"},2)
-		ENDIF
-	
-	ENDIF
+		CTIPOVENDA := M->C5_YSUBTP
 
-NEXT
- 
+		FOR nX := 1 TO LEN (ACOLS)
+
+			IF ALLTRIM(CTIPOVENDA) == "M"
+				NQTDPECAS := acols[nX,aScan(aHEADER,{|x| alltrim(x[2])=="C6_YQTDPC"})]
+				IF  NQTDPECAS==0
+					Lzero:=.F.
+					CITEM := acols[nX,aScan(aHEADER,{|x| alltrim(x[2])=="C6_ITEM"})]
+					AVISO("PREENCHER QUANTIDADE","Atenção! Favor preencher o campo Qtde. em PC do item " +CITEM + ", tipo M são obrigatórios!" ,;
+						{"Fechar"},2)
+				ENDIF
+
+			ENDIF
+
+		NEXT nX
+
+	EndIf
+
 RETURN Lzero

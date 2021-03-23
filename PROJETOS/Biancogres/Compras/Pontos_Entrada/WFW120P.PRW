@@ -72,10 +72,22 @@ Private P               := 1
 		AcertaAprovador()
 		
 		EMAIL_APRO()
+		
+		//|Pontin - Validação do projeto de Gestão do Limite de Caixa |
+		If SuperGetMV("MV_YATVLCX", .F., .T.)
+
+			oObj         := TFPGestaoLimiteCaixa():New()
+
+			oObj:cFilPed := xFilial("SC7")
+			oObj:cPedido := cA120Num
+
+			FWMsgRun( , { || oObj:Calculate() }, "Aguarde", "Calculando Gestão Limite Caixa..." )
+
+		EndIf
 	
 		If ChkFile("cTrab")
 		
-			DbSelectAre("cTrab")
+			DbSelectArea("cTrab")
 		
 			cTrab->(DbCloseArea())
 		

@@ -4,30 +4,17 @@
 
 // U_TSTFIL
 User Function TSTFIL()
-  Local cHora := "8:00"
 
-
-
-  If M->ZZV_TPAGEN == "A"
-    cHora := M->ZZV_HORAAG
-    cHora := SubStr(cHora, 1, 2)
-    IF  val(cHora) > 17  .OR. val(cHora) < 7
-      FwAlertWarning('Por favor informar a hora entre 07:00 às 17:59','Warning')
-      Return(.F.)
-    EndIf
-  EndIf
-
-
-  /*If Select("SX6") <= 0
+  If Select("SX6") <= 0
     RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
-EndIf*/
+  EndIf
 
   //TSTFIL001() // biaxfunc.prw  - Teste Email SEND
   //TSTFIL002() // Teste pedidos provisionados
   //TSTFIL003()
 
-  //DbSelectArea("ZDL")
-  //X31UPDTABLE('ZDL')
+  DbSelectArea("ZDK")
+  X31UPDTABLE('ZDK')
 
 
 RETURN

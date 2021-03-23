@@ -17,6 +17,7 @@
 USER FUNCTION ATU_PEDIDO()
 
 	Local I
+	Local LLRETORNO
 
 	// Tiago Rossini Coradini - Facile Sistemas - Data: 29/10/14
 	// Bloco comentado para não limpar mais os campos: C6_PRCVEN e C6_TES

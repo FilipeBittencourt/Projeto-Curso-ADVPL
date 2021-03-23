@@ -9,7 +9,7 @@
 @author Barbara Coelho	  
 @since 10/06/2020
 @version 1.0
-@description Relatório de Compras realizadas no mês corrente
+@description Relatório de Compras realizadas por grupo de produto no mês corrente
 @type function
 /*/																								
 
@@ -19,7 +19,7 @@ User Function BIABC023()
 	Private sAnoMes    := AnoMes ( Date() )
 	Private oExcel 	
 	
-    Aviso('Relatório de Compras Realizadas', "Compras realizadas do mês de " + MesExtenso(Month2Str( Date() ) ) + "/" + Year2Str( Date() ) ,{'Ok'})
+    Aviso('Relatório de Compras Realizadas por Grupo de Produto', "Compras realizadas do mês de " + MesExtenso(Month2Str( Date() ) ) + "/" + Year2Str( Date() ) ,{'Ok'})
 
 	oExcel := nil 	
 	oExcel := FWMSEXCEL():New()
@@ -97,7 +97,7 @@ Static Function fConsultaSQL
 	Local sQuery := ""
 
 	sQuery := " SELECT * FROM (                                                    " + cEnter
-	sQuery += " SELECT DISTINCT SUBSTRING(D1_GRUPO,1,3) GRUPO,                     " + cEnter
+	sQuery += " SELECT DISTINCT D1_GRUPO GRUPO,                     " + cEnter
 	sQuery += " 	            'NOTA' TIPO,                                       " + cEnter
 	sQuery += "                 D1_DTDIGIT EMISSAO,                                " + cEnter
 	sQuery += " 				D1_DOC DOC,                                        " + cEnter
@@ -130,9 +130,9 @@ Static Function fConsultaSQL
 	sQuery += "    AND SB1.D_E_L_E_T_ = ''				       		               " + cEnter
 	sQuery += "  WHERE F1_TIPO IN ('N','C')				       		               " + cEnter
 	sQuery += "    AND SD1.D_E_L_E_T_ = ''				       		               " + cEnter
-	sQuery += "    AND SUBSTRING(D1_DTDIGIT,1,6) = '202011'     		           " + cEnter
+	sQuery += "    AND SUBSTRING(D1_DTDIGIT,1,6) = '" + sAnoMes + "'	           " + cEnter
 	sQuery += " UNION ALL												           " + cEnter
-	sQuery += " SELECT DISTINCT SUBSTRING(D2_GRUPO,1,3) GRUPO, 			           " + cEnter
+	sQuery += " SELECT DISTINCT D2_GRUPO GRUPO, 			           " + cEnter
 	sQuery += "                 'DEVOLUCAO' TIPO,						           " + cEnter
 	sQuery += "                 D2_EMISSAO EMISSAO,						           " + cEnter
 	sQuery += " 				D2_DOC DOC,								           " + cEnter
@@ -165,9 +165,9 @@ Static Function fConsultaSQL
 	sQuery += "    AND SB1.D_E_L_E_T_ = ''				                           " + cEnter
 	sQuery += "  WHERE F2_TIPO IN ('D','C')				                           " + cEnter
 	sQuery += "    AND SD2.D_E_L_E_T_ = ''				                           " + cEnter
-	sQuery += "    AND SUBSTRING(D2_EMISSAO,1,6) = '202011'                        " + cEnter
+	sQuery += "    AND SUBSTRING(D2_EMISSAO,1,6) = '" + sAnoMes + "'               " + cEnter
 	sQuery += " UNION ALL												           " + cEnter
-	sQuery += " SELECT DISTINCT SUBSTRING(B1_GRUPO,1,3) GRUPO,			           " + cEnter
+	sQuery += " SELECT DISTINCT B1_GRUPO GRUPO,			           " + cEnter
 	sQuery += "                 'PEDIDO' TIPO,							           " + cEnter
 	sQuery += "                 C7_DATPRF EMISSAO,						           " + cEnter
 	sQuery += " 				C7_NUM DOC,								           " + cEnter

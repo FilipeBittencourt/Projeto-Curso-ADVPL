@@ -66,7 +66,7 @@ User Function BFG81DPD()
 
 	EndIf
 
-	If IsInCallsTack("BIAFG122")
+	If IsInCallsTack("U_BIAFG122")
 
 		_cDriver := fGetDrvPad(Date(),"RH")
 

@@ -5,15 +5,15 @@
 #INCLUDE "COLORS.CH"
 #INCLUDE "RPTDEF.CH"
 
-/*/{Protheus.doc} BIABC022
+/*/{Protheus.doc} BIABC026
 @author Barbara Coelho	  
-@since 10/11/2020
+@since 19/02/2021
 @version 1.0
-@description Relatório de Consumo médio dos ultimos 3 meses por grupo de produto
+@description Relatório de Consumo médio dos ultimos 3 meses por departamento
 @type function
 /*/																								
 
-User Function BIABC022()
+User Function BIABC026()
 	Private sdtInicial := "DATEADD(DAY, +1,EOMONTH(DATEADD(MONTH, -4,GETDATE())))"
 	Private sdtFinal   := "EOMONTH(DATEADD(MONTH,-1,GETDATE())) "
 	Private sAnoMes    := AnoMes ( Date() )
@@ -21,7 +21,7 @@ User Function BIABC022()
 	private aPergs := {}
 	Private oExcel 	
 	
-	Aviso('Relatório de Consumo médio por grupo de produto', "Consumo médio dos últimos 3 meses - mês referência " + MesExtenso(Month2Str( Date() ) ) + "/" + Year2Str( Date() ) ,{'Ok'})
+	Aviso('Relatório de Consumo médio por departamento', "Consumo médio dos últimos 3 meses - mês referência " + MesExtenso(Month2Str( Date() ) ) + "/" + Year2Str( Date() ) ,{'Ok'})
 	
 		oExcel := nil 	
 		oExcel := FWMSEXCEL():New()
@@ -32,11 +32,9 @@ User Function BIABC022()
 		oExcel:AddworkSheet(nxPlan)
 		oExcel:AddTable (nxPlan, nxTabl)
 
-		oExcel:AddColumn(nxPlan, nxTabl, "CODGRUPO"	,1,1)
-		oExcel:AddColumn(nxPlan, nxTabl, "DESCGRUPO",1,1)
+		oExcel:AddColumn(nxPlan, nxTabl, "DEPART",1,1)
 		oExcel:AddColumn(nxPlan, nxTabl, "EMISSAO"	,1,4)
 		oExcel:AddColumn(nxPlan, nxTabl, "DOC"		,1,1)
-		oExcel:AddColumn(nxPlan, nxTabl, "ITEM"		,1,1)
 		oExcel:AddColumn(nxPlan, nxTabl, "VALOR"	,3,2, .T.)
 		oExcel:AddColumn(nxPlan, nxTabl, "CODPROD"	,1,1)
 		oExcel:AddColumn(nxPlan, nxTabl, "DESCPROD"	,1,1)
@@ -45,7 +43,7 @@ User Function BIABC022()
 		GU004 := ""
 		xArqTemp := ""
 
-		GU004 := fConsultaSQL()
+		GU004 := fConsSQL()
 		xArqTemp := "base_ConsumoMedio3meses" + AnoMes ( Date() )
 
 			
@@ -57,11 +55,9 @@ User Function BIABC022()
 		
 		While !Eof()	
 			IncProc()
-				oExcel:AddRow(nxPlan, nxTabl, { GU04->CODGRUPO,;
-				                                GU04->DESCGRUPO,; 
+				oExcel:AddRow(nxPlan, nxTabl, { GU04->DESCENTID,; 
 												stod(GU04->EMISSAO),;
 												GU04->DOC,;
-												GU04->ITEM,;
 												Round(GU04->VALOR,2),;
 												GU04->CODPROD,;
 												GU04->DESCPROD,;
@@ -94,37 +90,38 @@ User Function BIABC022()
 		EndIf
 Return
 
-Static Function fConsultaSQL
+Static Function fConsSQL
 Local sQuery := ""
 
-sQuery := " SELECT DISTINCT  CODGRUPO, DESCGRUPO, EMISSAO, DOC, ITEM,            	  " + cEnter
+sQuery := " SELECT DISTINCT  CODENTID, DESCENTID, EMISSAO, DOC, QUANT,            	  " + cEnter
 sQuery += "        ROUND(SUM(CUSTO), 2) VALOR, CODPROD, DESCPROD,CLVL				  " + cEnter
-sQuery += "   FROM (SELECT DISTINCT SBM.BM_GRUPO CODGRUPO, SBM.BM_DESC DESCGRUPO,	  " + cEnter
+sQuery += "   FROM (SELECT DISTINCT ZCA_ENTID CODENTID , ZCA_DESCRI DESCENTID,		  " + cEnter
 sQuery += "                CASE WHEN D3_TM >= '500' THEN D3_QUANT					  " + cEnter
 sQuery += "                ELSE D3_QUANT * (-1) END QUANT,							  " + cEnter
 sQuery += "                CASE WHEN D3_TM >= '500' THEN D3_CUSTO1 					  " + cEnter
 sQuery += "                ELSE D3_CUSTO1 * (-1) END CUSTO, 						  " + cEnter
 sQuery += " 			   D3_EMISSAO EMISSAO,										  " + cEnter
 sQuery += " 			   D3_DOC DOC,												  " + cEnter
-sQuery += " 			   D3_ITEM ITEM,											  " + cEnter
 sQuery += " 			   B1_COD CODPROD, B1_DESC DESCPROD,						  " + cEnter
 sQuery += " 			   D3_CLVL CLVL												  " + cEnter
-sQuery += "           FROM " + RetSQLName("SBM") + " SBM WITH (NOLOCK)				  " + cEnter
-sQuery += "          INNER JOIN " + RetSQLName("SB1") + " SB1  WITH (NOLOCK) 		  " + cEnter
-sQuery += "             ON B1_GRUPO = SBM.BM_GRUPO 								  " + cEnter
-sQuery += "            AND SB1.D_E_L_E_T_ = ''										  " + cEnter
-sQuery += "          INNER JOIN " + RetSQLName("ZCN") + " ZCN  WITH (NOLOCK) 		  " + cEnter
-sQuery += "             ON B1_COD = ZCN_COD 										  " + cEnter
-sQuery += "            AND ZCN_POLIT IN ('4','8') 									  " + cEnter
-sQuery += "            AND ZCN.D_E_L_E_T_ = ''										  " + cEnter
+sQuery += "           FROM " + RetSQLName("SB1") + " SB1  WITH (NOLOCK) 			  " + cEnter
 sQuery += "          INNER JOIN " + RetSQLName("SD3") + " SD3  WITH (NOLOCK) 		  " + cEnter
-sQuery += "             ON D3_COD = ZCN_COD 										  " + cEnter
-sQuery += "            AND D3_LOCAL = ZCN_LOCAL 									  " + cEnter
+sQuery += "             ON D3_COD = B1_COD 				  							  " + cEnter
 sQuery += "            AND D3_YPARADA <> 'S' 										  " + cEnter
 sQuery += "            AND SD3.D_E_L_E_T_ = ' '										  " + cEnter
-sQuery += "          WHERE SBM.D_E_L_E_T_ = ''										  " + cEnter
-sQuery += "            AND D3_EMISSAO BETWEEN " + sdtInicial + " AND " + sdtInicial     + cEnter
-sQuery += "            )TBL									  " + cEnter
-sQuery += "  GROUP BY CODGRUPO, DESCGRUPO, EMISSAO, DOC, ITEM, CODPROD, DESCPROD,CLVL " + cEnter
+sQuery += "		     INNER JOIN " + RetSQLName("ZCN") + " ZCN  WITH (NOLOCK) 		  " + cEnter
+sQuery += "             ON D3_COD = ZCN_COD											  " + cEnter
+sQuery += "			   AND ZCN_FILIAL = D3_FILIAL									  " + cEnter
+sQuery += "			   AND ZCN_LOCAL = D3_LOCAL 									  " + cEnter
+sQuery += "            AND ZCN_POLIT IN ('4','8') 									  " + cEnter
+sQuery += "            AND ZCN.D_E_L_E_T_ = ''										  " + cEnter
+sQuery += "          INNER JOIN " + RetSQLName("CTH") + " CTH WITH (NOLOCK)           " + cEnter
+sQuery += "			    ON CTH.CTH_CLVL = D3_CLVL                                 	  " + cEnter
+sQuery += "			   AND CTH.D_E_L_E_T_ = ''   									  " + cEnter
+sQuery += "		     INNER JOIN " + RetSQLName("ZCA") + " ZCA WITH (NOLOCK)		      " + cEnter
+sQuery += "		        ON ZCA.ZCA_ENTID = CTH.CTH_YENTID                             " + cEnter
+sQuery += "          WHERE D3_EMISSAO BETWEEN " + sdtInicial + " AND " + sdtFinal       + cEnter
+sQuery += "            AND SB1.D_E_L_E_T_ = '')TMP									  " + cEnter
+sQuery += "  GROUP BY CODENTID, DESCENTID, CLVL, EMISSAO, DOC, ITEM, CODPROD, DESCPROD" + cEnter
 	
 Return sQuery

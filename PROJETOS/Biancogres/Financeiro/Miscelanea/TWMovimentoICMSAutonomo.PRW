@@ -2,6 +2,19 @@
 #Include "Protheus.CH"
 #Include "TOPCONN.CH"
 
+User Function TWMICMAE(cEmp, cFil, cData, nIcmAuto, cNatureza, cBanco, cAgencia, cConta, cCC, cCLVL)
+	
+	Local lRet := .T.
+	
+	RpcSetEnv(cEmp, cFil)
+
+	_ObjMICMSAut := TWMovimentoICMSAutonomo():New()
+	lRet := _ObjMICMSAut::ExecMovBanc(cData, nIcmAuto, cNatureza, cBanco, cAgencia, cConta, cCC, cCLVL)
+	
+	RpcClearEnv()
+	
+Return lRet
+
 User Function TWMICMAJ()
 	_Obj := TWMovimentoICMSAutonomo():New()
 	_Obj:ShowModal()		
@@ -28,6 +41,7 @@ Class TWMovimentoICMSAutonomo From LongClassName
 	Method GetValor() 
 	Method GetValorEmp()
 	Method GetEmp()
+	Method ExecMovBanc()
 	
 	Method ShowModal()
 	Method LoadModal()
@@ -285,6 +299,7 @@ Method ExecuteEmp() Class TWMovimentoICMSAutonomo
 	Local nI			:= 0
 	Local aListEmpSel	:= ::GetEmp()
 	Local nPos			:= 0
+	Local lRet			:= .T.
 	
 	For nI:=1 To Len (aListEmpSel)
 		
@@ -359,32 +374,52 @@ Method Execute() Class TWMovimentoICMSAutonomo
 		If (nIcmAuto > 0)
 			
 			If MsgNoYes(cMsg, "Confirma?")
-				oObjMovBanc := TAFMovimentoBancario():New()
-		
-				oObjMovBanc:cRecPag			:= 'R'
-				oObjMovBanc:dData 			:= cData
-				oObjMovBanc:dDigit 			:= cData
-				oObjMovBanc:dDispo 			:= cData
-				oObjMovBanc:cMoeda 			:= 'M1'
-				oObjMovBanc:nValor 			:= nIcmAuto
-				oObjMovBanc:cNatureza 		:= cNatureza
-				oObjMovBanc:cBanco 			:= PADR(cBanco, TamSx3("A6_COD")[1]) 
-				oObjMovBanc:cAgencia 		:= PADR(cAgencia, TamSx3("A6_AGENCIA")[1]) 
-				oObjMovBanc:cConta 			:= PADR(cConta, TamSx3("A6_NUMCON")[1]) 
-				oObjMovBanc:cHistorico 		:= 'REC ICMS do DIA '+cvaltochar(DTOC(cData))
-				oObjMovBanc:cCentroCusto 	:= cCC
-				oObjMovBanc:cClasseValor 	:= cCLVL
-				oObjMovBanc:nIdApi 			:= 0
-			
-				//If oObjMovBanc:Insert()
+				
+				lRet := StartJob("U_TWMICMAE", GetEnvServer(), .T., ::cCodEmp, ::cCodFil, cData, nIcmAuto, cNatureza, cBanco, cAgencia, cConta, cCC, cCLVL)
+				
+				If lRet
 					MsgAlert('Movimentação de ICMS Frete inserido com sucesso.', 'Sucesso')
-				//Else
-				//	MsgAlert('Erro no inserção do ICMS de Frete.', 'Erro')
-				//EndIf
+				Else
+					MsgAlert('Erro no inserção do ICMS de Frete.', 'Erro')
+				EndIf
+				
+				//::ExecMovBanc(cData, nIcmAuto, cNatureza, cBanco, cAgencia, cConta, cCC, cCLVL)
+				
 			EndIf
 		EndIf
 	EndIf			
-	
-	
 		
 Return 
+
+Method ExecMovBanc(cData, nIcmAuto, cNatureza, cBanco, cAgencia, cConta, cCC, cCLVL) Class TWMovimentoICMSAutonomo
+
+	Local lRet := .T.
+	
+	oObjMovBanc := TAFMovimentoBancario():New()
+			
+	oObjMovBanc:cRecPag			:= 'R'
+	oObjMovBanc:dData 			:= cData
+	oObjMovBanc:dDigit 			:= cData
+	oObjMovBanc:dDispo 			:= cData
+	oObjMovBanc:cMoeda 			:= 'M1'
+	oObjMovBanc:nValor 			:= nIcmAuto
+	oObjMovBanc:cNatureza 		:= cNatureza
+	oObjMovBanc:cBanco 			:= PADR(cBanco, TamSx3("A6_COD")[1]) 
+	oObjMovBanc:cAgencia 		:= PADR(cAgencia, TamSx3("A6_AGENCIA")[1]) 
+	oObjMovBanc:cConta 			:= PADR(cConta, TamSx3("A6_NUMCON")[1]) 
+	oObjMovBanc:cHistorico 		:= 'REC ICMS do DIA '+cvaltochar(DTOC(cData))
+	oObjMovBanc:cCentroCusto 	:= cCC
+	oObjMovBanc:cClasseValor 	:= cCLVL
+	oObjMovBanc:nIdApi 			:= 0
+	
+	//varinfo("oObjMovBanc", oObjMovBanc)
+	
+	If oObjMovBanc:Insert()
+		lRet := .T.
+		//MsgAlert('Movimentação de ICMS Frete inserido com sucesso.', 'Sucesso')
+	Else
+		lRet := .F.
+		//MsgAlert('Erro no inserção do ICMS de Frete.', 'Erro')
+	EndIf
+	
+Return lRet

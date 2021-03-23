@@ -1256,42 +1256,50 @@ Return
 
 
 Static Function fValida()
+	
 	Local lRet := .T.
 
-	If !Alltrim(SF2->F2_TPFRETE) == "S"
+	begin sequence
+
+		If (Alltrim(SF2->F2_TPFRETE)=="S")
+			break
+		endif
 
 		//Testa se o pedido esta sendo faturado utilizando as Transportadoras Padroes
 		If Alltrim(wTransp) $ "000051_000052"
-			MsgBox("Favor informar a Transportadora Correta!","INFO")
+			Help(nil,nil,"","__VLDTRANSP__","Favor informar a Transportadora Correta!",1,0,!IsBlind(),nil,nil,nil,.T.) 
 			lRet := .F.
-			Return(lRet)
+			break
 		Endif
 
 		//Valida se a Transportadora esta preenchida
 		If Empty(wTransp)
-			MsgBox("Transportadora nao cadastrada!","INFO")
+			Help(nil,nil,"","__VLDTRANSP__","Transportadora nao cadastrada!",1,0,!IsBlind(),nil,nil,nil,.T.) 
 			lRet := .F.
-			Return(lRet)
+			break
 		Endif
 
 		//Valida se a Transportadora esta correta
 		DbSelectArea("SA4")
 		DbSetOrder(1)
 		If !dbSeek(xFilial("SA4")+wTransp,.F.)
-			MsgBox("Transportadora não cadastrada!","INFO")
+			Help(nil,nil,"","__VLDTRANSP__","Transportadora não cadastrada!",1,0,!IsBlind(),nil,nil,nil,.T.) 
 			lRet := .F.
-			Return(lRet)
+			break
 		EndIf
-
 
 		// Valida se a UF da Placa esta preenchida
 		If !Empty(Alltrim(wPlaca)) .And. Empty(Alltrim(wUF))
-			MsgBox("Favor informar a UF da Placa do Veículo!","INFO")
+			Help(nil,nil,"","__VLDTRANSP__","Favor informar a UF da Placa do Veículo!",1,0,!IsBlind(),nil,nil,nil,.T.) 
 			lRet := .F.
-			Return(lRet)
+			break
 		EndIf
+	
+	end sequence
 
-	EndIf
+	if ((!lRet).and.(stackTools():IsInStackCall({"FaturarPedido","ProcFat","DocSaida"})))
+		lRet:=.T.
+	endif
 
 Return(lRet)
 
@@ -1460,7 +1468,6 @@ Static function fAtuSE1()
 	Local aArea 	:= GetArea()
 	Local nIndSE1 	:= SE1->(IndexOrd())
 	Local nRegSE1	:= SE1->(Recno())
-	Local nIndSD2	:= SD2->(IndexOrd())
 	Local nRegSD2 	:= SD2->(Recno())
 	Local nIndSC5	:= SC5->(IndexOrd())
 	Local nRegSC5 	:= SC5->(Recno())

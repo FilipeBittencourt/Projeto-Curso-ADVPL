@@ -8,6 +8,6 @@
 /*/                                                                                               
 User Function BIABC019
 
-AxCadastro("ZG0","CADASTRO DE METAS DE LIMITE DE COMPRA POR GRUPO DE PRODUTO")      
+AxCadastro("ZG2","CADASTRO DE METAS DE LIMITE DE COMPRA POR GRUPO DE PRODUTO")      
 
 Return

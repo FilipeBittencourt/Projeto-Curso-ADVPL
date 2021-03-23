@@ -33,13 +33,13 @@ procedure u_FIDCRelatorioRecebidos()
 	local otMultProcess		as object
 
     private cCadastro as character
-    cCadastro:=OemToAnsi("Relatorio Retorno FIDC")
+    cCadastro:=OemToAnsi("Relatorio Recebidos FIDC")
 
     aArea:=getArea()
 
 	begin sequence
 
-        lParamBox:=FIDCRetornoParameters(@aParamRet)
+        lParamBox:=FIDCRecebidosParameters(@aParamRet)
         if (!lParamBox)
             break
         endif
@@ -61,6 +61,10 @@ static procedure FIDCRelatorioRecebidos(otMultProcess as object,aParamRet as arr
 static procedure FIDCRelatorioRecebidosQuery(otMultProcess as object,aParamRet as array)
 
     local aBCOIsFIDC    as array
+    local aFWTTables    as array
+
+    local bTTimer       as block
+    local bMsAguarde    as block
 
     local cTmpAlias     as character
 
@@ -79,11 +83,14 @@ static procedure FIDCRelatorioRecebidosQuery(otMultProcess as object,aParamRet a
     local nBCO          as numeric
     local nBCOs         as numeric
 
+    local nTable        as numeric
+    local nTables       as numeric
+
     local nSA6RecNo     as numeric
     
     local nIncRegua     as numeric
 
-    local oFWTTable     as object
+    local oTTimer       as object
 
     aBCOIsFIDC:=FIDC():retbcoFIDC()
 
@@ -110,7 +117,15 @@ static procedure FIDCRelatorioRecebidosQuery(otMultProcess as object,aParamRet a
 
         SA6->(MsGoTo(nSA6RecNo))
 
-        MsAguarde({||cTmpAlias:=QueryView(@aParamRet,@oFWTTable,@aBCOIsFIDC[nBCO])},"Obtendo dados no SGBD. Aguarde...")
+        otMultProcess:SetRegua(1,0)
+        otMultProcess:SetRegua(2,0)
+
+        bTTimer:={||otMultProcess:IncRegua(1,"Obtendo dados no SGBD. Aguarde..."),otMultProcess:IncRegua(2,"Processando...")}
+        oTTimer:=TTimer():New(1,bTTimer,getWndDefault()) 
+
+        bMsAguarde:={||oTTimer:Activate(),cTmpAlias:=QueryView(@aParamRet,@aBCOIsFIDC[nBCO],@aFWTTables),oTTimer:DeActivate()}
+
+        MsAguarde(bMsAguarde,"Obtendo dados no SGBD. Aguarde...")
         
         nIncRegua:=(cTmpAlias)->(RecCount())
 
@@ -161,6 +176,8 @@ static procedure FIDCRelatorioRecebidosQuery(otMultProcess as object,aParamRet a
             lX3Titulo:=.T.
             ltxtEditMemo:=.F.
 
+            utoXML():setSX3Fields((cTmpAlias)->(dbStruct()))
+
             uToXML():setXMLVar("A1_COD","X3_TITULO","CODIGO")
             uToXML():setXMLVar("A1_NOME","X3_TITULO","RAZAO SOCIAL")
             uToXML():setXMLVar("E1_DATABOR","X3_TITULO","DATA REMESSA")
@@ -173,24 +190,61 @@ static procedure FIDCRelatorioRecebidosQuery(otMultProcess as object,aParamRet a
             uToXML():setXMLVar("E1_YFDCVAL","X3_TITULO","DESAGIO")
             uToXML():setXMLVar("ZK4_NOSNUM","X3_TITULO","NOSSO NUMERO")
             uToXML():setXMLVar("ZK4_VLREC","X3_TITULO","VALOR RECEBIDO")
+            uToXML():setXMLVar("ZK4_VLJURO","X3_TITULO","VALOR JUROS") 
             uToXML():setXMLVar("ZK4_DTLIQ","X3_TITULO","DATA LIQUIDACAO")
             uToXML():setXMLVar("ZK4_DTCRED","X3_TITULO","DATA CREDITO")
+
+            uToXML():setXMLVar("A1_COD","X3_PICTURE","@!")
+            uToXML():setXMLVar("A1_NOME","X3_PICTURE","@!")
+            uToXML():setXMLVar("E1_DATABOR","X3_PICTURE","__NOTRANSFORM__")
+            uToXML():setXMLVar("P_NUM_PARC","X3_PICTURE","@!")
+            uToXML():setXMLVar("E1_EMISSAO","X3_PICTURE","__NOTRANSFORM__")
+            uToXML():setXMLVar("E1_VENCTO","X3_PICTURE","__NOTRANSFORM__")
+            uToXML():setXMLVar("DIAS_ANTEC","X3_PICTURE","@R 9999")
+            uToXML():setXMLVar("E1_VENCREA","X3_PICTURE","__NOTRANSFORM__")
+            uToXML():setXMLVar("E1_VALOR","X3_PICTURE","__NOTRANSFORM__")
+            uToXML():setXMLVar("E1_YFDCVAL","X3_PICTURE","__NOTRANSFORM__")
+            uToXML():setXMLVar("ZK4_VLREC","X3_PICTURE","__NOTRANSFORM__")
+            uToXML():setXMLVar("ZK4_VLJURO","X3_PICTURE","__NOTRANSFORM__")
+            uToXML():setXMLVar("ZK4_DTLIQ","X3_PICTURE","__NOTRANSFORM__")
+            uToXML():setXMLVar("ZK4_DTCRED","X3_PICTURE","__NOTRANSFORM__")
+
+            uToXML():setXMLVar("E1_VALOR","TOTAL",.T.)
+            uToXML():setXMLVar("E1_YFDCVAL","TOTAL",.T.)
+            uToXML():setXMLVar("ZK4_VLREC","TOTAL",.T.)
+            uToXML():setXMLVar("ZK4_VLJURO","TOTAL",.T.)
+
+            otMultProcess:SetRegua(1,0)
+            otMultProcess:SetRegua(2,0)
+
+            bTTimer:={||otMultProcess:IncRegua(1,"Gerando Planilha Excel. Aguarde..."),otMultProcess:IncRegua(2,"Processando...")}
+            Eval(bTTimer)
             
-            MsAguarde({||uToXML():QryToXML(cTmpAlias,@cXMLFile,@cExcelTitle,@lPicture,@lX3Titulo,@ltxtEditMemo)},"Gerando Planilha Excel. Aguarde...")
-            
+            oTTimer:=TTimer():New(1,bTTimer,getWndDefault()) 
+
+            bMsAguarde:={||oTTimer:Activate(),uToXML():QryToXML(cTmpAlias,@cXMLFile,@cExcelTitle,@lPicture,@lX3Titulo,@ltxtEditMemo),oTTimer:Deactivate()}
+            MsAguarde(bMsAguarde,"Gerando Planilha Excel. Aguarde...")
+
             uToXML():clearXMLVar()
 
         endif
 
-        if (valType(oFWTTable)=="O")
-            oFWTTable:Delete()
+        if (valtype(aFWTTables)=="A")
+            nTables:=len(aFWTTables)
+            for nTable:=1 to nTables
+                if (valType(aFWTTables[nTable])=="O")
+                    aFWTTables[nTable]:Delete()
+                    aFWTTables[nTable]:=nil
+                endif
+            next nTable
+            aSize(aFWTTables,0)
         endif
 
     next nBCO
 
     return
 
-static function FIDCRetornoParameters(aParamRet as array) as logical
+static function FIDCRecebidosParameters(aParamRet as array) as logical
 
     local aArea     as array
 	local aParamBox as array 
@@ -316,7 +370,7 @@ static function FIDCRetornoParameters(aParamRet as array) as logical
 		aAdd(aParamBox,array(9))
 		nPBoxAT:=Len(aParamBox)
 		aParamBox[nPBoxAT][1]:=1//[1]:1 - MsGet
-		aParamBox[nPBoxAT][2]:=OemToAnsi("Data Retorno De")//[2]:Descricao
+		aParamBox[nPBoxAT][2]:=OemToAnsi("Data Recebidos De")//[2]:Descricao
 		aParamBox[nPBoxAT][3]:=CtoD("")//[3]:String contendo o inicializador do campo
 		aParamBox[nPBoxAT][4]:="@D"//[4]:String contendo a Picture do campo
 		aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
@@ -329,7 +383,7 @@ static function FIDCRetornoParameters(aParamRet as array) as logical
 		aAdd(aParamBox,array(9))
 		nPBoxAT:=Len(aParamBox)
 		aParamBox[nPBoxAT][1]:=1//[1]:1 - MsGet
-		aParamBox[nPBoxAT][2]:=OemToAnsi("Data Retorno Ate")//[2]:Descricao
+		aParamBox[nPBoxAT][2]:=OemToAnsi("Data Recebidos Ate")//[2]:Descricao
 		aParamBox[nPBoxAT][3]:=date()//[3]:String contendo o inicializador do campo
 		aParamBox[nPBoxAT][4]:="@D"//[4]:String contendo a Picture do campo
 		aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
@@ -340,7 +394,7 @@ static function FIDCRetornoParameters(aParamRet as array) as logical
 
         cParamTit:=&("cCadastro")
         cFunName:=FunName()
-        setFunName("FIDCRelRetorno")
+        setFunName("FIDCRelRecebidos")
         lParamBox:=ParamBox(@aParamBox,&("cCadastro"),@aParamRet,/*bOk*/,/*aButtons*/,.T./*lCentered*/,/*nPosx*/,/*nPosy*/,/*oDlgWizard*/,/*cLoad*/,.T./*lCanSave*/,.T./*lUserSave*/)
         setFunName(cFunName)
 
@@ -350,210 +404,7 @@ static function FIDCRetornoParameters(aParamRet as array) as logical
 
     return(lParamBox)
 
-static function QueryView(aParamRet as character,oFWTTable as object,aBCOIsFIDC as array) as character
-
-    local aFields       as array
-
-    local cA6COD        as character
-    local cA6AGENCIA    as character
-    local cA6NUMCON     as character
-
-    local cSQLPath      as character
-    local cSQLFile      as character
-    local cSQLQuery     as character
-    local cSQLInsert    as character
-
-    local cTmpAlias     as character
-    local cTmpTable     as character
-
-    local cA1CODDe      as character
-    local cA1CODAte     as character
-
-    local cE1DATABORDe  as character
-    local cE1DATABORAte as character
-
-    local cE1EMISSAODe  as character
-    local cE1EMISSAOAte as character
-
-    local cE1VENCTODe   as character
-    local cE1VENCTOAte  as character
-
-    local cZK4DataDe    as character
-    local cZK4DataAte   as character
-
-    local cType         as character
-    local cField        as character
-
-    local nLen          as numeric
-    local nDec          as numeric
-    local nField        as numeric
-    local nFields       as numeric
-
-    cA6COD:=aBCOIsFIDC[3]
-    cA6AGENCIA:=aBCOIsFIDC[4]
-    cA6NUMCON:=aBCOIsFIDC[5]
-
-    cA1CODDe:=aParamRet[1]
-    cA1CODAte:=aParamRet[2]
-
-    cE1DATABORDe:=DToS(aParamRet[3])
-    cE1DATABORAte:=DToS(aParamRet[4])
-
-    cE1EMISSAODe:=DToS(aParamRet[5])
-    cE1EMISSAOAte:=DToS(aParamRet[6])
-
-    cE1VENCTODe:=DToS(aParamRet[7])
-    cE1VENCTOAte:=DToS(aParamRet[8])
-
-    cZK4DataDe:=DToS(aParamRet[9])
-    cZK4DataAte:=DToS(aParamRet[10])
-
-    cTmpAlias:=getNextAlias()
-    beginSQL alias cTmpAlias
-
-        %noparser%
-
-        COLUMN E1_DATABOR  AS DATE
-        COLUMN E1_EMISSAO  AS DATE
-        COLUMN E1_VENCTO   AS DATE
-        COLUMN E1_VENCREA  AS DATE
-        COLUMN ZK4_DATA    AS DATE
-        COLUMN ZK4_DTLIQ   AS DATE
-        COLUMN ZK4_DTCRED  AS DATE 
-
-        SELECT SA1.A1_COD
-            ,SA1.A1_NOME
-            ,SE1.E1_DATABOR
-            ,SE1.E1_PREFIXO+SE1.E1_NUM+SE1.E1_PARCELA AS P_NUM_PARC
-            ,SE1.E1_EMISSAO
-            ,SE1.E1_VENCTO
-            ,0  AS DIAS_ANTEC
-            ,'' AS E1_VENCREA
-            ,SE1.E1_VALOR
-            ,SE1.E1_YFDCVAL
-            ,LTRIM(RTRIM(ZK4.ZK4_NOSNUM)) AS ZK4_NOSNUM
-            ,ZK4.ZK4_VLREC
-            ,ZK4.ZK4_DTLIQ
-            ,ZK4.ZK4_DTCRED
-        FROM %table:SE1% SE1 (NOLOCK)
-        JOIN %table:ZK4% ZK4 (NOLOCK)
-            ON (
-                    ZK4.%notDel%
-                AND ZK4.ZK4_FILIAL=%xFilial:ZK4%
-                AND SE1.E1_PORTADO=ZK4.ZK4_BANCO
-                AND SE1.E1_AGEDEP=ZK4.ZK4_AGENCI
-                AND SE1.E1_CONTA=ZK4.ZK4_CONTA
-                AND SE1.E1_NUM+SE1.E1_PARCELA=ZK4.ZK4_NUMERO
-                AND SE1.E1_NUMBCO=SUBSTRING(ZK4.ZK4_NOSNUM,1,11)
-                AND SE1.E1_VENCTO=ZK4.ZK4_DTVENC
-                AND ZK4.ZK4_CODOCO='06'
-                AND ZK4.ZK4_TIPO='R'
-                AND ZK4.ZK4_DATA BETWEEN %exp:cZK4DataDe% AND %exp:cZK4DataAte%
-                AND ZK4.ZK4_EMP=%exp:cEmpAnt%
-                AND ZK4.ZK4_FIL=%exp:cFilAnt%
-                AND ZK4.ZK4_STATUS='2'
-            )
-         JOIN %table:SA1% SA1 (NOLOCK) ON (
-                SA1.%notDel%
-            AND SA1.A1_FILIAL=%xFilial:SA1%
-            AND SE1.E1_CLIENTE=SA1.A1_COD
-            AND SE1.E1_LOJA=SA1.A1_LOJA
-         )
-         JOIN %table:SA6% SA6 (NOLOCK) ON (
-                SA6.%notDel%  
-            AND SA6.A6_FILIAL=%xFilial:SA6%
-            AND SA6.A6_COD=%exp:cA6COD%
-            AND SA6.A6_AGENCIA=%exp:cA6AGENCIA%
-            AND SA6.A6_NUMCON=%exp:cA6NUMCON%
-            AND SE1.E1_PORTADO=SA6.A6_COD
-            AND SE1.E1_AGEDEP=SA6.A6_AGENCIA
-            AND SE1.E1_CONTA=SA6.A6_NUMCON
-            AND SA6.A6_YTPINTB='1'
-         )
-        WHERE (1=2)
-            AND SE1.%notDel%
-            AND SA1.%notDel%
-            AND SA6.%notDel%
-            AND ZK4.%notDel%
-            AND SE1.E1_FILIAL=%xFilial:SE1%
-            AND SA1.A1_FILIAL=%xFilial:SA1%
-            AND SA6.A6_FILIAL=%xFilial:SA6%
-            AND SE1.E1_CLIENTE=SA1.A1_COD
-            AND SE1.E1_LOJA=SA1.A1_LOJA
-            AND SA6.A6_COD=%exp:cA6COD%
-            AND SA6.A6_AGENCIA=%exp:cA6AGENCIA%
-            AND SA6.A6_NUMCON=%exp:cA6NUMCON%
-            AND SE1.E1_PORTADO=SA6.A6_COD
-            AND SE1.E1_AGEDEP=SA6.A6_AGENCIA
-            AND SE1.E1_CONTA=SA6.A6_NUMCON
-            AND SA6.A6_YTPINTB='1'
-            AND SA1.A1_COD BETWEEN %exp:cA1CODDe% AND %exp:cA1CODAte%
-            AND SE1.E1_VENCTO BETWEEN %exp:cE1VENCTODe% AND %exp:cE1VENCTOAte%
-            AND SE1.E1_DATABOR BETWEEN %exp:cE1DATABORDe% AND %exp:cE1DATABORAte%
-            AND SE1.E1_EMISSAO BETWEEN %exp:cE1EMISSAODe% AND %exp:cE1EMISSAOAte%
-            AND ZK4.ZK4_DATA BETWEEN %exp:cZK4DataDe% AND %exp:cZK4DataAte%
-            AND ZK4.ZK4_CODOCO='06'
-            AND ZK4.ZK4_TIPO='R'
-            AND ZK4.ZK4_STATUS='2'
-        ORDER BY SE1.E1_FILIAL
-                ,SE1.E1_DATABOR
-                ,SA1.A1_FILIAL
-                ,SA1.A1_COD
-                ,SE1.E1_PREFIXO
-                ,SE1.E1_NUM
-                ,SE1.E1_PARCELA
-
-    endSQL    
-
-    if (IsBlind())
-        cSQLPath:="\tmp\"
-    else
-        cSQLPath:=getTempPath()
-        if (!right(cSQLPath,1)=="\")
-            cSQLPath+="\"
-        endif
-    endif
-    cSQLPath+="FIDC\SQL\"
-
-    cSQLQuery:=getLastQuery()[2]
-    cSQLQuery:=strTran(cSQLQuery,"(1=2)","(1=1)")
-    
-    A35():writeSQLFile(@cSQLQuery,&("cEmpAnt"),&("cFilAnt"),"FIDCRelatorioRecebidos","00","qry_final",@cSQLPath,@cSQLFile)
-
-    aFields:=(cTmpAlias)->(dbStruct())
-    nFields:=len(aFields)
-
-    (cTmpAlias)->(dbCloseArea())
-
-    oFWTTable:=FWTemporaryTable():New(cTmpAlias,aFields)
-    oFWTTable:Create()
-    cTmpTable:=oFWTTable:getRealName()
-    
-    cSQLInsert:="INSERT INTO"
-    cSQLInsert+=" "
-    cSQLInsert+=cTmpTable
-    cSQLInsert+=" "
-    cSQLInsert+="("
-    for nField:=1 to nFields
-        cField:=aFields[nField][DBS_NAME]
-        cType:=aFields[nField][DBS_TYPE]
-        nLen:=aFields[nField][DBS_LEN]
-        nDec:=aFields[nField][DBS_DEC]
-        uToXML():setXMLVar(cField,"X3_TIPO",cType)
-        uToXML():setXMLVar(cField,"X3_TAMANHO",nLen)
-        uToXML():setXMLVar(cField,"X3_DECIMAL",nDec)
-        cSQLInsert+=cField
-        cSQLInsert+=","
-    next nField
-    cSQLInsert:=subStr(cSQLInsert,1,(Len(cSQLInsert)-1))
-    cSQLInsert+=")"
-    cSQLInsert+=" "
-    cSQLInsert+=cSQLQuery
-
-    begin transaction
-        TCSQLExec(cSQLInsert)
-    end transaction
-
-    (cTmpAlias)->(dbGoTop())
-
+static function QueryView(aParamRet as character,aBCOIsFIDC as array,aFWTTables as array) as character
+    local cTmpAlias as character
+    cTmpAlias:=FIDC():getQueryRec(@aParamRet,@aBCOIsFIDC,@aFWTTables)
     return(cTmpAlias)

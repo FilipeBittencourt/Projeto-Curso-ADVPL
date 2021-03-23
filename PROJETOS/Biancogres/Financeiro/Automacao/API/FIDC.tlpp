@@ -1,5 +1,6 @@
 #include "totvs.ch"
 #include "parmtype.ch"
+#include "dbstruct.ch"
 
 /*/{Protheus.doc} FIDC
 @author Marinaldo de Jesus
@@ -47,6 +48,11 @@ class FIDC
 	static method existBiaPar(cParam as character,cEmp as character,cFil as character) as logical
 	static method InsertBiaPar(cParam as character,cConteudo as character,cEmp as character,cFil as character) as logical
 	static method resetFIDCPars()
+
+	static method getQueryRem(aParamRet as array,aBCOIsFIDC as array,aFWTTables as array) as character
+	static method getQueryRet(aParamRet as array,aBCOIsFIDC as array,aFWTTables as array) as character
+	static method getQueryRec(aParamRet as array,aBCOIsFIDC as array,aFWTTables as array) as character
+	static method getQueryCon(aParamRet as array,aBCOIsFIDC as array,aFWTTables as array) as character
 
 end class
 
@@ -1241,3 +1247,849 @@ static method resetFIDCPars() class FIDC
 static function FIDCParsInit()
     DEFAULT oFIDCPars:=JSONArray():New()
     return(oFIDCPars)
+
+static method getQueryRem(aParamRet,aBCOIsFIDC,aFWTTables) class FIDC
+
+    local aFields           as array
+
+    local bError            as block
+    local bErrorBlock       as block
+
+    local cTmpAlias         as character
+    local cTmpTable         as character
+    local cAPITable         as character
+
+    local cA6COD            as character
+    local cA6AGENCIA        as character
+    local cA6NUMCON         as character
+
+    local cA1CODDe          as character
+    local cA1CODAte         as character
+
+    local cE1DATABORDe      as character
+    local cE1DATABORAte     as character
+
+    local cE1EMISSAODe      as character
+    local cE1EMISSAOAte     as character
+
+    local cE1VENCTODe       as character
+    local cE1VENCTOAte      as character
+
+    local cUnidadeCodigo    as character
+
+    local cSQLPath          as character
+    local cSQLFile          as character
+    local cSQLQuery         as character
+    local cSQLInsert        as character
+
+    local cField            as character
+	local cSQLFields		as character
+
+    local nField            as numeric
+    local nFields           as numeric
+
+	local oFWTTable			as object
+
+	paramtype aParamRet as array
+	paramtype aBCOIsFIDC as array
+
+	paramtype aFWTTables as array optional default array(0)
+
+    cA6COD:=aBCOIsFIDC[3]
+    cA6AGENCIA:=aBCOIsFIDC[4]
+    cA6NUMCON:=aBCOIsFIDC[5]
+
+    cA1CODDe:=aParamRet[1]
+    cA1CODAte:=aParamRet[2]
+
+    cE1DATABORDe:=DToS(aParamRet[3])
+    cE1DATABORAte:=DToS(aParamRet[4])
+
+    cE1EMISSAODe:=DToS(aParamRet[5])
+    cE1EMISSAOAte:=DToS(aParamRet[6])
+
+    cE1VENCTODe:=DToS(aParamRet[7])
+    cE1VENCTOAte:=DToS(aParamRet[8])
+
+    cAPITable:=A35():tmpTableName("api_table")
+    cAPITable:="%"+cAPITable+"%"
+
+    cTmpAlias:=getNextAlias()
+
+    cUnidadeCodigo:=&("cEmpAnt")
+    cUnidadeCodigo+=&("cFilAnt")
+
+    if (IsBlind())
+        cSQLPath:="\tmp\"
+    else
+        cSQLPath:=getTempPath()
+        if (!right(cSQLPath,1)=="\")
+            cSQLPath+="\"
+        endif
+    endif
+    cSQLPath+="FIDC\SQL\"
+
+    bError:={|oError|break(oError)}
+    bErrorBlock:=ErrorBlock(bError)
+    begin sequence
+
+        beginSQL Alias cTmpAlias
+
+            %noparser%
+
+            WITH QAPI AS (
+                                SELECT SE1RECNO=NumeroControleParticipante 
+                                  FROM APIFINANCEIRO.dbo.Boleto  (NOLOCK)
+                                  JOIN APIFINANCEIRO.dbo.Unidade (NOLOCK) ON (Unidade.ID=Boleto.UnidadeID)
+                                  JOIN APIFINANCEIRO.dbo.Lote    (NOLOCK) ON (Lote.ID = Boleto.LoteID)
+                                  JOIN APIFINANCEIRO.dbo.Cedente (NOLOCK) ON (Cedente.ID=Boleto.CedenteID)
+                                  JOIN APIFINANCEIRO.dbo.ContaBancaria (NOLOCK) ON (ContaBancaria.ID=Cedente.ContaBancariaID)
+                                    WHERE CodigoBanco=%exp:cA6COD%
+                                      AND Agencia=%exp:cA6AGENCIA%
+                                      AND Conta=%exp:cA6NUMCON%
+                                      AND NomeArquivo<>''
+                                      AND Unidade.Codigo=%exp:cUnidadeCodigo%
+                                      AND CONVERT(DATE,APIFINANCEIRO.dbo.Boleto.InsertDate) BETWEEN CONVERT(DATE,%exp:cE1DATABORDe%) AND CONVERT(DATE,%exp:cE1DATABORAte%)
+            )
+            SELECT * INTO %exp:cAPITable% FROM QAPI
+            
+        endSQL
+
+    end sequence
+    ErrorBlock(bErrorBlock)
+    
+    cSQLQuery:=getLastQuery()[2]
+    TCSQLExec(cSQLQuery)
+
+    A35():writeSQLFile(@cSQLQuery,&("cEmpAnt"),&("cFilAnt"),"FIDCRelatorioRemessa","00","qry_insert",@cSQLPath,@cSQLFile)
+
+    if (select(cTmpAlias)>0)
+        (cTmpAlias)->(dbCloseArea())
+    endif
+    
+	cSQLFields:=""
+	cSQLFields+="SA1.A1_COD"
+    cSQLFields+=",SA1.A1_NOME"
+    cSQLFields+=",SE1.E1_DATABOR"
+    cSQLFields+=",SE1.E1_PREFIXO+SE1.E1_NUM+SE1.E1_PARCELA AS P_NUM_PARC"
+    cSQLFields+=",SE1.E1_EMISSAO"
+    cSQLFields+=",SE1.E1_VENCTO"
+    cSQLFields+=",0  AS DIAS_ANTEC"
+    cSQLFields+=",'' AS E1_VENCREA"
+    cSQLFields+=",SE1.E1_VALOR"
+    cSQLFields+=",SE1.E1_YFDCVAL"
+	cSQLFields+=",SE1.E1_NUMBCO"
+
+	if (stacktools():IsInCallStack("getQueryCon"))
+		cSQLFields+=",SE1.R_E_C_N_O_ AS SE1RECNO"
+	endif
+
+	cSQLFields:="%"+cSQLFields+"%"
+
+    beginSQL alias cTmpAlias
+
+        %noparser%
+
+        COLUMN E1_DATABOR  AS DATE
+        COLUMN E1_EMISSAO  AS DATE
+        COLUMN E1_VENCTO   AS DATE
+        COLUMN E1_VENCREA  AS DATE
+
+        SELECT %exp:cSQLFields%
+          FROM %table:SE1% SE1 (NOLOCK)
+          JOIN %exp:cAPITable% QAPI ON (SE1.R_E_C_N_O_=QAPI.SE1RECNO)
+          JOIN %table:SA1% SA1 (NOLOCK) ON (
+                SA1.%notDel%
+           AND SA1.A1_FILIAL=%xFilial:SA1%
+           AND SE1.E1_CLIENTE=SA1.A1_COD
+           AND SE1.E1_LOJA=SA1.A1_LOJA
+          )
+          JOIN %table:SA6% SA6 (NOLOCK) ON (
+                SA6.%notDel%  
+           AND SA6.A6_FILIAL=%xFilial:SA6%
+           AND SA6.A6_COD=%exp:cA6COD%
+           AND SA6.A6_AGENCIA=%exp:cA6AGENCIA%
+           AND SA6.A6_NUMCON=%exp:cA6NUMCON%
+           AND SE1.E1_PORTADO=SA6.A6_COD
+           AND SE1.E1_AGEDEP=SA6.A6_AGENCIA
+           AND SE1.E1_CONTA=SA6.A6_NUMCON
+           AND SA6.A6_YTPINTB='1'
+          )
+         WHERE (1=2)
+           AND SE1.%notDel%
+           AND SA1.%notDel%
+           AND SA6.%notDel%
+           AND SE1.E1_FILIAL=%xFilial:SE1%
+           AND SA1.A1_FILIAL=%xFilial:SA1%
+           AND SA6.A6_FILIAL=%xFilial:SA6%
+           AND SE1.E1_CLIENTE=SA1.A1_COD
+           AND SE1.E1_LOJA=SA1.A1_LOJA
+           AND SA6.A6_COD=%exp:cA6COD%
+           AND SA6.A6_AGENCIA=%exp:cA6AGENCIA%
+           AND SA6.A6_NUMCON=%exp:cA6NUMCON%
+           AND SE1.E1_PORTADO=SA6.A6_COD
+           AND SE1.E1_AGEDEP=SA6.A6_AGENCIA
+           AND SE1.E1_CONTA=SA6.A6_NUMCON
+           AND SA6.A6_YTPINTB='1'
+           AND SA1.A1_COD BETWEEN %exp:cA1CODDe% AND %exp:cA1CODAte%
+           AND SE1.E1_VENCTO BETWEEN %exp:cE1VENCTODe% AND %exp:cE1VENCTOAte%
+           AND SE1.E1_DATABOR BETWEEN %exp:cE1DATABORDe% AND %exp:cE1DATABORAte%
+           AND SE1.E1_EMISSAO BETWEEN %exp:cE1EMISSAODe% AND %exp:cE1EMISSAOAte%
+         ORDER BY SE1.E1_FILIAL
+                ,SE1.E1_DATABOR
+                ,SA1.A1_FILIAL
+                ,SA1.A1_COD
+                ,SE1.E1_PREFIXO
+                ,SE1.E1_NUM
+                ,SE1.E1_PARCELA
+    endSQL    
+
+    cSQLQuery:=getLastQuery()[2]
+    cSQLQuery:=strTran(cSQLQuery,"(1=2)","(1=1)")
+    
+    A35():writeSQLFile(@cSQLQuery,&("cEmpAnt"),&("cFilAnt"),"FIDCRelatorioRemessa","01","qry_final",@cSQLPath,@cSQLFile)
+
+    aFields:=(cTmpAlias)->(dbStruct())
+    nFields:=len(aFields)
+
+    (cTmpAlias)->(dbCloseArea())
+
+    oFWTTable:=FWTemporaryTable():New(cTmpAlias,aFields)
+    oFWTTable:Create()
+
+	aAdd(aFWTTables,oFWTTable)
+
+    cTmpTable:=oFWTTable:getRealName()
+    
+    cSQLInsert:="INSERT INTO"
+    cSQLInsert+=" "
+    cSQLInsert+=cTmpTable
+    cSQLInsert+=" "
+    cSQLInsert+="("
+    for nField:=1 to nFields
+        cField:=aFields[nField][DBS_NAME]
+		cSQLInsert+=cField
+        cSQLInsert+=","
+    next nField
+    cSQLInsert:=subStr(cSQLInsert,1,(Len(cSQLInsert)-1))
+    cSQLInsert+=")"
+    cSQLInsert+=" "
+    cSQLInsert+=cSQLQuery
+
+    begin transaction
+        TCSQLExec(cSQLInsert)
+    end transaction
+
+    cAPITable:=StrTran(cAPITable,"%","")
+    A35():tmpTableDrop(cAPITable)
+
+    (cTmpAlias)->(dbGoTop())
+
+	return(cTmpAlias)
+
+static method getQueryRet(aParamRet,aBCOIsFIDC,aFWTTables) class FIDC
+
+    local aFields       as array
+
+    local cA6COD        as character
+    local cA6AGENCIA    as character
+    local cA6NUMCON     as character
+
+    local cSQLPath      as character
+    local cSQLFile      as character
+    local cSQLQuery     as character
+    local cSQLInsert    as character
+
+    local cTmpAlias     as character
+    local cTmpTable     as character
+
+    local cA1CODDe      as character
+    local cA1CODAte     as character
+
+    local cE1DATABORDe  as character
+    local cE1DATABORAte as character
+
+    local cE1EMISSAODe  as character
+    local cE1EMISSAOAte as character
+
+    local cE1VENCTODe   as character
+    local cE1VENCTOAte  as character
+
+    local cZK4DataDe    as character
+    local cZK4DataAte   as character
+
+    local cField        as character
+	local cSQLFields	as character
+
+    local nField        as numeric
+    local nFields       as numeric
+
+	local oFWTTable		as object
+
+	paramtype aParamRet as array
+	paramtype aBCOIsFIDC as array
+
+	paramtype aFWTTables as array optional default array(0)
+
+    cA6COD:=aBCOIsFIDC[3]
+    cA6AGENCIA:=aBCOIsFIDC[4]
+    cA6NUMCON:=aBCOIsFIDC[5]
+
+    cA1CODDe:=aParamRet[1]
+    cA1CODAte:=aParamRet[2]
+
+    cE1DATABORDe:=DToS(aParamRet[3])
+    cE1DATABORAte:=DToS(aParamRet[4])
+
+    cE1EMISSAODe:=DToS(aParamRet[5])
+    cE1EMISSAOAte:=DToS(aParamRet[6])
+
+    cE1VENCTODe:=DToS(aParamRet[7])
+    cE1VENCTOAte:=DToS(aParamRet[8])
+
+    cZK4DataDe:=DToS(aParamRet[9])
+    cZK4DataAte:=DToS(aParamRet[10])
+
+	cSQLFields:=""
+	cSQLFields+="SA1.A1_COD"
+    cSQLFields+=",SA1.A1_NOME"
+    cSQLFields+=",SE1.E1_DATABOR"
+    cSQLFields+=",SE1.E1_PREFIXO+SE1.E1_NUM+SE1.E1_PARCELA AS P_NUM_PARC"
+    cSQLFields+=",SE1.E1_EMISSAO"
+    cSQLFields+=",SE1.E1_VENCTO"
+    cSQLFields+=",0  AS DIAS_ANTEC"
+    cSQLFields+=",'' AS E1_VENCREA"
+    cSQLFields+=",SE1.E1_VALOR"
+    cSQLFields+=",SE1.E1_YFDCVAL"
+    cSQLFields+=",LTRIM(RTRIM(ZK4.ZK4_NOSNUM)) AS ZK4_NOSNUM"
+
+	if (stacktools():IsInCallStack("getQueryCon"))
+		cSQLFields+=",SE1.R_E_C_N_O_ AS SE1RECNO"
+	endif
+
+	cSQLFields:="%"+cSQLFields+"%"
+
+    cTmpAlias:=getNextAlias()
+    beginSQL alias cTmpAlias
+
+        %noparser%
+
+        COLUMN E1_DATABOR  AS DATE
+        COLUMN E1_EMISSAO  AS DATE
+        COLUMN E1_VENCTO   AS DATE
+        COLUMN E1_VENCREA  AS DATE
+        COLUMN ZK4_DATA    AS DATE
+
+        SELECT %exp:cSQLFields%
+         FROM %table:SE1% SE1 (NOLOCK)
+         JOIN %table:ZK4% ZK4 (NOLOCK)
+           ON (
+                    ZK4.%notDel%
+                AND ZK4.ZK4_FILIAL=%xFilial:ZK4%
+                AND SE1.E1_PORTADO=ZK4.ZK4_BANCO
+                AND SE1.E1_AGEDEP=ZK4.ZK4_AGENCI
+                AND SE1.E1_CONTA=ZK4.ZK4_CONTA
+                AND SE1.E1_NUM+SE1.E1_PARCELA=ZK4.ZK4_NUMERO
+                AND SE1.E1_NUMBCO=SUBSTRING(ZK4.ZK4_NOSNUM,1,11)
+                AND SE1.E1_VENCTO=ZK4.ZK4_DTVENC
+                AND ZK4.ZK4_CODOCO='02'
+                AND ZK4.ZK4_TIPO='R'
+                AND ZK4.ZK4_DATA BETWEEN %exp:cZK4DataDe% AND %exp:cZK4DataAte%
+                AND ZK4.ZK4_EMP=%exp:cEmpAnt%
+                AND ZK4.ZK4_FIL=%exp:cFilAnt%
+                AND ZK4.ZK4_STATUS='2'
+            )
+         JOIN %table:SA1% SA1 (NOLOCK) ON (
+                SA1.%notDel%
+            AND SA1.A1_FILIAL=%xFilial:SA1%
+            AND SE1.E1_CLIENTE=SA1.A1_COD
+            AND SE1.E1_LOJA=SA1.A1_LOJA
+         )
+         JOIN %table:SA6% SA6 (NOLOCK) ON (
+                SA6.%notDel%  
+            AND SA6.A6_FILIAL=%xFilial:SA6%
+            AND SA6.A6_COD=%exp:cA6COD%
+            AND SA6.A6_AGENCIA=%exp:cA6AGENCIA%
+            AND SA6.A6_NUMCON=%exp:cA6NUMCON%
+            AND SE1.E1_PORTADO=SA6.A6_COD
+            AND SE1.E1_AGEDEP=SA6.A6_AGENCIA
+            AND SE1.E1_CONTA=SA6.A6_NUMCON
+            AND SA6.A6_YTPINTB='1'
+         )
+        WHERE (1=2)
+            AND SE1.%notDel%
+            AND SA1.%notDel%
+            AND SA6.%notDel%
+            AND ZK4.%notDel%
+            AND SE1.E1_FILIAL=%xFilial:SE1%
+            AND SA1.A1_FILIAL=%xFilial:SA1%
+            AND SA6.A6_FILIAL=%xFilial:SA6%
+            AND SE1.E1_CLIENTE=SA1.A1_COD
+            AND SE1.E1_LOJA=SA1.A1_LOJA
+            AND SA6.A6_COD=%exp:cA6COD%
+            AND SA6.A6_AGENCIA=%exp:cA6AGENCIA%
+            AND SA6.A6_NUMCON=%exp:cA6NUMCON%
+            AND SE1.E1_PORTADO=SA6.A6_COD
+            AND SE1.E1_AGEDEP=SA6.A6_AGENCIA
+            AND SE1.E1_CONTA=SA6.A6_NUMCON
+            AND SA6.A6_YTPINTB='1'
+            AND SA1.A1_COD BETWEEN %exp:cA1CODDe% AND %exp:cA1CODAte%
+            AND SE1.E1_VENCTO BETWEEN %exp:cE1VENCTODe% AND %exp:cE1VENCTOAte%
+            AND SE1.E1_DATABOR BETWEEN %exp:cE1DATABORDe% AND %exp:cE1DATABORAte%
+            AND SE1.E1_EMISSAO BETWEEN %exp:cE1EMISSAODe% AND %exp:cE1EMISSAOAte%
+            AND ZK4.ZK4_DATA BETWEEN %exp:cZK4DataDe% AND %exp:cZK4DataAte%
+            AND ZK4.ZK4_CODOCO='02'
+            AND ZK4.ZK4_TIPO='R'
+            AND ZK4.ZK4_STATUS='2'
+        ORDER BY SE1.E1_FILIAL
+                ,SE1.E1_DATABOR
+                ,SA1.A1_FILIAL
+                ,SA1.A1_COD
+                ,SE1.E1_PREFIXO
+                ,SE1.E1_NUM
+                ,SE1.E1_PARCELA
+
+    endSQL    
+
+    if (IsBlind())
+        cSQLPath:="\tmp\"
+    else
+        cSQLPath:=getTempPath()
+        if (!right(cSQLPath,1)=="\")
+            cSQLPath+="\"
+        endif
+    endif
+    cSQLPath+="FIDC\SQL\"
+
+    cSQLQuery:=getLastQuery()[2]
+    cSQLQuery:=strTran(cSQLQuery,"(1=2)","(1=1)")
+    
+    A35():writeSQLFile(@cSQLQuery,&("cEmpAnt"),&("cFilAnt"),"FIDCRelatorioRetorno","00","qry_final",@cSQLPath,@cSQLFile)
+
+    aFields:=(cTmpAlias)->(dbStruct())
+    nFields:=len(aFields)
+
+    (cTmpAlias)->(dbCloseArea())
+
+    oFWTTable:=FWTemporaryTable():New(cTmpAlias,aFields)
+    oFWTTable:Create()
+
+	aAdd(aFWTTables,oFWTTable)
+
+    cTmpTable:=oFWTTable:getRealName()
+    
+    cSQLInsert:="INSERT INTO"
+    cSQLInsert+=" "
+    cSQLInsert+=cTmpTable
+    cSQLInsert+=" "
+    cSQLInsert+="("
+    for nField:=1 to nFields
+        cField:=aFields[nField][DBS_NAME]
+        cSQLInsert+=cField
+        cSQLInsert+=","
+    next nField
+    cSQLInsert:=subStr(cSQLInsert,1,(Len(cSQLInsert)-1))
+    cSQLInsert+=")"
+    cSQLInsert+=" "
+    cSQLInsert+=cSQLQuery
+
+    begin transaction
+        TCSQLExec(cSQLInsert)
+    end transaction
+
+    (cTmpAlias)->(dbGoTop())
+
+    return(cTmpAlias)
+
+static method getQueryRec(aParamRet,aBCOIsFIDC,aFWTTables) class FIDC
+
+    local aFields       as array
+
+    local cA6COD        as character
+    local cA6AGENCIA    as character
+    local cA6NUMCON     as character
+
+    local cSQLPath      as character
+    local cSQLFile      as character
+    local cSQLQuery     as character
+    local cSQLInsert    as character
+
+    local cTmpAlias     as character
+    local cTmpTable     as character
+
+    local cA1CODDe      as character
+    local cA1CODAte     as character
+
+    local cE1DATABORDe  as character
+    local cE1DATABORAte as character
+
+    local cE1EMISSAODe  as character
+    local cE1EMISSAOAte as character
+
+    local cE1VENCTODe   as character
+    local cE1VENCTOAte  as character
+
+    local cZK4DataDe    as character
+    local cZK4DataAte   as character
+
+    local cField        as character
+	local cSQLFields 	as character	
+
+    local nField        as numeric
+    local nFields       as numeric
+
+	local oFWTTable		as numeric
+
+	paramtype aParamRet as array
+	paramtype aBCOIsFIDC as array
+
+	paramtype aFWTTables as array optional default array(0)
+
+    cA6COD:=aBCOIsFIDC[3]
+    cA6AGENCIA:=aBCOIsFIDC[4]
+    cA6NUMCON:=aBCOIsFIDC[5]
+
+    cA1CODDe:=aParamRet[1]
+    cA1CODAte:=aParamRet[2]
+
+    cE1DATABORDe:=DToS(aParamRet[3])
+    cE1DATABORAte:=DToS(aParamRet[4])
+
+    cE1EMISSAODe:=DToS(aParamRet[5])
+    cE1EMISSAOAte:=DToS(aParamRet[6])
+
+    cE1VENCTODe:=DToS(aParamRet[7])
+    cE1VENCTOAte:=DToS(aParamRet[8])
+
+    cZK4DataDe:=DToS(aParamRet[9])
+    cZK4DataAte:=DToS(aParamRet[10])
+
+	cSQLFields:=""
+
+	cSQLFields+=" SA1.A1_COD"
+    cSQLFields+=",SA1.A1_NOME"
+    cSQLFields+=",SE1.E1_DATABOR"
+    cSQLFields+=",SE1.E1_PREFIXO+SE1.E1_NUM+SE1.E1_PARCELA AS P_NUM_PARC"
+    cSQLFields+=",SE1.E1_EMISSAO"
+    cSQLFields+=",SE1.E1_VENCTO"
+    cSQLFields+=",0  AS DIAS_ANTEC"
+    cSQLFields+=",'' AS E1_VENCREA"
+    cSQLFields+=",SE1.E1_VALOR"
+    cSQLFields+=",SE1.E1_YFDCVAL"
+    cSQLFields+=",LTRIM(RTRIM(ZK4.ZK4_NOSNUM)) AS ZK4_NOSNUM"
+    cSQLFields+=",ZK4.ZK4_VLREC"
+    cSQLFields+=",ZK4.ZK4_VLJURO"
+    cSQLFields+=",ZK4.ZK4_DTLIQ"
+    cSQLFields+=",ZK4.ZK4_DTCRED"
+	
+	if (stacktools():IsInCallStack("getQueryCon"))
+		cSQLFields+=",SE1.R_E_C_N_O_ AS SE1RECNO"
+	endif
+
+	cSQLFields:="%"+cSQLFields+"%"
+
+    cTmpAlias:=getNextAlias()
+    beginSQL alias cTmpAlias
+
+        %noparser%
+
+        COLUMN E1_DATABOR  AS DATE
+        COLUMN E1_EMISSAO  AS DATE
+        COLUMN E1_VENCTO   AS DATE
+        COLUMN E1_VENCREA  AS DATE
+        COLUMN ZK4_DATA    AS DATE
+        COLUMN ZK4_DTLIQ   AS DATE
+        COLUMN ZK4_DTCRED  AS DATE 
+
+        SELECT %exp:cSQLFields%
+          FROM %table:SE1% SE1 (NOLOCK)
+          JOIN %table:ZK4% ZK4 (NOLOCK)
+            ON (
+                    ZK4.%notDel%
+                AND ZK4.ZK4_FILIAL=%xFilial:ZK4%
+                AND SE1.E1_PORTADO=ZK4.ZK4_BANCO
+                AND SE1.E1_AGEDEP=ZK4.ZK4_AGENCI
+                AND SE1.E1_CONTA=ZK4.ZK4_CONTA
+                AND SE1.E1_NUM+SE1.E1_PARCELA=ZK4.ZK4_NUMERO
+                AND SE1.E1_NUMBCO=SUBSTRING(ZK4.ZK4_NOSNUM,1,11)
+                AND SE1.E1_VENCTO=ZK4.ZK4_DTVENC
+                AND ZK4.ZK4_CODOCO='06'
+                AND ZK4.ZK4_TIPO='R'
+                AND ZK4.ZK4_DATA BETWEEN %exp:cZK4DataDe% AND %exp:cZK4DataAte%
+                AND ZK4.ZK4_EMP=%exp:cEmpAnt%
+                AND ZK4.ZK4_FIL=%exp:cFilAnt%
+                AND ZK4.ZK4_STATUS='2'
+            )
+         JOIN %table:SA1% SA1 (NOLOCK) ON (
+                SA1.%notDel%
+            AND SA1.A1_FILIAL=%xFilial:SA1%
+            AND SE1.E1_CLIENTE=SA1.A1_COD
+            AND SE1.E1_LOJA=SA1.A1_LOJA
+         )
+         JOIN %table:SA6% SA6 (NOLOCK) ON (
+                SA6.%notDel%  
+            AND SA6.A6_FILIAL=%xFilial:SA6%
+            AND SA6.A6_COD=%exp:cA6COD%
+            AND SA6.A6_AGENCIA=%exp:cA6AGENCIA%
+            AND SA6.A6_NUMCON=%exp:cA6NUMCON%
+            AND SE1.E1_PORTADO=SA6.A6_COD
+            AND SE1.E1_AGEDEP=SA6.A6_AGENCIA
+            AND SE1.E1_CONTA=SA6.A6_NUMCON
+            AND SA6.A6_YTPINTB='1'
+         )
+        WHERE (1=2)
+            AND SE1.%notDel%
+            AND SA1.%notDel%
+            AND SA6.%notDel%
+            AND ZK4.%notDel%
+            AND SE1.E1_FILIAL=%xFilial:SE1%
+            AND SA1.A1_FILIAL=%xFilial:SA1%
+            AND SA6.A6_FILIAL=%xFilial:SA6%
+            AND SE1.E1_CLIENTE=SA1.A1_COD
+            AND SE1.E1_LOJA=SA1.A1_LOJA
+            AND SA6.A6_COD=%exp:cA6COD%
+            AND SA6.A6_AGENCIA=%exp:cA6AGENCIA%
+            AND SA6.A6_NUMCON=%exp:cA6NUMCON%
+            AND SE1.E1_PORTADO=SA6.A6_COD
+            AND SE1.E1_AGEDEP=SA6.A6_AGENCIA
+            AND SE1.E1_CONTA=SA6.A6_NUMCON
+            AND SA6.A6_YTPINTB='1'
+            AND SA1.A1_COD BETWEEN %exp:cA1CODDe% AND %exp:cA1CODAte%
+            AND SE1.E1_VENCTO BETWEEN %exp:cE1VENCTODe% AND %exp:cE1VENCTOAte%
+            AND SE1.E1_DATABOR BETWEEN %exp:cE1DATABORDe% AND %exp:cE1DATABORAte%
+            AND SE1.E1_EMISSAO BETWEEN %exp:cE1EMISSAODe% AND %exp:cE1EMISSAOAte%
+            AND ZK4.ZK4_DATA BETWEEN %exp:cZK4DataDe% AND %exp:cZK4DataAte%
+            AND ZK4.ZK4_CODOCO='06'
+            AND ZK4.ZK4_TIPO='R'
+            AND ZK4.ZK4_STATUS='2'
+        ORDER BY SE1.E1_FILIAL
+                ,SE1.E1_DATABOR
+                ,SA1.A1_FILIAL
+                ,SA1.A1_COD
+                ,SE1.E1_PREFIXO
+                ,SE1.E1_NUM
+                ,SE1.E1_PARCELA
+
+    endSQL    
+
+    if (IsBlind())
+        cSQLPath:="\tmp\"
+    else
+        cSQLPath:=getTempPath()
+        if (!right(cSQLPath,1)=="\")
+            cSQLPath+="\"
+        endif
+    endif
+    cSQLPath+="FIDC\SQL\"
+
+    cSQLQuery:=getLastQuery()[2]
+    cSQLQuery:=strTran(cSQLQuery,"(1=2)","(1=1)")
+    
+    A35():writeSQLFile(@cSQLQuery,&("cEmpAnt"),&("cFilAnt"),"FIDCRelatorioRecebidos","00","qry_final",@cSQLPath,@cSQLFile)
+
+    aFields:=(cTmpAlias)->(dbStruct())
+    nFields:=len(aFields)
+
+    (cTmpAlias)->(dbCloseArea())
+
+    oFWTTable:=FWTemporaryTable():New(cTmpAlias,aFields)
+    oFWTTable:Create()
+
+	aAdd(aFWTTables,oFWTTable)
+	
+    cTmpTable:=oFWTTable:getRealName()
+    
+    cSQLInsert:="INSERT INTO"
+    cSQLInsert+=" "
+    cSQLInsert+=cTmpTable
+    cSQLInsert+=" "
+    cSQLInsert+="("
+    for nField:=1 to nFields
+        cField:=aFields[nField][DBS_NAME]
+        cSQLInsert+=cField
+        cSQLInsert+=","
+    next nField
+    cSQLInsert:=subStr(cSQLInsert,1,(Len(cSQLInsert)-1))
+    cSQLInsert+=")"
+    cSQLInsert+=" "
+    cSQLInsert+=cSQLQuery
+
+    begin transaction
+        TCSQLExec(cSQLInsert)
+    end transaction
+
+    (cTmpAlias)->(dbGoTop())
+
+    return(cTmpAlias)
+
+static method getQueryCon(aParamRet,aBCOIsFIDC,aFWTTables) class FIDC
+
+    local aFields       as array
+
+    local cA6COD        as character
+    local cA6AGENCIA    as character
+    local cA6NUMCON     as character
+
+    local cSQLPath      as character
+    local cSQLFile      as character
+    local cSQLQuery     as character
+    local cSQLInsert    as character
+
+    local cTmpAlias     as character
+    local cTmpTable     as character
+
+    local cA1CODDe      as character
+    local cA1CODAte     as character
+
+    local cE1DATABORDe  as character
+    local cE1DATABORAte as character
+
+    local cE1EMISSAODe  as character
+    local cE1EMISSAOAte as character
+
+    local cE1VENCTODe   as character
+    local cE1VENCTOAte  as character
+
+    local cZK4DataDe    as character
+    local cZK4DataAte   as character
+
+    local cField        as character
+
+	local cTableRem		as character
+	local cTableRet		as character
+	local cTableRec		as character
+
+    local nField        as numeric
+    local nFields       as numeric
+
+	local oFWTTable		as object
+
+	paramtype aParamRet as array
+	paramtype aBCOIsFIDC as array
+
+	paramtype aFWTTables as array optional DEFAULT array(0)
+
+    cA6COD:=aBCOIsFIDC[3]
+    cA6AGENCIA:=aBCOIsFIDC[4]
+    cA6NUMCON:=aBCOIsFIDC[5]
+
+    cA1CODDe:=aParamRet[1]
+    cA1CODAte:=aParamRet[2]
+
+    cE1DATABORDe:=DToS(aParamRet[3])
+    cE1DATABORAte:=DToS(aParamRet[4])
+
+    cE1EMISSAODe:=DToS(aParamRet[5])
+    cE1EMISSAOAte:=DToS(aParamRet[6])
+
+    cE1VENCTODe:=DToS(aParamRet[7])
+    cE1VENCTOAte:=DToS(aParamRet[8])
+
+    cZK4DataDe:=DToS(aParamRet[9])
+    cZK4DataAte:=DToS(aParamRet[10])
+
+	cTmpAlias:=FIDC():getQueryRem(@aParamRet,@aBCOIsFIDC,@aFWTTables)
+	if (select(cTmpAlias)>0)
+		cTableRem:=aFWTTables[len(aFWTTables)]:getRealName()
+		cTableRem:="%"+cTableRem+"%"
+		(cTmpAlias)->(dbCloseArea())
+	endif
+	
+	cTmpAlias:=FIDC():getQueryRet(@aParamRet,@aBCOIsFIDC,@aFWTTables)
+	if (select(cTmpAlias)>0)
+		cTableRet:=aFWTTables[len(aFWTTables)]:getRealName()
+		cTableRet:="%"+cTableRet+"%"
+		(cTmpAlias)->(dbCloseArea())
+	endif
+
+	cTmpAlias:=FIDC():getQueryRec(@aParamRet,@aBCOIsFIDC,@aFWTTables)
+	if (select(cTmpAlias)>0)
+		cTableRec:=aFWTTables[len(aFWTTables)]:getRealName()
+		cTableRec:="%"+cTableRec+"%"
+		(cTmpAlias)->(dbCloseArea())
+	endif
+
+    cTmpAlias:=getNextAlias()
+    beginSQL alias cTmpAlias
+
+        %noparser%
+
+        COLUMN E1_DATABOR  AS DATE
+        COLUMN E1_EMISSAO  AS DATE
+        COLUMN E1_VENCTO   AS DATE
+
+        SELECT REM.A1_COD
+              ,REM.A1_NOME
+              ,REM.E1_DATABOR
+              ,REM.P_NUM_PARC
+              ,REM.E1_EMISSAO
+              ,REM.E1_VENCTO
+			  ,ISNULL(REM.E1_VALOR,0)  AS ENVIADO
+			  ,ISNULL(RET.E1_VALOR,0)  AS REGISTRADO
+			  ,ISNULL(REC.ZK4_VLREC,0) AS BAIXADO
+			  ,(CASE WHEN ISNULL(REM.E1_VALOR,0)=ISNULL(RET.E1_VALOR,0) THEN 'CONCILIADO' ELSE 'PENDENTE' END) AS REGISTRO
+			  ,(CASE WHEN ISNULL(REC.ZK4_VLREC,0)>=ISNULL(REM.E1_VALOR,0) THEN 'BAIXADO' ELSE 'PENDENTE' END)  AS BAIXA
+        FROM %exp:cTableRem% REM (NOLOCK)
+        FULL OUTER JOIN %exp:cTableRet% RET (NOLOCK)
+            ON (
+                    REM.SE1RECNO=RET.SE1RECNO
+         )
+        FULL OUTER JOIN %exp:cTableRec% REC (NOLOCK) ON (
+                REM.SE1RECNO=REC.SE1RECNO
+         )
+        WHERE (1=2)
+        ORDER BY REM.E1_DATABOR
+                ,REM.A1_COD
+                ,REM.P_NUM_PARC
+
+    endSQL    
+
+    if (IsBlind())
+        cSQLPath:="\tmp\"
+    else
+        cSQLPath:=getTempPath()
+        if (!right(cSQLPath,1)=="\")
+            cSQLPath+="\"
+        endif
+    endif
+    cSQLPath+="FIDC\SQL\"
+
+    cSQLQuery:=getLastQuery()[2]
+    cSQLQuery:=strTran(cSQLQuery,"(1=2)","(1=1)")
+    
+    A35():writeSQLFile(@cSQLQuery,&("cEmpAnt"),&("cFilAnt"),"FIDCRelatorioRecebidos","00","qry_final",@cSQLPath,@cSQLFile)
+
+    aFields:=(cTmpAlias)->(dbStruct())
+    nFields:=len(aFields)
+
+    (cTmpAlias)->(dbCloseArea())
+
+    oFWTTable:=FWTemporaryTable():New(cTmpAlias,aFields)
+    oFWTTable:Create()
+	
+    aAdd(aFWTTables,oFWTTable)
+
+	cTmpTable:=oFWTTable:getRealName()
+
+    cSQLInsert:="INSERT INTO"
+    cSQLInsert+=" "
+    cSQLInsert+=cTmpTable
+    cSQLInsert+=" "
+    cSQLInsert+="("
+    for nField:=1 to nFields
+        cField:=aFields[nField][DBS_NAME]
+        cSQLInsert+=cField
+        cSQLInsert+=","
+    next nField
+    cSQLInsert:=subStr(cSQLInsert,1,(Len(cSQLInsert)-1))
+    cSQLInsert+=")"
+    cSQLInsert+=" "
+    cSQLInsert+=cSQLQuery
+
+    begin transaction
+        TCSQLExec(cSQLInsert)
+    end transaction
+
+    (cTmpAlias)->(dbGoTop())
+
+	return(cTmpAlias)

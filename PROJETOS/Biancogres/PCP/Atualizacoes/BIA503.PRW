@@ -28,11 +28,11 @@ User Function BIA503()
 	aRotina   := { {"Pesquisar"       ,"AxPesqui"	                         ,0,1},;
 	{               "Visualizar"      ,"AxVisual"	                         ,0,2},;
 	{               "1.Atualiza Itcus",'ExecBlock("BIA503C",.F.,.F.)'        ,0,3},;
-	{               "2.Qtd p/ RAC"    ,'ExecBlock("BIA505",.F.,.F.)'         ,0,4},;
-	{               "3.Itcus s/ Qtd"  ,'ExecBlock("BIA503B",.F.,.F.)'        ,0,5},;
-	{               "4.Etq Canc p/RAC",'ExecBlock("BIA503T",.F.,.F.)'        ,0,6},;
-	{               "5.Redutor de C1" ,'ExecBlock("BIA503D",.F.,.F.)'        ,0,7},;
-	{               "6.Atu.Delta SAP" ,'ExecBlock("BIA503S",.F.,.F.)'        ,0,8} }
+	{               "2.Qtd p/ RAC"    ,'ExecBlock("BIA505",.F.,.F.)'         ,0,3},;
+	{               "3.Itcus s/ Qtd"  ,'ExecBlock("BIA503B",.F.,.F.)'        ,0,3},;
+	{               "4.Etq Canc p/RAC",'ExecBlock("BIA503T",.F.,.F.)'        ,0,3},;
+	{               "5.Redutor de C1" ,'ExecBlock("BIA503D",.F.,.F.)'        ,0,3},;
+	{               "6.Atu.Delta SAP" ,'ExecBlock("BIA503S",.F.,.F.)'        ,0,3} }
 
 	dbSelectArea(SX2->X2_CHAVE)
 	dbSetOrder(1)
@@ -79,10 +79,10 @@ Static Function RptDetail()
 
 	//                               Zera Valores para que não ocorra erros em caso se reprocessamento
 	**************************************************************************************************
-	ZP003 := " UPDATE "+RetSqlName("SD3")+" SET D3_YITCUS = '   '
-	ZP003 += "   FROM "+RetSqlName("SD3")+" WITH (NOLOCK)
-	ZP003 += "  WHERE D3_FILIAL = '"+xFilial("SD3")+"'
-	ZP003 += "    AND D3_EMISSAO BETWEEN '"+dtos(kfDataDe)+"' AND '"+dtos(kfDataAte)+"'
+	ZP003 := " UPDATE " + RetSqlName("SD3") + " SET D3_YITCUS = '   '
+	ZP003 += "   FROM " + RetSqlName("SD3") + " WITH (NOLOCK)
+	ZP003 += "  WHERE D3_FILIAL = '" + xFilial("SD3") + "'
+	ZP003 += "    AND D3_EMISSAO BETWEEN '" + dtos(kfDataDe) + "' AND '" + dtos(kfDataAte) + "'
 	ZP003 += "    AND D_E_L_E_T_ = ' '
 	U_BIAMsgRun("Aguarde... Zerando Item de Custo nas movimentações internas",,{|| TCSQLExec(ZP003)})
 
@@ -107,7 +107,7 @@ Static Function RptDetail()
 		SX003 += "                       FROM PDEMAND) "
 	EndIf
 
-	US002 := " UPDATE "+RetSqlName("SD3")+" SET D3_YITCUS =
+	US002 := " UPDATE " + RetSqlName("SD3") + " SET D3_YITCUS =
 	US002 += "        CASE
 	US002 += "          WHEN D3_CLVL = '3180'   THEN CTH_YITCUS
 	US002 += "          WHEN SB1.B1_YITCUS <> '   ' THEN SB1.B1_YITCUS
@@ -116,27 +116,31 @@ Static Function RptDetail()
 	US002 += "          WHEN D3_TM = '999' AND D3_TIPO IN('PA','PS') THEN '065'
 	US002 += "          ELSE CT1_YITCUS
 	US002 += "        END
-	US002 += "   FROM "+RetSqlName("SD3")+" SD3 WITH (NOLOCK)
-	US002 += "  INNER JOIN "+RetSqlName("SC2")+" SC2 ON C2_FILIAL = '"+xFilial("SC2")+"'
+	US002 += "   FROM " + RetSqlName("SD3") + " SD3 WITH (NOLOCK)
+	US002 += "  INNER JOIN " + RetSqlName("SC2") + " SC2 ON C2_FILIAL = '" + xFilial("SC2") + "'
 	US002 += "                       AND C2_NUM = SUBSTRING(D3_OP,1,6)
 	US002 += "                       AND C2_ITEM = SUBSTRING(D3_OP,7,2)
 	US002 += "                       AND C2_SEQUEN = SUBSTRING(D3_OP,9,3)
 	US002 += "                       AND SC2.D_E_L_E_T_ = ' '
-	US002 += "  INNER JOIN "+RetSqlName("SB1")+" SB1 ON SB1.B1_FILIAL = '"+xFilial("SB1")+"'
+	US002 += "  INNER JOIN " + RetSqlName("SB1") + " SB1 ON SB1.B1_FILIAL = '" + xFilial("SB1") + "'
 	US002 += "                       AND SB1.B1_COD = C2_PRODUTO
-	US002 += "                       AND SB1.B1_TIPO IN('PP','PA','PS')
+	If cEmpAnt $ "01"
+		US002 += "                       AND SB1.B1_TIPO IN('PP','PA','PS')
+	ElseIf cEmpAnt == "06"
+		US002 += "                       AND SB1.B1_TIPO IN('MP','PI','PA')
+	EndIf
 	US002 += "                       AND SB1.D_E_L_E_T_ = ' '
-	US002 += "   LEFT JOIN "+RetSqlName("CTH")+" CTH ON CTH_FILIAL = '"+xFilial("CTH")+"'
+	US002 += "   LEFT JOIN " + RetSqlName("CTH") + " CTH ON CTH_FILIAL = '" + xFilial("CTH") + "'
 	US002 += "                       AND CTH_CLVL = D3_CLVL
 	US002 += "                       AND CTH.D_E_L_E_T_ = ' '
-	US002 += "   LEFT JOIN "+RetSqlName("CT1")+" CT1 ON CT1_FILIAL = '"+xFilial("CT1")+"'
+	US002 += "   LEFT JOIN " + RetSqlName("CT1") + " CT1 ON CT1_FILIAL = '" + xFilial("CT1") + "'
 	US002 += "                       AND CT1_CONTA = D3_CONTA
 	US002 += "                       AND CT1.D_E_L_E_T_ = ' '
-	US002 += "  INNER JOIN "+RetSqlName("SB1")+" ZB1 ON ZB1.B1_FILIAL = '"+xFilial("SB1")+"'
+	US002 += "  INNER JOIN " + RetSqlName("SB1") + " ZB1 ON ZB1.B1_FILIAL = '" + xFilial("SB1") + "'
 	US002 += "                       AND ZB1.B1_COD = D3_COD
 	US002 += "                       AND ZB1.D_E_L_E_T_ = ' '
-	US002 += "  WHERE D3_FILIAL = '"+xFilial("SD3")+"'
-	US002 += "    AND D3_EMISSAO BETWEEN '"+dtos(kfDataDe)+"' AND '"+dtos(kfDataAte)+"'
+	US002 += "  WHERE D3_FILIAL = '" + xFilial("SD3") + "'
+	US002 += "    AND D3_EMISSAO BETWEEN '" + dtos(kfDataDe) + "' AND '" + dtos(kfDataAte) + "'
 	US002 += "    AND D3_OP <> '             '
 	US002 += "    AND D3_YRFCUST <> 'PRODUCTION ON DEMAND'
 	US002 += "    AND SD3.D_E_L_E_T_ = ' '
@@ -146,26 +150,30 @@ Static Function RptDetail()
 	lsxControl := 0
 	LS002 := " SELECT COUNT(*) CONTAD "
 	LS002 += "   FROM " + RetSqlName("SD3") + " SD3 " 
-	LS002 += "  INNER JOIN "+RetSqlName("SC2")+" SC2 ON C2_FILIAL = '"+xFilial("SC2")+"'
+	LS002 += "  INNER JOIN " + RetSqlName("SC2") + " SC2 ON C2_FILIAL = '" + xFilial("SC2") + "'
 	LS002 += "                       AND C2_NUM = SUBSTRING(D3_OP,1,6)
 	LS002 += "                       AND C2_ITEM = SUBSTRING(D3_OP,7,2)
 	LS002 += "                       AND C2_SEQUEN = SUBSTRING(D3_OP,9,3)
 	LS002 += "                       AND SC2.D_E_L_E_T_ = ' '
-	LS002 += "  INNER JOIN "+RetSqlName("SB1")+" SB1 ON SB1.B1_FILIAL = '"+xFilial("SB1")+"'
+	LS002 += "  INNER JOIN " + RetSqlName("SB1") + " SB1 ON SB1.B1_FILIAL = '" + xFilial("SB1") + "'
 	LS002 += "                       AND SB1.B1_COD = C2_PRODUTO
-	LS002 += "                       AND SB1.B1_TIPO IN('PP','PA','PS')
+	If cEmpAnt $ "01"
+		LS002 += "                       AND SB1.B1_TIPO IN('PP','PA','PS')
+	ElseIf cEmpAnt == "06"
+		LS002 += "                       AND SB1.B1_TIPO IN('MP','PI','PA')
+	EndIf
 	LS002 += "                       AND SB1.D_E_L_E_T_ = ' '
-	LS002 += "   LEFT JOIN "+RetSqlName("CTH")+" CTH ON CTH_FILIAL = '"+xFilial("CTH")+"'
+	LS002 += "   LEFT JOIN " + RetSqlName("CTH") + " CTH ON CTH_FILIAL = '" + xFilial("CTH") + "'
 	LS002 += "                       AND CTH_CLVL = D3_CLVL
 	LS002 += "                       AND CTH.D_E_L_E_T_ = ' '
-	LS002 += "   LEFT JOIN "+RetSqlName("CT1")+" CT1 ON CT1_FILIAL = '"+xFilial("CT1")+"'
+	LS002 += "   LEFT JOIN " + RetSqlName("CT1") + " CT1 ON CT1_FILIAL = '" + xFilial("CT1") + "'
 	LS002 += "                       AND CT1_CONTA = D3_CONTA
 	LS002 += "                       AND CT1.D_E_L_E_T_ = ' '
-	LS002 += "  INNER JOIN "+RetSqlName("SB1")+" ZB1 ON ZB1.B1_FILIAL = '"+xFilial("SB1")+"'
+	LS002 += "  INNER JOIN " + RetSqlName("SB1") + " ZB1 ON ZB1.B1_FILIAL = '" + xFilial("SB1") + "'
 	LS002 += "                       AND ZB1.B1_COD = D3_COD
 	LS002 += "                       AND ZB1.D_E_L_E_T_ = ' '
 	LS002 += "  WHERE D3_FILIAL = '" + xFilial("SD3") + "' "
-	LS002 += "    AND D3_EMISSAO BETWEEN '"+dtos(kfDataDe)+"' AND '"+dtos(kfDataAte)+"' "
+	LS002 += "    AND D3_EMISSAO BETWEEN '" + dtos(kfDataDe) + "' AND '" + dtos(kfDataAte) + "' "
 	LS002 += "    AND D3_OP <> '             ' "
 	LS002 += "    AND D3_YRFCUST <> 'PRODUCTION ON DEMAND' "
 	LS002 += "    AND D3_YITCUS = '   ' "
@@ -189,18 +197,19 @@ Static Function RptDetail()
 
 	EndIf
 
-	US003 := " UPDATE "+RetSqlName("SD3")+" SET D3_YITCUS =
+	US003 := " UPDATE " + RetSqlName("SD3") + " SET D3_YITCUS =
 	US003 += "        CASE
 	US003 += "          WHEN F5_YITCUS <> '   ' THEN F5_YITCUS
 	US003 += "          ELSE '   '
 	US003 += "        END
-	US003 += "   FROM "+RetSqlName("SD3")+" SD3 WITH (NOLOCK)
-	US003 += "  INNER JOIN "+RetSqlName("SF5")+" SF5 ON F5_CODIGO = D3_TM
+	US003 += "   FROM " + RetSqlName("SD3") + " SD3 WITH (NOLOCK)
+	US003 += "  INNER JOIN " + RetSqlName("SF5") + " SF5 ON F5_FILIAL = '" + xFilial("SF5") + "'
+	US003 += "                       AND F5_CODIGO = D3_TM
 	US003 += "                       AND F5_QTDZERO = '1'
 	US003 += "                       AND F5_VAL = 'S'
 	US003 += "                       AND SF5.D_E_L_E_T_ = ' '
-	US003 += "  WHERE D3_FILIAL = '"+xFilial("SD3")+"'
-	US003 += "    AND D3_EMISSAO BETWEEN '"+dtos(kfDataDe)+"' AND '"+dtos(kfDataAte)+"'
+	US003 += "  WHERE D3_FILIAL = '" + xFilial("SD3") + "'
+	US003 += "    AND D3_EMISSAO BETWEEN '" + dtos(kfDataDe) + "' AND '" + dtos(kfDataAte) + "'
 	US003 += "    AND D3_OP = '             '
 	US003 += "    AND D3_TM IN('352','353')
 	US003 += "    AND D3_YRFCUST <> 'PRODUCTION ON DEMAND'
@@ -252,19 +261,19 @@ Static Function zRptDetail()
 
 	//                               Zera Valores para que não ocorra erros em caso se reprocessamento
 	**************************************************************************************************
-	ZP003 := " DELETE "+RetSqlName("Z44")
-	ZP003 += "   FROM "+RetSqlName("Z44")+" WITH (NOLOCK)
-	ZP003 += "  WHERE Z44_FILIAL = '"+xFilial("Z44")+"'
-	ZP003 += "    AND Z44_DATARF BETWEEN '"+dtos(kfDataDe)+"' AND '"+dtos(kfDataAte)+"'
+	ZP003 := " DELETE " + RetSqlName("Z44")
+	ZP003 += "   FROM " + RetSqlName("Z44") + " WITH (NOLOCK)
+	ZP003 += "  WHERE Z44_FILIAL = '" + xFilial("Z44") + "'
+	ZP003 += "    AND Z44_DATARF BETWEEN '" + dtos(kfDataDe) + "' AND '" + dtos(kfDataAte) + "'
 	ZP003 += "    AND D_E_L_E_T_ = ' '
 	U_BIAMsgRun("Aguarde... Zerando valores...",,{|| TCSQLExec(ZP003)})
 
 	//                                              Completa lacunas para os itens de custo realizados
 	**************************************************************************************************
 	GR001 := " WITH ETQCANC AS (SELECT D3_COD PROD, SUM(D3_QUANT) * (-1) QTDCAN
-	GR001 += "                    FROM "+RetSqlName("SD3")+" SD3 WITH (NOLOCK)
-	GR001 += "                   WHERE D3_FILIAL = '"+xFilial("SD3")+"'
-	GR001 += "                     AND D3_EMISSAO BETWEEN '"+dtos(kfDataDe)+"' AND '"+dtos(kfDataAte)+"'
+	GR001 += "                    FROM " + RetSqlName("SD3") + " SD3 WITH (NOLOCK)
+	GR001 += "                   WHERE D3_FILIAL = '" + xFilial("SD3") + "'
+	GR001 += "                     AND D3_EMISSAO BETWEEN '" + dtos(kfDataDe) + "' AND '" + dtos(kfDataAte) + "'
 	GR001 += "                     AND D3_TIPO IN('PP','PA')
 	GR001 += "                     AND D3_TM = '711'
 	GR001 += "                     AND D3_ESTORNO = ' '
@@ -285,32 +294,42 @@ Static Function zRptDetail()
 	GR001 += "                D3_YITCUS
 	GR001 += "           FROM (SELECT D3_YITCUS,
 	GR001 += "                        B1_TIPO
-	GR001 += "                   FROM "+RetSqlName("SD3")+" SD3 WITH (NOLOCK)
-	GR001 += "                  INNER JOIN "+RetSqlName("Z29")+" Z29 WITH (NOLOCK) ON Z29_COD_IT = SD3.D3_YITCUS
+	GR001 += "                   FROM " + RetSqlName("SD3") + " SD3 WITH (NOLOCK)
+	GR001 += "                  INNER JOIN " + RetSqlName("Z29") + " Z29 WITH (NOLOCK) ON Z29_COD_IT = SD3.D3_YITCUS
 	GR001 += "                                                     AND Z29_TIPO IN('CV','Q ')
 	GR001 += "                                                     AND Z29.D_E_L_E_T_ = ' '
-	GR001 += "                  INNER JOIN "+RetSqlName("SC2")+" SC2 WITH (NOLOCK) ON C2_NUM = SUBSTRING(D3_OP,1,6)
+	GR001 += "                  INNER JOIN " + RetSqlName("SC2") + " SC2 WITH (NOLOCK) ON C2_FILIAL = '" + xFilial("SC2") + "'
+	GR001 += "                                                     AND C2_NUM = SUBSTRING(D3_OP,1,6)
 	GR001 += "                                                     AND C2_ITEM = SUBSTRING(D3_OP,7,2)
 	GR001 += "                                                     AND C2_SEQUEN = SUBSTRING(D3_OP,9,3)
 	GR001 += "                                                     AND SC2.D_E_L_E_T_ = ' '
-	GR001 += "                  INNER JOIN "+RetSqlName("SB1")+" SB1 WITH (NOLOCK) ON B1_COD = C2_PRODUTO
-	GR001 += "                                                     AND B1_TIPO IN('PA','PS','PP')
+	GR001 += "                  INNER JOIN " + RetSqlName("SB1") + " SB1 WITH (NOLOCK) ON B1_COD = C2_PRODUTO
+	If cEmpAnt $ "01"
+		GR001 += "                                                     AND B1_TIPO IN('PA','PS','PP')
+	ElseIf cEmpAnt == "06"
+		GR001 += "                                                     AND B1_TIPO IN('MP','PI','PA')
+	EndIf
 	GR001 += "                                                     AND SB1.D_E_L_E_T_ = ' '
-	GR001 += "                  WHERE D3_EMISSAO BETWEEN '"+dtos(kfDataDe)+"' AND '"+dtos(kfDataAte)+"'
+	GR001 += "                  WHERE D3_FILIAL = '" + xFilial("SD3") + "'
+	GR001 += "                    AND D3_EMISSAO BETWEEN '" + dtos(kfDataDe) + "' AND '" + dtos(kfDataAte) + "'
 	GR001 += "                    AND D3_YITCUS <> '   '
 	GR001 += "                    AND D3_YRFCUST <> 'PRODUCTION ON DEMAND'
 	GR001 += "                    AND SD3.D_E_L_E_T_ = ' '
 	GR001 += "                  GROUP BY D3_YITCUS, B1_TIPO) AS TABL
 	GR001 += "          INNER JOIN (SELECT D3_COD,
 	GR001 += "                             D3_TIPO
-	GR001 += "                        FROM "+RetSqlName("SD3")+" SD3 WITH (NOLOCK)
-	GR001 += "                       WHERE D3_EMISSAO BETWEEN '"+dtos(kfDataDe)+"' AND '"+dtos(kfDataAte)+"'
+	GR001 += "                        FROM " + RetSqlName("SD3") + " SD3 WITH (NOLOCK)
+	GR001 += "                       WHERE D3_FILIAL = '" + xFilial("SD3") + "'
+	GR001 += "                         AND D3_EMISSAO BETWEEN '" + dtos(kfDataDe) + "' AND '" + dtos(kfDataAte) + "'
 	GR001 += "                         AND D3_TM = '010'
-	GR001 += "                         AND D3_TIPO IN('PA','PS','PP')
+	If cEmpAnt $ "01"
+		GR001 += "                         AND D3_TIPO IN('PA','PS','PP')
+	ElseIf cEmpAnt == "06"
+		GR001 += "                         AND D3_TIPO IN('MP','PI','PA')
+	EndIf
 	GR001 += "                         AND D3_YRFCUST <> 'PRODUCTION ON DEMAND'
 	GR001 += "                         AND SD3.D_E_L_E_T_ = ' '
 	GR001 += "                       GROUP BY D3_COD, D3_TIPO) TAB2L ON D3_TIPO = B1_TIPO) AS TAB3X
-
 	GR001 += "   LEFT JOIN (SELECT DATAREF,
 	GR001 += "                     TPPROD,
 	GR001 += "                     COD,
@@ -323,15 +342,21 @@ Static Function zRptDetail()
 	GR001 += "                             D3_YITCUS ITCUS,
 	GR001 += "                             SUM(D3_CUSTO1) CUSTO1,
 	GR001 += "                             SUM(D3_YQTDPAC) QUANT
-	GR001 += "                        FROM "+RetSqlName("SD3")+" SD3 WITH (NOLOCK)
-	GR001 += "                       INNER JOIN "+RetSqlName("SC2")+" SC2 WITH (NOLOCK) ON C2_NUM = SUBSTRING(D3_OP,1,6)
+	GR001 += "                        FROM " + RetSqlName("SD3") + " SD3 WITH (NOLOCK)
+	GR001 += "                       INNER JOIN " + RetSqlName("SC2") + " SC2 WITH (NOLOCK) ON C2_FILIAL = '" + xFilial("SC2") + "'
+	GR001 += "                                                          AND C2_NUM = SUBSTRING(D3_OP,1,6)
 	GR001 += "                                                          AND C2_ITEM = SUBSTRING(D3_OP,7,2)
 	GR001 += "                                                          AND C2_SEQUEN = SUBSTRING(D3_OP,9,3)
 	GR001 += "                                                          AND SC2.D_E_L_E_T_ = ' '
-	GR001 += "                       INNER JOIN "+RetSqlName("SB1")+" SB1 WITH (NOLOCK) ON B1_COD = C2_PRODUTO
-	GR001 += "                                                          AND B1_TIPO IN('PA','PS','PP')
+	GR001 += "                       INNER JOIN " + RetSqlName("SB1") + " SB1 WITH (NOLOCK) ON B1_COD = C2_PRODUTO
+	If cEmpAnt $ "01"
+		GR001 += "                                                          AND B1_TIPO IN('PA','PS','PP')
+	ElseIf cEmpAnt == "06"
+		GR001 += "                                                          AND B1_TIPO IN('MP','PI','PA')
+	EndIf
 	GR001 += "                                                          AND SB1.D_E_L_E_T_ = ' '
-	GR001 += "                       WHERE D3_EMISSAO BETWEEN '"+dtos(kfDataDe)+"' AND '"+dtos(kfDataAte)+"'
+	GR001 += "                       WHERE D3_FILIAL = '" + xFilial("SD3") + "'
+	GR001 += "                         AND D3_EMISSAO BETWEEN '" + dtos(kfDataDe) + "' AND '" + dtos(kfDataAte) + "'
 	GR001 += "                         AND D3_OP BETWEEN '0000000000000' AND 'ZZZZZZZZZZZZZ'
 	GR001 += "                         AND D3_YRFCUST <> 'PRODUCTION ON DEMAND'
 	GR001 += "                         AND SD3.D_E_L_E_T_ = ' '
@@ -444,28 +469,28 @@ Static Function zRptZDetail()
 
 	//                               Zera Valores para que não ocorra erros em caso se reprocessamento
 	**************************************************************************************************
-	ZP009 := " DELETE "+RetSqlName("Z44")
-	ZP009 += "   FROM "+RetSqlName("Z44")+" WITH (NOLOCK)
-	ZP009 += "  WHERE Z44_FILIAL = '"+xFilial("Z44")+"'
-	ZP009 += "    AND Z44_DATARF BETWEEN '"+dtos(kfDataDe)+"' AND '"+dtos(kfDataAte)+"'
+	ZP009 := " DELETE " + RetSqlName("Z44")
+	ZP009 += "   FROM " + RetSqlName("Z44") + " WITH (NOLOCK)
+	ZP009 += "  WHERE Z44_FILIAL = '" + xFilial("Z44") + "'
+	ZP009 += "    AND Z44_DATARF BETWEEN '" + dtos(kfDataDe) + "' AND '" + dtos(kfDataAte) + "'
 	ZP009 += "    AND Z44_COD = 'Z1000071       '
 	ZP009 += "    AND D_E_L_E_T_ = ' '
 	U_BIAMsgRun("Aguarde... Zerando valores produto: Z1000071 ...",,{|| TCSQLExec(ZP009)})
 
 	RT004 := " SELECT ITCUS, SUM(QUANT) QUANT, SUM(CUSTO1) CUSTO
 	RT004 += "   FROM (SELECT '071' ITCUS, SUM(D3_QUANT) QUANT, SUM(D3_CUSTO1) CUSTO1
-	RT004 += "           FROM " + RetSqlName("SD3")+" WITH (NOLOCK)
-	RT004 += "          WHERE D3_FILIAL = '"+xFilial("SD3")+"'
-	RT004 += "            AND D3_EMISSAO BETWEEN '"+dtos(kfDataDe)+"' AND '"+dtos(kfDataAte)+"'
+	RT004 += "           FROM " + RetSqlName("SD3") + " WITH (NOLOCK)
+	RT004 += "          WHERE D3_FILIAL = '" + xFilial("SD3") + "'
+	RT004 += "            AND D3_EMISSAO BETWEEN '" + dtos(kfDataDe) + "' AND '" + dtos(kfDataAte) + "'
 	RT004 += "            AND D3_TM = '517'
 	RT004 += "            AND D3_TIPO = 'PA'
 	RT004 += "            AND D3_YRFCUST <> 'PRODUCTION ON DEMAND'
 	RT004 += "            AND D_E_L_E_T_ = ' '
 	RT004 += "          UNION ALL
 	RT004 += "         SELECT '065' ITCUS, SUM(D3_QUANT) QUANT, SUM(D3_CUSTO1) CUSTO1
-	RT004 += "           FROM " + RetSqlName("SD3")+" WITH (NOLOCK)
-	RT004 += "          WHERE D3_FILIAL = '"+xFilial("SD3")+"'
-	RT004 += "            AND D3_EMISSAO BETWEEN '"+dtos(kfDataDe)+"' AND '"+dtos(kfDataAte)+"'
+	RT004 += "           FROM " + RetSqlName("SD3") + " WITH (NOLOCK)
+	RT004 += "          WHERE D3_FILIAL = '" + xFilial("SD3") + "'
+	RT004 += "            AND D3_EMISSAO BETWEEN '" + dtos(kfDataDe) + "' AND '" + dtos(kfDataAte) + "'
 	RT004 += "            AND D3_TM = '999'
 	RT004 += "            AND D3_TIPO = 'PA'
 	RT004 += "            AND D3_CF = 'RE1'
@@ -610,12 +635,12 @@ Static Function RptTDetail()
 		GP007 += "                  WHEN D3_TM = '711' THEN '001'
 		GP007 += "                  ELSE CT1_YITCUS
 		GP007 += "                END CT1_YITCUS
-		GP007 += "           FROM "+RetSqlName("SD3")+" SD3 WITH (NOLOCK)
-		GP007 += "           LEFT JOIN "+RetSqlName("CT1")+" CT1 WITH (NOLOCK) ON CT1_FILIAL = '"+xFilial("CT1")+"'
+		GP007 += "           FROM " + RetSqlName("SD3") + " SD3 WITH (NOLOCK)
+		GP007 += "           LEFT JOIN " + RetSqlName("CT1") + " CT1 WITH (NOLOCK) ON CT1_FILIAL = '" + xFilial("CT1") + "'
 		GP007 += "                                             AND CT1_CONTA = D3_CONTA
 		GP007 += "                                             AND CT1.D_E_L_E_T_ = ' '
-		GP007 += "          INNER JOIN "+RetSqlName("Z18")+" Z18 WITH (NOLOCK) ON Z18_FILIAL = '"+xFilial("Z18")+"'
-		GP007 += "                                             AND Z18_DATA BETWEEN '"+dtos(kfDataDe)+"' AND '"+dtos(kfDataAte)+"'
+		GP007 += "          INNER JOIN " + RetSqlName("Z18") + " Z18 WITH (NOLOCK) ON Z18_FILIAL = '" + xFilial("Z18") + "'
+		GP007 += "                                             AND Z18_DATA BETWEEN '" + dtos(kfDataDe) + "' AND '" + dtos(kfDataAte) + "'
 		If kgTipoPd == "PA"
 			GP007 += "                                             AND Z18_NSQSD3 = D3_YRFCUST
 			GP007 += "                                             AND Z18_NSQSD3 <> '         '
@@ -625,7 +650,7 @@ Static Function RptTDetail()
 		EndIf
 		GP007 += "                                             AND Z18.Z18_DOCSD3 <> 'XDOCECANC'
 		GP007 += "                                             AND Z18.D_E_L_E_T_ = ' '
-		GP007 += "          INNER JOIN "+RetSqlName("SB1")+" SB1 WITH (NOLOCK) ON B1_FILIAL = '"+xFilial("SB1")+"'
+		GP007 += "          INNER JOIN " + RetSqlName("SB1") + " SB1 WITH (NOLOCK) ON B1_FILIAL = '" + xFilial("SB1") + "'
 		If kgTipoPd == "PA"
 			GP007 += "                                             AND B1_COD = Z18_COD
 			GP007 += "                                             AND B1_TIPO = 'PA'
@@ -634,8 +659,8 @@ Static Function RptTDetail()
 			GP007 += "                                             AND B1_TIPO = 'PP'
 		EndIf
 		GP007 += "                                             AND SB1.D_E_L_E_T_ = ' '
-		GP007 += "          WHERE D3_FILIAL = '"+xFilial("SD3")+"'
-		GP007 += "            AND D3_EMISSAO BETWEEN '"+dtos(kfDataDe)+"' AND '"+dtos(kfDataAte)+"'
+		GP007 += "          WHERE D3_FILIAL = '" + xFilial("SD3") + "'
+		GP007 += "            AND D3_EMISSAO BETWEEN '" + dtos(kfDataDe) + "' AND '" + dtos(kfDataAte) + "'
 		GP007 += "            AND (D3_TM = '711' OR ( D3_TM = '211' AND D3_TIPO NOT IN('PA','PP') ) )
 		GP007 += "            AND D3_ESTORNO = ' '
 		GP007 += "            AND D3_YRFCUST <> 'PRODUCTION ON DEMAND'
@@ -699,8 +724,9 @@ Static Function RptTDetail()
 	RY004 += "        ISNULL(CUSTO1, 0) CUSTO1,
 	RY004 += "        ISNULL(QUANT, 0) QUANT,
 	RY004 += "        (SELECT SUM(D3_QUANT) * (-1)
-	RY004 += "           FROM "+RetSqlName("SD3")+" SD3 WITH (NOLOCK)
-	RY004 += "          WHERE D3_EMISSAO BETWEEN '"+dtos(kfDataDe)+"' AND '"+dtos(kfDataAte)+"'
+	RY004 += "           FROM " + RetSqlName("SD3") + " SD3 WITH (NOLOCK)
+	RY004 += "          WHERE D3_FILIAL = '" + xFilial("SD3") + "'
+	RY004 += "            AND D3_EMISSAO BETWEEN '" + dtos(kfDataDe) + "' AND '" + dtos(kfDataAte) + "'
 	RY004 += "            AND D3_COD = TAB3X.Z44_COD
 	RY004 += "            AND D3_TM = '711'
 	RY004 += "            AND D3_ESTORNO = ' '
@@ -712,17 +738,26 @@ Static Function RptTDetail()
 	RY004 += "                Z44_ITCUS
 	RY004 += "           FROM (SELECT Z29_COD_IT Z44_ITCUS,
 	RY004 += "                        Z29_APLIC Z44_TPPROD
-	RY004 += "                   FROM "+RetSqlName("Z29")+" Z29
+	RY004 += "                   FROM " + RetSqlName("Z29") + " Z29
 	RY004 += "                  WHERE Z29_TIPO IN('CV','Q ')
-	RY004 += "                    AND Z29_APLIC IN('PP','PA')
+	If cEmpAnt $ "01"
+		RY004 += "                    AND Z29_APLIC IN('PP','PA')
+	ElseIf cEmpAnt == "06"
+		RY004 += "                    AND Z29_APLIC IN('MP','PI','PA')
+	EndIf
 	RY004 += "                    AND Z29.D_E_L_E_T_ = ' '
 	RY004 += "                  GROUP BY Z29_COD_IT, Z29_APLIC) AS TABL
 	RY004 += "          INNER JOIN (SELECT Z44_COD,
 	RY004 += "                             Z44_TPPROD
-	RY004 += "                        FROM "+RetSqlName("Z44")+" Z44 WITH (NOLOCK)
-	RY004 += "                       WHERE Z44_DATARF BETWEEN '"+dtos(kfDataDe)+"' AND '"+dtos(kfDataAte)+"'
+	RY004 += "                        FROM " + RetSqlName("Z44") + " Z44 WITH (NOLOCK)
+	RY004 += "                       WHERE Z44_FILIAL = '" + xFilial("Z44") + "'
+	RY004 += "                         AND Z44_DATARF BETWEEN '" + dtos(kfDataDe) + "' AND '" + dtos(kfDataAte) + "'
 	RY004 += "                         AND Z44_TM = '010'
-	RY004 += "                         AND Z44_TPPROD IN('PA','PS','PP')
+	If cEmpAnt $ "01"
+		RY004 += "                         AND Z44_TPPROD IN('PA','PS','PP')
+	ElseIf cEmpAnt == "06"
+		RY004 += "                         AND Z44_TPPROD IN('MP','PI','PA')
+	EndIf
 	RY004 += "                         AND Z44_ITCUS NOT IN('   ','999')
 	RY004 += "                         AND Z44.D_E_L_E_T_ = ' '
 	RY004 += "                       GROUP BY Z44_COD, Z44_TPPROD) TAB2L ON TABL.Z44_TPPROD = TAB2L.Z44_TPPROD) AS TAB3X
@@ -732,8 +767,9 @@ Static Function RptTDetail()
 	RY004 += "                     Z44_ITCUS ITCUS,
 	RY004 += "                     SUM(Z44_CUSTO1) CUSTO1,
 	RY004 += "                     SUM(Z44_QUANT) QUANT
-	RY004 += "                FROM "+RetSqlName("Z44")+" Z44 WITH (NOLOCK)
-	RY004 += "               WHERE Z44_DATARF BETWEEN '"+dtos(kfDataDe)+"' AND '"+dtos(kfDataAte)+"'
+	RY004 += "                FROM " + RetSqlName("Z44") + " Z44 WITH (NOLOCK)
+	RY004 += "               WHERE Z44_FILIAL = '" + xFilial("Z44") + "'
+	RY004 += "                 AND Z44_DATARF BETWEEN '" + dtos(kfDataDe) + "' AND '" + dtos(kfDataAte) + "'
 	RY004 += "                 AND Z44_ITCUS NOT IN('   ','999')
 	RY004 += "                 AND Z44.D_E_L_E_T_ = ' '
 	RY004 += "               GROUP BY Z44_DATARF,
@@ -820,20 +856,20 @@ Static Function RptSDetail()
 
 	//                                                        Atualiza DELTA para integração SAP - SD3
 	**************************************************************************************************
-	ZP003 := " UPDATE "+RetSqlName("SD3")+" SET D3_YDELTA = '"+dtos(date()-1)+"'
-	ZP003 += "   FROM "+RetSqlName("SD3")+" WITH (NOLOCK)
-	ZP003 += "  WHERE D3_FILIAL = '"+xFilial("SD3")+"'
-	ZP003 += "    AND D3_EMISSAO BETWEEN '"+dtos(kfDataDe)+"' AND '"+dtos(kfDataAte)+"'
+	ZP003 := " UPDATE " + RetSqlName("SD3") + " SET D3_YDELTA = '" + dtos(date()-1) + "'
+	ZP003 += "   FROM " + RetSqlName("SD3") + " WITH (NOLOCK)
+	ZP003 += "  WHERE D3_FILIAL = '" + xFilial("SD3") + "'
+	ZP003 += "    AND D3_EMISSAO BETWEEN '" + dtos(kfDataDe) + "' AND '" + dtos(kfDataAte) + "'
 	ZP003 += "    AND D_E_L_E_T_ = ' '
 
 	U_BIAMsgRun("Aguarde... Atualizando DELTA para integração SAP - SD3",,{|| TCSQLExec(ZP003)})
 
 	//                                                        Atualiza DELTA para integração SAP - Z44
 	**************************************************************************************************
-	ZP004 := " UPDATE "+RetSqlName("Z44")+" SET Z44_YDELTA = '"+dtos(date()-1)+"'
-	ZP004 += "   FROM "+RetSqlName("Z44")+" WITH (NOLOCK)
-	ZP004 += "  WHERE Z44_FILIAL = '"+xFilial("Z44")+"'
-	ZP004 += "    AND Z44_DATARF BETWEEN '"+dtos(kfDataDe)+"' AND '"+dtos(kfDataAte)+"'
+	ZP004 := " UPDATE " + RetSqlName("Z44") + " SET Z44_YDELTA = '" + dtos(date()-1) + "'
+	ZP004 += "   FROM " + RetSqlName("Z44") + " WITH (NOLOCK)
+	ZP004 += "  WHERE Z44_FILIAL = '" + xFilial("Z44") + "'
+	ZP004 += "    AND Z44_DATARF BETWEEN '" + dtos(kfDataDe) + "' AND '" + dtos(kfDataAte) + "'
 	ZP004 += "    AND D_E_L_E_T_ = ' '
 
 	U_BIAMsgRun("Aguarde... Atualizando DELTA para integração SAP - Z44",,{|| TCSQLExec(ZP004)})

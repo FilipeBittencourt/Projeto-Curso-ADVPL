@@ -1,0 +1,37 @@
+#include "totvs.ch"
+
+/*/{Protheus.doc} A265COL
+@author G3
+@since 11/03/2021
+@project Ticket 25665
+@version 1.0
+@description Ponto de Entrada para ALTERAR aCols na Rotina MATA265
+@type function
+/*/
+
+user function A265COL() as array
+
+    local aCabSDA   as array
+    local aItemSDB  as array
+
+    local lRet      as logical
+
+    begin sequence
+
+        if (!stackTools():IsInStackCall({"ProcPedido","ProcessaDevolucao"}))
+            break        
+        endif        
+
+        if (type("aCols")=="A")
+            aCabSDA:=cacheData():get("fDistribui","aCabSDA",{})
+            aItemSDB:=cacheData():get("fDistribui","aItemSDB",{})
+            if (len(aItemSDB)<len(aCols))
+                aSize(aCols,len(aItemSDB))
+            endif
+        endif
+
+    end sequence
+
+    DEFAULT lRet:=.T.
+
+    return(lRet)

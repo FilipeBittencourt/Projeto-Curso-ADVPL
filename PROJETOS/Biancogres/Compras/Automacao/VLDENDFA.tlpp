@@ -1,0 +1,128 @@
+#include "totvs.ch"
+
+/*/{Protheus.doc} VLDENDFA
+@author G3
+@since 10/03/2021
+@project Ticket 25665
+@version 1.0
+@description Ponto de Entrada para Validar campo Localizacao (C6_LOCALIZ)
+@type function
+/*/
+
+user function VLDENDFA() as logical
+
+    local lRet as logical
+
+    if (stackTools():IsInStackCall({"ProcPedido","ProcessaDevolucao"}))
+        evalBlock():evalBlock({||lRet:=chkDev()},nil,.T.)
+    endif
+
+    lRet:=VLDENDFA()
+
+    return(lRet)
+
+static function VLDENDFA() as logical
+    
+    local aParmIXB  as array
+    
+    local lRet      as logical
+    local cProg     as character
+
+    if (type("PARAMIXB")=="A")
+        aParmIXB:=&("PARAMIXB")
+        if ((!empty(aParmIXB)).and.(len(aParmIXB)>=2))
+            lRet:=aParmIXB[1]
+            cProg:=aParmIXB[2]
+        endif
+    endif
+
+    DEFAULT lRet:=.F.
+
+    return(lRet)
+
+static function chkDev() as logical
+
+    local aVlrDev       as array
+    local aCabSC5       as array
+    local aItensSC6     as array
+
+    local cDoc          as character
+    local cItem         as character
+    local cLoja         as character
+    local cLocal        as character
+    local cSerie        as character
+    local cProduto      as character
+
+    local cCliente      as character
+
+    local cSD1KeySeek   as character
+
+    local lRet          as logical
+
+    local nSD1Order     as numeric
+    
+    local nAT           as numeric
+    local nATDoc        as numeric
+    local nATItem       as numeric
+    local nATLoja       as numeric
+    local nATLocal      as numeric
+    local nATSerie      as numeric
+    local nATCliente    as numeric
+    local nATProduto    as numeric
+
+    begin sequence
+
+        if (type("n")=="N")
+
+            nAT:=&("n")
+
+            aCabSC5:=cacheData():get("ProcPedido","aCabSC5",{})
+            aItensSC6:=cacheData():get("ProcPedido","aItensSC6",{})
+
+            if (nAT>0).and.(nAT<=len(aItensSC6))
+
+                nATCliente:=aScan(aCabSc5,{|x|x[1]=="C5_CLIENTE"})
+                cCliente:=aCabSc5[nATCliente][2]
+
+                nATLoja:=aScan(aCabSc5,{|x|x[1]=="C5_LOJACLI"})
+                cLoja:=aCabSc5[nATLoja][2]
+
+                nATDoc:=aScan(aItensSC6[nAT],{|x|x[1]=="C6_NFORI"})
+                cDoc:=aItensSC6[nAT][nATDoc][2]
+
+                nATSerie:=aScan(aItensSC6[nAT],{|x|x[1]=="C6_SERIORI"})
+                cSerie:=aItensSC6[nAT][nATSerie][2]
+
+                nATProduto:=aScan(aItensSC6[nAT],{|x|x[1]=="C6_PRODUTO"})
+                cProduto:=aItensSC6[nAT][nATProduto][2]
+
+                nATItem:=aScan(aItensSC6[nAT],{|x|x[1]=="C6_ITEMORI"})
+                cItem:=aItensSC6[nAT][nATItem][2]
+
+                nATLocal:=aScan(aItensSC6[nAT],{|x|x[1]=="C6_LOCAL"})
+                cLocals:=aItensSC6[nAT][nATLocal][2]
+
+                cSD1KeySeek:=xFilial("SD1") 
+                cSD1KeySeek+=cDoc
+                cSD1KeySeek+=cSerie
+                cSD1KeySeek+=cCliente
+                cSD1KeySeek+=cLoja
+                cSD1KeySeek+=cProduto
+                cSD1KeySeek+=cItem
+
+                nSD1Order:=retOrder("SD1","D1_FILIAL+D1_DOC+D1_SERIE+D1_FORNECE+D1_LOJA+D1_COD+D1_ITEM")
+                SD1->(dbSetOrdeR(nSD1Order))
+                SD1->(MsSeek(cSD1KeySeek,.F.))
+
+                //A410SNfOri(cCliFor,cLoja,cNfOri,cSerOri,cItemOri,cProduto,cIdentB6,cLocal,cAliasSD1,aPedido,l410ProcDv)
+                aVlrDev:=a410SNfOri(cCliente,cLoja,cDoc,cSerie,cItem,cProduto,nil,cLocal,"SD1",nil,.F.)
+
+            endif
+
+        endif
+
+    end sequence
+
+    DEFAULT lRet:=.T.
+
+    return(lRet)

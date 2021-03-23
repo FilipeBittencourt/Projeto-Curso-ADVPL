@@ -58,8 +58,9 @@ User Function BIA944()
 	(M001)->(dbCloseArea())
 
 	// ,'Z96'
+	// ,'ZOY' eu criei a tabela na familia errada e com o nome do campo _VERSAO errado.
 	// Tabelas Avulsas                                 Família de Tabelas usadas desde 2017                                                                                                                                                                                    Família de tabelas passas a serem usada a partir do orçamento 2021
-	_cVetTabl  := {'Z42','Z45','Z46','Z47','Z50','Z98','ZB0','ZB1','ZB2','ZB3','ZB4','ZB5','ZB6','ZB7','ZB8','ZB9','ZBA','ZBB','ZBC','ZBD','ZBE','ZBF','ZBG','ZBH','ZBI','ZBJ','ZBK','ZBL','ZBM','ZBN','ZBO','ZBP','ZBQ','ZBR','ZBS','ZBT','ZBU','ZBV','ZBW','ZBX','ZBY','ZBZ','ZO0','ZO1','ZO2','ZO3','ZO4','ZO5','ZO6','ZO7','ZO8','ZO9','ZOA','ZOB','ZOC','ZOD','ZOE','ZOF','ZOG','ZOH','ZOI','ZOJ','ZOK','ZOL','ZOM','ZON','ZOO','ZOP','ZOQ','ZOR','ZOS','ZOT','ZOU','ZOV','ZOW','ZOX','ZOY','ZOZ'}
+	_cVetTabl  := {'Z42','Z45','Z46','Z47','Z50','Z98','ZB0','ZB1','ZB2','ZB3','ZB4','ZB5','ZB6','ZB7','ZB8','ZB9','ZBA','ZBB','ZBC','ZBD','ZBE','ZBF','ZBG','ZBH','ZBI','ZBJ','ZBK','ZBL','ZBM','ZBN','ZBO','ZBP','ZBQ','ZBR','ZBS','ZBT','ZBU','ZBV','ZBW','ZBX','ZBY','ZBZ','ZO0','ZO1','ZO2','ZO3','ZO4','ZO5','ZO6','ZO7','ZO8','ZO9','ZOA','ZOB','ZOC','ZOD','ZOE','ZOF','ZOG','ZOH','ZOI','ZOJ','ZOK','ZOL','ZOM','ZON','ZOO','ZOP','ZOQ','ZOR','ZOS','ZOT','ZOU','ZOV','ZOW','ZOX','ZOZ'}
 	_cTlbAfetad := ""
 
 	For _ms := 1 to Len(_cVetTabl)
@@ -172,6 +173,19 @@ User Function BIA944()
 						XK001 += "    AND " + SX2->X2_CHAVE + "_ANOREF = '" + _cAnoRef + "' "
 						XK001 += "    AND D_E_L_E_T_ = ' ' "
 						U_BIAMsgRun("Aguarde... Replicando tabela: " + SX2->X2_CHAVE ,,{|| TcSQLExec(XK001) })
+
+						If SX2->X2_CHAVE == "ZBM"
+
+							cQuery := " UPDATE " + RetSqlName("ZBM") + " "
+							cQuery += "    SET ZBM_ATIVO = 'N' "
+							cQuery += "  WHERE ZBM_FILIAL = '" + xFilial("ZBM") + "' "
+							cQuery += "    AND ZBM_VERSAO = '" + _cVersao + "' "
+							cQuery += "    AND ZBM_REVISA = '" + _cRevisa + "' "
+							cQuery += "    AND ZBM_ANOREF = '" + _cAnoRef + "' "
+							cQuery += "    AND D_E_L_E_T_ = ' ' "
+							U_BIAMsgRun("Aguarde... Encerrando Sequencia GMR anterior: " + SX2->X2_CHAVE ,,{|| TcSQLExec(cQuery) })
+
+						EndIf						
 
 					EndIf
 

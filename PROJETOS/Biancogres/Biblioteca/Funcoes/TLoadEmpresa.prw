@@ -231,6 +231,10 @@ Method GetCodigos() Class TLoadEmpresa
 	DbSelectArea("SA2")
 	SA2->(DbSetOrder(3)) // A2_FILIAL, A2_CGC, R_E_C_N_O_, D_E_L_E_T_
 
+	If SELECT("SM0")==0
+		OpenSM0()
+	EndIf
+
 	DbSelectArea("SM0")
 	SM0->(DbSetOrder(1))
 	SM0->(DBGoTop())

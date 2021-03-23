@@ -39,9 +39,14 @@ Static Function RptDetail()
 	MV_PAR01 := xdDeData
 	MV_PAR02 := xdAteData
 
-	if !U_BiaULRAC(MV_PAR01)
+	If !cEmpAnt $ "01/06"
+		MsgSTOP("Empresa não configurada para cálculo da RAC Realizada!!!")
 		Return
-	endif
+	Endif
+
+	If !U_BiaULRAC(MV_PAR01)
+		Return
+	EndIf
 
 	ProcRegua(1000)
 	IncProc("Preparando dados...")
@@ -49,10 +54,10 @@ Static Function RptDetail()
 
 	//                               Zera Valores para que não ocorra erros em caso se reprocessamento
 	**************************************************************************************************
-	ZP003 := " UPDATE "+RetSqlName("SD3")+" SET D3_YQTDPAC = 0
-	ZP003 += "   FROM "+RetSqlName("SD3")+" WITH (NOLOCK)
-	ZP003 += "  WHERE D3_FILIAL = '"+xFilial("SD3")+"'
-	ZP003 += "    AND D3_EMISSAO BETWEEN '"+dtos(MV_PAR01)+"' AND '"+dtos(MV_PAR02)+"'
+	ZP003 := " UPDATE " + RetSqlName("SD3") + " SET D3_YQTDPAC = 0
+	ZP003 += "   FROM " + RetSqlName("SD3") + " WITH (NOLOCK)
+	ZP003 += "  WHERE D3_FILIAL = '" + xFilial("SD3") + "'
+	ZP003 += "    AND D3_EMISSAO BETWEEN '" + dtos(MV_PAR01) + "' AND '" + dtos(MV_PAR02) + "'
 	ZP003 += "    AND D_E_L_E_T_ = ' '
 	U_BIAMsgRun("Aguarde... Zerando QTD RAC nas movimentações internas",,{|| TCSQLExec(ZP003)})
 
@@ -66,18 +71,22 @@ Static Function RptDetail()
 	ZP007 += "        COUNT(*) CONTAD,
 	ZP007 += "        SUM(D3_QUANT) QUANT,
 	ZP007 += "        MIN(SD3.R_E_C_N_O_) REGSD3
-	ZP007 += "   FROM "+RetSqlName("SD3")+" SD3 WITH (NOLOCK)
-	ZP007 += "  INNER JOIN "+RetSqlName("SC2")+" SC2 WITH (NOLOCK) ON C2_FILIAL = '"+xFilial("SC2")+"'
+	ZP007 += "   FROM " + RetSqlName("SD3") + " SD3 WITH (NOLOCK)
+	ZP007 += "  INNER JOIN " + RetSqlName("SC2") + " SC2 WITH (NOLOCK) ON C2_FILIAL = '" + xFilial("SC2") + "'
 	ZP007 += "                                     AND C2_NUM = SUBSTRING(D3_OP,1,6)
 	ZP007 += "                                     AND C2_ITEM = SUBSTRING(D3_OP,7,2)
 	ZP007 += "                                     AND C2_SEQUEN = SUBSTRING(D3_OP,9,3)
 	ZP007 += "                                     AND SC2.D_E_L_E_T_ = ' '
-	ZP007 += "  INNER JOIN "+RetSqlName("SB1")+" SB1 WITH (NOLOCK) ON B1_FILIAL = '"+xFilial("SB1")+"'
+	ZP007 += "  INNER JOIN " + RetSqlName("SB1") + " SB1 WITH (NOLOCK) ON B1_FILIAL = '" + xFilial("SB1") + "'
 	ZP007 += "                                     AND B1_COD = C2_PRODUTO
-	ZP007 += "                                     AND B1_TIPO IN('PP','PA','PS')
+	If cEmpAnt $ "01"
+		ZP007 += "                                     AND B1_TIPO IN('PP','PA','PS')
+	ElseIf cEmpAnt == "06"
+		ZP007 += "                                     AND B1_TIPO IN('MP','PI','PA')
+	EndIf
 	ZP007 += "                                     AND SB1.D_E_L_E_T_ = ' '
-	ZP007 += "  WHERE D3_FILIAL = '"+xFilial("SD3")+"'
-	ZP007 += "    AND D3_EMISSAO BETWEEN '"+dtos(MV_PAR01)+"' AND '"+dtos(MV_PAR02)+"'
+	ZP007 += "  WHERE D3_FILIAL = '" + xFilial("SD3") + "'
+	ZP007 += "    AND D3_EMISSAO BETWEEN '" + dtos(MV_PAR01) + "' AND '" + dtos(MV_PAR02) + "'
 	ZP007 += "    AND SD3.D_E_L_E_T_ = ' '
 	ZP007 += "  GROUP BY D3_EMISSAO,
 	ZP007 += "           C2_PRODUTO,
@@ -137,22 +146,26 @@ Static Function RptDetail()
 	ZP004 += "        SUM(D3_CUSTO1) CUSTO1,
 	ZP004 += "        COUNT(*) CONTAD,
 	ZP004 += "        (SELECT SUM(ZSD3.D3_QUANT)
-	ZP004 += "           FROM "+RetSqlName("SD3")+" ZSD3 WITH (NOLOCK)
-	ZP004 += "          WHERE ZSD3.D3_FILIAL = '"+xFilial("SD3")+"'
+	ZP004 += "           FROM " + RetSqlName("SD3") + " ZSD3 WITH (NOLOCK)
+	ZP004 += "          WHERE ZSD3.D3_FILIAL = '" + xFilial("SD3") + "'
 	ZP004 += "            AND SUBSTRING(ZSD3.D3_EMISSAO,1,6) = SUBSTRING(SD3.D3_EMISSAO,1,6)
 	ZP004 += "            AND ZSD3.D3_COD = SD3.D3_COD
 	ZP004 += "            AND ZSD3.D3_TM = '010'
 	ZP004 += "            AND ZSD3.D_E_L_E_T_ = ' ') QUANT,
 	ZP004 += "        MIN(SD3.R_E_C_N_O_) REGSD3
-	ZP004 += "   FROM "+RetSqlName("SD3")+" SD3 WITH (NOLOCK)
-	ZP004 += "  INNER JOIN "+RetSqlName("SF5")+" SF5 WITH (NOLOCK)  ON F5_FILIAL = '"+xFilial("SF5")+"'
+	ZP004 += "   FROM " + RetSqlName("SD3") + " SD3 WITH (NOLOCK)
+	ZP004 += "  INNER JOIN " + RetSqlName("SF5") + " SF5 WITH (NOLOCK)  ON F5_FILIAL = '" + xFilial("SF5") + "'
 	ZP004 += "                       AND F5_CODIGO = D3_TM
 	ZP004 += "                       AND F5_VAL = 'S'
 	ZP004 += "                       AND F5_QTDZERO <> '2'
 	ZP004 += "                       AND SF5.D_E_L_E_T_ = ' '
 	ZP004 += "  WHERE D3_FILIAL = '"+xFilial("SD3")+"'
-	ZP004 += "    AND D3_EMISSAO BETWEEN '"+dtos(MV_PAR01)+"' AND '"+dtos(MV_PAR02)+"'
-	ZP004 += "    AND D3_TIPO IN('PP','PA','PS')
+	ZP004 += "    AND D3_EMISSAO BETWEEN '" + dtos(MV_PAR01) + "' AND '" + dtos(MV_PAR02) + "'
+	If cEmpAnt $ "01"
+		ZP004 += "    AND D3_TIPO IN('PP','PA','PS')
+	ElseIf cEmpAnt == "06"
+		ZP004 += "    AND D3_TIPO IN('MP','PI','PA')
+	EndIf
 	ZP004 += "    AND RTRIM(D3_YRFCUST) NOT IN('BIA705','MANUAL')
 	ZP004 += "    AND SD3.D_E_L_E_T_ = ' '
 	ZP004 += "  GROUP BY SUBSTRING(D3_EMISSAO,1,6),

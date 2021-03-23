@@ -1027,6 +1027,9 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 	cHTML += ' 										<th> DT. ENT. </th>        
 	cHTML += ' 										<th> DT. NECE. </th>    
 	
+	If (AllTrim(SA1->A1_YTPSEG) == 'E')
+		cHTML += ' 										<th> DT.NEC.REAL </th>
+	EndIf
 	
 	If (AllTrim(_cARejeicao) != "")    
 		cHTML += ' 										<th> REJEIÇÃO % </th>        
@@ -1081,6 +1084,10 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 		
 		cHtml += '								<td align="right" class="tblItensPedido-border-right">'+cvaltochar(DTOC(SC6->C6_ENTREG)) +' </td>
 		cHtml += '								<td align="right" class="tblItensPedido-border-right">'+cvaltochar(DTOC(SC6->C6_YDTNECE)) +' </td>
+		
+		If (AllTrim(SA1->A1_YTPSEG) == 'E')
+			cHTML += ' 							<td align="right" class="tblItensPedido-border-right">'+cvaltochar(DTOC(SC6->C6_YDTNERE)) +' </td>
+		EndIf
 		
 		If (AllTrim(_cARejeicao) != "")    
 			cHtml += '								<td align="right" style="color: red;" class="tblItensPedido-border-right">'+IIF(!Empty(SC6->C6_YMOTREJ) .Or. !Empty(SC6->C6_YMOTFRA), 'X', '') +' </td>

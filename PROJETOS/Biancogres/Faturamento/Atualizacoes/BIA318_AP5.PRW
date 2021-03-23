@@ -301,12 +301,13 @@ TRB->(DbCloseArea())
 cCadastro := "Liberação de Pedidos bloqueados na Politíca Comercial"
 
 //Menu
-aRotina   := { 	{"Pesquisar"    ,"AxPesqui"                       	,0,1},;
-				{"Visualizar"   ,'ExecBlock("BIA660",.F.,.F.,"V")'	,0,2},;
-				{"Liberar"      ,'ExecBlock("BIA319",.F.,.F.,{"L",UZ7->UZ7_PEDIDO})',0,2},;
-				{"Recusar"      ,'U_BIA318RC()',0,2},;
-				{"Revisar"      ,'U_BIA318RV()',0,2},;
-				{"Legenda" 		,'U_BIA318LEG()'					,0,5} }
+aRotina   := { 	{"Pesquisar"    			,"AxPesqui"                       	,0,1},;
+				{"Visualizar"   			,'ExecBlock("BIA660",.F.,.F.,"V")'	,0,2},;
+				{"Liberar"      			,'ExecBlock("BIA319",.F.,.F.,{"L",UZ7->UZ7_PEDIDO})',0,2},;
+				{"Recusar"     				,'U_BIA318RC()',0,2},;
+				{"Revisar"      			,'U_BIA318RV()',0,2},;
+				{"Pedido x Aprovadores"		,'U_BACP0006(UZ7->UZ7_PEDIDO, UZ7->UZ7_FILIAL)',0,2},;
+				{"Legenda" 					,'U_BIA318LEG()'					,0,5} }
 
 //Legenda
 aCores    := {	{  'Alltrim(UZ7_APROV)=="" '	, 'BR_VERMELHO'} ,;

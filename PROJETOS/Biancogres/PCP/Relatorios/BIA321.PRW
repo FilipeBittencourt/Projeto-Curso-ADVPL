@@ -263,7 +263,7 @@ Static Function fValidPerg()
 	// Grupo/Ordem/Pergunta/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid/Var01/Def01/Cnt01/Var02/Def02/Cnt02/Var03/Def03/Cnt03/Var04/Def04/Cnt04/Var05/Def05/Cnt05/F3
 	aAdd(aRegs,{cPerg,"01","De Data                  ?","","","mv_ch1","D",08,0,0,"G","","mv_par01","","","","","","","","","","","","","","","","","","","","","","","","",""})
 	aAdd(aRegs,{cPerg,"02","Até Data                 ?","","","mv_ch2","D",08,0,0,"G","","mv_par02","","","","","","","","","","","","","","","","","","","","","","","","",""})
-	aAdd(aRegs,{cPerg,"03","Formulário               ?","","","mv_ch3","N",01,0,0,"C","","mv_par03","Prensa","Prensa","Prensa","","","Laboratorio","Laboratorio","Laboratorio","","","","","","","","","","","","","","","","",""})
+	aAdd(aRegs,{cPerg,"03","Formulário               ?","","","mv_ch3","N",01,0,0,"C","","mv_par03","Prensa","Prensa","Prensa","","","Laboratorio","Laboratorio","Laboratorio","","","CQPA","CQPA","CQPA","","","","","","","","","","","",""})
 	For i := 1 to Len(aRegs)
 		if !dbSeek(cPerg + aRegs[i,2])
 			RecLock("SX1",.t.)

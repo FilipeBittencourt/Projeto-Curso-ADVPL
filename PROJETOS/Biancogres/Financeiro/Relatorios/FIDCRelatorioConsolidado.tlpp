@@ -6,21 +6,22 @@
 @since 08/03/2021
 @project FIDC
 @version 1.0
-@description Function para Impressao do Relatorio (Excel) Retorno FIDC
+@description Function para Impressao do Relatorio (Excel) Consolidado FIDC
 @type function
 /*/
-function u_FIDCRetRel()
-    return(u_FIDCRelatorioRetorno())
+
+function u_FIDCConRel()
+    return(u_FIDCRelatorioConsolidado())
 
 /*/{Protheus.doc} FIDC
 @author Marinaldo de Jesus
 @since 08/03/2021
 @project FIDC
 @version 1.0
-@description Procedure para Impressao do Relatorio (Excel) Retorno FIDC
+@description Procedure para Impressao do Relatorio (Excel) Consolidado FIDC
 @type procedure
 /*/
-procedure u_FIDCRelatorioRetorno()
+procedure u_FIDCRelatorioConsolidado()
 
 	local aArea				as array
 	local aParamRet			as array
@@ -32,18 +33,18 @@ procedure u_FIDCRelatorioRetorno()
 	local otMultProcess		as object
 
     private cCadastro as character
-    cCadastro:=OemToAnsi("Relatorio Retorno FIDC")
+    cCadastro:=OemToAnsi("Relatorio Consolidado FIDC")
 
     aArea:=getArea()
 
 	begin sequence
 
-        lParamBox:=FIDCRetornoParameters(@aParamRet)
+        lParamBox:=FIDCConsolidadoParameters(@aParamRet)
         if (!lParamBox)
             break
         endif
 
-		bAction:={||FIDCRelatorioRetorno(otMultProcess,aParamRet)}
+		bAction:={||FIDCRelatorioConsolidado(otMultProcess,aParamRet)}
 		otMultProcess:=tMultProcess():New(bAction,&("cCadastro"),OemToAnsi("Aguarde. Gerando Relatorio..."),nil,2)
 		otMultProcess:Activate()
 
@@ -53,11 +54,11 @@ procedure u_FIDCRelatorioRetorno()
 
     return
 
-static procedure FIDCRelatorioRetorno(otMultProcess as object,aParamRet as array)
-    EvalBlock():EvalBlock({||FIDCRelatorioRetornoQuery(otMultProcess,aParamRet)},nil,.T.)
+static procedure FIDCRelatorioConsolidado(otMultProcess as object,aParamRet as array)
+    EvalBlock():EvalBlock({||FIDCRelatorioConsolidadoQuery(otMultProcess,aParamRet)},nil,.T.)
     return
 
-static procedure FIDCRelatorioRetornoQuery(otMultProcess as object,aParamRet as array)
+static procedure FIDCRelatorioConsolidadoQuery(otMultProcess as object,aParamRet as array)
 
     local aBCOIsFIDC    as array
     local aFWTTables    as array
@@ -83,11 +84,9 @@ static procedure FIDCRelatorioRetornoQuery(otMultProcess as object,aParamRet as 
     local nBCOs         as numeric
 
     local nTable        as numeric
-    local nTables       as numeric
+    local nTables       as numeric    
 
     local nSA6RecNo     as numeric
-    
-    local nIncRegua     as numeric
 
     local oTTimer       as object
 
@@ -121,37 +120,18 @@ static procedure FIDCRelatorioRetornoQuery(otMultProcess as object,aParamRet as 
 
         bTTimer:={||otMultProcess:IncRegua(1,"Obtendo dados no SGBD. Aguarde..."),otMultProcess:IncRegua(2,"Processando...")}
         Eval(bTTimer)
-        
+
         oTTimer:=TTimer():New(1,bTTimer,getWndDefault()) 
 
         bMsAguarde:={||oTTimer:Activate(),cTmpAlias:=QueryView(@aParamRet,@aBCOIsFIDC[nBCO],@aFWTTables),oTTimer:DeActivate()}
         MsAguarde(bMsAguarde,"Obtendo dados no SGBD. Aguarde...")
-        
-        nIncRegua:=(cTmpAlias)->(RecCount())
-
-        otMultProcess:SetRegua(1,nIncRegua)
-        otMultProcess:SetRegua(2,nIncRegua)
-
-        (cTmpAlias)->(dbGoTop())
-        
-        while ((cTmpAlias)->(!eof()))
-            otMultProcess:IncRegua(1,"Atualizando Dados do SGBD. Aguarde...")
-            otMultProcess:IncRegua(2,"Calculando Dados. Aguarde...")
-            if (cTmpAlias)->(recLock(cTmpAlias,.F.))
-                (cTmpAlias)->(FIDC():calculaDesconto(E1_VALOR,E1_VENCTO,E1_DATABOR))
-                (cTmpAlias)->(DIAS_ANTEC:=FIDC():getFIDCVar("nDiasCalculo",0))
-                (cTmpAlias)->(E1_VENCREA:=FIDC():getFIDCVar("dDataValida",E1_DATABOR))
-                (cTmpAlias)->(MsUnLock())
-            endif
-            (cTmpAlias)->(dbSkip())
-        end while
 
         (cTmpAlias)->(dbGoTop())
 
         cXMLPath:="\FIDC\XML\"
         if (dirtools():MakeDir(cXMLPath))
 
-            cXMLFile:=A35():getXMLFile(&("cEmpAnt"),&("cFilAnt"),cXMLPath,"FIDCRelatorioRetorno","","")
+            cXMLFile:=A35():getXMLFile(&("cEmpAnt"),&("cFilAnt"),cXMLPath,"FIDCRelatorioConsolidado","","")
             
             if (type("cCadastro")=="C")
                 cExcelTitle:=&("cCadastro")
@@ -184,35 +164,33 @@ static procedure FIDCRelatorioRetornoQuery(otMultProcess as object,aParamRet as 
             uToXML():setXMLVar("P_NUM_PARC","X3_TITULO","PREFIXO+NUMERO+PARCELA")
             uToXML():setXMLVar("E1_EMISSAO","X3_TITULO","EMISSAO")
             uToXML():setXMLVar("E1_VENCTO","X3_TITULO","VENCIMENTO")
-            uToXML():setXMLVar("DIAS_ANTEC","X3_TITULO","DIAS ANTECIPADOS")
-            uToXML():setXMLVar("E1_VENCREA","X3_TITULO","VENC.AJUSTADO")
-            uToXML():setXMLVar("E1_VALOR","X3_TITULO","VALOR")
-            uToXML():setXMLVar("E1_YFDCVAL","X3_TITULO","DESAGIO")
-            uToXML():setXMLVar("ZK4_NOSNUM","X3_TITULO","NOSSO NUMERO")
+
+            uToXML():setXMLVar("ENVIADO","X3_TITULO","ENVIADO")
+            uToXML():setXMLVar("REGISTRADO","X3_TITULO","REGISTRADO")
+            uToXML():setXMLVar("BAIXADO","X3_TITULO","BAIXADO")
 
             uToXML():setXMLVar("A1_COD","X3_PICTURE","@!")
             uToXML():setXMLVar("A1_NOME","X3_PICTURE","@!")
             uToXML():setXMLVar("E1_DATABOR","X3_PICTURE","__NOTRANSFORM__")
-            uToXML():setXMLVar("P_NUM_PARC","X3_PICTURE","@!")
             uToXML():setXMLVar("E1_EMISSAO","X3_PICTURE","__NOTRANSFORM__")
             uToXML():setXMLVar("E1_VENCTO","X3_PICTURE","__NOTRANSFORM__")
-            uToXML():setXMLVar("DIAS_ANTEC","X3_PICTURE","@R 9999")
-            uToXML():setXMLVar("E1_VENCREA","X3_PICTURE","__NOTRANSFORM__")
-            uToXML():setXMLVar("E1_VALOR","X3_PICTURE","__NOTRANSFORM__")
-            uToXML():setXMLVar("E1_YFDCVAL","X3_PICTURE","__NOTRANSFORM__")
+            uToXML():setXMLVar("ENVIADO","X3_PICTURE","__NOTRANSFORM__")
+            uToXML():setXMLVar("REGISTRADO","X3_PICTURE","__NOTRANSFORM__")
+            uToXML():setXMLVar("BAIXADO","X3_PICTURE","__NOTRANSFORM__")
 
-            uToXML():setXMLVar("E1_VALOR","TOTAL",.T.)
-            uToXML():setXMLVar("E1_YFDCVAL","TOTAL",.T.)
+            uToXML():setXMLVar("ENVIADO","TOTAL",.T.)
+            uToXML():setXMLVar("REGISTRADO","TOTAL",.T.)
+            uToXML():setXMLVar("BAIXADO","TOTAL",.T.)
 
             otMultProcess:SetRegua(1,0)
             otMultProcess:SetRegua(2,0)
-
+            
             bTTimer:={||otMultProcess:IncRegua(1,"Gerando Planilha Excel. Aguarde..."),otMultProcess:IncRegua(2,"Processando...")}
             Eval(bTTimer)
 
             oTTimer:=TTimer():New(1,bTTimer,getWndDefault()) 
 
-            bMsAguarde:={||uToXML():QryToXML(cTmpAlias,@cXMLFile,@cExcelTitle,@lPicture,@lX3Titulo,@ltxtEditMemo)}
+            bMsAguarde:={||oTTimer:Activate(),uToXML():QryToXML(cTmpAlias,@cXMLFile,@cExcelTitle,@lPicture,@lX3Titulo,@ltxtEditMemo),oTTimer:DeActivate()}
             MsAguarde(bMsAguarde,"Gerando Planilha Excel. Aguarde...")
             
             uToXML():clearXMLVar()
@@ -234,7 +212,7 @@ static procedure FIDCRelatorioRetornoQuery(otMultProcess as object,aParamRet as 
 
     return
 
-static function FIDCRetornoParameters(aParamRet as array) as logical
+static function FIDCConsolidadoParameters(aParamRet as array) as logical
 
     local aArea     as array
 	local aParamBox as array 
@@ -360,7 +338,7 @@ static function FIDCRetornoParameters(aParamRet as array) as logical
 		aAdd(aParamBox,array(9))
 		nPBoxAT:=Len(aParamBox)
 		aParamBox[nPBoxAT][1]:=1//[1]:1 - MsGet
-		aParamBox[nPBoxAT][2]:=OemToAnsi("Data Retorno De")//[2]:Descricao
+		aParamBox[nPBoxAT][2]:=OemToAnsi("Data Consolidado De")//[2]:Descricao
 		aParamBox[nPBoxAT][3]:=CtoD("")//[3]:String contendo o inicializador do campo
 		aParamBox[nPBoxAT][4]:="@D"//[4]:String contendo a Picture do campo
 		aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
@@ -373,7 +351,7 @@ static function FIDCRetornoParameters(aParamRet as array) as logical
 		aAdd(aParamBox,array(9))
 		nPBoxAT:=Len(aParamBox)
 		aParamBox[nPBoxAT][1]:=1//[1]:1 - MsGet
-		aParamBox[nPBoxAT][2]:=OemToAnsi("Data Retorno Ate")//[2]:Descricao
+		aParamBox[nPBoxAT][2]:=OemToAnsi("Data Consolidado Ate")//[2]:Descricao
 		aParamBox[nPBoxAT][3]:=date()//[3]:String contendo o inicializador do campo
 		aParamBox[nPBoxAT][4]:="@D"//[4]:String contendo a Picture do campo
 		aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
@@ -384,7 +362,7 @@ static function FIDCRetornoParameters(aParamRet as array) as logical
 
         cParamTit:=&("cCadastro")
         cFunName:=FunName()
-        setFunName("FIDCRelRetorno")
+        setFunName("FIDCRelConsolidado")
         lParamBox:=ParamBox(@aParamBox,&("cCadastro"),@aParamRet,/*bOk*/,/*aButtons*/,.T./*lCentered*/,/*nPosx*/,/*nPosy*/,/*oDlgWizard*/,/*cLoad*/,.T./*lCanSave*/,.T./*lUserSave*/)
         setFunName(cFunName)
 
@@ -396,5 +374,5 @@ static function FIDCRetornoParameters(aParamRet as array) as logical
 
 static function QueryView(aParamRet as character,aBCOIsFIDC as array,aFWTTables as array) as character
     local cTmpAlias as character
-    cTmpAlias:=FIDC():getQueryRet(@aParamRet,@aBCOIsFIDC,@aFWTTables)
+    cTmpAlias:=FIDC():getQueryCon(@aParamRet,@aBCOIsFIDC,@aFWTTables)
     return(cTmpAlias)

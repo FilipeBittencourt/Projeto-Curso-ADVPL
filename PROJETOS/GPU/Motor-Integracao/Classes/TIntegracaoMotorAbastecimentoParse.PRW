@@ -781,4 +781,3 @@ Static Function EmpFilArmaz(cProduto)
 	RestArea(aArea)
 
 Return cEmpEst + cFilEst
-

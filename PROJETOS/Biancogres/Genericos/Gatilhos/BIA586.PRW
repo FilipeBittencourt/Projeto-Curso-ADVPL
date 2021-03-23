@@ -18,7 +18,7 @@
 User Function BIA586()
 Local lRet := .T.
 
-	If (ALTERA .AND. U_VALOPER("031", .F.))
+	If (ALTERA .AND. !U_VALOPER("031", .F.))
 		lRet := .F.
 	EndIf
 	

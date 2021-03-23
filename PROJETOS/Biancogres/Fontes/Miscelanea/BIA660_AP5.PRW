@@ -1,7 +1,7 @@
 #Include "RwMake.ch"
 #Include "TOPCONN.CH"
-#Include "Totvs.ch"                      
-#Include "PROTHEUS.CH"  
+#Include "Totvs.ch"
+#Include "PROTHEUS.CH"
 
 /*
 ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
@@ -17,6 +17,16 @@
 ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 */
 User Function BIA660()
+
+	Local uRet
+
+	If (!stackTools():IsInStackCall({"ProcPedido","ProcessaDevolucao"}))
+		uRet:= BIA660()
+	EndIf
+
+Return(uRet)
+
+Static Function BIA660()
 
 	Local cEmpNPOL := AllTrim(GetNewPar("FA_EMPNPOL","14#"))
 	local _ni
@@ -58,8 +68,8 @@ User Function BIA660()
 		IF X3USO(x3_usado) .AND. cNivel >= X3_NIVEL .AND. !(RTRIM(X3_CAMPO) $ wCpo)
 			nUsado:=nUsado+1
 			AADD(aHeader,{ TRIM(x3_titulo), ALLTRIM(x3_campo)	, x3_picture		,;
-			x3_tamanho		, x3_decimal			,"AllwaysTrue()"	,;
-			x3_usado			, x3_tipo				, x3_arquivo		, x3_context } )
+				x3_tamanho		, x3_decimal			,"AllwaysTrue()"	,;
+				x3_usado			, x3_tipo				, x3_arquivo		, x3_context } )
 		ENDIF
 		DBSKIP()
 	ENDDO
@@ -68,7 +78,7 @@ User Function BIA660()
 	IF cOpcao=="VISUALIZAR"
 		DBSELECTAREA("SC6"); DBSETORDER(1)
 		IF DBSEEK(XFILIAL("SC6")+UZ7->UZ7_PEDIDO)
-			WHILE !EOF() .AND. (UZ7->UZ7_FILIAL == SC6->C6_FILIAL) .AND. (UZ7->UZ7_PEDIDO == SC6->C6_NUM) 
+			WHILE !EOF() .AND. (UZ7->UZ7_FILIAL == SC6->C6_FILIAL) .AND. (UZ7->UZ7_PEDIDO == SC6->C6_NUM)
 				IF SC6->C6_QTDVEN - SC6->C6_QTDENT > 0
 					AADD(aCols,ARRAY(nUsado+1)) 					// Cria uma linha nova com a quantidade de colunas determinadas pelo SX3 ou outra fonte qualquer
 					aCols[LEN(aCols)][nUsado+1] := .F. 	//.F. Ativa a linha  .T. Desativa (Marca para deleção)
@@ -127,13 +137,13 @@ RETURN()
 ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 */
 User Function aButtons()
-	aBotao :={}	
+	aBotao :={}
 
 	If U_VALOPER("003",.F.) //Apenas para Diretores e Gerentes
 		//aBotao :={{"BUDGETY",{|| U_CalcMargem(UZ7->UZ7_PEDIDO,"1") },"Margem"}}
-		//aBotao :={{"BUDGETY",{|| U_fMargem2(UZ7->UZ7_PEDIDO,"3") },"Margem2"}}	
+		//aBotao :={{"BUDGETY",{|| U_fMargem2(UZ7->UZ7_PEDIDO,"3") },"Margem2"}}
 		//aBotao :={{"BUDGETY",{|| U_fMargem3(UZ7->UZ7_PEDIDO,"3") },"Margem Operacional"}}
-		AADD(aBotao,{"BUDGETY",{|| U_fMargem3(UZ7->UZ7_PEDIDO,"3") },"Margem Operacional"})	
+		AADD(aBotao,{"BUDGETY",{|| U_fMargem3(UZ7->UZ7_PEDIDO,"3") },"Margem Operacional"})
 	EndIf
 
 	AADD(aBotao,{"BUDGETY",{|| U_BIA584() },"Total Quant."})
@@ -162,7 +172,7 @@ User Function CalcMargem(nNumPed,lFlag)
 	Local nFator 	:= 0
 	Local nVlrPre	:= 0
 	Local nDescZF 	:= 0
-	Local nVlrM		:= 0  
+	Local nVlrM		:= 0
 	Local nVlMCM	:= 0
 	Local nPcMCM	:= 0
 	Local lMundi	:= .F.
@@ -267,7 +277,7 @@ User Function CalcMargem(nNumPed,lFlag)
 	//Alteração da gravação da Taxa Financeira, conforme OS 2349-15
 	nFator	:= U_fBuscaTxBI(_TMP2->C5_YEMP,"TXF",_TMP2->C5_EMISSAO)
 	IF nFator == 0
-		MsgBox("Favor verificar o preenchimento da tabela Parametros BI (Z40), pois a Taxa Financeira (TXF) esta vencida para a Marca "+_TMP2->C5_YEMP+". Entre em contato com a Controladoria ou Direção Administrativa.","BIA660","STOP")		
+		MsgBox("Favor verificar o preenchimento da tabela Parametros BI (Z40), pois a Taxa Financeira (TXF) esta vencida para a Marca "+_TMP2->C5_YEMP+". Entre em contato com a Controladoria ou Direção Administrativa.","BIA660","STOP")
 		Return(nRet)
 	EndIf
 
@@ -330,7 +340,7 @@ User Function CalcMargem(nNumPed,lFlag)
 	//ARMAZENA VARIAVEIS PARA MONTAGEM DA TELA
 	If nDescZF > 0
 		cGet1 := Transform(nVlrPre+nDescZF		, "@E 999,999,999.99")
-		cGet8 := Transform(nDescZF				, "@E 999,999,999.99")	
+		cGet8 := Transform(nDescZF				, "@E 999,999,999.99")
 	Else
 		cGet1 := Transform(nVlrPre				, "@E 999,999,999.99")
 	EndIf
@@ -346,7 +356,7 @@ User Function CalcMargem(nNumPed,lFlag)
 
 	lMundi := .F.
 
-	If lFlag <> "2" //1 ou 3 
+	If lFlag <> "2" //1 ou 3
 
 		If lMundi
 			DEFINE MSDIALOG oDlg TITLE "Cálculo da Margem" FROM 000, 000  TO 440, 285 COLORS 0, 16777215 PIXEL
@@ -468,7 +478,7 @@ User Function fMargem2(nNumPed,lFlag)
 	Local cVlrPr 	:= "Define variable value"
 	Local nVlrRLC
 	Local cVlrRLC 	:= "Define variable value"
-	Local nVlrFt	
+	Local nVlrFt
 	Local cVlrFt 	:= "Define variable value"
 	Local nVlrINSS
 	Local cVlrINSS 	:= "Define variable value"
@@ -551,11 +561,11 @@ User Function fMargem2(nNumPed,lFlag)
 	//Alteração da gravação da Taxa Financeira, conforme OS 2349-15
 	nFator	:= U_fBuscaTxBI(_TMP2->C5_YEMP,"TXF",_TMP2->C5_EMISSAO)
 	IF nFator == 0
-		MsgBox("Favor verificar o preenchimento da tabela Parametros BI (Z40), pois a Taxa Financeira (TXF) esta vencida para a Marca "+_TMP2->C5_YEMP+". Entre em contato com a Controladoria ou Direção Administrativa.","BIA660","STOP")		
+		MsgBox("Favor verificar o preenchimento da tabela Parametros BI (Z40), pois a Taxa Financeira (TXF) esta vencida para a Marca "+_TMP2->C5_YEMP+". Entre em contato com a Controladoria ou Direção Administrativa.","BIA660","STOP")
 		Return(nRet)
 	EndIf
 
-	cSQL := ""                 
+	cSQL := ""
 	cSQL += "SELECT Z40_PERC FROM "+RetSqlName("Z40")+" WHERE Z40_MARCA = '"+_TMP->EMP+"' AND Z40_TIPO = 'DAO' AND Z40_DATDE <= '"+dtos(dDataBase)+"' AND Z40_DATATE >= '"+dtos(dDataBase)+"' AND D_E_L_E_T_ = '' "
 	If chkfile("_DAO")
 		dbSelectArea("_DAO")
@@ -563,7 +573,7 @@ User Function fMargem2(nNumPed,lFlag)
 	EndIf
 	TCQUERY cSQL ALIAS "_DAO" NEW
 
-	cSQL := ""                 
+	cSQL := ""
 	cSQL += "SELECT Z40_PERC FROM "+RetSqlName("Z40")+" WHERE Z40_MARCA = '"+_TMP->EMP+"' AND Z40_TIPO = 'DCF' AND Z40_DATDE <= '"+dtos(dDataBase)+"' AND Z40_DATATE >= '"+dtos(dDataBase)+"' AND D_E_L_E_T_ = '' "
 	If chkfile("_DCF")
 		dbSelectArea("_DCF")
@@ -571,7 +581,7 @@ User Function fMargem2(nNumPed,lFlag)
 	EndIf
 	TCQUERY cSQL ALIAS "_DCF" NEW
 
-	cSQL := ""                 
+	cSQL := ""
 	cSQL += "SELECT Z40_PERC FROM "+RetSqlName("Z40")+" WHERE Z40_MARCA = '"+_TMP->EMP+"' AND Z40_TIPO = 'DVi' AND Z40_DATDE <= '"+dtos(dDataBase)+"' AND Z40_DATATE >= '"+dtos(dDataBase)+"' AND D_E_L_E_T_ = '' "
 	If chkfile("_DCVI")
 		dbSelectArea("_DCVI")
@@ -579,7 +589,7 @@ User Function fMargem2(nNumPed,lFlag)
 	EndIf
 	TCQUERY cSQL ALIAS "_DCVI" NEW
 
-	cSQL := ""                 
+	cSQL := ""
 	cSQL += "SELECT Z40_PERC FROM "+RetSqlName("Z40")+" WHERE Z40_MARCA = '"+_TMP->EMP+"' AND Z40_TIPO = 'DVp' AND Z40_DATDE <= '"+dtos(dDataBase)+"' AND Z40_DATATE >= '"+dtos(dDataBase)+"' AND D_E_L_E_T_ = '' "
 	If chkfile("_DCVP")
 		dbSelectArea("_DCVP")
@@ -588,7 +598,7 @@ User Function fMargem2(nNumPed,lFlag)
 	TCQUERY cSQL ALIAS "_DCVP" NEW
 
 
-	//Realiza o calculo da Margem           
+	//Realiza o calculo da Margem
 	cVlrFt		:= Round((_TMP->VALOR+_TMP->DESCZF),2)
 	cVlrPr		:= Round((_TMP->VALOR+_TMP->DESCZF)/((1+nFator)^_TMP2->PZM),2)
 	cVlrImp		:= _TMP2->IMPOSTO
@@ -606,7 +616,7 @@ User Function fMargem2(nNumPed,lFlag)
 	cVlrMC2 	:= cVlrMC - (cDAO+cDCF+cDCVc+cDCVi+cDCVp)
 	//cPercMC2	:= Round((cVlrMC2/cVlrPr)*100,2)			//SUBTOTAL
 	cPercMC2	:= Round((cVlrMC2/cVlrFt)*100,2)			//SUBTOTAL
-	rPercMC2	:= cPercMC2		
+	rPercMC2	:= cPercMC2
 
 	cVlrFt		:= Transform(cVlrFt,	"@E 999,999,999.99")
 	cVlrPr		:= Transform(cVlrPr,	"@E 999,999,999.99")
@@ -636,7 +646,7 @@ User Function fMargem2(nNumPed,lFlag)
 			cSQL += "(SELECT C6_NUM AS PEDIDO, C6_PRODUTO AS PRODUTO, C6_ITEM AS ITEM, "
 			cSQL += "		ROUND ((C6_VALOR-C6_YDESCZF)/POWER(1+"+Alltrim(Str(nFator))+","+Alltrim(Str(_TMP2->PZM))+"),2) VPF,"
 			cSQL += "		C6_YVLTICM+C6_YVLTCOF+C6_YVLTPIS AS IMP,  "
-			cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*1)/100),2) INSS, " 
+			cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*1)/100),2) INSS, "
 			cSQL += "		CP = CASE "
 			cSQL += "				WHEN SUBSTRING(C6_YEMP,1,2) = '13' THEN ROUND((SELECT dbo.FN_CM(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_LOCAL,C6_YEMISSA))*C6_QTDVEN,2) "
 			cSQL += "				ELSE ROUND((SELECT dbo.FN_CP(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_YEMISSA,C6_YEMISSA))*C6_QTDVEN,2) "
@@ -649,7 +659,7 @@ User Function fMargem2(nNumPed,lFlag)
 			cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*"+Alltrim(Str(_DCVP->Z40_PERC))+")/100),2) DCVp "
 			cSQL += "FROM "+RetSqlName("SC6")+" "
 			cSQL += "WHERE C6_NUM = '"+nNumPed+"' AND D_E_L_E_T_ = '') TMP1, "+RetSqlName("SC6")+" "
-			cSQL += "WHERE PEDIDO  = C6_NUM 	AND "	
+			cSQL += "WHERE PEDIDO  = C6_NUM 	AND "
 			cSQL += "	   PRODUTO = C6_PRODUTO	AND "
 			cSQL += "	   ITEM    = C6_ITEM 	AND "
 			cSQL += "      D_E_L_E_T_ = '' 			"
@@ -658,13 +668,13 @@ User Function fMargem2(nNumPed,lFlag)
 		EndIf
 	EndIf
 
-	If lFlag <> "2" //1 ou 3 
+	If lFlag <> "2" //1 ou 3
 
-		/*                                       
+		/*
 		DEFINE MSDIALOG oDlg TITLE "Cálculo da Margem" FROM 000, 000  TO 400, 285 COLORS 0, 16777215 PIXEL
 
 		@ 008, 011 MSPANEL oPanel1 SIZE 120, 043 OF oDlg COLORS 0, 16777215 RAISED
-		@ 030, 000 SAY oSay4 PROMPT "Valor RLC" SIZE 036, 007 OF oPanel1 FONT oFont1 COLORS 128, 16777215 PIXEL   
+		@ 030, 000 SAY oSay4 PROMPT "Valor RLC" SIZE 036, 007 OF oPanel1 FONT oFont1 COLORS 128, 16777215 PIXEL
 		@ 000, 035 SAY oSay11 PROMPT "=" SIZE 000, 007 OF oSay4 FONT oFont1 COLORS 128, 16777215 PIXEL
 		@ 028, 058 MSGET nVlrRLC VAR cVlrRLC SIZE 060, 012 OF oPanel1 COLORS 128, 16777215 FONT oFont1 READONLY PIXEL
 		@ 031, 047 SAY oSay12 PROMPT "=" SIZE 007, 007 OF oPanel1 FONT oFont1 COLORS 128, 16777215 PIXEL
@@ -678,7 +688,7 @@ User Function fMargem2(nNumPed,lFlag)
 		@ 004, 000 SAY oSay14 PROMPT "Valor CP" SIZE 035, 007 OF oPanel3 FONT oFont2 COLORS 0, 16777215 PIXEL
 		@ 004, 049 SAY oSay5 PROMPT "-" SIZE 006, 006 OF oPanel3 FONT oFont3 COLORS 0, 16777215 PIXEL
 		@ 001, 059 MSGET nVlrCP VAR cVlrCP SIZE 060, 011 OF oPanel3 COLORS 0, 16777215 FONT oFont2 READONLY PIXEL
-		@ 017, 000 SAY oSay13 PROMPT "Valor MC" SIZE 037, 007 OF oPanel3 FONT oFont1 COLORS 128, 16777215 PIXEL 
+		@ 017, 000 SAY oSay13 PROMPT "Valor MC" SIZE 037, 007 OF oPanel3 FONT oFont1 COLORS 128, 16777215 PIXEL
 		@ 015, 059 MSGET nVlrMC VAR cVlrMC SIZE 060, 012 OF oPanel3 COLORS 128, 16777215 FONT oFont1 READONLY PIXEL
 		@ 016, 048 SAY oSay15 PROMPT "=" SIZE 007, 007 OF oPanel3 FONT oFont1 COLORS 128, 16777215 PIXEL
 		@ 094, 011 MSPANEL oPanel4 SIZE 121, 101 OF oDlg COLORS 0, 16777215 RAISED
@@ -780,7 +790,7 @@ User Function B660CPOL()
 		SC5->(DbSetOrder(1))
 		SC5->(DbSeek(XFilial("SC5")+UZ7->UZ7_PEDIDO))
 
-		_cItem 	:= aCols[N][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_ITEM"})] 
+		_cItem 	:= aCols[N][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_ITEM"})]
 
 		SC6->(DbSetOrder(1))
 		SC6->(DbSeek(XFilial("SC5")+UZ7->UZ7_PEDIDO+_cItem))
@@ -856,7 +866,7 @@ User Function fMargem3(nNumPed,lFlag)
 	Local oSay16
 	Local oSay17
 
-	Static oDlg  
+	Static oDlg
 
 
 	cSQL := ""
@@ -864,12 +874,12 @@ User Function fMargem3(nNumPed,lFlag)
 	If cEmpAnt == "07"
 
 		SM0->(DbSetOrder(1))
-		SM0->(DbSeek(cEmpAnt+cFilAnt))	
+		SM0->(DbSeek(cEmpAnt+cFilAnt))
 		_nFator		:= U_LMFatRed(SM0->M0_ESTCOB)
 
 		cSQL += "	,BS_INS_DES = CASE " + CRLF
 		cSQL += "					WHEN C6_YEMISSA <= '20150630' THEN ISNULL(ROUND(SUM((C6_VALOR-C6_YDESCZF)*0.9),2),0) " + CRLF
-		cSQL += "					WHEN C6_YEMISSA > '20150630' THEN ISNULL(ROUND(SUM((C6_VALOR-C6_YDESCZF)*"+AllTrim(Str(_nFator))+"),2),0) " + CRLF	
+		cSQL += "					WHEN C6_YEMISSA > '20150630' THEN ISNULL(ROUND(SUM((C6_VALOR-C6_YDESCZF)*"+AllTrim(Str(_nFator))+"),2),0) " + CRLF
 		cSQL += "					ELSE ISNULL(ROUND(SUM((C6_VALOR-C6_YDESCZF)*"+AllTrim(Str(_nFator))+"),2),0) " + CRLF
 		cSQL += "				END " + CRLF
 	Else
@@ -897,7 +907,7 @@ User Function fMargem3(nNumPed,lFlag)
 	cSQL += "						  (((C6_VALOR-C6_YDESCZF)*C6_COMIS4)/100)+									" + CRLF
 	cSQL += "						  (((C6_VALOR-C6_YDESCZF)*C6_COMIS5)/100),2) AS COMISSAO, C5_YSUBTP, C5_YPEDORI, C5_CONDPAG, C6_YEMISSA, C5_CLIENTE " + CRLF
 	cSQL += "FROM "+RetSqlName("SC5")+" SC5, "+RetSqlName("SC6")+" SC6 " + CRLF
-	cSQL += "WHERE	C5_FILIAL		= '"+xFilial("SC5")+"' AND " + CRLF 
+	cSQL += "WHERE	C5_FILIAL		= '"+xFilial("SC5")+"' AND " + CRLF
 	cSQL += "		C6_FILIAL		= '"+xFilial("SC6")+"' AND " + CRLF
 	cSQL += "		C5_NUM			= C6_NUM		AND " + CRLF
 	cSQL += "		C5_NUM			= '"+nNumPed+"'	AND " + CRLF
@@ -937,13 +947,13 @@ User Function fMargem3(nNumPed,lFlag)
 	//Alteração da gravação da Taxa Financeira, conforme OS 2349-15
 	nFator	:= U_fBuscaTxBI(_TMP2->C5_YEMP,"TXF",_TMP2->C5_EMISSAO)
 	IF nFator == 0
-	CONOUT("ESTOU AQUI************************")
+		CONOUT("ESTOU AQUI************************")
 		MsgBox("Favor verificar o preenchimento da tabela Parametros BI (Z40), pois a Taxa Financeira (TXF) esta vencida para a Marca "+_TMP2->C5_YEMP+". Entre em contato com a Controladoria ou Direção Administrativa.","BIA660","STOP")
 		CONOUT("ESTOU AQUI************************VOU DAR RETURN")
 		Return(nRet)
 	EndIf
 
-	cSQL := ""                 
+	cSQL := ""
 	cSQL += "SELECT ISNULL(Z40_PERC,0) PERC FROM "+RetSqlName("Z40")+" WHERE Z40_FILIAL = '"+xFilial("Z40")+"' AND Z40_MARCA = '"+_TMP->EMP+"' AND Z40_TIPO = 'DAO' AND Z40_DATDE <= '"+dtos(dDataBase)+"' AND Z40_DATATE >= '"+dtos(dDataBase)+"' AND D_E_L_E_T_ = '' "
 	If chkfile("_DAO")
 		dbSelectArea("_DAO")
@@ -951,7 +961,7 @@ User Function fMargem3(nNumPed,lFlag)
 	EndIf
 	TCQUERY cSQL ALIAS "_DAO" NEW
 
-	cSQL := ""                 
+	cSQL := ""
 	cSQL += "SELECT ISNULL(Z40_PERC,0) PERC FROM "+RetSqlName("Z40")+" WHERE Z40_FILIAL = '"+xFilial("Z40")+"' AND Z40_MARCA = '"+_TMP->EMP+"' AND Z40_TIPO = 'DCF' AND Z40_DATDE <= '"+dtos(dDataBase)+"' AND Z40_DATATE >= '"+dtos(dDataBase)+"' AND D_E_L_E_T_ = '' "
 	If chkfile("_DCF")
 		dbSelectArea("_DCF")
@@ -959,7 +969,7 @@ User Function fMargem3(nNumPed,lFlag)
 	EndIf
 	TCQUERY cSQL ALIAS "_DCF" NEW
 
-	cSQL := ""                 
+	cSQL := ""
 	cSQL += "SELECT ISNULL(Z40_PERC,0) PERC FROM "+RetSqlName("Z40")+" WHERE Z40_FILIAL = '"+xFilial("Z40")+"' AND Z40_MARCA = '"+_TMP->EMP+"' AND Z40_TIPO = 'DVi' AND Z40_DATDE <= '"+dtos(dDataBase)+"' AND Z40_DATATE >= '"+dtos(dDataBase)+"' AND D_E_L_E_T_ = '' "
 	If chkfile("_DCVI")
 		dbSelectArea("_DCVI")
@@ -967,7 +977,7 @@ User Function fMargem3(nNumPed,lFlag)
 	EndIf
 	TCQUERY cSQL ALIAS "_DCVI" NEW
 
-	cSQL := ""                 
+	cSQL := ""
 	cSQL += "SELECT ISNULL(Z40_PERC,0) PERC FROM "+RetSqlName("Z40")+" WHERE Z40_FILIAL = '"+xFilial("Z40")+"' AND Z40_MARCA = '"+_TMP->EMP+"' AND Z40_TIPO = 'DVp' AND Z40_DATDE <= '"+dtos(dDataBase)+"' AND Z40_DATATE >= '"+dtos(dDataBase)+"' AND D_E_L_E_T_ = '' "
 	If chkfile("_DCVP")
 		dbSelectArea("_DCVP")
@@ -975,7 +985,7 @@ User Function fMargem3(nNumPed,lFlag)
 	EndIf
 	TCQUERY cSQL ALIAS "_DCVP" NEW
 
-	cSQL := ""                 
+	cSQL := ""
 	cSQL += "SELECT ISNULL(Z40_PERC,0) PERC FROM "+RetSqlName("Z40")+" WHERE Z40_FILIAL = '"+xFilial("Z40")+"' AND Z40_MARCA = '"+_TMP->EMP+"' AND Z40_TIPO = 'INS' AND Z40_DATDE <= '"+dtos(dDataBase)+"' AND Z40_DATATE >= '"+dtos(dDataBase)+"' AND D_E_L_E_T_ = '' "
 	If chkfile("_INSS")
 		dbSelectArea("_INSS")
@@ -1002,7 +1012,7 @@ User Function fMargem3(nNumPed,lFlag)
 	nMB 		:= nMC - nCPfix
 
 	//Cálculo da MO
-	If _TMP2->C5_EMISSAO >= "20160701" //A partir de 01/07/2016 o cálculo do DAO/DCF serão calculos pela RL  
+	If _TMP2->C5_EMISSAO >= "20160701" //A partir de 01/07/2016 o cálculo do DAO/DCF serão calculos pela RL
 		nDAO 	:= Round((_DAO->PERC*nRL)/100,2)
 		nDCF 	:= Round((_DCF->PERC*nRL)/100,2)
 	Else
@@ -1013,8 +1023,8 @@ User Function fMargem3(nNumPed,lFlag)
 	nDCVCLI 	:= Round((_DCVI->PERC*nRB)/100,2)
 	nDCVFAB		:= Round((_DCVP->PERC*nRB)/100,2)
 	nMO 		:= nMB - (nDAO+nDCF+nDCVc+nDCVCLI+nDCVFAB)
-	nPercMO		:= Round((nMO/nRL)*100,2)			
-	rPercMO		:= nPercMO		
+	nPercMO		:= Round((nMO/nRL)*100,2)
+	rPercMO		:= nPercMO
 
 	nVOL		:= Transform(nVOL,		"@E 999,999,999.99")
 	nRB			:= Transform(nRB,		"@E 999,999,999.99")
@@ -1038,53 +1048,53 @@ User Function fMargem3(nNumPed,lFlag)
 		If lFlag <> "3" //1 ou 2
 
 			//ATUALIZA CAMPO SC5
-			cSQL := "UPDATE "+RetSqlName("SC5")+" SET C5_YPERCMC = '"+Alltrim(Str(rPercMO))+"' WHERE C5_FILIAL = '"+xFilial("SC5")+"' AND C5_NUM = '"+nNumPed+"' AND D_E_L_E_T_ = ''	" 
+			cSQL := "UPDATE "+RetSqlName("SC5")+" SET C5_YPERCMC = '"+Alltrim(Str(rPercMO))+"' WHERE C5_FILIAL = '"+xFilial("SC5")+"' AND C5_NUM = '"+nNumPed+"' AND D_E_L_E_T_ = ''	"
 			TcSqlExec(cSQL)
 
 			//ATUALIZA CAMPO SC6
-			cSQL := "UPDATE "+RetSqlName("SC6")+" SET C6_YPERCMC = ROUND((MB-(DAO+DCF+DCVc+DCVi+DCVp))/RL*100,2) " + CRLF 
+			cSQL := "UPDATE "+RetSqlName("SC6")+" SET C6_YPERCMC = ROUND((MB-(DAO+DCF+DCVc+DCVi+DCVp))/RL*100,2) " + CRLF
 			cSQL += "FROM " + CRLF
-			cSQL += "(SELECT VPF-(IMP+INSS) AS RL, VPF-(IMP+INSS+CV) AS MC, VPF-(IMP+INSS+CV+CF) AS MB, " + CRLF 
+			cSQL += "(SELECT VPF-(IMP+INSS) AS RL, VPF-(IMP+INSS+CV) AS MC, VPF-(IMP+INSS+CV+CF) AS MB, " + CRLF
 			If _TMP2->C5_EMISSAO >= "20160701" //A partir de 01/07/2016 o cálculo do DAO/DCF serão calculos pela RL
-				cSQL += "		ROUND(((VPF-(IMP+INSS))*"+Alltrim(Str(_DAO->PERC))+")/100,2) AS DAO,	" + CRLF 
+				cSQL += "		ROUND(((VPF-(IMP+INSS))*"+Alltrim(Str(_DAO->PERC))+")/100,2) AS DAO,	" + CRLF
 				cSQL += "		ROUND(((VPF-(IMP+INSS))*"+Alltrim(Str(_DCF->PERC))+")/100,2) AS DCF,	" + CRLF
 			Else
-				cSQL += "		ROUND((RB*"+Alltrim(Str(_DAO->PERC))+")/100,2) AS DAO,					" + CRLF 
+				cSQL += "		ROUND((RB*"+Alltrim(Str(_DAO->PERC))+")/100,2) AS DAO,					" + CRLF
 				cSQL += "		ROUND((RB*"+Alltrim(Str(_DCF->PERC))+")/100,2) AS DCF,					" + CRLF
 			EndIf
 			cSQL += "  		*																			" + CRLF
-			cSQL += "FROM																				" + CRLF 		
+			cSQL += "FROM																				" + CRLF
 			cSQL += "(SELECT C6_NUM AS PEDIDO, C6_PRODUTO AS PRODUTO, C6_ITEM AS ITEM, 	" + CRLF
-			cSQL += "		(C6_VALOR-C6_YDESCZF) RB,									" + CRLF 
+			cSQL += "		(C6_VALOR-C6_YDESCZF) RB,									" + CRLF
 			cSQL += "		ROUND ((C6_VALOR-C6_YDESCZF)/POWER(1+"+Alltrim(Str(nFator))+","+Alltrim(Str(_TMP2->PZM))+"),2) VPF," + CRLF
 			cSQL += "		C6_YVLTICM+C6_YVLTCOF+C6_YVLTPIS AS IMP,  " + CRLF
 			If cEmpAnt == "07"
 
 				SM0->(DbSetOrder(1))
-				SM0->(DbSeek(cEmpAnt+cFilAnt))	
+				SM0->(DbSeek(cEmpAnt+cFilAnt))
 				_nFator		:= U_LMFatRed(SM0->M0_ESTCOB)
 
 				cSQL += "		INSS = CASE WHEN C6_YEMISSA <= '20150630' THEN ROUND(((((C6_VALOR-C6_YDESCZF*0.9))*"+Alltrim(Str(_INSS->PERC))+")/100),2) ELSE ROUND(((((C6_VALOR-C6_YDESCZF*"+AllTrim(Str(_nFator))+"))*"+Alltrim(Str(_INSS->PERC))+")/100),2) END, " + CRLF
 			Else
-				cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*"+Alltrim(Str(_INSS->PERC))+")/100),2) INSS, " + CRLF 
+				cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*"+Alltrim(Str(_INSS->PERC))+")/100),2) INSS, " + CRLF
 			EndIf
-			cSQL += "		CV = CASE 								" + CRLF 
-			cSQL += "				WHEN C6_YEMP IN ('1399','1302') THEN ROUND((SELECT dbo.FN_CM(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_LOCAL,C6_YEMISSA))*C6_QTDVEN,2) " + CRLF 
-			cSQL += "				WHEN C6_YEMP IN ('1301','1401') THEN 0 " + CRLF 
+			cSQL += "		CV = CASE 								" + CRLF
+			cSQL += "				WHEN C6_YEMP IN ('1399','1302') THEN ROUND((SELECT dbo.FN_CM(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_LOCAL,C6_YEMISSA))*C6_QTDVEN,2) " + CRLF
+			cSQL += "				WHEN C6_YEMP IN ('1301','1401') THEN 0 " + CRLF
 			cSQL += "				ELSE ROUND((SELECT dbo.FN_CV(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_YEMISSA,C6_YEMISSA))*C6_QTDVEN,2) " + CRLF
-			cSQL += "		  	END,								" + CRLF 
-			cSQL += "		CF = CASE 								" + CRLF 
-			cSQL += "				WHEN C6_YEMP IN ('1399','1302') THEN 0" + CRLF 
-			cSQL += "				WHEN C6_YEMP IN ('1301','1401') THEN 0 " + CRLF 
-			cSQL += "				ELSE ROUND((SELECT dbo.FN_CF(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_YEMISSA,C6_YEMISSA))*C6_QTDVEN,2) " + CRLF 
-			cSQL += "			END,								" + CRLF 
+			cSQL += "		  	END,								" + CRLF
+			cSQL += "		CF = CASE 								" + CRLF
+			cSQL += "				WHEN C6_YEMP IN ('1399','1302') THEN 0" + CRLF
+			cSQL += "				WHEN C6_YEMP IN ('1301','1401') THEN 0 " + CRLF
+			cSQL += "				ELSE ROUND((SELECT dbo.FN_CF(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_YEMISSA,C6_YEMISSA))*C6_QTDVEN,2) " + CRLF
+			cSQL += "			END,								" + CRLF
 			cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*C6_COMIS1)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS2)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS3)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS4)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS5)/100),2) AS DCVc,      " + CRLF
 			cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*"+Alltrim(Str(_DCVI->PERC))+")/100),2) DCVi, " + CRLF
 			cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*"+Alltrim(Str(_DCVP->PERC))+")/100),2) DCVp " + CRLF
 			cSQL += "FROM "+RetSqlName("SC6")+" " + CRLF
 			cSQL += "WHERE C6_FILIAL = '"+xFilial("SC6")+"' AND C6_NUM = '"+nNumPed+"' AND D_E_L_E_T_ = '') TMP1) TMP2, "+RetSqlName("SC6")+" " + CRLF
-			cSQL += "WHERE C6_FILIAL = '"+xFilial("SC6")+"' AND " + CRLF 
-			cSQL += "	   PEDIDO  = C6_NUM 	AND " + CRLF	
+			cSQL += "WHERE C6_FILIAL = '"+xFilial("SC6")+"' AND " + CRLF
+			cSQL += "	   PEDIDO  = C6_NUM 	AND " + CRLF
 			cSQL += "	   PRODUTO = C6_PRODUTO	AND " + CRLF
 			cSQL += "	   ITEM    = C6_ITEM 	AND " + CRLF
 			cSQL += "      D_E_L_E_T_ = '' 			" + CRLF
@@ -1093,7 +1103,7 @@ User Function fMargem3(nNumPed,lFlag)
 		EndIf
 	EndIf
 
-	If lFlag <> "2" //1 ou 3 
+	If lFlag <> "2" //1 ou 3
 
 		DEFINE MSDIALOG oDlg TITLE "Cálculo Margem Operacional (MO)" FROM 000, 000  TO 610, 345 COLORS 0, 16777215 PIXEL
 

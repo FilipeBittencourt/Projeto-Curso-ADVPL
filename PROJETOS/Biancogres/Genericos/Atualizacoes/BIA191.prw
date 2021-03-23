@@ -16,27 +16,71 @@
 
 User Function BIA191()
 
-	Local aCores := {}  
-	Local cAlias := "Z28" 
-
+	Local aArea := ZZ8->(GetArea())
+	Private oBrowse
 	Private cCadastro := "Amarração Workflow x Emails"
+	Private lCtrlAdm  := .F.
+	Private lCtrlInd  := .F.
 
-	/*
-	AAdd(aCores,{"PH0_STATUS == '0'", "BR_VERDE" 	}) 		
-	AAdd(aCores,{"Empty(PH0_STATUS)", "BR_VERDE" 	}) 		
-	AAdd(aCores,{"PH0_STATUS == '1'", "BR_VERMELHO" }) 		
-	*/
+	Private aRotina
 
-	Private aRotina   := {	{"Pesquisar"    	,"AxPesqui"     	,0,1},;
-	{"Visualizar"  		,"U_BIA191_MNT"	,0,2},;
-	{"Incluir"	     	,"U_BIA191_I"	,0,3},;
-	{"Alterar"  	   	,"U_BIA191_MNT"	,0,4},;
-	{"Excluir"			,"U_BIA191_E"	,0,5}}
+	If PswSeek( __cUserID, .T. )
 
-	(cAlias)->(DbSetOrder(1))
-	(cAlias)->(DbGoTop())
+		aArray := PSWRET()
+		If aScan(aArray[1][10],'000000') > 0
 
-	(cAlias)->(MBROWSE(6,1,22,75,cAlias,,,,,,aCores))
+			lCtrlAdm := .T.
+
+		Else
+
+			lCtrlInd := .F.
+			If U_ValOper("I01", .F.)
+				lCtrlInd := .T.
+			EndIf
+
+		EndIf
+
+	EndIf
+
+	If lCtrlAdm
+
+		aRotina   := { {"Pesquisar"    	,"AxPesqui"    	,0,1},;
+		{               "Visualizar"  	,"U_BIA191_MNT"	,0,2},;
+		{               "Incluir"	    ,"U_BIA191_I"	,0,3},;
+		{               "Alterar"  	   	,"U_BIA191_MNT"	,0,4},;
+		{               "Excluir"		,"U_BIA191_E"	,0,5} }
+
+	ElseIf lCtrlInd
+
+		aRotina   := { {"Pesquisar"    	,"AxPesqui"    	,0,1},;
+		{               "Visualizar"  	,"U_BIA191_MNT"	,0,2},;
+		{               "Incluir"	    ,"U_BIA191_I"	,0,3},;
+		{               "Alterar"  	   	,"U_BIA191_MNT"	,0,4} }
+
+	Else
+
+		MsgALERT("Você não tem acesso para prosseguir a partir deste ponto! Abra ticket para ter acesso à rotina BIA191 se necessitar realmente a esta rotina.", "Atenção")
+		Return
+
+	EndIf
+
+	//Iniciamos a construção básicMARCOS_S	a de um Browse.
+	oBrowse := FWMBrowse():New()
+
+	//Definimos a tabela que será exibida na Browse utilizando o método SetAlias
+	oBrowse:SetAlias("Z28")
+
+	//Definimos o título que será exibido como método SetDescription
+	oBrowse:SetDescription(cCadastro)
+
+	//Adiciona um filtro ao browse
+	If lCtrlInd
+		oBrowse:SetFilterDefault( "Z28_ROTINA = 'BIAFG101            '" )
+	EndIf
+
+	//Ativamos a classe
+	oBrowse:Activate()
+	RestArea(aArea)	
 
 Return            
 
@@ -54,7 +98,6 @@ User Function BIA191_I(cAlias, nReg, nOpc)
 	Local oTPanel1
 	Local aSizFrm := {}   
 	Local oSay1
-	Local oSay2
 
 	Private oDlg            
 	Private oGetDados
@@ -67,6 +110,13 @@ User Function BIA191_I(cAlias, nReg, nOpc)
 	Private aHeader := {}
 	Private aCOLS := {}
 	Private aREG := {}  
+
+	If !lCtrlAdm
+
+		MsgSTOP("Somente ADMINISTRADOR pode utilizar esta opção.")
+		Return
+
+	EndIf
 
 	//Monta Tela     
 	aSizFrm := MsAdvSize() 
@@ -99,6 +149,7 @@ User Function BIA191_I(cAlias, nReg, nOpc)
 	ACTIVATE MSDIALOG oDlg CENTER ON INIT EnchoiceBar(oDlg,{|| IIF(TudoOk(), Mod2GrvI(),(NIL) )},{|| oDlg:End() })	
 
 	RestArea(aArea)
+
 Return     
 
 /*
@@ -123,7 +174,9 @@ Static Function TudoOk()
 	EndIf
 	EndIf
 	*/
+
 Return lRet
+
 /*
 ##############################################################################################################
 # PROGRAMA...: FEXPLOK
@@ -175,7 +228,8 @@ User Function BIA191OK()
 				EndIf
 			Next nI
 		EndIf
-	EndIf          
+	EndIf  
+
 return lRet      
 
 /*
@@ -231,8 +285,8 @@ Static Function Mod2GrvI()
 	oDlg:End()
 
 	RestArea(aArea)
-Return    
 
+Return    
 
 /*
 ##############################################################################################################
@@ -279,8 +333,8 @@ Static Function Mod2GrvA()
 	Next nI
 
 	RestArea( aArea )
-Return              
 
+Return              
 
 /*
 ##############################################################################################################
@@ -317,8 +371,8 @@ Static Function Mod2aHeader( cAlias )
 	End     
 
 	RestArea(aArea)
-Return     
 
+Return     
 
 /*
 ##############################################################################################################
@@ -361,8 +415,8 @@ Static Function Mod2aCOLS( cAlias, nReg, nOpc )
 	Endif                   
 
 	Restarea( aArea )
-Return
 
+Return
 
 /*
 ##############################################################################################################
@@ -430,6 +484,8 @@ User Function BIA191_MNT( cAlias, nReg, nOpc )
 
 	ACTIVATE MSDIALOG oDlg CENTER ON INIT EnchoiceBar(oDlg,{|| ( IIF( nOpc==4 .And. TudoOk(), Mod2GrvA(), IIF( nOpc==5, Mod2GrvE(), oDlg:End() ) ), oDlg:End() ) },{|| oDlg:End() })
 
+	RestArea( aArea )
+
 Return   
 
 
@@ -452,7 +508,7 @@ User Function BIA191_E()
 	If dbSeek( xFilial( cAlias ) + cChave )
 		//If dbSeek(cChave)
 
-		If MsgYesNo("Confirma Excluisão da Rotina " +Alltrim(Z28->Z28_ROTINA)+"? Isso Poderá acarrer na Falha do Recebimentos dos Emails","Confirma Exclusão?")
+		If MsgYesNo("Confirma Exclusão da Rotina " +Alltrim(Z28->Z28_ROTINA)+"? Isso Poderá acarrer na Falha do Recebimentos dos Emails","Confirma Exclusão?")
 
 			While !EOF() .And. (cAlias)->( Z28_FILIAL + Z28_ROTINA ) == xFilial( cAlias ) + cChave
 				RecLock(cAlias,.F.)  
@@ -477,6 +533,7 @@ Return
 ##############################################################################################################
 */
 Static Function ValidaRotina()
+
 	Local aArea := GetArea()
 	Local lRet := .T.             
 
@@ -503,6 +560,7 @@ Return lRet
 ##############################################################################################################
 */
 Static Function MudaRepl(cAlias, nReg, nOpc)
+
 	If(Len(aCols) > 1 .Or. !Empty(aCols[1][2]) )
 		If MsgYesNo("Já existe registros inseridos. Deseja Reiniciar Cadastro?","Confirmar?")
 			aCOLS := {} 
@@ -510,4 +568,5 @@ Static Function MudaRepl(cAlias, nReg, nOpc)
 			oGetDados:Refresh()			
 		EndIf
 	EndIf
+
 Return
