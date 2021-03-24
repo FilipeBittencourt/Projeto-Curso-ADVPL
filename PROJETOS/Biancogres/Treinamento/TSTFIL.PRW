@@ -8,6 +8,8 @@ User Function TSTFIL()
   If Select("SX6") <= 0
     RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
   EndIf
+  ExistCpo("SA1", cCodCli + cLoja)
+  iif(ExistCpo("CT1"))
 
   //TSTFIL001() // biaxfunc.prw  - Teste Email SEND
   //TSTFIL002() // Teste pedidos provisionados

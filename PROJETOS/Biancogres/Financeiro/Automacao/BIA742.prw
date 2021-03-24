@@ -1,5 +1,6 @@
 #Include 'Protheus.ch'
 #include "fwmvcdef.ch"
+#INCLUDE "TOPCONN.CH"
 
 /*/{Protheus.doc} BIA742
 @description Aprovadores de descontos financeiro via limites estabelecidos.
@@ -66,7 +67,7 @@ Static Function ModelDef()
 
 
   //Instanciando o modelo, não é recomendado colocar nome da user function (por causa do u_), respeitando 10 caracteres
-  oModel := MPFormModel():New("MODZDK",/*bPre*/, /*bPos*/,/*bCommit*/,/*bCancel*/)
+  oModel := MPFormModel():New("BIA742M",/*bPreValid*/,{|oModel| fTdOk(oModel)},/*<bCommit >*/,/*bCancel*/)
 
   //Atribuindo formulários para o modelo
   oModel:AddFields("FORMZDK",/*cOwner*/,oStZDK)
@@ -105,7 +106,7 @@ Static Function ViewDef()
   oView:CreateHorizontalBox("TELA",100)
 
   //Colocando título do formulário
-  oView:EnableTitleView('VIEW_ZDK', 'Dados - '+cTitulo )
+  oView:EnableTitleView('VIEW_ZDK',cTitulo )
 
   //Força o fechamento da janela na confirmação
   oView:SetCloseOnOk({||.T.})
@@ -126,6 +127,36 @@ User Function ZDKLEG()
   BrwLegenda(cTitulo, "Status", aLegenda)
 
 Return
+
+Static Function fTdOk(oModel)
+
+  Local lRet    := .T.
+  Local cQuery  := ""
+  Local cCLVLR  := oModel:GetModel("FORMZDK"):GetValue('ZDK_CLVLR')
+  Local cAPROV1 := oModel:GetModel("FORMZDK"):GetValue('ZDK_APROV1')
+  Local cCCONTA := oModel:GetModel("FORMZDK"):GetValue('ZDK_CCONTA')
+  Local cSTATUS := oModel:GetModel("FORMZDK"):GetValue('ZDK_STATUS')
+  Local cQry    := GetNextAlias()
+
+  cQuery += " select * from ZDK010 "  + CRLF
+  cQuery += " WHERE D_E_L_E_T_ = '' "  + CRLF
+  cQuery += " AND ZDK_CLVLR    = '"+AllTrim(cCLVLR)+"' "+ CRLF
+  cQuery += " AND ZDK_APROV1   = '"+AllTrim(cAPROV1)+"' "+ CRLF
+  cQuery += " AND ZDK_CCONTA   = '"+AllTrim(cCCONTA)+"' "+ CRLF
+  cQuery += " AND ZDK_STATUS   = '"+AllTrim(cStatus)+"' "+ CRLF
+
+
+  TcQuery cQuery New Alias (cQry)
+
+  If !EMPTY((cQry)->ZDK_APROV1);
+      .and. oModel:GetModel("FORMZDK"):GetValue('ZDK_VLAPIN') == (cQry)->ZDK_VLAPIN;
+      .and. oModel:GetModel("FORMZDK"):GetValue('ZDK_VLAPFI') == (cQry)->ZDK_VLAPFI
+    lRet := .F.
+    Help(NIL, NIL, "Help", NIL, "Já existe dados cadastrados com essas informações.", 1, 0,,,,,,{""})
+  EndIf
+
+
+Return (lRet)
 
 
 
