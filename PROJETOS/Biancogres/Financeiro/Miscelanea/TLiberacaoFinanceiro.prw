@@ -14,13 +14,13 @@ Class TLiberacaoFinanceiro From TAFAbStractClass
 
 	Data cChk // Imagem de marcacao
 	Data cUnChk // Imagem de marcacao
-	
+
 	Data lFinalizados
 	Data lSolicitante
 	Data lAprovador
 	Data lFinanceiro
 	Data cCcClaVL
-				
+
 	Data lReceber
 	Data lPagar
 
@@ -39,9 +39,9 @@ Class TLiberacaoFinanceiro From TAFAbStractClass
 	Data cForneceAte
 	Data cLojaDe
 	Data cLojaAte
-	
+
 	Data cErro
-			
+
 	Method New() ConStructor
 
 	Method GDFieldData(lReceber, lPagar)
@@ -52,14 +52,14 @@ Class TLiberacaoFinanceiro From TAFAbStractClass
 	Method SetPergLC(cYesNo)
 	Method GetErrorLog(aError)
 	Method Baixar(nValor, cBanco, cAgencia, cConta)
-	
+
 EndClass
 
 
 Method New() Class TLiberacaoFinanceiro
 
 	_Super:New()
-	
+
 	::cCliExc := GetNewPar("MV_YAPICEX", "000481|005885|999999|022551|026423|026308|007871|004536|010083|008615|010064|025633|025634|025704|018410|014395|001042")
 	::cChk := "WFCHK"
 	::cUnChk := "WFUNCHK"
@@ -72,7 +72,7 @@ Method New() Class TLiberacaoFinanceiro
 
 	::lReceber := .F.
 	::lPagar := .F.
-		
+
 	::cNumDe := Space(TamSx3("E2_NUM")[1])
 	::cNumAte := Space(TamSx3("E2_NUM")[1])
 	::cVencrDe := StoD("  /  /  ")
@@ -87,9 +87,9 @@ Method New() Class TLiberacaoFinanceiro
 	::cForneceAte := Space(TamSx3("E2_FORNECE")[1])
 	::cLojaDe := Space(TamSx3("E2_LOJA")[1])
 	::cLojaAte := Space(TamSx3("E2_LOJA")[1])
-	
+
 	::cErro := ""
-	
+
 Return()
 
 Method GetQueryReceber() Class TLiberacaoFinanceiro
@@ -98,45 +98,45 @@ Method GetQueryReceber() Class TLiberacaoFinanceiro
 	Local cStatus := ""
 
 	If ::lAprovador
-	
+
 		cStatus += If(Empty(cStatus), "", "/") + "2"
-		
+
 		If ::lFinalizados
-		
+
 			cStatus += If(Empty(cStatus), "", "/") + "4/5"
-		
+
 		EndIf
-	
+
 	EndIf
-	
+
 	If ::lSolicitante
-		
+
 		cStatus += If(Empty(cStatus), "", "/") + "2/3"
 
 		If ::lFinalizados
-		
+
 			cStatus += If(Empty(cStatus), "", "/") + "4/5"
-		
+
 		EndIf
-				
+
 	EndIf
-	
+
 	If ::lFinanceiro
-	
+
 		cStatus += If(Empty(cStatus), "", "/") + "2/3"
 
 		If ::lFinalizados
-		
+
 			cStatus += If(Empty(cStatus), "", "/") + "4/5"
-		
+
 		EndIf
-			
+
 	EndIf
 
 	If ::lSolicitante .Or. ::lAprovador .Or. ::lFinanceiro
-		
+
 		If ::lSolicitante
-		
+
 			cSQL := " SELECT '1' ZL0_STATUS, "
 			cSQL += " E1_NUM, "
 			cSQL += " E1_PREFIXO, "
@@ -158,19 +158,19 @@ Method GetQueryReceber() Class TLiberacaoFinanceiro
 			cSQL += " '' ZL0_CLVLDB, "
 			cSQL += " '' ZL0_CCD, "
 			cSQL += " '' ZL0_CTRVER "
-						
+
 			cSQL += " FROM " + RetSQLName("SE1") + " SE1 "
 			cSQL += " WHERE E1_FILIAL = "+ ValToSQL(xFilial("SE1"))
-			
+
 			cSQL += " AND E1_SALDO > 0 "
 			//cSQL += " AND E1_NUMBOR = '' "
 			cSQL += " AND E1_YBLQ IN ('', 'XX') "
 			//cSQL += " AND E1_TIPO NOT IN ('BOL', 'NCC', 'NDC', 'RA') " -- ticket 21762
-			
+
 			//Ticket 28366 - titulos do tipo BOL devem ser incluidos na selação, solicitação Nadine.
 			cSQL += " AND E1_TIPO NOT IN ('NCC', 'RA') "
 			cSQL += " AND E1_CLIENTE NOT IN " + FormatIn(::cCliExc, "|")
-			
+
 			cSQL += " AND E1_CLIENTE	BETWEEN " + ValToSQL(::cForneceDe)	+ " AND " + ValToSQL(::cForneceAte)
 			cSQL += " AND E1_LOJA		BETWEEN " + ValToSQL(::cLojaDe)		+ " AND " + ValToSQL(::cLojaAte)
 			cSQL += " AND E1_NUM 		BETWEEN " + ValToSQL(::cNumDe)		+ " AND " + ValToSQL(::cNumAte)
@@ -178,7 +178,7 @@ Method GetQueryReceber() Class TLiberacaoFinanceiro
 			cSQL += " AND E1_PARCELA 	BETWEEN " + ValToSQL(::cParcDe)		+ " AND " + ValToSQL(::cParcAte)
 			cSQL += " AND E1_TIPO 		BETWEEN " + ValToSQL(::cTipoDe)		+ " AND " + ValToSQL(::cTipoAte)
 			cSQL += " AND E1_VENCREA	BETWEEN " + ValToSQL(::cVencrDe)	+ " AND " + ValToSQL(::cVencrAte)
-			
+
 			cSQL += " AND NOT EXISTS
 			cSQL += " ( "
 			cSQL += " 	SELECT * FROM " + RetSQLName("ZL0") + " ZL0 "
@@ -195,15 +195,27 @@ Method GetQueryReceber() Class TLiberacaoFinanceiro
 			cSQL += " 		  AND ZL0_STATUS IN ( '2', '3' ) "
 			cSQL += " 	AND ZL0.D_E_L_E_T_   = '' "
 			cSQL += " ) "
-			
+
 			cSQL += " AND SE1.D_E_L_E_T_ = '' "
-			
+
+			cSQL += " AND NOT exists(															"
+			cSQL += " select 1  from "+ RetSQLName("SA6") + " SA6								"
+			cSQL += " where									 									"
+			cSQL += " 	A6_FILIAL			= '"+xFilial("SA6")+"'	 							"
+			cSQL += " 	AND A6_COD			= SE1.E1_PORTADO 									"
+			cSQL += " 	AND A6_AGENCIA		= SE1.E1_AGEDEP 									"
+			cSQL += " 	AND A6_NUMCON		= SE1.E1_CONTA 										"
+			cSQL += " 	AND SA6.D_E_L_E_T_	= ''												"
+			cSQL += " 	AND SA6.A6_YTPINTB	= '1'												"
+			cSQL += " )																			"
+
+
 		EndIf
-		
+
 		If ::lAprovador .Or. ::lFinanceiro .Or. ::lSolicitante
-			
+
 			cSQL += If(Empty(cSQL), " ", " UNION ")
-			
+
 			cSQL += " SELECT ZL0_STATUS, "
 			cSQL += " ZL0_NUM E1_NUM, "
 			cSQL += " ZL0_PREFIX E1_PREFIXO, "
@@ -240,14 +252,15 @@ Method GetQueryReceber() Class TLiberacaoFinanceiro
 			//cSQL += " 		AND ZL0_STATUS <> '4' "
 			cSQL += " 		AND SE1.D_E_L_E_T_   = '' "
 			cSQL += " ) "
-						
+
 			cSQL += " WHERE ZL0.D_E_L_E_T_ = '' AND ZL0_STATUS IN " + FormatIn(cStatus, "/")
 			cSQL += " AND ZL0_CART = 'R' "
 			cSQL += " AND ZL0_CODEMP = " + ValToSQL(cEmpAnt)
 			cSQL += " AND ZL0_CODFIL = " + ValToSQL(cFilAnt)
-			
+
+
 			If ::lSolicitante
-				
+
 				cSQL += " AND ZL0_CLIFOR	BETWEEN " + ValToSQL(::cForneceDe)	+ " AND " + ValToSQL(::cForneceAte)
 				cSQL += " AND ZL0_LOJA		BETWEEN " + ValToSQL(::cLojaDe)		+ " AND " + ValToSQL(::cLojaAte)
 				cSQL += " AND ZL0_NUM 		BETWEEN " + ValToSQL(::cNumDe)		+ " AND " + ValToSQL(::cNumAte)
@@ -255,23 +268,23 @@ Method GetQueryReceber() Class TLiberacaoFinanceiro
 				cSQL += " AND ZL0_PARCEL 	BETWEEN " + ValToSQL(::cParcDe)		+ " AND " + ValToSQL(::cParcAte)
 				cSQL += " AND ZL0_TIPO 		BETWEEN " + ValToSQL(::cTipoDe)		+ " AND " + ValToSQL(::cTipoAte)
 				cSQL += " AND E1_VENCREA	BETWEEN " + ValToSQL(::cVencrDe)	+ " AND " + ValToSQL(::cVencrAte)
-				
+
 			EndIf
-			
+
 			If ::lAprovador
-				
+
 				If !FWIsAdmin(__cUserID)
-				
+
 					cSQL += " AND RTRIM(LTRIM(ZL0_CCD)) + SUBSTRING(ZL0_CLVLDB, 1, 1) IN " + FormatIn(::cCcClaVL, "|")
-				
+
 				EndIf
-				
+
 			EndIf
-				
+
 		EndIf
-		
+
 		cSQL += If(Empty(cSQL), " ", " UNION ")
-				
+
 		cSQL += " SELECT '2' ZL0_STATUS, "
 		cSQL += " E1_NUM, "
 		cSQL += " E1_PREFIXO, "
@@ -299,7 +312,7 @@ Method GetQueryReceber() Class TLiberacaoFinanceiro
 		//cSQL += " AND E1_YOBSLIB = '' "
 		//cSQL += " AND E1_NUMBOR = '' "
 		//cSQL += " AND E1_TIPO NOT IN ('BOL', 'NCC', 'NDC', 'RA') " -- ticket 21762
-		
+
 		//Ticket 28366 - titulos do tipo BOL devem ser incluidos na selação, solicitação Nadine.
 		cSQL += " AND E1_TIPO NOT IN ('NCC', 'RA') "
 		cSQL += " AND E1_CLIENTE NOT IN " + FormatIn(::cCliExc, "|")
@@ -312,6 +325,18 @@ Method GetQueryReceber() Class TLiberacaoFinanceiro
 		cSQL += " AND E1_VENCREA	BETWEEN " + ValToSQL(::cVencrDe)	+ " AND " + ValToSQL(::cVencrAte)
 		cSQL += " AND E1_SALDO > 0 "
 		cSQL += " AND SE1.D_E_L_E_T_ = '' "
+
+		cSQL += " AND NOT exists(															"
+		cSQL += " select 1  from "+ RetSQLName("SA6") + " SA6								"
+		cSQL += " where									 									"
+		cSQL += " 	A6_FILIAL			= '"+xFilial("SA6")+"'	 							"
+		cSQL += " 	AND A6_COD			= SE1.E1_PORTADO 									"
+		cSQL += " 	AND A6_AGENCIA		= SE1.E1_AGEDEP 									"
+		cSQL += " 	AND A6_NUMCON		= SE1.E1_CONTA 										"
+		cSQL += " 	AND SA6.D_E_L_E_T_	= ''												"
+		cSQL += " 	AND SA6.A6_YTPINTB	= '1'												"
+		cSQL += " )																			"
+
 
 		cSQL += " AND NOT EXISTS
 		cSQL += " ( "
@@ -328,36 +353,36 @@ Method GetQueryReceber() Class TLiberacaoFinanceiro
 		cSQL += " 		  AND ZL0_LOJA   = E1_LOJA "
 		cSQL += " 	AND ZL0.D_E_L_E_T_   = '' "
 		cSQL += " ) "
-				
+
 		cSQL += " ORDER BY 2, 3, 4 , 5, 6, 7 "
-	
+
 	EndIf
-		
+
 Return(cSQL)
 
 Method GetQueryPagar() Class TLiberacaoFinanceiro
 
 	Local cSQL := ""
 	Local cStatus := ""
-	
+
 	If ::lAprovador
-	
+
 		cStatus += If(Empty(cStatus), "", "/") + "2"
-	
+
 		If ::lFinalizados
-	
+
 			cStatus += If(Empty(cStatus), "", "/") + "3/4/5"
-		
+
 		EndIf
-	
+
 	EndIf
-	
+
 	If ::lAprovador
-		
+
 		If ::lAprovador
-			
+
 			cSQL += If(Empty(cSQL), " ", " UNION ")
-			
+
 			cSQL += " SELECT ZL0_STATUS, "
 			cSQL += " ZL0_NUM E2_NUM, "
 			cSQL += " ZL0_PREFIX E2_PREFIXO, "
@@ -388,16 +413,16 @@ Method GetQueryPagar() Class TLiberacaoFinanceiro
 			//cSQL += " 		AND ZL0_STATUS <> '4' "
 			cSQL += " 		AND SE2.D_E_L_E_T_   = '' "
 			cSQL += " ) "
-			
+
 			cSQL += " WHERE ZL0.D_E_L_E_T_ = '' AND ZL0_STATUS IN " + FormatIn(cStatus, "/")
 			cSQL += " AND ZL0_CODEMP = " + ValToSQL(cEmpAnt)
 			cSQL += " AND ZL0_CODFIL = " + ValToSQL(cFilAnt)
 			cSQL += " AND ZL0_CART 	 = 'P' "
-					
+
 		EndIf
-		
+
 		cSQL += If(Empty(cSQL), " ", " UNION ")
-				
+
 		cSQL += " SELECT '2' ZL0_STATUS, "
 		cSQL += " E2_NUM, "
 		cSQL += " E2_PREFIXO, "
@@ -412,7 +437,7 @@ Method GetQueryPagar() Class TLiberacaoFinanceiro
 		cSQL += " E2_VENCREA, "
 		cSQL += " E2_VALOR, "
 		cSQL += " E2_SALDO, "
-		cSQL += " CASE WHEN E2_YBLQ = '01' THEN 'PA' WHEN E2_YBLQ = '02' THEN 'DESCONTO' ELSE '' END ZL0_OBSLIB "	
+		cSQL += " CASE WHEN E2_YBLQ = '01' THEN 'PA' WHEN E2_YBLQ = '02' THEN 'DESCONTO' ELSE '' END ZL0_OBSLIB "
 		cSQL += " FROM "+ RetSQLName("SE2") + " SE2 "
 		cSQL += " WHERE E2_FILIAL = "+ ValToSQL(xFilial("SE2"))
 		cSQL += " AND (E2_YBLQ <> 'XX' AND E2_YBLQ <> '') "
@@ -437,89 +462,104 @@ Method GetQueryPagar() Class TLiberacaoFinanceiro
 		cSQL += " 		  AND ZL0_LOJA   = E2_LOJA "
 		cSQL += " 	AND ZL0.D_E_L_E_T_   = '' "
 		cSQL += " ) "
-				
+
 		cSQL += " ORDER BY 2, 3, 4 , 5, 6, 7 "
-	
+
 	EndIf
-		
+
 Return(cSQL)
 
 Method GDFieldData(lReceber, lPagar) Class TLiberacaoFinanceiro
 
 	Local aRet := {}
 	Local cSQL := ""
+	Local cRet := "V"
 	Local cStatus := ""
 	Local cQry := GetNextAlias()
-	
+
 	DBSelectArea("ZL0")
-	
+
 	If lReceber
-		
+
 		cSQL := ::GetQueryReceber()
-		
+
 	ElseIf lPagar
-		
+
 		cSQL := ::GetQueryPagar()
-		
+
 	EndIf
-	
+
 	If ! Empty(cSQL)
-	
+
 		TcQuery cSQL New Alias (cQry)
-	
+
 		While !(cQry)->(Eof())
-		
+
 			cStatus := "" // 1=Normal;2=Aguardando aprov;3=Aprovado;4=Rejeitado;5=Finalizado
-		
+
 			If (cQry)->ZL0_STATUS == "1"
-			
+
 				cStatus := "BR_VERDE"
-			
+
 			ElseIf (cQry)->ZL0_STATUS == "2"
-			
+
 				cStatus := "BR_AMARELO"
-			
+
 			ElseIf (cQry)->ZL0_STATUS == "3"
-			
+
 				cStatus := "BR_AZUL"
-			
+
 			ElseIf (cQry)->ZL0_STATUS == "4"
-			
+
 				cStatus := "BR_VERMELHO"
 
 			ElseIf (cQry)->ZL0_STATUS == "5"
-			
+
 				cStatus := "BR_PRETO"
-							
+
 			EndIf
-		
+
 			If lReceber
-		
-				aAdd(aRet, { ::cUnChk,;
-					cStatus,;
-					(cQry)->E1_NUM,;
-					(cQry)->E1_PREFIXO,;
-					(cQry)->E1_PARCELA,;
-					(cQry)->E1_TIPO,;
-					(cQry)->E1_NATUREZ,;
-					(cQry)->E1_CLIENTE,;
-					(cQry)->E1_LOJA,;
-					(cQry)->NOME,;
-					STOD((cQry)->E1_EMISSAO),;
-					STOD((cQry)->E1_VENCTO),;
-					STOD((cQry)->E1_VENCREA),;
-					(cQry)->E1_VALOR,;
-					(cQry)->E1_SALDO,;
-					(cQry)->ZL0_DESCON,;
-					If(Empty((cQry)->ZL0_CLVLDB), Space(TAMSX3("ZL0_CLVLDB")[1]), (cQry)->ZL0_CLVLDB),;
-					If(Empty((cQry)->ZL0_CCD), Space(TAMSX3("ZL0_CCD")[1]), (cQry)->ZL0_CCD),;
-					If(Empty((cQry)->ZL0_ITEMD), Space(TAMSX3("ZL0_ITEMD")[1]), (cQry)->ZL0_ITEMD),;
-					If(Empty((cQry)->ZL0_DEBITO), Space(TAMSX3("ZL0_DEBITO")[1]), (cQry)->ZL0_DEBITO),;
-					If(Empty((cQry)->ZL0_CTRVER), Space(TAMSX3("ZL0_CTRVER")[1]), (cQry)->ZL0_CTRVER),;
-					If(Empty((cQry)->ZL0_OBSLIB), Space(TAMSX3("ZL0_OBSLIB")[1]), (cQry)->ZL0_OBSLIB),;
-					.F.})
-						
-			ElseIf lPagar
+
+				/*If Empty((cQry)->ZL0_CLVLDB)
+
+				If CkDescFin((cQry)->ZL0_CLVLDB, (cQry)->ZL0_DEBITO, (cQry)->ZL0_DESCON)
+
+						cRet := CkDescFin((cQry)->ZL0_CLVLDB, (cQry)->ZL0_DEBITO, (cQry)->ZL0_DESCON)
+
+				EndIf
+
+			EndIf*/
+
+			//if("V|U" $ cRet)
+
+					aAdd(aRet, { ::cUnChk,;
+						cStatus,;
+						(cQry)->E1_NUM,;
+						(cQry)->E1_PREFIXO,;
+						(cQry)->E1_PARCELA,;
+						(cQry)->E1_TIPO,;
+						(cQry)->E1_NATUREZ,;
+						(cQry)->E1_CLIENTE,;
+						(cQry)->E1_LOJA,;
+						(cQry)->NOME,;
+						STOD((cQry)->E1_EMISSAO),;
+						STOD((cQry)->E1_VENCTO),;
+						STOD((cQry)->E1_VENCREA),;
+						(cQry)->E1_VALOR,;
+						(cQry)->E1_SALDO,;
+						(cQry)->ZL0_DESCON,;
+						IIf(Empty((cQry)->ZL0_CLVLDB), Space(TAMSX3("ZL0_CLVLDB")[1]), (cQry)->ZL0_CLVLDB),;
+						IIf(Empty((cQry)->ZL0_CCD), Space(TAMSX3("ZL0_CCD")[1]), (cQry)->ZL0_CCD),;
+						IIf(Empty((cQry)->ZL0_ITEMD), Space(TAMSX3("ZL0_ITEMD")[1]), (cQry)->ZL0_ITEMD),;
+						IIf(Empty((cQry)->ZL0_DEBITO), Space(TAMSX3("ZL0_DEBITO")[1]), (cQry)->ZL0_DEBITO),;
+						IIf(Empty((cQry)->ZL0_CTRVER), Space(TAMSX3("ZL0_CTRVER")[1]), (cQry)->ZL0_CTRVER),;
+						IIf(Empty((cQry)->ZL0_OBSLIB), Space(TAMSX3("ZL0_OBSLIB")[1]), (cQry)->ZL0_OBSLIB),;
+						.F.})
+
+		//EndIf
+
+		ElseIf lPagar
 
 				aAdd(aRet, { ::cUnChk,;
 					cStatus,;
@@ -538,17 +578,17 @@ Method GDFieldData(lReceber, lPagar) Class TLiberacaoFinanceiro
 					(cQry)->E2_SALDO,;
 					(cQry)->ZL0_OBSLIB,;
 					.F.})
-								
-			EndIf
-									
+
+		EndIf
+
 			(cQry)->(DbSkip())
-		
-		EndDo
-	
+
+	EndDo
+
 		(cQry)->(DbCloseArea())
-	
-	EndIf
-	
+
+EndIf
+
 Return(aRet)
 
 Method Baixar(nValor, cBanco, cAgencia, cConta) Class TLiberacaoFinanceiro
@@ -561,9 +601,9 @@ Method Baixar(nValor, cBanco, cAgencia, cConta) Class TLiberacaoFinanceiro
 	Private lMsErroAuto := .F.
 	Private lMsHelpAuto := .T.
 	Private lAutoErrNoFile := .T.
-	
+
 	::SetPergLC(2)
-	
+
 	aAdd(aTit, {"E1_PREFIXO"	, SE1->E1_PREFIXO	, Nil})
 	aAdd(aTit, {"E1_NUM"		, SE1->E1_NUM		, Nil})
 	aAdd(aTit, {"E1_PARCELA"	, SE1->E1_PARCELA	, Nil})
@@ -579,17 +619,17 @@ Method Baixar(nValor, cBanco, cAgencia, cConta) Class TLiberacaoFinanceiro
 	aAdd(aTit, {"AUTMULTA"		, 0					, Nil, .T.})
 	aAdd(aTit, {"AUTACRESC"		, 0					, Nil, .T.})
 	aAdd(aTit, {"AUTVALREC"		, 0					, Nil, .T.})
-	
+
 	::cErro := ""
-	
+
 	MsExecAuto({|x,y| FINA070(x,y)}, aTit, 3)
 
 	If lMsErroAuto
 
 		cLogTxt += ::GetErrorLog()
-		
+
 		::cErro := cLogTxt
-		
+
 		::oLog:cIDProc := ::oPro:cIDProc
 		::oLog:cOperac := "R"
 		::oLog:cMetodo := "CR_TIT_INC"
@@ -598,11 +638,11 @@ Method Baixar(nValor, cBanco, cAgencia, cConta) Class TLiberacaoFinanceiro
 		::oLog:cEnvWF := "S"
 		::oLog:cTabela := RetSQLName("SE1")
 		::oLog:nIDTab := SE1->(Recno())
-		
+
 		::oLog:Insert()
 
 	Else
-		
+
 		::oLog:cIDProc := ::oPro:cIDProc
 		::oLog:cOperac := "R"
 		::oLog:cMetodo := "CR_TIT_INC"
@@ -611,7 +651,7 @@ Method Baixar(nValor, cBanco, cAgencia, cConta) Class TLiberacaoFinanceiro
 		::oLog:cEnvWF := "S"
 		::oLog:cTabela := RetSQLName("SE1")
 		::oLog:nIDTab := SE1->(Recno())
-		
+
 		::oLog:Insert()
 
 		If SE1->E1_PREFIXO = "JR" .And. SE1->E1_SALDO == 0
@@ -622,14 +662,14 @@ Method Baixar(nValor, cBanco, cAgencia, cConta) Class TLiberacaoFinanceiro
 
 			If MsgYesNo("Deseja prorrogar os titulos referentes?")
 
-				oObjDepId:BaixaDepAntJR(.T.) 
+				oObjDepId:BaixaDepAntJR(.T.)
 
 			EndIf
-		
+
 		EndIf
-		
+
 	EndIf
-	
+
 	::SetPergLC(1)
 
 Return(!lMsErroAuto)
@@ -641,7 +681,7 @@ Method SetPergLC(cYesNo) Class TLiberacaoFinanceiro
 	Pergunte("FIN070", .F.,,,,, @aPerg)
 
 	MV_PAR01 := cYesNo
-	
+
 	__SaveParam("FIN070", aPerg)
 
 Return()
@@ -651,11 +691,34 @@ Method GetErrorLog() Class TLiberacaoFinanceiro
 	Local cRet := ""
 	Local nX := 1
 	Local aError := GETAUTOGRLOG()
-	
+
 	For nX := 1 To Len(aError)
-	
+
 		cRet += aError[nX] + CRLF
-		
+
 	Next nX
-	
+
+Return(cRet)
+
+Static FUNCTION CkDescFin()
+
+	Local lRet := .F.
+	Local cQuery  := ""
+
+	Local cQry    := GetNextAlias()
+
+	cQuery += " select * from ZDK010 "  + CRLF
+	cQuery += " WHERE D_E_L_E_T_ = '' "  + CRLF
+	cQuery += " AND ZDK_CLVLR    = '"+AllTrim(cCLVLR)+"' "+ CRLF
+	cQuery += " AND ZDK_APROV1   = '"+AllTrim(cAPROV1)+"' "+ CRLF
+	cQuery += " AND ZDK_CCONTA   = '"+AllTrim(cCCONTA)+"' "+ CRLF
+
+	TcQuery cQuery New Alias (cQry)
+
+	If !EMPTY((cQry)->ZDK_APROV1) .AND.  oModel:getoperation() == 3
+		lRet := .F.
+		Help(NIL, NIL, "Help", NIL, "Já existe dados cadastrados com essas informações.", 1, 0,,,,,,{""})
+	EndIf
+
+
 Return(cRet)

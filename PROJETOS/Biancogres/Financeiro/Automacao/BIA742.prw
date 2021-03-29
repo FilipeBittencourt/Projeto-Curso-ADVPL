@@ -1,6 +1,9 @@
-#Include 'Protheus.ch'
-#include "fwmvcdef.ch"
-#INCLUDE "TOPCONN.CH"
+#include "protheus.ch"
+#include "msmgadd.ch"
+#INCLUDE "TOTVS.CH"
+#INCLUDE "FWMBROWSE.CH"
+#INCLUDE "FWMVCDEF.CH"
+#INCLUDE "TOPCONN.CH
 
 /*/{Protheus.doc} BIA742
 @description Aprovadores de descontos financeiro via limites estabelecidos.
@@ -12,7 +15,6 @@
 
 Static cTitulo := "Aprovadores de descontos financeiro"
 
-// u_BIA742()
 User Function BIA742()
 
   Local oBrowse
@@ -21,102 +23,101 @@ User Function BIA742()
 
   SetFunName("BIA742")
 
-  oBrowse := FWMBrowse():New() // Fornece um objeto do tipo grid, botões laterais e detalhes das colunas baseado no dicionário de dados
-  oBrowse:SetAlias('ZDK') // SELECINA A TABELA QUE IRÁ SER EXIBIDA
-  oBrowse:SetDescription(cTitulo) // NOME DO TITULO Que aparece no topo
-
-
+  oBrowse := FWMBrowse():New()
+  oBrowse:SetAlias('ZDK')
+  oBrowse:SetDescription(cTitulo)
   oBrowse:AddLegend("ZDK->ZDK_STATUS == 'A'" ,"GREEN","Ativo")
   oBrowse:AddLegend("ZDK->ZDK_STATUS == 'B'" ,"RED","Bloqueado")
-
-  oBrowse:Activate() // ativa  a função para aparecer
-
-  SetFunName(cFunBkp)
-  //RestArea(aArea)
-
-Return Nil
+  oBrowse:Activate()
 
 
-//------------------------------
-//Definição do menu da rotina
-//------------------------------
+Return
+
 Static Function MenuDef()
 
-  Local aRotina := {}
-  ADD OPTION aRotina Title 'Visualizar' Action 'VIEWDEF.BIA742' OPERATION 1 ACCESS 0
-  //ADD OPTION aRotina Title 'Visualizar' Action 'VIEWDEF.BIA742' OPERATION 2 ACCESS 0
-  ADD OPTION aRotina Title 'Incluir'    Action 'VIEWDEF.BIA742' OPERATION 3 ACCESS 0
-  ADD OPTION aRotina Title 'Alterar'    Action 'VIEWDEF.BIA742' OPERATION 4 ACCESS 0
-  ADD OPTION aRotina Title 'Excluir'    Action 'VIEWDEF.BIA742' OPERATION 5 ACCESS 0
-  ADD OPTION aRotina Title 'Legenda'    Action 'U_ZDKLEG' OPERATION 6 ACCESS 0
+  Local aRot := {}
+  //ADD OPTION aRot Title 'Visualizar' Action 'VIEWDEF.BIA742' OPERATION 1 ACCESS 0
+  ADD OPTION aRot Title 'Visualizar' Action 'VIEWDEF.BIA742' OPERATION MODEL_OPERATION_VIEW   ACCESS 0 //OPERATION 2 OU  1
+  ADD OPTION aRot Title 'Incluir'    Action 'VIEWDEF.BIA742' OPERATION MODEL_OPERATION_INSERT ACCESS 0 //OPERATION 3
+  ADD OPTION aRot Title 'Alterar'    Action 'VIEWDEF.BIA742' OPERATION MODEL_OPERATION_UPDATE ACCESS 0 //OPERATION 4
+  ADD OPTION aRot Title 'Excluir'    Action 'VIEWDEF.BIA742' OPERATION MODEL_OPERATION_DELETE ACCESS 0 //OPERATION 5
+  ADD OPTION aRot Title 'Legenda'    Action 'U_ZDKLEG' OPERATION 6 ACCESS 0
 
-Return(aRotina)
+Return(aRot)
 
-
-
-
-//------------------------------
-//Definição do modelo de dados
-//------------------------------
 Static Function ModelDef()
-  //Criação do objeto do modelo de dados
-  Local oModel := Nil
 
-  //Criação da estrutura de dados utilizada na interface
-  Local oStZDK := FWFormStruct(1, "ZDK")
+  Local oModel   := Nil
+  Local aZDKRel  := {}
+  Local oFormPai := FWFormStruct(1, 'ZDK', {|cCampo| AllTrim(cCampo) $ "ZDK_CLVLR|ZZE_NUM|ZDK_CCONTA"}) // CABEÇALHO
+  Local oFormFil := FWFormStruct(1, 'ZDK', {|cCampo| AllTrim(cCampo) $ "ZDK_APROV1|ZDK_APRON1|ZDK_VLAPIN|ZDK_VLAPFI|ZDK_STATUS"})// ITENS
 
-
-  //Instanciando o modelo, não é recomendado colocar nome da user function (por causa do u_), respeitando 10 caracteres
+  //Criando modelo de dados  //Instanciando o modelo, não é recomendado colocar nome da user function (por causa do u_), respeitando 10 caracteres
   oModel := MPFormModel():New("BIA742M",/*bPreValid*/,{|oModel| fTdOk(oModel)},/*<bCommit >*/,/*bCancel*/)
 
-  //Atribuindo formulários para o modelo
-  oModel:AddFields("FORMZDK",/*cOwner*/,oStZDK)
+  oModel:AddFields("FORMPAI",/*cOwner*/,oFormPai)// Cabeçalho - PAI
+  oModel:AddGrid('FORMFILH',"FORMPAI",oFormFil) // ITENS - FILHO
 
-  //Setando a chave primária da rotina
-  oModel:SetPrimaryKey({'ZDK_FILIAL'})
+  If INCLUI
+    oFormFil:SetProperty('ZDK_APRON1'	, MODEL_FIELD_INIT, {|oView| Space(TamSx3("ZDK_APRON1")[1]) })
+  Else
+    oFormFil:SetProperty('ZDK_APRON1'	, MODEL_FIELD_INIT, {|oView| UsrFullName(ZDK->ZDK_APROV1) })
+  EndIf
 
-  //Adicionando descrição ao modelo
+  oFormFil:AddTrigger("ZDK_APROV1",'ZDK_APRON1', {|| .T.}, {|oView| UsrFullName(M->ZDK_APROV1) })
+
+  //Criando o relacionamento FILHO e PAI
+  aAdd(aZDKRel, {'ZDK_CLVLR',  'IIf(!INCLUI, ZDK->ZDK_CLVLR,  FWxFilial("ZDK"))'} )
+  aAdd(aZDKRel, {'ZDK_CCONTA', 'IIf(!INCLUI, ZDK->ZDK_CCONTA, FWxFilial("ZDK"))'} )
+
+
+  //Criando o relacionamento
+  oModel:SetRelation('FORMFILH', aZDKRel, ZDK->(IndexKey(1)))
+
+  //Setando o campo único da ITENS para não ter repetição
+  //oModel:GetModel('FORMFILH'):SetUniqueLine({"ZDK_TRECHO"})
+
+  //Setando outras informações do Modelo de Dados
   oModel:SetDescription(cTitulo)
+  oModel:SetPrimaryKey({})
 
-  //Setando a descrição do formulário
-  oModel:GetModel("FORMZDK"):SetDescription(cTitulo)
+  oModel:GetModel("FORMPAI"):SetDescription(cTitulo)
+
 Return oModel
 
-
 Static Function ViewDef()
-  Local aStruZDK	:= ZDK->(DbStruct())
 
-  //Criação do objeto do modelo de dados da Interface do Cadastro de Autor/Interprete
-  Local oModel := FWLoadModel("BIA742")
+  Local oModel   := FWLoadModel("BIA742")
+  Local oFormPai := FWFormStruct(2, 'ZDK', {|cCampo| AllTrim(cCampo) $ "ZDK_CLVLR|ZZE_NUM|ZDK_CCONTA"}) // CABEÇALHO
+  Local oFormFil := FWFormStruct(2, 'ZDK', {|cCampo| AllTrim(cCampo) $ "ZDK_APROV1|ZDK_APRON1|ZDK_VLAPIN|ZDK_VLAPFI|ZDK_STATUS"})// ITENS
 
-  //Criação da estrutura de dados utilizada na interface do cadastro de Autor
-  Local oStZDK := FWFormStruct(2, "ZDK")  //pode se usar um terceiro parâmetro para filtrar os campos exibidos { |cCampo| cCampo $ 'SZDK_NOME|SZDK_DTAFAL|'}
+  Local oView    := Nil
 
-  //Criando oView como nulo
-  Local oView := Nil
-
-  //Criando a view que será o retorno da função e setando o modelo da rotina
   oView := FWFormView():New()
   oView:SetModel(oModel)
 
-  //Atribuindo formulários para interface
-  oView:AddField("VIEW_ZDK", oStZDK, "FORMZDK")
+  oView:AddField("VIEW_CAB"	, oFormPai	, "FORMPAI")
+  oView:AddGrid('VIEW_FIL'	, oFormFil	, "FORMFILH")
 
-  //Criando um container com nome tela com 100%
-  oView:CreateHorizontalBox("TELA",100)
+  //Setando o dimensionamento de tamanho
+  oView:CreateHorizontalBox('CABEC', 30)
+  oView:CreateHorizontalBox('ITENS' , 70)
 
-  //Colocando título do formulário
-  oView:EnableTitleView('VIEW_ZDK',cTitulo )
+  //Amarrando a view com as box
+  oView:SetOwnerView('VIEW_CAB','CABEC')
+  oView:SetOwnerView('VIEW_FIL','ITENS')
 
-  //Força o fechamento da janela na confirmação
+  //Habilitando título
+  //oView:EnableTitleView('VIEW_CAB', 'AAAAA')
+  //oView:EnableTitleView('VIEW_FIL', 'BBBBB')
+
+  //Tratativa padrão para fechar a tela
   oView:SetCloseOnOk({||.T.})
 
-  //O formulário da interface será colocado dentro do container
-  oView:SetOwnerView("VIEW_ZDK","TELA")
-
+  //Remove os campos de Filial e Tabela da ITENS
+	/*oStFilho:RemoveField('ZDK_CODIGO')*/
 
 Return oView
-
 
 User Function ZDKLEG()
   Local aLegenda := {}
@@ -128,35 +129,313 @@ User Function ZDKLEG()
 
 Return
 
+
 Static Function fTdOk(oModel)
 
   Local lRet    := .T.
+  Local nX      := 1
+  Local nY      := 1
   Local cQuery  := ""
-  Local cCLVLR  := oModel:GetModel("FORMZDK"):GetValue('ZDK_CLVLR')
-  Local cAPROV1 := oModel:GetModel("FORMZDK"):GetValue('ZDK_APROV1')
-  Local cCCONTA := oModel:GetModel("FORMZDK"):GetValue('ZDK_CCONTA')
-  Local cSTATUS := oModel:GetModel("FORMZDK"):GetValue('ZDK_STATUS')
-  Local cQry    := GetNextAlias()
+  Local oCAB    := oModel:GetModel("FORMPAI")
+  Local oITEM   := oModel:GetModel("FORMFILH")
+  Local oAUX   := oITEM
+  Local nOpc 		:= oModel:GetOperation()
 
-  cQuery += " select * from ZDK010 "  + CRLF
+  Local cCLVLR  := oCAB:GetValue('ZDK_CLVLR')
+  Local cCCONTA := oCAB:GetValue('ZDK_CCONTA')
+
+  //Local cAPROV1 := oModel:GetModel("FORMZDK"):GetValue('ZDK_APROV1')
+  //Local cSTATUS := oModel:GetModel("FORMZDK"):GetValue('ZDK_STATUS')
+  //Local cQry    := GetNextAlias()
+
+  /*cQuery += " select * from ZDK010 "  + CRLF
   cQuery += " WHERE D_E_L_E_T_ = '' "  + CRLF
   cQuery += " AND ZDK_CLVLR    = '"+AllTrim(cCLVLR)+"' "+ CRLF
   cQuery += " AND ZDK_APROV1   = '"+AllTrim(cAPROV1)+"' "+ CRLF
   cQuery += " AND ZDK_CCONTA   = '"+AllTrim(cCCONTA)+"' "+ CRLF
-  cQuery += " AND ZDK_STATUS   = '"+AllTrim(cStatus)+"' "+ CRLF
 
+  TcQuery cQuery New Alias (cQry)*/
 
-  TcQuery cQuery New Alias (cQry)
+  If nOpc == MODEL_OPERATION_INSERT .or. nOpc == MODEL_OPERATION_UPDATE
 
-  If !EMPTY((cQry)->ZDK_APROV1);
-      .and. oModel:GetModel("FORMZDK"):GetValue('ZDK_VLAPIN') == (cQry)->ZDK_VLAPIN;
-      .and. oModel:GetModel("FORMZDK"):GetValue('ZDK_VLAPFI') == (cQry)->ZDK_VLAPFI
+    For nX := 1 To oITEM:GetQtdLine()  //percorrendo  o grid
+
+      oITEM:GoLine(nX) // posiciona no primeiro item do grid
+
+      If !oITEM:IsDeleted() // ignora linhas deletadas
+
+        //Não permite cadastrar rotas iguais
+        For nY := 1 To oAUX:GetQtdLine()
+          
+          oAUX:GoLine(nY) // posiciona no primeiro item do grid
+          If !oAUX:IsDeleted() .AND. oITEM:GetValue('ZDK_APROV1') == oAUX:GetValue('ZDK_APROV1')
+            Help(,,'HELP',,"Não é permitido cadastrar o mesmo usuario  mais de uma vez. <b>"+oITEM:GetValue('ZDK_APROV1')+"</b>", 1, 0)
+            lRet := .F.
+            Exit
+          EndIf
+
+        Next nY
+
+      EndIf
+
+    Next nX
+
+  EndIf
+/*
+  If !EMPTY((cQry)->ZDK_APROV1) .AND.  oModel:getoperation() == 3
     lRet := .F.
     Help(NIL, NIL, "Help", NIL, "Já existe dados cadastrados com essas informações.", 1, 0,,,,,,{""})
   EndIf
-
+*/
 
 Return (lRet)
 
 
 
+
+/*
+Static Function fLinOK(oGrid,nLine)
+  Local nOpc := oITEM:GetOperation()
+  Local lRet := .T.
+Return(lRet)
+
+Static Function fPreValidCad(oModel)
+  Local lRet :=.T.
+  Local nOpc := oModel:getoperation()
+Return(lRet)
+
+Static Function fTudoOK(oModel)
+
+  Local lRet		 := .T.
+  Local nX   		 := 0
+  Local nWhile       := 1
+  Local nLinValid  := 0
+  Local nOpc 		 := oModel:GetOperation()
+  Local oField     := oModel:GetModel("FORMPAI")
+  Local oGrid      := oModel:GetModel("FORMFILH","ZDK_TRECHO")
+
+  Local cUsrAux := ""
+  Local cPswAux := ""
+
+  Local cUFOrig  := "" // estado de origem
+  Local cCidOrig := "" // cidade de origem
+  Local cUFDest  := "" // estado de Destino
+  Local cCidDest := "" // cidade de Destino
+
+  If !(RetCodUsr() $ cCodGestor)
+
+    If nOpc == MODEL_OPERATION_DELETE .Or. nOpc == MODEL_OPERATION_UPDATE
+
+      If !StaticCall(VIXA114, AnaliBloqueio, SC7->C7_NUM) // Ja liberado
+
+        If Aviso("ATENCAO", "Pedido já esta liberado. Seu usuário não tem permissão para " + If(nOpc == MODEL_OPERATION_DELETE, " exclusão!", " alteração!") + CRLF, {"Autorização Gestor", "Cancela"}, 3) == 1
+
+          If !U_VIXA259(@cUsrAux, @cPswAux)
+
+            Return(.F.)
+
+          EndIf
+
+        Else
+
+          Return(.F.)
+
+        EndIf
+
+      EndIf
+
+    EndIf
+
+  EndIf
+
+  If nOpc == MODEL_OPERATION_INSERT .or. nOpc == MODEL_OPERATION_UPDATE
+
+
+
+    //percorrendo  o ITENS
+    For nX := 1 To oITEM:GetQtdLine()
+      oITEM:GoLine(nX) // posiciona no primeiro item do ITENS
+      If !oITEM:IsDeleted() // ignora linhas deletadas
+        lRet := fLinOK(oGrid,nX)
+
+        //Não permite cadastrar rotas iguais
+        If((oITEM:GetValue('ZDK_UFORIG') == oITEM:GetValue('ZDK_UFDEST')) .AND.  (oITEM:GetValue('ZDK_CIDORI') == oITEM:GetValue('ZDK_CIDDES')))
+          Help( ,, 'HELP',, "Não é permitido cadastrar rotas iguais, favor verificar", 1, 0)
+          lRet := .F.
+          Exit
+        EndIf
+
+        // começar a validar a partir da segunda linha caso exista. Onde o destino precisa ser a origem do trecho seguinte
+        If nX > 1
+          If(cUFDest != oITEM:GetValue('ZDK_UFORIG'))
+            Help( ,, 'HELP',, "O estado da origem do próximo trecho precisa ser igual ao estado do destino anterior", 1, 0)
+            lRet := .F.
+            Exit
+          EndIf
+
+          If(cCidDest != oITEM:GetValue('ZDK_CIDORI'))
+            Help( ,, 'HELP',, "A cidade da origem do próximo trecho precisa ser igual a cidade do destino anterior", 1, 0)
+            lRet := .F.
+            Exit
+          EndIf
+        EndIf
+        cUFOrig := oITEM:GetValue('ZDK_UFORIG')
+        cCidOrig := oITEM:GetValue('ZDK_CIDORI')
+        cUFDest := oITEM:GetValue('ZDK_UFDEST')
+        cCidDest := oITEM:GetValue('ZDK_CIDDES')
+
+        // O ultimo destino destino precisa terminar na cidade em que a FILIA s encontra
+        //		 If(nX == oITEM:GetQtdLine())
+        //  If((oITEM:GetValue('ZDK_UFDEST') != SM0->M0_ESTCOB) .OR. (SubStr(SM0->M0_CODMUN,3) != oITEM:GetValue('ZDK_CIDDES')))
+        //			 	Help( ,, 'HELP',, "O último trecho de destino precisa ser o da própria Filial: " + cValToChar(SM0->M0_CIDCOB)+" - "+ cValToChar(SM0->M0_ESTCOB), 1, 0)
+        //				lRet := .F.
+        //				Exit
+        //  EndIf
+        //EndIf
+
+
+      EndIf
+    Next nX
+
+  EndIf
+
+Return(lRet)
+
+//Valida fornecedor para não permitir cadastrar uma rota para um que já tenha.
+User Function VIX257PC()
+
+  Local oModel	:= FWModelActive()
+  Local nOpc 	:= oModel:GetOperation()
+  Local lRet   := .T.
+
+  If nOpc == MODEL_OPERATION_INSERT
+    ZDK->(dbSetOrder(1)) // orderna sempre pelo indice nesse caso o 1   ZDK_FILIAL+ZDK_CODFOR+ZDK_LOJA+ZDK_CTRANS
+    If (ZDK->(DBSEEK(xFilial("ZDK")+oModel:GetValue('FORMPAI','ZDK_NUM')))) // posiciona no primeiro registro da tabela em questão segundo a ordem do indice no  dbSetOrder(1)
+      Help( ,, 'HELP',, "Este pedido já possui uma rota cadastrada, favor escolher outro. ", 1, 0)
+      lRet :=  .F.
+    EndIf
+  EndIf
+
+  SC7->(dbSetOrder(1)) // orderna sempre pelo indice nesse caso o 1   ZDK_FILIAL+ZDK_CODFOR+ZDK_LOJA+ZDK_CTRANS
+  If !(SC7->(DBSEEK(xFilial("SC7")+oModel:GetValue('FORMPAI','ZDK_NUM')))) // posiciona no primeiro registro da tabela em questão segundo a ordem do indice no  dbSetOrder(1)
+    Help( ,, 'HELP',, "Pedido inexistente, favor escolher outro. ", 1, 0)
+    lRet :=  .F.
+  EndIf
+
+Return lRet
+
+Static Function fCommit(oModel)
+
+  Local lRet 		 := .T.
+  Local oGrid		 := oModel:GetModel("FORMFILH")
+  Local oForm		 := oModel:GetModel("FORMPAI")
+  Local nX   		 := 0
+  Local nY		 := 0
+  Local nOpc 		 := oModel:GetOperation()
+  Local aCposForm  := oForm:GetStruct():GetFields()
+  Local aCposGrid  := oITEM:GetStruct():GetFields()
+
+  If nOpc == MODEL_OPERATION_INSERT
+
+    ConfirmSX8()
+
+  EndIf
+
+  For nX := 1 To oITEM:GetQtdLine()
+
+    oITEM:GoLine(nX)
+
+    ZDK->(dbGoTo(oITEM:GetDataID()))
+
+    If nOpc == MODEL_OPERATION_DELETE
+
+      //-- Deleta registro
+      ZDK->(RecLock("ZDK",.F.))
+      ZDK->(dbDelete())
+      ZDK->(MsUnLock())
+
+    Else
+
+      //-- Grava inclusao/alteracao
+      ZDK->(RecLock("ZDK", ZDK->(EOF())))
+
+      If oITEM:IsDeleted()
+
+        ZDK->(dbDelete())
+
+      Else
+
+        //-- Grava campos do cabecalho
+        For nY := 1 To Len(aCposForm)
+
+          If ZDK->(FieldPos(aCposForm[nY,3])) > 0
+
+            ZDK->&(aCposForm[nY,3]) := oForm:GetValue(aCposForm[nY,3])
+
+          EndIf
+
+        Next nY
+
+        //-- Grava campos do ITENS
+        For nY := 1 To Len(aCposGrid)
+
+          If ZDK->(FieldPos(aCposGrid[nY,3])) > 0 .And. aCposGrid[nY,3] <> "ZDK_FILIAL"
+
+            ZDK->&(aCposGrid[nY,3]) := oITEM:GetValue(aCposGrid[nY,3])
+
+          EndIf
+
+        Next nY
+
+      EndIf
+
+      ZDK->(MsUnLock())
+
+      ZDK->(RecLock("ZDK",.F.))
+      ZDK->ZDK_FILIAL := xFilial("ZDK")
+      ZDK->(MsUnLock())
+
+    EndIf
+
+  Next nX
+
+Return(lRet)
+
+Static Function fCancel(oModel)
+
+  Local lRet 		 := .T.
+  Local oForm		 := oModel:GetModel("FORMPAI")
+  Local oGrid		 := oModel:GetModel("FORMFILH")
+  Local nOpc 		 := oModel:GetOperation()
+
+  If nOpc == MODEL_OPERATION_INSERT
+
+    RollBAckSx8()
+
+  EndIf
+
+Return(lRet)
+
+User Function VIX257IG(cTab, nIndex, cConteudo, cCampoRet, lTrigger, aCampoDest)
+
+  Local lRet 		:= .T.
+  Local oModel	:= FWModelActive()
+  Local oView		:= FwViewActive()
+  Local cRetorno	:= ""
+
+  Default cTab		:= ""
+  Default lTrigger 	:= .F.
+  Default aCampoDest	:= {}
+
+  If (!oView:IsActive() .And. !INCLUI) .Or. lTrigger
+
+    If ! Empty(cTab)
+
+      cRetorno := PadL(Posicione(cTab, nIndex, xFilial(cTab) + cConteudo, cCampoRet), TamSx3(cCampoRet)[1])
+
+    EndIf
+
+  EndIf
+
+Return(cRetorno)
+ */

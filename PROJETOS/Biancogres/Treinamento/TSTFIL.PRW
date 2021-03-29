@@ -5,18 +5,20 @@
 // U_TSTFIL
 User Function TSTFIL()
 
+/*
   If Select("SX6") <= 0
     RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
   EndIf
-  ExistCpo("SA1", cCodCli + cLoja)
-  iif(ExistCpo("CT1"))
+  */
+
 
   //TSTFIL001() // biaxfunc.prw  - Teste Email SEND
   //TSTFIL002() // Teste pedidos provisionados
   //TSTFIL003()
+  TSTFIL004()
 
-  DbSelectArea("ZDK")
-  X31UPDTABLE('ZDK')
+  //DbSelectArea("ZDK")
+  //X31UPDTABLE('ZDK')
 
 
 RETURN
@@ -219,7 +221,6 @@ Static Function TSTFIL002()
 
 Return
 
-
 Static Function TSTFIL003()
 
   Local cQuery    := ""
@@ -259,14 +260,6 @@ Static Function TSTFIL003()
 
 Return lRet
 
-
-
-
-
-
-
-
-
 Static Function MSGTXT(cMensagem,cTitulo)
 
   Local oDlg
@@ -292,3 +285,27 @@ Static Function MSGTXT(cMensagem,cTitulo)
   ACTIVATE MSDIALOG oDlg CENTER
 
 Return lRet
+
+
+Static Function TSTFIL004()
+
+
+  Local nX       := 1
+  Local nY       := 1
+  Local aArrX    := {1,2}
+  Local aArrY    := {1,2,3,4,5,6,7,8,9,10}
+  Local cNum := ""
+
+  For nX := 1 TO Len(aArrX)
+
+    For nY := Len(aArrY)  TO 1 STEP -1
+
+      If aArrX[nX] == aArrY[nY]
+        alert("Posição do aArrX = "+cValtoChar(nX))
+      EndIf
+
+    Next nY
+
+  Next nX
+
+Return
