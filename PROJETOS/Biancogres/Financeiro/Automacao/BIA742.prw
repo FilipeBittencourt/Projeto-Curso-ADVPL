@@ -49,8 +49,8 @@ Static Function ModelDef()
 
   Local oModel   := Nil
   Local aZDKRel  := {}
-  Local oFormPai := FWFormStruct(1, 'ZDK', {|cCampo| AllTrim(cCampo) $ "ZDK_CLVLR|ZZE_NUM|ZDK_CCONTA"}) // CABEÇALHO
-  Local oFormFil := FWFormStruct(1, 'ZDK', {|cCampo| AllTrim(cCampo) $ "ZDK_APROV1|ZDK_APRON1|ZDK_VLAPIN|ZDK_VLAPFI|ZDK_STATUS"})// ITENS
+  Local oFormPai := FWFormStruct(1, 'ZDK', {|cCampo| AllTrim(cCampo) $ "ZDK_CLVLR|ZDK_CCONTA"}) // CABEÇALHO
+  Local oFormFil := FWFormStruct(1, 'ZDK', {|cCampo| AllTrim(cCampo) $ "ZDK_APROV1|ZDK_APRON1|ZDK_VLAPIN|ZDK_VLAPFI|ZDK_APROVT|ZDK_APRONT|ZDK_DTATIN|ZDK_DTATFI|ZDK_STATUS"})// ITENS
 
   //Criando modelo de dados  //Instanciando o modelo, não é recomendado colocar nome da user function (por causa do u_), respeitando 10 caracteres
   oModel := MPFormModel():New("BIA742M",/*bPreValid*/,{|oModel| fTdOk(oModel)},/*<bCommit >*/,/*bCancel*/)
@@ -60,11 +60,14 @@ Static Function ModelDef()
 
   If INCLUI
     oFormFil:SetProperty('ZDK_APRON1'	, MODEL_FIELD_INIT, {|oView| Space(TamSx3("ZDK_APRON1")[1]) })
+    oFormFil:SetProperty('ZDK_APRONT'	, MODEL_FIELD_INIT, {|oView| Space(TamSx3("ZDK_APRONT")[1]) })
   Else
     oFormFil:SetProperty('ZDK_APRON1'	, MODEL_FIELD_INIT, {|oView| UsrFullName(ZDK->ZDK_APROV1) })
+    oFormFil:SetProperty('ZDK_APRONT'	, MODEL_FIELD_INIT, {|oView| UsrFullName(ZDK->ZDK_APROVT) })
   EndIf
 
   oFormFil:AddTrigger("ZDK_APROV1",'ZDK_APRON1', {|| .T.}, {|oView| UsrFullName(M->ZDK_APROV1) })
+  oFormFil:AddTrigger("ZDK_APROVT",'ZDK_APRONT', {|| .T.}, {|oView| UsrFullName(M->ZDK_APROVT) })
 
   //Criando o relacionamento FILHO e PAI
   aAdd(aZDKRel, {'ZDK_CLVLR',  'IIf(!INCLUI, ZDK->ZDK_CLVLR,  FWxFilial("ZDK"))'} )
@@ -88,8 +91,8 @@ Return oModel
 Static Function ViewDef()
 
   Local oModel   := FWLoadModel("BIA742")
-  Local oFormPai := FWFormStruct(2, 'ZDK', {|cCampo| AllTrim(cCampo) $ "ZDK_CLVLR|ZZE_NUM|ZDK_CCONTA"}) // CABEÇALHO
-  Local oFormFil := FWFormStruct(2, 'ZDK', {|cCampo| AllTrim(cCampo) $ "ZDK_APROV1|ZDK_APRON1|ZDK_VLAPIN|ZDK_VLAPFI|ZDK_STATUS"})// ITENS
+  Local oFormPai := FWFormStruct(2, 'ZDK', {|cCampo| AllTrim(cCampo) $ "ZDK_CLVLR|ZDK_CCONTA"}) // CABEÇALHO
+  Local oFormFil := FWFormStruct(2, 'ZDK', {|cCampo| AllTrim(cCampo) $ "ZDK_APROV1|ZDK_APRON1|ZDK_VLAPIN|ZDK_VLAPFI|ZDK_APROVT|ZDK_APRONT|ZDK_DTATIN|ZDK_DTATFI|ZDK_STATUS"})// ITENS
 
   Local oView    := Nil
 
@@ -137,41 +140,53 @@ Static Function fTdOk(oModel)
   Local nY      := 1
   Local cQuery  := ""
   Local oCAB    := oModel:GetModel("FORMPAI")
-  Local oITEM   := oModel:GetModel("FORMFILH")
-  Local oAUX   := oITEM
+  Local oITEM   := oModel:GetModel("FORMFILH","ZDK_APRON1")
+  Local oAUX    := oITEM
   Local nOpc 		:= oModel:GetOperation()
 
   Local cCLVLR  := oCAB:GetValue('ZDK_CLVLR')
   Local cCCONTA := oCAB:GetValue('ZDK_CCONTA')
+  Local cQry    := GetNextAlias()
 
-  //Local cAPROV1 := oModel:GetModel("FORMZDK"):GetValue('ZDK_APROV1')
-  //Local cSTATUS := oModel:GetModel("FORMZDK"):GetValue('ZDK_STATUS')
-  //Local cQry    := GetNextAlias()
 
-  /*cQuery += " select * from ZDK010 "  + CRLF
-  cQuery += " WHERE D_E_L_E_T_ = '' "  + CRLF
-  cQuery += " AND ZDK_CLVLR    = '"+AllTrim(cCLVLR)+"' "+ CRLF
-  cQuery += " AND ZDK_APROV1   = '"+AllTrim(cAPROV1)+"' "+ CRLF
-  cQuery += " AND ZDK_CCONTA   = '"+AllTrim(cCCONTA)+"' "+ CRLF
 
-  TcQuery cQuery New Alias (cQry)*/
+  If (nOpc == MODEL_OPERATION_INSERT)
 
-  If nOpc == MODEL_OPERATION_INSERT .or. nOpc == MODEL_OPERATION_UPDATE
+    cQuery += " select * from ZDK010 "  + CRLF
+    cQuery += " WHERE D_E_L_E_T_ = '' "  + CRLF
+    cQuery += " AND ZDK_CLVLR    = '"+AllTrim(cCLVLR)+"' "+ CRLF
+    cQuery += " AND ZDK_CCONTA   = '"+AllTrim(cCCONTA)+"' "+ CRLF
 
-    For nX := 1 To oITEM:GetQtdLine()  //percorrendo  o grid
+    TcQuery cSQL New Alias (cQry)
+
+    If !EMPTY((cQry)->ZDK_APROV1)
+      Help(NIL, NIL, "Help", NIL, "Já existe dados cadastrados com essas informações.", 1, 0,,,,,,{""})
+      Return .F.
+    EndIf
+
+  EndIf
+
+
+  If oITEM:GetQtdLine() == 0
+
+    Help(NIL, NIL, "Help", NIL, "Favor informar os dados de valores inicial e final.", 1, 0,,,,,,{""})
+    Return .F.
+
+  EndIf
+
+  If (nOpc == MODEL_OPERATION_INSERT .or. nOpc == MODEL_OPERATION_UPDATE) .and. oITEM:GetQtdLine() >= 2
+
+    For nX := 1 TO oITEM:GetQtdLine()
 
       oITEM:GoLine(nX) // posiciona no primeiro item do grid
+      If oITEM:IsDeleted(nX) == .F. // ignora linhas deletadas
 
-      If !oITEM:IsDeleted() // ignora linhas deletadas
+        For nY := 1  TO oAUX:GetQtdLine()
 
-        //Não permite cadastrar rotas iguais
-        For nY := 1 To oAUX:GetQtdLine()
-          
-          oAUX:GoLine(nY) // posiciona no primeiro item do grid
-          If !oAUX:IsDeleted() .AND. oITEM:GetValue('ZDK_APROV1') == oAUX:GetValue('ZDK_APROV1')
-            Help(,,'HELP',,"Não é permitido cadastrar o mesmo usuario  mais de uma vez. <b>"+oITEM:GetValue('ZDK_APROV1')+"</b>", 1, 0)
-            lRet := .F.
-            Exit
+          oAUX:GoLine(nY) // posiciona no ULTIMO item do grid
+          If ( (oAUX:IsDeleted(nY) == .F.) .AND. (oITEM:GetValue('ZDK_APROV1', nX) == oAUX:GetValue('ZDK_APROV1',nY)) .AND. (nY != nX) )
+            Help(,,'HELP',,"Não é permitido cadastrar o mesmo usuario  mais de uma vez na linha  <b>"+cValToChar(nY)+" - "+oITEM:GetValue('ZDK_APROV1')+"</b>", 1, 0,,,,,,{"Para auxiliar, ordene pela coluna usuário e altere um dos valores duplicados."})
+            Return .F.
           EndIf
 
         Next nY
@@ -181,12 +196,6 @@ Static Function fTdOk(oModel)
     Next nX
 
   EndIf
-/*
-  If !EMPTY((cQry)->ZDK_APROV1) .AND.  oModel:getoperation() == 3
-    lRet := .F.
-    Help(NIL, NIL, "Help", NIL, "Já existe dados cadastrados com essas informações.", 1, 0,,,,,,{""})
-  EndIf
-*/
 
 Return (lRet)
 
