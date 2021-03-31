@@ -5,7 +5,7 @@
 // U_TSTFIL
 User Function TSTFIL()
 
-
+  RpcClearEnv()
   If Select("SX6") <= 0
     RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
   EndIf
@@ -19,7 +19,7 @@ User Function TSTFIL()
 
   //DbSelectArea("ZDK")
 
-  X31UPDTABLE('ZDK')
+  // X31UPDTABLE('ZDK')
 
 
 RETURN
