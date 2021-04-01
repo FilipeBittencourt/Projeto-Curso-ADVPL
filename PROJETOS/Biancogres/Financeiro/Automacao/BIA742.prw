@@ -50,7 +50,7 @@ Static Function ModelDef()
   Local oModel   := Nil
   Local aZDKRel  := {}
   Local oCAB := FWFormStruct(1, 'ZDK', {|cCampo| AllTrim(cCampo) $ "ZDK_CLVLR|ZDK_CCONTA"}) // CABEÇALHO
-  Local oITEN := FWFormStruct(1, 'ZDK', {|cCampo| AllTrim(cCampo) $ "ZDK_APROV1|ZDK_APRON1|ZDK_VLAPIN|ZDK_VLAPFI|ZDK_APROVT|ZDK_APRONT|ZDK_DTATIN|ZDK_DTATFI|ZDK_STATUS"})// ITENS
+  Local oITEN := FWFormStruct(1, 'ZDK', {|cCampo| AllTrim(cCampo) $ "ZDK_STATUS|ZDK_APROV1|ZDK_APRON1|ZDK_VLAPIN|ZDK_VLAPFI|ZDK_APROVT|ZDK_APRONT|ZDK_DTATIN|ZDK_DTATFI"})// ITENS
 
   //Criando modelo de dados  //Instanciando o modelo, não é recomendado colocar nome da user function (por causa do u_), respeitando 10 caracteres
   oModel := MPFormModel():New("BIA742M",/*bPreValid*/,{|oModel| fTdOk(oModel)},/*<bCommit >*/,/*bCancel*/)
@@ -69,17 +69,6 @@ Static Function ModelDef()
   oITEN:AddTrigger("ZDK_APROV1",'ZDK_APRON1', {|| .T.}, {|oView| UsrFullName(M->ZDK_APROV1) })
   oITEN:AddTrigger("ZDK_APROVT",'ZDK_APRONT', {|| .T.}, {|oView| UsrFullName(M->ZDK_APROVT) })
 
-  //Criando o relacionamento FILHO e PAI
-  aAdd(aZDKRel, {'ZDK_CLVLR',  'IIf(!INCLUI, ZDK->ZDK_CLVLR,  FWxFilial("ZDK"))'} )
-  aAdd(aZDKRel, {'ZDK_CCONTA', 'IIf(!INCLUI, ZDK->ZDK_CCONTA, FWxFilial("ZDK"))'} )
-
-
-  //Criando o relacionamento
-  oModel:SetRelation('ITEN', aZDKRel, ZDK->(IndexKey(1)))
-
-  //Setando o campo único da ITENS para não ter repetição
-  //oModel:GetModel('ITEN'):SetUniqueLine({"ZDK_TRECHO"})
-
   //Setando outras informações do Modelo de Dados
   oModel:SetDescription(cTitulo)
   oModel:SetPrimaryKey({})
@@ -91,8 +80,8 @@ Return oModel
 Static Function ViewDef()
 
   Local oModel   := FWLoadModel("BIA742")
-  Local oCAB := FWFormStruct(2, 'ZDK', {|cCampo| AllTrim(cCampo) $ "ZDK_CLVLR|ZDK_CCONTA"}) // CABEÇALHO
-  Local oITEN := FWFormStruct(2, 'ZDK', {|cCampo| AllTrim(cCampo) $ "ZDK_APROV1|ZDK_APRON1|ZDK_VLAPIN|ZDK_VLAPFI|ZDK_APROVT|ZDK_APRONT|ZDK_DTATIN|ZDK_DTATFI|ZDK_STATUS"})// ITENS
+  Local oCAB := FWFormStruct(2, 'ZDK', {|cCampo| AllTrim(cCampo)  $ "ZDK_CLVLR|ZDK_CCONTA"}) // CABEÇALHO
+  Local oITEN := FWFormStruct(2, 'ZDK', {|cCampo| AllTrim(cCampo) $ "ZDK_STATUS|ZDK_APROV1|ZDK_APRON1|ZDK_VLAPIN|ZDK_VLAPFI|ZDK_APROVT|ZDK_APRONT|ZDK_DTATIN|ZDK_DTATFI"})// ITENS
 
   Local oView    := Nil
 
@@ -152,7 +141,7 @@ Static Function fTdOk(oModel)
 
   If (nOpc == MODEL_OPERATION_INSERT)
 
-    cQuery += " select * from ZDK010 "  + CRLF
+    cQuery += " select * from ZDK990 "  + CRLF
     cQuery += " WHERE D_E_L_E_T_ = '' "  + CRLF
     cQuery += " AND ZDK_CLVLR    = '"+AllTrim(cCLVLR)+"' "+ CRLF
     cQuery += " AND ZDK_CCONTA   = '"+AllTrim(cCCONTA)+"' "+ CRLF
@@ -160,7 +149,7 @@ Static Function fTdOk(oModel)
     TcQuery cQuery New Alias (cQry)
 
     If !EMPTY((cQry)->ZDK_APROV1)
-      Help(NIL, NIL, "Help", NIL, "Já existe dados cadastrados para a classe de valor.<b>"+cValToChar(cCLVLR)+"</b> e conta <b>"+cValToChar(cCCONTA)+"</b>", 1, 0,,,,,,{""})
+      Help(NIL, NIL, "Help", NIL, "Já existem dados cadastrados para a classe de valor. <b>"+cCLVLR+"</b> com a conta <b>"+IIf(EMPTY(cCCONTA), "Não Informada.", cCCONTA)+"</b>", 1, 0,,,,,,{""})
       Return .F.
     EndIf
 
