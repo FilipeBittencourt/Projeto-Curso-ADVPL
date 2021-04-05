@@ -141,7 +141,7 @@ Static Function fTdOk(oModel)
 
   If (nOpc == MODEL_OPERATION_INSERT)
 
-    cQuery += " select * from ZDK990 "  + CRLF
+    cQuery += " select * from ZDK010 "  + CRLF
     cQuery += " WHERE D_E_L_E_T_ = '' "  + CRLF
     cQuery += " AND ZDK_CLVLR    = '"+AllTrim(cCLVLR)+"' "+ CRLF
     cQuery += " AND ZDK_CCONTA   = '"+AllTrim(cCCONTA)+"' "+ CRLF
