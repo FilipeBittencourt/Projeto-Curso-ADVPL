@@ -42,12 +42,14 @@ Class TProcessoRocket From LongClassName
 	Data nValLim // validade do limite de credito, em meses
 	Data cParCli // Parecer da analise do cliente
 	Data cPorte // Porte do cliente
+	Data cCredit // Decisão Analista - Identifica o retorno da plataforma Rocket - APROVADO; REPROVADO; APROVADO_AUTOMATICO; REPROVADO_AUTOMATICO	 
 	Data lEnvProd // Ambiente de Producao
 	
 	Method New() Constructor
 	Method Add()
 	Method AddReturn()
 	Method UpdCustomer()
+	Method UpdCreditRequest()
 	Method GetSeq()
 	Method Load()
 	Method Request()
@@ -95,6 +97,7 @@ Method New() Class TProcessoRocket
 	::nValLim := 0
 	::cParCli := ""
 	::cPorte := ""
+	::cCredit := ""
 	::lEnvProd := If (Upper(AllTrim(GetEnvserver())) $ "PRODUCAO/SCHEDULE/REMOTO/COMP-TIAGO", .T., .F.)
 
 Return()
@@ -185,9 +188,23 @@ Method AddReturn() Class TProcessoRocket
 		ZM4->ZM4_DTVLC := MonthSum(dDataBase, ::nValLim)
 		ZM4->ZM4_PAC := ::cParCli
 		ZM4->ZM4_PORTE := ::cPorte
+		ZM4->ZM4_CREDIT := ::cCredit
 
 	ZM4->(MsUnLock())
+	
 
+	DbSelectArea("ZM0")
+	DbSetOrder(1)
+	If ZM0->(DbSeek(xFilial("ZM0") + ::cCodPro))
+	
+		RecLock("ZM0", .F.)
+					
+			ZM0->ZM0_CREDIT := ::cCredit
+		
+		ZM0->(MsUnLock())
+	
+	EndIf
+	
 Return()
 
 
@@ -209,19 +226,50 @@ Local cSQL := ""
 		EndIf
 		
 		cSQL += " WHERE A1_FILIAL = " + ValToSQL(xFilial("SA1"))
-		cSQL += " AND A1_CGC IN "
+		cSQL += " AND SUBSTRING(A1_CGC, 1, 8) IN "
 		cSQL += " ( "
-		cSQL += " 	SELECT ZM1_CNPJ "
+		cSQL += " 	SELECT SUBSTRING(ZM1_CNPJ, 1, 8) "
 		cSQL += " 	FROM " + RetSQLName("ZM1")
 		cSQL += " 	WHERE ZM1_FILIAL = " + ValToSQL(xFilial("ZM1"))
 		cSQL += " 	AND ZM1_CODPRO = " + ValToSQL(::cCodPro)
 		cSQL += " 	AND D_E_L_E_T_ = '' "
 		cSQL += " ) "
+		cSQL += " AND A1_YTIPOLC IN "
+		cSQL += " ( "		
+		cSQL += " 	SELECT A1_YTIPOLC
+		cSQL += " 	FROM " + RetFullName("SA1", aEmp[nCount])
+		cSQL += " 	WHERE A1_CGC IN
+		cSQL += " 	(
+		cSQL += " 		SELECT ZM1_CNPJ "
+		cSQL += " 		FROM " + RetSQLName("ZM1")
+		cSQL += " 		WHERE ZM1_FILIAL = " + ValToSQL(xFilial("ZM1"))
+		cSQL += " 		AND ZM1_CODPRO = " + ValToSQL(::cCodPro)
+		cSQL += " 		AND D_E_L_E_T_ = '' "
+		cSQL += " 	)
+		cSQL += " 	AND D_E_L_E_T_ = ''
+		cSQL += " ) "				
 		cSQL += " AND D_E_L_E_T_ = '' "
 	
 		TcSQLExec(cSQL)	
 
 	Next
+
+Return()
+
+
+Method UpdCreditRequest() Class TProcessoRocket
+Local cSQL := ""
+
+	cSQL := " UPDATE " + RetFullName("SZU", "01")
+	cSQL += " SET ZU_STATUS = " + ValToSQL(If (::cCredit $ "AM/AA", "APROVADO", "REPROVADO"))
+	cSQL += ", ZU_DATAAPR = " + ValToSQL(dDatabase)
+	cSQL += ", ZU_OBS_LIB = " + ValToSQL(::cParCli)	
+	cSQL += " WHERE ZU_FILIAL = " + ValToSQL(xFilial("SZU"))
+	cSQL += " AND ZU_BIZAGI = '' "
+	cSQL += " AND ZU_CODPRO = " + ValToSQL(::cCodPro)
+	cSQL += " AND D_E_L_E_T_ = '' "
+
+	TcSQLExec(cSQL)
 
 Return()
 
@@ -357,9 +405,29 @@ Local nCount := 1
 				
 			ElseIf oXml[nCount]:_NOME:TEXT == "PORTE_CLIENTE"
 			
-				::cPorte := oXml[nCount]:_VALOR:TEXT	
+				::cPorte := oXml[nCount]:_VALOR:TEXT
 			
-			EndIf
+			ElseIf oXml[nCount]:_NOME:TEXT == "DECISAO_ANALISTA"
+			
+				If Upper(oXml[nCount]:_VALOR:TEXT) == "APROVADO"
+				
+					::cCredit := "AM"
+				
+				ElseIf Upper(oXml[nCount]:_VALOR:TEXT) == "REPROVADO"
+				
+					::cCredit := "RM"
+				
+				ElseIf Upper(oXml[nCount]:_VALOR:TEXT) == "APROVADO_AUTOMATICO"
+				
+					::cCredit := "AA"
+				
+				ElseIf Upper(oXml[nCount]:_VALOR:TEXT) == "REPROVADO_AUTOMATICO"
+				
+					::cCredit := "RA"
+				
+				EndIf
+			
+			EndIf			
 			
 			nCount++
 						
@@ -371,7 +439,13 @@ Local nCount := 1
 			
 		::AddReturn()
 		
-		//::UpdCustomer()
+		If ::cCredit == "AM" .Or. ::cCredit == "AA"
+			
+			::UpdCustomer()
+			
+		EndIf
+		
+		::UpdCreditRequest()
 		
 	EndIf
 	

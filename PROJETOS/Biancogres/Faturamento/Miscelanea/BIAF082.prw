@@ -43,11 +43,7 @@ Return()
 
 
 // Função para teste de envio de e-mail de aprovação
-//User Function BIAF082A()
-User Function BIAF082A(cNumPed, cCodTabAprov)
-	
-	//Local aArea 	:= GetArea()
-	//Local oAprPed	:= TAprovaPedidoVendaEMail():New()
+User Function BIAF082A()
 
 /*
 --Pablo S. Nascimento
@@ -65,11 +61,21 @@ WHERE
 	--and (select sum(SC6.C6_YDNV) from SC6070 SC6
 	--		where SC6.C6_NUM = SC.C5_NUM) > 0
 	ORDER BY ZKL.R_E_C_N_O_	desc
-*/
-	Default cNumPed 		:= 'F08304'
-	Default cCodTabAprov	:= '000001'
 	
-	RPCSetType(3)
+--SQL util para buscar pedidos e aprovadores de exemplo para testar workflow
+SELECT * 								
+	 FROM ZKL070
+	WHERE 	1=1										
+	D_E_L_E_T_ 			= ''						
+	AND ZKL_PEDIDO		= 'F08304'			
+	AND ZKL_FILIAL		= '01'		
+	AND ZKL_STATUS		= '1'						
+	ORDER BY R_E_C_N_O_	desc
+
+*/
+	Default cNumPed 		:= ''
+	Default cCodAprov		:= ''
+	
 	RPCSetEnv("01", "01")
 	
 		oAprPed	:= TAprovaPedidoVendaEMail():New()
@@ -79,13 +85,11 @@ WHERE
 		If SC5->(DbSeek(xFilial("SC5") + cNumPed))		
 			 		
 			oAprPed:cNumPed 		:= cNumPed
-			oAprPed:cCodTabAprov	:= cCodTabAprov
+			oAprPed:cCodApr			:= cCodAprov
 			oAprPed:Envia()
 							
 		EndIf
 	
 	RpcClearEnv()	
-	
-	//RestArea(aArea)
 	
 Return()

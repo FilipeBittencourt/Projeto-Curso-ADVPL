@@ -2,33 +2,37 @@
 #INCLUDE "TOTVS.CH"
 #INCLUDE "TOPCONN.CH"
 
+/*/{Protheus.doc} BIACMGMR
+@author Pedro - Facile
+@since 17/06/20
+@version 1.0
+@description Cria sequência para GMRResponsável por criar uma nova sequência para carga GMR de uma determinada revisão orçamentária
+@obs Responsável por criar uma nova sequência para carga GMR de uma determinada revisão orçamentária
+@type function
+/*/
+
 User Function BIACMGMR()
 
-	Private cAno			:= SPACE(TAMSX3("ZBM_ANOREF")[1]) 
 	Private cVersao			:= SPACE(TAMSX3("ZBM_VERSAO")[1]) 
 	Private cRevisa			:= SPACE(TAMSX3("ZBM_REVISA")[1])
-	Private cSequen			:= SPACE(TAMSX3("ZBM_SEQUEN")[1])
-	
+	Private cAno			:= SPACE(TAMSX3("ZBM_ANOREF")[1]) 
+
 	Filtrar()
-	
+
 Return 
 
-
 Static Function Filtrar()
-	
+
 	Local nPos				:= 0
 	Private aPergs			:= {}
 	Private cRefPer		  	:= 'BIACMGMR' + cEmpAnt
 	Private cFileName    	:= __cUserID +"_"+ cRefPer
 	Private aRetPerg		:= {"","",""}
-	
-	
+
 	aAdd( aPergs ,{1, "Versão:"					,cVersao  ,"","U_BIAFUGMR('1')","ZB5",'.T.',50,.T.})
 	aAdd( aPergs ,{1, "Revisao:"				,cRevisa  ,"","U_BIAFUGMR('1')","",'.T.',50,.T.})
-	aAdd( aPergs ,{1, "Ano:"					,cAno  ,"","U_BIAFUGMR('1')","",'.T.',50,.T.})
-	aAdd( aPergs ,{1, "Sequencia Ativa:"		,cSequen  ,"",,"",'.F.',50,.F.})
-	
-	
+	aAdd( aPergs ,{1, "Ano:"					,cAno     ,"","U_BIAFUGMR('1')","",'.T.',50,.T.})
+
 	If !ParamBox(aPergs ,"Filtro - Copiar meta GMR", aRetPerg,,,,,,,cRefPer,.T.,.T.)
 		Return
 	EndIf
@@ -37,38 +41,37 @@ Static Function Filtrar()
 	cVersao	:= ParamLoad(cFileName,,nPos++ 	, cVersao)
 	cRevisa	:= ParamLoad(cFileName,,nPos++ 	, cRevisa)
 	cAno	:= ParamLoad(cFileName,,nPos++ 	, cAno)
-	
+
 	ProcDados()
-				
+
 Return 
 
-
 Static Function ProcDados()
-	
+
 	Local cAliasTmp			:= GetNextAlias()
 	Local cProxSeque		:= "001"
 	Local cQuery			:= ""
-	
+
 	cQuery := " SELECT SEQUENCIA=(REPLICATE('0', 3 - LEN(MAX(ZBM_SEQUEN)+1)) + RTrim(MAX(ZBM_SEQUEN)+1)) FROM " + RetSqlName("ZBM") + " where D_E_L_E_T_ = ''	"
 
 	TcQuery cQuery New Alias (cAliasTmp)
-	
+
 	If !(cAliasTmp)->(Eof()) 
 		cProxSeque := (cAliasTmp)->SEQUENCIA
 	EndIf
-	
+
 	(cAliasTmp)->(DbCloseArea())
-	
+
 	If (MSGYESNO("Deseja gerar uma nova sequência para transfêrencia de GMR?", "" ))
-		//Processa( {|| ExecCopia(cProxSeque)}, "Aguarde...", "Copiando registros...")
-		
+
 		U_BIAMsgRun("Aguarde... Copiando registros...",, {|| ExecCopia(cProxSeque) })
+
 	EndIf
-		
+
 Return
 
 Static Function ExecCopia(cProxSeque)
-	
+
 	Local cQuery	:= ""
 	Local nStatus	:= 0
 
@@ -128,6 +131,7 @@ Static Function ExecCopia(cProxSeque)
 	cQuery += " ZBM_MOICMS,                                                                                                                 "
 	cQuery += " ZBM_MODCVF,                                                                                                                 "
 	cQuery += " ZBM_MODCVC,	                                                                                                                "
+	cQuery += " ZBM_ATIVO,	                                                                                                                "
 	cQuery += " ZBM_SEQUEN	                                                                                                                "
 	cQuery += " )                                                                                                                           "
 	cQuery += "                                                                                                                             "
@@ -164,7 +168,7 @@ Static Function ExecCopia(cProxSeque)
 	cQuery += " ZBM_VDIFAL,                                                                                                                 "
 	cQuery += " ZBM_ORIGF,                                                                                                                  "
 	cQuery += " D_E_L_E_T_,                                                                                                                 "
-	cQuery += "  (SELECT MAX(R_E_C_N_O_) FROM " + RetSqlName("ZBM") + ") + ROW_NUMBER() OVER(ORDER BY R_E_C_N_O_) AS R_E_C_N_O_,	                            "
+	cQuery += "  (SELECT MAX(R_E_C_N_O_) FROM " + RetSqlName("ZBM") + ") + ROW_NUMBER() OVER(ORDER BY R_E_C_N_O_) AS R_E_C_N_O_,	        "
 	cQuery += " R_E_C_D_E_L_,                                                                                                               "
 	cQuery += " ZBM_LINHAA,                                                                                                                 "
 	cQuery += " ZBM_FILEIN,                                                                                                                 "
@@ -186,19 +190,25 @@ Static Function ExecCopia(cProxSeque)
 	cQuery += " ZBM_MOICMS,                                                                                                                 "
 	cQuery += " ZBM_MODCVF,                                                                                                                 "
 	cQuery += " ZBM_MODCVC,                    	                                                                                            "
+	cQuery += " ' ' ZBM_ATIVO,                    	                                                                                            "
 	cQuery += " '"+cProxSeque+"'             	                                                                                            "
 	cQuery += " from " + RetSqlName("ZBM") + "                                                                                              "
 	cQuery += " where ZBM_VERSAO = '"+cVersao+"' AND ZBM_REVISA = '"+cRevisa+"' AND ZBM_ANOREF = '"+cAno+"' AND D_E_L_E_T_ = ''				"
 	cQuery += " AND ZBM_FILIAL = '"+xFilial('ZBM')+"'																						"
 	cQuery += " AND (ZBM_ATIVO = 'S')																										"	
-	
+
 	ConOut(cQuery)
 	nStatus := TcSQLExec(cQuery)
+
 	If (nStatus < 0)
+
 		ConOut("Erro=> " + TCSQLError())
-		MsgAlert("Erro na criação da sequência: "+cProxSeque+".","")
-    Else
-    	MsgAlert("Sequência: "+cProxSeque+" gerada com sucesso.", "")
+		MsgAlert("Erro na criação da sequência: " + cProxSeque + ".", "BIACMGMR")
+
+	Else
+
+		MsgINFO("Processamento realizado com sucesso. Nova Sequência gerada: " + cProxSeque + ".", "BIACMGMR")
+
 	EndIf
-			
+
 Return

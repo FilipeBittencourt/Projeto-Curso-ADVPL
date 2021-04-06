@@ -12,6 +12,8 @@
 
 User Function MSD2460()
 
+Local _oMd	:=	TBiaControleMD():New()
+
 //Variaveis de Posicionamento
 //--------------------------------
 Private aArea	:= GetArea()
@@ -80,7 +82,16 @@ dbSelectArea("KR01")
 If !KR01->(EOF())
 	U_fGrvPdFr(KR01->A2_COD, KR01->A2_LOJA, SD2->D2_COD, SD2->D2_COD)
 EndIf
+/*
+SF4->(DbSetOrder(1))
+SF4->(DbSeek(xFilial("SF4")+SF2->F2_FILIAL))
 
+If SF2->F2_TIPO == 'D' .And. Alltrim(SF4->F4_ESTOQUE) == 'S' .And. _oMd:CheckMD(SD2->D2_COD,SD2->D2_LOCAL)
+	_oMd:DevolucaoNF(SD2->D2_NFORI,SD2->D2_SERIORI,SD2->D2_CLIENTE,SD2->D2_LOJA,SD2->D2_ITEMORI,SD2->D2_DOC,SD2->D2_SERIE,;
+	SD2->D2_CLIENTE,SD2->D2_LOJA,SD2->D2_ITEM,SD2->D2_COD,SD2->D2_LOCAL,SD2->D2_QUANT,cUserName,FunName(),;
+    							SD2->D2_EMISSAO,"SD2",SD2->(Recno()))
+EndIf
+*/
 KR01->(dbCloseArea())
 Ferase(cIndSA1+GetDBExtension())	//arquivo de trabalho
 Ferase(cIndSA1+OrdBagExt())			//indice gerado

@@ -219,12 +219,20 @@ Method LoadDevolucao() Class TCompensacaoReceber
 		
 		While !SE1->(EOF()) .And. SE1->(E1_FILIAL + E1_CLIENTE + E1_LOJA + E1_PREFIXO + E1_NUM) == xFilial("SE1") + cA100For + cLoja + cSerie + cNfiscal
 			
-			If SE1->E1_SALDO > 0 .And. SE1->E1_TIPO == "NCC"
+			__cID		:= SE1->(Recno())
+			__oBlqCR	:= TBloqueioContaReceber():New()
+			__lRet		:= __oBlqCR:CheckPorRecno(__cID)
+			
+			If(!__lRet)//não e FDIC
 				
-				::nTotTitCred += SE1->E1_SALDO
-		
-				aAdd(::aTitCredito, SE1->(Recno()))
-			 
+				If SE1->E1_SALDO > 0 .And. SE1->E1_TIPO == "NCC"
+				
+					::nTotTitCred += SE1->E1_SALDO
+			
+					aAdd(::aTitCredito, SE1->(Recno()))
+				 
+				EndIf
+				
 			EndIf
 			
 			SE1->(DbSkip())
@@ -239,13 +247,21 @@ Method LoadDevolucao() Class TCompensacaoReceber
 			
 			While !SE1->(EOF()) .And. SE1->(E1_FILIAL + E1_CLIENTE + E1_LOJA + E1_PREFIXO + E1_NUM) == xFilial("SE1") + cA100For + cLoja + ::aNfDevol[nW][NPOSSERIE] + ::aNfDevol[nW][NPOSNOTA]
 				
-				If SE1->E1_SALDO > 0
-					
-					::nTotTitRec += SE1->E1_SALDO
-			
-					aAdd(::aTitReceber, SE1->(Recno()))
+				__cID		:= SE1->(Recno())
+				__oBlqCR	:= TBloqueioContaReceber():New()
+				__lRet		:= __oBlqCR:CheckPorRecno(__cID)
 				
-				Endif
+				If(!__lRet)//não e FDIC
+			
+					If SE1->E1_SALDO > 0
+						
+						::nTotTitRec += SE1->E1_SALDO
+				
+						aAdd(::aTitReceber, SE1->(Recno()))
+					
+					Endif
+					
+				EndIf
 				
 				SE1->(DbSkip())
 			

@@ -317,7 +317,7 @@ Return
 
 Method Execute() Class TWMovimentoICMSAutonomo
 
-	Local cData			:= ::GetData()  
+	Local cData			:= ::GetData() + 1 //movimento sempre dia + 1
 	Local cBanco		:= ''
 	Local cAgencia		:= ''
 	Local cConta		:= ''
@@ -333,27 +333,31 @@ Method Execute() Class TWMovimentoICMSAutonomo
 	cConta			:= ''
 	cCLVL 			:= ''
 	
+	//Biancogres 55097-3 e LM 5286-8
+	//001
+	//
+	
 	// B=1101, LM=1150, INCESA=1003, Vinilico=1035
 	If AllTrim(cEmpAnt)+AllTrim(cFilAnt) == '0101'
 		cCLVL 		:= '1101'
-		cBanco		:= 'DAF'
-		cAgencia	:= 'SN'
-		cConta		:= 'CAIXA DAF'
+		cBanco		:= '001'
+		cAgencia	:= '34312'
+		cConta		:= '55.097-3'
 	ElseIf AllTrim(cEmpAnt)+AllTrim(cFilAnt) == '0501'
 		cCLVL		:= '1003'
-		cBanco		:= '001'
-		cAgencia	:= '001'
-		cConta		:= '0000000001'
+		cBanco		:= '021'
+		cAgencia	:= '552'
+		cConta		:= '10.532.885'
 	ElseIf AllTrim(cEmpAnt)+AllTrim(cFilAnt) == '0701'
 		cCLVL		:= '1150'
-		cBanco		:= '000'
-		cAgencia	:= '00000'
-		cConta		:= 'CAIXA DAF'
+		cBanco		:= '001'
+		cAgencia	:= '34312'
+		cConta		:= '52868'
 	ElseIf AllTrim(cEmpAnt)+AllTrim(cFilAnt) == '1301'
 		cCLVL		:= '1035'
-		cBanco		:= 'DAF'
-		cAgencia	:= 'SN'
-		cConta		:= '00000'
+		cBanco		:= '001'
+		cAgencia	:= '34312'
+		cConta		:= '54666'
 	EndIf
 	
 	cNatureza		:= '1225'

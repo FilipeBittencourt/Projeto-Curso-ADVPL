@@ -13,6 +13,9 @@ User Function FA070CHK
 Local lRet := .T.
 Local aArea := GetArea()
 Local cAliasTmp
+Local _lRet := .T.
+Local _cID	:= SE1->(Recno())
+
 
 //Checkar se a baixa do titulo correspondente ja foi feita na LM - se nao bloqueia
 If AllTrim(CEMPANT) <> "07" .And. SE1->E1_CLIENTE == "010064" .And. SE1->E1_TIPO == "NF "  
@@ -61,6 +64,16 @@ If AllTrim(CEMPANT) <> "07" .And. SE1->E1_CLIENTE == "010064" .And. SE1->E1_TIPO
 	
 	EndIf
 
+EndIf
+
+	
+If (!IsBlind())
+	oBlqCR	:= TBloqueioContaReceber():New()
+	_lRet	:= oBlqCR:CheckPorRecno(_cID)
+	If(_lRet)
+		MsgAlert('<p style="color:red">Titulo FIDC não e possivel realizar "Baixa Manual".</p>', 'FA070CHK')
+		lRet := .F.
+	EndIf
 EndIf
 
 RestArea(aArea)

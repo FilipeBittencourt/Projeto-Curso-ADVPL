@@ -96,13 +96,20 @@ Static Function RptDetail()
 	ProcRegua(0)
 
 	If cEmpAnt $ "01"
+
 		msQry01 := U_BIA677N1()
+
 	ElseIf cEmpAnt == "06"
+
 		msQry01 := U_BJZ677N1()
+
 	Else
+
 		MsgALERT("Empresa não configurada para cálculo da RAC")
 		Return
+
 	EndIf
+
 	U_BIAMsgRun("Aguarde... Criando arquivo de Trabalho... ",,{|| msStaExcQy := TcSQLExec(msQry01) })
 	If msStaExcQy < 0
 		mslOk := .F.
@@ -112,12 +119,18 @@ Static Function RptDetail()
 
 		// Custo Fixo
 		If cEmpAnt $ "01"
+
 			msQry02 := U_BIA677N2()
+
 		ElseIf cEmpAnt == "06"
+
 			msQry02 := U_BJZ677N2()
+
 		Else
+
 			MsgALERT("Empresa não configurada para cálculo da RAC")
 			Return
+
 		EndIf
 
 		QRIndex := CriaTrab(Nil,.f.)
@@ -208,6 +221,68 @@ Static Function RptDetail()
 		QR03->(dbCloseArea())
 		Ferase(QYIndex+GetDBExtension())
 		Ferase(QYIndex+OrdBagExt())
+
+		If cEmpAnt $ "01"
+
+			// Custo C1 para B9/BO/C6
+			msQry04 := U_BIA677N4()
+
+			Q4Index := CriaTrab(Nil,.f.)
+			dbUseArea(.T.,"TOPCONN",TcGenQry(,,msQry04),'QR04',.T.,.T.)
+			dbSelectArea("QR04")
+			QR04->(dbGoTop())
+			ProcRegua(RecCount())
+			While !QR04->(Eof())
+
+				msMsg := "C1 para B9/BO/C6 - " + QR04->ZN8_PRODUT
+				IncProc("C1 para B9/BO/C6 - " + QR04->ZN8_PRODUT)
+
+				Reclock("ZN8",.T.)
+				ZN8->ZN8_FILIAL := xFilial("ZN8")
+				ZN8->ZN8_DTREF  := stod(QR04->ZN8_DTREF)
+				ZN8->ZN8_TPPROD := "PA"
+				ZN8->ZN8_PRODUT := QR04->ZN8_PRODUT
+				ZN8->ZN8_ITCUS  := "065"
+				ZN8->ZN8_TPCUS  := "CV"
+				ZN8->ZN8_CUS223 := QR04->CUS223
+				ZN8->ZN8_CUS224 := QR04->CUS224
+				ZN8->(MsUnlock())
+
+				QR04->(dbSkip())
+
+			End
+
+			QR04->(dbCloseArea())
+			Ferase(Q4Index+GetDBExtension())
+			Ferase(Q4Index+OrdBagExt())
+
+			// Custo C1 para B9/BO/C6 para registros sem custo no mês corrente
+			msQry05 := U_BIA677N5()
+
+			Q5Index := CriaTrab(Nil,.f.)
+			dbUseArea(.T.,"TOPCONN",TcGenQry(,,msQry05),'QR05',.T.,.T.)
+			dbSelectArea("QR05")
+			QR05->(dbGoTop())
+			ProcRegua(RecCount())
+			While !QR05->(Eof())
+
+				msMsg := "C1 para B9/BO/C6 - p2" + QR05->ZN8_PRODUT
+				IncProc("C1 para B9/BO/C6 - p2" + QR05->ZN8_PRODUT)
+
+				ZN8->(dbGoTo(QR05->REGZN8))
+				Reclock("ZN8",.F.)
+				ZN8->ZN8_CUS224 := ZN8->ZN8_CUS223 * QR05->MEDIO
+				ZN8->(MsUnlock())
+
+				QR05->(dbSkip())
+
+			End
+
+			QR05->(dbCloseArea())
+			Ferase(Q5Index+GetDBExtension())
+			Ferase(Q5Index+OrdBagExt())
+
+		Endif
 
 	Else
 
@@ -393,8 +468,10 @@ User Function BIA677N1()
 	RK001 += Alltrim("                         END,                                                                                                                          ") + msEnter
 	RK001 += Alltrim("                 CLVL,                                                                                                                                 ") + msEnter
 	RK001 += Alltrim("                 AGGRAT = CASE                                                                                                                         ") + msEnter
-	RK001 += Alltrim("                              WHEN RTRIM(SUBSTRING(CTA, 1, 3)) IN('615', '616', '617')                                                                 ") + msEnter
-	RK001 += Alltrim("                                   AND RTRIM(CTA) NOT IN('61601022')                                                                                   ") + msEnter
+	RK001 += Alltrim("                              WHEN((RTRIM(SUBSTRING(CTA, 1, 3)) IN('615', '617'))                                                                      ") + msEnter
+	RK001 += Alltrim("                                   OR (RTRIM(SUBSTRING(CTA, 1, 3)) IN('616')                                                                           ") + msEnter
+	RK001 += Alltrim("                                       AND RTRIM(CTA) NOT IN('61601022')                                                                               ") + msEnter
+	RK001 += Alltrim("                                       AND SUBSTRING(CTH_YCRIT, 1, 1) <> 'L'))                                                                         ") + msEnter
 	RK001 += Alltrim("                              THEN CASE                                                                                                                ") + msEnter
 	RK001 += Alltrim("                                       WHEN CLVL = 3141                                                                                                ") + msEnter
 	RK001 += Alltrim("                                       THEN 'AC00'                                                                                                     ") + msEnter
@@ -425,7 +502,8 @@ User Function BIA677N1()
 	RK001 += Alltrim("                   CLVL,                                                                                                                               ") + msEnter
 	RK001 += Alltrim("                   SUBSTRING(CTH_DESC04, 1, 4),                                                                                                        ") + msEnter
 	RK001 += Alltrim("                   CTH_YITCUS,                                                                                                                         ") + msEnter
-	RK001 += Alltrim("                   SUBSTRING(CTH_YCRIT, 1, 3)),                                                                                                        ") + msEnter
+	RK001 += Alltrim("                   SUBSTRING(CTH_YCRIT, 1, 3),                                                                                                         ") + msEnter
+	RK001 += Alltrim("                   SUBSTRING(CTH_YCRIT, 1, 1)),                                                                                                        ") + msEnter
 	RK001 += Alltrim("      TAB_C                                                                                                                                            ") + msEnter
 	RK001 += Alltrim("      AS (SELECT PERIODO,                                                                                                                              ") + msEnter
 	RK001 += Alltrim("                 APL,                                                                                                                                  ") + msEnter
@@ -1291,6 +1369,94 @@ User Function BIA677N3()
 	KR003 += Alltrim("      FROM CVPROCESS04 CVPR04                                                                                ") + msEnter
 
 Return( KR003 )
+
+User Function BIA677N4()
+
+	KR004 := Alltrim(" WITH PRODCRET                                                                                                ") + msEnter
+	KR004 += Alltrim("      AS (SELECT DISTINCT                                                                                     ") + msEnter
+	KR004 += Alltrim("                 ZN8_DTREF,                                                                                   ") + msEnter
+	KR004 += Alltrim("                 ZN8_PRODUT,                                                                                  ") + msEnter
+	KR004 += Alltrim("                 ZN8_CUS223                                                                                   ") + msEnter
+	KR004 += Alltrim("          FROM " + RetSqlName("ZN8") + " ZN8(NOLOCK)                                                          ") + msEnter
+	KR004 += Alltrim("          WHERE ZN8_FILIAL = '" + xFilial("ZN8") + "'                                                         ") + msEnter
+	KR004 += Alltrim("                AND ZN8_DTREF BETWEEN '" + cDatIni + "' AND '" + cDatFin + "'                                 ") + msEnter
+	KR004 += Alltrim("                AND SUBSTRING(ZN8_PRODUT, 1, 2) IN('B9', 'BO', 'C6')                                          ") + msEnter
+	KR004 += Alltrim("          AND ZN8_TPCUS = 'CV'                                                                                ") + msEnter
+	KR004 += Alltrim("          AND ZN8.D_E_L_E_T_ = ' '),                                                                          ") + msEnter
+	KR004 += Alltrim("      PRODUCC1                                                                                                ") + msEnter
+	KR004 += Alltrim("      AS (SELECT SUBSTRING(ZN8_PRODUT, 1, 7) + '1' + SPACE(7) PRODC1,                                         ") + msEnter
+	KR004 += Alltrim("                 SUM(ZN8_CUS224 / ZN8_CUS223) CUSTMED                                                         ") + msEnter
+	KR004 += Alltrim("          FROM " + RetSqlName("ZN8") + " ZN8(NOLOCK)                                                          ") + msEnter
+	KR004 += Alltrim("          WHERE ZN8_FILIAL = '" + xFilial("ZN8") + "'                                                         ") + msEnter
+	KR004 += Alltrim("                AND ZN8_DTREF BETWEEN '" + cDatIni + "' AND '" + cDatFin + "'                                 ") + msEnter
+	KR004 += Alltrim("                AND SUBSTRING(ZN8_PRODUT, 1, 2) = 'C1'                                                        ") + msEnter
+	KR004 += Alltrim("                AND ZN8_TPPROD = 'PP'                                                                         ") + msEnter
+	KR004 += Alltrim("                AND ZN8.D_E_L_E_T_ = ' '                                                                      ") + msEnter
+	KR004 += Alltrim("          GROUP BY SUBSTRING(ZN8_PRODUT, 1, 7)),                                                              ") + msEnter
+	KR004 += Alltrim("      PROCRT02                                                                                                ") + msEnter
+	KR004 += Alltrim("      AS (SELECT ZN8_DTREF,                                                                                   ") + msEnter
+	KR004 += Alltrim("                 ZN8_PRODUT,                                                                                  ") + msEnter
+	KR004 += Alltrim("                 ZN8_CUS223,                                                                                  ") + msEnter
+	KR004 += Alltrim("                 G1_COMP,                                                                                     ") + msEnter
+	KR004 += Alltrim("                 G1_QUANT                                                                                     ") + msEnter
+	KR004 += Alltrim("          FROM PRODCRET PRT                                                                                   ") + msEnter
+	KR004 += Alltrim("               INNER JOIN " + RetSqlName("SG1") + " SG1(NOLOCK) ON G1_FILIAL = '" + xFilial("SG1") + "'       ") + msEnter
+	KR004 += Alltrim("                                                AND G1_COD = ZN8_PRODUT                                       ") + msEnter
+	KR004 += Alltrim("                                                AND SUBSTRING(G1_COMP, 1, 2) = 'C1'                           ") + msEnter
+	KR004 += Alltrim("                                                AND SG1.D_E_L_E_T_ = ' ')                                     ") + msEnter
+	KR004 += Alltrim("      SELECT *,                                                                                               ") + msEnter
+	KR004 += Alltrim("             CUS223 = ZN8_CUS223,                                                                             ") + msEnter
+	KR004 += Alltrim("             CUS224 = ZN8_CUS223 * CUSTMED                                                                    ") + msEnter
+	KR004 += Alltrim("      FROM PROCRT02 PROC02                                                                                    ") + msEnter
+	KR004 += Alltrim("           LEFT JOIN PRODUCC1 PRC1 ON PRC1.PRODC1 = PROC02.G1_COMP;                                           ") + msEnter
+
+Return( KR004 )
+
+User Function BIA677N5()
+
+	KR005 := Alltrim(" WITH PRODCRET                                                                                                                 ") + msEnter
+	KR005 += Alltrim("      AS (SELECT DISTINCT                                                                                                      ") + msEnter
+	KR005 += Alltrim("                 ZN8_DTREF,                                                                                                    ") + msEnter
+	KR005 += Alltrim("                 ZN8_PRODUT,                                                                                                   ") + msEnter
+	KR005 += Alltrim("                 ZN8_CUS223,                                                                                                   ") + msEnter
+	KR005 += Alltrim("                 ZN8.R_E_C_N_O_ REGZN8                                                                                         ") + msEnter
+	KR005 += Alltrim("          FROM " + RetSqlName("ZN8") + " ZN8(NOLOCK)                                                                           ") + msEnter
+	KR005 += Alltrim("          WHERE ZN8_FILIAL = '" + xFilial("ZN8") + "'                                                                          ") + msEnter
+	KR005 += Alltrim("                AND ZN8_DTREF BETWEEN '" + cDatIni + "' AND '" + cDatFin + "'                                                  ") + msEnter
+	KR005 += Alltrim("                AND ZN8_TPCUS = 'CV'                                                                                           ") + msEnter
+	KR005 += Alltrim("                AND ZN8_ITCUS = '065'                                                                                          ") + msEnter
+	KR005 += Alltrim("                AND ZN8_CUS224 = 0                                                                                             ") + msEnter
+	KR005 += Alltrim("                AND ZN8.D_E_L_E_T_ = ' '),                                                                                     ") + msEnter
+	KR005 += Alltrim("      PROCC101                                                                                                                 ") + msEnter
+	KR005 += Alltrim("      AS (SELECT PRT.*,                                                                                                        ") + msEnter
+	KR005 += Alltrim("                 G1_COMP,                                                                                                      ") + msEnter
+	KR005 += Alltrim("          (                                                                                                                    ") + msEnter
+	KR005 += Alltrim("              SELECT MAX(Z57_DATARF)                                                                                           ") + msEnter
+	KR005 += Alltrim("              FROM " + RetSqlName("Z57") + " Z57(NOLOCK)                                                                       ") + msEnter
+	KR005 += Alltrim("              WHERE Z57_FILIAL = '" + xFilial("Z57") + "'                                                                      ") + msEnter
+	KR005 += Alltrim("                    AND Z57_PRODUT = G1_COMP                                                                                   ") + msEnter
+	KR005 += Alltrim("                    AND Z57_DATARF <= '" + cDatFin + "'                                                                        ") + msEnter
+	KR005 += Alltrim("                    AND D_E_L_E_T_ = ' '                                                                                       ") + msEnter
+	KR005 += Alltrim("          ) DTPROD                                                                                                             ") + msEnter
+	KR005 += Alltrim("          FROM PRODCRET PRT                                                                                                    ") + msEnter
+	KR005 += Alltrim("               INNER JOIN " + RetSqlName("SG1") + " SG1(NOLOCK) ON G1_FILIAL = '" + xFilial("SG1") + "'                        ") + msEnter
+	KR005 += Alltrim("                                                AND G1_COD = ZN8_PRODUT                                                        ") + msEnter
+	KR005 += Alltrim("                                                AND SUBSTRING(G1_COMP, 1, 2) = 'C1'                                            ") + msEnter
+	KR005 += Alltrim("                                                AND SG1.D_E_L_E_T_ = ' ')                                                      ") + msEnter
+	KR005 += Alltrim("      SELECT *,                                                                                                                ") + msEnter
+	KR005 += Alltrim("      (                                                                                                                        ") + msEnter
+	KR005 += Alltrim("          SELECT SUM(ZN8_CUS224 / ZN8_CUS223)                                                                                  ") + msEnter
+	KR005 += Alltrim("          FROM " + RetSqlName("ZN8") + " ZN8(NOLOCK)                                                                           ") + msEnter
+	KR005 += Alltrim("          WHERE ZN8_FILIAL = '" + xFilial("ZN8") + "'                                                                          ") + msEnter
+	KR005 += Alltrim("                AND ZN8_DTREF BETWEEN SUBSTRING(DTPROD, 1, 6) + '01' AND DTPROD                                                ") + msEnter
+	KR005 += Alltrim("                AND SUBSTRING(ZN8_PRODUT, 1, 7) = SUBSTRING(G1_COMP, 1, 7)                                                     ") + msEnter
+	KR005 += Alltrim("                AND ZN8_TPPROD = 'PP'                                                                                          ") + msEnter
+	KR005 += Alltrim("                AND ZN8_CUS223 <> 0                                                                                            ") + msEnter
+	KR005 += Alltrim("                AND ZN8.D_E_L_E_T_ = ' '                                                                                       ") + msEnter
+	KR005 += Alltrim("      ) MEDIO                                                                                                                  ") + msEnter
+	KR005 += Alltrim("      FROM PROCC101                                                                                                            ") + msEnter
+
+Return( KR005 )
 
 /*___________________________________________________________________________
 ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦

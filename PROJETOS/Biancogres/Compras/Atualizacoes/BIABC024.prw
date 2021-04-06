@@ -11,6 +11,8 @@
 /*/                                                                                               
 
 User Function BIABC024()
+    Local nCnt 
+    
 	Private sdtInicial := "DATEADD(DAY, +1,EOMONTH(DATEADD(MONTH, -4,GETDATE())))"
 	Private sdtFinal   := "EOMONTH(DATEADD(MONTH,-1,GETDATE())) "
 	Private sAnoMes    := AnoMes ( Date() )
@@ -55,20 +57,24 @@ User Function BIABC024()
 
 	While !EOF()
 		DbSelectArea("ZG4")
-		DbSetOrder(1)
+		DbSetOrder(3)
 		
-		IF DbSeek(xFilial("ZG4") + QRY1->CODENTID + sAnoMes)
+		IF DbSeek(xFilial("ZG4") + QRY1->CODENTID + sAnoMes + DTOS( FirstDate ( Date() )))
 			bInsere    := .F.
 			Aviso('Cálculo Limite de Compras por Departamento', "Atenção! O cálculo já havia sido executado para o período : " + sAnoMes ,{'Ok'})
 			EXIT
 		ELSE	
-			RecLock("ZG4",.T.)
-			ZG4->ZG4_FILIAL := xFilial("ZG4")
-			ZG4->ZG4_ENTID  := QRY1->CODENTID
-			ZG4->ZG4_VLCM   := QRY1->CUSTO
-			ZG4->ZG4_ANOMES := sAnoMes
-
-			MsUnLock("ZG4")
+           For nCnt := 0 To 12 Step 1
+			  RecLock("ZG4",.T.)
+			
+			  ZG4->ZG4_FILIAL := xFilial("ZG4")
+			  ZG4->ZG4_ENTID  := QRY1->CODENTID
+			  ZG4->ZG4_VLCM   := QRY1->CUSTO
+			  ZG4->ZG4_ANOMES := AnoMes ( MonthSum( Date(),nCnt ) )
+			  ZG4->ZG4_DTCALC := FirstDate ( Date() )
+			
+			  MsUnLock("ZG4")
+			Next
 		ENDIF
 		DbSelectArea("QRY1")
 		DbSkip()

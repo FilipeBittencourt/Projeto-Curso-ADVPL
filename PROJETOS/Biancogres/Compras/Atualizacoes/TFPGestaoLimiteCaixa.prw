@@ -270,20 +270,9 @@ Method GetInfo() Class TFPGestaoLimiteCaixa
       oObj:nRealizado      := (_cAlias)->C7_YREALCX
       oObj:nSaldo          := oObj:nMetaGrupo - oObj:nRealizado
       oObj:nVlrPedido      := (_cAlias)->C7_TOTAL
-      // oObj:nNovoSaldo      := oObj:nSaldo - oObj:nVlrPedido
       oObj:nPercGatilho    := (_cAlias)->C7_YPGALCX
       oObj:nPercMeta       := (_cAlias)->C7_YPMELCX
       oObj:cDtCalculo      := (_cAlias)->C7_YDTCLCX
-
-      //|Calcula o realizado do grupo de produtos |
-      // nNovoRealizado       := oObj:nRealizado + oObj:nVlrPedido
-      // oObj:nPercRealizado := ::CalcRealizado( nNovoRealizado, oObj:nMetaGrupo )
-
-      // If oObj:cCodGrupo $ ::cGrpIgnora
-      //   oObj:cCor   := "verde"
-      // Else
-      //   oObj:cCor   := ::GetColor( oObj:nPercRealizado, oObj:nPercGatilho, oObj:nPercMeta )
-      // EndIf
 
       //|Dados do aprovador |
       oObj:cEmpAprovador   := SubStr( (_cAlias)->C7_YAPRLCX, 1, 2 )
@@ -305,19 +294,9 @@ Method GetInfo() Class TFPGestaoLimiteCaixa
       oObj:nMetaClasVl    := (_cAlias)->C7_YMETLDP
       oObj:nRealClasVl    := (_cAlias)->C7_YREALDP
       oObj:nSaldoClsVl    := oObj:nMetaClasVl - oObj:nRealClasVl
-      // oObj:nNvSaldoClV    := oObj:nSaldoClsVl - oObj:nVlrPedido
       oObj:nPerGatClsV    := (_cAlias)->C7_YPGALDP
       oObj:nPerMetaClV    := (_cAlias)->C7_YPMELDP
       oObj:cDtCalcClsV    := (_cAlias)->C7_YDTCLDP
-      
-      // nClsVRealizado      := oObj:nRealClasVl + oObj:nVlrPedido
-      // oObj:nPerRealClV    := ::CalcRealizado( nClsVRealizado, oObj:nMetaClasVl )
-
-      // If ::ProductValid( (_cAlias)->C7_PRODUTO, (_cAlias)->C7_LOCAL )
-      //   oObj:cCorClsV     := ::GetColor( oObj:nPerRealClV, oObj:nPerGatClsV, oObj:nPerMetaClV )
-      // Else
-      //   oObj:cCorClsV     := "verde"
-      // EndIf
       
       (_cAlias)->( dbSkip() )
 
@@ -425,7 +404,7 @@ Method MountData() Class TFPGestaoLimiteCaixa
     oObj2   := ::oLst:GetItem(nI)
 
     //|Processsa grupo de produtos |
-    If !oObj:cCodGrupo $ ::cGrpIgnora
+    If .F. // PONTIN - Desativado processo por grupo de produto a pedido da Barbara: !oObj:cCodGrupo $ ::cGrpIgnora
 
       If ( nPos := aScan( ::oLstGrupo:ToArray(), { |e| e:cCodGrupo == oObj:cCodGrupo } ) ) > 0
       

@@ -120,11 +120,12 @@ static function BIA27673() as logical
     begin sequence
 
         nAttempts:=0
+        dirtools():MakeDir("\tmp\")
         while (!(lRet:=lIsDir("\tmp\")))
             if ((nAttempts++)>10)
                 exit
             endif
-            makeDir("\tmp\")
+            dirtools():MakeDir("\tmp\")
         end while
 
         if (!lRet)
@@ -175,7 +176,7 @@ static function BIA27673() as logical
             endif
         endif
 
-    end squence
+    end sequence
 
     return(lRet)
 
@@ -286,11 +287,12 @@ static function getQuery(nDays as numeric) as character
     if (IsBlind())
         cQryPath:="\tmp\"
         nAttempts:=0
+        dirtools():MakeDir(cQryPath)
         while (!lIsDir(cQryPath))
             if ((nAttempts++)>10)
                 exit
             endif
-            makeDir(cQryPath)
+            dirtools():MakeDir(cQryPath)
         end while
     else
         cQryPath:=getTempPath()

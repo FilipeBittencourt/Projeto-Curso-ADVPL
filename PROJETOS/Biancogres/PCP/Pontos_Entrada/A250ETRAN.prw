@@ -23,7 +23,7 @@ User Function A250ETRAN()
 	Local bxUmid   := .F.
 
 	// Implementado por Marcos Alberto em 04/07/12 para baixar as quantidades de MPM referente a UMIDADE média, com base de mês anterior.
-	If az_GrpPr == "PI01"
+	If cEmpAnt <> "06" .and. az_GrpPr == "PI01"
 
 		jh_MesA := stod(Substr(dtos(dDataBase),1,6)+"01")-1
 		jh_PriD := Substr(dtos(jh_MesA),1,6) + "01"
@@ -154,7 +154,7 @@ User Function A250ETRAN()
 		EndIf
 
 
-	ElseIf az_TipPr == "PI" .and. !Alltrim(az_GrpPr) $ "PI01/108A"
+	ElseIf cEmpAnt <> "06" .and. az_TipPr == "PI" .and. !Alltrim(az_GrpPr) $ "PI01"
 
 		qiProdSeca := 0
 		QI002 := " WITH CTRLUMID AS ( "
@@ -266,6 +266,138 @@ User Function A250ETRAN()
 		QI02->(dbCloseArea())
 		Ferase(QIcIndex+GetDBExtension())     //arquivo de trabalho
 		Ferase(QIcIndex+OrdBagExt())          //indice gerado
+
+	ElseIf cEmpAnt == "06" .and. az_TipPr == "PI" .and. az_GrpPr == "108B"
+
+		// Todos este tratamento foi implementado em 29/03/21, trazendo a PI01 os scripts originais
+
+		jh_MesA := dDataBase
+		jh_PriD := dtos(jh_MesA)
+		jh_UltD := dtos(jh_MesA)
+
+		TK001 := " SELECT D4_COD, "
+		TK001 += "        D4_OP, "
+		TK001 += "        D4_LOCAL, "		
+		TK001 += "        C2_QUANT,
+		TK001 += "        " + Alltrim(Str(az_QtdPd)) + " D3_QUANT,
+		TK001 += "        ISNULL((SELECT SUM(Z02_UMIDAD * Z02_QTDCRG) / SUM(Z02_QTDCRG)
+		TK001 += "                  FROM " + RetSqlName("Z02") + " Z02(NOLOCK)
+		TK001 += "                 WHERE Z02_FILIAL = '" + xFilial("Z02") + "'
+		TK001 += "                   AND Z02_DATREF BETWEEN '" + jh_PriD + "' AND '" + jh_UltD + "'
+		TK001 += "                   AND Z02_PRODUT = D4_COD
+		TK001 += "                   AND Z02_QTDCRG <> 0
+		TK001 += "                   AND Z02_ORGCLT = '2'
+		TK001 += "                   AND D_E_L_E_T_ = ' '), 0) UMIDADE,
+		TK001 += "        ISNULL((SELECT BZ_YUMIDAD
+		TK001 += "                  FROM " + RetSqlName("SBZ") + " SBZ(NOLOCK)
+		TK001 += "                 WHERE BZ_FILIAL = '" + xFilial("SBZ") + "'
+		TK001 += "                   AND BZ_COD = D4_COD
+		TK001 += "                   AND D_E_L_E_T_ = ' '), 0) UMIDAD2,
+		TK001 += "        D4_TRT,
+		TK001 += "        D4_QTDEORI
+		TK001 += "   FROM " + RetSqlName("SD4") + " SD4(NOLOCK)
+		TK001 += "  INNER JOIN " + RetSqlName("SC2") + " SC2(NOLOCK) ON C2_FILIAL = '" + xFilial("SC2") + "'
+		TK001 += "                       AND C2_NUM + C2_ITEM + C2_SEQUEN + '  ' = D4_OP
+		TK001 += "                       AND SC2.D_E_L_E_T_ = ' '
+		TK001 += "  WHERE D4_FILIAL = '" + xFilial("SD4") + "'
+		TK001 += "    AND D4_OP = '" + SC2->C2_NUM + SC2->C2_ITEM + SC2->C2_SEQUEN + "'
+		TK001 += "    AND SD4.D_E_L_E_T_ = ' '
+		TKcIndex := CriaTrab(Nil,.f.)
+		dbUseArea(.T.,"TOPCONN",TcGenQry(,,TK001),'TK01',.F.,.T.)
+		dbSelectArea("TK01")
+		dbGoTop()
+		While !Eof()
+
+			// Tratamento implementado em 17/12/13.
+			xrUmidad := TK01->UMIDADE
+			If xrUmidad == 0
+				xrUmidad := TK01->UMIDAD2
+			EndIf
+
+			// Requisição da proporção da UMIDADE para Apropriação de custo da MASSA
+			If xrUmidad > 0
+
+				bxUmid   := .T.
+
+				SB1->(dbSetOrder(1))
+				SB1->(dbSeek(xFilial("SB1")+TK01->D4_COD))
+				jh_Quant := TK01->D3_QUANT / TK01->C2_QUANT * TK01->D4_QTDEORI
+				jh_Adici := Round((jh_Quant / ((100-xrUmidad)/100)) - jh_Quant, 2)
+
+				RecLock("SD3",.T.)
+				SD3->D3_FILIAL   :=  xFilial("SD3")
+				SD3->D3_TM       :=  "999"
+				SD3->D3_OP       :=  SC2->C2_NUM + SC2->C2_ITEM + SC2->C2_SEQUEN
+				SD3->D3_COD      :=  TK01->D4_COD
+				SD3->D3_QUANT    :=  jh_Adici
+				SD3->D3_QTSEGUM  :=  ConvUm(SD3->D3_COD, SD3->D3_QUANT, 0, 2)
+				SD3->D3_UM       :=  SB1->B1_UM
+				SD3->D3_SEGUM    :=  SB1->B1_SEGUM
+				SD3->D3_GRUPO    :=  SB1->B1_GRUPO
+				SD3->D3_LOCAL    :=  TK01->D4_LOCAL
+				SD3->D3_TRT      :=  TK01->D4_TRT
+				SD3->D3_CC       :=  "3000"
+				SD3->D3_CLVL     :=  az_clvl
+				SD3->D3_CONTA    :=  SB1->B1_YCTRIND
+				SD3->D3_TIPO     :=  SB1->B1_TIPO
+				SD3->D3_EMISSAO  :=  az_DtEms
+				SD3->D3_DOC      :=  az_NmDoc
+				SD3->D3_NIVEL    :=  SC2->C2_NIVEL
+				SD3->D3_YOBS     :=  "Umid: " + Transform(xrUmidad, "@E 999.99999")
+				MsUnlock()
+				nRegD3 := Recno()
+
+				SB2->(DbSetOrder(1))
+
+				If SB2->(DbSeek(xFilial("SB2")+SD3->D3_COD+SD3->D3_LOCAL))
+					Reclock("SB2",.F.)
+					SB2->B2_QATU	:=	B2_QATU - jh_Adici
+					SB2->B2_QTSEGUM :=  ConvUM(SB2->B2_COD, SB2->B2_QATU, 0, 8)
+					SB2->(MsUnlock())
+				EndIf
+
+				dbSelectArea("SD3")
+				dbGoto(nRegD3)
+				RecLock("SD3",.F.)
+				Replace D3_CF      With "RE1"
+				Replace D3_NUMSEQ  With az_NmSeq
+				Replace D3_IDENT   With az_Ident
+				Replace D3_CONTA   With za_CtaPI
+				Replace D3_YAPLIC  With az_Aplic
+				Replace D3_YDRIVER  With az_Driver
+				Replace D3_YTAG    With az_Tag
+				Replace D3_YMATRIC With az_Matrc
+				Replace D3_YEMPR   With az_Emprx
+				MsUnlock()
+
+				If SB2->B2_QATU < 0
+					Aviso('A250ETRAN(1)', 'A baixa complementar da umidade deixou o estoque do produto: ' + TK01->D4_COD + ' negativo em: ' + Transform(SB2->B2_QATU, "@E 999,999,999.99999") + ' Favor alinhar o setor de custos!!!',{'Ok'})
+				EndIf
+
+			Else
+
+				bxUmid   := .F.
+
+			EndIf
+
+			dbSelectArea("TK01")
+			dbSkip()
+
+		End
+		TK01->(dbCloseArea())
+		Ferase(TKcIndex+GetDBExtension())     //arquivo de trabalho
+		Ferase(TKcIndex+OrdBagExt())          //indice gerado
+
+		// Tratamento efetuado em 29/04/14 por Marcos Alberto Soprani.
+		If !bxUmid
+
+			Aviso('A250ETRAN','Problema ao efetuar a baixa complementar de MPM proveniente da UMIDADE. Este apontamento de produção deverá ser excluído: documento '+az_NmDoc+'; em seguinda, verificar qual (ou quais) MPMs estão sem UMIDADE cadastrada - efetuar o cadastro; por fim, efetuar o apontamento de produção do PI-MASSA novamente.',{'Ok'})
+
+		Else
+
+			Aviso('A250ETRAN','Baixa da umidade referentes as MPMs efetuada com sucesso!',{'Ok'})
+
+		EndIf
 
 	EndIf
 

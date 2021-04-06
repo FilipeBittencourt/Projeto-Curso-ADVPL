@@ -42,7 +42,7 @@ M->C5_YAAPROV	:= CriaVar("C5_YAAPROV",.T.)
 M->C5_YALTP		:= CriaVar("C5_YALTP",.T.)
 
 For i := 1 to Len(aCols)
-	Acols[i,aScan(aHeader,{|x| Alltrim(x[2])=="C6_YDTNECE"})] := U_FROPAD3U(dDataBase)
+	Acols[i,aScan(aHeader,{|x| Alltrim(x[2])=="C6_YDTNECE" .Or. Alltrim(x[2])=="C6_YDTNERE"})] := U_FROPAD3U(dDataBase)
 	
 	//tipos de pedido que fazem reserva de estoque
 	If M->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES","14"))) .And. M->C5_YLINHA <> "4"

@@ -246,11 +246,7 @@ User Function M410AGRV()
 		If M->C5_CLIENTE == "016443" .And. !(M->C5_TIPO $ "D_B")
 			M->C5_MENNOTA := "Não incidência de ICMS-ST conforme portaria 22-R/2018."
 		EndIf
-
-		//Ticket 8233 - Marcus V. S. Nascimento 10/09/18
-		If M->C5_CLIENTE == "005693" .And. !(M->C5_TIPO $ "D_B")
-			M->C5_MENNOTA := "Tupan Construções Ltda -  IE CACEPE nº 0307620-22 - Detentora do Regime especial com produtos diversos - RE ST DETENTORES - DPC Nº 175/2018 - DOE-PE 10 Agosto de 2018."
-		EndIf
+		
 		//Ticket 21283
 		If M->C5_CLIENTE == "029017" .And. !(M->C5_TIPO $ "D_B")
 			M->C5_MENNOTA := "Contribuinte credenciado para não-antecipação do ICMS – Processo 13953020195, Parecer final 11.792/2019."

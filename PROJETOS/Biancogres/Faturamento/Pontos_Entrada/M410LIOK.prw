@@ -191,6 +191,13 @@ static function M410LIOK()
 		Return(.F.)
 	EndIf
 
+	//Ticket 30997 - Valida se cliente for segmento engenharia obrigar preenchimento de Data Necessidade Real C6_YDTNERE
+	
+	If Alltrim(SA1->A1_YTPSEG) == "E" .And. Empty(DTOS(Gdfieldget("C6_YDTNERE",n))) 
+		MsgAlert("Antes de realizar a liberação deste item, é obrigatório o preenchimento do campo Dt.Nec.Real.", "Data de Necessidade Real")
+		Return(.F.)
+	EndIf
+
 	//Valida Desconto Incondicional com os campo C6_PRCVEN e C6_PRUNIT                 
 	//Fernando em 01/10 - adicionado o tipo B - estava dando problema nos pedidos da Fabiana Corona
 	If !(M->C5_TIPO) $ "C_I_P_D_B_" .And. ( ALLTRIM(SB1->B1_TIPO) $ 'PA#PR' ) //Compl. Preço, Compl. ICMS, Compl. IPI e Devolução
@@ -538,7 +545,6 @@ static function M410LIOK()
 		lRetorno := .F.
 		Return(lRetorno)
 	EndIf
-
 
 	//VALIDAR SE O PEDIDO POSSUI CARGA EM ABERTO E NAO DEIXAR ALTERAR LINHA - FERNANDO
 	If lUsaCarga .And. !(IsInCallStack("U_M410RPRC"))

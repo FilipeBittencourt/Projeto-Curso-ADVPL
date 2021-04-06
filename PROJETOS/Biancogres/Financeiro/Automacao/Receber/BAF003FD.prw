@@ -3,8 +3,11 @@
 
 
 User Function BAF003FD()
-Local oObj := Nil
-Local nCount := 0
+	
+	Local oObj		:= Nil
+	
+	Local cDataRef
+	Local dDataRef
 
 	U_GravaPZ2(0,"SE1","BAF003FD","INICIO","EMP:"+CEMPANT,"MNT",CUSERNAME)
 
@@ -26,7 +29,14 @@ Local nCount := 0
 	oObj:oMrr:dEmissaoAte	:= dDataBase
 	oObj:Send()
 	
-	U_FIDCXML()
+	U_FIDCXML(@cDataRef)
+
+	ConOut("TAF => BAF003 - [MOVIMENTACAO BANCARIA FIDC] - Inicio do Processo - DATE: "+DTOC(Date())+" TIME: "+Time())	
+
+	dDataRef:=SToD(cDataRef)
+	FIDC():movBcoFIDC(@dDataRef)
+
+	ConOut("TAF => BAF003 - [MOVIMENTACAO BANCARIA FIDC] - Final do Processo - DATE: "+DTOC(Date())+" TIME: "+Time())
 							
 	ConOut("TAF => BAF003 - [REGISTRO ON-LINE NORMAL FIDC - REENVIO/QUEDA] - FIM do Processo - DATE: "+DTOC(Date())+" TIME: "+Time())	
 			

@@ -61,12 +61,12 @@ Static Function VerifDados()
 	Local aButtons 		:= {}  
 	Local lConfirm 		:= .F. 
 
-
 	AADD(aSays, OemToAnsi( "ATENÇÃO: foram identificadas as seguintes Revisão e Sequência ativas:" ))   
 	AADD(aSays, OemToAnsi( "" ))   
 
 	cQuery := " SELECT ZBM_REVISA, "
-	cQuery += "        ZBM_SEQUEN "
+	cQuery += "        ZBM_SEQUEN, "
+	cQuery += "        COUNT(*) CONTAD "
 	cQuery += "   FROM " + RetSqlName("ZBM") + " "
 	cQuery += "  WHERE ZBM_FILIAL = '" + xFilial('ZBM') + "' "
 	cQuery += "    AND ZBM_VERSAO = '" + cVersao + "' "
@@ -80,7 +80,7 @@ Static Function VerifDados()
 	(cAliasTmp)->(dbGoTop())
 	While !(cAliasTmp)->(Eof())
 
-		AADD(aSays, OemToAnsi( (cAliasTmp)->(ZBM_REVISA) + " / " + (cAliasTmp)->(ZBM_SEQUEN) ))   
+		AADD(aSays, OemToAnsi( (cAliasTmp)->(ZBM_REVISA) + " / " + (cAliasTmp)->(ZBM_SEQUEN) + "   -   Registros: " + Alltrim(Str((cAliasTmp)->(CONTAD))) ))   
 
 		(cAliasTmp)->(dbSkip())
 
@@ -88,8 +88,8 @@ Static Function VerifDados()
 	(cAliasTmp)->(dbCloseArea())
 
 	AADD(aSays, OemToAnsi( "" ))   
-	AADD(aSays, OemToAnsi( "Antes de continuar, verifique os parâmetros             !" ))   
-	AADD(aSays, OemToAnsi( "Deseja Continuar?" ))   
+	AADD(aSays, OemToAnsi( "Antes de continuar, REVALIDE os parâmetros, repita o tempo orçamentário e preencha a" ))   
+	AADD(aSays, OemToAnsi( "sequência que ficará ATIVA. Deseja Continuar?" ))   
 
 	AADD(aButtons, { 5,.T.,{|| fbRevAtv() } } )
 	AADD(aButtons, { 1,.T.,{|o| lConfirm := .T. , o:oWnd:End()}} )
@@ -99,7 +99,15 @@ Static Function VerifDados()
 
 	If lConfirm
 
-		ProcDados()
+		If cVersao + cRevisa + cAno == idVersao + idRevisa + idAnoRef
+
+			ProcDados()
+
+		Else
+
+			MsgALERT("Parâmetros não confere. Favor verificar!!!")
+
+		EndIf
 
 	EndIf
 
@@ -122,10 +130,10 @@ Static Function fbRevAtv()
 	idAnoRef		:= cAno 
 	idSequen   		:= space(003) 
 
-	aAdd( aPergs ,{1,"Versão:"                      ,idVersao    ,"@!","NAOVAZIO()",'ZB5','.F.',070,.F.})	
-	aAdd( aPergs ,{1,"Revisão:"                     ,idRevisa    ,"@!","NAOVAZIO()",''   ,'.F.', 03,.F.})	
-	aAdd( aPergs ,{1,"Ano Orçamentário: "           ,idAnoRef    ,"@!","NAOVAZIO()",''   ,'.F.', 04,.F.})	
-	aAdd( aPergs ,{1,"Sequência:"                   ,idSequen    ,"@!","NAOVAZIO()",''   ,'.T.', 03,.F.})	
+	aAdd( aPergs ,{1,"Versão:"                      ,idVersao    ,"@!","NAOVAZIO()",'ZB5','.T.',070,.T.})	
+	aAdd( aPergs ,{1,"Revisão:"                     ,idRevisa    ,"@!","NAOVAZIO()",''   ,'.T.', 03,.T.})	
+	aAdd( aPergs ,{1,"Ano Orçamentário: "           ,idAnoRef    ,"@!","NAOVAZIO()",''   ,'.T.', 04,.T.})	
+	aAdd( aPergs ,{1,"Sequência para Ativação:"     ,idSequen    ,"@!","NAOVAZIO()",''   ,'.T.', 03,.T.})	
 
 	If ParamBox(aPergs ,"Ativação de Sequencia para GMR",,,,,,,,cLoad,.T.,.T.)      
 		idVersao    := ParamLoad(cFileName,,1,idVersao) 
@@ -176,12 +184,12 @@ Static Function ProcDados()
 
 		If lOk
 
-			MsgINFO("Sequência habilitada com sucesso.", "")
+			MsgINFO("Sequência " + idSequen + " habilitada com sucesso.", "BIAATGMR")
 
 		Else
 
 			DisarmTransaction()
-			MsgSTOP("Erro: Nova sequência não habilitada.","")
+			MsgSTOP("Erro: Nova sequência não habilitada.", "BIAATGMR")
 
 		EndIf
 

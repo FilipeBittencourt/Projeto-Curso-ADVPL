@@ -41,8 +41,8 @@ Class TLoadEmpresa From LongClasName
 
 	Method New(lEmpAnt) Constructor
 	Method Load(lEmpAnt)
-	Method Seek(cCgc)
-	Method SeekForCli(cCodEmp, cCodFil)
+	Method Seek(cCgc,nSM0RecNo)
+	Method SeekForCli(cCodEmp, cCodFil,nSM0RecNo)
 	Method SeekCli(cCodigo, cLoja)
 	Method SeekFor(cCodigo, cLoja)
 	Method GetCodigos()
@@ -86,11 +86,13 @@ Method Load(lEmpAnt) Class TLoadEmpresa
 
 Return()
 
-Method Seek(cCgc) Class TLoadEmpresa
+Method Seek(cCgc,nSM0RecNo) Class TLoadEmpresa
 
 	Local aAreaSM0 := SM0->(GetArea())
 	Local aAreaSA1 := SA1->(GetArea())
 	Local aAreaSA2 := SA2->(GetArea())
+
+    Local lSM0RecNo:=(!empty(nSM0RecNo))
 
 	::Load()
 
@@ -104,9 +106,13 @@ Method Seek(cCgc) Class TLoadEmpresa
 
 	DbSelectArea("SM0")
 	SM0->(DbSetOrder(1))
-	SM0->(DBGoTop())
+    if (lSM0RecNo)
+        SM0->(MsGoTo(nSM0RecNo))
+    else
+        SM0->(DBGoTop())
+    endif
 
-	While SM0->(! EOF())
+	While SM0->(!EOF())
 
 		If AllTrim(SM0->M0_CGC) == ::cCgc
 
@@ -197,19 +203,32 @@ Method SeekFor(cCodigo, cLoja) Class TLoadEmpresa
 
 Return(::lFornecedor)
 
-Method SeekForCli(cCodEmp, cCodFil) Class TLoadEmpresa
+Method SeekForCli(cCodEmp, cCodFil,nSM0RecNo) Class TLoadEmpresa
 
 	Local aAreaSM0 := SM0->(GetArea())
 
+    local lSM0Found
+    Local lSM0RecNo:=(!empty(nSM0RecNo))
+
 	DbSelectArea("SM0")
 	SM0->(DbSetOrder(1))
-	SM0->(DBGoTop())
+	
+    if (lSM0RecNo)
+        SM0->(MsGoTo(nSM0RecNo))
+        lSM0Found:=SM0->(RecNo()==nSM0RecNo)
+    else
+        SM0->(DBGoTop())
+    endif
 
 	::Load()
 
-	If SM0->(DbSeek(cCodEmp + cCodFil))
+	if(!lSM0Found)
+        lSM0Found:=SM0->(MsSeek(cCodEmp + cCodFil))
+    endif
+    
+    If (lSM0Found)
 
-		::Seek(SM0->M0_CGC)
+		::Seek(SM0->M0_CGC,nSM0RecNo)
 
 	EndIf
 
@@ -231,7 +250,7 @@ Method GetCodigos() Class TLoadEmpresa
 	DbSelectArea("SA2")
 	SA2->(DbSetOrder(3)) // A2_FILIAL, A2_CGC, R_E_C_N_O_, D_E_L_E_T_
 
-	If SELECT("SM0")==0
+	If (Select("SM0")==0)
 		OpenSM0()
 	EndIf
 

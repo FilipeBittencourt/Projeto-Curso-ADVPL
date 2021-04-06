@@ -9,7 +9,7 @@
 @type function
 /*/
 
-user function A265COL() as array
+function u_A265COL() as array
 
     local aCabSDA   as array
     local aItemSDB  as array
@@ -25,6 +25,10 @@ user function A265COL() as array
         if (type("aCols")=="A")
             aCabSDA:=cacheData():get("fDistribui","aCabSDA",{})
             aItemSDB:=cacheData():get("fDistribui","aItemSDB",{})
+            nSDARecNo:=cacheData():get("fDistribui","nSDARecNo",0)
+            if (!empty(nSDARecNo))
+                SDA->(MsGoTo(nSDARecNo))
+            endif
             if (len(aItemSDB)<len(aCols))
                 aSize(aCols,len(aItemSDB))
             endif

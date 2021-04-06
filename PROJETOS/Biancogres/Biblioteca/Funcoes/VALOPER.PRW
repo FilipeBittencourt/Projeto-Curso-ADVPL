@@ -81,8 +81,8 @@ User Function VALOPER(cFuncao,lShowMsg,lAdmLib)
 
 		lIsBlind:=IsBlind()
 
-		bValOper:={||VALOPER(@cFuncao,@lShowMsg,@lAdmLib,@cMsg)}
-		lRet:=evalBlock():evalBlock(bValOper,nil,!lIsBlind)
+		bValOper:={||lRet:=VALOPER(@cFuncao,@lShowMsg,@lAdmLib,@cMsg)}
+		evalBlock():evalBlock(bValOper,nil,!lIsBlind)
 	
 		aAdd(aKeepValid,{cKeepValid,lRet,cMsg})
 

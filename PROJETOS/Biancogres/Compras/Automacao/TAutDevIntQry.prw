@@ -13,6 +13,7 @@
 class TAutDevIntQry
     static method GetDocOri(cDoc as character,cSerie as character,cCliente as character,cLoja as character,cCodFor as character,cLojaFor as character) as character
     static method ProcessaDevolucao(cCodigosCli as character) as character
+    static method DocOriCmpAut(nZL9RecNo) as character
 end class
 
 static method GetDocOri(cDoc,cSerie,cCliente,cLoja,cCodFor,cLojaFor) class TAutDevIntQry
@@ -55,8 +56,6 @@ static method GetDocOri(cDoc,cSerie,cCliente,cLoja,cCodFor,cLojaFor) class TAutD
     nDSSize+=getSX3Cache("D1_SERIE","X3_TAMANHO")
     cDSSize:=cValToChar(nDSSize)
     cDSSize:="%"+cDSSize+"%"
-
-    cQuery:=""
 
     beginContent var cQuery
 
@@ -204,5 +203,58 @@ static method ProcessaDevolucao(cCodigosCli) class TAutDevIntQry
 	cSQL += " ) "
 
 	cSQL += " AND SF1.D_E_L_E_T_ = '' "
+
+    return(cSQL)
+
+static method DocOriCmpAut(nZL9RecNo) class TAutDevIntQry
+
+    static oFWPrepStatDocOriCmpAut as object
+
+    local aTipos    as array
+
+    local cSQL      as character
+
+    paramtype nZL9RecNo as numeric optional DEFAULT ZL9->(RecNo())
+
+    if (!(valtype(oFWPrepStatDocOriCmpAut)=="O"))
+        
+        beginContent var cSQL
+            SELECT R_E_C_N_O_ SE2RECNO
+              FROM [?] SE2 WITH (NOLOCK)
+             WHERE (
+                    ((SE2.E2_NUM=?) AND (SE2.E2_PREFIXO=?) AND (SE2.E2_TIPO='NF ') AND (SE2.E2_BAIXA=' ') AND (SE2.E2_SALDO>0))
+                    OR
+                    ((SE2.E2_NUM=?) AND (SE2.E2_PREFIXO=?) AND (SE2.E2_TIPO='NDF') AND (SE2.E2_BAIXA=' '))
+              )
+               AND (SE2.D_E_L_E_T_=' ')
+               AND (SE2.E2_FORNECE=?)
+               AND (SE2.E2_LOJA=?)
+               AND (SE2.E2_TIPO IN (?))
+        endContent
+
+        oFWPrepStatDocOriCmpAut:=FWPreparedStatement():New(cSQL)
+
+    endif
+
+    ZL9->(MsGoTo(nZL9RecNo))
+
+    oFWPrepStatDocOriCmpAut:setString(1,retSQLName("SE2"))
+    
+    oFWPrepStatDocOriCmpAut:setString(2,ZL9->ZL9_DOCORI)
+    oFWPrepStatDocOriCmpAut:setString(3,ZL9->ZL9_SERORI)
+
+    oFWPrepStatDocOriCmpAut:setString(4,ZL9->ZL9_DOCDEV)
+    oFWPrepStatDocOriCmpAut:setString(5,ZL9->ZL9_SERDEV)
+
+    oFWPrepStatDocOriCmpAut:setString(6,ZL9->ZL9_FORNEC)
+    oFWPrepStatDocOriCmpAut:setString(7,ZL9->ZL9_LOJFOR)
+    
+    aTipos:={"NF "/*,"PA "*/,"NDF"}
+    oFWPrepStatDocOriCmpAut:SetIn(8,aTipos)
+
+    cSQL:=oFWPrepStatDocOriCmpAut:GetFixQuery()
+    
+    cSQL:=strTran(cSQL,"['","[")
+    cSQL:=strTran(cSQL,"']","]")
 
     return(cSQL)

@@ -23,15 +23,19 @@ User Function SD3240I()
 
 	aArea:=GetArea()
 
-	If SD3->D3_TM > '500' .And. _oMd:CheckMd(SD3->D3_COD,SD3->D3_LOCAL)
-		_cMatOri	:=	Iif(!Empty(SD3->D3_YMATORI),SD3->D3_YMATORI,SD3->D3_YMATRIC)
-
-		_oMd:InsereMovimentacao(SD3->D3_FILIAL,SD3->D3_DOC,"","","","",SD3->D3_COD,SD3->D3_QUANT,SD3->D3_LOCAL,;
-			    									"501",SD3->D3_YMATRIC,_cMatOri,cUserName,Alltrim(funname()),SD3->D3_EMISSAO,"SD3",SD3->(RECNO())) //Insere Movimentação na Tabela	
+	If _oMd:CheckMd(SD3->D3_COD,SD3->D3_LOCAL)
+		If SD3->D3_TM > '500' 
+			_cMatOri	:=	Iif(!Empty(SD3->D3_YMATORI),SD3->D3_YMATORI,SD3->D3_YMATRIC)
+	
+			_oMd:InsereMovimentacao(SD3->D3_FILIAL,SD3->D3_DOC,"","","","",SD3->D3_COD,SD3->D3_QUANT,SD3->D3_LOCAL,;
+			    				 		"501",SD3->D3_YMATRIC,_cMatOri,cUserName,Alltrim(funname()),SD3->D3_EMISSAO,"SD3",SD3->(RECNO())) //Insere Movimentação na Tabela	
 
 		
+		Else
+			_oMd:DevolucaoMovimentacao(SD3->D3_FILIAL,SD3->D3_DOC,"","","","",SD3->D3_COD,SD3->D3_QUANT,SD3->D3_LOCAL,;
+										cUserName,Alltrim(FunName()),SD3->D3_EMISSAO,"SD3",SD3->(Recno()))
+		EndIf
 	EndIf
-
 	//VARIAVEL CRIADA PARA TESTAR SE ESTA EXECUTANDO VIA EXECAUTO - MATA241
 	IF Type("_ExecAutoII") <> "U" 
 		RestArea(aArea)

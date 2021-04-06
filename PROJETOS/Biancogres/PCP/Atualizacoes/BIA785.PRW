@@ -2668,6 +2668,50 @@ Return( gk_Retn )
 /*___________________________________________________________________________
 ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
 ¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦Funçao    ¦ BIA785H  ¦ Autor ¦ Marcos Alberto S      ¦ Data ¦ 08.11.11 ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦Descriçào ¦ Validação da Digitação por Linha do Grid Referência        ¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
+User Function BIA785X()
+
+	Local gk_Retn := .T.
+	Local sf_CalcAj := 0, sf_CalcQt := 0
+
+	If Alltrim(__readvar) == "M->COMP"
+
+		If GdFieldGet("REGISTR",n) == 1
+			MsgALERT("Não é possível alterar registros contidos no formula.")
+			gk_Retn := .F.
+			M->COMP := GdFieldGet("COMP",n)
+			zoNwDad1:Refresh()
+		Else
+			SB1->(dbSetOrder(1))
+			If SB1->(dbSeek(xFilial("SB1")+M->COMP))
+				If SB1->B1_MSBLQL == "1"
+					MsgALERT("Produto Bloqueado. Favor verificar!!!")
+					gk_Retn := .F.
+					M->COMP := Space(15)
+				Else
+					GdFieldPut("DESCRIC", SB1->B1_DESC, n)
+				EndIf
+			Else
+				MsgALERT("Produto Inexistente!!!")
+				gk_Retn := .F.
+				M->COMP := Space(15)
+			EndIf
+		EndIf
+
+		GdFieldPut("SEQ", "000", n)
+
+	EndIf
+
+Return( gk_Retn )
+
+/*___________________________________________________________________________
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
 ¦¦¦Funçao    ¦ BIA785T  ¦ Autor ¦ Marcos Alberto S      ¦ Data ¦ 08.01.14 ¦¦¦
 ¦¦+----------+------------------------------------------------------------¦¦¦
 ¦¦¦Descriçào ¦ Validação da Digitação por Linha do Grid Referência        ¦¦¦
@@ -2899,7 +2943,7 @@ User Function B785APRO()
 		@ nLin*.008, nCol*.006 GROUP toGroup1 TO nLin*.061, nCol*.483 PROMPT " Referência "                       OF oDlgApro COLOR 0, 16777215 PIXEL
 		@ nLin*.071, nCol*.006 GROUP toGroup2 TO nLin*.410, nCol*.483 PROMPT " Cálculo "                          OF oDlgApro COLOR 0, 16777215 PIXEL
 		@ nLin*.039, nCol*.009 SAY toSay1 PROMPT "Quantidade base para Aproveitamento:" SIZE nLin*.200, nCol*.011 OF oDlgApro FONT toFont1 COLORS 0, 16777215 PIXEL
-		@ nLin*.036, nCol*.165 MSGET toGet1 VAR noGet1 SIZE nLin*.060, nCol*.008                                  OF oDlgApro PICTURE "@E 999,999,999.99" COLORS 0, 16777215 PIXEL
+		@ nLin*.036, nCol*.165 MSGET toGet1 VAR noGet1 SIZE nLin*.060, nCol*.008                                  OF oDlgApro VALID u_t_CalcQtd(1) PICTURE "@E 999,999,999.99" COLORS 0, 16777215 PIXEL
 		@ nLin*.020, nCol*.009 SAY toSay2 PROMPT tDescEsm SIZE nLin*.246, nCol*.011                               OF oDlgApro FONT toFont1 COLORS 0, 16777215 PIXEL
 		@ nLin*.020, nCol*.263 SAY toSay3 PROMPT "Revisão: "+MARK->REVISA SIZE nLin*.070, nCol*.011               OF oDlgApro FONT toFont1 COLORS 0, 16777215 PIXEL
 		@ nLin*.039, nCol*.210 SAY toSay1 PROMPT "Em Quilogramas" SIZE nLin*.200, nCol*.011                       OF oDlgApro FONT toFont1 COLORS 0, 16777215 PIXEL
@@ -2931,8 +2975,8 @@ Static Function fAproDet1()
 	Local aHeaderEx    := {}
 	Local aColsEx      := {}
 	Local aFieldFill   := {}
-	Local aFields      := {"SEQ","COMP","DESCRIC","QUANTID","REGISTR"}
-	Local aAlterFields := {"COMP","QUANTID"}
+	Local aFields      := {"SEQ","COMP","DESCRIC","MISTURA","AJUSTE","QUANTID","REGISTR"}
+	Local aAlterFields := {"COMP","AJUSTE","QUANTID"}
 
 	dbSelectArea("SX3")
 	dbSetOrder(2)
@@ -2944,22 +2988,31 @@ Static Function fAproDet1()
 	dbSeek("B1_DESC")
 	aAdd(aHeaderEx,{x3_titulo        ,"DESCRIC"  ,x3_picture           ,50        ,x3_decimal,,x3_usado,x3_tipo,         ,x3_context})
 	dbSeek("G1_QUANT")
+	aAdd(aHeaderEx,{"% Mistura"      ,"MISTURA"	 ,"@E 999,999.9999"    ,x3_tamanho,x3_decimal, , x3_usado,x3_tipo,         ,x3_context})
+	dbSeek("G1_QUANT")
+	aAdd(aHeaderEx,{"Per.Ajuste"     ,"AJUSTE"   ,"@E 999,999.999999"  ,x3_tamanho,x3_decimal, "u_t_CalcQtd(2)",x3_usado,x3_tipo,         ,x3_context})
+	dbSeek("G1_QUANT")
 	aAdd(aHeaderEx,{"Quantidade"     ,"QUANTID"  ,"@E 999,999.999999"  ,x3_tamanho,x3_decimal,,x3_usado,x3_tipo,         ,x3_context})
 	dbSeek("G1_QUANT")
 	aAdd(aHeaderEx,{"Registro"       ,"REGISTR"  ,"@E 99999999"        ,8         ,x3_decimal,,x3_usado,x3_tipo,         ,x3_context})
 
-	AV001 := " SELECT '000' SEQ,
+	AV001 := " SELECT 
+	AV001 += "        '000' SEQ,
 	AV001 += "        G1_COMP COMP,
 	AV001 += "        SUBSTRING(B1_DESC,1,50) DESCRIC,
+	AV001 += "        G1_YMISTUR MISTURA,
+	AV001 += "        0 AJUSTE, 
 	AV001 += "        0 QUANT
-	AV001 += "   FROM "+RetSqlName("SG1")+" SG1 WITH(NOLOCK)
-	AV001 += "  INNER JOIN "+RetSqlName("SB1")+" SB1 WITH(NOLOCK) ON B1_FILIAL = '"+xFilial("SB1")+"'
+	AV001 += " FROM "+RetSqlName("SG1")+" SG1 WITH(NOLOCK)
+	AV001 += "  INNER JOIN "+RetSqlName("SB1")+" SB1 WITH(NOLOCK) ON 
+	AV001 += "                       	 B1_FILIAL = '"+ xFilial("SB1") +"'
 	AV001 += "                       AND B1_COD = G1_COMP
 	AV001 += "                       AND SB1.D_E_L_E_T_ = ' '
-	AV001 += "  WHERE G1_FILIAL = '"+xFilial("SG1")+"'
-	AV001 += "    AND G1_COD = '"+MARK->CODESM+"'
-	AV001 += "    AND '"+MARK->REVISA+"' >= G1_REVINI
-	AV001 += "    AND '"+MARK->REVISA+"' <= G1_REVFIM
+	AV001 += "  WHERE 
+	AV001 += "    	  G1_FILIAL = '"+ xFilial("SG1") +"'
+	AV001 += "    AND G1_COD = '"+ MARK->CODESM +"'
+	AV001 += "    AND '"+ MARK->REVISA +"' >= G1_REVINI
+	AV001 += "    AND '"+ MARK->REVISA +"' <= G1_REVFIM
 	AV001 += "    AND SG1.D_E_L_E_T_ = ' '
 	TcQuery AV001 ALIAS "AV01" NEW
 	dbSelectArea("AV01")
@@ -2969,17 +3022,88 @@ Static Function fAproDet1()
 		aColsEx[Len(aColsEx), 1] := AV01->SEQ
 		aColsEx[Len(aColsEx), 2] := AV01->COMP
 		aColsEx[Len(aColsEx), 3] := AV01->DESCRIC
-		aColsEx[Len(aColsEx), 4] := AV01->QUANT
-		aColsEx[Len(aColsEx), 5] := 1
+		aColsEx[Len(aColsEx), 4] := AV01->MISTURA
+		aColsEx[Len(aColsEx), 5] := AV01->AJUSTE
+		aColsEx[Len(aColsEx), 6] := AV01->QUANT
+		aColsEx[Len(aColsEx), 7] := 1
 		aColsEx[Len(aColsEx), Len(aFields)+1] := .F.
 		dbSelectArea("AV01")
 		dbSkip()
 	End
 	AV01->(dbCloseArea())
 
-	zoNwApro1 := MsNewGetDados():New( nLin*.082, nCol*.010, nLin*.405, nCol*.478, GD_INSERT+GD_UPDATE, "AllwaysTrue", "AllwaysTrue", "+Field1+Field2", aAlterFields,, 999, "AllwaysTrue", "", "AllwaysTrue", oDlgApro, aHeaderEx, aColsEx)
+	zoNwApro1 := MsNewGetDados():New( nLin*.082, nCol*.010, nLin*.405, nCol*.478, GD_INSERT+GD_UPDATE, "AllwaysTrue", "AllwaysTrue", "+Field1+Field2", aAlterFields,, 999, 'U_BIA785X()', "", "AllwaysTrue", oDlgApro, aHeaderEx, aColsEx)
 
 Return
+
+/*___________________________________________________________________________
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦Funçao    ¦ t_CalcQtd  ¦ Autor ¦ FACILE Sistemas     ¦ Data ¦ 22.03.21 ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦Descriçao ¦ Calcular a quantidade, para a grid, com base na quantidade ¦¦¦
+¦¦¦          ¦ base para aproveitamento.                                  ¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦Parametro ¦ nRefOper                                                   ¦¦¦
+¦¦¦          ¦ 1 - Execução a partir do preenchimento do Cpo. na Enchoice ¦¦¦
+¦¦¦          ¦ 2 - Execução a partir do preenchimento na Grid Cpo. Mistura¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
+User Function t_CalcQtd(nRefOper)
+	Local _kf 		:= 0
+	Local whQtdApr	:= 0
+	Local nPGrdMst	:= 0
+	Local nPGrdQtd	:= 0
+	Local nPGrdAju	:= 0
+	Local cReadVar	:= ""
+	Local cConteudo := ""
+
+	Default nRefOper := 1
+
+	whQtdApr := noGet1													// Quantidade digitada (ench.).
+	If ( Valtype(zoNwApro1) == "O" )
+		nPGrdMst := aScan(zoNwApro1:aHeader, {|x| x[2] == "MISTURA" })	// Coluna Grid : % Mistura
+		nPGrdAju := aScan(zoNwApro1:aHeader, {|x| x[2] == "AJUSTE" })	// Coluna Grid : % Ajuste
+		nPGrdQtd := aScan(zoNwApro1:aHeader, {|x| x[2] == "QUANTID" })	// Coluna Grid : Quantidade 
+	EndIf
+	// Percorrer as linhas da GRID:
+	// Executar a regra : Assim que um número for inserido, deverá multiplicar este valor pela informação contida no GET "Quantidade base para Aproveitamento" e gravar na linha do acols correspondente coluna "Quantidade". (Exemplo: 1000(Get) * 10/100)
+	// Preencher a informação para quantidade.
+	If ( (nPGrdAju > 0) .AnD. (nPGrdQtd > 0) )
+		If ( nRefOper == 1 )
+			For _kf := 1 To Len(zoNwApro1:ACOLS)
+				If ( whQtdApr <> 0 )
+					If ( zoNwApro1:ACOLS[_kf][nPGrdAju] <> 0 )
+						zoNwApro1:ACOLS[_kf][nPGrdQtd] := ( noGet1 * (zoNwApro1:ACOLS[_kf][nPGrdAju] / 100) )
+					EndIf
+				ElseIf ( whQtdApr == 0 )
+					zoNwApro1:ACOLS[_kf][nPGrdQtd] := 0
+				EndIf
+			Next _kf
+		Else
+			If ( whQtdApr <> 0 )
+				// Capturar o conteúdo do campo.
+				cReadVar := ReadVar()
+				If ( Alltrim(cReadVar) == AllTrim("M->AJUSTE") )
+					cConteudo := &cReadVar
+				Else
+					cConteudo := GdFieldGet("AJUSTE", zoNwApro1:nAt)
+				Endif
+				If ( cConteudo <> 0 )
+					GdFieldPut("QUANTID", noGet1 * (cConteudo / 100), zoNwApro1:nAt)
+				EndIf
+			ElseIf ( whQtdApr == 0 )
+				GdFieldPut("QUANTID", 0, zoNwApro1:nAt)
+			EndIf
+		EndIf
+		// Atualizar a GRID para exibir os novos valores.
+		zoNwApro1:Refresh()
+	EndIf
+
+
+Return(.T.)
+
 
 /*___________________________________________________________________________
 ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
@@ -2994,25 +3118,34 @@ Return
 Static Function t_GrvApro()
 
 	Local _kf, _bj
-	Local xpNumOp := GetNumSc2()
-	Local _nAux	:=	0
-	Local _cAux	:=	0
+	Local xpNumOp 	:= GetNumSc2()
+	Local _nAux		:=	0
+	Local _cAux		:=	0
 	Local _cLocal	:=	""
+	Local nPGrdQtd	:= 0
+	Local nPGrdSKU	:= 0
+	Local nPGrdSeq	:= 0
+
+	If ( Valtype(zoNwApro1) == "O" )
+		nPGrdSeq := aScan(zoNwApro1:aHeader, {|x| x[2] == "SEQ" })		// Coluna Grid : Sequencia
+		nPGrdSKU := aScan(zoNwApro1:aHeader, {|x| x[2] == "COMP" })		// Coluna Grid : Componente
+		nPGrdQtd := aScan(zoNwApro1:aHeader, {|x| x[2] == "QUANTID" })	// Coluna Grid : Quantidade 
+	EndIf
 
 	whQtdApr := 0
 	For _kf := 1 To Len(zoNwApro1:ACOLS)
-		If zoNwApro1:ACOLS[_kf][4] <> 0
-			whQtdApr += zoNwApro1:ACOLS[_kf][4]
+		If zoNwApro1:ACOLS[_kf][nPGrdQtd] <> 0
+			whQtdApr += zoNwApro1:ACOLS[_kf][nPGrdQtd]
 		EndIf
 	Next _kf
 
-	If whQtdApr <> noGet1
-		Aviso('Aproveitamento','A quantidade a ser gerada para esta ordem de produção de aproveitamento é diferente da soma das quantidade dos seus componentes: '+Alltrim(Str(whQtdApr))+'. Diferença: '+Alltrim(Str(whQtdApr-noGet1))+'.',{'Ok'})
-		Return
+	If ( whQtdApr <> noGet1 )
+		Aviso('Aproveitamento','O aproveitamento será realizado. Porém atente-se para que a quantidade a ser gerada para esta ordem de produção de aproveitamento é diferente da soma das quantidade dos seus componentes: '+Alltrim(Str(whQtdApr))+'. Diferença: '+Alltrim(Str(whQtdApr-noGet1))+'.',{'Ok'})
+		//Return
 	EndIf
 
 	gg_ChNOp := ""
-	If whQtdApr > 0
+	If ( whQtdApr > 0 )
 		SB1->(dbSetOrder(1))
 		SB1->(dbSeek(xFilial("SB1")+tCodiEsm))
 
@@ -3056,36 +3189,36 @@ Static Function t_GrvApro()
 
 		For _bj := 1 To Len(zoNwApro1:ACOLS)
 
-			If zoNwApro1:ACOLS[_bj][4] <> 0
+			If ( zoNwApro1:ACOLS[_bj][nPGrdQtd] <> 0 )
 
-				U_BFG73LIN(coGet2,zoNwApro1:ACOLS[_bj][2],@_cAux,.F.)
+				U_BFG73LIN(coGet2,zoNwApro1:ACOLS[_bj][nPGrdSKU],@_cAux,.F.)
 
-				_nAux := ConvUm(zoNwApro1:ACOLS[_bj][2], SD4->D4_QTDEORI,0,2)
+				_nAux := ConvUm(zoNwApro1:ACOLS[_bj][nPGrdSKU], SD4->D4_QTDEORI,0,2)
 				dbSelectArea("SD4")
 				dbSetOrder(1)
 				// Tratamento específico para os casos em que o um item a mais foi incluído na correção
 				RecLock("SD4",.T.)
 				SD4->D4_FILIAL   := xFilial("SD4")
-				SD4->D4_COD      := zoNwApro1:ACOLS[_bj][2]
+				SD4->D4_COD      := zoNwApro1:ACOLS[_bj][nPGrdSKU]
 				SD4->D4_LOCAL    := _cAux
 				SD4->D4_OP       := gg_ChNOp
 				SD4->D4_DATA     := dDataBase
-				SD4->D4_QTDEORI  := zoNwApro1:ACOLS[_bj][4]
-				SD4->D4_QUANT    := zoNwApro1:ACOLS[_bj][4]
-				SD4->D4_YQTDFLX  := zoNwApro1:ACOLS[_bj][4]
+				SD4->D4_QTDEORI  := zoNwApro1:ACOLS[_bj][nPGrdQtd]
+				SD4->D4_QUANT    := zoNwApro1:ACOLS[_bj][nPGrdQtd]
+				SD4->D4_YQTDFLX  := zoNwApro1:ACOLS[_bj][nPGrdQtd]
 				SD4->D4_QTSEGUM  := _nAux
 				MsUnLock()
 
 				AADD(aColsEx, Array(12) )
 				aColsEx[Len(aColsEx), 1] := dDataBase
-				aColsEx[Len(aColsEx), 2] := zoNwApro1:ACOLS[_bj][1]
-				aColsEx[Len(aColsEx), 3] := zoNwApro1:ACOLS[_bj][2]
-				aColsEx[Len(aColsEx), 4] := Substr(Posicione("SB1", 1, xFilial("SB1")+zoNwApro1:ACOLS[_bj][2], "B1_DESC"),1,50)
-				aColsEx[Len(aColsEx), 5] := zoNwApro1:ACOLS[_bj][4]
+				aColsEx[Len(aColsEx), 2] := zoNwApro1:ACOLS[_bj][nPGrdSeq]
+				aColsEx[Len(aColsEx), 3] := zoNwApro1:ACOLS[_bj][nPGrdSKU]
+				aColsEx[Len(aColsEx), 4] := Substr(Posicione("SB1", 1, xFilial("SB1")+zoNwApro1:ACOLS[_bj][nPGrdSKU], "B1_DESC"),1,50)
+				aColsEx[Len(aColsEx), 5] := zoNwApro1:ACOLS[_bj][nPGrdQtd]
 				aColsEx[Len(aColsEx), 6] := 0
 				aColsEx[Len(aColsEx), 7] := 0
 				aColsEx[Len(aColsEx), 8] := "1" // Soma
-				aColsEx[Len(aColsEx), 9] := zoNwApro1:ACOLS[_bj][4]
+				aColsEx[Len(aColsEx), 9] := zoNwApro1:ACOLS[_bj][nPGrdQtd]
 				aColsEx[Len(aColsEx),10] := noGet1
 				aColsEx[Len(aColsEx),11] := 0
 				aColsEx[Len(aColsEx),12] := .F.

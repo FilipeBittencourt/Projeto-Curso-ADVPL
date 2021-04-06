@@ -865,13 +865,24 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 	
 	cHTML += ' 									  <tr>                                                                                                                                                          '
 	cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> TIPO PEDIDO: </td>                                                                           '
-	cHTML += ' 										<td colspan="3" align="left" class="pedido-detalhe-cor"> '+AllTrim(cSubTp)+' </td>                                                                                                                                   '
-
+	if(!Empty(STR(SC5->C5_YPRZINC)) .And. SC5->C5_YPRZINC > 0)
+		cHTML += ' 										<td colspan="1" align="left" class="pedido-detalhe-cor"> '+AllTrim(cSubTp)+' </td>                                                                                                                                   '
+		cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> Incr. Vencimento: </td>                                                                                          '
+		cHTML += ' 										<td align="left"> '+ STR(SC5->C5_YPRZINC)+' dias </td>  
+	else
+		cHTML += ' 										<td colspan="3" align="left" class="pedido-detalhe-cor"> '+AllTrim(cSubTp)+' </td>                                                                                                                                   '
+	endif
 	cHTML += ' 									 </tr>                                                                                                                                                          '
 
 	cHTML += ' 									  <tr>                                                                                                                                                          '
 	cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> VENDEDOR: </td>                                                                           '
-	cHTML += ' 										<td colspan="3" align="left"> '+AllTrim(SA3->A3_COD)+" - "+AllTrim(SA3->A3_NREDUZ)+' </td>                                                                                                                                   '
+	if !Empty(DTOS(SC5->C5_YDTINC))
+		cHTML += ' 										<td colspan="1" align="left"> '+AllTrim(SA3->A3_COD)+" - "+AllTrim(SA3->A3_NREDUZ)+' </td>                                                                                                                                   '
+		cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> Data Incremento: </td>                                                                                          '
+		cHTML += ' 										<td align="left"> '+ DTOS(SC5->C5_YDTINC)+' </td>  
+	else
+		cHTML += ' 										<td colspan="3" align="left"> '+AllTrim(SA3->A3_COD)+" - "+AllTrim(SA3->A3_NREDUZ)+' </td>                                                                                                                                   '
+	endif
 	cHTML += ' 									 </tr>                                                                                                                                                          '
 
 	

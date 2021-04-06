@@ -53,14 +53,14 @@ User Function CT060INC()
 Return()
 
 
-User Function fAddItem(cClvl)
-
+Static Function fAddItem(cClvl)
+	
 	Begin Transaction
 	
 		fAdd(cClvl)
 	
 	End Transaction
-				
+
 Return()
 
 
@@ -76,25 +76,7 @@ Local cQry := GetNextAlias()
 	
 	While !(cQry)->(Eof())
 
-		RecLock("ZMA", .T.)
-		
-			cCodRef := GetSxEnum('ZMA', 'ZMA_CODIGO')
-
-			ZMA->ZMA_FILIAL := xFilial("ZMA")
-			ZMA->ZMA_CODIGO := cCodRef
-			ZMA->ZMA_CLVL := cClvl
-			ZMA->ZMA_ITEMCT := (cQry)->ITEMCT
-			
-		ZMA->(MsUnLock())
-	
-		RecLock("ZMB", .T.)
-		
-			ZMB->ZMB_FILIAL := xFilial("ZMB")
-			ZMB->ZMB_CODREF := cCodRef
-			ZMB->ZMB_SUBITE := (cQry)->SUBITE
-			ZMB->ZMB_DESC := (cQry)->DESCR
-		
-		ZMB->(MsUnLock())
+		UpdateItem(cClvl, (cQry)->ITEMCT, (cQry)->SUBITE, (cQry)->DESCR)
 
 		(cQry)->(DbSkip())
 		
@@ -102,4 +84,91 @@ Local cQry := GetNextAlias()
 				
 	(cQry)->(DbCloseArea())
 			
+Return()
+
+
+Static Function UpdateItem(cClvl, cItem, cSubitem, cDesc)
+Local lInsert := .T.
+Local cCodRef := ""
+Local cSQL := ""
+Local cQry := GetNextAlias()
+
+	If !Empty(cClvl) .And. !Empty(cItem) .And. !Empty(cSubitem) .And. !Empty(cDesc)
+	
+		cSQL := " SELECT ISNULL(ZMA_CODIGO, '') AS ZMA_CODIGO "
+		cSQL += " FROM "+ RetSQLName("ZMA")
+		cSQL += " WHERE ZMA_FILIAL = "+ ValToSQL(xFilial("ZMA")) 
+		cSQL += " AND ZMA_CLVL = " + ValToSQL(cClvl)
+		cSQL += " AND ZMA_ITEMCT = " + ValToSQL(cItem)
+		cSQL += " AND D_E_L_E_T_ = '' "
+		
+		TcQuery cSQL New Alias (cQry)
+		
+		lInsert := Empty((cQry)->ZMA_CODIGO)
+		
+		If lInsert
+
+			RecLock("ZMA", lInsert)			
+			
+				cCodRef := GETSXENUM('ZMA', 'ZMA_CODIGO')
+	
+				ZMA->ZMA_FILIAL := xFilial("ZMA")
+				ZMA->ZMA_CODIGO := cCodRef
+				ZMA->ZMA_CLVL := cClvl
+				ZMA->ZMA_ITEMCT := cItem
+				
+			ZMA->(MsUnLock())
+		
+		Else
+				
+			cCodRef := (cQry)->ZMA_CODIGO
+				 
+		EndIf
+	
+		UpdateSubitem(cCodRef, cSubitem, cDesc)
+					
+		(cQry)->(DbCloseArea())
+		
+	EndIf
+	
+Return()
+
+
+Static Function UpdateSubitem(cCodRef, cSubitem, cDesc)
+Local lInsert := .T.
+Local cSQL := ""
+Local cQry := GetNextAlias()
+
+	If !Empty(cCodRef) .And. !Empty(cSubitem) .And. !Empty(cDesc)
+	
+		cSQL := " SELECT R_E_C_N_O_ AS RECNO "
+		cSQL += " FROM "+ RetSQLName("ZMB")
+		cSQL += " WHERE ZMB_FILIAL = "+ ValToSQL(xFilial("ZMB")) 
+		cSQL += " AND ZMB_CODREF = " + ValToSQL(cCodRef)
+		cSQL += " AND ZMB_SUBITE = " + ValToSQL(cSubitem)
+		cSQL += " AND D_E_L_E_T_ = '' "
+		
+		TcQuery cSQL New Alias (cQry)
+		
+		lInsert := Empty((cQry)->RECNO)
+		
+		If !lInsert
+			
+			ZMB->(DbGoTo((cQry)->RECNO))
+			
+		EndIf
+		
+		RecLock("ZMB", lInsert)
+		
+			ZMB->ZMB_FILIAL := xFilial("ZMB")
+			ZMB->ZMB_CODREF := cCodRef
+			ZMB->ZMB_SUBITE := cSubitem
+			ZMB->ZMB_DESC := cDesc
+
+		ZMB->(MsUnLock())
+						
+		(cQry)->(DbCloseArea())
+		
+	EndIf
+	
 Return()

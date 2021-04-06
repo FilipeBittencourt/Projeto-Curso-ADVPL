@@ -30,21 +30,15 @@ Return
 
 Static Function RptDetail()
 
-	Local nI
-	Local oDlg01
-	Local nUsado := 0
 	Local oDlgSC2
 	Local aArea    := SC2->(GetArea())
-	Local oPCadastro
-	Local oPanel
-	Local oChkBox
 	Local aEdits
 
 	Local _aSize 		:=	{} 
 	Local _aObjects		:=	{}
 	Local _aInfo		:=	{}
 	Local _aPosObj		:=	{}
-	Local _bKeyF5	:=	Setkey(VK_F5,{|| U_B255INC()})
+	Local _bKeyF5		:=	Setkey(VK_F5,{|| U_B255INC()})
 
 	Private lRefresh := .T.
 	Private aHeader   := {}
@@ -69,6 +63,7 @@ Static Function RptDetail()
 	Private oRadio2
 	Private INCLUI := .F.
 	Private aProdAlt	:=	{}
+	Private msEnter     := CHR(13) + CHR(10)
 
 	_aSize := MsAdvSize(.T.)
 
@@ -103,7 +98,9 @@ Static Function RptDetail()
 	A0001 += "        C2_OBS,
 	A0001 += "        ISNULL(ZZ6_DESC, ' ') ZZ6_DESC,
 	A0001 += "        C2_YDTDISP,
-	A0001 += "        C2_YQTRTFC	
+	A0001 += "        C2_YQTRTFC,
+	A0001 += "        C2_YRESCOM,
+	A0001 += "        ' ' CTRLCOM	
 	A0001 += "   FROM "+RetSqlName("SC2")+" SC2
 	A0001 += "  INNER JOIN SB1010 SB1 ON B1_FILIAL = '"+xFilial("SB1")+"'
 	A0001 += "                       AND B1_COD = C2_PRODUTO
@@ -133,6 +130,7 @@ Static Function RptDetail()
 	kh_log := ""
 	cf_Aculm := Space(8)
 	While !Eof()
+
 		cTempo := Alltrim(ElapTime(cHInicio, Time()))
 		IncProc("Atualizando.... "+A001->C2_PRODUTO+"   Tempo: "+cTempo)
 
@@ -150,13 +148,17 @@ Static Function RptDetail()
 		A001->ZZ6_DESC,;
 		stod(A001->C2_YDTDISP),;
 		A001->C2_YQTRTFC,;
+		A001->C2_YRESCOM,;
+		A001->CTRLCOM,;
 		.F.})
 
 		dbSelectArea("A001")
 		dbSkip()
+
 	End
 
 	If Select("A001") > 0
+
 		dbSelectArea("A001")
 		dbCloseArea()
 		If File("A001")
@@ -168,6 +170,7 @@ Static Function RptDetail()
 			fErase(A001+".002")
 			fErase(A001+".003")
 		EndIf
+
 	Endif
 
 	Define FONT oFont   NAME "Arial"          SIZE 0,14 BOLD
@@ -183,8 +186,9 @@ Static Function RptDetail()
 	oGetDados :=   MsGetDados():New(_aPosObj[1,1], _aPosObj[1,2], _aPosObj[1,3], _aPosObj[1,4], 4       ,"U_BIA255A()",          ,          , .F.,aEdits      ,    , .F.,9999,'U_BIA255D()',             , ,          ,oDlgSC2)
 	SetKey(VK_F7,{|| BIA255G()})
 	SetKey(VK_F9,{|| BIA255I()})
+	Setkey(K_ALT_R,{||B255RES()})
 
-	oDlgSC2:bInit := {||EnchoiceBar(oDlgSC2, {|| ExecBlock("BIA255F",.F.,.F.), oDlgSC2:End() }, {|| df_Fch := .F., Iif(Len(aProdalt) > 0, MSGINFO("As quantidades de alguns produtos foram alteradas, portanto somente a opção confirmar poderá ser utilizada!"), df_Fch := MsgYESNO("Confirma cancelamento das Alterações?")), IIf(df_Fch, oDlgSC2:End(), ) }, , {{"NOTE",{|| ExecBlock("BIA255J",.F.,.F.) },"Legenda"}} )}
+	oDlgSC2:bInit := {||EnchoiceBar(oDlgSC2, {|| ExecBlock("BIA255F",.F.,.F.), oDlgSC2:End() }, {|| df_Fch := .F., Iif(Len(aProdalt) > 0, MSGINFO("As quantidades de alguns produtos foram alteradas, portanto somente a opção confirmar poderá ser utilizada!"), df_Fch := U_B255CLOS() ), IIf(df_Fch, oDlgSC2:End(), ) }, , {{"NOTE",{|| ExecBlock("BIA255J",.F.,.F.) },"Legenda"}} )}
 	oDlgSC2:Activate(,,,.T.)
 
 	If Len(aProdAlt) > 0
@@ -195,6 +199,7 @@ Static Function RptDetail()
 	SetKey(VK_F4,{||})
 	SetKey(VK_F7,{||})
 	SetKey(VK_F9,{||})
+	SetKey(K_ALT_R,{||})
 	Setkey(VK_F5,_bKeyF5)
 
 Return
@@ -236,7 +241,10 @@ Static Function fHeader(aHeader)
 	aAdd(aHeader,{x3_titulo        ,x3_campo   ,x3_picture         ,x3_tamanho,x3_decimal,,x3_usado,x3_tipo,         ,x3_context})
 	dbSeek("C2_YQTRTFC")
 	aAdd(aHeader,{x3_titulo        ,x3_campo   ,x3_picture         ,x3_tamanho,x3_decimal,,x3_usado,x3_tipo,         ,x3_context})
-
+	dbSeek("C2_YRESCOM")
+	aAdd(aHeader,{x3_titulo        ,x3_campo   ,x3_picture         ,x3_tamanho,x3_decimal,,x3_usado,x3_tipo,         ,x3_context})
+	dbSeek("C2_ITEM")
+	aAdd(aHeader,{"Alterou?"       ,"CTRLCOM"  ,"@!"               ,1         ,x3_decimal,,x3_usado,x3_tipo,         ,x3_context})
 
 Return
 
@@ -280,6 +288,8 @@ Static Function BIA255B
 			aCols2[r,11],;
 			aCols2[r,12],;
 			aCols2[r,13],;
+			aCols2[r,14],;
+			aCols2[r,15],;
 			.F.})
 		Next r
 
@@ -298,13 +308,17 @@ Return .T.
 +----------+------------------------------------------------------------*/
 User Function BIA255D
 
-	Local n_op,nOrd,nPasso,nX,r
+	Local n_op
+	Local nOrd
+	Local nPasso
+	Local nX
 	Local saArea   := GetArea()
 	Local _nPSegOp	:=	0
 
 	gk_Retn := .T.
 
 	If Alltrim(__readvar) == "M->C2_PRIOR"
+
 		cOld := n
 		cNew := Val(M->C2_PRIOR)
 		If cNew < 1 .or. cNew > Len(aCols)
@@ -345,13 +359,13 @@ User Function BIA255D
 
 	ElseIf Alltrim(__readvar) == "M->C2_QUANT" 
 		If aScan(aProdAlt,{|x| x[1] == GdFieldGet("C2_NUM",n) .And. x[2] == GdFieldGet("C2_ITEM",n);
-			.And. x[3] == GdFieldGet("C2_SEQUEN",n) .And. x[4] == GdFieldGet("C2_PRODUTO",n)})
+		.And. x[3] == GdFieldGet("C2_SEQUEN",n) .And. x[4] == GdFieldGet("C2_PRODUTO",n)})
 			MsgINFO("Não é permitido ajustar a quantidade novamente para essa OP! Para tal, utilize o botão confirmar e em seguida abra novamente a rotina e realize a alteração.")					
 			gk_Retn := .F.
 		Else
 			If !Empty(GdFieldGet("C2_NUM",n))
 				vh_Abatim :=  M->C2_QUANT - GdFieldGet("C2_QUANT",n)
-	
+
 				VL007 := "   WITH EMPENH AS (SELECT '1' CHV, SUM(PZ0_QUANT) QUANT
 				VL007 += "                     FROM " + RetSqlName("PZ0")
 				VL007 += "                    WHERE PZ0_FILIAL = '"+xFilial("PZ0")+"'
@@ -378,29 +392,29 @@ User Function BIA255D
 				VL07->(dbCloseArea())
 				Ferase(VLIndex+GetDBExtension())
 				Ferase(VLIndex+OrdBagExt())
-				
+
 				// Tratamento para controle de empenho de OP para Carteira de Vendas e Quantidade já entregue - Por Marcos Alberto Soprani - em 30/01/15 - conforme OS effettivo 0409-15
 				If vh_Abatim < 0 .And. msSaldoP < 0
 					MsgINFO("Não é permitido ajustar a quantidade da maneira que se pretende, porque irá afetar a disponibilidade do saldo versus o empenho da OP na carteira " + Transform(msCartei, "@E 999,999.99")+ "!!!")
 					gk_Retn := .F.
 				EndIf
-				
+
 				If gk_Retn
 					_nPSegOp	:=	fGetPSeg(GdFieldGet("C2_PRODUTO",n))
-						
+
 					If _nPsegOp	== 0
 						MsgInfo("O Produto " + GdFieldGet("C2_PRODUTO",n) + " e seu formato não possuem % de segurança cadastrado!")
 					EndIf
-					
+
 					If msCartei/msSaldoD * 100 > _nPSegOp
 						MsgInfo("Esta OP ficará com " + Alltrim(Str(Round(msCartei/msSaldoD * 100,2))) + "% de Ocupação. Sendo o percentual de segurança cadastrado de " + Alltrim(Str(_nPSegOp))+"%")
 					EndIf
 				EndIf
-	
+
 				If gk_Retn
-	
+
 					If MsgNOYES("Devido exigências técnicas esta alteração será gravada imediatamente na base de dados independentemente do botão <Confirmar> da tela do Painel de Controle. Confirma a alteração?")
-	
+
 						nPerc   := vh_Abatim/GdFieldGet("C2_QUANT",n)
 						If Alltrim(GdFieldGet("C2_ITEM",n)) == "01" .And. Alltrim(GdFieldGet("C2_SEQUEN",n)) == "001" 
 							aAdd(aProdAlt,{;
@@ -415,7 +429,7 @@ User Function BIA255D
 							GdFieldGet("C2_DATPRI",n),									;	//09-Nova Data Inicio
 							GdFieldGet("C2_DATPRF",n),									;	//10-Data Fim
 							GdFieldGet("C2_DATPRF",n)})										//11-Nova Data Fim
-	
+
 						EndIf
 						If nPerc <> 0
 							//A0001 := " UPDATE " + RetSqlName("SC2")
@@ -439,7 +453,7 @@ User Function BIA255D
 							A001->(dbCloseArea())
 							Ferase(MscIndex+GetDBExtension())     //arquivo de trabalho
 							Ferase(MscIndex+OrdBagExt())          //indice gerado
-	
+
 							//A0003 := " UPDATE "+RetSqlName("SD4")
 							A0003 := "	 SELECT R_E_C_N_O_ as REG, ROUND(D4_QUANT + (D4_QTDEORI * "+Alltrim(Str(nPerc))+"),2) QTD, "
 							A0003 += "         ROUND(D4_QTDEORI + (D4_QTDEORI * "+Alltrim(Str(nPerc))+"),2) QTDORI"
@@ -462,40 +476,44 @@ User Function BIA255D
 							A003->(dbCloseArea())
 							Ferase(MscIndex+GetDBExtension())     //arquivo de trabalho
 							Ferase(MscIndex+OrdBagExt())          //indice gerado
-	
+
 						EndIf
-	
+
 					Else
+
 						gk_Retn := .F.
+
 					EndIf
-	
+
 				EndIf
+
 			EndIf
+
 		EndIf
+
 	ElseIf Alltrim(__readvar) == "M->C2_YQTRTFC" 
-	
-	
-			A0001 := "  SELECT R_E_C_N_O_ REG "
-			A0001 += "  FROM " + RetSqlName("SC2") + " WITH(NOLOCK) "
-			A0001 += "  WHERE C2_FILIAL = '"+xFilial("SC2")+"' "
-			A0001 += "    AND C2_NUM = '"+GdFieldGet("C2_NUM",n)+"' "
-			A0001 += "    AND C2_ITEM = '"+GdFieldGet("C2_ITEM",n)+"' "
-			A0001 += "    AND C2_SEQUEN = '"+GdFieldGet("C2_SEQUEN",n)+"' "		
-			A0001 += "    AND D_E_L_E_T_ = ' ' "
-			MscIndex := CriaTrab(Nil,.f.)
-			dbUseArea(.T.,"TOPCONN",TcGenQry(,,A0001),'A001',.F.,.T.)
-			dbSelectArea("A001")
-			dbGoTop()
-			While A001->(!EOF())
-				SC2->(DbGoTo(A001->REG))
-				Reclock("SC2",.F.)
-				SC2->C2_YQTRTFC 	:= M->C2_YQTRTFC
-				SC2->(MsUnlock())						
-				A001->(DbSkip())
-			End
-			A001->(dbCloseArea())
-			Ferase(MscIndex+GetDBExtension())     //arquivo de trabalho
-			Ferase(MscIndex+OrdBagExt())          //indice gerado
+
+		A0001 := "  SELECT R_E_C_N_O_ REG "
+		A0001 += "  FROM " + RetSqlName("SC2") + " WITH(NOLOCK) "
+		A0001 += "  WHERE C2_FILIAL = '"+xFilial("SC2")+"' "
+		A0001 += "    AND C2_NUM = '"+GdFieldGet("C2_NUM",n)+"' "
+		A0001 += "    AND C2_ITEM = '"+GdFieldGet("C2_ITEM",n)+"' "
+		A0001 += "    AND C2_SEQUEN = '"+GdFieldGet("C2_SEQUEN",n)+"' "		
+		A0001 += "    AND D_E_L_E_T_ = ' ' "
+		MscIndex := CriaTrab(Nil,.f.)
+		dbUseArea(.T.,"TOPCONN",TcGenQry(,,A0001),'A001',.F.,.T.)
+		dbSelectArea("A001")
+		dbGoTop()
+		While A001->(!EOF())
+			SC2->(DbGoTo(A001->REG))
+			Reclock("SC2",.F.)
+			SC2->C2_YQTRTFC 	:= M->C2_YQTRTFC
+			SC2->(MsUnlock())						
+			A001->(DbSkip())
+		End
+		A001->(dbCloseArea())
+		Ferase(MscIndex+GetDBExtension())     //arquivo de trabalho
+		Ferase(MscIndex+OrdBagExt())          //indice gerado
 
 	EndIf
 
@@ -523,6 +541,9 @@ Static Function RptDetPn()
 	Local aMata650
 	Local _cLinha	:=	MV_PAR03 
 	Local _cLocal	:=	""
+
+	// Incluído em 29/03/21 por Marcos Alberto para tratar Resto Complementar Alterado de OP para Pedido
+	ChkCtrlRC()
 
 	dbSelectArea("SC2")
 	ProcRegua(RecCount())
@@ -604,38 +625,42 @@ Static Function RptDetPn()
 				dbSelectArea("SD4")
 				dbSkip()
 			End
+
 		Else
+
 			_cNumOP	:=	GetNumSc2()
 			SB1->(dbSetOrder(1))
 			SB1->(dbSeek(xFilial("SB1")+aCols[k,__PRODUTO]))
-			
+
 			U_BFG73LIN(_cLinha,SB1->B1_COD,@_cLocal,.F.)
-			
-			aMata650  := {{            'C2_SEQUEN'   ,'001'                                    ,NIL},;
-			{              'C2_ITEM'     ,'01'                                     ,NIL},;
-			{              'C2_NUM'      ,_cNumOP                                  ,NIL},;
-			{              'C2_LINHA'    ,_cLinha                                  ,NIL},;
-			{              'C2_PRODUTO'  ,SB1->B1_COD                              ,NIL},;
-			{              'C2_QUANT'    ,aCols[k,__QUANT]                         ,NIL},;
-			{              'C2_QTSEGUM'  ,ConvUm(SB1->B1_COD,aCols[k,__QUANT],0,2) ,NIL},;
-			{              'C2_UM'       ,SB1->B1_UM                               ,NIL},;
-			{              'C2_CC'       ,SB1->B1_CC                               ,NIL},;
-			{              'C2_SEGUM'    ,SB1->B1_SEGUM                            ,NIL},;
-			{              'C2_DATPRI'   ,aCols[k,__INICIO]                        ,NIL},;
-			{              'C2_DATPRF'   ,aCols[k,__ENTREG]                        ,NIL},;
-			{              'C2_REVISAO'  ,SB1->B1_REVATU                          ,NIL},;
-			{              'C2_TPOP'     ,"F"                                      ,NIL},;
-			{              'C2_EMISSAO'  ,Date()	                               ,NIL},;
-			{              'C2_ROTEIRO'  ,SB1->B1_OPERPAD                          ,NIL},;
-			{              'C2_OPC'      ,""                                       ,NIL},;
-			{              'C2_OBS'      ,aCols[k,__OBS]                           ,NIL},;
-			{              'AUTEXPLODE'  ,'S'                                      ,NIL} }
+
+			aMata650  := {{  'C2_SEQUEN'   ,'001'                                    ,NIL},;
+			{                'C2_ITEM'     ,'01'                                     ,NIL},;
+			{                'C2_NUM'      ,_cNumOP                                  ,NIL},;
+			{                'C2_LINHA'    ,_cLinha                                  ,NIL},;
+			{                'C2_PRODUTO'  ,SB1->B1_COD                              ,NIL},;
+			{                'C2_QUANT'    ,aCols[k,__QUANT]                         ,NIL},;
+			{                'C2_QTSEGUM'  ,ConvUm(SB1->B1_COD,aCols[k,__QUANT],0,2) ,NIL},;
+			{                'C2_UM'       ,SB1->B1_UM                               ,NIL},;
+			{                'C2_CC'       ,SB1->B1_CC                               ,NIL},;
+			{                'C2_SEGUM'    ,SB1->B1_SEGUM                            ,NIL},;
+			{                'C2_DATPRI'   ,aCols[k,__INICIO]                        ,NIL},;
+			{                'C2_DATPRF'   ,aCols[k,__ENTREG]                        ,NIL},;
+			{                'C2_REVISAO'  ,SB1->B1_REVATU                           ,NIL},;
+			{                'C2_TPOP'     ,"F"                                      ,NIL},;
+			{                'C2_EMISSAO'  ,Date()	                                 ,NIL},;
+			{                'C2_ROTEIRO'  ,SB1->B1_OPERPAD                          ,NIL},;
+			{                'C2_OPC'      ,""                                       ,NIL},;
+			{                'C2_OBS'      ,aCols[k,__OBS]                           ,NIL},;
+			{                'AUTEXPLODE'  ,'S'                                      ,NIL} }
 			lMsErroAuto	:=	.F.
 			MsExecAuto({|x,Y| Mata650(x,Y)},aMata650,3)
 			If lMsErroAuto
 				Mostraerro()
 			EndIf
+
 		EndIf	
+
 	Next k
 
 Return .T.
@@ -691,8 +716,10 @@ Static Function BIA255I
 
 	If nRadioGrp1 == 1
 		aCols := aSort(aCols,,,{|x,y| x[__PRIOR] < y[__PRIOR] })
+
 	ElseIf nRadioGrp1 == 2
 		aCols := aSort(aCols,,,{|x,y| x[__PRODUTO] < y[__PRODUTO] })
+
 	ElseIf nRadioGrp1 == 3
 		aVet1 := aSort(aCols,,,{|x,y| dtos(x[__ENTREG])+x[__PRIOR] < dtos(y[__ENTREG])+y[__PRIOR] })
 		aCols := {}
@@ -712,8 +739,11 @@ Static Function BIA255I
 			aVet1[r,11],;
 			aVet1[r,12],;
 			aCols2[r,13],;
+			aVet1[r,14],;
+			aVet1[r,15],;
 			.F.})
 		Next r
+
 	EndIf
 
 Return
@@ -730,7 +760,8 @@ User Function BIA255J
 	Define MsDialog oDlg002 TITLE 'Legenda....' FROM nLin*.19,nCol*.002 TO nLin*.42,nCol*.400 PIXEL
 	oCapA01 := tSay():New(010,010,{|| "F4  -  Mudança da Ordem por Formanto"                                    },oDlg002,,oFont3,,,,.T.,CLR_HBLUE,CLR_HBLUE,270,20)
 	oCapA02 := tSay():New(020,010,{|| "F7  -  Pesquisa pelo número da OP"                                       },oDlg002,,oFont3,,,,.T.,CLR_HBLUE,CLR_HBLUE,270,20)
-	oCapA02 := tSay():New(030,010,{|| "F9  -  Permite a Mudanca da Ordem de distribução dos registros"          },oDlg002,,oFont3,,,,.T.,CLR_HBLUE,CLR_HBLUE,270,20)
+	oCapA03 := tSay():New(030,010,{|| "F9  -  Permite a Mudanca da Ordem de distribução dos registros"          },oDlg002,,oFont3,,,,.T.,CLR_HBLUE,CLR_HBLUE,270,20)
+	oCapA04 := tSay():New(040,010,{|| "Alt R  -  Flexibiliza quantidade da Ordem de Produção"                   },oDlg002,,oFont3,,,,.T.,CLR_HBLUE,CLR_HBLUE,270,20)
 	@ 080,200 Button "Fecha" Size 037,012 PIXEL OF oDlg002 ACTION oDlg002:End()
 
 	Activate MsDialog oDlg002 Centered
@@ -749,9 +780,9 @@ Static Function ValidPerg()
 	MV_PAR03 := SPACE(TAMSX3("C2_LINHA")[1])
 	MV_PAR04 := SPACE(TAMSX3("B1_COD")[1])
 	MV_PAR05 := SPACE(TAMSX3("B1_COD")[1])
-	
-	aAdd( aPergs ,{1,"Data De " 		  	,MV_PAR01 ,""  ,"",''  ,'.T.',50,.F.})
-	aAdd( aPergs ,{1,"Data Ate " 		  	,MV_PAR02 ,""  ,"",''  ,'.T.',50,.F.})
+
+	aAdd( aPergs ,{1,"Data De " 		  	,MV_PAR01 ,""  ,"",''     ,'.T.',50,.F.})
+	aAdd( aPergs ,{1,"Data Ate " 		  	,MV_PAR02 ,""  ,"",''     ,'.T.',50,.F.})
 	aAdd( aPergs ,{1,"Linha de Producao " 	,MV_PAR03 ,""  ,"",'ZCO'  ,'.T.',50,.F.})
 	aAdd( aPergs ,{1,"Produto De " 		  	,MV_PAR04 ,""  ,"",'SB1'  ,'.T.',70,.F.})
 	aAdd( aPergs ,{1,"Produto Ate " 		,MV_PAR05 ,""  ,"",'SB1'  ,'.T.',70,.F.})
@@ -764,10 +795,10 @@ Static Function ValidPerg()
 		MV_PAR03 := ParamLoad(cFileName,,3,MV_PAR03)
 		MV_PAR04 := ParamLoad(cFileName,,4,MV_PAR04)
 		MV_PAR05 := ParamLoad(cFileName,,5,MV_PAR05)
+
 	EndIf
+
 Return lRet
-
-
 
 /*---------+----------+-------+-----------------------+------+-----------+
 |Função    | wfSend   | Autor | Gabriel Rossi         | Data | 30.05.2017|
@@ -830,7 +861,7 @@ Static function wfSend()
 	_cHtml	+=	'	    </div></th> 		                                                                                                      '
 	_cHtml	+=	'     </tr> '
 
-	for _nI	:=	1 to Len(aProdAlt)
+	For _nI	:=	1 to Len(aProdAlt)
 
 		_cHtml += '	  </tr>                                                                                                                      '
 		_cHtml += '     <td><div align="center">' + aProdAlt[_nI,1] + '</div></td> '
@@ -859,12 +890,12 @@ Static function wfSend()
 
 Return
 
-
 User Function B255INC()
 
 	Local _cPrior	:=	SOMA1(aCols[Len(aCols),9])
 
 	IF ConPad1(,,,"SB1",,, .F.)
+
 		If Empty(aCols[Len(aCols),3])
 			aDel(aCols,Len(aCols))
 			aSize(aCols,Len(aCols)-1)
@@ -881,7 +912,11 @@ User Function B255INC()
 		SPACE(TAMSX3("C2_OBS")[1]),;
 		POSICIONE("ZZ6",1,xFilial("ZZ6") + SB1->B1_YFORMAT,"ZZ6_DESC"),;
 		stod(""),;
+		0,;
+		0,;
+		"",;
 		.F.})
+
 	EndIf
 
 Return
@@ -903,6 +938,159 @@ Static Function fGetPSeg(_cProd)
 				_nPSegOp	:=	ZZ6->ZZ6_INDCOM
 			EndIf
 		EndIf
-	EndIf	
+	EndIf
+
 	RestArea(_aArea)
+
 Return _nPSegOp
+
+Static Function B255RES()
+
+	Local xoButton1
+	Local xoButton2
+	Local xoTxt0 := ""
+	Local xoGet1
+	Local xoGet2
+	Local xoGet3
+	Local xoGet4
+	Local xoSay0
+	Local xoSay1
+	Local xoSay2
+	Local xoSay3
+	Local xoSay4
+	Private xcGet1 := 0
+	Private xcGet2 := 0
+	Private xcGet3 := 0
+	Private xcGet4 := 0
+	Private msoDlg
+	Private vpEsc  := .F.
+
+	xoTxt0 := "NumOP: " + aCols[n][5] + ", Produto: " + Alltrim(aCols[n][3]) + " - " + Alltrim(aCols[n][4])
+
+	xcGet1 := aCols[n][6]
+	msPFOR := Posicione("SB1", 1, xFilial("SB1") + aCols[n][3], "B1_YFORMAT")
+	msPCLA := Posicione("SB1", 1, xFilial("SB1") + aCols[n][3], "B1_YCLASSE")
+	msForC := 100
+	//If msPCLA == "1"
+	//	msForC := Posicione("ZZ6", 1, xFilial("ZZ6") + msPFOR, "ZZ6_INDCOM")
+	//Else
+	//	msForC := Posicione("ZZ6", 1, xFilial("ZZ6") + msPFOR, "ZZ6_INDCMB")
+	//EndIf
+	msForC := fGetPSeg(aCols[n][3])
+	xcGet2 := aCols[n][6] * ((100 - msForC)/100)
+	xcGet3 := aCols[n,14] //Posicione("SC2", 1, xFilial("SC2") + aCols[n][5] + aCols[n][1] + aCols[n][2], "C2_YRESCOM")
+	xcGet4 := 0
+
+	DEFINE MSDIALOG msoDlg TITLE "Flexibilização da Quantidade da OP" FROM 000, 000  TO 175, 500 COLORS 0, 16777215 PIXEL
+
+	@ 010, 014 SAY xoSay0 PROMPT xoTxt0 SIZE 200, 007 OF msoDlg COLORS 0, 16777215 PIXEL
+	@ 022, 014 SAY xoSay1 PROMPT "Quantidade Original:" SIZE 054, 007 OF msoDlg COLORS 0, 16777215 PIXEL
+	@ 035, 014 SAY xoSay2 PROMPT "Limite para Flexibilização:" SIZE 062, 006 OF msoDlg COLORS 0, 16777215 PIXEL
+	@ 048, 014 SAY xoSay3 PROMPT "Quantidade já apropriada:" SIZE 064, 007 OF msoDlg COLORS 0, 16777215 PIXEL
+	@ 061, 014 SAY xoSay4 PROMPT "Insira o novo valor para Flexibilização:" SIZE 093, 007 OF msoDlg COLORS 0, 16777215 PIXEL
+
+	@ 022, 115 MSGET xoGet1 VAR xcGet1 SIZE 060, 010 OF msoDlg COLORS 0, 16777215 Picture "@E 999999999.99" PIXEL WHEN(.F.)
+	@ 035, 115 MSGET xoGet2 VAR xcGet2 SIZE 060, 010 OF msoDlg COLORS 0, 16777215 Picture "@E 999999999.99" PIXEL WHEN(.F.)
+	@ 048, 115 MSGET xoGet3 VAR xcGet3 SIZE 060, 010 OF msoDlg COLORS 0, 16777215 Picture "@E 999999999.99" PIXEL WHEN(.F.)
+	@ 061, 115 MSGET xoGet4 VAR xcGet4 SIZE 060, 010 OF msoDlg VALID vpCheck() COLORS 0, 16777215 Picture "@E 999999999.99" PIXEL
+
+	@ 028, 189 BUTTON xoButton1 PROMPT "Confirma" SIZE 037, 012 OF msoDlg ACTION vpConfirma() PIXEL
+	@ 053, 189 BUTTON xoButton2 PROMPT "Cancela" SIZE 037, 012 OF msoDlg ACTION vpCancel() PIXEL
+
+	ACTIVATE MSDIALOG msoDlg CENTERED VALID vpEsc
+
+Return
+
+Static Function vpCheck()
+
+	Local xqRet := .T.
+	Local xqQtd := 0
+
+	If xcGet4 > xcGet2
+
+		xqQtd := xcGet2 - xcGet4 
+		MsgSTOP("Quantidade limite de 100% da OP afetada em " + Transform(ABS(xqQtd), "@E 99,999,999.99") + ". Favor ajustar a quantidade informada.")
+		xqRet := .F.
+
+	EndIf 
+
+Return ( xqRet )
+
+Static Function vpCancel()
+
+	vpEsc := .T.
+	msoDlg:End()
+
+Return
+
+Static Function vpConfirma()
+
+	aCols[n,14] := xcGet4
+	aCols[n,15] := 'S'
+
+	SC2->( dbSetOrder(1) )
+	SC2->( dbSeek(xFilial("SC2") + aCols[n][5] + aCols[n][1] + aCols[n][2] ))
+	RecLock("SC2",.F.)
+	SC2->C2_YRESCOM   := xcGet4
+	SC2->(MsUnlock())
+
+	vpEsc := .T.
+	msoDlg:End()
+
+Return
+
+User Function B255CLOS()
+
+	Local lxRet := .F.
+
+	If MsgYESNO("Confirma cancelamento das Alterações?")
+
+		lxRet := .T.
+
+		ChkCtrlRC()
+
+	EndIf
+
+Return( lxRet )
+
+Static Function ChkCtrlRC()
+
+	Local kxCtrlZera := 0
+	Local kx
+
+
+	For kx := 1 to Len(aCols)
+
+		If aCols[kx,15] == "S"
+
+			kxCtrlZera ++
+
+		EndIf
+
+	Next kx
+
+	If kxCtrlZera > 0
+
+		If MsgNOYES("Foram encontrados registros com Resto Complementar Alterado." + msEnter + msEnter + " Confirma o ZERAMENTO?" + msEnter + msEnter + " Se clicar em SIM estará confirmando o zeramento. Do contrário, o sistema manterá os complementos alterados.")
+
+			For kx := 1 to Len(aCols)
+
+				If aCols[kx,15] == "S"
+
+					SC2->( dbSetOrder(1) )
+					SC2->( dbSeek(xFilial("SC2") + aCols[kx][5] + aCols[kx][1] + aCols[kx][2] ))
+					RecLock("SC2",.F.)
+					SC2->C2_YRESCOM   := 0
+					SC2->(MsUnlock())
+					aCols[kx,14] := 0
+					aCols[kx,15] := ""
+
+				EndIf
+
+			Next kx
+
+		EndIf
+
+	EndIf
+
+Return

@@ -1,627 +1,656 @@
-#INCLUDE "PROTHEUS.CH"
-#INCLUDE "APWIZARD.CH"
-#INCLUDE "FILEIO.CH"
-#INCLUDE "RPTDEF.CH"
-#INCLUDE "FWPrintSetup.ch"
-#INCLUDE "TOTVS.CH"
-#INCLUDE "PARMTYPE.CH"
-#INCLUDE "TOPCONN.CH"
+#include "totvs.ch"
+#include "fileio.ch"
+#include "rptdef.ch"
+#include "apwizard.ch"
+#include "parmtype.ch"
+#include "topconn.ch"
+#include "fwprintsetup.ch"
+
+static __cCRLF as character
 
 /*/{Protheus.doc} TAutomacaoDevolucaoIntercompany
 @author Wlysses Cerqueira (Facile)
 @since 09/09/2020
 @project Automação Entrada
 @version 1.0
-@description 
+@description
 @type function
 /*/
 
+
 User Function JOBDEVINTE()
 
-	Local oBj := Nil
+    Local oTAutDevIntCom as object
 
-	oBj := TAutomacaoDevolucaoIntercompany():New(.F.)
+    DEFAULT __cCRLF:=CRLF
 
-	oBj:PercorreFiliais()
+    oTAutDevIntCom:=TAutomacaoDevolucaoIntercompany():New(.F.)
 
-	FreeObj(oBj)
+    oTAutDevIntCom:PercorreFiliais()
 
-Return()
-
-User Function EJOBDEVINTE(aParam)
-
-	Local oBj_ := Nil
-
-	//RPCSetType(3)
-
-	RpcSetEnv(aParam[1], aParam[2],,"FAT")
-
-	oBj_ := TAutomacaoDevolucaoIntercompany():New(.T.)
-
-	oBj_:AddLog("Iniciando processo")
-
-	oBj_:ProcessaSaida()
-
-	oBj_:ProcessaDevolucao()
-
-	oBj_:FaturarPedido()
-
-	oBj_:ProcessaEntrada(aParam[3])
-
-	oBj_:AddLog("Finalizando processo")
-
-	FreeObj(oBj_)
-
-	RpcClearEnv()
+    oTAutDevIntCom:=FreeObj(oTAutDevIntCom)
 
 Return()
 
-	Class TAutomacaoDevolucaoIntercompany From LongClassName
+User Function EJOBDEVINTE(aEmpFil)
 
-		Data aErros
-		Data aFiliais
-		Data cSerieNF
-		Data aNotas
-		Data cEmailNfDev
+    local aFiliais			as array
 
-		Public Method New(lJob) Constructor
-		Public Method Load()
-		Public Method LoadFiliais()
-		Public Method PercorreFiliais()
-		Public Method ExisteFuncaoEmProcessamento(cFuncProc, cEmp, cFil)
-		Public Method AddLog(cMsg)
-		Public Method AddErro(nRecno, cErro)
-		Public Method GravaErro()
-		Public Method GetErrorLog()
+    local cEmp			 	as character
+    local cFil      	 	as character
 
-		Public Method ProcessaDevolucao(aFiliais)
-		Public Method ProcessaSaida()
-		Public Method ProcessaEntrada(aFiliais)
-		Public Method ProcPedido(aCabSC5, aItensSC6, cDoc, cSerie, cCliente, cLoja, cEmpFilOri, cFormul)
-		Public Method FaturarPedido()
-		Public Method Transmissao()
-		Public Method PDF(aNotas)
-		Public Method EnvioNFe(aNotasEnv)
-		public Method ProcEntrada(aDocEntrada)
-		Public Method ProcFat(cDoc, cSerie, cCliente, cLoja)
-		Public Method DocSaida(cPedido, cDoc, cSerie, cCliente, cLoja, aPvlNfs)
-		Public Method GetDocOri(cDoc,cSerie,cCliente,cLoja)
-		Public Method GetEndereco(cDoc, cSerie, cCodCli, cLojaCli, cCodFor, cLojaFor)
-		Public Method fDistribui(_cDoc, _cSerie, _cCli, _cLoja, cLocaliz, cStatus)
-		Public Method Vld_MV_NUMITEN()
-		Public Method SetStatus(cEmpOri, cFilOri, cPedOri, cDoc, cSerie, cDocDes, cSerDes, cPedDes, cEmpDes, cFilDes)
-		Public Method SetStatusDest(cDoc, cSerie, cCliente, cLoja, cStatus, cLog)
-		Public Method SetPedido(cDoc, cSerie, cCliente, cLoja, cPedido, cForDev, cLojaFor,aItensSC6)
-		Public Method SetDocDev(cDoc, cSerie, cCliente, cLoja, cDocDev, cSerDev)
+    local oTAutDevIntCom	as object
 
-		Public Method WorkflowTransf(cProdOri, cProdDes, nQtd, cLocalOri, cLocalDes, cPedido, aDocEntrada)
-		Public Method CreatePath(cPath)
+    DEFAULT __cCRLF:=CRLF
 
-		Public Method InputZL9(cDoc, cSerie, cCliente, cLoja, cEmpFilOri)
+    cEmp:=aEmpFil[1]
+    cFil:=aEmpFil[2]
 
-	EndClass
+    RpcSetEnv(cEmp,cFil,nil,"FAT")
+
+    oTAutDevIntCom:=TAutomacaoDevolucaoIntercompany():New(.T.)
+
+    oTAutDevIntCom:AddLog("Iniciando processo")
+
+    oTAutDevIntCom:ProcessaSaida()
+
+    oTAutDevIntCom:ProcessaDevolucao()
+
+    oTAutDevIntCom:FaturarPedido()
+
+    aFiliais:=aEmpFil[3]
+    oTAutDevIntCom:ProcessaEntrada(aFiliais)
+
+    oTAutDevIntCom:AddLog("Finalizando processo")
+
+    oTAutDevIntCom:=FreeObj(oTAutDevIntCom)
+
+    RpcClearEnv()
+
+Return(nil)
+
+Class TAutomacaoDevolucaoIntercompany From LongClassName
+
+    Data aErros			as array
+    Data aNotas			as array
+    Data aFiliais		as array
+
+    Data cSerieNF		as character
+    Data cEmailNfDev	as character
+    Data cEmailTransf   as character
+
+    Public Method New(lJob) Constructor
+    Public Method Load()
+    Public Method LoadFiliais()
+    Public Method PercorreFiliais()
+    Public Method ExisteFuncaoEmProcessamento(cFuncProc, cEmp, cFil)
+    Public Method AddLog(cMsg)
+    Public Method AddErro(nRecno, cErro)
+    Public Method GravaErro()
+    Public Method GetErrorLog()
+
+    Public Method ProcessaDevolucao(aFiliais)
+    Public Method ProcessaSaida()
+    Public Method ProcessaEntrada(aFiliais)
+    Public Method ProcPedido(aCabSC5, aItensSC6, cDoc, cSerie, cCliente, cLoja, cEmpFilOri, cFormul,cDocOri,cSerOri)
+    Public Method FaturarPedido()
+    Public Method Transmissao()
+    Public Method PDF(aNotas)
+    Public Method EnvioNFe(aNotasEnv)
+    public Method ProcEntrada(aDocEntrada)
+    Public Method ProcFat(cDoc, cSerie, cCliente, cLoja)
+    Public Method DocSaida(cPedido, cDoc, cSerie, cCliente, cLoja, aPvlNfs)
+    Public Method GetDocOri(cDoc,cSerie,cCliente,cLoja)
+    Public Method GetEndereco(cDoc, cSerie, cCodCli, cLojaCli, cCodFor, cLojaFor)
+    Public Method fDistribui(_cDoc, _cSerie, _cCli, _cLoja, cLocaliz, cStatus)
+    Public Method Vld_MV_NUMITEN()
+    Public Method SetStatus(cEmpOri, cFilOri, cPedOri, cDoc, cSerie, cDocDes, cSerDes, cPedDes, cEmpDes, cFilDes)
+    Public Method SetStatusDest(cDoc, cSerie, cCliente, cLoja, cStatus, cLog)
+    Public Method SetPedido(cDoc, cSerie, cCliente, cLoja, cPedido, cForDev, cLojaFor,aItensSC6,cDocOri,cSerOri)
+    Public Method SetDocDev(cDoc, cSerie, cCliente, cLoja, cDocDev, cSerDev)
+    Public Method DocOriCmpAut(nZL9RecNo)
+
+    Public Method WorkflowTransf(cProdOri, cProdDes, nQtd, cLocalOri, cLocalDes, cPedido, aDocEntrada)
+    Public Method CreatePath(cPath)
+
+    Public Method InputZL9(cDoc, cSerie, cCliente, cLoja, cEmpFilOri)
+
+EndClass
 
 Method New(lJob) Class TAutomacaoDevolucaoIntercompany
 
-	Default lJob := .F.
+    DEFAULT lJob := .F.
 
-	::aErros := {}
+    DEFAULT __cCRLF:=CRLF
 
-	::cSerieNF := "" // PADR(GetNewPar("MV_YSERFTP", "1"), TamSx3("F2_DOC")[1])
+    ::aErros:=Array(0)
+    ::aNotas:=Array(0)
+    ::aFiliais:=Array(0)
 
-	::aNotas := {}
+    ::cSerieNF:="" // PADR(GetNewPar("MV_YSERFTP", "1"), TamSx3("F2_DOC")[1])
+    ::cEmailNfDev:=""
+    ::cEmailTransf:=""
 
-	//TODO: Incluir na rotina de Workflow de e-mail BIA191 para recuperação via u_emailWF
-	//ex.: u_emailWF("TAFDEVINTC",&("cEmpAnt"))
+    ::CreatePath("P10\AUTOMACAO\DEVOLUCAO")
 
-	::cEmailNfDev := "wlysses@facilesistemas.com.br;fabiana.corona@biancogres.com.br"
-
-	::CreatePath("P10\AUTOMACAO\DEVOLUCAO")
-
-	::Load(lJob)
+    ::Load(lJob)
 
 Return(Self)
 
 Method Load(lJob) Class TAutomacaoDevolucaoIntercompany
 
-	Local aFilAux	:= {}
-	Local nW		:= 0
+    local aFilAux	as array
 
-	Default lJob := .F.
+    local cEmp		as character
+    local cFil		as character
 
-	::aFiliais := {}
+    local nFilial	as numeric
+    local nFiliais	as numeric
 
-	If !lJob
+    DEFAULT lJob := .F.
 
-		aFilAux := ::LoadFiliais()
+    aSize(::aFiliais,0)
 
-		For nW := 1 To Len(aFilAux)
+    If (!lJob)
 
-			If ::ExisteFuncaoEmProcessamento("U_EJOBDEVINTE", aFilAux[nW, 1], aFilAux[nW, 2])
+        aFilAux:=::LoadFiliais()
 
-				aAdd(::aFiliais, {aFilAux[nW, 1], aFilAux[nW, 2], aFilAux[nW, 3]})
+        nFiliais:=Len(aFilAux)
+        For nFilial:=1 To nFiliais
 
-			EndIf
+            cEmp:=aFilAux[nFilial][1]
+            cFil:=aFilAux[nFilial][2]
 
-		Next nW
+            If (::ExisteFuncaoEmProcessamento("U_EJOBDEVINTE",cEmp,cFil))
 
-	EndIf
+                aAdd(::aFiliais,aFilAux[nFilial])
+
+            EndIf
+
+        Next nFilial
+
+    EndIf
 
 Return()
 
 Method ProcessaSaida() Class TAutomacaoDevolucaoIntercompany
 
-	Local cSQL 		:= ""
-	Local cAlias 	:= GetNextAlias()
-	Local oObj 		:= Nil
-	Local aRetorno 	:= {}
-	Local aNotas 	:= {}
-	Local aNotasEnv := {}
-	Local nPos 		:= 0
-	Local nW 		:= 0
+    local aArea         := getArea()
 
-	cSQL := " SELECT * "
-	cSQL += " FROM " + RetSQLName("ZL9") + " ZL9 ( NOLOCK )
-	cSQL += " WHERE ZL9.ZL9_FILIAL = " + ValToSql(xFilial("ZL9"))
-	cSQL += " AND ZL9.ZL9_CODEMP = " + ValToSql(cEmpAnt)
-	cSQL += " AND ZL9.ZL9_CODFIL = " + ValToSql(cFilAnt)
-	//cSQL += " AND ZL9.ZL9_MSBLQL <> '1' "
-	//cSQL += " AND ZL9.ZL9_STAERR <> 'E' "
-	cSQL += " AND ( "
-	cSQL += "       ( ZL9.ZL9_STADOC NOT IN ( '5', '8' ) ) " // 1=Emitida;2=Transmitida;3=Autorizada;4=Rejeitada;5=Cancelada;6=PDF criado;7=PDF enviado;8=Finalizado
-	cSQL += " 		OR "
-	cSQL += " 			( "
-	cSQL += " 				ZL9.ZL9_STADOC <> '5' AND "
-	cSQL += " 				ZL9.ZL9_DOC <> '' AND "
-	cSQL += " 				NOT EXISTS "
-	cSQL += " 				( "
-	cSQL += " 					SELECT NULL "
-	cSQL += " 					FROM " + RetSQLName("SF2") + " SF2 "
-	cSQL += " 					WHERE SF2.F2_FILIAL = " + ValToSql(xFilial("SF2"))
-	cSQL += " 					AND SF2.F2_DOC 		= ZL9.ZL9_DOC "
-	cSQL += " 					AND SF2.F2_SERIE 	= ZL9.ZL9_SERIE "
-	cSQL += " 					AND SF2.D_E_L_E_T_ 	= ''
-	cSQL += " 				) "
-	cSQL += " 			) "
-	cSQL += "	  ) "
-	cSQL += " AND ZL9.D_E_L_E_T_ = '' "
+    Local cSQL 		    := ""
+    Local cZL9TmpAlias  := GetNextAlias()
 
-	TCQUERY cSQL NEW ALIAS (cAlias)
+    Local aNotas 	    := {}
+    Local aRetorno 	    := {}
+    Local aNotasEnv     := {}
 
-	DBSelectArea("ZL9")
-	ZL9->(dbSetOrder(2)) // ZL9_FILIAL, ZL9_CODEMP, ZL9_CODFIL, ZL9_PEDIDO, R_E_C_N_O_, D_E_L_E_T_
+    Local nPos 		    := 0
+    Local nW 		    := 0
 
-	DBSelectArea("SF2")
-	SF2->(dbSetOrder(1)) // F2_FILIAL, F2_DOC, F2_SERIE, F2_CLIENTE, F2_LOJA, F2_FORMUL, F2_TIPO, R_E_C_N_O_, D_E_L_E_T_
+    Local oTFatAut
 
-	DBSelectArea("SC5")
-	SC5->(dbSetOrder(1))
+    cSQL := " SELECT ZL9.R_E_C_N_O_ ZL9RECNO "+__cCRLF
+    cSQL += "   FROM " + RetSQLName("ZL9") + " ZL9 ( NOLOCK )"+__cCRLF
+    cSQL += "  WHERE ZL9.ZL9_FILIAL = " + ValToSql(xFilial("ZL9"))+__cCRLF
+    cSQL += "    AND ZL9.ZL9_CODEMP = " + ValToSql(cEmpAnt)+__cCRLF
+    cSQL += "    AND ZL9.ZL9_CODFIL = " + ValToSql(cFilAnt)+__cCRLF
+    cSQL += "    AND ( "+__cCRLF
+    cSQL += "           ( ZL9.ZL9_STADOC NOT IN ( '5', '8' ) ) "+__cCRLF // 1=Emitida;2=Transmitida;3=Autorizada;4=Rejeitada;5=Cancelada;6=PDF criado;7=PDF enviado;8=Finalizado
+    cSQL += " 		    OR "+__cCRLF
+    cSQL += " 			( "+__cCRLF
+    cSQL += " 				ZL9.ZL9_STADOC <> '5' AND "+__cCRLF
+    cSQL += " 				ZL9.ZL9_DOC <> '' AND "+__cCRLF
+    cSQL += " 				NOT EXISTS "+__cCRLF
+    cSQL += " 				( "+__cCRLF
+    cSQL += " 					SELECT NULL "+__cCRLF
+    cSQL += " 					FROM " + RetSQLName("SF2") + " SF2 "+__cCRLF
+    cSQL += " 					WHERE SF2.F2_FILIAL = " + ValToSql(xFilial("SF2"))+__cCRLF
+    cSQL += " 					AND SF2.F2_DOC 		= ZL9.ZL9_DOC "+__cCRLF
+    cSQL += " 					AND SF2.F2_SERIE 	= ZL9.ZL9_SERIE "+__cCRLF
+    cSQL += " 					AND SF2.D_E_L_E_T_ 	= ''"+__cCRLF
+    cSQL += " 				) "+__cCRLF
+    cSQL += " 			) "+__cCRLF
+    cSQL += "	 ) "+__cCRLF
+    cSQL += "    AND ZL9.D_E_L_E_T_ = '' "+__cCRLF
 
-	While (cAlias)->(!eof())
+    TCQUERY (cSQL) ALIAS (cZL9TmpAlias) NEW
 
-		ZL9->(DBGoTo((cAlias)->R_E_C_N_O_))
+    DBSelectArea("ZL9")
+    ZL9->(dbSetOrder(2)) // ZL9_FILIAL, ZL9_CODEMP, ZL9_CODFIL, ZL9_PEDIDO, R_E_C_N_O_, D_E_L_E_T_
 
-		If ZL9->(!eof())
+    DBSelectArea("SF2")
+    SF2->(dbSetOrder(1)) // F2_FILIAL, F2_DOC, F2_SERIE, F2_CLIENTE, F2_LOJA, F2_FORMUL, F2_TIPO, R_E_C_N_O_, D_E_L_E_T_
 
-			::AddLog("Pocessando Pedido: " + ZL9->ZL9_PEDIDO + " Nota: " + ZL9->ZL9_DOC + "-" + ZL9->ZL9_SERIE + "-" + " NF Devolucao: " + ZL9->ZL9_DOCDEV + "-" + ZL9->ZL9_SERDEV)
+    DBSelectArea("SC5")
+    SC5->(dbSetOrder(1))
 
-			If RecLock("ZL9", .F.)
+    While (cZL9TmpAlias)->(!eof())
 
-				If Empty(oObj)
+        ZL9->(DBGoTo((cZL9TmpAlias)->ZL9RECNO))
 
-					oObj := TFaturamentoAutomatico():New(.T.)
+        If ZL9->(!eof())
 
-				EndIf
+            ::AddLog("Pocessando Pedido: " + ZL9->ZL9_PEDIDO + " Nota: " + ZL9->ZL9_DOC + "-" + ZL9->ZL9_SERIE + "-" + " NF Devolucao: " + ZL9->ZL9_DOCDEV + "-" + ZL9->ZL9_SERDEV)
 
-				nPos := aScan(aNotas, {|x| x[1] == ZL9->ZL9_PEDIDO })
+            If RecLock("ZL9", .F.)
 
-				If nPos == 0
+                If Empty(oTFatAut)
 
-					aAdd(aNotas, {ZL9->ZL9_PEDIDO, .T.})
+                    oTFatAut := TFaturamentoAutomatico():New(.T.)
 
-					aAdd(aNotas[Len(aNotas)], {ZL9->ZL9_DOC, ZL9->ZL9_SERIE, ZL9->(Recno())})
+                EndIf
 
-				Else
+                nPos := aScan(aNotas, {|x| x[1] == ZL9->ZL9_PEDIDO })
 
-					aAdd(aNotas[nPos], {ZL9->ZL9_DOC, ZL9->ZL9_SERIE, ZL9->(Recno())})
+                If nPos == 0
 
-				EndIf
+                    aAdd(aNotas, {ZL9->ZL9_PEDIDO, .T.})
 
-				If SC5->(!DBSeek(xFilial("SC5") + ZL9->ZL9_PEDIDO))
+                    aAdd(aNotas[Len(aNotas)], {ZL9->ZL9_DOC, ZL9->ZL9_SERIE, ZL9->(Recno())})
 
-					ZL9->ZL9_PEDIDO:=""
-					ZL9->ZL9_FORNEC:=""
-					ZL9->ZL9_LOJFOR:=""
+                Else
 
-					aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
+                    aAdd(aNotas[nPos], {ZL9->ZL9_DOC, ZL9->ZL9_SERIE, ZL9->(Recno())})
 
-				Else
+                EndIf
 
-					If !Empty(ZL9->ZL9_DOC)
+                If SC5->(!DBSeek(xFilial("SC5") + ZL9->ZL9_PEDIDO))
 
-						If SF2->(!DBSeek(xFilial("SF2") + ZL9->ZL9_DOC + ZL9->ZL9_SERIE))
+                    ZL9->ZL9_PEDIDO:=""
+                    ZL9->ZL9_FORNEC:=""
+                    ZL9->ZL9_LOJFOR:=""
 
-							ZL9->ZL9_STADOC := "" // 5=Cancelada
-							ZL9->ZL9_STATUS := "3"
-							ZL9->ZL9_MSBLQL := "1"
-							ZL9->ZL9_LOG    := "A nota foi excluida! Para continuar o processo faça o desbloqueio!"
-							ZL9->ZL9_DOC    := ""
-							ZL9->ZL9_SERIE  := ""
-							ZL9->ZL9_FORNEC := ""
-							ZL9->ZL9_LOJFOR := ""
-							ZL9->ZL9_STAERR := ""
+                    aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
 
-							aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
+                Else
 
-						EndIf
+                    If !Empty(ZL9->ZL9_DOC)
 
-					EndIf
+                        If SF2->(!DBSeek(xFilial("SF2") + ZL9->ZL9_DOC + ZL9->ZL9_SERIE))
 
-					If ZL9->ZL9_MSBLQL <> '1' .And. !Empty(ZL9->ZL9_PEDIDO) .And. !Empty(ZL9->ZL9_DOC)
+                            ZL9->ZL9_STADOC := "" // 5=Cancelada
+                            ZL9->ZL9_STATUS := "3"
+                            ZL9->ZL9_MSBLQL := "1"
+                            ZL9->ZL9_DOC    := ""
+                            ZL9->ZL9_SERIE  := ""
+                            ZL9->ZL9_STAERR := ""
 
-						If ZL9->ZL9_STADOC == "1" // 1=Emitida
+                            ZL9->(ZL9PutLog("A nota foi excluida! Para continuar o processo faça o desbloqueio!"))
 
-							::Transmissao(ZL9->ZL9_DOC, ZL9->ZL9_SERIE)
+                            aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
 
-							ZL9->ZL9_STADOC := "2"
+                        EndIf
 
-							aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
+                    EndIf
 
-						ElseIf ZL9->ZL9_STADOC == "2" // 2=Transmitida
+                    If ZL9->ZL9_MSBLQL <> '1' .And. !Empty(ZL9->ZL9_PEDIDO) .And. !Empty(ZL9->ZL9_DOC)
 
-							aRetorno := oObj:MonitoraNFe(ZL9->ZL9_SERIE, ZL9->ZL9_DOC, .F.)
+                        If ZL9->ZL9_STADOC == "1" // 1=Emitida
 
-							nPos := aScan(aNotas, {|x| x[1] == ZL9->ZL9_PEDIDO })
+                            ::Transmissao(ZL9->ZL9_DOC, ZL9->ZL9_SERIE)
 
-							If Len(aRetorno) == 0
+                            ZL9->ZL9_STADOC := "2"
 
-								ZL9->ZL9_STADOC := "1" // 1=Emitida
+                            aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
 
-								aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
+                        ElseIf ZL9->ZL9_STADOC == "2" // 2=Transmitida
 
-							ElseIf !(aRetorno[1, 5] $ "100")
+                            aRetorno := oTFatAut:MonitoraNFe(ZL9->ZL9_SERIE, ZL9->ZL9_DOC, .F.)
 
-								If !('Aguardando processamento' $ AllTrim(aRetorno[1, 9]))
+                            varInfo("aRetorno",aRetorno)
 
-									ZL9->ZL9_STADOC := "4" // 4=Rejeitada
-									ZL9->ZL9_MSBLQL := "1"
+                            nPos := aScan(aNotas, {|x| x[1] == ZL9->ZL9_PEDIDO })
 
-									::AddLog(AllTrim(aRetorno[1, 9]))
+                            If Len(aRetorno) == 0
 
-									ZL9->ZL9_RETNFE := AllTrim(aRetorno[1, 9])
+                                ZL9->ZL9_STADOC := "1" // 1=Emitida
 
-									aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
+                                aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
 
-								EndIf
+                            ElseIf !(aRetorno[1, 5] $ "100")
 
-							ElseIf aRetorno[1, 5] $ "100"
+                                If !('Aguardando processamento' $ AllTrim(aRetorno[1, 9]))
 
-								ZL9->ZL9_STADOC := "3" // 3=Autorizada
+                                    ZL9->ZL9_STADOC := "4" // 4=Rejeitada
+                                    ZL9->ZL9_MSBLQL := "1"
 
-								ZL9->ZL9_RETNFE := AllTrim(aRetorno[1, 9])
+                                    ::AddLog(AllTrim(aRetorno[1, 9]))
 
-							EndIf
+                                    ZL9->ZL9_RETNFE := AllTrim(aRetorno[1, 9])
 
-						ElseIf ZL9->ZL9_STADOC == "4" // // 4=Rejeitada
+                                    aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
 
-							aRetorno := oObj:MonitoraNFe(ZL9->ZL9_SERIE, ZL9->ZL9_DOC, .F.)
+                                EndIf
 
-							nPos := aScan(aNotas, {|x| x[1] == ZL9->ZL9_PEDIDO })
+                            ElseIf aRetorno[1, 5] $ "100"
 
-							If !(aRetorno[1, 5] $ "100")
+                                ZL9->ZL9_STADOC := "3" // 3=Autorizada
 
-								If !('Aguardando processamento' $ AllTrim(aRetorno[1, 9]))
+                                ZL9->ZL9_RETNFE := AllTrim(aRetorno[1, 9])
 
-									ZL9->ZL9_STADOC := "4" // 4=Rejeitada
-									ZL9->ZL9_MSBLQL := "1"
+                            EndIf
 
-									::AddLog(AllTrim(aRetorno[1, 9]))
+                        ElseIf ZL9->ZL9_STADOC == "4" // // 4=Rejeitada
 
-									ZL9->ZL9_RETNFE := AllTrim(aRetorno[1, 9])
+                            aRetorno := oTFatAut:MonitoraNFe(ZL9->ZL9_SERIE, ZL9->ZL9_DOC, .F.)
 
-									aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
+                            nPos := aScan(aNotas, {|x| x[1] == ZL9->ZL9_PEDIDO })
 
-								EndIf
+                            If !(aRetorno[1, 5] $ "100")
 
-							ElseIf aRetorno[1, 5] $ "100"
+                                If !('Aguardando processamento' $ AllTrim(aRetorno[1, 9]))
 
-								ZL9->ZL9_STADOC := "3" // 3=Autorizada
+                                    ZL9->ZL9_STADOC := "4" // 4=Rejeitada
+                                    ZL9->ZL9_MSBLQL := "1"
 
-								ZL9->ZL9_RETNFE := AllTrim(aRetorno[1, 9])
+                                    ::AddLog(AllTrim(aRetorno[1, 9]))
 
-							EndIf
+                                    ZL9->ZL9_RETNFE := AllTrim(aRetorno[1, 9])
 
-						ElseIf ZL9->ZL9_STADOC == "6" // 6=PDF criado
+                                    aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
 
-							nPos := aScan(aNotasEnv, {|x| x[1] == ZL9->ZL9_PDF })
+                                EndIf
 
-							If nPos == 0
+                            ElseIf aRetorno[1, 5] $ "100"
 
-								aAdd(aNotasEnv, {ZL9->ZL9_PDF, .T.})
+                                ZL9->ZL9_STADOC := "3" // 3=Autorizada
 
-								aAdd(aNotasEnv[Len(aNotasEnv)], {ZL9->ZL9_DOC, ZL9->ZL9_SERIE, ZL9->ZL9_PDF, ZL9->(Recno())})
+                                ZL9->ZL9_RETNFE := AllTrim(aRetorno[1, 9])
 
-								aNotasEnv[Len(aNotasEnv)][2] := File(AllTrim(ZL9->ZL9_PDF)) .And. !File(AllTrim(Replace(ZL9->ZL9_PDF, ".pdf", ".pd_")))
+                            EndIf
 
-							Else
+                        ElseIf ZL9->ZL9_STADOC == "6" // 6=PDF criado
 
-								aAdd(aNotasEnv[nPos], {ZL9->ZL9_DOC, ZL9->ZL9_SERIE, ZL9->ZL9_PDF, ZL9->(Recno())})
+                            nPos := aScan(aNotasEnv, {|x| x[1] == ZL9->ZL9_PDF })
 
-							EndIf
+                            If nPos == 0
 
-							nPos := aScan(aNotas, {|x| x[1] == ZL9->ZL9_PEDIDO })
+                                aAdd(aNotasEnv, {ZL9->ZL9_PDF, .T.})
 
-							aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
+                                aAdd(aNotasEnv[Len(aNotasEnv)], {ZL9->ZL9_DOC, ZL9->ZL9_SERIE, ZL9->ZL9_PDF, ZL9->(Recno())})
 
-						ElseIf ZL9->ZL9_STADOC == "7" // 7=PDF enviado
+                                aNotasEnv[Len(aNotasEnv)][2] := File(AllTrim(ZL9->ZL9_PDF)) .And. !File(AllTrim(Replace(ZL9->ZL9_PDF, ".pdf", ".pd_")))
 
-							ZL9->ZL9_STADOC := "8" // 8=Finalizado
+                            Else
 
-							nPos := aScan(aNotas, {|x| x[1] == ZL9->ZL9_PEDIDO })
+                                aAdd(aNotasEnv[nPos], {ZL9->ZL9_DOC, ZL9->ZL9_SERIE, ZL9->ZL9_PDF, ZL9->(Recno())})
 
-							aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
+                            EndIf
 
-						EndIf
+                            nPos := aScan(aNotas, {|x| x[1] == ZL9->ZL9_PEDIDO })
 
-					EndIf
+                            aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
 
-				EndIf
+                        ElseIf ZL9->ZL9_STADOC == "7" // 7=PDF enviado
 
-				ZL9->(MSUnLock())
+                            ZL9->ZL9_STADOC := "8" // 8=Finalizado
 
-			Else
+                            nPos := aScan(aNotas, {|x| x[1] == ZL9->ZL9_PEDIDO })
 
-				::AddLog("Nao consegui lockar ZL9 -> " + cValToChar(ZL9->(Recno())))
+                            aNotas[If(nPos > 0, nPos, Len(aNotas))][2] := .F.
 
-			EndIf
+                        EndIf
 
-		EndIf
+                    EndIf
 
-		(cAlias)->(DBSkip())
+                EndIf
 
-	EndDo
+                ZL9->(MSUnLock())
 
-	If Len(aNotas) > 0
+            Else
 
-		For nW := 1 To Len(aNotas)
+                ::AddLog("Nao consegui lockar ZL9 -> " + cValToChar(ZL9->(Recno())))
 
-			If aNotas[nW][2]
+            EndIf
 
-				::PDF(aNotas[nW])
+        EndIf
 
-			EndIf
+        (cZL9TmpAlias)->(DBSkip())
 
-		Next nW
+    EndDo
 
-	EndIf
+    If Len(aNotas) > 0
 
-	If Len(aNotasEnv) > 0
+        For nW := 1 To Len(aNotas)
 
-		For nW := 1 To Len(aNotasEnv)
+            If aNotas[nW][2]
 
-			If aNotasEnv[nW][2]
+                ::PDF(aNotas[nW])
 
-				::EnvioNFe(aNotasEnv[nW])
+            EndIf
 
-			EndIf
+        Next nW
 
-		Next nW
+    EndIf
 
-	EndIf
+    If Len(aNotasEnv) > 0
 
-	(cAlias)->(DBcloseArea())
+        For nW := 1 To Len(aNotasEnv)
+
+            If aNotasEnv[nW][2]
+
+                ::EnvioNFe(aNotasEnv[nW])
+
+            EndIf
+
+        Next nW
+
+    EndIf
+
+    (cZL9TmpAlias)->(DBcloseArea())
+    dbSelectArea("ZL9")
+
+    restArea(aArea)
 
 Return()
 
 Method PDF(aNotas) Class TAutomacaoDevolucaoIntercompany
 
-	Local nW 		:= 0
-	Local cLocal 	:= "\P10\AUTOMACAO\DEVOLUCAO\"
-	Local cNomeArq 	:= ZL9->ZL9_PEDIDO + "_" + DtoS(Date()) + "_" + Replace(Time(), ":", "")
-	Local cIdEnt	:= GetCfgEntidade()
-	Local oSetup	:= Nil
-	Local oPrint	:= Nil
-	Local lOk		:= .T.
+    Local nW 		:= 0
+    Local cLocal 	:= "\P10\AUTOMACAO\DEVOLUCAO\"
+    Local cNomeArq 	:= ZL9->ZL9_PEDIDO + "_" + DtoS(Date()) + "_" + Replace(Time(), ":", "")
+    Local cIdEnt	:= GetCfgEntidade()
+    Local oSetup	:= Nil
+    Local oPrint	:= Nil
+    Local lOk		:= .T.
 
-	Default aNotas	:= {}
+    DEFAULT aNotas	:= {}
 
-	lServer := .F.
-	lAdjustToLegacy := .F.
-	lDisableSetup  := .T.
+    lServer := .F.
+    lAdjustToLegacy := .F.
+    lDisableSetup  := .T.
 
-	oPrint := FWMSPrinter():New(cNomeArq, IMP_PDF, .F., cLocal, .T., , ,, .T., .F.)
+    oPrint := FWMSPrinter():New(cNomeArq, IMP_PDF, .F., cLocal, .T., , ,, .T., .F.)
 
-	oPrint:lViewPDF		:= .F.
-	oPrint:cPathPDF		:= cLocal
-	oPrint:lServer  	:= .T.
+    oPrint:lViewPDF		:= .F.
+    oPrint:cPathPDF		:= cLocal
+    oPrint:lServer  	:= .T.
 
-	Begin Transaction
+    Begin Transaction
 
-		For nW := 3 To Len(aNotas)
+        For nW := 3 To Len(aNotas)
 
-			ZL9->(DBGoTo(aNotas[nW][3]))
+            ZL9->(DBGoTo(aNotas[nW][3]))
 
-			If !Empty(cIdEnt)
+            If !Empty(cIdEnt)
 
-				u_fautdanfe(cIdEnt ,/*cVal1*/ ,/*cVal2*/ ,oPrint , oSetup, cNomeArq, aNotas[nW][1], aNotas[nW][2])
+                u_fautdanfe(cIdEnt ,/*cVal1*/ ,/*cVal2*/ ,oPrint , oSetup, cNomeArq, aNotas[nW][1], aNotas[nW][2])
 
-				Reclock("ZL9", .F.)
-				ZL9->ZL9_STADOC := "6"
-				ZL9->ZL9_PDF := cLocal + cNomeArq + ".pdf"
-				ZL9->(MSUnLock())
+                Reclock("ZL9", .F.)
+                ZL9->ZL9_STADOC := "6"
+                ZL9->ZL9_PDF := cLocal + cNomeArq + ".pdf"
+                ZL9->(MSUnLock())
 
-			Else
+            Else
 
-				Reclock("ZL9", .F.)
-				ZL9->ZL9_STADOC := "3"
-				ZL9->ZL9_PDF := "Sem conexao com o TSS"
-				ZL9->(MSUnLock())
+                Reclock("ZL9", .F.)
+                ZL9->ZL9_STADOC := "3"
+                ZL9->ZL9_PDF := "Sem conexao com o TSS"
+                ZL9->(MSUnLock())
 
-				lOk := .F.
+                lOk := .F.
 
-			EndIf
+            EndIf
 
-		Next nW
+        Next nW
 
-	End Transaction
+    End Transaction
 
-	If lOk
+    If lOk
 
-		oPrint:Print()
+        oPrint:Print()
 
-	EndIf
+    EndIf
 
-	FreeObj(oPrint)
+    FreeObj(oPrint)
 
-	oPrint := Nil
+    oPrint := Nil
 
 Return(cNomeArq)
 
 Method EnvioNFe(aNotasEnv) Class TAutomacaoDevolucaoIntercompany
 
-	Local nW := 0
-	Local lEnv := .T.
+    local nNota		as numeric
+    local nNotas	as numeric
 
-	For nW := 3 To Len(aNotasEnv)
+    local lEnv		as logical
 
-		ZL9->(DBGoTo(aNotasEnv[nW][4]))
+    lEnv:=.T.
 
-		If lEnv
+    //TODO: Incluir na rotina de Workflow de e-mail BIA191 para recuperação via u_emailWF
+    //ex.: u_emailWF("TAFDEVINTC",&("cEmpAnt"))
+    if (empty(::cEmailNfDev))
+        ::cEmailNfDev:=u_emailWF("TAFDEVINTC",&("cEmpAnt"))
+        if (empty(::cEmailNfDev))
+            ::cEmailNfDev:="fabiana.corona@biancogres.com.br"
+        endif
+    endif
 
-			U_BIAEnvMail(, ::cEmailNfDev, "NF-e de Devolução de " + AllTrim(SM0->M0_NOME), "Segue nota fiscal eletrônica", , AllTrim(aNotasEnv[1]), .F.)
-
-			lEnv := .F.
-
-		EndIf
-
-		Reclock("ZL9", .F.)
-		ZL9->ZL9_STADOC := "7"
-		ZL9->(MSUnLock())
-
-	Next nW
+    nNotas:=Len(aNotasEnv)
+    For nNota:=3 To nNotas
+        ZL9->(DBGoTo(aNotasEnv[nNota][4]))
+        If (lEnv)
+            U_BIAEnvMail(nil,::cEmailNfDev, "NF-e de Devolução de "+AllTrim(SM0->M0_NOME),"Segue nota fiscal eletrônica",nil,AllTrim(aNotasEnv[1]),.F.)
+            lEnv := .F.
+        EndIf
+        if (ZL9->(Reclock("ZL9", .F.)))
+            ZL9->ZL9_STADOC := "7"
+            ZL9->(MSUnLock())
+        endif
+    Next nNota
 
 Return()
 
 Method ProcessaDevolucao() Class TAutomacaoDevolucaoIntercompany
 
-	Local aArea			:= GetArea()
-	Local cSQL 			:= ""
-	Local cAlias1 		:= GetNextAlias()
-	Local oEmpDestino	:= TLoadEmpresa():New()
+    Local aArea			:= GetArea()
+    Local cSQL 			:= ""
+    Local cTmpAlias 	:= GetNextAlias()
+    Local oEmpDestino	:= TLoadEmpresa():New()
 
-	Local aCabSC5		:= {}
-	Local aItensSC6		:= {}
-	Local aItemSC6		:= {}
-	Local cItem         := "01"
-	Local nW            := 0
+    Local aCabSC5		:= {}
+    Local aItensSC6		:= {}
+    Local aItemSC6		:= {}
+    Local cItem         := "01"
+    Local nW            := 0
 
-	Local cCliente       := ""
-	Local cLoja         := ""
-	Local cDoc			:= ""
-	Local cSerie		:= ""
-	Local cEmpFilOri    := ""
-	Local cPedOri       := ""
-	Local cFormul       := ""
-	Local lOrigFound    := .T.
-	Local aDocEntOri    := {}
+    Local cCliente       := ""
+    Local cLoja         := ""
+    Local cDoc			:= ""
+    Local cDocOri       := ""
+    Local cSerOri       := ""
+    Local cSerie		:= ""
+    Local cEmpFilOri    := ""
+    Local cPedOri       := ""
+    Local cFormul       := ""
+    Local lOrigFound    := .T.
+    Local aDocEntOri    := {}
 
     Local nQuant
     Local nValor
     Local nPreco
 
-	::AddLog("Buscando notas de devolucao para processo intercompany")
+    ::AddLog("Buscando notas de devolucao para processo intercompany")
 
-	oEmpDestino:GetCodigos()
+    oEmpDestino:GetCodigos()
 
     cSQL:=TAutDevIntQry():ProcessaDevolucao(oEmpDestino:cCodigosCli)
 
-	TCQUERY cSQL NEW ALIAS (cAlias1)
+    TCQUERY (cSQL) ALIAS (cTmpAlias) NEW
 
-	DBSelectArea("SC5")
-	SC5->(dbSetOrder(1)) // C5_FILIAL, C5_NUM, R_E_C_N_O_, D_E_L_E_T_
+    DBSelectArea("SC5")
+    SC5->(dbSetOrder(1)) // C5_FILIAL, C5_NUM, R_E_C_N_O_, D_E_L_E_T_
 
-	DBSelectArea("SD2")
-	SD2->(dbSetOrder(3)) // D2_FILIAL, D2_DOC, D2_SERIE, D2_CLIENTE, D2_LOJA, D2_COD, D2_ITEM, R_E_C_N_O_, D_E_L_E_T_
+    DBSelectArea("SD2")
+    SD2->(dbSetOrder(3)) // D2_FILIAL, D2_DOC, D2_SERIE, D2_CLIENTE, D2_LOJA, D2_COD, D2_ITEM, R_E_C_N_O_, D_E_L_E_T_
 
-	While (cAlias1)->(!eof())
+    While (cTmpAlias)->(!eof())
 
-		If cDoc + cSerie + cCliente + cLoja + cEmpFilOri <> (cAlias1)->(D1_DOC+D1_SERIE+D1_FORNECE+D1_LOJA+C5_YEMPPED)
+        If cDoc + cSerie + cCliente + cLoja + cEmpFilOri <> (cTmpAlias)->(D1_DOC+D1_SERIE+D1_FORNECE+D1_LOJA+C5_YEMPPED)
 
-			If !Empty(cDoc + cSerie + cCliente + cLoja + cEmpFilOri)
+            //-----------------------------------
+            // Cabecalho do Pedido de Venda
+            //-----------------------------------
+            aSize(aCabSC5,0)
+            aSize(aItensSC6,0)
 
-				::ProcPedido(aCabSC5, aItensSC6, cDoc, cSerie, cCliente, cLoja, cEmpFilOri, cFormul)
+            cFormul     := (cTmpAlias)->F1_FORMUL
+            cDoc		:= (cTmpAlias)->D1_DOC
+            cSerie		:= (cTmpAlias)->D1_SERIE
+            cCliente    := (cTmpAlias)->D1_FORNECE
+            cLoja		:= (cTmpAlias)->D1_LOJA
+            cEmpFilOri  := (cTmpAlias)->C5_YEMPPED + "01"
+            cPedOri     := (cTmpAlias)->C5_YPEDORI
+            cItem	    :=	"01"
 
-				aSize(aCabSC5,0)
+            oEmpDestino:SeekForCli(SubStr(cEmpFilOri, 1, 2), SubStr(cEmpFilOri, 3, 4))
 
-				aSize(aItensSC6,0)
+            aAdd(aCabSC5, {"C5_NUM"   		, ""		   				, Nil})
+            aAdd(aCabSC5, {"C5_TIPO"   		, "D"				   		, Nil})
 
-				lOrigFound := .T.
+            aAdd(aCabSC5, {"C5_CLIENTE"   	, oEmpDestino:cCodFor		, Nil})
+            aAdd(aCabSC5, {"C5_LOJACLI"   	, oEmpDestino:cLojaFor		, Nil})
+            aAdd(aCabSC5, {"C5_CLIENT"   	, oEmpDestino:cCodFor		, Nil})
+            aAdd(aCabSC5, {"C5_LOJAENT"		, oEmpDestino:cLojaFor		, Nil})
 
-			EndIf
+            aAdd(aCabSC5, {"C5_ORIGEM"		, ""						, Nil})
+            aAdd(aCabSC5, {"C5_YCONF"		, "S"						, Nil})
+            aAdd(aCabSC5, {"C5_YSUBTP"		, "O"						, Nil})
 
-			//-----------------------------------
-			// Cabecalho do Pedido de Venda
-			//-----------------------------------
-			aSize(aCabSC5,0)
-			aSize(aItensSC6,0)
+            aAdd(aCabSC5, {"C5_TRANSP"		, ""						, Nil})
+            aAdd(aCabSC5, {"C5_TPFRETE"		, "S"						, Nil})
 
-			cFormul     := (cAlias1)->F1_FORMUL
-			cDoc		:= (cAlias1)->D1_DOC
-			cSerie		:= (cAlias1)->D1_SERIE
-			cCliente    := (cAlias1)->D1_FORNECE
-			cLoja		:= (cAlias1)->D1_LOJA
-			cEmpFilOri  := (cAlias1)->C5_YEMPPED + "01"
-			cPedOri     := (cAlias1)->C5_YPEDORI
-			cItem	    :=	"01"
+            aAdd(aCabSC5, {"C5_CONDPAG"		, "505"         			, Nil}) // 528??
+            aAdd(aCabSC5, {"C5_VEND1"		, "999999"					, Nil})
+            aAdd(aCabSC5, {"C5_COMIS1"		, 0							, Nil})
+            aAdd(aCabSC5, {"C5_COMIS2"		, 0							, Nil})
+            aAdd(aCabSC5, {"C5_COMIS3"		, 0							, Nil})
+            aAdd(aCabSC5, {"C5_COMIS4"		, 0							, Nil})
+            aAdd(aCabSC5, {"C5_COMIS5"		, 0							, Nil})
+            aAdd(aCabSC5, {"C5_EMISSAO"		, dDataBase					, Nil})
+            aAdd(aCabSC5, {"C5_TPCOMPL"		,"2"						, Nil})
 
-			oEmpDestino:SeekForCli(SubStr(cEmpFilOri, 1, 2), SubStr(cEmpFilOri, 3, 4))
+        EndIf
 
-			aAdd(aCabSC5, {"C5_NUM"   		, ""		   				, Nil})
-			aAdd(aCabSC5, {"C5_TIPO"   		, "D"				   		, Nil})
+        //------------------------------
+        // Itens do Pedido de Venda
+        //------------------------------
+        aSize(aItemSC6,0)
 
-			aAdd(aCabSC5, {"C5_CLIENTE"   	, oEmpDestino:cCodFor		, Nil})
-			aAdd(aCabSC5, {"C5_LOJACLI"   	, oEmpDestino:cLojaFor		, Nil})
-			aAdd(aCabSC5, {"C5_CLIENT"   	, oEmpDestino:cCodFor		, Nil})
-			aAdd(aCabSC5, {"C5_LOJAENT"		, oEmpDestino:cLojaFor		, Nil})
+        aDocEntOri:=(cTmpAlias)->(::GetDocOri(D1_DOC,D1_SERIE,D1_FORNECE,D1_LOJA,oEmpDestino:cCodFor,oEmpDestino:cLojaFor))
 
-			aAdd(aCabSC5, {"C5_ORIGEM"		, ""						, Nil})
-			aAdd(aCabSC5, {"C5_YCONF"		, "S"						, Nil})
-			aAdd(aCabSC5, {"C5_YSUBTP"		, "O"						, Nil})
+        If Len(aDocEntOri) > 0 .And. lOrigFound
 
-			aAdd(aCabSC5, {"C5_TRANSP"		, ""						, Nil})
-			aAdd(aCabSC5, {"C5_TPFRETE"		, "S"						, Nil})
+            lOrigFound := .T.
 
-			aAdd(aCabSC5, {"C5_CONDPAG"		, "505"         			, Nil}) // 528??
-			aAdd(aCabSC5, {"C5_VEND1"		, "999999"					, Nil})
-			aAdd(aCabSC5, {"C5_COMIS1"		, 0							, Nil})
-			aAdd(aCabSC5, {"C5_COMIS2"		, 0							, Nil})
-			aAdd(aCabSC5, {"C5_COMIS3"		, 0							, Nil})
-			aAdd(aCabSC5, {"C5_COMIS4"		, 0							, Nil})
-			aAdd(aCabSC5, {"C5_COMIS5"		, 0							, Nil})
-			aAdd(aCabSC5, {"C5_EMISSAO"		, dDataBase					, Nil})
-			aAdd(aCabSC5, {"C5_TPCOMPL"		,"2"						, Nil})
+        Else
 
-		EndIf
+            ::AddLog("Nao foi encontrado nota fiscal de origem com saldo! Nao sera possivel continuar" + "[ Produto: " + (cTmpAlias)->D1_COD + "]")
 
-		//------------------------------
-		// Itens do Pedido de Venda
-		//------------------------------
-		aSize(aItemSC6,0)
+            lOrigFound := .F.
 
-		aDocEntOri:=(cAlias1)->(::GetDocOri(D1_DOC,D1_SERIE,D1_FORNECE,D1_LOJA,oEmpDestino:cCodFor,oEmpDestino:cLojaFor))
-
-		If Len(aDocEntOri) > 0 .And. lOrigFound
-
-			lOrigFound := .T.
-
-		Else
-
-			::AddLog("Nao foi encontrado nota fiscal de origem com saldo! Nao sera possivel continuar" + "[ Produto: " + (cAlias1)->D1_COD + "]")
-
-			lOrigFound := .F.
-
-		EndIf
-			/*
+        EndIf
+        /*
 			{;
 							(cAliasTemp)->D1_DOC,;
 							(cAliasTemp)->D1_SERIE,;
@@ -630,476 +659,499 @@ Method ProcessaDevolucao() Class TAutomacaoDevolucaoIntercompany
 							(cAliasTemp)->D1_QUANT,;
 							(cAliasTemp)->D2_PRCVEN;
 						}
-			*/
+        */
 
-		For nW := 1 To Len(aDocEntOri)
+        For nW := 1 To Len(aDocEntOri)
 
-			nQuant:=(cAlias1)->D1_QUANT
+            nQuant:=(cTmpAlias)->D1_QUANT
             nPreco:=aDocEntOri[nW][6]
             nValor:=A410Arred(nQuant*nPreco,"C6_VALOR")
-            
+
+            cDocOri:=aDocEntOri[nW][1]
+            cSerOri:=aDocEntOri[nW][2]
+
             aAdd(aItemSC6, {"C6_NUM"	, ""				 , Nil})
-			aAdd(aItemSC6, {"C6_ITEM"	, cItem              , Nil})
-			aAdd(aItemSC6, {"C6_PRODUTO", (cAlias1)->D1_COD	 , Nil})
-			aAdd(aItemSC6, {"C6_QTDVEN"	, nQuant             , Nil})
-			aAdd(aItemSC6, {"C6_PRCVEN"	, nPreco             , Nil})
-			aAdd(aItemSC6, {"C6_PRUNIT"	, nPreco             , Nil})
-			aAdd(aItemSC6, {"C6_VALOR"	, nValor             , Nil})
-			aAdd(aItemSC6, {"C6_TES"	, "5I4"				 , Nil})
-			aAdd(aItemSC6, {"C6_LOCAL"	, (cAlias1)->C6_LOCAL, Nil})
-			aAdd(aItemSC6, {"C6_LOTECTL", aDocEntOri[nW][4]  , Nil})
-			aAdd(aItemSC6, {"C6_LOCALIZ", "LM"               , Nil})
-			aAdd(aItemSC6, {"C6_NFORI"	, aDocEntOri[nW][1]  , Nil})
-			aAdd(aItemSC6, {"C6_SERIORI", aDocEntOri[nW][2]  , Nil})
-			aAdd(aItemSC6, {"C6_ITEMORI", aDocEntOri[nW][3]  , Nil})
+            aAdd(aItemSC6, {"C6_ITEM"	, cItem              , Nil})
+            aAdd(aItemSC6, {"C6_PRODUTO", (cTmpAlias)->D1_COD	 , Nil})
+            aAdd(aItemSC6, {"C6_QTDVEN"	, nQuant             , Nil})
+            aAdd(aItemSC6, {"C6_PRCVEN"	, nPreco             , Nil})
+            aAdd(aItemSC6, {"C6_PRUNIT"	, nPreco             , Nil})
+            aAdd(aItemSC6, {"C6_VALOR"	, nValor             , Nil})
+            aAdd(aItemSC6, {"C6_TES"	, "5I4"				 , Nil})
+            aAdd(aItemSC6, {"C6_LOCAL"	, (cTmpAlias)->C6_LOCAL, Nil})
+            aAdd(aItemSC6, {"C6_LOTECTL", aDocEntOri[nW][4]  , Nil})
+            aAdd(aItemSC6, {"C6_LOCALIZ", "LM"               , Nil})
+            aAdd(aItemSC6, {"C6_NFORI"	, aDocEntOri[nW][1]  , Nil})
+            aAdd(aItemSC6, {"C6_SERIORI", aDocEntOri[nW][2]  , Nil})
+            aAdd(aItemSC6, {"C6_ITEMORI", aDocEntOri[nW][3]  , Nil})
 
-			aAdd(aItensSC6, aClone(aItemSC6))
+            aAdd(aItensSC6, aClone(aItemSC6))
 
-			cItem := Soma1(cItem)
+            cItem := Soma1(cItem)
 
-		Next nW
+        Next nW
 
-		(cAlias1)->(DBSkip())
+        (cTmpAlias)->(DBSkip())
 
-	EndDo
+    EndDo
 
-	(cAlias1)->(DBcloseArea())
+    (cTmpAlias)->(DBcloseArea())
 
-	If Len(aItensSC6) > 0
+    If Len(aItensSC6) > 0
 
-		If lOrigFound
+        If lOrigFound
 
-			::ProcPedido(aCabSC5, aItensSC6, cDoc, cSerie, cCliente, cLoja, cEmpFilOri, cFormul)
+            ::ProcPedido(aCabSC5, aItensSC6, cDoc, cSerie, cCliente, cLoja, cEmpFilOri, cFormul,cDocOri,cSerOri)
 
-		EndIf
+        EndIf
 
-		lOrigFound := .T.
+        lOrigFound := .T.
 
-	EndIf
+    EndIf
 
-	::GravaErro()
+    ::GravaErro()
 
-	RestArea(aArea)
+    RestArea(aArea)
 
 Return()
 
 Method FaturarPedido() Class TAutomacaoDevolucaoIntercompany
 
-	Local aArea		:= GetArea()
-	Local cSQL 		:= ""
-	Local cAlias1 	:= GetNextAlias()
-	Local lRet      := .T.
-	Local cErro		:= ""
-	Local bErro 	:= ErrorBlock( { |oErr| cErro := oErr:Description })
+    Local aArea		:= GetArea()
+    Local cSQL 		:= ""
+    Local cTmpAlias 	:= GetNextAlias()
+    Local lRet      := .T.
+    Local cErro		:= ""
+    Local bErro 	:= ErrorBlock( { |oErr| cErro := oErr:Description })
 
-	::AddLog("Buscando Pedidos para faturar")
+    ::AddLog("Buscando Pedidos para faturar")
 
-	DBSelectArea("ZL9")
+    DBSelectArea("ZL9")
 
-	cSQL := " SELECT * "
-	cSQL += " FROM " + RetSQLName("ZL9") + " ZL9 ( NOLOCK ) "
-	cSQL += " WHERE ZL9.ZL9_FILIAL 	= " + ValToSql(xFilial("ZL9"))
-	cSQL += " AND ZL9.ZL9_CODEMP    = " + ValToSql(cEmpAnt)
-	cSQL += " AND ZL9.ZL9_CODFIL    = " + ValToSql(cFilAnt)
-	cSQL += " AND ZL9.ZL9_STATUS    = '3' " // Devolucao Intercompany - Pedido Gerado
-	cSQL += " AND ZL9.ZL9_STAERR   <> 'E' "
-	cSQL += " AND ZL9.ZL9_MSBLQL   <> '1' "
-	cSQL += " AND ZL9.ZL9_DOC       = '' "
-	cSQL += " AND ZL9.D_E_L_E_T_    = '' "
+    cSQL := " SELECT * "
+    cSQL += " FROM " + RetSQLName("ZL9") + " ZL9 ( NOLOCK ) "
+    cSQL += " WHERE ZL9.ZL9_FILIAL 	= " + ValToSql(xFilial("ZL9"))
+    cSQL += " AND ZL9.ZL9_CODEMP    = " + ValToSql(cEmpAnt)
+    cSQL += " AND ZL9.ZL9_CODFIL    = " + ValToSql(cFilAnt)
+    cSQL += " AND ZL9.ZL9_STATUS    = '3' " // Devolucao Intercompany - Pedido Gerado
+    cSQL += " AND ZL9.ZL9_STAERR   <> 'E' "
+    cSQL += " AND ZL9.ZL9_MSBLQL   <> '1' "
+    cSQL += " AND ZL9.ZL9_DOC       = '' "
+    cSQL += " AND ZL9.D_E_L_E_T_    = '' "
 
-	TCQUERY cSQL NEW ALIAS (cAlias1)
+    TCQUERY (cSQL) ALIAS (cTmpAlias) NEW
 
-	DBSelectArea("SC5")
-	SC5->(dbSetOrder(1)) // C5_FILIAL, C5_NUM, R_E_C_N_O_, D_E_L_E_T_
+    DBSelectArea("SC5")
+    SC5->(dbSetOrder(1)) // C5_FILIAL, C5_NUM, R_E_C_N_O_, D_E_L_E_T_
 
-	While (cAlias1)->(!eof())
+    While (cTmpAlias)->(!eof())
 
-		If SC5->(DBSeek(xFilial("SC5") + (cAlias1)->ZL9_PEDIDO))
+        If SC5->(DBSeek(xFilial("SC5") + (cTmpAlias)->ZL9_PEDIDO))
 
-			Begin Transaction
+            Begin Transaction
 
-				Begin Sequence
+                Begin Sequence
 
-					::AddLog("Faturando pedido " + SC5->C5_NUM)
+                    ::AddLog("Faturando pedido " + SC5->C5_NUM)
 
-					If ::Vld_MV_NUMITEN()
+                    If ::Vld_MV_NUMITEN()
 
-						lRet := ::ProcFat((cAlias1)->ZL9_DOCDEV, (cAlias1)->ZL9_SERDEV, (cAlias1)->ZL9_CLIDEV, (cAlias1)->ZL9_LOJDEV)
+                        lRet := ::ProcFat((cTmpAlias)->ZL9_DOCDEV, (cTmpAlias)->ZL9_SERDEV, (cTmpAlias)->ZL9_CLIDEV, (cTmpAlias)->ZL9_LOJDEV)
 
-					EndIf
+                    EndIf
 
-				End Sequence
+                End Sequence
 
-				ErrorBlock( bErro )
+                ErrorBlock( bErro )
 
-				If ( ValType(cErro) <> "U" .And. !Empty(cErro) ) .Or. !lRet
+                If ( ValType(cErro) <> "U" .And. !Empty(cErro) ) .Or. !lRet
 
-					DisarmTransaction()
+                    DisarmTransaction()
 
-				Else
+                Else
 
-					::AddLog("Pedido " + SC5->C5_NUM + " faturado")
+                    ::AddLog("Pedido " + SC5->C5_NUM + " faturado")
 
-				EndIf
+                EndIf
 
-			End Transaction
+            End Transaction
 
-		EndIf
+        EndIf
 
-		(cAlias1)->(DBSkip())
+        (cTmpAlias)->(DBSkip())
 
-	EndDo
+    EndDo
 
-	(cAlias1)->(DBcloseArea())
+    (cTmpAlias)->(DBcloseArea())
 
-	::GravaErro()
+    ::GravaErro()
 
-	RestArea(aArea)
+    RestArea(aArea)
 
 Return()
 
-Method ProcPedido(aCabSC5, aItensSC6, cDoc, cSerie, cCliente, cLoja, cEmpFilOri, cFormul) Class TAutomacaoDevolucaoIntercompany
+Method ProcPedido(aCabSC5, aItensSC6, cDoc, cSerie, cCliente, cLoja, cEmpFilOri, cFormul,cDocOri,cSerOri) Class TAutomacaoDevolucaoIntercompany
 
-	Local aArea		:= GetArea()
+    Local aArea		:= GetArea()
 
-	Local bError
-	Local bErrorBlock
+    Local bError
+    Local bErrorBlock
 
-	Local cNumPed 	:= ""
-	Local cLogTxt 	:= ""
-	Local cLog      := ""
+    Local cNumPed 	:= ""
+    Local cLogTxt 	:= ""
+    Local cLog      := ""
 
-	Local cError		:= ""
-	Local lHasError := .F.
+    Local cError		:= ""
+    Local lHasError := .F.
 
-	Default aCabSC5     := {}
-	Default aItensSC6   := {}
-	Default cDoc        := ""
-	Default cSerie      := ""
-	Default cEmpFilOri  := ""
-	Default cFormul     := ""
+    DEFAULT aCabSC5     := {}
+    DEFAULT aItensSC6   := {}
+    DEFAULT cDoc        := ""
+    DEFAULT cSerie      := ""
+    DEFAULT cEmpFilOri  := ""
+    DEFAULT cFormul     := ""
 
     Private lMsErroAuto 	:= .F.
     Private lMsHelpAuto 	:= .T.
     Private lAutoErrNoFile	:= .T.
 
 
-	bError:={|oError|evalBlock():BreakError(oError,@lHasError,!IsBlind(),"ProcPedido","Erro Em ProcPedido"),cError:=if(lHasError,oError:Description,"")}
-	bErrorBlock:=ErrorBlock(bError)
+    bError:={|oError|evalBlock():BreakError(oError,@lHasError,!IsBlind(),"ProcPedido","Erro Em ProcPedido"),cError:=if(lHasError,oError:Description,"")}
+    bErrorBlock:=ErrorBlock(bError)
 
-	begin sequence
+    begin sequence
 
-		If ::InputZL9(cDoc, cSerie, cCliente, cLoja, cEmpFilOri, cFormul)
+        If ::InputZL9(cDoc, cSerie, cCliente, cLoja, cEmpFilOri, cFormul)
 
-			Begin Transaction
+            Begin Transaction
 
-				Begin Sequence
+                Begin Sequence
 
-					If ::fDistribui(cDoc, cSerie, cCliente, cLoja, "LM", "2")
+                    If ::fDistribui(cDoc, cSerie, cCliente, cLoja, "LM", "2")
 
-						::AddLog("Criando pedido referente nota " + cDoc + "-" + cSerie)
+                        ::AddLog("Criando pedido referente nota " + cDoc + "-" + cSerie)
 
-						cNumPed := GetSxENum("SC5","C5_NUM")
-						RollBackSX8()
+                        cNumPed := GetSxENum("SC5","C5_NUM")
+                        RollBackSX8()
 
-						aCabSC5[1][2] := cNumPed
+                        aCabSC5[1][2] := cNumPed
 
-						aEval(aItensSC6,{|x|  x[1][2] := cNumPed })
+                        aEval(aItensSC6,{|x|  x[1][2] := cNumPed })
 
-						DBSelectArea("SC5")
-						cMay := "SC5"+ Alltrim(xFilial("SC5"))
-						SC5->(dbSetOrder(1))
+                        DBSelectArea("SC5")
+                        cMay := "SC5"+ Alltrim(xFilial("SC5"))
+                        SC5->(dbSetOrder(1))
 
-						While ( DBSeek(xFilial("SC5")+cNumPed) .Or. !MayIUseCode(cMay+cNumPed) )
+                        While ( DBSeek(xFilial("SC5")+cNumPed) .Or. !MayIUseCode(cMay+cNumPed) )
 
-							cNumPed := Soma1(cNumPed, Len(cNumPed))
+                            cNumPed := Soma1(cNumPed, Len(cNumPed))
 
-							aCabSC5[1][2] := cNumPed
+                            aCabSC5[1][2] := cNumPed
 
-							aEval(aItensSC6,{|x|  x[1][2] := cNumPed })
+                            aEval(aItensSC6,{|x|  x[1][2] := cNumPed })
 
-						EndDo
+                        EndDo
 
-						//SetFunName("MATA410")
-						
-						lMsErroAuto 	:= .F.
-						lMsHelpAuto 	:= .T.
-						lAutoErrNoFile	:= .T.
+                        //SetFunName("MATA410")
 
-						cacheData():Set("ProcPedido","aCabSC5",aClone(aCabSC5))
-						cacheData():Set("ProcPedido","aItensSC6",aClone(aItensSC6))
-						
-						MsExecAuto({|x,y,z| Mata410(x,y,z)}, aCabSC5, aItensSC6, 3)
+                        lMsErroAuto 	:= .F.
+                        lMsHelpAuto 	:= .T.
+                        lAutoErrNoFile	:= .T.
 
-						cacheData():clear()
+                        cacheData():Set("ProcPedido","aCabSC5",aClone(aCabSC5))
+                        cacheData():Set("ProcPedido","aItensSC6",aClone(aItensSC6))
 
-						//SetFunName(cBckFunc)
+                        MsExecAuto({|x,y,z| Mata410(x,y,z)}, aCabSC5, aItensSC6, 3)
 
-						If (lMsErroAuto)
+                        cacheData():clear()
 
-							VarInfo("aCabSC5", aCabSC5)
+                        //SetFunName(cBckFunc)
 
-							VarInfo("aItensSC6", aItensSC6)
+                        If (lMsErroAuto)
 
                             cLogTxt+=::GetErrorLog()
 
-							cLog := "Erro ao incluir pedido de venda " + CRLF + cLogTxt
+                            cLog := "Erro ao incluir pedido de venda " + __cCRLF + cLogTxt
 
-							if (InTransact())
-								RollBackSX8()
-								DisarmTransaction()
-							endif
+                            VarInfo("cLogTxt", cLog)
 
-							::SetStatus(cDoc, cSerie, cCliente, cLoja, "E", cLog)
+                            VarInfo("aCabSC5", aCabSC5)
 
-						Else
+                            VarInfo("aItensSC6", aItensSC6)
 
-							ConfirmSX8()
+                            if (InTransact())
+                                RollBackSX8()
+                                DisarmTransaction()
+                            endif
 
-							::SetStatus(cDoc, cSerie, cCliente, cLoja, "3", cLog)
+                            ::SetStatus(cDoc, cSerie, cCliente, cLoja, "E", cLog)
 
-							::SetPedido(cDoc, cSerie, cCliente, cLoja, SC5->C5_NUM, SC5->C5_CLIENTE, SC5->C5_LOJACLI, aItensSC6)
+                        Else
 
-						EndIf
+                            ConfirmSX8()
 
-					EndIf
+                            ::SetStatus(cDoc, cSerie, cCliente, cLoja, "3", cLog)
 
-				End Sequence
+                            ::SetPedido(cDoc, cSerie, cCliente, cLoja, SC5->C5_NUM, SC5->C5_CLIENTE, SC5->C5_LOJACLI, aItensSC6,cDocOri,cSerOri)
 
-				If ( lHasError .Or. lMsErroAuto )
+                        EndIf
 
-					if (empty(cError))
-						cError:="Ocorreram erros no Processamento."
-					endif
+                    EndIf
 
-					cError+=CRLF
-					cError+=::GetErrorLog()
-					cError+=CRLF
+                End Sequence
 
-					::AddLog(cError)
+                If ( lHasError .Or. lMsErroAuto )
 
-					if (InTransact())
-						RollBackSX8()
-						DisarmTransaction()
-					endif
+                    if (empty(cError))
+                        cError:="Ocorreram erros no Processamento."
+                    endif
 
-				EndIf
+                    cError+=__cCRLF
+                    cError+=::GetErrorLog()
+                    cError+=__cCRLF
 
-			End Transaction
+                    ::AddLog(cError)
 
-		Else
+                    if (InTransact())
+                        RollBackSX8()
+                        DisarmTransaction()
+                    endif
 
-			::AddLog("ZL9 ja existe!")
+                EndIf
 
-		EndIf
+            End Transaction
 
-	recover
+        Else
 
-		if (InTransact())
-			RollBackSX8()
-			DisarmTransaction()
-		endif
+            ::AddLog("ZL9 ja existe!")
 
-		if (empty(cError))
-			cError:="Ocorreram erros no Processamento."
-		endif
+        EndIf
 
-		cError+=CRLF
-		cError+=::GetErrorLog()
-		cError+=CRLF
+        recover
 
-		::AddLog(cError)
-	
-	end sequence
+        if (InTransact())
+            RollBackSX8()
+            DisarmTransaction()
+        endif
 
-	ErrorBlock( bErrorBlock )
+        if (empty(cError))
+            cError:="Ocorreram erros no Processamento."
+        endif
 
-	RestArea(aArea)
+        cError+=__cCRLF
+        cError+=::GetErrorLog()
+        cError+=__cCRLF
+
+        ::AddLog(cError)
+
+    end sequence
+
+    ErrorBlock( bErrorBlock )
+
+    RestArea(aArea)
 
 Return(!lMsErroAuto)
 
 Method GetEndereco(cDoc, cSerie, cCodCli, cLojaCli, cCodFor, cLojaFor) Class TAutomacaoDevolucaoIntercompany
 
-	Local cAlias4   := GetNextAlias()
-	Local cSql      := ""
-	Local cEnderec  := ""
+    local aArea     := getArea()
+    Local cAlias4   := GetNextAlias()
+    Local cSql      := ""
+    Local cEnderec  := ""
 
-	cSql += " SELECT DISTINCT Z25_NUM, Z25_RETMRC "
-	cSql += " FROM " + RetSQLName("Z26") + " Z26 "
-	cSql += " JOIN " + RetSQLName("Z25") + " Z25 ON "
-	cSql += " ( "
-	cSql += " 	Z25.Z25_FILIAL      = " + ValToSQL(xFilial("Z25"))
-	cSql += "   AND Z25.Z25_CODCLI  = " + ValToSQL(cCodCli)
-	cSql += "   AND Z25.Z25_LOJCLI  = " + ValToSQL(cLojaCli)
-	cSql += "   AND Z25.Z25_NUM     = Z26_NUMPRC "
-	cSql += " 	AND Z25.D_E_L_E_T_  = '' "
-	cSql += " ) "
-	cSql += " WHERE Z26_FILIAL   = " + ValToSQL(xFilial("Z26"))
-	cSql += " AND Z26.Z26_NFISC	 = " + ValToSQL(cDoc)
-	cSql += " AND Z26.Z26_SERIE	 = " + ValToSQL(cSerie)
-	cSql += " AND Z26.D_E_L_E_T_ = '' "
+    cSql += " SELECT DISTINCT Z25_NUM, Z25_RETMRC "
+    cSql += " FROM " + RetSQLName("Z26") + " Z26 "
+    cSql += " JOIN " + RetSQLName("Z25") + " Z25 ON "
+    cSql += " ( "
+    cSql += " 	Z25.Z25_FILIAL      = " + ValToSQL(xFilial("Z25"))
+    cSql += "   AND Z25.Z25_CODCLI  = " + ValToSQL(cCodCli)
+    cSql += "   AND Z25.Z25_LOJCLI  = " + ValToSQL(cLojaCli)
+    cSql += "   AND Z25.Z25_NUM     = Z26_NUMPRC "
+    cSql += " 	AND Z25.D_E_L_E_T_  = '' "
+    cSql += " ) "
+    cSql += " WHERE Z26_FILIAL   = " + ValToSQL(xFilial("Z26"))
+    cSql += " AND Z26.Z26_NFISC	 = " + ValToSQL(cDoc)
+    cSql += " AND Z26.Z26_SERIE	 = " + ValToSQL(cSerie)
+    cSql += " AND Z26.D_E_L_E_T_ = '' "
 
-	TCQUERY cSQL NEW ALIAS (cAlias4)
+    TCQUERY (cSQL) ALIAS (cAlias4) NEW
 
-	If (cAlias4)->(!eof())
+    If (cAlias4)->(!eof())
 
-		If (cAlias4)->Z25_RETMRC == "S"
+        If (cAlias4)->Z25_RETMRC == "S"
 
-			cEnderec := "DEVOLUCAO"
+            cEnderec := "DEVOLUCAO"
 
-		Else
+        Else
 
-			cEnderec := "P. DEVOL"
+            cEnderec := "P. DEVOL"
 
-		EndIf
+        EndIf
 
-	Else
+    Else
 
-		cEnderec := "NOTFOUND"
+        cEnderec := "NOTFOUND"
 
-	EndIf
+    EndIf
 
-	(cAlias4)->(DbCloseArea())
+    (cAlias4)->(DbCloseArea())
+
+    restArea(aArea)
 
 Return(cEnderec)
 
 Method fDistribui(cDoc, cSerie, cCliente, cLoja, cLocaliz, cStatus, lDestino, cCodFor, cLojaFor) Class TAutomacaoDevolucaoIntercompany
 
-	Local lRet		:= .T.
-	Local cLogTxt	:= ""
-	Local cLog      := ""
-	Local cSQL      := ""
-	Local cAlias3	:= GetNextAlias()
-	Local aCabSDA   := {}
-	Local aItemSDB  := {}
-	Local aItensSDB := {}
+    local aArea     := getArea()
 
-	Default lDestino := .F.
-	Default cCodFor  := ""
-	Default cLojaFor := ""
+    Local lRet		:= .T.
+    Local cLogTxt	:= ""
+    Local cLog      := ""
+    Local cSQL      := ""
+    Local cSDATmp	:= GetNextAlias()
+    Local aCabSDA   := {}
+    Local aItemSDB  := {}
+    Local aItensSDB := {}
 
-	cSQL := " SELECT * "
-	cSQL += " FROM " + RetSQLName("SDA") + " SDA ( NOLOCK ) "
-	cSQL += " WHERE SDA.DA_FILIAL 	= " + ValToSql(xFilial("SDA"))
-	cSQL += " AND SDA.DA_TIPONF	    = 'D' "
-	cSQL += " AND SDA.DA_ORIGEM 	= 'SD1' "
-	cSQL += " AND SDA.DA_DOC 		= " + ValToSql(cDoc)
-	cSQL += " AND SDA.DA_SERIE      = " + ValToSql(cSerie)
-	cSQL += " AND SDA.DA_CLIFOR 	= " + ValToSql(cCliente)
-	cSQL += " AND SDA.DA_LOJA 	    = " + ValToSql(cLoja)
-	cSQL += " AND SDA.D_E_L_E_T_    = '' "
+    local nSDARecNo
 
-	TCQUERY cSQL NEW ALIAS (cAlias3)
+    DEFAULT lDestino := .F.
+    DEFAULT cCodFor  := ""
+    DEFAULT cLojaFor := ""
 
-	If (cAlias3)->(!eof())
+    cSQL := " SELECT SDA.R_E_C_N_O_ SDARECNO "+__cCRLF
+    cSQL += "   FROM " + RetSQLName("SDA") + " SDA ( NOLOCK ) "+__cCRLF
+    cSQL += "  WHERE SDA.DA_FILIAL 	= " + ValToSql(xFilial("SDA"))+__cCRLF
+    cSQL += "    AND SDA.DA_TIPONF	= 'D' "+__cCRLF
+    cSQL += "    AND SDA.DA_ORIGEM 	= 'SD1' "+__cCRLF
+    cSQL += "    AND SDA.DA_DOC 	= " + ValToSql(cDoc)+__cCRLF
+    cSQL += "    AND SDA.DA_SERIE   = " + ValToSql(cSerie)+__cCRLF
+    cSQL += "    AND SDA.DA_CLIFOR 	= " + ValToSql(cCliente)+__cCRLF
+    cSQL += "    AND SDA.DA_LOJA 	= " + ValToSql(cLoja)+__cCRLF
+    cSQL += "    AND SDA.D_E_L_E_T_ = '' "+__cCRLF
 
-		While (cAlias3)->(!eof())
+    TCQUERY (cSQL) ALIAS (cSDATmp) NEW
 
-			If (cAlias3)->DA_SALDO > 0
+    If (cSDATmp)->(!eof())
 
-				aSize(aCabSDA,0)
-				aSize(aItemSDB,0)
-				aSize(aItensSDB,0)
+        While (cSDATmp)->(!eof())
 
-				aAdd(aCabSDA, {"DA_PRODUTO" , (cAlias3)->DA_PRODUTO	, Nil})
-				aAdd(aCabSDA, {"DA_NUMSEQ"  , (cAlias3)->DA_NUMSEQ	, Nil})
+            nSDARecNo:=(cSDATmp)->SDARECNO
+            SDA->(dbGoTo(nSDARecNo))
 
-				aAdd(aItemSDB, {"DB_ITEM"     , "0001"              , Nil})
-				aAdd(aItemSDB, {"DB_ESTORNO"  , " "                 , Nil})
-				aAdd(aItemSDB, {"DB_LOCALIZ"  , cLocaliz            , Nil})
-				aAdd(aItemSDB, {"DB_DATA"     , Date()				, Nil})
-				aAdd(aItemSDB, {"DB_QUANT"    , (cAlias3)->DA_SALDO	, Nil})
+            If (SDA->DA_SALDO>0)
 
-				aAdd(aItensSDB, aItemSDB)
+                aSize(aCabSDA,0)
+                aSize(aItemSDB,0)
+                aSize(aItensSDB,0)
 
-				Private lMsErroAuto 	:= .F.
-				Private lMsHelpAuto 	:= .T.
-				Private lAutoErrNoFile	:= .T.
+                aAdd(aCabSDA, {"DA_PRODUTO" , SDA->DA_PRODUTO , Nil})
+                aAdd(aCabSDA, {"DA_NUMSEQ"  , SDA->DA_NUMSEQ  , Nil})
 
-            	cacheData():set("fDistribui","aCabSDA",aCabSDA)
-            	cacheData():set("fDistribui","aItemSDB",aItensSDB)
+                aAdd(aItemSDB, {"DB_ITEM"     , "0001"        , Nil})
+                aAdd(aItemSDB, {"DB_ESTORNO"  , " "           , Nil})
+                aAdd(aItemSDB, {"DB_LOCALIZ"  , cLocaliz      , Nil})
+                aAdd(aItemSDB, {"DB_DATA"     , Date()		  , Nil})
+                aAdd(aItemSDB, {"DB_QUANT"    , SDA->DA_SALDO , Nil})
 
-				MsExecAuto({|x,y,z| MATA265(x,y,z) }, aCabSDA, aItensSDB, 3)
+                aAdd(aItensSDB, aItemSDB)
 
-				cacheData():clear()
+                Private lMsErroAuto 	:= .F.
+                Private lMsHelpAuto 	:= .T.
+                Private lAutoErrNoFile	:= .T.
 
-				If (lMsErroAuto)
+                cacheData():set("fDistribui","aCabSDA",aCabSDA)
+                cacheData():set("fDistribui","aItemSDB",aItensSDB)
+                cacheData():set("fDistribui","nSDARecNo",nSDARecNo)
 
-					cLogTxt := ::GetErrorLog()
+                MsExecAuto({|x,y,z| MATA265(x,y,z) }, aCabSDA, aItensSDB, 3)
 
-					cLog := "Distribuicao - ERRO: " + cLogTxt
+                cacheData():clear()
 
-					If lDestino
+                If (lMsErroAuto)
 
-						::SetStatusDest(cDoc, cSerie, cCliente, cLoja, "E", cLog)
+                    cLogTxt := ::GetErrorLog()
 
-					Else
+                    cLog := "Distribuicao - ERRO: " + cLogTxt
 
-						::SetStatus(cDoc, cSerie, cCliente, cLoja, "E", cLog)
+                    varInfo("cLogTxt",cLog)
 
-					EndIf
+                    If lDestino
 
-					lRet :=	.F.
+                        ::SetStatusDest(cDoc, cSerie, cCliente, cLoja, "E", cLog)
 
-					Exit
+                    Else
 
-				Else
+                        ::SetStatus(cDoc, cSerie, cCliente, cLoja, "E", cLog)
 
-					cLog := "Distribuicao - Produto " + (cAlias3)->DA_PRODUTO + " Distribuído com Sucesso!"
+                    EndIf
 
-					If lDestino
+                    lRet :=	.F.
 
-						::SetStatusDest(cDoc, cSerie, cCodFor, cLojaFor, cStatus, cLog)
+                    Exit
 
-					Else
+                Else
 
-						::SetStatus(cDoc, cSerie, cCodFor, cLojaFor, cStatus, cLog)
+                    cLog := "Distribuicao - Produto " + SDA->DA_PRODUTO + " Distribuído com Sucesso!"
 
-					EndIf
+                    If lDestino
 
-				EndIf
+                        ::SetStatusDest(cDoc, cSerie, cCodFor, cLojaFor, cStatus, cLog)
 
-			Else
+                    Else
 
-				cLog := "Distribuicao - Produto " + (cAlias3)->DA_PRODUTO + " JA ESTAVA DISTRIBUIDO!"
+                        ::SetStatus(cDoc, cSerie, cCodFor, cLojaFor, cStatus, cLog)
 
-				If lDestino
+                    EndIf
 
-					::SetStatusDest(cDoc, cSerie, cCodFor, cLojaFor, cStatus, cLog)
+                EndIf
 
-				Else
+            Else
 
-					::SetStatus(cDoc, cSerie, cCliente, cLoja, cStatus, cLog)
+                cLog := "Distribuicao - Produto " + SDA->DA_PRODUTO + " JA ESTAVA DISTRIBUIDO!"
 
-				EndIf
+                If lDestino
 
-			EndIf
+                    ::SetStatusDest(cDoc, cSerie, cCodFor, cLojaFor, cStatus, cLog)
 
-			(cAlias3)->(DBSkip())
+                Else
 
-		EndDo
+                    ::SetStatus(cDoc, cSerie, cCliente, cLoja, cStatus, cLog)
 
-	Else
+                EndIf
 
-		::AddLog('Distribuicao - ERRO: Nao foram encontrados registros' )
+            EndIf
 
-		lRet :=	.F.
+            (cSDATmp)->(DBSkip())
 
-	EndIf
+        EndDo
 
-	(cAlias3)->(DBcloseArea())
+    Else
+
+        ::AddLog('Distribuicao - ERRO: Nao foram encontrados registros' )
+
+        lRet :=	.F.
+
+    EndIf
+
+    if (select(cSDATmp)>0)
+        (cSDATmp)->(DBcloseArea())
+    endif
+
+    restArea(aArea)
+
 
 Return(lRet)
 
 Method GetDocOri(cDoc,cSerie,cCliente,cLoja,cCodFor,cLojaFor) Class TAutomacaoDevolucaoIntercompany
 
-	Local aArea			as array
-	Local aDocEntOri	as array
+    Local aArea			as array
+    Local aDocEntOri	as array
 
-	Local cQuery		as character
-	Local cAliasTemp    as character
+    Local cQuery		as character
+    Local cAliasTemp    as character
 
-	Local nSD1RecNo     as numeric
+    Local nSD1RecNo     as numeric
 
     paramtype cDoc as character
     paramtype cSerie as character
@@ -1108,77 +1160,77 @@ Method GetDocOri(cDoc,cSerie,cCliente,cLoja,cCodFor,cLojaFor) Class TAutomacaoDe
     paramtype cCodFor as character
     paramtype cLojaFor as character
 
-	aArea:=getArea()
-	aDocEntOri:=array(0)
-	cAliasTemp:=GetNextAlias()
+    aArea:=getArea()
+    aDocEntOri:=array(0)
+    cAliasTemp:=GetNextAlias()
 
-	cQuery:=TAutDevIntQry():GetDocOri(@cDoc,@cSerie,@cCliente,@cLoja,@cCodFor,@cLojaFor)
+    cQuery:=TAutDevIntQry():GetDocOri(@cDoc,@cSerie,@cCliente,@cLoja,@cCodFor,@cLojaFor)
 
-	TCQUERY (cQuery) ALIAS (cAliasTemp) NEW
+    TCQUERY (cQuery) ALIAS (cAliasTemp) NEW
 
-	While (cAliasTemp)->(!eof())
+    While (cAliasTemp)->(!eof())
 
-		nSD1RecNo:=(cAliasTemp)->SD1RECNO
-		SD1->(dbGoTo(nSD1RecNo))
+        nSD1RecNo:=(cAliasTemp)->SD1RECNO
+        SD1->(dbGoTo(nSD1RecNo))
 
-		SD1->(;
-				aAdd(aDocEntOri,;
-					{;
-						D1_DOC,;
-						D1_SERIE,;
-						D1_ITEM,;
-						D1_LOTECTL,;
-						D1_QUANT,;
-						D1_VUNIT;
-					};
-				);
-			)
-		
-		(cAliasTemp)->(DBSkip())
+        SD1->(;
+            aAdd(aDocEntOri,;
+            {;
+            D1_DOC,;
+            D1_SERIE,;
+            D1_ITEM,;
+            D1_LOTECTL,;
+            D1_QUANT,;
+            D1_VUNIT;
+            };
+            );
+            )
 
-	EndDo
+        (cAliasTemp)->(DBSkip())
 
-	(cAliasTemp)->(DBcloseArea())
+    EndDo
 
-	restArea(aArea)
+    (cAliasTemp)->(DBcloseArea())
+
+    restArea(aArea)
 
 Return(aDocEntOri)
 
 
 Method InputZL9(cDoc, cSerie, cCliente, cLoja, cEmpFilOri, cFormul) Class TAutomacaoDevolucaoIntercompany
 
-	local lRet      as logical
-	
-	local lFound    as logical
-	local lAddNew   as logical
+    local lRet      as logical
 
-	lRet := .F.
+    local lFound    as logical
+    local lAddNew   as logical
 
-	DBSelectArea("ZL9")
-	ZL9->(dbSetOrder(1)) // ZL9_FILIAL, ZL9_CODEMP, ZL9_CODFIL, ZL9_DOCDEV, ZL9_SERDEV, ZL9_CLIDEV, ZL9_LOJDEV, R_E_C_N_O_, D_E_L_E_T_
+    lRet := .F.
 
-	lFound:=ZL9->(DBSeek(xFilial("ZL9") + cEmpAnt + cFilAnt + cDoc + cSerie + cCliente + cLoja))
-	lAddNew:=(!lFound)
+    DBSelectArea("ZL9")
+    ZL9->(dbSetOrder(1)) // ZL9_FILIAL, ZL9_CODEMP, ZL9_CODFIL, ZL9_DOCDEV, ZL9_SERDEV, ZL9_CLIDEV, ZL9_LOJDEV, R_E_C_N_O_, D_E_L_E_T_
 
-	if (ZL9->(RecLock("ZL9",lAddNew)))
-		ZL9->ZL9_FILIAL:=xFilial("ZL9")
-		ZL9->ZL9_CODEMP:=cEmpAnt
-		ZL9->ZL9_CODFIL:=cFilAnt
-		ZL9->ZL9_EMPORI:=SubStr(cEmpFilOri,1,2)
-		ZL9->ZL9_FILORI:=SubStr(cEmpFilOri,3,4)
-		ZL9->ZL9_DOCDEV:=cDoc
-		ZL9->ZL9_SERDEV:=cSerie
-		ZL9->ZL9_CLIDEV:=cCliente
-		ZL9->ZL9_LOJDEV:=cLoja
-		ZL9->ZL9_FORMUL:=cFormul
-		ZL9->ZL9_DATAIN:=MsDate()
-		ZL9->ZL9_HORAIN:=Time()
-		ZL9->ZL9_STATUS:=if(lFound,ZL9->ZL9_STATUS,"1") // Devolucao Cliente - NF Incluida
-		ZL9->ZL9_MSBLQL:="2"
-		ZL9->ZL9_STAERR:=""
-		ZL9->(MSUnLock())
-		lRet:=((lAddNew).or.(Empty(ZL9->ZL9_PEDIDO)))
-	endif
+    lFound:=ZL9->(DBSeek(xFilial("ZL9") + cEmpAnt + cFilAnt + cDoc + cSerie + cCliente + cLoja))
+    lAddNew:=(!lFound)
+
+    if (ZL9->(RecLock("ZL9",lAddNew)))
+        ZL9->ZL9_FILIAL:=xFilial("ZL9")
+        ZL9->ZL9_CODEMP:=cEmpAnt
+        ZL9->ZL9_CODFIL:=cFilAnt
+        ZL9->ZL9_EMPORI:=SubStr(cEmpFilOri,1,2)
+        ZL9->ZL9_FILORI:=SubStr(cEmpFilOri,3,4)
+        ZL9->ZL9_DOCDEV:=cDoc
+        ZL9->ZL9_SERDEV:=cSerie
+        ZL9->ZL9_CLIDEV:=cCliente
+        ZL9->ZL9_LOJDEV:=cLoja
+        ZL9->ZL9_FORMUL:=cFormul
+        ZL9->ZL9_DATAIN:=MsDate()
+        ZL9->ZL9_HORAIN:=Time()
+        ZL9->ZL9_STATUS:=if(lFound,ZL9->ZL9_STATUS,"1") // Devolucao Cliente - NF Incluida
+        ZL9->ZL9_MSBLQL:="2"
+        ZL9->ZL9_STAERR:=""
+        ZL9->(MSUnLock())
+        lRet:=((lAddNew).or.(Empty(ZL9->ZL9_PEDIDO)))
+    endif
 
     if ((!lAddNew).and.!(lRet))
         lRet:=((lFound).and.(Empty(ZL9->ZL9_PEDIDO)))
@@ -1188,1313 +1240,1557 @@ Return(lRet)
 
 Method ProcessaEntrada(aFiliais) Class TAutomacaoDevolucaoIntercompany
 
-	Local aArea			:= GetArea()
-	Local cSQL 			:= ""
-	Local cAlias1 		:= ""
-	Local oEmpFilVen	:= TLoadEmpresa():New()
-	Local oEmpFilCom	:= TLoadEmpresa():New()
-	Local nW 			:= 0
+    Local aArea			:= GetArea()
+    Local cSQL 			:= ""
+    Local cTmpAlias 		:= ""
+    Local oEmpFilVen	:= TLoadEmpresa():New()
+    Local oEmpFilCom	:= TLoadEmpresa():New()
+    Local nW 			:= 0
 
-	Local aDocEntrada	:= {,}
-	Local aPedVenda		:= {}
+    Local aDocEntrada	:= array(0)
+    Local aPedVenda		:= array(0)
 
-	Local aCabSF1		:= {}
-	Local aItensSF1		:= {}
-	Local aItemSF1		:= {}
+    Local aCabSF1		:= array(0)
+    Local aItensSF1		:= array(0)
+    Local aItemSF1		:= array(0)
 
-	Local cEmpOri		:= ""
-	Local cFilOri		:= ""
-	Local cPedOri		:= ""
-	Local cCodFor		:= ""
-	Local cLojaFor		:= ""
-	Local cDoc			:= ""
-	Local cSerie		:= ""
-	Local cCliente		:= ""
-	Local cLoja			:= ""
-	Local cCondPag		:= ""
+    Local cEmpOri		:= ""
+    Local cFilOri		:= ""
+    Local cPedOri		:= ""
+    Local cCodFor		:= ""
+    Local cLojaFor		:= ""
+    Local cDoc			:= ""
+    Local cSerie		:= ""
+    Local cCliente		:= ""
+    Local cLoja			:= ""
+    Local cCondPag		:= ""
+    Local cSM0KeySeek
 
-	Default aFiliais	:= {}
+    Local nSM0RecNo
 
-	oEmpFilCom:SeekForCli(cEmpAnt, cFilAnt)
+    DEFAULT aFiliais	:= {}
 
-	For nW:= 1 To Len(aFiliais)
+    cSM0KeySeek:=cEmpAnt
+    cSM0KeySeek+=cFilAnt
+    if (SM0->(MsSeek(cSM0KeySeek,.F.)))
+        nSM0RecNo:=SM0->(RecNo())
+    endif
 
-		If cEmpAnt + cFilAnt <> aFiliais[nW][1] + AllTrim(aFiliais[nW][2])
+    oEmpFilCom:SeekForCli(cEmpAnt,cFilAnt,nSM0RecNo)
 
-			::AddLog("Buscando notas de devolucao na filial: " + aFiliais[nW][1] + AllTrim(aFiliais[nW][2]) + " para dar entrada")
+    For nW:= 1 To Len(aFiliais)
 
-			oEmpFilVen:SeekForCli(aFiliais[nW][1], aFiliais[nW][2])
+        If cEmpAnt + cFilAnt <> aFiliais[nW][1] + AllTrim(aFiliais[nW][2])
 
-			If oEmpFilCom:lFornecedor
+            ::AddLog("Buscando notas de devolucao na filial: " + aFiliais[nW][1] + AllTrim(aFiliais[nW][2]) + " para dar entrada")
 
-				cAlias1 := GetNextAlias()
+            nSM0RecNo:=aFiliais[nW][4]
+            SM0->(MsGoTo(nSM0RecNo))
 
-				cSQL := " SELECT D2_FILIAL, D2_LOCAL, F2_COND, D2_DOC, D2_SERIE, D2_CLIENTE, D2_LOJA, D2_EMISSAO, D2_COD, D2_QUANT, "
-				cSQL += " 		 D2_TES, D2_ITEM, D2_PRCVEN, D2_TOTAL, D2_LOTECTL, D2_DTVALID, D2_PEDIDO, D2_ITEMPV, DOC_CHV CHAVE, "
-				cSQL += " 		 C6_ITEM, C6_LOCAL, C5_TIPO, C5_TRANSP, C5_TPFRETE, C5_CONDPAG, D2_NFORI, D2_SERIORI, D2_ITEMORI "
-				cSQL += " FROM " + RetFullName("SF2", oEmpFilVen:cCodEmp) + " SF2 ( NOLOCK ) "
+            oEmpFilVen:SeekForCli(aFiliais[nW][1], aFiliais[nW][2],nSM0RecNo)
 
-				cSQL += " JOIN " + RetFullName("SD2", oEmpFilVen:cCodEmp) + " SD2 (NOLOCK) ON "
-				cSQL += " ( "
-				cSQL += " 	SD2.D2_FILIAL 		= SF2.F2_FILIAL "
-				cSQL += " 	AND SD2.D2_DOC 		= SF2.F2_DOC "
-				cSQL += " 	AND SD2.D2_SERIE 	= SF2.F2_SERIE "
-				cSQL += " 	AND SD2.D2_CLIENTE 	= SF2.F2_CLIENTE "
-				cSQL += " 	AND SD2.D2_LOJA 	= SF2.F2_LOJA "
-				cSQL += " 	AND SD2.D_E_L_E_T_	= '' "
-				cSQL += " ) "
+            If oEmpFilCom:lFornecedor
 
-				cSQL += " JOIN " + RetFullName("SC5", oEmpFilVen:cCodEmp) + " SC5 (NOLOCK) ON "
-				cSQL += " ( "
-				cSQL += " 	SC5.C5_FILIAL 		= SD2.D2_FILIAL "
-				cSQL += " 	AND SC5.C5_NUM 		= SD2.D2_PEDIDO "
-				cSQL += " 	AND SC5.D_E_L_E_T_	= '' "
-				cSQL += " ) "
+                cTmpAlias := GetNextAlias()
 
-				cSQL += " JOIN " + RetFullName("SC6", oEmpFilVen:cCodEmp) + " SC6 (NOLOCK) ON "
-				cSQL += " ( "
-				cSQL += " 	SC6.C6_FILIAL 		= SC5.C5_FILIAL "
-				cSQL += " 	AND SC6.C6_NUM 		= SD2.D2_PEDIDO "
-				cSQL += " 	AND SC6.C6_ITEM		= SD2.D2_ITEMPV "
-				cSQL += " 	AND SC6.D_E_L_E_T_	= '' "
-				cSQL += " ) "
+                cSQL := " SELECT SF2.F2_COND"+__cCRLF
 
-				cSQL += " JOIN SPED050 SPED (NOLOCK) ON "
-				cSQL += " ( "
-				cSQL += " 	SPED.ID_ENT 		= " + ValToSql(oEmpFilVen:cIdEnt)
-				cSQL += " 	AND SPED.NFE_ID 	= SF2.F2_SERIE + SF2.F2_DOC "
-				cSQL += " 	AND SPED.STATUS 	= 6 "
-				cSQL += " 	AND SPED.D_E_L_E_T_	= '' "
-				cSQL += " ) "
+                cSQL += "       ,SD2.D2_FILIAL"+__cCRLF
+                cSQL += "       ,SD2.D2_LOCAL"+__cCRLF
+                cSQL += "       ,SD2.D2_DOC"+__cCRLF
+                cSQL += "       ,SD2.D2_SERIE"+__cCRLF
+                cSQL += "       ,SD2.D2_CLIENTE"+__cCRLF
+                cSQL += "       ,SD2.D2_LOJA"+__cCRLF
+                cSQL += "       ,SD2.D2_EMISSAO"+__cCRLF
+                cSQL += "       ,SD2.D2_COD"+__cCRLF
+                cSQL += "       ,SD2.D2_QUANT"+__cCRLF
+                cSQL += " 		,SD2.D2_TES"+__cCRLF
+                cSQL += " 		,SD2.D2_ITEM"+__cCRLF
+                cSQL += " 		,SD2.D2_PRCVEN"+__cCRLF
+                cSQL += " 		,SD2.D2_TOTAL"+__cCRLF
+                cSQL += " 		,SD2.D2_LOTECTL"+__cCRLF
+                cSQL += " 		,SD2.D2_DTVALID"+__cCRLF
+                cSQL += " 		,SD2.D2_PEDIDO"+__cCRLF
+                cSQL += " 		,SD2.D2_ITEMPV"+__cCRLF
+                cSQL += " 		,SD2.D2_NFORI"+__cCRLF
+                cSQL += " 		,SD2.D2_SERIORI"+__cCRLF
+                cSQL += " 		,SD2.D2_ITEMORI"+__cCRLF
 
-				cSQL += " WHERE SF2.F2_FILIAL 	= " + ValToSql(oEmpFilVen:cCodFil)
-				cSQL += " AND F2_TIPO		    = " + ValToSql("D")
-				cSQL += " AND F2_CLIENTE		= " + ValToSql(oEmpFilCom:cCodFor)
-				cSQL += " AND F2_LOJA			= " + ValToSql(oEmpFilCom:cLojaFor)
+                cSQL += " 		,SPED.DOC_CHV CHAVE"+__cCRLF
 
-				cSQL += " AND NOT EXISTS "
-				cSQL += " ( "
-				cSQL += " 	SELECT NULL "
-				cSQL += " 	FROM " + RetSQLName("SF1") + " SF1 (NOLOCK) "
-				cSQL += " 	WHERE F1_FILIAL 	= " + ValToSql(cFilAnt)
-				cSQL += " 	AND F1_FORNECE		= " + ValToSql(oEmpFilVen:cCodCli)
-				cSQL += " 	AND F1_LOJA			= " + ValToSql(oEmpFilVen:cLojaCli)
-				cSQL += " 	AND F1_DOC			= F2_DOC "
-				cSQL += " 	AND F1_SERIE 		= F2_SERIE "
-				//cSQL += " 	AND SF1.D_E_L_E_T_ 	= '' " // Caso o usuario exclua a nota, iria ficar fazendo entrada a todo momento.
-				cSQL += " )
+                cSQL += " 		,SC5.C5_TIPO"+__cCRLF
+                cSQL += " 		,SC5.C5_TRANSP"+__cCRLF
+                cSQL += " 		,SC5.C5_TPFRETE"+__cCRLF
+                cSQL += " 		,SC5.C5_CONDPAG"+__cCRLF
 
-				cSQL += " AND EXISTS "
-				cSQL += " ( "
-				cSQL += " 	SELECT NULL "
-				cSQL += " 	FROM " + RetSQLName("ZL9") + " ZL9 (NOLOCK) "
-				cSQL += " 	WHERE ZL9_FILIAL 	= " + ValToSql(xFilial("ZL9"))
-				cSQL += " 	AND ZL9.ZL9_CODEMP	= " + ValToSql(oEmpFilVen:cCodEmp)
-				cSQL += " 	AND ZL9.ZL9_CODFIL	= " + ValToSql(oEmpFilVen:cCodFil)
-				cSQL += "   AND ZL9.ZL9_EMPORI  = " + ValToSql(cEmpAnt)
-				cSQL += "   AND ZL9.ZL9_FILORI  = " + ValToSql(cFilAnt)
-				cSQL += "   AND ZL9.ZL9_MSBLQL  <> '1' "
-				cSQL += "   AND ZL9.ZL9_STAERR  <> 'E' "
-				cSQL += "   AND ZL9.ZL9_PEDIDO  = D2_PEDIDO"
-				cSQL += " 	AND ZL9.D_E_L_E_T_ 	= '' "
-				cSQL += " )	"
+                cSQL += " 		,SC6.C6_ITEM"+__cCRLF
+                cSQL += " 		,SC6.C6_LOCAL"+__cCRLF
 
-				cSQL += " AND SF2.D_E_L_E_T_ = '' "
+                cSQL += " FROM " + RetFullName("SF2", oEmpFilVen:cCodEmp) + " SF2 ( NOLOCK )"+__cCRLF
 
-				TCQUERY cSQL NEW ALIAS (cAlias1)
+                cSQL += " JOIN " + RetFullName("SD2", oEmpFilVen:cCodEmp) + " SD2 (NOLOCK) ON"+__cCRLF
+                cSQL += " ( "+__cCRLF
+                cSQL += " 	    SD2.D2_FILIAL   = SF2.F2_FILIAL"+__cCRLF
+                cSQL += " 	AND SD2.D2_DOC 		= SF2.F2_DOC"+__cCRLF
+                cSQL += " 	AND SD2.D2_SERIE 	= SF2.F2_SERIE"+__cCRLF
+                cSQL += " 	AND SD2.D2_CLIENTE 	= SF2.F2_CLIENTE"+__cCRLF
+                cSQL += " 	AND SD2.D2_LOJA 	= SF2.F2_LOJA"+__cCRLF
+                cSQL += " 	AND SD2.D_E_L_E_T_	= ''"+__cCRLF
+                cSQL += " )"+__cCRLF
 
-				aDocEntrada := {}
-				aPedVenda 	:= {}
+                cSQL += " JOIN " + RetFullName("SC5", oEmpFilVen:cCodEmp) + " SC5 (NOLOCK) ON"+__cCRLF
+                cSQL += " ("+__cCRLF
+                cSQL += " 	    SC5.C5_FILIAL 	= SD2.D2_FILIAL"+__cCRLF
+                cSQL += " 	AND SC5.C5_NUM 		= SD2.D2_PEDIDO"+__cCRLF
+                cSQL += " 	AND SC5.D_E_L_E_T_	= ''"+__cCRLF
+                cSQL += " )"+__cCRLF
 
-				aCabSF1		:= {}
-				aItemSF1	:= {}
-				aItensSF1	:= {}
+                cSQL += " JOIN " + RetFullName("SC6", oEmpFilVen:cCodEmp) + " SC6 (NOLOCK) ON"+__cCRLF
+                cSQL += " ("+__cCRLF
+                cSQL += " 	    SC6.C6_FILIAL 	= SC5.C5_FILIAL"+__cCRLF
+                cSQL += " 	AND SC6.C6_NUM 		= SD2.D2_PEDIDO"+__cCRLF
+                cSQL += " 	AND SC6.C6_ITEM		= SD2.D2_ITEMPV"+__cCRLF
+                cSQL += " 	AND SC6.D_E_L_E_T_	= ''"+__cCRLF
+                cSQL += " )"+__cCRLF
 
-				cEmpOri		:= ""
-				cFilOri		:= ""
-				cPedOri		:= ""
-				cDoc		:= ""
-				cSerie		:= ""
-				cCodFor		:= ""
-				cLojaFor	:= ""
+                cSQL += " JOIN SPED050 SPED (NOLOCK) ON"+__cCRLF
+                cSQL += " ("+__cCRLF
+                cSQL += " 	SPED.ID_ENT 		= " + ValToSql(oEmpFilVen:cIdEnt)+__cCRLF
+                cSQL += " 	AND SPED.NFE_ID 	= SF2.F2_SERIE + SF2.F2_DOC"+__cCRLF
+                cSQL += " 	AND SPED.STATUS 	= 6"+__cCRLF
+                cSQL += " 	AND SPED.D_E_L_E_T_	= ''"+__cCRLF
+                cSQL += " )"+__cCRLF
 
-				While (cAlias1)->(!eof())
+                cSQL += " WHERE SF2.F2_FILIAL 	= " + ValToSql(oEmpFilVen:cCodFil)+__cCRLF
+                cSQL += "   AND SF2.F2_TIPO		= " + ValToSql("D")+__cCRLF
+                cSQL += "   AND SF2.F2_CLIENTE	= " + ValToSql(oEmpFilCom:cCodFor)+__cCRLF
+                cSQL += "   AND SF2.F2_LOJA		= " + ValToSql(oEmpFilCom:cLojaFor)+__cCRLF
 
-					If cDoc + cSerie + cCliente + cLoja <> (cAlias1)->(D2_DOC+D2_SERIE+D2_CLIENTE+D2_LOJA)
+                cSQL += " AND NOT EXISTS"+__cCRLF
+                cSQL += " ("+__cCRLF
+                cSQL += " 	SELECT 1"+__cCRLF
+                cSQL += " 	 FROM " + RetSQLName("SF1") + " SF1 (NOLOCK)"+__cCRLF
+                cSQL += " 	WHERE SF1.F1_FILIAL 	= " + ValToSql(cFilAnt)+__cCRLF
+                cSQL += " 	  AND SF1.F1_FORNECE	= " + ValToSql(oEmpFilVen:cCodCli)+__cCRLF
+                cSQL += " 	  AND SF1.F1_LOJA		= " + ValToSql(oEmpFilVen:cLojaCli)+__cCRLF
+                cSQL += " 	  AND SF1.F1_DOC		= SF2.F2_DOC"+__cCRLF
+                cSQL += " 	  AND SF1.F1_SERIE 		= SF2.F2_SERIE"+__cCRLF
+                cSQL += " 	  AND SF1.D_E_L_E_T_ 	= ''"+__cCRLF // Caso o usuario exclua a nota, iria ficar fazendo entrada a todo momento.
+                cSQL += " )"+__cCRLF
 
-						If !Empty(cDoc + cSerie + cCliente + cLoja)
+                cSQL += " AND EXISTS"+__cCRLF
+                cSQL += " ("+__cCRLF
+                cSQL += " 	SELECT 1"+__cCRLF
+                cSQL += " 	  FROM " + RetSQLName("ZL9") + " ZL9 (NOLOCK)"+__cCRLF
+                cSQL += " 	 WHERE ZL9_FILIAL 	= " + ValToSql(xFilial("ZL9"))+__cCRLF
+                cSQL += " 	   AND ZL9.ZL9_CODEMP  = " + ValToSql(oEmpFilVen:cCodEmp)+__cCRLF
+                cSQL += " 	   AND ZL9.ZL9_CODFIL  = " + ValToSql(oEmpFilVen:cCodFil)+__cCRLF
+                cSQL += "      AND ZL9.ZL9_EMPORI  = " + ValToSql(cEmpAnt)+__cCRLF
+                cSQL += "      AND ZL9.ZL9_FILORI  = " + ValToSql(cFilAnt)+__cCRLF
+                cSQL += "      AND ZL9.ZL9_MSBLQL  <> '1'"+__cCRLF
+                cSQL += "      AND ZL9.ZL9_STAERR  <> 'E'"+__cCRLF
+                cSQL += "      AND ZL9.ZL9_STATUS  <> 'F'"+__cCRLF
+                cSQL += "      AND ZL9.ZL9_PEDIDO  = SD2.D2_PEDIDO"+__cCRLF
+                cSQL += "      AND ZL9.ZL9_DOC  <> ' ' "+__cCRLF
+                cSQL += "      AND ZL9.ZL9_SERIE <> ' ' "+__cCRLF
+                cSQL += " 	   AND ZL9.D_E_L_E_T_ = '' "+__cCRLF
+                cSQL += " )"+__cCRLF
 
-							aAdd(aDocEntrada, {aCabSF1, aItensSF1, cEmpOri, cFilOri, cPedOri, cDoc, cSerie, cCodFor, cLojaFor, cCondPag})
+                cSQL += " AND SF2.D_E_L_E_T_ = ''"+__cCRLF
 
-							aCabSF1 := {}
+                TCQUERY (cSQL) ALIAS (cTmpAlias) NEW
 
-							aItensSF1 := {}
+                aSize(aDocEntrada,0)
+                aSize(aPedVenda,0)
 
-						EndIf
+                aSize(aCabSF1,0)
+                aSize(aItemSF1,0)
+                aSize(aItensSF1,0)
 
-						//-----------------------------------
-						// Cabecalho do Documento de Entrada
-						//-----------------------------------
-						aCabSF1		:= {}
-						aItensSF1 	:= {}
+                cEmpOri		:= ""
+                cFilOri		:= ""
+                cPedOri		:= ""
+                cDoc		:= ""
+                cSerie		:= ""
+                cCodFor		:= ""
+                cLojaFor	:= ""
 
-						cEmpOri		:= oEmpFilVen:cCodEmp
-						cFilOri		:= (cAlias1)->D2_FILIAL
-						cPedOri		:= (cAlias1)->D2_PEDIDO
+                While (cTmpAlias)->(!eof())
 
-						cCodFor		:= oEmpFilCom:cCodFor
-						cLojaFor	:= oEmpFilCom:cLojaFor
-						cDoc		:= (cAlias1)->D2_DOC
-						cSerie		:= (cAlias1)->D2_SERIE
-						cCliente	:= (cAlias1)->D2_CLIENTE
-						cLoja		:= (cAlias1)->D2_LOJA
-						cCondPag	:= (cAlias1)->C5_CONDPAG
+                    If cDoc + cSerie + cCliente + cLoja <> (cTmpAlias)->(D2_DOC+D2_SERIE+D2_CLIENTE+D2_LOJA)
 
-						aAdd(aCabSF1, {"F1_TIPO"    , "D"           					, NIL, Nil})
-						aAdd(aCabSF1, {"F1_FORMUL"  , "N"             					, NIL, Nil})
-						aAdd(aCabSF1, {"F1_ESPECIE" , "SPED"			 				, NIL, Nil})
+                        If !Empty(cDoc + cSerie + cCliente + cLoja)
 
-						aAdd(aCabSF1, {"F1_DOC"     	, (cAlias1)->D2_DOC				, NIL, Nil})
-						aAdd(aCabSF1, {"F1_SERIE"   	, (cAlias1)->D2_SERIE	 		, NIL, Nil})
-						aAdd(aCabSF1, {"F1_FORNECE" 	, oEmpFilVen:cCodCli			, NIL, Nil})
-						aAdd(aCabSF1, {"F1_LOJA"    	, oEmpFilVen:cLojaCli  			, NIL, Nil})
-						aAdd(aCabSF1, {"F1_EMISSAO" 	, STOD((cAlias1)->D2_EMISSAO)	, NIL, Nil})
-						aAdd(aCabSF1, {"F1_CHVNFE"   	, (cAlias1)->CHAVE				, NIL, Nil})
+                            aAdd(aDocEntrada, {aCabSF1, aItensSF1, cEmpOri, cFilOri, cPedOri, cDoc, cSerie, cCodFor, cLojaFor, cCondPag})
 
-					EndIf
+                            aSize(aCabSF1,0)
 
-					//------------------------------
-					// Itens do Documento de entrada
-					//------------------------------
-					aItemSF1 := {}
+                            aSize(aItensSF1,0)
 
-					aAdd(aItemSF1, {"D1_ITEM" 		, (cAlias1)->D2_ITEM			, NIL, Nil})
-					aAdd(aItemSF1, {"D1_COD" 		, (cAlias1)->D2_COD     		, NIL, Nil})
-					aAdd(aItemSF1, {"D1_DOC"    	, (cAlias1)->D2_DOC     		, Nil, Nil})
-					aAdd(aItemSF1, {"D1_SERIE"    	, (cAlias1)->D2_SERIE      		, Nil, Nil})
-					aAdd(aItemSF1, {"D1_FORNECE"	, oEmpFilVen:cCodCli      		, Nil, Nil})
-					aAdd(aItemSF1, {"D1_LOJA"    	, oEmpFilVen:cLojaCli			, Nil, Nil})
-					aAdd(aItemSF1, {"D1_TES"    	, "034"  						, Nil, Nil})
-					aAdd(aItemSF1, {"D1_QUANT"    	, (cAlias1)->D2_QUANT  			, Nil, Nil})
-					aAdd(aItemSF1, {"D1_VUNIT"    	, (cAlias1)->D2_PRCVEN   		, Nil, Nil})
-					aAdd(aItemSF1, {"D1_TOTAL"    	, (cAlias1)->D2_TOTAL   		, Nil, Nil})
-					aAdd(aItemSF1, {"D1_LOCAL"  	, (cAlias1)->D2_LOCAL			, Nil, Nil})
-					aAdd(aItemSF1, {"D1_LOTECTL"  	, (cAlias1)->D2_LOTECTL         , Nil, Nil})
+                        EndIf
 
-					aAdd(aItemSF1, {"D1_NFORI"		, (cAlias1)->D2_NFORI      		, Nil})
-					aAdd(aItemSF1, {"D1_SERIORI"	, (cAlias1)->D2_SERIORI         , Nil})
-					aAdd(aItemSF1, {"D1_ITEMORI"	, (cAlias1)->D2_ITEMORI 	    , Nil})
+                        //-----------------------------------
+                        // Cabecalho do Documento de Entrada
+                        //-----------------------------------
+                        aSize(aCabSF1,0)
+                        aSize(aItensSF1,0)
 
-					aAdd(aItensSF1, aItemSF1)
+                        cEmpOri		:= oEmpFilVen:cCodEmp
+                        cFilOri		:= (cTmpAlias)->D2_FILIAL
+                        cPedOri		:= (cTmpAlias)->D2_PEDIDO
 
-					(cAlias1)->(DBSkip())
+                        cCodFor		:= oEmpFilCom:cCodFor
+                        cLojaFor	:= oEmpFilCom:cLojaFor
+                        cDoc		:= (cTmpAlias)->D2_DOC
+                        cSerie		:= (cTmpAlias)->D2_SERIE
+                        cCliente	:= (cTmpAlias)->D2_CLIENTE
+                        cLoja		:= (cTmpAlias)->D2_LOJA
+                        cCondPag	:= (cTmpAlias)->C5_CONDPAG
 
-				EndDo
+                        aAdd(aCabSF1, {"F1_TIPO"    , "D"          					, NIL, Nil})
+                        aAdd(aCabSF1, {"F1_FORMUL"  , "N"          					, NIL, Nil})
+                        aAdd(aCabSF1, {"F1_ESPECIE" , "SPED"		 				, NIL, Nil})
 
-				(cAlias1)->(DBcloseArea())
+                        aAdd(aCabSF1, {"F1_DOC"     , (cTmpAlias)->D2_DOC			, NIL, Nil})
+                        aAdd(aCabSF1, {"F1_SERIE"   , (cTmpAlias)->D2_SERIE	 		, NIL, Nil})
+                        aAdd(aCabSF1, {"F1_FORNECE" , oEmpFilVen:cCodCli			, NIL, Nil})
+                        aAdd(aCabSF1, {"F1_LOJA"    , oEmpFilVen:cLojaCli  			, NIL, Nil})
+                        aAdd(aCabSF1, {"F1_EMISSAO" , STOD((cTmpAlias)->D2_EMISSAO)	, NIL, Nil})
+                        aAdd(aCabSF1, {"F1_CHVNFE"  , (cTmpAlias)->CHAVE			, NIL, Nil})
 
-				If Len(aItensSF1) > 0
+                    EndIf
 
-					aAdd(aDocEntrada, {aCabSF1, aItensSF1, cEmpOri, cFilOri, cPedOri, cDoc, cSerie, cCodFor, cLojaFor, cCondPag, oEmpFilVen:cCodCli, oEmpFilVen:cLojaCli})
+                    //------------------------------
+                    // Itens do Documento de entrada
+                    //------------------------------
+                    aSize(aItemSF1,0)
 
-				EndIf
+                    aAdd(aItemSF1, {"D1_ITEM" 		, (cTmpAlias)->D2_ITEM			, NIL, Nil})
+                    aAdd(aItemSF1, {"D1_COD" 		, (cTmpAlias)->D2_COD     		, NIL, Nil})
+                    aAdd(aItemSF1, {"D1_DOC"    	, (cTmpAlias)->D2_DOC     		, Nil, Nil})
+                    aAdd(aItemSF1, {"D1_SERIE"    	, (cTmpAlias)->D2_SERIE      	, Nil, Nil})
+                    aAdd(aItemSF1, {"D1_FORNECE"	, oEmpFilVen:cCodCli      		, Nil, Nil})
+                    aAdd(aItemSF1, {"D1_LOJA"    	, oEmpFilVen:cLojaCli			, Nil, Nil})
+                    aAdd(aItemSF1, {"D1_TES"    	, "034"  						, Nil, Nil})
+                    aAdd(aItemSF1, {"D1_QUANT"    	, (cTmpAlias)->D2_QUANT  		, Nil, Nil})
+                    aAdd(aItemSF1, {"D1_VUNIT"    	, (cTmpAlias)->D2_PRCVEN   		, Nil, Nil})
+                    aAdd(aItemSF1, {"D1_TOTAL"    	, (cTmpAlias)->D2_TOTAL   		, Nil, Nil})
+                    aAdd(aItemSF1, {"D1_LOCAL"  	, (cTmpAlias)->D2_LOCAL			, Nil, Nil})
+                    aAdd(aItemSF1, {"D1_LOTECTL"  	, (cTmpAlias)->D2_LOTECTL       , Nil, Nil})
 
-				If Len(aDocEntrada) > 0
+                    aAdd(aItemSF1, {"D1_NFORI"		, (cTmpAlias)->D2_NFORI      	, Nil})
+                    aAdd(aItemSF1, {"D1_SERIORI"	, (cTmpAlias)->D2_SERIORI       , Nil})
+                    aAdd(aItemSF1, {"D1_ITEMORI"	, (cTmpAlias)->D2_ITEMORI 	    , Nil})
 
-					::ProcEntrada(aDocEntrada)
+                    aAdd(aItensSF1,aClone(aItemSF1))
 
-					aCabSF1 := {}
+                    (cTmpAlias)->(DBSkip())
 
-					aItensSF1 := {}
+                EndDo
 
-				EndIf
+                (cTmpAlias)->(DBcloseArea())
+                dbSelectArea("SF1")
 
-			EndIf
+                If Len(aItensSF1) > 0
 
-		EndIf
+                    aAdd(aDocEntrada, {aCabSF1, aItensSF1, cEmpOri, cFilOri, cPedOri, cDoc, cSerie, cCodFor, cLojaFor, cCondPag, oEmpFilVen:cCodCli, oEmpFilVen:cLojaCli})
 
-	Next nW
+                EndIf
 
-	::GravaErro()
+                If Len(aDocEntrada) > 0
 
-	RestArea(aArea)
+                    ::ProcEntrada(aDocEntrada)
+
+                    aSize(aCabSF1,0)
+
+                    aSize(aItensSF1,0)
+
+                EndIf
+
+            EndIf
+
+        EndIf
+
+    Next nW
+
+    ::GravaErro()
+
+    RestArea(aArea)
 
 Return()
 
 Method Transmissao(cDoc, cSerie) Class TAutomacaoDevolucaoIntercompany
 
-	Local aArea		:= GetArea()
+    Local aArea		:= GetArea()
 
-	Local _cError
-	Local lRet := .T.
+    Local _cError
+    Local lRet := .T.
 
-	Private cIdEnt := GetCfgEntidade(@_cerror)
+    Private cIdEnt := GetCfgEntidade(@_cerror)
 
-	If Empty(cIdent)
+    If Empty(cIdent)
 
-		lRet := .F.
+        lRet := .F.
 
-		::AddLog("TAutomacaoDevolucaoIntercompany -> TSS não responde")
+        ::AddLog("TAutomacaoDevolucaoIntercompany -> TSS não responde")
 
-	Else
+    Else
 
-		StaticCall(BACP0011, fSendDanfe, cDoc, cDoc, cSerie)
+        StaticCall(BACP0011, fSendDanfe, cDoc, cDoc, cSerie)
 
-	EndIf
+    EndIf
 
-	RestArea(aArea)
+    RestArea(aArea)
 
 Return(lRet)
 
 Method SetStatus(cDoc, cSerie, cCliente, cLoja, cStatus, cLog) Class TAutomacaoDevolucaoIntercompany
 
-	Local aArea     := GetArea()
-	Local aAreaZL9  := ZL9->(GetArea())
+    Local aArea     := GetArea()
+    Local aAreaZL9  := ZL9->(GetArea())
 
-	Default cStatus := ""
-	Default cLog    := ""
+    DEFAULT cStatus := ""
+    DEFAULT cLog    := ""
 
-	DBSelectArea("ZL9")
-	ZL9->(dbSetOrder(1)) // ZL9_FILIAL, ZL9_CODEMP, ZL9_CODFIL, ZL9_DOCDEV, ZL9_SERDEV, ZL9_CLIDEV, ZL9_LOJDEV, R_E_C_N_O_, D_E_L_E_T_
+    DBSelectArea("ZL9")
+    ZL9->(dbSetOrder(1)) // ZL9_FILIAL, ZL9_CODEMP, ZL9_CODFIL, ZL9_DOCDEV, ZL9_SERDEV, ZL9_CLIDEV, ZL9_LOJDEV, R_E_C_N_O_, D_E_L_E_T_
 
-	::AddLog(cLog)
+    ::AddLog(cLog)
 
-	If ZL9->(DBSeek(xFilial("ZL9") + cEmpAnt + cFilAnt + cDoc + cSerie + cCliente + cLoja))
+    If ZL9->(DBSeek(xFilial("ZL9") + cEmpAnt + cFilAnt + cDoc + cSerie + cCliente + cLoja))
 
-		RecLock("ZL9", .F.)
+        RecLock("ZL9", .F.)
 
-		If cStatus == "E"
+        If cStatus == "E"
 
-			::AddErro(ZL9->(Recno()), cLog)
+            ::AddErro(ZL9->(Recno()), cLog)
 
-		Else
+        Else
 
-			ZL9->ZL9_STATUS	:= If(Empty(cStatus), ZL9->ZL9_STATUS, cStatus)
+            ZL9->ZL9_STATUS	:= If(Empty(cStatus), ZL9->ZL9_STATUS, cStatus)
 
-		EndIf
+        EndIf
+        
+        ZL9->(ZL9PutLog(cLog))
+        
+        ZL9->(MsUnLock())
 
-		ZL9->ZL9_LOG   	:= If(Empty(cLog), ZL9->ZL9_LOG, cLog)
-		ZL9->(MsUnLock())
+    EndIf
 
-	EndIf
-
-	RestArea(aArea)
-	RestArea(aAreaZL9)
+    RestArea(aArea)
+    RestArea(aAreaZL9)
 
 Return()
 
 Method SetStatusDest(cDoc, cSerie, cCliente, cLoja, cStatus, cLog) Class TAutomacaoDevolucaoIntercompany
 
-	Local aArea     := GetArea()
-	Local aAreaZL9  := ZL9->(GetArea())
+    Local aArea     := GetArea()
+    Local aAreaZL9  := ZL9->(GetArea())
 
-	Default cStatus := ""
-	Default cLog    := ""
+    DEFAULT cStatus := ""
+    DEFAULT cLog    := ""
 
-	::AddLog(cLog)
+    ::AddLog(cLog)
 
-	DBSelectArea("ZL9")
-	ZL9->(dbSetOrder(3)) // ZL9_FILIAL, ZL9_EMPORI, ZL9_FILORI, ZL9_DOC, ZL9_SERIE, ZL9_FORNEC, ZL9_LOJFOR, R_E_C_N_O_, D_E_L_E_T_
+    DBSelectArea("ZL9")
+    ZL9->(dbSetOrder(3)) // ZL9_FILIAL, ZL9_EMPORI, ZL9_FILORI, ZL9_DOC, ZL9_SERIE, ZL9_FORNEC, ZL9_LOJFOR, R_E_C_N_O_, D_E_L_E_T_
 
-	If ZL9->(DBSeek(xFilial("ZL9") + cEmpAnt + cFilAnt + cDoc + cSerie + cCliente + cLoja))
+    If ZL9->(DBSeek(xFilial("ZL9") + cEmpAnt + cFilAnt + cDoc + cSerie + cCliente + cLoja))
 
-		RecLock("ZL9", .F.)
+        RecLock("ZL9", .F.)
 
-		If cStatus == "E"
+        If cStatus == "E"
 
-			::AddErro(ZL9->(Recno()), cLog)
+            ::AddErro(ZL9->(Recno()), cLog)
 
-		Else
+        Else
 
-			ZL9->ZL9_STATUS	:= If(Empty(cStatus), ZL9->ZL9_STATUS, cStatus)
+            ZL9->ZL9_STATUS	:= If(Empty(cStatus), ZL9->ZL9_STATUS, cStatus)
 
-		EndIf
+        EndIf
+        
+        ZL9->(ZL9PutLog(cLog))
+        
+        ZL9->(MsUnLock())
 
-		ZL9->ZL9_LOG   	:= If(Empty(cLog), ZL9->ZL9_LOG, cLog)
-		ZL9->(MsUnLock())
+        If cStatus == "E"
 
-		If cStatus == "E"
+            ::AddErro(ZL9->(Recno()), cLog)
 
-			::AddErro(ZL9->(Recno()), cLog)
+        EndIf
 
-		EndIf
+    EndIf
 
-	EndIf
-
-	RestArea(aArea)
-	RestArea(aAreaZL9)
+    RestArea(aArea)
+    RestArea(aAreaZL9)
 
 Return()
 
-Method SetPedido(cDoc, cSerie, cCliente, cLoja, cPedido, cForDev, cLojaFor, aItensSC6) Class TAutomacaoDevolucaoIntercompany
+Method SetPedido(cDoc, cSerie, cCliente, cLoja, cPedido, cForDev, cLojaFor, aItensSC6,cDocOri,cSerOri) Class TAutomacaoDevolucaoIntercompany
 
-	Local aArea     := GetArea()
-	Local aAreaZL9  := ZL9->(GetArea())
+    Local aArea     := GetArea()
+    Local aAreaZL9  := ZL9->(GetArea())
 
-	Local cSC6KeySeek
+    Local cSC6KeySeek
 
-	local nSC6Item
-	local nSC6Itens
+    local nSC6Item
+    local nSC6Itens
 
-	local nATItem
-	local nATValor
-	local nATPRUnit
-	local nATPRCVen
-	local nATQTDVen
-	local nATProduto
+    local nATItem
+    local nATValor
+    local nATPRUnit
+    local nATPRCVen
+    local nATQTDVen
+    local nATProduto
 
-	Default cPedido := ""
+    DEFAULT cPedido := ""
 
-	SC5->(dbSetOrder(RetOrder("SC5","C5_FILIAL+C5_NUM")))
-	if (SC5->(MsSeek(xFilial("SC5")+cPedido,.F.)))
+    SC5->(dbSetOrder(RetOrder("SC5","C5_FILIAL+C5_NUM")))
+    if (SC5->(MsSeek(xFilial("SC5")+cPedido,.F.)))
 
-		DBSelectArea("ZL9")
-		ZL9->(dbSetOrder(1)) // ZL9_FILIAL, ZL9_CODEMP, ZL9_CODFIL, ZL9_DOCDEV, ZL9_SERDEV, ZL9_CLIDEV, ZL9_LOJDEV, R_E_C_N_O_, D_E_L_E_T_
+        DBSelectArea("ZL9")
+        ZL9->(dbSetOrder(1)) // ZL9_FILIAL, ZL9_CODEMP, ZL9_CODFIL, ZL9_DOCDEV, ZL9_SERDEV, ZL9_CLIDEV, ZL9_LOJDEV, R_E_C_N_O_, D_E_L_E_T_
 
-		If ZL9->(DBSeek(xFilial("ZL9") + cEmpAnt + cFilAnt + cDoc + cSerie + cCliente + cLoja))
+        If ZL9->(DBSeek(xFilial("ZL9") + cEmpAnt + cFilAnt + cDoc + cSerie + cCliente + cLoja))
 
-			if ZL9->(RecLock("ZL9",.F.))
-				ZL9->ZL9_PEDIDO:=cPedido
-				ZL9->ZL9_FORNEC:=cForDev
-				ZL9->ZL9_LOJFOR:=cLojaFor
-				ZL9->(MsUnLock())
-			endif
+            if ZL9->(RecLock("ZL9",.F.))
+                ZL9->ZL9_PEDIDO:=cPedido
+                ZL9->ZL9_FORNEC:=cForDev
+                ZL9->ZL9_LOJFOR:=cLojaFor
+                ZL9->ZL9_DOCORI:=cDocOri
+                ZL9->ZL9_SERORI:=cSerOri
+                ZL9->(MsUnLock())
+            endif
 
-		EndIf
+        EndIf
 
-		SC6->(dbSetOrder(RetOrder("SC5","C6_FILIAL+C6_NUM+C6_ITEM+C6_PRODUTO")))
-		nSC6Itens:=len(aItensSC6)
-		for nSC6Item:=1 to nSC6Itens
-			nATItem:=aScan(aItensSC6[nSC6Item],{|x|x[1]=="C6_ITEM"})
-			if (nATItem==0)
-				loop
-			endif
-			nATProduto:=aScan(aItensSC6[nSC6Item],{|x|x[1]=="C6_PRODUTO"})
-			if (nATProduto==0)
-				loop
-			endif
-			cSC6KeySeek:=SC5->C5_FILIAL
-			cSC6KeySeek+=SC5->C5_NUM
-			cSC6KeySeek+=PadR(aItensSC6[nSC6Item][nATItem][2],getSX3Cache("C6_ITEM","X3_TAMANHO"))
-			cSC6KeySeek+=PadR(aItensSC6[nSC6Item][nATProduto][2],getSX3Cache("C6_PRODUTO","X3_TAMANHO"))
-			if (SC6->(dbSeek(cSC6KeySeek,.F.)))
-				if (SC6->(recLock("SC6",.F.)))
-					nATQTDVen:=aScan(aItensSC6[nSC6Item],{|x|x[1]=="C6_QTDVEN"})
-					if (nATQTDVen>0)
-						SC6->C6_QTDVEN:=Max(SC6->C6_QTDVEN,aItensSC6[nSC6Item][nATQTDVen][2])
-					endif
-					nATPRCVen:=aScan(aItensSC6[nSC6Item],{|x|x[1]=="C6_PRCVEN"})
-					if (nATPRCVen>0)
-						SC6->C6_PRCVEN:=Max(SC6->C6_PRCVEN,aItensSC6[nSC6Item][nATPRCVen][2])
-					endif
-					nATPRUnit:=aScan(aItensSC6[nSC6Item],{|x|x[1]=="C6_PRUNIT"})
-					if (nATPRUnit>0)
-						SC6->C6_PRUNIT:=Max(SC6->C6_PRCVEN,aItensSC6[nSC6Item][nATPRUnit][2])
-					endif
-					nATValor:=aScan(aItensSC6[nSC6Item],{|x|x[1]=="C6_VALOR"})
-					if (nATValor>0)
-						SC6->C6_VALOR:=Max(SC6->C6_VALOR,aItensSC6[nSC6Item][nATValor][2])
-					endif
-					SC6->(MsUnLock())
-				endif
-			endif
-		next nSC6Item
+        SC6->(dbSetOrder(RetOrder("SC5","C6_FILIAL+C6_NUM+C6_ITEM+C6_PRODUTO")))
+        nSC6Itens:=len(aItensSC6)
+        for nSC6Item:=1 to nSC6Itens
+            nATItem:=aScan(aItensSC6[nSC6Item],{|x|x[1]=="C6_ITEM"})
+            if (nATItem==0)
+                loop
+            endif
+            nATProduto:=aScan(aItensSC6[nSC6Item],{|x|x[1]=="C6_PRODUTO"})
+            if (nATProduto==0)
+                loop
+            endif
+            cSC6KeySeek:=SC5->C5_FILIAL
+            cSC6KeySeek+=SC5->C5_NUM
+            cSC6KeySeek+=PadR(aItensSC6[nSC6Item][nATItem][2],getSX3Cache("C6_ITEM","X3_TAMANHO"))
+            cSC6KeySeek+=PadR(aItensSC6[nSC6Item][nATProduto][2],getSX3Cache("C6_PRODUTO","X3_TAMANHO"))
+            if (SC6->(dbSeek(cSC6KeySeek,.F.)))
+                if (SC6->(recLock("SC6",.F.)))
+                    nATQTDVen:=aScan(aItensSC6[nSC6Item],{|x|x[1]=="C6_QTDVEN"})
+                    if (nATQTDVen>0)
+                        SC6->C6_QTDVEN:=Max(SC6->C6_QTDVEN,aItensSC6[nSC6Item][nATQTDVen][2])
+                    endif
+                    nATPRCVen:=aScan(aItensSC6[nSC6Item],{|x|x[1]=="C6_PRCVEN"})
+                    if (nATPRCVen>0)
+                        SC6->C6_PRCVEN:=Max(SC6->C6_PRCVEN,aItensSC6[nSC6Item][nATPRCVen][2])
+                    endif
+                    nATPRUnit:=aScan(aItensSC6[nSC6Item],{|x|x[1]=="C6_PRUNIT"})
+                    if (nATPRUnit>0)
+                        SC6->C6_PRUNIT:=Max(SC6->C6_PRCVEN,aItensSC6[nSC6Item][nATPRUnit][2])
+                    endif
+                    nATValor:=aScan(aItensSC6[nSC6Item],{|x|x[1]=="C6_VALOR"})
+                    if (nATValor>0)
+                        SC6->C6_VALOR:=Max(SC6->C6_VALOR,aItensSC6[nSC6Item][nATValor][2])
+                    endif
+                    SC6->(MsUnLock())
+                endif
+            endif
+        next nSC6Item
 
-	endif
+    endif
 
-	RestArea(aArea)
-	RestArea(aAreaZL9)
+    RestArea(aArea)
+    RestArea(aAreaZL9)
 
 Return()
 
 Method SetDocDev(cDoc, cSerie, cCliente, cLoja, cDocDev, cSerDev) Class TAutomacaoDevolucaoIntercompany
 
-	Local aArea     := GetArea()
-	Local aAreaZL9  := ZL9->(GetArea())
+    Local aArea     := GetArea()
+    Local aAreaZL9  := ZL9->(GetArea())
 
-	Default cDocDev := ""
-	Default cSerDev := ""
+    DEFAULT cDocDev := ""
+    DEFAULT cSerDev := ""
 
-	DBSelectArea("ZL9")
-	ZL9->(dbSetOrder(1)) // ZL9_FILIAL, ZL9_CODEMP, ZL9_CODFIL, ZL9_DOCDEV, ZL9_SERDEV, ZL9_CLIDEV, ZL9_LOJDEV, R_E_C_N_O_, D_E_L_E_T_
+    DBSelectArea("ZL9")
+    ZL9->(dbSetOrder(1)) // ZL9_FILIAL, ZL9_CODEMP, ZL9_CODFIL, ZL9_DOCDEV, ZL9_SERDEV, ZL9_CLIDEV, ZL9_LOJDEV, R_E_C_N_O_, D_E_L_E_T_
 
-	If ZL9->(DBSeek(xFilial("ZL9") + cEmpAnt + cFilAnt + cDoc + cSerie + cCliente + cLoja))
+    If ZL9->(DBSeek(xFilial("ZL9") + cEmpAnt + cFilAnt + cDoc + cSerie + cCliente + cLoja))
 
-		RecLock("ZL9", .F.)
-		ZL9->ZL9_DOC	:= cDocDev
-		ZL9->ZL9_SERIE	:= cSerDev
-		ZL9->ZL9_STADOC	:= "1"
-		ZL9->(MsUnLock())
+        if Zl9->(RecLock("ZL9", .F.))
+            ZL9->ZL9_DOC	:= cDocDev
+            ZL9->ZL9_SERIE	:= cSerDev
+            ZL9->ZL9_STADOC	:= "1"
+            ZL9->(MsUnLock())
+            ZL9->(self:DocOriCmpAut(RecNo()))
+        endif
 
-	EndIf
+    EndIf
 
-	RestArea(aArea)
-	RestArea(aAreaZL9)
+    RestArea(aArea)
+    RestArea(aAreaZL9)
 
 Return()
 
+method DocOriCmpAut(nZL9RecNo) Class TAutomacaoDevolucaoIntercompany
+
+    local aArea         as array
+    local aPerg         as array
+
+    local aNF           as array
+    local aPA_NDF       as array
+
+    local aRecSE5       as array
+    local aEstorno      as array
+
+    local aNDFDados     as array
+    local aContabil     as array
+
+    local bBlock        as block
+
+    local cMsg          as character
+    local cLog          as character
+    local cSQL          as character
+    local cTblTmp       as character
+
+    local dDataBase     as Date
+
+    local lHelp         as logical
+    local lDigita       as logical
+    local lCompTit      as logical
+    local lAglutina     as logical
+    local lContabiliza  as logical
+
+    local nHdl          as numeric
+    local nTaxaPA       as numeric
+    local nTaxaNF       as numeric
+    local nSldComp      as numeric
+    local nOperacao     as numeric
+    local nSE2RECNO     as numeric
+
+    paramtype nZL9RecNo as numeric optional default ZL9->(recNo())
+
+    aArea:=getArea()
+
+    ZL9->(MsGoTo(nZL9RecNo))
+
+    cLog:="Pedido: "+ZL9->ZL9_PEDIDO
+    cLog+=" Nota: " + ZL9->ZL9_DOC
+    cLog+="-"
+    cLog+=ZL9->ZL9_SERIE
+    cLog+="-" + " NF Devolucao: "
+    cLog+=ZL9->ZL9_DOCDEV
+    cLog+="-"
+    cLog+=ZL9->ZL9_SERDEV
+    cLog+=" NF Original: "
+    cLog+=ZL9->ZL9_DOCORI
+    cLog+="-"
+    cLog+=ZL9->ZL9_SERORI
+
+    ::AddLog("Inicio Compensação Titulos: " + cLog )
+
+    cSQL:=TAutDevIntQry():DocOriCmpAut(nZL9RecNo)
+    
+    cTblTmp:=MpSysOpenQuery(cSQL)
+
+    aNF:=array(0)
+    aPA_NDF:=array(0)
+
+    while (cTblTmp)->(!eof())
+        nSE2RECNO:=(cTblTmp)->SE2RECNO
+        SE2->(DbGoTo(nSE2RECNO))
+        if (SE2->E2_TIPO$(MVPAGANT+"|"+MV_CPNEG))
+            aAdd(aPA_NDF,nSE2RECNO)
+        else
+            aAdd(aNF,nSE2RECNO)
+        endif 
+        (cTblTmp)->(DbSkip())
+    end while
+
+    (cTblTmp)->(DbCloseArea())
+
+    lCompTit:=(!empty(aPA_NDF).and.(!empty(aNF)))
+
+    if (lCompTit)
+    
+        Pergunte("AFI340", .F.,,,,, @aPerg)
+        MV_PAR09:=2
+        __SaveParam("AFI340", aPerg)
+
+        lDigita:=(MV_PAR09==1)
+        lAglutina:=(MV_PAR08==1)
+        lContabiliza:=(MV_PAR11==1)
+
+        dDatabase:=Date()
+
+        lCompTit:=FinCmpAut(@aNF,@aPA_NDF,@aContabil,@bBlock,@aEstorno,@nSldComp,@dDatabase,@nTaxaPA,@nTaxaNF,@nHdl,@nOperacao,@aRecSE5,@aNDFDados,@lHelp)
+
+    endif
+
+    cMsg:=cLog
+
+    if (lCompTit)
+        cMsg+=" :: Compensação realizada com sucesso"
+    else
+        cMsg+=" :: Ocorreu um erro no processo de compensação"
+        varInfo("aNF",aNF)
+        varInfo("aPA_NDF",aPA_NDF)
+        if ZL9->(RecLock("ZL9",.F.))
+            ZL9->(ZL9PutLog(cMsg))
+            ZL9->(MsUnLock())
+        endif
+    endif
+
+    ::AddLog("Final Compensação Titulos: " + cMsg )
+
+    ::AddLog("Final Compensação Titulos: " + cLog )
+
+    restArea(aArea)
+
+    return(lCompTit)
+
 Method ProcFat(cDoc, cSerie, cCliente, cLoja) Class TAutomacaoDevolucaoIntercompany
 
-	Local aPerg
+    Local aPerg
 
-	Local aAreaSC5 := SC5->(GetArea())
-	Local aAreaSC6 := SC6->(GetArea())
+    Local aAreaSC5 := SC5->(GetArea())
+    Local aAreaSC6 := SC6->(GetArea())
 
-	Local xRetorno	:= .T.
-	Local aPvlNfs	:= {}
-	Local aBloqueio	:= {}
-	Local nQtdJaEnt	:= 0
-	Local aRecSC6	:= {}
-	local aSC9RecNos:={}
+    Local xRetorno	:= .T.
+    Local aPvlNfs	:= {}
+    Local aBloqueio	:= {}
+    Local nQtdJaEnt	:= 0
+    Local aRecSC6	:= {}
+    local aSC9RecNos:={}
 
-	Local nVolumes	:= 0
-	Local nPesoBrut	:= 0
-	Local nPesoLiq	:= 0
-	Local cEspecie	:= "VOLUME(S)"
-	Local nW		:= 0
-	Local nX        := 0
-	Local cNumPed   := ""
-	Local nSC6RecNo
-	Local nSC9RecNo
+    Local nVolumes	:= 0
+    Local nPesoBrut	:= 0
+    Local nPesoLiq	:= 0
+    Local cEspecie	:= "VOLUME(S)"
+    Local nW		:= 0
+    Local nX        := 0
+    Local cNumPed   := ""
+    Local nSC6RecNo
+    Local nSC9RecNo
 
-	local lMa410LbNfs
+    local lMa410LbNfs
 
-	local uMa410LbNfs
-	local uMaLibDoFat
+    local uMa410LbNfs
+    local uMaLibDoFat
 
-	Public xBiaVTotNf	:= 0
-	Public _XCRGATFAT	:= .T.
-	Public nFlagFT   	:= "S"
-	Public xVlFrtInf 	:= 0
-	Public nNovaCond 	:= Nil
+    Public xBiaVTotNf	:= 0
+    Public _XCRGATFAT	:= .T.
+    Public nFlagFT   	:= "S"
+    Public xVlFrtInf 	:= 0
+    Public nNovaCond 	:= Nil
 
-	Private nTpFrete	:= 2
-	Private nTransp		:= ""
+    Private nTpFrete	:= 2
+    Private nTransp		:= ""
 
-	::aNotas := {}
+    ::aNotas := {}
 
-	If Empty(SC5->C5_NOTA)
+    If Empty(SC5->C5_NOTA)
 
-		::cSerieNF := PADR(GetNewPar("MV_YSERFTP", "1"), TamSx3("F2_DOC")[1])
+        ::cSerieNF := PADR(GetNewPar("MV_YSERFTP", "1"), TamSx3("F2_DOC")[1])
 
-		If !Empty(::cSerieNF)
+        If !Empty(::cSerieNF)
 
-			xBiaVTotNf	:= 0
-			_XCRGATFAT	:= .T.
-			nFlagFT   	:= "S"
-			xVlFrtInf 	:= 0
-			nNovaCond 	:= Nil
-			nTpFrete	:= 2
-			nTransp		:= SC5->C5_TRANSP
-			cNumPed     := SC5->C5_NUM
+            xBiaVTotNf	:= 0
+            _XCRGATFAT	:= .T.
+            nFlagFT   	:= "S"
+            xVlFrtInf 	:= 0
+            nNovaCond 	:= Nil
+            nTpFrete	:= 2
+            nTransp		:= SC5->C5_TRANSP
+            cNumPed     := SC5->C5_NUM
 
-			DBSelectArea("SC5")
-			SC6->(dbSetOrder(1))
+            DBSelectArea("SC5")
+            SC6->(dbSetOrder(1))
 
-			If SC6->(DBSeek(SC5->C5_FILIAL+cNumPed))
+            If SC6->(DBSeek(SC5->C5_FILIAL+cNumPed))
 
-				While SC6->(!eof() .And. SC5->C5_FILIAL+cNumPed==SC6->C6_FILIAL+SC6->C6_NUM)
+                While SC6->(!eof() .And. SC5->C5_FILIAL+cNumPed==SC6->C6_FILIAL+SC6->C6_NUM)
 
-					nQtdJaEnt := SC6->C6_QTDENT
+                    nQtdJaEnt := SC6->C6_QTDENT
 
-					If SC6->C6_QTDVEN-nQtdJaEnt > 0
+                    If SC6->C6_QTDVEN-nQtdJaEnt > 0
 
-						nPos01 := aScan(aRecSC6,{|x| x[1] == "" .And. x[2] == ""})
+                        nPos01 := aScan(aRecSC6,{|x| x[1] == "" .And. x[2] == ""})
 
-						If nPos01 == 0
+                        If nPos01 == 0
 
-							aAdd(aRecSC6,{"","",{}})
+                            aAdd(aRecSC6,{"","",{}})
 
-							nPos01 := Len(aRecSC6)
+                            nPos01 := Len(aRecSC6)
 
-						EndIf
+                        EndIf
 
-						aAdd(aRecSC6[nPos01][3],{SC6->(Recno()),SC6->C6_QTDVEN-nQtdJaEnt})
+                        aAdd(aRecSC6[nPos01][3],{SC6->(Recno()),SC6->C6_QTDVEN-nQtdJaEnt})
 
-						//capta os volumes dos itens que tem faturamento direto
-						SB1->(dbSetOrder(1))
-						SB1->(DBSeek(xFilial("SB1")+SC6->C6_PRODUTO))
+                        //capta os volumes dos itens que tem faturamento direto
+                        SB1->(dbSetOrder(1))
+                        SB1->(DBSeek(xFilial("SB1")+SC6->C6_PRODUTO))
 
-						nVolumes	+= SC6->C6_QTDVEN-nQtdJaEnt
-						nPesoBrut	+= SB1->B1_PESO*(SC6->C6_QTDVEN-nQtdJaEnt)
-						nPesoLiq	+= SB1->B1_PESO*(SC6->C6_QTDVEN-nQtdJaEnt)
-						cEspecie	:= "VOLUME(S)"
+                        nVolumes	+= SC6->C6_QTDVEN-nQtdJaEnt
+                        nPesoBrut	+= SB1->B1_PESO*(SC6->C6_QTDVEN-nQtdJaEnt)
+                        nPesoLiq	+= SB1->B1_PESO*(SC6->C6_QTDVEN-nQtdJaEnt)
+                        cEspecie	:= "VOLUME(S)"
 
-					EndIf
+                    EndIf
 
-					SC6->(DBSkip())
+                    SC6->(DBSkip())
 
-				EndDo
+                EndDo
 
-			EndIf
+            EndIf
 
-			aSC9RecNos:=array(0)
+            aSC9RecNos:=array(0)
 
-			//FATURAMENTO DOS ITENS APTOS
-			For nW := 1 to Len(aRecSC6)
+            //FATURAMENTO DOS ITENS APTOS
+            For nW := 1 to Len(aRecSC6)
 
-				//Realiza estorno de liberaÃ§Ã£o de estoque e credito
-				SC9->(dbSetOrder(1))
-				If SC9->(DBSeek(xFilial('SC9')+cNumPed))
+                //Realiza estorno de liberaÃ§Ã£o de estoque e credito
+                SC9->(dbSetOrder(1))
+                If SC9->(DBSeek(xFilial('SC9')+cNumPed))
 
-					While SC9->(!eof() .And. xFilial('SC9')+cNumPed == SC9->C9_FILIAL+SC9->C9_PEDIDO)
+                    While SC9->(!eof() .And. xFilial('SC9')+cNumPed == SC9->C9_FILIAL+SC9->C9_PEDIDO)
 
-						If Empty(SC9->C9_NFISCAL)
+                        If Empty(SC9->C9_NFISCAL)
 
-							SC6->(dbSetOrder(1))
-							SC6->(DBSeek(xFilial("SC6")+SC9->C9_PEDIDO+SC9->C9_ITEM))
+                            SC6->(dbSetOrder(1))
+                            SC6->(DBSeek(xFilial("SC6")+SC9->C9_PEDIDO+SC9->C9_ITEM))
 
-							//Begin Transaction
-							SC9->(a460Estorna())
-							//End Transaction
+                            //Begin Transaction
+                            SC9->(a460Estorna())
+                            //End Transaction
 
-						EndIf
+                        EndIf
 
-						SC9->(DBSkip())
+                        SC9->(DBSkip())
 
-					EndDo
+                    EndDo
 
-				EndIf
+                EndIf
 
-				cCodProduto := ''
+                cCodProduto := ''
 
-				For nX := 1 to Len(aRecSC6[nW][3])
+                For nX := 1 to Len(aRecSC6[nW][3])
 
-					nSC6RecNo:=aRecSC6[nW][3][nX][1]
-					SC6->(dbGoTo(nSC6RecNo))
+                    nSC6RecNo:=aRecSC6[nW][3][nX][1]
+                    SC6->(dbGoTo(nSC6RecNo))
 
-					nQtdLib := aRecSC6[nW][3][nX][2]
+                    nQtdLib := aRecSC6[nW][3][nX][2]
 
-					If nQtdLib > 0
+                    If nQtdLib > 0
 
-						cCodProduto := SC6->C6_PRODUTO
+                        cCodProduto := SC6->C6_PRODUTO
 
-						lLiberado := .T.
+                        lLiberado := .T.
 
-						SC6->(::AddLog(C6_FILIAL+C6_NUM+C6_ITEM+C6_PRODUTO+"MaLibDoFat :: " +cValToChar(uMaLibDoFat:=MaLibDoFat(nSC6RecNo,@nQtdLib,.F.,.F.,.T.,.T.,.F.,.F.))))
+                        SC6->(::AddLog(C6_FILIAL+C6_NUM+C6_ITEM+C6_PRODUTO+"MaLibDoFat :: " +cValToChar(uMaLibDoFat:=MaLibDoFat(nSC6RecNo,@nQtdLib,.F.,.F.,.T.,.T.,.F.,.F.))))
 
-						if (!empty(uMaLibDoFat))
-							nSC9RecNo:=SC9->(RecNo())
-							if (aScan(aSC9RecNos,{|nRecNo|(nRecno==nSC9RecNo)})==0)
-								aAdd(aSC9RecNos,nSC9RecNo)
-							endif
-						endif
+                        if (!empty(uMaLibDoFat))
+                            SC9->(dbSetOrder(retOrder("SC9","C9_FILIAL+C9_PRODUTO+C9_PEDIDO+C9_ITEM")))
+                            if (SC9->(dbSeek(SC6->(C6_FILIAL+C6_PRODUTO+C6_NUM+C6_ITEM),.F.)))
+                                nSC9RecNo:=SC9->(RecNo())
+                                if (aScan(aSC9RecNos,{|nRecNo|(nRecno==nSC9RecNo)})==0)
+                                    aAdd(aSC9RecNos,nSC9RecNo)
+                                endif
+                            endif
+                        endif
 
-					EndIf
+                    EndIf
 
-				Next nX
+                Next nX
 
-				::AddLog("MaLiberOk ==>"+cValToChar(MaLiberOk({SC5->C5_NUM},.F.)))
+                ::AddLog("MaLiberOk ==>"+cValToChar(MaLiberOk({SC5->C5_NUM},.F.)))
 
-				aSize(aPvlNfs,0)
-				aSize(aBloqueio,0)
+                aSize(aPvlNfs,0)
+                aSize(aBloqueio,0)
 
-				//Checa itens liberados
+                //Checa itens liberados
 
-				SX1->(dbSetOrder(1))
-				if (SX1->(dbSeek(PadR("MTA440",Len(X1_GRUPO))+"01",.F.)))
-					if SX1->(recLock("SX1",.F.))
-						SX1->X1_PRESEL:=1
-						SX1->(MsUnLock())
-						recLock("SX1",.F.)
-					endif
-				endif
-				if (SX1->(dbSeek(PadR("MTA440",Len(X1_GRUPO))+"02",.F.)))
-					if SX1->(recLock("SX1",.F.))
-						SX1->X1_PRESEL:=1
-						SX1->(MsUnLock())
-						recLock("SX1",.F.)
-					endif
-				endif
+                SX1->(dbSetOrder(1))
+                if (SX1->(dbSeek(PadR("MTA440",Len(X1_GRUPO))+"01",.F.)))
+                    if SX1->(recLock("SX1",.F.))
+                        SX1->X1_PRESEL:=1
+                        SX1->(MsUnLock())
+                        recLock("SX1",.F.)
+                    endif
+                endif
+                if (SX1->(dbSeek(PadR("MTA440",Len(X1_GRUPO))+"02",.F.)))
+                    if SX1->(recLock("SX1",.F.))
+                        SX1->X1_PRESEL:=1
+                        SX1->(MsUnLock())
+                        recLock("SX1",.F.)
+                    endif
+                endif
 
-				Pergunte("MTA440", .F.,,,,, @aPerg)
-				MV_PAR01:=1
-				MV_PAR02:=1
-				__SaveParam("MTA440", aPerg)
+                Pergunte("MTA440", .F.,,,,, @aPerg)
+                MV_PAR01:=1
+                MV_PAR02:=1
+                __SaveParam("MTA440", aPerg)
 
-				lMa410LbNfs:=.F.
+                lMa410LbNfs:=.F.
 
-				if (select("MA410PVNFS")>0)
-					//Alias already in use: MA410PVNFS on MA410LBNFS(MATN410C.PRW)
-					MA410PVNFS->(dbCloseArea())
-					dbSelectArea("SC9")
-				endif
+                if (select("MA410PVNFS")>0)
+                    //Alias already in use: MA410PVNFS on MA410LBNFS(MATN410C.PRW)
+                    MA410PVNFS->(dbCloseArea())
+                    dbSelectArea("SC9")
+                endif
 
-				if (select("Ma410PvlNfs")>0)
-					//Alias already in use: Ma410PvlNfs on MA410LBNFS(MATN410C.PRW)
-					Ma410PvlNfs->(dbCloseArea())
-					dbSelectArea("SC9")
-				endif
+                if (select("Ma410PvlNfs")>0)
+                    //Alias already in use: Ma410PvlNfs on MA410LBNFS(MATN410C.PRW)
+                    Ma410PvlNfs->(dbCloseArea())
+                    dbSelectArea("SC9")
+                endif
 
-				uMa410LbNfs:=Ma410LbNfs(2,@aPvlNfs,@aBloqueio)
+                uMa410LbNfs:=Ma410LbNfs(2,@aPvlNfs,@aBloqueio)
+                lMa410LbNfs:=((valType(uMa410LbNfs)=="L").and.(uMa410LbNfs))
 
-				::AddLog("Ma410LbNfs 2 ==>"+cValToChar(lMa410LbNfs))
-				lMa410LbNfs:=((valType(uMa410LbNfs)=="L").and.(uMa410LbNfs))
+                ::AddLog("Ma410LbNfs 2 ==>"+cValToChar(lMa410LbNfs))
+                lMa410LbNfs:=((valType(uMa410LbNfs)=="L").and.(uMa410LbNfs))
 
-				if (lMa410LbNfs)
+                if (lMa410LbNfs)
 
-					if (select("MA410PVNFS")>0)
-						//Alias already in use: MA410PVNFS on MA410LBNFS(MATN410C.PRW)
-						MA410PVNFS->(dbCloseArea())
-						dbSelectArea("SC9")
-					endif
+                    if (select("MA410PVNFS")>0)
+                        //Alias already in use: MA410PVNFS on MA410LBNFS(MATN410C.PRW)
+                        MA410PVNFS->(dbCloseArea())
+                        dbSelectArea("SC9")
+                    endif
 
-					if (select("Ma410PvlNfs")>0)
-						//Alias already in use: Ma410PvlNfs on MA410LBNFS(MATN410C.PRW)
-						Ma410PvlNfs->(dbCloseArea())
-						dbSelectArea("SC9")
-					endif
+                    if (select("Ma410PvlNfs")>0)
+                        //Alias already in use: Ma410PvlNfs on MA410LBNFS(MATN410C.PRW)
+                        Ma410PvlNfs->(dbCloseArea())
+                        dbSelectArea("SC9")
+                    endif
 
-					uMa410LbNfs:=Ma410LbNfs(1,@aPvlNfs,@aBloqueio)
-					lMa410LbNfs:=((valType(uMa410LbNfs)=="L").and.(uMa410LbNfs))
+                    uMa410LbNfs:=Ma410LbNfs(1,@aPvlNfs,@aBloqueio)
+                    lMa410LbNfs:=((valType(uMa410LbNfs)=="L").and.(uMa410LbNfs))
 
-					::AddLog("Ma410LbNfs 1 ==>"+cValToChar(lMa410LbNfs))
+                    ::AddLog("Ma410LbNfs 1 ==>"+cValToChar(lMa410LbNfs))
 
-				endif
-				
-				if (SX1->(dbSeek(PadR("MTA440",Len(X1_GRUPO))+"01",.F.)))
-					SX1->(MsUnLock())
-				endif
-				
-				if (SX1->(dbSeek(PadR("MTA440",Len(X1_GRUPO))+"02",.F.)))
-					SX1->(MsUnLock())
-				endif
+                endif
 
-				if ((lMa410LbNfs).and.(empty(aPvlNfs).and.empty(aBloqueio)))
-					SC5->(aPvlNfs:=getaPvlNfs(aSC9RecNos))
-				endif
+                if (SX1->(dbSeek(PadR("MTA440",Len(X1_GRUPO))+"01",.F.)))
+                    SX1->(MsUnLock())
+                endif
 
-				If ((Len(aBloqueio)>0).or.(Len(aPvlNfs)==0))
+                if (SX1->(dbSeek(PadR("MTA440",Len(X1_GRUPO))+"02",.F.)))
+                    SX1->(MsUnLock())
+                endif
 
-					::AddLog(If(Len(aBloqueio)>0,"Bloqueio -> Credito: [" + aBloqueio[1][6] + "] - Estoque: [" + aBloqueio[1][7] + "]", "Ma410LbNfs -> aPvlNfs vazio!"))
+                if ((lMa410LbNfs).and.(empty(aPvlNfs).and.empty(aBloqueio)))
+                    SC5->(aPvlNfs:=getaPvlNfs(aSC9RecNos))
+                endif
 
-					xRetorno := .F.
+                If ((Len(aBloqueio)>0).or.(Len(aPvlNfs)==0))
 
-				Else
+                    ::AddLog(If(Len(aBloqueio)>0,"Bloqueio -> Credito: [" + aBloqueio[1][6] + "] - Estoque: [" + aBloqueio[1][7] + "]", "Ma410LbNfs -> aPvlNfs vazio!"))
 
-					//apos acerto de volumes realiza o faturamento
-					xRetorno := ::DocSaida(SC5->C5_NUM, cDoc, cSerie, cCliente, cLoja, aPvlNfs)
+                    xRetorno := .F.
 
-				EndIf
+                Else
 
-			Next nW
+                    //apos acerto de volumes realiza o faturamento
+                    xRetorno := ::DocSaida(SC5->C5_NUM, cDoc, cSerie, cCliente, cLoja, aPvlNfs)
 
-		Else
+                EndIf
 
-			xRetorno := .F.
+            Next nW
 
-			::AddLog("Serie [" + ::cSerieNF + "]" + SC5->C5_NUM + " não identificada na Empresa\Filial " + cEmpAnt + "\" + cFilAnt + "!")
+        Else
 
-		EndIf
+            xRetorno := .F.
 
-	EndIf
+            ::AddLog("Serie [" + ::cSerieNF + "]" + SC5->C5_NUM + " não identificada na Empresa\Filial " + cEmpAnt + "\" + cFilAnt + "!")
 
-	If !xRetorno
+        EndIf
 
-		DisarmTransaction()
+    EndIf
 
-	EndIf
+    If !xRetorno
 
-	_XCRGATFAT	:= .F.
+        DisarmTransaction()
 
-	RestArea(aAreaSC5)
-	RestArea(aAreaSC6)
+    EndIf
+
+    _XCRGATFAT	:= .F.
+
+    RestArea(aAreaSC5)
+    RestArea(aAreaSC6)
 
 Return(xRetorno)
 
 Method DocSaida(cPedido, cDoc, cSerie, cCliente, cLoja, aPvlNfs) Class TAutomacaoDevolucaoIntercompany
 
-	Local aPerg 	:= {}
-	Local aNotas 	:= {}
-	Local nItemNf	:= ""
-	Local aTotPvlNfs:= {}
-	Local cNota		:= ""
-	Local nX		:= 0
+    Local aAreaSC5      as array
+    Local aAreaSC6      as array
 
-	local lSF2Foud
+    Local aPerg         as array
+    Local aNotas 	    as array
+    Local aTotPvlNfs    as array
 
-	local cSF2KeySeek
+    Local bAtuPGerNF    as block
 
-	Local aAreaSC5	:= SC5->(GetArea())
-	Local aAreaSC6	:= SC6->(GetArea())
+    Local cNota		    as character
+    Local cSerie		as character
+    local cSF2KeySeek   as character
 
-	//inclui no vetor principal para faturamento
-	aAdd(aTotPvlNfs,{cCliente+cLoja,::cSerieNF,aPvlNfs})
+    Local nX		    as numeric
+    Local nItemNf	    as numeric
 
-	For nX:= 1 to Len(aTotPvlNfs)
+    local lSF2Foud      as logical
 
-		aNotas	:= {}
+    aAreaSC5	:= SC5->(GetArea())
+    aAreaSC6	:= SC6->(GetArea())
 
-		nItemNf	:= a460NumIt(aTotPvlNfs[nX][2])
+    aPerg:=array(0)
+    aNotas:=array(0)
+    aTotPvlNfs:=array(0)
+    nItemNf:=0
+    cNota:=""
+    cSerie:=::cSerieNF
 
-		aAdd(aNotas,{aTotPvlNfs[nX][2],{}})
+    //inclui no vetor principal para faturamento
+    aAdd(aTotPvlNfs,{cCliente+cLoja,cSerie,aPvlNfs})
 
-		//Quebra o pedido em notas caso tenha mais itens do que o determinado em parametro
-		If Len(aTotPvlNfs[nX][3]) >= nItemNf
+    For nX:= 1 to Len(aTotPvlNfs)
 
-			For nX := 1 To Len(aTotPvlNfs[nX][3])
+        aNotas	:= {}
 
-				If Len(aNotas[Len(aNotas)][2]) >= nItemNf
+        nItemNf	:= a460NumIt(aTotPvlNfs[nX][2])
 
-					aAdd(aNotas,{aTotPvlNfs[nX][2],{}})
+        aAdd(aNotas,{aTotPvlNfs[nX][2],{}})
 
-				EndIf
+        //Quebra o pedido em notas caso tenha mais itens do que o determinado em parametro
+        If Len(aTotPvlNfs[nX][3]) >= nItemNf
 
-				aAdd(aNotas[Len(aNotas)][2],aClone(aTotPvlNfs[nX][3][nX]))
+            For nX := 1 To Len(aTotPvlNfs[nX][3])
 
-			Next nX
+                If Len(aNotas[Len(aNotas)][2]) >= nItemNf
 
-		Else
+                    aAdd(aNotas,{aTotPvlNfs[nX][2],{}})
 
-			aNotas[Len(aNotas)][2] := aClone(aTotPvlNfs[nX][3])
+                EndIf
 
-		EndIf
+                aAdd(aNotas[Len(aNotas)][2],aClone(aTotPvlNfs[nX][3][nX]))
 
-		For nX := 1 To Len(aNotas)
+            Next nX
 
-			//Chama grupo de perguntas para emissão da nf fiscal
-			Pergunte("MT460A", .F.,,,,, @aPerg)
+        Else
 
-			MV_PAR01 := 2 // Mostra Lanç.Contab ?
-			MV_PAR02 := 1 // Aglut. Lançamentos ?
-			MV_PAR03 := 1 // Lanç.Contab.On-Line ?
+            aNotas[Len(aNotas)][2] := aClone(aTotPvlNfs[nX][3])
 
-			MV_PAR17 := 1 // Gera Titulo da guia (SE2) ?
-			MV_PAR18 := 1 // Gera guia recolhimento (SF6) ?
-			MV_PAR19 := 2 // Gera Titulo ICMS Próprio ?
-			MV_PAR20 := 2 // Gera Guia ICMS Próprio ?
+        EndIf
 
-			MV_PAR22 := 2 // Gera Titulo por Produto ?
-			MV_PAR23 := 2 // Gera Guia por Produto ?
-			MV_PAR24 := 1 // Gera Guia ICM Compl. UF Dest (DIFAL) ?
-			MV_PAR25 := 1 // Gera Guia FECP da UF Destino ?
+        For nX := 1 To Len(aNotas)
 
-			__SaveParam("MT460A", aPerg)
+            //Chama grupo de perguntas para emissão da nf fiscal
+            Pergunte("MT460A", .F.,,,,, @aPerg)
 
-			//Rotina para geração da nf fiscal
-			cNota := MaPvlNfs(aNotas[nX][2],aNotas[nX][1],(MV_PAR01==1),(MV_PAR02==1),(MV_PAR03==1),(MV_PAR04==1),(MV_PAR05==1),MV_PAR07,MV_PAR08,(MV_PAR15==1),(MV_PAR16==2),nil,nil,/*bAtuPGerNF*/)
-			
-			cNota:=PadR(cNota,getsx3cache("F2_DOC","X3_TAMANHO"))
-			::cSerieNF:=PadR(::cSerieNF,getsx3cache("F2_SERIE","X3_TAMANHO"))
-			cCliente:=PadR(cCliente,getsx3cache("F2_CLIENTE","X3_TAMANHO"))
-			cLoja:=PadR(cLoja,getsx3cache("F2_LOJA","X3_TAMANHO"))
+            MV_PAR01 := 2 // Mostra Lanç.Contab ?
+            MV_PAR02 := 1 // Aglut. Lançamentos ?
+            MV_PAR03 := 1 // Lanç.Contab.On-Line ?
 
-			cSF2KeySeek:=xFilial("SF2")
-			cSF2KeySeek+=cNota
-			cSF2KeySeek+=::cSerieNF
+            MV_PAR17 := 1 // Gera Titulo da guia (SE2) ?
+            MV_PAR18 := 1 // Gera guia recolhimento (SF6) ?
+            MV_PAR19 := 2 // Gera Titulo ICMS Próprio ?
+            MV_PAR20 := 2 // Gera Guia ICMS Próprio ?
+
+            MV_PAR22 := 2 // Gera Titulo por Produto ?
+            MV_PAR23 := 2 // Gera Guia por Produto ?
+            MV_PAR24 := 1 // Gera Guia ICM Compl. UF Dest (DIFAL) ?
+            MV_PAR25 := 1 // Gera Guia FECP da UF Destino ?
+
+            __SaveParam("MT460A", aPerg)
+
+            //Rotina para geração da nf fiscal
+            bAtuPGerNF:={||AtuPGerNF()}
+            cNota := MaPvlNfs(aNotas[nX][2],aNotas[nX][1],(MV_PAR01==1),(MV_PAR02==1),(MV_PAR03==1),(MV_PAR04==1),(MV_PAR05==1),MV_PAR07,MV_PAR08,(MV_PAR15==1),(MV_PAR16==2),nil,nil,bAtuPGerNF)
+
+            cNota:=PadR(cNota,getsx3cache("F2_DOC","X3_TAMANHO"))
+            cSerie:=PadR(cSerie,getsx3cache("F2_SERIE","X3_TAMANHO"))
+            cCliente:=PadR(cCliente,getsx3cache("F2_CLIENTE","X3_TAMANHO"))
+            cLoja:=PadR(cLoja,getsx3cache("F2_LOJA","X3_TAMANHO"))
+
+            cSF2KeySeek:=xFilial("SF2")
+            cSF2KeySeek+=cNota
+            cSF2KeySeek+=cSerie
+            /*
 			cSF2KeySeek+=cCliente
 			cSF2KeySeek+=cLoja
+            */
+            SF2->(dbSetOrder(retOrder("SF2","F2_FILIAL+F2_DOC+F2_SERIE+F2_CLIENTE+F2_LOJA")))
+            lSF2Foud:=(SF2->(MsSeek(cSF2KeySeek,.F.)))
 
-			SF2->(dbSetOrder(1)) // F2_FILIAL, F2_DOC, F2_SERIE, F2_CLIENTE, F2_LOJA, F2_FORMUL, F2_TIPO, R_E_C_N_O_, D_E_L_E_T_
-			lSF2Foud:=((.T.).or.(SF2->(DBSeek(cSF2KeySeek,.F.))))
-			
-			If (!Empty(cNota).and.(lSF2Foud))
+            If (!Empty(cNota).and.(lSF2Foud))
 
-				aAdd(::aNotas,{cNota,::cSerieNF,""})
+                aAdd(::aNotas,{cNota,cSerie,""})
 
-				::SetDocDev(cDoc, cSerie, cCliente, cLoja, cNota, ::cSerieNF)
+                ::SetDocDev(cDoc, cSerie, cCliente, cLoja, cNota, cSerie)
 
-				::SetStatus(cDoc, cSerie, cCliente, cLoja, "4", "Pedido faturado") // "Devolucao Intercompany - Pedido Faturado"
+                ::SetStatus(cDoc, cSerie, cCliente, cLoja, "4", "Pedido faturado") // "Devolucao Intercompany - Pedido Faturado"
 
-			Else
+            Else
 
-				::SetStatus(cDoc, cSerie, cCliente, cLoja, "E", "Ocorreu erro ao gerar a nota fiscal de saida!")
+                ::SetStatus(cDoc, cSerie, cCliente, cLoja, "E", "Ocorreu erro ao gerar a nota fiscal de saida!")
 
-				Return .F.
+                Return .F.
 
-			EndIf
+            EndIf
 
-		Next nX
+        Next nX
 
-	Next nX
+    Next nX
 
-	RestArea(aAreaSC5)
-	RestArea(aAreaSC6)
+    RestArea(aAreaSC5)
+    RestArea(aAreaSC6)
 
 Return(.T.)
 
+static function AtuPGerNF()
+    if (SF2->(recLock("SF2",.F.)))
+        SF2->F2_YSUBTP:="DC"
+        SF2->F2_YDES:=Date()
+        SF2->(MsUnLock())
+    endif
+return
+
 Method ProcEntrada(aDocEntrada) Class TAutomacaoDevolucaoIntercompany
 
-	Local aArea		:= GetArea()
-	Local cLogTxt 	:= ""
-	Local cBckFunc 	:= FunName()
-	Local aPerg		:= {}
-	Local cErro		:= ""
-	Local bErro 	:= ErrorBlock( { |oErr| cErro := oErr:Description })
-	Local nY		:= 0
+    Local aArea		:= GetArea()
+    Local cLogTxt 	:= ""
+    Local cBckFunc 	:= FunName()
+    Local aPerg		:= {}
+    Local cErro		:= ""
+    Local bErro 	:= ErrorBlock( { |oErr| cErro := oErr:Description })
+    Local nY		:= 0
 
-	Local aCabSF1	:= {}
-	Local aItensSF1	:= {}
-	Local cCondPag	:= ""
+    Local aCabSF1	:= {}
+    Local aItensSF1	:= {}
+    Local cCondPag	:= ""
 
-	Local cEmpOri	:= ""
-	Local cFilOri	:= ""
-	Local cPedOri	:= ""
-	Local cDoc		:= ""
-	Local cSerie	:= ""
-	Local cCodFor	:= ""
-	Local cLojaFor	:= ""
-	Local cCodCli	:= ""
-	Local cLojaCli	:= ""
-	Local cEnderec  := ""
+    Local cEmpOri	:= ""
+    Local cFilOri	:= ""
+    Local cPedOri	:= ""
+    Local cDoc		:= ""
+    Local cSerie	:= ""
+    Local cCodFor	:= ""
+    Local cLojaFor	:= ""
+    Local cCodCli	:= ""
+    Local cLojaCli	:= ""
+    Local cEnderec  := ""
 
-	Default aDocEntrada := {}
+    DEFAULT aDocEntrada := {}
 
-	Private lMsErroAuto 	:= .F.
-	Private lMsHelpAuto 	:= .T.
-	Private lAutoErrNoFile	:= .T.
+    Private lMsErroAuto 	:= .F.
+    Private lMsHelpAuto 	:= .T.
+    Private lAutoErrNoFile	:= .T.
 
-	Begin Transaction
+    Begin Transaction
 
-		Begin Sequence
+        Begin Sequence
 
-			// Processa primeiro Documentos de entrada
-			For nY := 1 To Len(aDocEntrada)
+            // Processa primeiro Documentos de entrada
+            For nY := 1 To Len(aDocEntrada)
 
-				aCabSF1		:= aClone(aDocEntrada[nY][1])
-				aItensSF1	:= aClone(aDocEntrada[nY][2])
+                aCabSF1		:= aClone(aDocEntrada[nY][1])
+                aItensSF1	:= aClone(aDocEntrada[nY][2])
 
-				cEmpOri		:= aDocEntrada[nY][3]
-				cFilOri		:= aDocEntrada[nY][4]
-				cPedOri		:= aDocEntrada[nY][5]
-				cDoc		:= aDocEntrada[nY][6]
-				cSerie		:= aDocEntrada[nY][7]
-				cCodFor		:= aDocEntrada[nY][8]
-				cLojaFor	:= aDocEntrada[nY][9]
-				cCondPag	:= aDocEntrada[nY][10]
-				cCodCli		:= aDocEntrada[nY][11]
-				cLojaCli	:= aDocEntrada[nY][12]
+                cEmpOri		:= aDocEntrada[nY][3]
+                cFilOri		:= aDocEntrada[nY][4]
+                cPedOri		:= aDocEntrada[nY][5]
+                cDoc		:= aDocEntrada[nY][6]
+                cSerie		:= aDocEntrada[nY][7]
+                cCodFor		:= aDocEntrada[nY][8]
+                cLojaFor	:= aDocEntrada[nY][9]
+                cCondPag	:= aDocEntrada[nY][10]
+                cCodCli		:= aDocEntrada[nY][11]
+                cLojaCli	:= aDocEntrada[nY][12]
 
-				aPerg := {}
+                aPerg := {}
 
-				::AddLog("Incluindo documento de entrada " + cDoc + "/" +  cSerie)
+                ::AddLog("Incluindo documento de entrada " + cDoc + "/" +  cSerie)
 
-				SetFunName("MATA103")
+                SetFunName("MATA103")
 
-				Pergunte("MTA103",.F.,,,,, @aPerg)
+                Pergunte("MTA103",.F.,,,,, @aPerg)
 
-				MV_PAR01 := 2 // Mostra Lanç.Contab ?
-				MV_PAR02 := 1 // Aglut Lançamentos ?
-				MV_PAR06 := 1 // Lancto.Cont.On-Line ?
+                MV_PAR01 := 2 // Mostra Lanç.Contab ?
+                MV_PAR02 := 1 // Aglut Lançamentos ?
+                MV_PAR06 := 1 // Lancto.Cont.On-Line ?
 
-				__SaveParam("MTA103", aPerg)
+                __SaveParam("MTA103", aPerg)
 
-				SA1->(dbSetOrder(1))
-				SA1->(DbSeek(xFilial("SA1")+PADR(cCodCli, TamSx3("D1_FORNECE")[1])+PADR(cLojaCli, TamSx3("D1_LOJA")[1])))
+                SA1->(dbSetOrder(1))
+                SA1->(DbSeek(xFilial("SA1")+PADR(cCodCli, TamSx3("D1_FORNECE")[1])+PADR(cLojaCli, TamSx3("D1_LOJA")[1])))
 
-				lMsErroAuto 	:= .F.
-				lMsHelpAuto 	:= .T.
-				lAutoErrNoFile	:= .T.
+                lMsErroAuto 	:= .F.
+                lMsHelpAuto 	:= .T.
+                lAutoErrNoFile	:= .T.
 
-				// __cInternet := ""
+                // __cInternet := ""
 
-				VarInfo("aCabSF1", aCabSF1)
+                VarInfo("aCabSF1", aCabSF1)
 
-				VarInfo("aItensSF1", aItensSF1)
+                VarInfo("aItensSF1", aItensSF1)
 
-				MSExecAuto({|x,y,z| MATA103(x,y,z)}, aCabSF1, aItensSF1, 3, .T.)
+                MSExecAuto({|x,y,z| MATA103(x,y,z)}, aCabSF1, aItensSF1, 3, .T.)
 
-				SetFunName(cBckFunc)
+                SetFunName(cBckFunc)
 
-				If lMsErroAuto
+                If lMsErroAuto
 
-					VarInfo("aCabSF1", aCabSF1)
+                    cLogTxt := "Erro ao gerar documento de entrada " + cDoc +"/"+  cSerie + "-" + __cCRLF + ::GetErrorLog()
 
-					VarInfo("aItensSF1", aItensSF1)
+                    VarInfo("cLogTxt",cLogTxt)
 
-					cLogTxt := "Erro ao gerar documento de entrada " + cDoc +"/"+  cSerie + "-" + CRLF + ::GetErrorLog()
+                    VarInfo("aCabSF1", aCabSF1)
 
-					DisarmTransaction()
+                    VarInfo("aItensSF1", aItensSF1)
 
-					::SetStatusDest(cDoc, cSerie, cCodFor, cLojaFor, "E", cLogTxt)
+                    DisarmTransaction()
 
-				Else
+                    ::SetStatusDest(cDoc, cSerie, cCodFor, cLojaFor, "E", cLogTxt)
 
-					::SetStatusDest(cDoc, cSerie, cCodFor, cLojaFor, "5", "Documento de entrada incluido") // "Devolucao Intercompany - NF Incluida"
+                Else
 
-					cEnderec := ::GetEndereco(aItensSF1[1][13][2], aItensSF1[1][14][2], cCodCli, cLojaCli, cCodFor, cLojaFor)
+                    ::SetStatusDest(cDoc, cSerie, cCodFor, cLojaFor, "5", "Documento de entrada incluido") // "Devolucao Intercompany - NF Incluida"
 
-					If ::fDistribui(cDoc, cSerie, cCodCli, cLojaCli, cEnderec, "6", .T., cCodFor, cLojaFor) // "Devolucao Intercompany - NF Enderecada"
+                    cEnderec := ::GetEndereco(aItensSF1[1][13][2], aItensSF1[1][14][2], cCodCli, cLojaCli, cCodFor, cLojaFor)
 
-						::SetStatusDest(cDoc, cSerie, cCodFor, cLojaFor, "F", "Processo finalizado") // "Processo Finalizado"
+                    If ::fDistribui(cDoc, cSerie, cCodCli, cLojaCli, cEnderec, "6", .T., cCodFor, cLojaFor) // "Devolucao Intercompany - NF Enderecada"
 
-					EndIf
+                        ::SetStatusDest(cDoc, cSerie, cCodFor, cLojaFor, "F", "Processo finalizado") // "Processo Finalizado"
 
-				EndIf
+                    EndIf
 
-			Next nY
+                EndIf
 
-		End Sequence
+            Next nY
 
-		ErrorBlock( bErro )
+        End Sequence
 
-		If ( ValType(cErro) <> "U" .And. !Empty(cErro) ) .Or. lMsErroAuto
+        ErrorBlock( bErro )
 
-			RollBackSX8()
+        If ( ValType(cErro) <> "U" .And. !Empty(cErro) ) .Or. lMsErroAuto
 
-			DisarmTransaction()
+            RollBackSX8()
 
-			::AddLog("EXCEPTION " + cDoc +"/"+  cSerie + "-" + cErro)
+            DisarmTransaction()
 
-		EndIf
+            ::AddLog("EXCEPTION " + cDoc +"/"+  cSerie + "-" + cErro)
 
-	End Transaction
+        EndIf
 
-	RestArea(aArea)
+    End Transaction
+
+    RestArea(aArea)
 
 Return(!lMsErroAuto)
 
 Method LoadFiliais() Class TAutomacaoDevolucaoIntercompany
 
-	Local aFil := {}
+    Local aArea:=getArea()
+    Local aFiliais:=array(0)
 
-	// abre o sigamat.emp
-	If ( Select( "SM0" ) == 0 )
+    Local lOpenSM0:=.F.
+    Local lSM0Open:=.F.
 
-		Private CARQEMP := "sigamat.emp"
+    lSM0Open:=(!Select("SM0")==0)
 
-		OpenSM0()
+    // abre o sigamat.emp
+    If (!lSM0Open)
+        Private cArqEmp:="sigamat.emp"
+        lOpenSM0:=OpenSM0()
+    EndIf
 
-	EndIf
+    // le o sigamat.emp
+    SM0->( DBGoTop() )
 
-	// le o sigamat.emp
-	SM0->( DBGoTop() )
+    While SM0->( !eof() )
+        If SM0->( !Deleted() )
+            If ( AllTrim(SM0->M0_CODIGO) $ "01|05|07|13" )
+                SM0->(aAdd(aFiliais,{M0_CODIGO,M0_CODFIL,M0_CGC,RECNO()}))
+            EndIf
+        EndIf
+        SM0->( DBSkip() )
+    EndDo
 
-	While SM0->( !eof() )
+    if (.F.)
+        SM0->(DBcloseArea())
+    endif
 
-		If SM0->( !Deleted() )
+    restArea(aArea)
 
-			If ( AllTrim(SM0->M0_CODIGO) $ "01|05|07|13" )
-
-				aAdd( aFil , { SM0->M0_CODIGO, SM0->M0_CODFIL, SM0->M0_CGC } )
-
-			EndIf
-
-		EndIf
-
-		SM0->( DBSkip( ) )
-
-	EndDo
-
-	SM0->(DBcloseArea())
-
-Return(aFil)
+Return(aFiliais)
 
 Method PercorreFiliais() Class TAutomacaoDevolucaoIntercompany
 
-	Local nI := 0
+    Local nI := 0
 
-	For nI := 1 To Len(::aFiliais)
+    For nI := 1 To Len(::aFiliais)
 
-		// Coloque aqui todas suas StartJobs
-		//StartJob( "U_EJOBDEVINTE", GetEnvServer(), .F., {::aFiliais[nI, 1], ::aFiliais[nI, 2]} )
+        // Coloque aqui todas suas StartJobs
+        //StartJob( "U_EJOBDEVINTE", GetEnvServer(), .F., {::aFiliais[nI, 1], ::aFiliais[nI, 2]} )
 
-		U_EJOBDEVINTE({::aFiliais[nI, 1], ::aFiliais[nI, 2], ::aFiliais})
+        U_EJOBDEVINTE({::aFiliais[nI,1],::aFiliais[nI,2],::aFiliais})
 
-	Next nI
+    Next nI
 
 Return()
 
 Method ExisteFuncaoEmProcessamento(cFuncProc, cEmp, cFil) Class TAutomacaoDevolucaoIntercompany
 
-	Local aThreads	:= GetUserInfoArray()
-	Local nW		:= 0
-	Local lRet		:= .T.
+    Local aThreads	:= GetUserInfoArray()
+    Local nW		:= 0
+    Local lRet		:= .T.
 
-	For nW := 1 To Len(aThreads)
+    For nW := 1 To Len(aThreads)
 
-		If aThreads[nW, 5] $ cFuncProc .And. aThreads[nW, 3] <> ThreadId()
+        If aThreads[nW, 5] $ cFuncProc .And. aThreads[nW, 3] <> ThreadId()
 
-			If Empty(aThreads[nW, 11])
+            If Empty(aThreads[nW, 11])
 
-				lRet := .F.
+                lRet := .F.
 
-				Exit
+                Exit
 
-			ElseIf cFuncProc+"|"+cEmp+"|"+cFil+"|" $ aThreads[nW, 11]
+            ElseIf cFuncProc+"|"+cEmp+"|"+cFil+"|" $ aThreads[nW, 11]
 
-				lRet := .F.
+                lRet := .F.
 
-				Exit
+                Exit
 
-			EndIf
+            EndIf
 
-		EndIf
+        EndIf
 
-	Next nW
+    Next nW
 
 Return(lRet)
 
 Method AddLog(cMsg) Class TAutomacaoDevolucaoIntercompany
 
-	Default cMsg := ""
+    DEFAULT cMsg := ""
 
-	ConOut("[" + cEmpAnt + cFilAnt +"] " + "[" + Time() +"] " + "[" + PadR("TAutomacaoDevolucaoIntercompany", 32) + "] " + cMsg)
+    ConOut("[" + cEmpAnt + cFilAnt +"] " + "[" + Time() +"] " + "[" + PadR("TAutomacaoDevolucaoIntercompany", 32) + "] " + cMsg)
 
 Return()
 
 Method AddErro(nRecno, cErro) Class TAutomacaoDevolucaoIntercompany
 
-	Default cErro := ""
+    DEFAULT cErro := ""
 
-	If !Empty(cErro) .And. nRecno > 0
+    If !Empty(cErro) .And. nRecno > 0
 
-		aAdd(::aErros, {nRecno, cErro})
+        aAdd(::aErros, {nRecno, cErro})
 
-	EndIf
+    EndIf
 
 Return()
 
 Method GravaErro() Class TAutomacaoDevolucaoIntercompany
 
-	Local nW := 0
+    Local nW := 0
 
-	DBSelectArea("ZL9")
+    DBSelectArea("ZL9")
 
-	If Len(::aErros) > 0
+    If Len(::aErros) > 0
 
-		::AddLog("Gravando logs de erros") // Gravo aqui pois eh depois do rollback
+        ::AddLog("Gravando logs de erros") // Gravo aqui pois eh depois do rollback
 
-	EndIf
+    EndIf
 
-	For nW := 1 To Len(::aErros)
+    For nW := 1 To Len(::aErros)
 
-		ZL9->(DBGoTo(::aErros[nW][1]))
+        ZL9->(DBGoTo(::aErros[nW][1]))
 
-		If ZL9->(!eof())
+        If ZL9->(!eof())
+            if ZL9->(Reclock("ZL9", .F.))
+                ZL9->ZL9_STAERR:="E"
+                ZL9->(ZL9PutLog(::aErros[nW][2]))
+                ZL9->(MSUnLock())
+            endif
+        EndIf
 
-			Reclock("ZL9", .F.)
-			ZL9->ZL9_LOG    := ::aErros[nW][2]
-			ZL9->ZL9_STAERR := "E"
-			ZL9->(MSUnLock())
+    Next nW
 
-		EndIf
-
-	Next nW
-
-	::aErros := {}
+    ::aErros := {}
 
 Return()
 
 Method GetErrorLog() Class TAutomacaoDevolucaoIntercompany
 
-	Local cRet := ""
-	Local nCount := 1
+    Local cRet := ""
+    Local nCount := 1
 
-	aError := GetAutoGrLog()
+    aError := GetAutoGrLog()
 
-	For nCount := 1 To Len(aError)
+    For nCount := 1 To Len(aError)
 
-		cRet += aError[nCount] + CRLF
+        cRet += aError[nCount] + __cCRLF
 
-	Next
+    Next
 
 Return(cRet)
 
 Method WorkflowTransf(cProdOri, cProdDes, nQtd, cLocalOri, cLocalDes, cPedido, aDocEntrada) Class TAutomacaoDevolucaoIntercompany
 
-	Local cHtml 	:= ""
-	Local oMail 	:= TAFMail():New()
-	Local cDoc		:= ""
-	Local cSerie	:= ""
-	Local nY		:= 0
+    Local cHtml 	:= ""
+    Local oMail 	:= TAFMail():New()
+    Local cDoc		:= ""
+    Local cSerie	:= ""
+    Local nY		:= 0
 
-	Default aDocEntrada := {}
+    DEFAULT aDocEntrada := {}
 
-	cHtml += '</tbody>'
-	cHtml += '</table>'
+    cHtml += '</tbody>'
+    cHtml += '</table>'
 
-	cHtml += '<style type="text/css">'
-	cHtml += '.tg  {border-collapse:collapse;border-color:#aaa;border-spacing:0;}'
-	cHtml += '.tg td{background-color:#fff;border-color:#aaa;border-style:solid;border-width:1px;color:#333;'
-	cHtml += '  font-family:Arial, sans-serIf;font-size:14px;overflow:hidden;padding:10px 5px;word-break:normal;}'
-	cHtml += '.tg th{background-color:#f38630;border-color:#aaa;border-style:solid;border-width:1px;color:#fff;'
-	cHtml += '  font-family:Arial, sans-serIf;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}'
-	cHtml += '.tg .tg-zw5y{border-color:inherit;text-align:center;text-decoration:underline;vertical-align:top}'
-	cHtml += '.tg .tg-0lax{text-align:left;vertical-align:top}'
-	cHtml += '</style>'
+    cHtml += '<style type="text/css">'
+    cHtml += '.tg  {border-collapse:collapse;border-color:#aaa;border-spacing:0;}'
+    cHtml += '.tg td{background-color:#fff;border-color:#aaa;border-style:solid;border-width:1px;color:#333;'
+    cHtml += '  font-family:Arial, sans-serIf;font-size:14px;overflow:hidden;padding:10px 5px;word-break:normal;}'
+    cHtml += '.tg th{background-color:#f38630;border-color:#aaa;border-style:solid;border-width:1px;color:#fff;'
+    cHtml += '  font-family:Arial, sans-serIf;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}'
+    cHtml += '.tg .tg-zw5y{border-color:inherit;text-align:center;text-decoration:underline;vertical-align:top}'
+    cHtml += '.tg .tg-0lax{text-align:left;vertical-align:top}'
+    cHtml += '</style>'
 
-	cHtml += '<table class="tg" width="100%">'
-	cHtml += '   <thead>'
-	cHtml += '      <tr>'
-	cHtml += '         <th class="tg-zw5y" colspan="3" style="width: 99.8856%;">'
-	cHtml += '            <div style="text-align: center;">' + cEmpAnt + cFilAnt + ' - Transferencia de Produto</div>'
-	cHtml += '         </th>'
-	cHtml += '      </tr>'
-	cHtml += '   </thead>'
-	cHtml += '   <tbody>'
+    cHtml += '<table class="tg" width="100%">'
+    cHtml += '   <thead>'
+    cHtml += '      <tr>'
+    cHtml += '         <th class="tg-zw5y" colspan="3" style="width: 99.8856%;">'
+    cHtml += '            <div style="text-align: center;">' + cEmpAnt + cFilAnt + ' - Transferencia de Produto</div>'
+    cHtml += '         </th>'
+    cHtml += '      </tr>'
+    cHtml += '   </thead>'
+    cHtml += '   <tbody>'
 
-	For nY := 1 To Len(aDocEntrada)
+    For nY := 1 To Len(aDocEntrada)
 
-		cDoc		:= aDocEntrada[nY][6]
-		cSerie		:= aDocEntrada[nY][7]
+        cDoc		:= aDocEntrada[nY][6]
+        cSerie		:= aDocEntrada[nY][7]
 
-		If cPedido == aDocEntrada[nY][5]
+        If cPedido == aDocEntrada[nY][5]
 
-			cHtml += '      <tr>'
-			cHtml += '         <td><strong>Documento Entrada</strong></td>'
-			cHtml += '         <td colspan="2">' + cDoc + '</td>'
-			cHtml += '      </tr>'
-			cHtml += '      <tr>'
-			cHtml += '         <td><strong>Serie</strong></td>'
-			cHtml += '         <td colspan="2">' + cSerie + '</td>'
-			cHtml += '      </tr>'
+            cHtml += '      <tr>'
+            cHtml += '         <td><strong>Documento Entrada</strong></td>'
+            cHtml += '         <td colspan="2">' + cDoc + '</td>'
+            cHtml += '      </tr>'
+            cHtml += '      <tr>'
+            cHtml += '         <td><strong>Serie</strong></td>'
+            cHtml += '         <td colspan="2">' + cSerie + '</td>'
+            cHtml += '      </tr>'
 
-		EndIf
+        EndIf
 
-	Next nY
+    Next nY
 
-	cHtml += '      <tr>'
-	cHtml += '         <td><strong>Produto origem</strong></td>'
-	cHtml += '         <td colspan="2">' + cProdOri + '</td>'
-	cHtml += '      </tr>'
-	cHtml += '      <tr>'
-	cHtml += '         <td><strong>Local origem</strong></td>'
-	cHtml += '         <td colspan="2">' + cLocalOri + '</td>'
-	cHtml += '      </tr>'
-	cHtml += '      <tr>'
-	cHtml += '         <td><strong>Produto destino</strong></td>'
-	cHtml += '         <td colspan="2">' + cProdDes + '</td>'
-	cHtml += '      </tr>'
-	cHtml += '      <tr>'
-	cHtml += '         <td><strong>Local destino</strong></td>'
-	cHtml += '         <td colspan="2">' + cLocalDes + '</td>'
-	cHtml += '      </tr>'
-	cHtml += '      <tr>'
-	cHtml += '         <td><strong>Quantidade</strong></td>'
-	cHtml += '         <td colspan="2">' + AllTrim(TRANSFORM(nQtd,"@E 999,999,999.99")) + '</td>'
-	cHtml += '      </tr>'
-	cHtml += '      <tr>'
-	cHtml += '         <td><strong>Observa&ccedil;&atilde;o</strong></td>'
-	cHtml += '         <td colspan="2">Consulte o Kardex dos produtos</td>'
-	cHtml += '      </tr>'
-	cHtml += '   </tbody>'
-	cHtml += '</table>'
+    cHtml += '      <tr>'
+    cHtml += '         <td><strong>Produto origem</strong></td>'
+    cHtml += '         <td colspan="2">' + cProdOri + '</td>'
+    cHtml += '      </tr>'
+    cHtml += '      <tr>'
+    cHtml += '         <td><strong>Local origem</strong></td>'
+    cHtml += '         <td colspan="2">' + cLocalOri + '</td>'
+    cHtml += '      </tr>'
+    cHtml += '      <tr>'
+    cHtml += '         <td><strong>Produto destino</strong></td>'
+    cHtml += '         <td colspan="2">' + cProdDes + '</td>'
+    cHtml += '      </tr>'
+    cHtml += '      <tr>'
+    cHtml += '         <td><strong>Local destino</strong></td>'
+    cHtml += '         <td colspan="2">' + cLocalDes + '</td>'
+    cHtml += '      </tr>'
+    cHtml += '      <tr>'
+    cHtml += '         <td><strong>Quantidade</strong></td>'
+    cHtml += '         <td colspan="2">' + AllTrim(TRANSFORM(nQtd,"@E 999,999,999.99")) + '</td>'
+    cHtml += '      </tr>'
+    cHtml += '      <tr>'
+    cHtml += '         <td><strong>Observa&ccedil;&atilde;o</strong></td>'
+    cHtml += '         <td colspan="2">Consulte o Kardex dos produtos</td>'
+    cHtml += '      </tr>'
+    cHtml += '   </tbody>'
+    cHtml += '</table>'
 
-	oMail:cTo := ::cEmailTransf
-	oMail:cSubject := "Tranferencia de Produto - Informativo"
-	oMail:cBody := cHtml
+    //TODO: Incluir na rotina de Workflow de e-mail BIA191 para recuperação via u_emailWF
+    //ex.: u_emailWF("TAFDEVINTC",&("cEmpAnt"))
+    if (empty(::cEmailTransf))
+        ::cEmailTransf:=u_emailWF("TAFDEVINTC",&("cEmpAnt"))
+        if (empty(::cEmailTransf))
+            ::cEmailTransf:="fabiana.corona@biancogres.com.br"
+        endif
+    endif
 
-	oMail:Send()
+    oMail:cTo := ::cEmailTransf
+    oMail:cSubject := "Tranferencia de Produto - Informativo"
+    oMail:cBody := cHtml
+
+    oMail:Send()
 
 Return()
 
 Method CreatePath(cPath) Class TAutomacaoDevolucaoIntercompany
 
-	Local aPath := {}
-	Local nW := 0
+    Local aPath := {}
+    Local nW := 0
 
-	Default cPath := ""
+    DEFAULT cPath := ""
 
-	aPath := StrToKarr(cPath, "\")
+    aPath := StrToKarr(cPath, "\")
 
-	For nW := 1 To Len(aPath)
+    For nW := 1 To Len(aPath)
 
-		If At(":", aPath[nW]) > 0
+        If At(":", aPath[nW]) > 0
 
-			aPath[nW + 1] := aPath[nW] + "\" + aPath[nW + 1]
+            aPath[nW + 1] := aPath[nW] + "\" + aPath[nW + 1]
 
-			aDel(aPath, 1)
+            aDel(aPath, 1)
 
-			aSize(aPath, Len(aPath) - 1 )
+            aSize(aPath, Len(aPath) - 1 )
 
-			Exit
+            Exit
 
-		EndIf
+        EndIf
 
-	Next nW
+    Next nW
 
-	cPath := ""
+    cPath := ""
 
-	For nW := 1 To Len(aPath)
+    For nW := 1 To Len(aPath)
 
-		cPath += If(nW == 1, "", "\") + aPath[nW]
+        cPath += If(nW == 1, "", "\") + aPath[nW]
 
-		If ! File(cPath)
+        If ! File(cPath)
 
-			If MakeDir( cPath,,.F. ) <> 0
+            If MakeDir( cPath,,.F. ) <> 0
 
-				Conout("TAutomacaoDevolucaoIntercompany - Erro ao criar pasta")
+                Conout("TAutomacaoDevolucaoIntercompany - Erro ao criar pasta")
 
-			EndIf
+            EndIf
 
-		EndIf
+        EndIf
 
-	Next nW
+    Next nW
 
 Return()
 
 Method Vld_MV_NUMITEN() Class TAutomacaoDevolucaoIntercompany
 
-	Local aArea := SX6->(GetArea())
+    Local aArea := SX6->(GetArea())
 
-	DbSelectArea( "SX6" )
+    DbSelectArea( "SX6" )
 
-	If GetMv("MV_NUMITEN",.T.)
+    If GetMv("MV_NUMITEN",.T.)
 
-		lLockX6 := MsRLock()
+        lLockX6 := MsRLock()
 
-		::AddLog('TAutomacaoDevolucaoIntercompany - lock -> MV_NUMITEN ' + If(lLockX6, ".T.", ".F. (travado! [Feche a tela de pedido de venda] ) " + TcInternal(53)))
+        ::AddLog('TAutomacaoDevolucaoIntercompany - lock -> MV_NUMITEN ' + If(lLockX6, ".T.", ".F. (travado! [Feche a tela de pedido de venda] ) " + TcInternal(53)))
 
-	EndIf
+    EndIf
 
-	RestArea(aArea)
+    RestArea(aArea)
 
 Return(lLockX6)
 
 static function getaPvlNfs(aSC9RecNos as array) as array
-    
+
     local aPvlNfs 		as array
 
-	local nRecNo 		as numeric
-	local nRecNos		as numeric
-	local nSC9RecNo		as numeric
+    local nRecNo 		as numeric
+    local nRecNos		as numeric
+    local nSC9RecNo		as numeric
 
-	aPvlNfs:=array(0)
+    aPvlNfs:=array(0)
 
-	nRecNos:=len(aSC9RecNos)
-	for nRecNo:=1 to nRecNos
+    nRecNos:=len(aSC9RecNos)
+    for nRecNo:=1 to nRecNos
 
-		nSC9RecNo:=aSC9RecNos[nRecNo]
-		SC9->(dbGoTo(nSC9RecNo))
-		
-		SC6->(dbSetOrder(1))
-		SC6->(MsSeek(xFilial("SC6")+SC9->(C9_PEDIDO+C9_ITEM+C9_PRODUTO)))
-		
-		SE4->(dbSetOrder(1))
-		SE4->(MsSeek(xFilial("SE4")+SC5->C5_CONDPAG) )
+        nSC9RecNo:=aSC9RecNos[nRecNo]
+        SC9->(dbGoTo(nSC9RecNo))
 
-		SB1->(dbSetOrder(1))
-		SB1->(MsSeek(xFilial("SB1")+SC6->C6_PRODUTO))
+        SC6->(dbSetOrder(1))
+        SC6->(MsSeek(xFilial("SC6")+SC9->(C9_PEDIDO+C9_ITEM+C9_PRODUTO)))
 
-		SB2->(dbSetOrder(1))
-		SB2->(MsSeek(xFilial("SB2")+SC9->(C9_PRODUTO+C9_LOCAL)))
+        SE4->(dbSetOrder(1))
+        SE4->(MsSeek(xFilial("SE4")+SC5->C5_CONDPAG) )
 
-		SF4->(dbSetOrder(1))
-		SF4->(MsSeek(xFilial("SF4")+SC6->C6_TES))
+        SB1->(dbSetOrder(1))
+        SB1->(MsSeek(xFilial("SB1")+SC6->C6_PRODUTO))
 
-		SC9->(aAdd(aPvlNfs,{C9_PEDIDO,;
-							C9_ITEM,;
-							C9_SEQUEN,;
-							C9_QTDLIB,;
-							C9_PRCVEN,;
-							C9_PRODUTO,;
-							(SF4->F4_ISS=="S"),;
-							nSC9RecNo,;
-							SC5->(RecNo()),;
-							SC6->(RecNo()),;
-							SE4->(RecNo()),;
-							SB1->(RecNo()),;
-							SB2->(RecNo()),;
-							SF4->(RecNo()),;
-							C9_LOCAL,;
-							0,;
-							C9_QTDLIB2,;
-							(SF4->F4_DUPLIC=="S");
-						};
-					);
-		)
-	
-	next nRecNo
+        SB2->(dbSetOrder(1))
+        SB2->(MsSeek(xFilial("SB2")+SC9->(C9_PRODUTO+C9_LOCAL)))
 
-	return(aPvlNfs)
+        SF4->(dbSetOrder(1))
+        SF4->(MsSeek(xFilial("SF4")+SC6->C6_TES))
+
+        SC9->(aAdd(aPvlNfs,{C9_PEDIDO,;
+            C9_ITEM,;
+            C9_SEQUEN,;
+            C9_QTDLIB,;
+            C9_PRCVEN,;
+            C9_PRODUTO,;
+            (SF4->F4_ISS=="S"),;
+            nSC9RecNo,;
+            SC5->(RecNo()),;
+            SC6->(RecNo()),;
+            SE4->(RecNo()),;
+            SB1->(RecNo()),;
+            SB2->(RecNo()),;
+            SF4->(RecNo()),;
+            C9_LOCAL,;
+            0,;
+            C9_QTDLIB2,;
+            (SF4->F4_DUPLIC=="S");
+            };
+            );
+            )
+
+    next nRecNo
+
+    return(aPvlNfs)
+
+static function ZL9PutLog(cLog as character) as logical
+    
+    local cZL9Log       as character
+    
+    local lZl9Lock      as logical
+    local lZL9IsLocked  as logical
+    
+    DEFAULT cLog:=""
+    
+    if (!empty(cLog))
+
+        lZL9IsLocked:=ZL9->(IsLocked())
+        lZl9Lock:=((lZL9IsLocked).or.(ZL9->((!eof()).and.(recLock("ZL9",.F.)))))
+
+        if (lZl9Lock)
+            DEFAULT __cCRLF:=CRLF
+            cZL9Log:=DToS(Date())
+            cZL9Log+="T"
+            cZL9Log+=Time()
+            cZL9Log+=__cCRLF
+            cZL9Log+=cLog
+            cZL9Log+=__cCRLF
+            cZL9Log+=replicate("-",20)
+            cZL9Log+=__cCRLF
+            cZL9Log+=ZL9->ZL9_LOG
+            ZL9->ZL9_LOG:=cZL9Log
+            if (!lZL9IsLocked)
+                SZ9->(MsUnLock())
+            endif
+        endif
+
+    endif
+
+    DEFAULT lZl9Lock:=.F.
+
+    return(lZl9Lock)

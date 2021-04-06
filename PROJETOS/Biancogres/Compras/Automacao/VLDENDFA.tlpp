@@ -9,7 +9,7 @@
 @type function
 /*/
 
-user function VLDENDFA() as logical
+function u_VLDENDFA() as logical
 
     local lRet as logical
 

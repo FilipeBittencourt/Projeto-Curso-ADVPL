@@ -69,6 +69,20 @@ User Function FA460FIL()
 		Endif
 
 	Endif
+	
+	If (!IsBlind())
+		cQuery += " AND NOT exists(																"
+		cQuery += " select 1  from "+ RetSQLName("SA6") + " SA6									"
+		cQuery += " where									 									"
+		cQuery += " 	A6_FILIAL			= '"+xFilial("SA6")+"'	 							"
+		cQuery += " 	AND A6_COD			= SE1.E1_PORTADO 									"
+		cQuery += " 	AND A6_AGENCIA		= SE1.E1_AGEDEP 									"
+		cQuery += " 	AND A6_NUMCON		= SE1.E1_CONTA 										"
+		cQuery += " 	AND SA6.D_E_L_E_T_	= ''												"
+		cQuery += " 	AND SA6.A6_YTPINTB	= '1'												"
+		cQuery += " )																			"
+	EndIf
+	
 
 Return(cQuery)
 

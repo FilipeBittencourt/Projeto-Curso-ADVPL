@@ -236,7 +236,10 @@ Method CleanBorSE1(nSE1RecNo,cStatus,cCodBar) Class TAFBorderoReceber
 			
 			if (RecLock("SE1", .F.))
 				SE1->E1_CODBAR:=cCodBar
-				SE1->E1_YSITAPI:=cStatus	 //0=Pendente;1=Enviado;2=Retorno com Sucesso;3=Retorno com Erro
+				//0=Pendente;1=Enviado;2=Retorno com Sucesso;3=Retorno com Erro
+				SE1->E1_YSITAPI:=cStatus	 
+				//Titulos FIDC nao entram no Fluxo de Caixa
+				SE1->E1_FLUXO:="N"
 				SE1->(MSUnlock())
 			endif
 

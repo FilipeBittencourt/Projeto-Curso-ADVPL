@@ -174,7 +174,7 @@ User Function SD1100I()
 		EndIf
 	EndIf
 
-	If Alltrim(SD1->D1_TIPO) == 'N' .And. Alltrim(SF4->F4_ESTOQUE) == 'S'  .And. _oMd:CheckMD(SD1->D1_COD,SD1->D1_LOCAL)
+	If Alltrim(SD1->D1_TIPO) == 'N' .And. Alltrim(SF4->F4_ESTOQUE) == 'S'  .And. _oMd:CheckMD(SD1->D1_COD,SD1->D1_LOCAL) .And. Alltrim(SD1->D1_FORNECE) <> 'PIS'
 	    _cSolic	:=	_oMd:GetSolicNFE(SD1->D1_DOC,SD1->D1_SERIE,SD1->D1_FORNECE,SD1->D1_LOJA,SD1->D1_ITEM)
 	    _oMd:InsereMovimentacao(SD1->D1_FILIAL,SD1->D1_DOC,SD1->D1_SERIE,SD1->D1_FORNECE,SD1->D1_LOJA,SD1->D1_ITEM,SD1->D1_COD,SD1->D1_QUANT,SD1->D1_LOCAL,;
 	    									"001",_cSolic,_cSolic,cUserName,"MATA103",SD1->D1_DTDIGIT,"SD1",SD1->(RECNO())) //Insere Movimentação na Tabela	

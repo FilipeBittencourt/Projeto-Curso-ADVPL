@@ -277,6 +277,18 @@ Local dDtVenc := dDataBase
 	cSQL += " WHERE E1_FILIAL = "+ ValToSQL(xFilial("SE1"))
 	cSQL += " AND E1_SALDO > 0 "
 
+	cSQL += " AND NOT exists(															"
+	cSQL += " select 1  from "+ RetSQLName("SA6") + " SA6								"
+	cSQL += " where									 									"
+	cSQL += " 	A6_FILIAL			= '"+xFilial("SA6")+"'	 							"
+	cSQL += " 	AND A6_COD			= SE1.E1_PORTADO 									"
+	cSQL += " 	AND A6_AGENCIA		= SE1.E1_AGEDEP 									"
+	cSQL += " 	AND A6_NUMCON		= SE1.E1_CONTA 										"
+	cSQL += " 	AND SA6.D_E_L_E_T_	= ''												"
+	cSQL += " 	AND SA6.A6_YTPINTB	= '1'												"
+	cSQL += " )																			"
+	
+
 	If Empty(::oParam:cProcesso)
 
 		// Ticket: 23214 - Retirado devido prorrogacao COVID-19, alguns cliente pagam via deposito

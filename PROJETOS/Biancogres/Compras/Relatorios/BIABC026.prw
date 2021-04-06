@@ -93,7 +93,7 @@ Return
 Static Function fConsSQL
 Local sQuery := ""
 
-sQuery := " SELECT DISTINCT  CODENTID, DESCENTID, EMISSAO, DOC, QUANT,            	  " + cEnter
+sQuery := " SELECT DISTINCT  CODENTID, DESCENTID, EMISSAO, DOC,                  	  " + cEnter
 sQuery += "        ROUND(SUM(CUSTO), 2) VALOR, CODPROD, DESCPROD,CLVL				  " + cEnter
 sQuery += "   FROM (SELECT DISTINCT ZCA_ENTID CODENTID , ZCA_DESCRI DESCENTID,		  " + cEnter
 sQuery += "                CASE WHEN D3_TM >= '500' THEN D3_QUANT					  " + cEnter
@@ -122,6 +122,6 @@ sQuery += "		     INNER JOIN " + RetSQLName("ZCA") + " ZCA WITH (NOLOCK)		      
 sQuery += "		        ON ZCA.ZCA_ENTID = CTH.CTH_YENTID                             " + cEnter
 sQuery += "          WHERE D3_EMISSAO BETWEEN " + sdtInicial + " AND " + sdtFinal       + cEnter
 sQuery += "            AND SB1.D_E_L_E_T_ = '')TMP									  " + cEnter
-sQuery += "  GROUP BY CODENTID, DESCENTID, CLVL, EMISSAO, DOC, ITEM, CODPROD, DESCPROD" + cEnter
+sQuery += "  GROUP BY CODENTID, DESCENTID, CLVL, EMISSAO, DOC, CODPROD, DESCPROD" + cEnter
 	
 Return sQuery

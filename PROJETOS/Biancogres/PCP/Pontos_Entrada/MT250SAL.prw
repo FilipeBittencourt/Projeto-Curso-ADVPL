@@ -149,16 +149,89 @@ User Function MT250SAL()
 
 	EndIf
 
+	If cEmpAnt <> "06"
 
-	DbSelectArea("SB1")
-	SB1->(DbSetOrder(1))
+		dbSelectArea("SB1")
+		SB1->(DbSetOrder(1))
 
-	If SB1->(DbSeek(xFilial("SB1")+M->D3_COD))	.And. SB1->B1_TIPO = 'PI' .And. SB1->B1_GRUPO == 'PI01'
-		_dMesAnt	:=	stod(Substr(dtos(dDataBase),1,6)+"01")-1
-		_cDtIni		:=	Substr(dtos(_dMesAnt),1,6) + "01"
-		_cDtFim		:=	dtos(Ultimodia(_dMesAnt))	
+		If SB1->(DbSeek(xFilial("SB1")+M->D3_COD))	.And. SB1->B1_TIPO = 'PI' .And. SB1->B1_GRUPO == 'PI01'
 
-		If SB1->B1_GRUPO = 'PI01'	//MASSA
+			_dMesAnt	:=	stod(Substr(dtos(dDataBase),1,6)+"01")-1
+			_cDtIni		:=	Substr(dtos(_dMesAnt),1,6) + "01"
+			_cDtFim		:=	dtos(Ultimodia(_dMesAnt))	
+
+			If SB1->B1_GRUPO = 'PI01'	//MASSA
+				BeginSql Alias _cAlias
+					SELECT D4_COD, 
+					D4_OP, 
+					D4_LOCAL, 
+					C2_QUANT,
+					%Exp:M->D3_QUANT% D3_QUANT,
+					ISNULL((SELECT SUM(Z02_UMIDAD * Z02_QTDCRG) / SUM(Z02_QTDCRG)
+					FROM %TABLE:Z02%
+					WHERE Z02_FILIAL = %XFILIAL:Z02%
+					AND Z02_DATREF BETWEEN %Exp:_cDtIni% AND %Exp:_cDtFim%
+					AND Z02_PRODUT = D4_COD
+					AND Z02_QTDCRG <> 0
+					AND Z02_ORGCLT = '2'
+					AND %NotDel%), 0) UMIDADE,
+					ISNULL((SELECT BZ_YUMIDAD
+					FROM %TABLE:SBZ%
+					WHERE BZ_FILIAL = ''
+					AND BZ_COD = D4_COD
+					AND %NotDel%), 0) UMIDAD2,
+					D4_TRT,
+					D4_QTDEORI
+					FROM %TABLE:SD4% SD4
+					INNER JOIN %TABLE:SC2% SC2 ON C2_FILIAL = %XFILIAL:SC2%
+					AND C2_NUM + C2_ITEM + C2_SEQUEN + '  ' = D4_OP
+					AND SC2.D_E_L_E_T_ = ' '
+					WHERE D4_FILIAL = %XFILIAL:SD4%
+					AND D4_OP = %Exp:M->D3_OP%
+					AND SD4.%NotDel%
+
+				EndSql
+
+			EndIf
+
+			While (_cAlias)->(!EOF())
+
+				_nPerUmid	:=	Iif((_cAlias)->UMIDADE == 0,(_cAlias)->UMIDAD2,(_cAlias)->UMIDADE)
+
+				_nQtdCalc	:=	(_cAlias)->D3_QUANT / (_cAlias)->C2_QUANT * (_cAlias)->D4_QTDEORI
+
+				_nQtdAdic	:=	Round((_nQtdCalc / ((100-_nPerUmid)/100)) - _nQtdCalc, 2)
+
+				If (_nPos	:=	aScan(aSaldos,{|x| Alltrim(x[1]) == Alltrim((_cAlias)->D4_COD)})) > 0
+
+					aSaldos[_nPos,3]	-=	_nQtdAdic
+
+					_cTeste	+=	(_cAlias)->D4_COD + '-' + Str(_nQtdAdic) + CRLF
+
+				EndIf
+
+				(_cAlias)->(DbSkip())
+
+			EndDo
+
+			(_cAlias)->(DbCloseArea())
+
+		EndIf
+
+	Else 
+
+		// Todos este tratamento foi implementado em 29/03/21, trazendo a PI01 os scripts originais
+
+		dbSelectArea("SB1")
+		SB1->(DbSetOrder(1))
+		SB1->(DbSeek(xFilial("SB1") + M->D3_COD))
+
+		If SB1->B1_TIPO = 'PI' .And. SB1->B1_GRUPO == '108B'
+
+			_dMesAnt	:=	dDataBase
+			_cDtIni		:=	dtos(_dMesAnt)
+			_cDtFim		:=	dtos(_dMesAnt)	
+
 			BeginSql Alias _cAlias
 				SELECT D4_COD, 
 				D4_OP, 
@@ -175,7 +248,7 @@ User Function MT250SAL()
 				AND %NotDel%), 0) UMIDADE,
 				ISNULL((SELECT BZ_YUMIDAD
 				FROM %TABLE:SBZ%
-				WHERE BZ_FILIAL = ''
+				WHERE BZ_FILIAL = %XFILIAL:SBZ%
 				AND BZ_COD = D4_COD
 				AND %NotDel%), 0) UMIDAD2,
 				D4_TRT,
@@ -190,31 +263,32 @@ User Function MT250SAL()
 
 			EndSql
 
+			While (_cAlias)->(!EOF())
+
+				_nPerUmid	:=	Iif((_cAlias)->UMIDADE == 0,(_cAlias)->UMIDAD2,(_cAlias)->UMIDADE)
+
+				_nQtdCalc	:=	(_cAlias)->D3_QUANT / (_cAlias)->C2_QUANT * (_cAlias)->D4_QTDEORI
+
+				_nQtdAdic	:=	Round((_nQtdCalc / ((100-_nPerUmid)/100)) - _nQtdCalc, 2)
+
+				If (_nPos	:=	aScan(aSaldos,{|x| Alltrim(x[1]) == Alltrim((_cAlias)->D4_COD)})) > 0
+
+					aSaldos[_nPos,3]	-=	_nQtdAdic
+
+					_cTeste	+=	(_cAlias)->D4_COD + '-' + Str(_nQtdAdic) + CRLF
+
+				EndIf
+
+				(_cAlias)->(DbSkip())
+				
+			EndDo
+
+			(_cAlias)->(DbCloseArea())
+
 		EndIf
 
-		While (_cAlias)->(!EOF())
+	EndIf
 
-			_nPerUmid	:=	Iif((_cAlias)->UMIDADE == 0,(_cAlias)->UMIDAD2,(_cAlias)->UMIDADE)
-
-			_nQtdCalc	:=	(_cAlias)->D3_QUANT / (_cAlias)->C2_QUANT * (_cAlias)->D4_QTDEORI
-
-			_nQtdAdic	:=	Round((_nQtdCalc / ((100-_nPerUmid)/100)) - _nQtdCalc, 2)
-
-
-			If (_nPos	:=	aScan(aSaldos,{|x| Alltrim(x[1]) == Alltrim((_cAlias)->D4_COD)})) > 0
-
-				aSaldos[_nPos,3]	-=	_nQtdAdic
-
-				_cTeste	+=	(_cAlias)->D4_COD + '-' + Str(_nQtdAdic) + CRLF
-
-			EndIf
-
-			(_cAlias)->(DbSkip())
-		EndDo
-
-		(_cAlias)->(DbCloseArea())
-
-	EndIF
 	RestArea(mmjArea)
 
 Return(aSaldos)

@@ -98,15 +98,13 @@ User Function MT410TOK
 			EndIf
 		EndIf
 		
-		//Empty(M->C5_YNUMSI) .And. !
-		/*
 		//TRATAR FORMA DE PAGAMENTO BONIFICAÇÂO
-		If (AllTrim(M->C5_YSUBTP) $ "B") .And. Empty(M->C5_YNOUTAI)
+		/*If (AllTrim(M->C5_YSUBTP) $ "B") .And. Empty(M->C5_YNOUTAI)
 			Msgbox("ATENÇÃO. Pedido de venda Tipo: 'Bonificação' é necessario informar 'AI Outros'.","MT410TOK","STOP")
 			Return(.F.)
 		ElseIf (AllTrim(M->C5_YSUBTP) $ "B") .And. !Empty(M->C5_YNOUTAI)
 			
-			_cQuery := "select * from SZO010 where ZO_SI = '"+M->C5_YNOUTAI+"' AND R_E_C_N_O_ = ''"
+			_cQuery := "select * from "+RETSQLNAME("SZO")+" SZO where ZO_SI = '"+M->C5_YNOUTAI+"' AND R_E_C_N_O_ = ''"
 			_cAliasTemp := GetNextAlias()
 			TcQuery _cQuery New Alias (_cAliasTemp)
 			
@@ -122,7 +120,7 @@ User Function MT410TOK
 			(_cAliasTemp)->(DbCloseArea())	
 			
 		EndIf	
-		*/					
+		*/				
 		
 		
 		// Tiago Rossini Coradini - 10/04/2017 - OS: 1219-17 - Adicionado tratamento para implantar pedidos de damostra na Mundi
@@ -285,7 +283,12 @@ User Function MT410TOK
 		EndIf
 	EndIf
 	
-
+	//Ticket 31159
+	If (!Empty(Str(M->C5_FRETE)) .And. M->C5_FRETE > 0)
+	    If(!MsgYesNo("Campo Frete /p Dev está preenchido. Deseja continuar?"))
+	        Return(.F.)
+	    Endif
+	Endif
 
 	// Tiago Rossini -- Bloqueio de Pedidos tipo 'B' com o campo Classe de Valor em branco -- OS: 0227-15 - Tania de Fatima
 	// Tiago Rossini -- Bloqueio de Pedidos tipo 'G' com o campo Classe de Valor em branco -- OS: 3573-15 - Tania de Fatima

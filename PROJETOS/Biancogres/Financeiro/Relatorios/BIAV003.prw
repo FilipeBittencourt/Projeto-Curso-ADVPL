@@ -3682,6 +3682,13 @@ While SM0->(!Eof()) .and. SM0->M0_CODIGO == cEmpAnt .and.  If(mv_par40 ==1 .And.
 					aRet[li][CLIENT] := SA1->A1_COD
 					aRet[li][MARCA] := NEWSE5->E5_PREFIXO
 					
+					//Ticket 27847
+					If NEWSE5->E5_MOTBX == "PMI"
+					    dbSelectArea("NEWSE5")
+						NEWSE5->(dbSkip())		     
+						Loop
+					Endif	
+					
 //					If SA1->A1_COD == "010064" .Or. SA1->A1_COD == "004536" 
 //					    dbSelectArea("NEWSE5")
 //						NEWSE5->(dbSkip())		      // filtro de registros desnecessarios

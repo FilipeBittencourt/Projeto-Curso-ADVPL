@@ -435,7 +435,8 @@ User Function BFVCXPED(cPedido, cEmpDest, _cRepAtu, _cUserName)
 
 		//campos do processo de reserva de lote
 		aAdd(aAux,{"C6_YTPEST"	,(cAliasTmp)->C6_YTPEST			,Nil})
-		aAdd(aAux,{"C6_YDTNECE"	,(cAliasTmp)->C6_YDTNECE		,Nil}) 
+		aAdd(aAux,{"C6_YDTNECE"	,(cAliasTmp)->C6_YDTNECE		,Nil})
+		aAdd(aAux,{"C6_YDTNERE"	,(cAliasTmp)->C6_YDTNERE		,Nil})
 		aAdd(aAux,{"C6_YQTDSUG"	,(cAliasTmp)->C6_YQTDSUG		,Nil})
 		aAdd(aAux,{"C6_YLOTSUG"	,(cAliasTmp)->C6_YLOTSUG		,Nil})
 		aAdd(aAux,{"C6_YLOTTOT"	,(cAliasTmp)->C6_YLOTTOT		,Nil})
