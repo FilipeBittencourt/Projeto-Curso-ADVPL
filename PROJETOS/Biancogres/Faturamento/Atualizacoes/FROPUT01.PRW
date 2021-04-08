@@ -18,8 +18,8 @@ User function FROPMSG(cTitulo, cMsg, aBtn, nOpc, cSubTit, lEditErro)
 	Default cSubTit := ""
 	Default lEditErro := .F.
 
-	nRet := Aviso(cTitulo,cMsg,aBtn,nOpc,cSubTit,,,lEditErro)                                                                                                                                                                                                                                        
-	
+	nRet := Aviso(cTitulo,cMsg,aBtn,nOpc,cSubTit,,,lEditErro)
+
 Return nRet
 
 //Funcao para Efetuar o Login em Outra Empresa
@@ -199,7 +199,7 @@ User Function FROPAD3U(_dData, _nDias)
 	Local nDu 		:= 0
 	Local dDt
 	Default _nDias 	:= 3
-	
+
 	dDt := _dData
 	While nDu < _nDias
 		dDt := dDt + 1
@@ -244,7 +244,7 @@ User Function FRUTCONF(_cPedido, _cPedOri, _cAprov)
 					SC5->C5_YCONF := "S"
 					SC5->(MsUnlock())
 
-				EndIf				
+				EndIf
 			EndIf
 
 		EndIf
@@ -300,7 +300,7 @@ User Function XEMPAUPO(_cPedido, _cAprov)
 		If SC5->(DbSeek(XFilial("SC5")+_cPedido))
 
 			CONOUT("XEMPAUPO - SITUACAO_2 C5_NUM: "+SC5->C5_NUM+", C5_YCONF: "+SC5->C5_YCONF+", C5_YAPROV: "+_cAprov)
-			
+
 			If (AllTrim(_cAprov) <> ""  .And. ALLTRIM(SC5->C5_YSUBTP) <> "A")
 
 				_oEmpAut := TBiaEmpenhoPedido():New()
@@ -484,10 +484,10 @@ Return
 
 //Buscar nomes dos liberadores para mensagem na inclusao de pedido
 User Function FRGERADM(_cPedido)
-	Local I
-	Local aIdGAdm
-	Local aUser
-	Local cRet := ""
+	Local I       := 1
+	Local aIdGAdm := {}
+	Local aUser   := {}
+	Local cRet    := ""
 	Local cEmpPed := CEMPANT
 	Local aAreaC6 := SC6->(GetArea())
 	Local aAreaB1 := SB1->(GetArea())
@@ -506,10 +506,10 @@ User Function FRGERADM(_cPedido)
 
 	SC6->(DbSetOrder(1))
 	If SC6->(DbSeek(XFilial("SC6")+_cPedido))
-	
+
 		SB1->(DbSetOrder(1))
 		SB1->(DbSeek(XFilial("SB1")+SC6->C6_PRODUTO))
-		
+
 		ZZ7->(DbSetOrder(1))
 		If ZZ7->(DbSeek(XFilial("ZZ7")+SB1->B1_YLINHA+SB1->B1_YLINSEQ))
 			If Alltrim(ZZ7->ZZ7_EMP) == "1302"
@@ -519,7 +519,7 @@ User Function FRGERADM(_cPedido)
 			EndIf
 		EndIf
 	EndIf
-	
+
 	For I := 1 To Len(aIdGAdm)
 
 		PswOrder(2)
@@ -555,7 +555,7 @@ User Function FSEGORI(_cPedido)
 	Else
 		SC5->(DbSetOrder(1))
 		If SC5->(DbSeek(XFilial("SC5")+_cPedido))
-			_cCliente := SC5->(C5_CLIENTE+C5_LOJACLI)	
+			_cCliente := SC5->(C5_CLIENTE+C5_LOJACLI)
 			If _cCliente == "01006401"
 				_cCliente := SC5->(C5_YCLIORI+C5_YLOJORI)
 			EndIf
@@ -564,7 +564,7 @@ User Function FSEGORI(_cPedido)
 			If SA1->(DbSeek(XFilial("SA1")+_cCliente))
 				cRet := SA1->A1_YTPSEG
 			EndIf
-		EndIf 
+		EndIf
 	EndIf
 
 	RestArea(aAreaA1)
@@ -578,15 +578,15 @@ User function FRGAARM()
 	Local _cProd := M->C6_PRODUTO
 	Local _cLocal
 
-	
+
 	//tem local e e reserva de OP
 	//problema caso gatinhar produto novamente
 	If (!Empty(Gdfieldget('C6_LOCAL', n)) .And. AllTrim(Gdfieldget('C6_YTPEST', n)) == 'R')
 		_cLocal := Gdfieldget('C6_LOCAL', n)
 		Return(_cLocal)
 	EndIf
-	
-	
+
+
 	SB1->(DbSetOrder(1))
 	SB1->(DbSeek(XFilial("SB1")+_cProd))
 	IF (M->C5_YLINHA == '2' .And. SubStr(SB1->B1_YEMPEST,1,2) == "05")
@@ -618,7 +618,7 @@ User Function FRSALDOP(_cEmpresa,_cFilial,_cOpNum,_cOpItem,_cOpSeq,_cPedido,_cIt
 
 	cAliasTmp := GetNextAlias()
 
-	cSQL := "select SALDO = dbo.FNC_ROP_CALC_SALDO_OP_"+_cEmpresa+"('"+_cFilial+"', '"+_cOpNum+"', '"+_cOpItem+"', '"+_cOpSeq+"', '"+_cPedido+"', '"+_cItemPV+"', 1)"	
+	cSQL := "select SALDO = dbo.FNC_ROP_CALC_SALDO_OP_"+_cEmpresa+"('"+_cFilial+"', '"+_cOpNum+"', '"+_cOpItem+"', '"+_cOpSeq+"', '"+_cPedido+"', '"+_cItemPV+"', 1)"
 
 	TCQUERY cSQL ALIAS (cAliasTmp) NEW
 

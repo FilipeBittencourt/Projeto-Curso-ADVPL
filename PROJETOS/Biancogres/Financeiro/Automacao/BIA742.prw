@@ -3,7 +3,7 @@
 #INCLUDE "TOTVS.CH"
 #INCLUDE "FWMBROWSE.CH"
 #INCLUDE "FWMVCDEF.CH"
-#INCLUDE "TOPCONN.CH
+#INCLUDE "TOPCONN.CH"
 
 /*/{Protheus.doc} BIA742
 @description Aprovadores de descontos financeiro via limites estabelecidos.

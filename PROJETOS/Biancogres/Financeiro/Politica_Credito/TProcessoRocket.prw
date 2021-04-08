@@ -262,8 +262,7 @@ Local cSQL := ""
 
 	cSQL := " UPDATE " + RetFullName("SZU", "01")
 	cSQL += " SET ZU_STATUS = " + ValToSQL(If (::cCredit $ "AM/AA", "APROVADO", "REPROVADO"))
-	cSQL += ", ZU_DATAAPR = " + ValToSQL(dDatabase)
-	cSQL += ", ZU_OBS_LIB = " + ValToSQL(::cParCli)	
+	cSQL += ", ZU_DATAAPR = " + ValToSQL(dDatabase)	
 	cSQL += " WHERE ZU_FILIAL = " + ValToSQL(xFilial("SZU"))
 	cSQL += " AND ZU_BIZAGI = '' "
 	cSQL += " AND ZU_CODPRO = " + ValToSQL(::cCodPro)
