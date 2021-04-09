@@ -16,6 +16,7 @@ User Function TSTFIL()
   //TSTFIL002() // Teste pedidos provisionados
   //TSTFIL003()
   //TSTFIL004()
+  TSTFIL005() //Montar classe de envio de email e enviando
 
   //DbSelectArea("ZDK")
 
@@ -24,6 +25,32 @@ User Function TSTFIL()
 
 RETURN
 
+
+Static Function MSGTXT(cMensagem,cTitulo)
+
+  Local oDlg
+  Local oGet
+  Local oBtn1
+  Local lRet			:= .F.
+  Private cTexto 		:= ""
+
+  Default cTitulo := "TESTE MSG"
+  Default cMensagem := ""
+
+
+  //cTexto += 'BLOQUEIO POR REGRAS DE NEGÃ“CIO:' +CRLF + CRLF
+  cTexto := cMensagem
+
+  DEFINE MSDIALOG oDlg Title cTitulo From 000,000	To 350,400 Pixel
+
+  @ 005,005 Get oGet VAR cTexto MEMO SIZE 193,150 Of oDlg Pixel READONLY
+  oGet:bRClicked := {||AllwaysTrue()}
+
+  //oBtn1     := TButton():New( 020,160,"Cancelar",oDlg,{|| oDlg:End()},040,012,,,,.T.,,"",,,,.F. )
+
+  ACTIVATE MSDIALOG oDlg CENTER
+
+Return lRet
 //Teste Email SEND
 Static Function  TSTFIL001
 
@@ -261,33 +288,6 @@ Static Function TSTFIL003()
 
 Return lRet
 
-Static Function MSGTXT(cMensagem,cTitulo)
-
-  Local oDlg
-  Local oGet
-  Local oBtn1
-  Local lRet			:= .F.
-  Private cTexto 		:= ""
-
-  Default cTitulo := "TESTE MSG"
-  Default cMensagem := ""
-
-
-  //cTexto += 'BLOQUEIO POR REGRAS DE NEGÃ“CIO:' +CRLF + CRLF
-  cTexto := cMensagem
-
-  DEFINE MSDIALOG oDlg Title cTitulo From 000,000	To 350,400 Pixel
-
-  @ 005,005 Get oGet VAR cTexto MEMO SIZE 193,150 Of oDlg Pixel READONLY
-  oGet:bRClicked := {||AllwaysTrue()}
-
-  //oBtn1     := TButton():New( 020,160,"Cancelar",oDlg,{|| oDlg:End()},040,012,,,,.T.,,"",,,,.F. )
-
-  ACTIVATE MSDIALOG oDlg CENTER
-
-Return lRet
-
-
 Static Function TSTFIL004()
 
 
@@ -310,3 +310,131 @@ Static Function TSTFIL004()
   Next nX
 
 Return
+
+Static Function TSTFIL005()
+
+
+  Local oServidor := TMailManager():New()
+  Local oMensagem := TMailMessage():New()
+  Local nErro     := 0
+  Local cServidor := SubStr(GetMv("MV_RELSERV"),1,RAT(':',GetMv("MV_RELSERV"))-1)
+  Local cSrvPOP	  := SubStr(GetMv("MV_YSRVPOP"),1,RAT(':',GetMv("MV_YSRVPOP"))-1)
+  Local cConta 	  := GetMv("MV_YPVCTAP")
+  Local cSenha   	:= GetMv("MV_YPVSNAP")
+  Local cEmail 	  := GetMv("MV_YPVCTAP")
+  Local lUseTLS 	:= GetMv("MV_RELTLS")
+  Local lUseSSL 	:= GetMv("MV_RELSSL")
+  Local lUseAUT 	:= GetMv("MV_RELAUTH")
+  Local cContaRec := GetMv("MV_YPVCTAP")
+  Local cSenhaRec := GetMv("MV_YPVSNAP")
+  Local cPtSMTP   := Val(SubStr(GetMv("MV_RELSERV"),RAT(':',GetMv("MV_RELSERV"))+1,Len(Alltrim(GetMv("MV_RELSERV")))))
+  Local cPtPOP3   := Val(SubStr(GetMv("MV_YSRVPOP"),RAT(':',GetMv("MV_YSRVPOP"))+1,Len(Alltrim(GetMv("MV_YSRVPOP")))))
+
+
+  Local cNumPed   := "000001"
+  Local cKeyEnc   := "Bi@nCoGrEs"
+  Local cChave     := Upper(HMAC(cEmpAnt + cFilAnt + cNumPed, cKeyEnc, 1))
+
+
+
+  oServidor:SetUseTLS(lUseTLS)
+  oServidor:SetUseSSL(lUseSSL)
+  oServidor:Init("",cServidor, cConta,cSenha, 0, cPtSMTP)
+  oServidor:SetSmtpTimeOut(60)
+
+  If oServidor:SmtpConnect() == 0
+
+    If lUseAUT
+      nErro := oServidor:SmtpAuth(::cConta, ::cSenha)
+    EndIf
+
+    if nErro == 0
+
+      oMensagem:cFrom		  := cEmail
+      oMensagem:cTo 		  := "filipe.bittencourt@facilesistemas.com.br"
+      oMensagem:cCc 		  := ""
+      oMensagem:cBcc 	  	:= ""
+      oMensagem:cSubject	:= "Pedido: " + cNumPed + " TESTE  de ENVIO "
+      oMensagem:cBody 		:= TSTFIL005A(cEmail,cNumPed, cChave)
+
+      If oMensagem:Send(oServidor) == 0
+
+        oServidor:SmtpDisconnect()
+
+      EndIf
+
+    Else
+
+      ConOut( "ERRO ao autenticar: " + str(nErro,6), oServidor:GetErrorString( nErro ) )
+
+    EndIf
+
+  EndIf
+
+
+Return
+
+Static Function TSTFIL005A(cEmail,cNumPed, cChave)
+
+  Local cHtml := ""
+  cHtml := " <html> "
+  cHtml += "    <body style='font-family: Courier, Arial, Helvetica, sans-serif;'> "
+  cHtml += "       <div style='margin:0;padding:0;background-color:#fff;height:100%; '> "
+  cHtml += "          <table align='center' border='0' cellpadding='0' cellspacing='0' style='overflow-x:hidden;margin:0px 20px 0px 20px;border:1px solid #ebebeb'> "
+  cHtml += "             <tbody> "
+  cHtml += "                <tr> "
+  cHtml += "                   <td align='center' bgcolor='#919191'  style='font-size:20px; color:#ffffff; font-family: Courier, Arial, Helvetica, sans-serif;'> "
+  cHtml += "                      <h1 style='margin:0px; padding:5px; letter-spacing:15px;'>BIANCOGRES</h1> "
+  cHtml += " 					 <h4 style='margin:0px; padding:5px;'>Liberação de descontos</h4> "
+  cHtml += "                   </td> "
+  cHtml += "                </tr> "
+  cHtml += "                <tr> "
+  cHtml += "                   <td align='left' bgcolor='#ffffff' style='padding:30px 30px 30px 30px;font-family: Courier, Arial, Helvetica, sans-serif;'>  "
+  cHtml += " 				  Olá, <b>filipe.bittencourt@facilesistemas.com.br!</b> <br> 	 "
+  cHtml += " 				  Existem titulos pendendes de liberação. "
+  cHtml += " 				  </td> "
+  cHtml += "                </tr>		 "
+  cHtml += " 			    <tr> "
+  cHtml += "                   <td align='left' bgcolor='#fff' style='padding:3px;'> "
+  cHtml += "                      <table align='center' style='width:100%; border-collapse: collapse;  border: 1px solid #e5e5e5;'> "
+  cHtml += "                         <tbody> "
+  cHtml += "                            <tr> "
+  cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Empresa/Filial</th> "
+  cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Cliente/Loja</th> "
+  cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Titulo/Prefixo/Tipo</th> "
+  cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Parcela</th> "
+  cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Valor</th> "
+  cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Desconto</th> "
+  cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Emissão</th> "
+  cHtml += "                            </tr> "
+  cHtml += " 						    <tr> "
+  cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>07/01</td> "
+  cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'> 013181/01</td> "
+  cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>013974   /1   FT </td> "  "
+  cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>A</td> "
+  cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>6.528,60</td> "
+  cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>182,80</td> "
+  cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>22/04/2021</td> "
+  cHtml += "                            </tr> "
+  cHtml += " 						  </tbody> "
+  cHtml += " 						</table> "
+  cHtml += " 					</td> "
+  cHtml += " 				</tr>		 "
+  cHtml += " 			    <tr> "
+  cHtml += "                 <td align='center' bgcolor='#ffffff' style='padding:20px;font-family: Courier, Arial, Helvetica, sans-serif;'> 				 						 "
+  cHtml += " 					<a  href='mailto:"+cEmail+"?subject=Aprovar desconto:"+cNumPed+" - ACTION:APROVAR - KEY:"+ cChave +"' style= 'text-decoration: none; color: #FFF; background-color: #34a853; border: solid #34a853; border-width: 15px; line-height: 2; font-weight: bold; text-align: center; cursor: pointer; display: inline-block; border-radius: 5px;'>APROVAR</a> "
+  cHtml += " 					<a  href='mailto:"+cEmail+"?subject=Recusar desconto:"+cNumPed+" - ACTION:RECUSAR - KEY:"+ cChave +"' style= 'text-decoration: none; color: #FFF; background-color: #e94235; border: solid #e94235; border-width: 15px; line-height: 2; font-weight: bold; text-align: center; cursor: pointer; display: inline-block; border-radius: 5px;'>RECUSAR</a> "
+  cHtml += " 				  </td> "
+  cHtml += "              </tr>	 "
+  cHtml += "              <tr> "
+  cHtml += "                 <td align='center' bgcolor='#FAFAFA' style='padding:30px 30px 30px 30px;'> "
+  cHtml += "                      <p style='padding:0px;color:#333f4c;margin:0;font-size:11px;line-height:22px'>                         Esta notificação foi enviada por um email configurado para não receber resposta. 						Por favor, não responda esta mensagem.                       </p> "
+  cHtml += "                   </td> "
+  cHtml += "              </tr>		 "
+  cHtml += "             </tbody> "
+  cHtml += "          </table> "
+  cHtml += "       </div> "
+  cHtml += "    </body> "
+  cHtml += " </html> "
+
+Return cHtml
