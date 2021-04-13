@@ -9,7 +9,7 @@
 @type class
 /*/
 
-Class TAprovaPreNotaEMail From LongClassName	
+Class TAprovaPreNotaEMail From LongClassName
 
 	Data cNumPed
 	Data cCodApr
@@ -37,7 +37,7 @@ Class TAprovaPreNotaEMail From LongClassName
 	Data lUseTLS
 	Data lUseSSL
 	Data lUseAut
-	
+
 
 	Method New() Constructor
 	Method Inclui()
@@ -63,15 +63,15 @@ Method New() Class TAprovaPreNotaEMail
 	::cCodApr := ""
 	::cEmailApr := ""
 	::cCodAprT := ""
-	::cEmailAprT := ""	
+	::cEmailAprT := ""
 	::cDoc := ""
 	::cSerie := ""
 	::cCliFor := ""
 	::cLoja := ""
 
 	::oServidor := TMailManager():New()
-	::oMensagem := TMailMessage():New()	
-	
+	::oMensagem := TMailMessage():New()
+
 	::cServidor := SubStr(GetMv("MV_RELSERV"),1,RAT(':',GetMv("MV_RELSERV"))-1)
 	::cSrvPOP	:= SubStr(GetMv("MV_YSRVPOP"),1,RAT(':',GetMv("MV_YSRVPOP"))-1)
 	::cConta 	:= GetMv("MV_YPCCTAP")
@@ -82,15 +82,15 @@ Method New() Class TAprovaPreNotaEMail
 	::lUseAUT 	:= GetMv("MV_RELAUTH")
 	::cContaRec := GetMv("MV_YPCCTAP")
 	::cSenhaRec := GetMv("MV_YPCSNAP")
-	::cPtSMTP   := Val(SubStr(GetMv("MV_RELSERV"),RAT(':',GetMv("MV_RELSERV"))+1,Len(Alltrim(GetMv("MV_RELSERV")))))    
-	::cPtPOP3   := Val(SubStr(GetMv("MV_YSRVPOP"),RAT(':',GetMv("MV_YSRVPOP"))+1,Len(Alltrim(GetMv("MV_YSRVPOP"))))) 
+	::cPtSMTP   := Val(SubStr(GetMv("MV_RELSERV"),RAT(':',GetMv("MV_RELSERV"))+1,Len(Alltrim(GetMv("MV_RELSERV")))))
+	::cPtPOP3   := Val(SubStr(GetMv("MV_YSRVPOP"),RAT(':',GetMv("MV_YSRVPOP"))+1,Len(Alltrim(GetMv("MV_YSRVPOP")))))
 
 	::cIDMsg := ""
 
 Return()
 
 
-Method Inclui() Class TAprovaPreNotaEMail 
+Method Inclui() Class TAprovaPreNotaEMail
 
 	If ::Existe()
 
@@ -103,12 +103,12 @@ Method Inclui() Class TAprovaPreNotaEMail
 	ZC1->ZC1_FILIAL	:= xFilial("ZC1")
 	ZC1->ZC1_EMP := cEmpAnt
 	ZC1->ZC1_FIL := cFilAnt
-	ZC1->ZC1_PEDIDO	:= ::cNumPed
+	ZC1->ZC1_PEDIDO	:= AllTrim(::cNumPed)
 	ZC1->ZC1_APROV := ::cCodApr
 	ZC1->ZC1_EMAIL := ::cEmailApr
 	ZC1->ZC1_APROVT := ::cCodAprT
 	ZC1->ZC1_EMAILT := ::cEmailAprT
-	ZC1->ZC1_CHAVE := ::cIDMsg		
+	ZC1->ZC1_CHAVE := ::cIDMsg
 	ZC1->ZC1_DATENV := dDataBase
 	ZC1->ZC1_STATUS := "E"
 
@@ -187,18 +187,18 @@ Return()
 
 Method Envia() Class TAprovaPreNotaEMail
 
-	//TICKET 23728 - ocorreu alguma mudanca no servidor de email que passou a nao aceitar poerta 25 - mudando para 587	
+	//TICKET 23728 - ocorreu alguma mudanca no servidor de email que passou a nao aceitar poerta 25 - mudando para 587
 	::oServidor:SetUseTLS(::lUseTLS)
 
 	::oServidor:SetUseSSL(::lUseSSL)
-	
-	::oServidor:Init("", ::cServidor, ::cConta, ::cSenha, 0, ::cPtSMTP)				
+
+	::oServidor:Init("", ::cServidor, ::cConta, ::cSenha, 0, ::cPtSMTP)
 
 	::oServidor:SetSmtpTimeOut(60)
 
 	If ::oServidor:SmtpConnect() == 0
-	
-		If ::lUseAUT 
+
+		If ::lUseAUT
 			_nErro := ::oServidor:SmtpAuth(::cConta, ::cSenha)
 		Else
 			_nErro := 0
@@ -209,7 +209,7 @@ Method Envia() Class TAprovaPreNotaEMail
 			::cIDMsg := Upper(HMAC(cEmpAnt + cFilAnt + ::cDoc + ::cSerie + ::cCliFor + ::cLoja, "Bi@nCoGrEs", 1))
 
 			::oMensagem := TMailMessage():New()
-			::oMensagem:Clear() 
+			::oMensagem:Clear()
 
 			::cEmailApr := UsrRetMail(::cCodApr)
 			::cEmailAprT := UsrRetMail(::cCodAprT)
@@ -218,7 +218,7 @@ Method Envia() Class TAprovaPreNotaEMail
 			::oMensagem:cTo := ::RetEmailApr()
 			::oMensagem:cCc := ""
 			::oMensagem:cBcc := ""
-			::oMensagem:cSubject := "Confirmar Entrada de Pré-Nota de Serviço: " + ::cDoc + " - Fornecedor: " + ::RetNomFor() 			
+			::oMensagem:cSubject := "Confirmar Entrada de Pré-Nota de Serviço: " + ::cDoc + " - Fornecedor: " + ::RetNomFor()
 			::oMensagem:cBody := ::RetHtml()
 
 			_nErro := ::oMensagem:Send( ::oServidor )
@@ -234,8 +234,8 @@ Method Envia() Class TAprovaPreNotaEMail
 			EndIf
 
 		Else
-		
-			ConOut( "TAprovaPreNotaEMail:Envia() => ERRO ao autenticar: " + str(_nErro,6), ::oServidor:GetErrorString( _nErro ) ) 
+
+			ConOut( "TAprovaPreNotaEMail:Envia() => ERRO ao autenticar: " + str(_nErro,6), ::oServidor:GetErrorString( _nErro ) )
 
 		EndIf
 
@@ -249,8 +249,8 @@ Return()
 Method Recebe() Class TAprovaPreNotaEMail
 
 	Local nMsg := 0
-	Local nTotMsg := 0 
-	
+	Local nTotMsg := 0
+
 	::oServidor:SetUseSSL(::lUseSSL)
 
 	::oServidor:Init(::cSrvPOP, "", ::cContaRec, ::cSenhaRec, ::cPtPOP3, 0)
@@ -261,13 +261,13 @@ Method Recebe() Class TAprovaPreNotaEMail
 
 	If (_nRet == 0)
 
-		::oServidor:GetNumMsgs(@nTotMsg)	  
+		::oServidor:GetNumMsgs(@nTotMsg)
 
 		For nMsg := 1 To nTotMsg
 
 			::oMensagem:Clear()
 
-			::oMensagem:Receive(::oServidor, nMsg)	    	    	     	    	    
+			::oMensagem:Receive(::oServidor, nMsg)
 
 			ConOut(cValToChar(dDataBase) +"-"+ Time() + " -- TAprovaPreNotaEMail:Recebe()")
 
@@ -286,7 +286,7 @@ Method Recebe() Class TAprovaPreNotaEMail
 
 			EndIf
 
-			::oServidor:DeleteMsg(nMsg)	    
+			::oServidor:DeleteMsg(nMsg)
 
 		Next
 
@@ -303,11 +303,11 @@ Return()
 
 Method Valida()	Class TAprovaPreNotaEMail
 
-	Local lRet := .F.			
+	Local lRet := .F.
 
-	If !Empty(::cIDMsg) .And. ::Existe()	
+	If !Empty(::cIDMsg) .And. ::Existe()
 
-		::cNumPed 	:= ZC1->ZC1_PEDIDO		
+		::cNumPed 	:= ZC1->ZC1_PEDIDO
 		::cDoc 		:= ZC1->ZC1_DOC
 		::cSerie 	:= ZC1->ZC1_SERIE
 		::cCliFor 	:= ZC1->ZC1_CLIFOR
@@ -365,16 +365,16 @@ Return(cRet)
 Method RetHtml() Class TAprovaPreNotaEMail
 
 	Local cRet := ""
-	
+
 	cRet := '<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 	cRet += '<html xmlns="http://www.w3.org/1999/xhtml">
 	cRet += '<head>
 	cRet += ' <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	cRet += ' <title>Workflow</title>
 	cRet += '</head>
-	cRet += '<body>	
+	cRet += '<body>
 
-	cRet += ::RetHtmlBody()	
+	cRet += ::RetHtmlBody()
 
 	cRet += '</body>
 	cRet += '</html>
@@ -390,7 +390,7 @@ Method RetIDMsg() Class TAprovaPreNotaEMail
 
 		cRet := SubStr(AllTrim(::oMensagem:cSubject), At('KEY:', ::oMensagem:cSubject) + 3, 32)
 
-	EndIf	
+	EndIf
 
 Return(cRet)
 
@@ -414,7 +414,7 @@ Method RetHtmlBody() Class TAprovaPreNotaEMail
 	Local cTpFre := ""
 
 	cSQL := ""
-	cSQL += " SELECT C7_USER, D1_FORNECE, D1_LOJA, D1_DOC, D1_SERIE, C7_TPFRETE, D1_COD, C7_DESCRI, C7_UM, C7_DATPRF, C7_YICMS, C7_YPIS, C7_YCOF, C7_YIPI, "+CRLF 
+	cSQL += " SELECT C7_USER, D1_FORNECE, D1_LOJA, D1_DOC, D1_SERIE, C7_TPFRETE, D1_COD, C7_DESCRI, C7_UM, C7_DATPRF, C7_YICMS, C7_YPIS, C7_YCOF, C7_YIPI, "+CRLF
 	cSQL += " D1_QUANT, D1_VUNIT, D1_TOTAL, D1_IPI, C7_NUMSC, C7_MOEDA, C7_OBS, C7_COND, C7_TOTAL, C7_PRECO, C7_IPI, C7_QUANT, C7_VALFRE, C7_VLDESC, C7_VLDESC, C7_YTRANSP "+CRLF
 	cSQL += " FROM SD1010 SD1 "+CRLF
 	cSQL += " JOIN SC7010 SC7 on C7_FILIAL = D1_FILIAL and C7_NUM = D1_PEDIDO and C7_ITEM = D1_ITEMPC "+CRLF
@@ -428,19 +428,19 @@ Method RetHtmlBody() Class TAprovaPreNotaEMail
 
 	TcQuery cSQL New Alias (cQry)
 
-	If !(cQry)->(Eof()) 
+	If !(cQry)->(Eof())
 
-		cNomCon := (cQry)->C7_USER	
+		cNomCon := (cQry)->C7_USER
 		cEmailCon :=	Lower(UsrRetMail(cNomCon))
 
 		PswOrder(1)
 
-		If (!Empty(cNomCon) .And. PswSeek(cNomCon))	
+		If (!Empty(cNomCon) .And. PswSeek(cNomCon))
 
 			cNomCon:= PswRet(1)[1][4]
 
 		EndIf
-		
+
 		SA2->(DbSetOrder(1))
 		SA2->(DbSeek(xFilial("SA2") + (cQry)->D1_FORNECE + (cQry)->D1_LOJA))
 
@@ -454,17 +454,17 @@ Method RetHtmlBody() Class TAprovaPreNotaEMail
 		cHtml += '.mainTableCss tr,.tblDadosComprador tr,.tblDadosFornecedor tr,.tblTotais tr,.tblDadosTransportadora tr{ }'
 		cHtml += '.mainTableCss th,.tblDadosComprador th,.tblDadosFornecedor th,.tblDadosItens th,.tblTotais th,.tblDadosTransportadora th{ padding: 10px; }'
 		cHtml += '.mainTableCss td,.tblDadosComprador td,.tblDadosFornecedor td,.tblDadosItens td,.tblTotais td,.tblDadosTransportadora td{ padding: 2px 10px 2px 10px; font-size: 12px; }'
-		cHtml += '.tblItensPedido td{border-top: 1px solid #c6c6c6; border-bottom: 1px solid #c6c6c6; }' 
-		cHtml += '.tblItensPedido-border-left{ border-left: 1px solid #c6c6c6; padding:1px 1px 1px 1px; }' 
-		cHtml += '.tblItensPedido-border-right{ border-right: 1px solid #c6c6c6; border-left: 1px solid #c6c6c6; padding:1fpx 1px 1px 1px;}' 
-		cHtml += '.titleCss{ font-size: 14px; }' 
+		cHtml += '.tblItensPedido td{border-top: 1px solid #c6c6c6; border-bottom: 1px solid #c6c6c6; }'
+		cHtml += '.tblItensPedido-border-left{ border-left: 1px solid #c6c6c6; padding:1px 1px 1px 1px; }'
+		cHtml += '.tblItensPedido-border-right{ border-right: 1px solid #c6c6c6; border-left: 1px solid #c6c6c6; padding:1fpx 1px 1px 1px;}'
+		cHtml += '.titleCss{ font-size: 14px; }'
 		cHtml += '.titleTable{ background-color: #C6C6C6; font-size: 14px; }'
 		cHtml += '.linkConfirmacao{ font-size: 16px; color: blue; font-weight: bold; }'
 		cHtml += '</style>'
 		cHtml += '<table class="mainTableCss" >'
 		cHtml += '	<tr class="">'
 		cHtml += '		<th colspan="2" valign="top">'
-		cHtml += '			<u><span class="linkConfirmacao"></u>' + cLink		
+		cHtml += '			<u><span class="linkConfirmacao"></u>' + cLink
 		cHtml += '		</th>'
 		cHtml += '	</tr>'
 		cHtml += '	<tr class="">'
@@ -574,17 +574,17 @@ Method RetHtmlBody() Class TAprovaPreNotaEMail
 			nTotFre += (cQry)->C7_VALFRE
 			nTotDes += (cQry)->C7_VLDESC
 
-			IIf(Empty(cObs), cObs := (cQry)->C7_VLDESC, "") 
+			IIf(Empty(cObs), cObs := (cQry)->C7_VLDESC, "")
 
 			(cQry)->(DbSkip())
 
 			nCount ++
 
-		EndDo()     
+		EndDo()
 
 		nTotGer := (nTotMer+nTotIpi+nTotFre) - nTotDes
 
-		cHtml += '							 </tr>' 
+		cHtml += '							 </tr>'
 		cHtml += '						</table>'
 		cHtml += '					</td>'
 		cHtml += '				</tr>'
@@ -613,7 +613,7 @@ Method RetHtmlBody() Class TAprovaPreNotaEMail
 		cHtml += '				<tr class="titleTable"><th colspan="2">DADOS DA TRANSPORTADORA</th></tr>'
 		cHtml += '				<tr><td><b>TRANSPORTADORA:&nbsp;</b></td><td>'+ Capital(Alltrim(Posicione("SA4", 1, xFilial("SA4") + (cQry)->C7_YTRANSP, "A4_NOME"))) +'</td></tr>'
 		cHtml += '			</table>'
-		cHtml += '		</td>'			
+		cHtml += '		</td>'
 		cHtml += '	</tr>'
 		cHtml += '	<tr>'
 		cHtml += '		<td>'
@@ -624,6 +624,6 @@ Method RetHtmlBody() Class TAprovaPreNotaEMail
 
 	EndIf
 
-	(cQry)->(DbCloseArea()) 
+	(cQry)->(DbCloseArea())
 
 Return(cHtml)

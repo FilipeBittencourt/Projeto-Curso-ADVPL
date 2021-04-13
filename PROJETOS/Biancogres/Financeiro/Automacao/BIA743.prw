@@ -74,6 +74,9 @@ User Function BIA743()
 
 Return
 
+
+// Filipe - Facile - 12/04/2021 | Ticket: 26221
+// AS regras abaixo estão presentes no fonte TWLiberacaoFinanceiro metodo Regras
 Static Function Regras(aJS)
 
   Local cEmail    := ""
