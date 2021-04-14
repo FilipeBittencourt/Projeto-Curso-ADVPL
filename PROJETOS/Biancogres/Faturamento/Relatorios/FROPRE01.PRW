@@ -1,4 +1,4 @@
-#INCLUDE "PROTHEUS.CH"   
+#INCLUDE "PROTHEUS.CH"
 #INCLUDE "TOPCONN.CH"
 
 /*/{Protheus.doc} FROPRE01
@@ -49,6 +49,14 @@ Static Function ReportDef()
 	TRCell():New(oSection1	,"C2_QUANT"  		,,"Qtde"				,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->C2_QUANT  } )
 	TRCell():New(oSection1	,"C2_YQTRTFC"  		,,"Qt.Retífica"			,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->C2_YQTRTFC  } )
 	TRCell():New(oSection1	,"C2_QUJE"  		,,"Qt.Ja Produzida"		,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->C2_QUJE  } )
+	TRCell():New(oSection1	,"C2_LINHA"			,,"Linha"				,"@!", 6,/*lPixel*/,  {|| (cQUERY)->C2_LINHA } )
+	TRCell():New(oSection1	,"ZZ6_DESC"			,,"Desc"				,"@!", 10,/*lPixel*/,  {|| (cQUERY)->ZZ6_DESC } )
+	TRCell():New(oSection1	,"ZZ6_FORNOP"			,,"Forno"				,"@!", 10,/*lPixel*/,  {|| (cQUERY)->ZZ6_FORNOP } )
+	TRCell():New(oSection1	,"C2_OBS"			,,"Obs."				,"@!", 10,/*lPixel*/,  {|| (cQUERY)->C2_OBS } )
+
+
+
+
 	TRCell():New(oSection1	,"TOT_DISPO_VENDA"  ,,"Total p/Reserva"		,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->TOT_DISPO_VENDA  } )
 	TRCell():New(oSection1	,"RESERVADA"  		,,"Qt.Reservada"		,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->RESERVADA  } )
 	TRCell():New(oSection1	,"SALDO_VENDA"  	,,"Saldo p/Reserva"		,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->SALDO_VENDA  } )
@@ -71,7 +79,7 @@ Static Function ReportPrint( oReport )
 	CSQL += " SELECT "+CRLF
 	CSQL += " C2_NUM, "+CRLF
 	CSQL += " C2_PRODUTO, "+CRLF
-	CSQL += " B1_DESC, "+CRLF
+	CSQL += " SB1.B1_DESC, "+CRLF
 	CSQL += " C2_EMISSAO, "+CRLF
 	CSQL += " C2_DATPRI, "+CRLF
 	CSQL += " C2_DATPRF, "+CRLF
@@ -79,7 +87,13 @@ Static Function ReportPrint( oReport )
 	CSQL += " C2_DATRF, "+CRLF
 	CSQL += " C2_QUANT, "+CRLF
 	CSQL += " C2_YQTRTFC, "+CRLF
+
 	CSQL += " C2_QUJE, "+CRLF
+	CSQL += " C2_LINHA,"+CRLF
+	CSQL += " C2_OBS,"+CRLF
+	CSQL += " ZZ6.ZZ6_DESC,"+CRLF
+	CSQL += " ZZ6.ZZ6_FORNOP,"+CRLF
+
 	CSQL += " RESERVADA = isnull((select sum(PZ0_QUANT) from "+RetSQLName("PZ0")+" PZ0 where PZ0_FILIAL = C2_FILIAL and PZ0_OPNUM = C2_NUM  "+CRLF
 	CSQL += " 				and PZ0_OPITEM = C2_ITEM and PZ0_OPSEQ = C2_SEQUEN and PZ0.D_E_L_E_T_=''),0), "+CRLF
 	CSQL += " TOT_DISPO_VENDA = ROUND([dbo].[FNC_ROP_CALC_SALDO_OP_"+AllTrim(CEMPANT)+"](SC2.C2_FILIAL,SC2.C2_NUM,SC2.C2_ITEM,SC2.C2_SEQUEN,'','',0),2) "+CRLF
@@ -88,7 +102,7 @@ Static Function ReportPrint( oReport )
 	CSQL += " JOIN "+RetSQLName("ZZ6")+" ZZ6 (nolock) ON ZZ6_COD = B1_YFORMAT "+CRLF
 	CSQL += " WHERE "+CRLF
 	CSQL += " C2_FILIAL = '"+XFilial("SC2")+"' "+CRLF
-	CSQL += " and B1_TIPO = 'PA' "+CRLF                                   
+	CSQL += " and B1_TIPO = 'PA' "+CRLF
 	CSQL += " and C2_PRODUTO between '"+MV_PAR03+"' and '"+MV_PAR04+"' "+CRLF
 	CSQL += " and C2_EMISSAO between '"+DTOS(MV_PAR05)+"' and '"+DTOS(MV_PAR06)+"' "+CRLF
 	CSQL += " and B1_YCLASSE between '"+MV_PAR07+"' and '"+MV_PAR08+"' "+CRLF
@@ -106,7 +120,9 @@ Static Function ReportPrint( oReport )
 	CSQL += " SELECT "+CRLF
 	CSQL += " C2_NUM, "+CRLF
 	CSQL += " C2_PRODUTO, "+CRLF
-	CSQL += " B1_DESC, "+CRLF
+
+	CSQL += " SB1.B1_DESC, "+CRLF //
+
 	CSQL += " C2_EMISSAO, "+CRLF
 	CSQL += " C2_DATPRI, "+CRLF
 	CSQL += " C2_DATPRF, "+CRLF
@@ -115,10 +131,19 @@ Static Function ReportPrint( oReport )
 	CSQL += " C2_QUANT, "+CRLF
 	CSQL += " C2_YQTRTFC, "+CRLF
 	CSQL += " C2_QUJE, "+CRLF
+
+	CSQL += " C2_LINHA, "+CRLF
+	CSQL += " C2_OBS, "+CRLF
+	CSQL += " ZZ6.ZZ6_DESC,"+CRLF
+	CSQL += " ZZ6.ZZ6_FORNOP, "+CRLF
+
 	CSQL += " TOT_DISPO_VENDA, "+CRLF
 	CSQL += " RESERVADA, "+CRLF
 	CSQL += " SALDO_VENDA = (TOT_DISPO_VENDA - C2_QUJE - RESERVADA) "+CRLF
 	CSQL += " FROM TAB_OP "+CRLF
+
+	CSQL += " JOIN "+RetSQLName("SB1")+" SB1 (nolock) ON SB1.B1_COD = C2_PRODUTO "+CRLF
+	CSQL += " JOIN "+RetSQLName("ZZ6")+" ZZ6 (nolock) ON ZZ6_COD = SB1.B1_YFORMAT "+CRLF
 	CSQL += " WHERE "+CRLF
 
 	CSQL += " 1 = 1 "+CRLF
@@ -126,7 +151,7 @@ Static Function ReportPrint( oReport )
 		CSQL += " and (TOT_DISPO_VENDA - C2_QUJE - RESERVADA) > 0 "+CRLF
 	ElseIf MV_PAR02 == 3
 		CSQL += " and (TOT_DISPO_VENDA - C2_QUJE - RESERVADA) <= 0 "+CRLF
-	EndIf     
+	EndIf
 
 	If nOrder = 1
 		CSQL += " ORDER BY C2_PRODUTO "+CRLF
@@ -141,7 +166,7 @@ Static Function ReportPrint( oReport )
 	oSection1:Init()
 	oSection1:Print()
 	oSection1:Finish()
-	
+
 	IF Select("QUERY") > 0
 		QUERY->(DbCloseArea())
 	ENDIF
@@ -172,10 +197,10 @@ Static Function ValPerg()
 	aRegs := {}
 	For I := 1 To Len(aTRegs)
 		aAdd(aRegs,{cPerg, StrZero(I,2), aTRegs[I][1], aTRegs[I][1], aTRegs[I][1],;
-		"mv_ch"+Alltrim(Str(I)), aTRegs[I][2],aTRegs[I][3],aTRegs[I][4],aTRegs[I][5],;
-		aTRegs[I][6],aTRegs[I][7],"mv_par"+StrZero(I,2),aTRegs[I][8],"","","","",;
-		aTRegs[I][9],"","","","",aTRegs[I][10],"","","","",aTRegs[I][11],"","","",;
-		"",aTRegs[I][12],"","","",aTRegs[I][13],""})
+			"mv_ch"+Alltrim(Str(I)), aTRegs[I][2],aTRegs[I][3],aTRegs[I][4],aTRegs[I][5],;
+			aTRegs[I][6],aTRegs[I][7],"mv_par"+StrZero(I,2),aTRegs[I][8],"","","","",;
+			aTRegs[I][9],"","","","",aTRegs[I][10],"","","","",aTRegs[I][11],"","","",;
+			"",aTRegs[I][12],"","","",aTRegs[I][13],""})
 	Next I
 
 	//Grava no SX1 se ja nao existir
@@ -212,4 +237,4 @@ Static Function ValPerg()
 
 	Next
 
-RETURN                	
+RETURN

@@ -1,0 +1,95 @@
+#Include "TOTVS.CH"
+#Include "Protheus.CH"
+#Include "TOPCONN.CH"
+
+// U_BIA761
+User Function BIA761()
+
+
+  RpcClearEnv()
+  If Select("SX6") <= 0
+    RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+  EndIf
+
+  LerEmail()
+
+RETURN
+
+Static Function LerEmail()
+
+  Local oMailManager := TMailManager():New()
+  Local oMailMessage := TMailMessage():New()
+
+  Local nMsg 		:= 0
+  Local nTotMsg	:= 0
+  Local nRet		:= 0
+  Local cChave	:= ""
+  Local cAcao 	:= ""
+
+  Local cSrvPOP	  := SubStr(GetMv("MV_YSRVPOP"),1,RAT(':',GetMv("MV_YSRVPOP"))-1)
+  Local lUseTLS 	:= GetMv("MV_RELTLS")
+  Local cContaRec := GetMv("MV_YPVCTAP")
+  Local cSenhaRec := GetMv("MV_YPVSNAP")
+
+  oMailManager:SetUseTLS(lUseTLS)
+  oMailManager:Init(cSrvPOP, "" , cContaRec, cSenhaRec)
+  oMailManager:SetPopTimeOut(60)
+
+  nRet := oMailManager:PopConnect()
+
+  If (nRet == 0)
+
+    oMailManager:GetNumMsgs(@nTotMsg)
+
+    For nMsg := 1 To nTotMsg
+
+      oMailMessage:Clear()
+
+      oMailMessage:Receive(oMailManager, nMsg)
+
+      ConOut(cValToChar(dDataBase) +"-"+ Time() + " -- BIA761 - METODO -> LerEmail()")
+
+      //recuperar chave da mensagem
+      If 'KEY:' $ oMailMessage:cSubject
+
+        cChave := SubStr(AllTrim(oMailMessage:cSubject), At('KEY:', oMailMessage:cSubject) + 3, 32)
+
+      EndIf
+
+      If 'ACTION:' $ oMailMessage:cSubject
+
+        cAcao := SubStr(AllTrim(oMailMessage:cSubject), At('ACTION:', oMailMessage:cSubject) + 6, 7)
+
+      EndIf
+
+      If !EMPTY(cChave) .AND. !EMPTY(cAcao)
+        AtualizaChave(cChave,cAcao)
+        oMailManager:DeleteMsg(nMsg)
+      EndIf
+
+    Next
+
+    //oMailManager:POPDisconnect()
+
+  Else
+
+    ConOut( "BIA761 => ERRO ao conectar com servidor POP: " + oMailManager:GetErrorString( nRet ) )
+
+  EndIf
+
+Return
+
+Static Function AtualizaChave(cChave,cAcao)
+
+  Local cQuery := ""
+
+  cQuery := " UPDATE  ZKH010 SET  ZKH_STATUS = 'R' , ZKH_DATREC = "+CVALTOCHAR(dDataBase)+"  " + CRLF
+  cQuery += " WHERE ZKH_TABELA = 'ZL0010' " + CRLF
+  cQuery += " AND ZKH_STATUS   = 'E' " + CRLF
+  cQuery += " AND ZKH_PROCES   = 'DESCONTO-FINANCEIRO' " + CRLF
+  cQuery += " AND ZKH_CHAVE    = '"+AllTrim(cChave)+"' " + CRLF
+
+  TCSQLEXEC(cQuery)
+
+Return
+

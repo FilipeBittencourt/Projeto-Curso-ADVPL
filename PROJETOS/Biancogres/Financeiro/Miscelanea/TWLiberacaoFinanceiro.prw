@@ -1868,7 +1868,7 @@ Static FUNCTION CkDescFin(cCODEMP,cCODFIL,cCLIFOR,cLOJA,cCLVLDB,cCCONTA,;
 				ZKH->ZKH_EMP 		  := cCODEMP
 				ZKH->ZKH_FIL 		  := cCODFIL
 				ZKH->ZKH_TABELA		:= "ZL0010"
-				ZKH->ZKH_PROCES		:= "DESCONT. FINANC."
+				ZKH->ZKH_PROCES		:= "DESCONTO-FINANCEIRO"
 				ZKH->ZKH_APROV 		:= cAprov
 				ZKH->ZKH_EMAIL 		:= cEmail
 				ZKH->ZKH_CHAVE 		:= cChave
@@ -1893,17 +1893,14 @@ Static Function CkDescMail(cEUser,cCODEMP,cCODFIL,cCLIFOR,cLOJA,cCLVLDB,cCCONTA,
 	Local oMensagem := TMailMessage():New()
 	Local nErro     := 0
 	Local cServidor := SubStr(GetMv("MV_RELSERV"),1,RAT(':',GetMv("MV_RELSERV"))-1)
-	Local cSrvPOP	  := SubStr(GetMv("MV_YSRVPOP"),1,RAT(':',GetMv("MV_YSRVPOP"))-1)
 	Local cConta 	  := GetMv("MV_YPVCTAP")
 	Local cSenha   	:= GetMv("MV_YPVSNAP")
 	Local cEmail 	  := GetMv("MV_YPVCTAP")
 	Local lUseTLS 	:= GetMv("MV_RELTLS")
 	Local lUseSSL 	:= GetMv("MV_RELSSL")
 	Local lUseAUT 	:= GetMv("MV_RELAUTH")
-	Local cContaRec := GetMv("MV_YPVCTAP")
-	Local cSenhaRec := GetMv("MV_YPVSNAP")
 	Local cPtSMTP   := Val(SubStr(GetMv("MV_RELSERV"),RAT(':',GetMv("MV_RELSERV"))+1,Len(Alltrim(GetMv("MV_RELSERV")))))
-	Local cPtPOP3   := Val(SubStr(GetMv("MV_YSRVPOP"),RAT(':',GetMv("MV_YSRVPOP"))+1,Len(Alltrim(GetMv("MV_YSRVPOP")))))
+
 	Local lRet      := .F.
 
 

@@ -3,9 +3,9 @@
 #INCLUDE "TOPCONN.CH"
 
 /*/{Protheus.doc} BIA743
-@description JOB que Envia EMAIL para Aprovadores de descontos financeiro via limites estabelecidos.
+@description JOB que Envia EMAIL pendentes de aprovação de descontos financeiro via limites estabelecidos.
 @author Filipe Bittencourt
-@since 31/03/2021
+@since 14/04/2021
 @version 1.0
 @type function
 /*/ 
@@ -24,15 +24,26 @@ User Function BIA743()
   EndIf
 
   cQry   := GetNextAlias()
-  dDtIni := "20201210"//FirstDate(Date()-1) //CToD("01/01/19")
 
+  cSQL := " SELECT " + CRLF
 
-  cSQL := " SELECT *  " + CRLF
-  cSQL += " FROM  ZL0010 " + CRLF
-  cSQL += " WHERE ZL0_DESCON >   0 " + CRLF
-  cSQL += " AND   ZL0_CLVLDB <> '' " + CRLF
-  cSQL += " AND   D_E_L_E_T_ =  '' " + CRLF
-  cSQL += " AND   ZL0_EMISSA = " + ValToSQL(dDtIni)  + CRLF
+  cSQL += "   ZKH.ZKH_STATUS " + CRLF
+  cSQL += " , ZKH.ZKH_APROV " + CRLF
+  cSQL += " , ZKH.ZKH_EMAIL " + CRLF
+  cSQL += " , ZL0.* " + CRLF
+
+  cSQL += " FROM ZKH010 ZKH " + CRLF
+
+  cSQL += " INNER JOIN ZL0010 ZL0 ON ZKH.ZKH_ID = ZL0.R_E_C_N_O_ " + CRLF
+  cSQL += " AND ZL0.ZL0_CODEMP = ZKH.ZKH_EMP  " + CRLF
+  cSQL += " AND ZL0.ZL0_CODFIL = ZKH.ZKH_FIL " + CRLF
+  cSQL += " AND ZL0.D_E_L_E_T_ = ''   " + CRLF
+
+  cSQL += "  WHERE ZKH.ZKH_TABELA = 'ZL0010' " + CRLF
+  cSQL += "  AND ZKH.ZKH_STATUS = 'E' " + CRLF
+  cSQL += "  AND ZKH.ZKH_PROCES = 'DESCONTO-FINANCEIRO' " + CRLF
+  cSQL += "  AND ZKH.D_E_L_E_T_ = '' " + CRLF
+  cSQL += "  ORDER BY ZKH.ZKH_EMAIL  " + CRLF
 
   TcQuery cSQL New Alias (cQry)
 
@@ -55,7 +66,9 @@ User Function BIA743()
     aAuxJS[Len(aAuxJS)]["ZL0_PARCEL"] := AllTrim((cQry)->ZL0_PARCEL)
     aAuxJS[Len(aAuxJS)]["ZL0_TIPO"]    := AllTrim((cQry)->ZL0_TIPO)
 
-    aAuxJS[Len(aAuxJS)]["EMAIL"] := Regras(aAuxJS[Len(aAuxJS)])
+    aAuxJS[Len(aAuxJS)]["EMAIL"] := AllTrim((cQry)->ZKH_EMAIL)
+
+    aAuxJS[Len(aAuxJS)]["EMAIL"] := "filipe.bittencourt@facilesistemas.com.br"
 
     if EMPTY(aAuxJS[Len(aAuxJS)]["EMAIL"])
       aAuxJS[Len(aAuxJS)]["EMAIL"] := "filipe.bittencourt@facilesistemas.com.br"
@@ -73,98 +86,6 @@ User Function BIA743()
 
 
 Return
-
-
-// Filipe - Facile - 12/04/2021 | Ticket: 26221
-// AS regras abaixo estão presentes no fonte TWLiberacaoFinanceiro metodo Regras
-Static Function Regras(aJS)
-
-  Local cEmail    := ""
-  Local cQry      := GetNextAlias()
-  Local cSQL      := ""
-
-  cSQL := " select * "+  CRLF
-  cSQL += " from ZDK010 "+  CRLF
-  cSQL += " where LTRIM(RTRIM(ZDK_CLVLR)) = " + ValToSQL(AllTrim(aJS["ZL0_CLVLDB"]))  + CRLF
-  cSQL += " AND LTRIM(RTRIM(ZDK_CCONTA))  = " + ValToSQL(AllTrim(aJS["ZL0_DEBITO"]))  + CRLF
-  cSQL += " AND   "+cValTochar(aJS["ZL0_DESCON"])+"  BETWEEN  ZDK_VLAPIN AND ZDK_VLAPFI  "+  CRLF
-  cSQL += " AND   ZDK_STATUS =  'A' " + CRLF
-  cSQL += " AND   D_E_L_E_T_ =  '' " + CRLF
-  cSQL += " ORDER BY ZDK_VLAPIN, ZDK_VLAPFI "+  CRLF
-
-  TcQuery cSQL New Alias (cQry)
-
-  While (cQry)->(!Eof())
-
-
-    //Regra 1 - ATÉ 8000 DE desconte
-
-    If aJS["ZL0_DESCON"] <= 8000 .AND. !EMPTY(AllTrim(aJS["ZL0_DEBITO"]))
-
-      cEmail := UsrRetMail(AllTrim((cQry)->ZDK_APROV1)) //MANDA PARA O GESTOR PRINCIPAL
-
-      If !EMPTY((cQry)->ZDK_APROVT) .AND. !EMPTY((cQry)->ZDK_DTATIN) .AND. !EMPTY((cQry)->ZDK_VLAPFI)
-
-        IF (cQry)->ZDK_VLAPFI >= dDataBase
-
-          cEmail := UsrRetMail(AllTrim((cQry)->ZDK_APROV1)) //MANDA PARA O APROVADOR TEMPORARIO
-
-        EndIf
-
-      EndIf
-
-      //Regra 2 - acima de 8000.01 e classe de valor começando com 2
-    ElseIf aJS["ZL0_DESCON"] >= 8000.01 .AND. SUBSTR(AllTrim((cQry)->ZDK_CLVLR), 0, 1) == "2" .AND. !EMPTY(AllTrim(aJS["ZL0_DEBITO"]))
-
-      cEmail := UsrRetMail(AllTrim((cQry)->ZDK_APROV1)) //MANDA PARA O GESTOR PRINCIPAL
-
-      If !EMPTY((cQry)->ZDK_APROVT) .AND. !EMPTY((cQry)->ZDK_DTATIN) .AND. !EMPTY((cQry)->ZDK_VLAPFI)
-
-        IF (cQry)->ZDK_VLAPFI >= dDataBase
-
-          cEmail := UsrRetMail(AllTrim((cQry)->ZDK_APROV1)) //MANDA PARA O APROVADOR TEMPORARIO
-
-        EndIf
-
-      EndIf
-
-      //Regra 3 - acima de 8000.01 e classe de valor começando com 3
-    ElseIf aJS["ZL0_DESCON"] >= 8000.01 .AND. SUBSTR(AllTrim((cQry)->ZDK_CLVLR), 0, 1) == "3" .AND. !EMPTY(AllTrim(aJS["ZL0_DEBITO"]))
-
-      cEmail := UsrRetMail(AllTrim((cQry)->ZDK_APROV1)) //MANDA PARA O GESTOR PRINCIPAL
-
-      If !EMPTY((cQry)->ZDK_APROVT) .AND. !EMPTY((cQry)->ZDK_DTATIN) .AND. !EMPTY((cQry)->ZDK_VLAPFI)
-
-        IF (cQry)->ZDK_VLAPFI >= dDataBase
-
-          cEmail := UsrRetMail(AllTrim((cQry)->ZDK_APROV1)) //MANDA PARA O APROVADOR TEMPORARIO
-
-        EndIf
-
-      EndIf
-
-      //Regra 4 - INDEPENDETE DO VALOR, POREM SEM CONTA CONTABIL
-    ELSE
-
-      cEmail := UsrRetMail(AllTrim((cQry)->ZDK_APROV1)) //MANDA PARA O GESTOR PRINCIPAL
-
-      If !EMPTY((cQry)->ZDK_APROVT) .AND. !EMPTY((cQry)->ZDK_DTATIN) .AND. !EMPTY((cQry)->ZDK_VLAPFI)
-
-        IF (cQry)->ZDK_VLAPFI >= dDataBase
-
-          cEmail := UsrRetMail(AllTrim((cQry)->ZDK_APROV1)) //MANDA PARA O APROVADOR TEMPORARIO
-
-        EndIf
-
-      EndIf
-
-    EndIf
-
-    (cQry)->(DbSkip())
-
-  EndDo
-
-Return cEmail
 
 Static Function EmailSend(oJSZL0)
 
