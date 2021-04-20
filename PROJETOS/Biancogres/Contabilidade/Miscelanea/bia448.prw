@@ -87,6 +87,7 @@ User Function BIA448B()
 	zy_Grid := {}
 	nUsado := 0
 	dbSelectArea("SX3")
+	dbSetOrder(1)
 	dbSeek("ZBF")
 	aHeader := {}
 	While !Eof() .and. SX3->X3_ARQUIVO == "ZBF"

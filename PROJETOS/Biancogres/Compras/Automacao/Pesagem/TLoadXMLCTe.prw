@@ -50,6 +50,14 @@ Method GetCTe() Class TLoadXMLCTe
 		oCTe   	:= XmlParserFile(::cBuffer,"_", @cAviso,@cErro)
 	EndIf
 
+	//tratamento para aqruivos enviados != de CTe
+	If (XmlChildEx(oCTe, "_CTEPROC") == NIL)
+		If (XmlChildEx(oCTe, "_CTE") == NIL)
+			oCTe := Nil
+		EndIf
+	EndIf
+	
+	
 	If (oCTe <> Nil)
 
 		If Type("oCTe:_cteProc") <> "U"

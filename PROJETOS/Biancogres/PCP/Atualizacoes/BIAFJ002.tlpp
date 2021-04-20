@@ -1,0 +1,42 @@
+#include "totvs.ch"
+#include "topconn.ch"
+
+#DEFINE STR0001 "Cadastro de Formato por Perda"
+#DEFINE STR0002 "Formato por Perda"
+
+/*/{Protheus.doc}
+@author J&DO - Jordan G. Lazarine (facile)
+@since 18/03/2021
+@version 1.0
+@description Cadastro de Perda por Formato.
+@type function
+/*/
+
+procedure u_BIAFJ002()
+
+    local oFWMBrowse   as object
+
+    // Instanciamento da classe de Browse
+    oFWMBrowse:=FWMBrowse():New()
+
+    //Alias
+    oFWMBrowse:SetAlias("ZRX")
+
+    private cCadastro as character
+    cCadastro := STR0001
+
+    // Titulo da Browse
+    oFWMBrowse:SetDescription(cCadastro)
+
+    //Define o menu do Browse
+    oFWMBrowse:setMenuDef("BJ002MVC")
+
+    //Habilita o botao para fechar a janela
+    oFWMBrowse:ForceQuitButton()
+
+    // Ativacao da classe
+    ZRX->(oFWMBrowse:Activate())
+
+    freeObj(oFWMBrowse)
+
+    return

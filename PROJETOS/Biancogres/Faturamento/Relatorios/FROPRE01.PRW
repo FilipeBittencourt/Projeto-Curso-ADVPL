@@ -44,22 +44,22 @@ Static Function ReportDef()
 	TRCell():New(oSection1	,"C2_EMISSAO"  		,,"Emissão"				,"@!", 10,/*lPixel*/, {|| DTOC(STOD((cQUERY)->C2_EMISSAO))  } )
 	TRCell():New(oSection1	,"C2_DATPRI"  		,,"Prev.Inicio"			,"@!", 10,/*lPixel*/, {|| DTOC(STOD((cQUERY)->C2_DATPRI))  } )
 	TRCell():New(oSection1	,"C2_DATPRF"  		,,"Prev.Fim"			,"@!", 10,/*lPixel*/, {|| DTOC(STOD((cQUERY)->C2_DATPRF))  } )
-	TRCell():New(oSection1	,"C2_YDTDISP"  		,,"Disponibilidade"		,"@!", 10,/*lPixel*/, {|| DTOC(STOD((cQUERY)->C2_YDTDISP))  } )
+
 	TRCell():New(oSection1	,"C2_DATRF"  		,,"Dt.Encerramento"		,"@!", 10,/*lPixel*/, {|| DTOC(STOD((cQUERY)->C2_DATRF))  } )
 	TRCell():New(oSection1	,"C2_QUANT"  		,,"Qtde"				,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->C2_QUANT  } )
 	TRCell():New(oSection1	,"C2_YQTRTFC"  		,,"Qt.Retífica"			,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->C2_YQTRTFC  } )
 	TRCell():New(oSection1	,"C2_QUJE"  		,,"Qt.Ja Produzida"		,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->C2_QUJE  } )
-	TRCell():New(oSection1	,"C2_LINHA"			,,"Linha"				,"@!", 6,/*lPixel*/,  {|| (cQUERY)->C2_LINHA } )
-	TRCell():New(oSection1	,"ZZ6_DESC"			,,"Desc"				,"@!", 10,/*lPixel*/,  {|| (cQUERY)->ZZ6_DESC } )
-	TRCell():New(oSection1	,"ZZ6_FORNOP"			,,"Forno"				,"@!", 10,/*lPixel*/,  {|| (cQUERY)->ZZ6_FORNOP } )
-	TRCell():New(oSection1	,"C2_OBS"			,,"Obs."				,"@!", 10,/*lPixel*/,  {|| (cQUERY)->C2_OBS } )
-
-
-
-
 	TRCell():New(oSection1	,"TOT_DISPO_VENDA"  ,,"Total p/Reserva"		,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->TOT_DISPO_VENDA  } )
 	TRCell():New(oSection1	,"RESERVADA"  		,,"Qt.Reservada"		,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->RESERVADA  } )
 	TRCell():New(oSection1	,"SALDO_VENDA"  	,,"Saldo p/Reserva"		,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->SALDO_VENDA  } )
+
+	TRCell():New(oSection1	,"C2_LINHA"			,,"Linha"				,"@!", 6,/*lPixel*/,  {|| (cQUERY)->C2_LINHA } )
+	TRCell():New(oSection1	,"ZZ6_DESC"			,,"Desc"				,"@!", 10,/*lPixel*/,  {|| (cQUERY)->ZZ6_DESC } )
+	TRCell():New(oSection1	,"ZZ6_FORNOP"			,,"Forno"				,"@!", 6,/*lPixel*/,  {|| (cQUERY)->ZZ6_FORNOP } )
+	TRCell():New(oSection1	,"PERCENT_OP"  ,,"Disp OP%"		,"@E 99.99", 10,/*lPixel*/, {|| (cQUERY)->PERCENT_OP  } )
+	TRCell():New(oSection1	,"C2_YDTDORI"  		,,"Dt.Disp.Ori"		,"@!", 10,/*lPixel*/, {|| DTOC(STOD((cQUERY)->C2_YDTDORI))  } )
+	TRCell():New(oSection1	,"C2_OBS"			,,"Obs."				,"@!", 10,/*lPixel*/,  {|| (cQUERY)->C2_OBS } )
+
 
 Return oReport
 
@@ -83,7 +83,7 @@ Static Function ReportPrint( oReport )
 	CSQL += " C2_EMISSAO, "+CRLF
 	CSQL += " C2_DATPRI, "+CRLF
 	CSQL += " C2_DATPRF, "+CRLF
-	CSQL += " C2_YDTDISP, "+CRLF
+	CSQL += " C2_YDTDORI, "+CRLF
 	CSQL += " C2_DATRF, "+CRLF
 	CSQL += " C2_QUANT, "+CRLF
 	CSQL += " C2_YQTRTFC, "+CRLF
@@ -95,8 +95,15 @@ Static Function ReportPrint( oReport )
 	CSQL += " ZZ6.ZZ6_FORNOP,"+CRLF
 
 	CSQL += " RESERVADA = isnull((select sum(PZ0_QUANT) from "+RetSQLName("PZ0")+" PZ0 where PZ0_FILIAL = C2_FILIAL and PZ0_OPNUM = C2_NUM  "+CRLF
-	CSQL += " 				and PZ0_OPITEM = C2_ITEM and PZ0_OPSEQ = C2_SEQUEN and PZ0.D_E_L_E_T_=''),0), "+CRLF
-	CSQL += " TOT_DISPO_VENDA = ROUND([dbo].[FNC_ROP_CALC_SALDO_OP_"+AllTrim(CEMPANT)+"](SC2.C2_FILIAL,SC2.C2_NUM,SC2.C2_ITEM,SC2.C2_SEQUEN,'','',0),2) "+CRLF
+	CSQL += "	and PZ0_OPITEM = C2_ITEM and PZ0_OPSEQ = C2_SEQUEN and PZ0.D_E_L_E_T_=''),0), "+CRLF
+
+	CSQL += " TOT_DISPO_VENDA = ROUND([dbo].[FNC_ROP_CALC_SALDO_OP_"+AllTrim(CEMPANT)+"](SC2.C2_FILIAL,SC2.C2_NUM,SC2.C2_ITEM,SC2.C2_SEQUEN,'','',0),2) ,"+CRLF
+
+	CSQL += " CASE WHEN SB1.B1_YINDCOM > 0 "+CRLF
+	CSQL += " THEN SB1.B1_YINDCOM "+CRLF
+	CSQL += " ELSE ZZ6.ZZ6_INDCOM "+CRLF
+	CSQL += " END AS PERCENT_OP "+CRLF
+
 	CSQL += " FROM "+RetSQLName("SC2")+" SC2 (nolock) "+CRLF
 	CSQL += " JOIN "+RetSQLName("SB1")+" SB1 (nolock) ON B1_COD = C2_PRODUTO "+CRLF
 	CSQL += " JOIN "+RetSQLName("ZZ6")+" ZZ6 (nolock) ON ZZ6_COD = B1_YFORMAT "+CRLF
@@ -126,7 +133,7 @@ Static Function ReportPrint( oReport )
 	CSQL += " C2_EMISSAO, "+CRLF
 	CSQL += " C2_DATPRI, "+CRLF
 	CSQL += " C2_DATPRF, "+CRLF
-	CSQL += " C2_YDTDISP, "+CRLF
+	CSQL += " C2_YDTDORI, "+CRLF
 	CSQL += " C2_DATRF, "+CRLF
 	CSQL += " C2_QUANT, "+CRLF
 	CSQL += " C2_YQTRTFC, "+CRLF
@@ -139,7 +146,13 @@ Static Function ReportPrint( oReport )
 
 	CSQL += " TOT_DISPO_VENDA, "+CRLF
 	CSQL += " RESERVADA, "+CRLF
-	CSQL += " SALDO_VENDA = (TOT_DISPO_VENDA - C2_QUJE - RESERVADA) "+CRLF
+	CSQL += " SALDO_VENDA = (TOT_DISPO_VENDA - C2_QUJE - RESERVADA) ,"+CRLF
+
+	CSQL += " CASE WHEN SB1.B1_YINDCOM > 0 "+CRLF
+	CSQL += " THEN SB1.B1_YINDCOM "+CRLF
+	CSQL += " ELSE ZZ6.ZZ6_INDCOM "+CRLF
+	CSQL += " END AS PERCENT_OP "+CRLF
+
 	CSQL += " FROM TAB_OP "+CRLF
 
 	CSQL += " JOIN "+RetSQLName("SB1")+" SB1 (nolock) ON SB1.B1_COD = C2_PRODUTO "+CRLF
@@ -156,7 +169,7 @@ Static Function ReportPrint( oReport )
 	If nOrder = 1
 		CSQL += " ORDER BY C2_PRODUTO "+CRLF
 	ElseIf nOrder = 2
-		CSQL += " ORDER BY C2_YDTDISP "+CRLF
+		CSQL += " ORDER BY C2_YDTDORI "+CRLF
 	Else
 		CSQL += " ORDER BY C2_NUM "+CRLF
 	EndIf

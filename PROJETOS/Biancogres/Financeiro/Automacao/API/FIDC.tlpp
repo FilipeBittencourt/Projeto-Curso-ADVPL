@@ -53,6 +53,7 @@ class FIDC
 	static method getQueryRet(aParamRet as array,aBCOIsFIDC as array,aFWTTables as array) as character
 	static method getQueryRec(aParamRet as array,aBCOIsFIDC as array,aFWTTables as array) as character
 	static method getQueryCon(aParamRet as array,aBCOIsFIDC as array,aFWTTables as array) as character
+	static method getQueryMovBco(dDataRef) as character
 
 	static method getParamRem(aParamRet as array) as logical
 	static method getParamRet(aParamRet as array) as logical
@@ -1438,6 +1439,7 @@ static method getQueryRem(aParamRet,aBCOIsFIDC,aFWTTables) class FIDC
            AND SE1.E1_PORTADO=SA6.A6_COD
            AND SE1.E1_AGEDEP=SA6.A6_AGENCIA
            AND SE1.E1_CONTA=SA6.A6_NUMCON
+           AND SE1.E1_YSITAPI='2'
            AND SA6.A6_YTPINTB='1'
            AND SA1.A1_COD BETWEEN %exp:cA1CODDe% AND %exp:cA1CODAte%
            AND SE1.E1_VENCTO BETWEEN %exp:cE1VENCTODe% AND %exp:cE1VENCTOAte%
@@ -1666,6 +1668,7 @@ static method getQueryRet(aParamRet,aBCOIsFIDC,aFWTTables) class FIDC
             AND SA6.A6_FILIAL=%xFilial:SA6%
             AND SE1.E1_CLIENTE=SA1.A1_COD
             AND SE1.E1_LOJA=SA1.A1_LOJA
+            AND SE1.E1_YSITAPI='2'
             AND SA6.A6_COD=%exp:cA6COD%
             AND SA6.A6_AGENCIA=%exp:cA6AGENCIA%
             AND SA6.A6_NUMCON=%exp:cA6NUMCON%
@@ -1928,6 +1931,7 @@ static method getQueryRec(aParamRet,aBCOIsFIDC,aFWTTables) class FIDC
             AND SE1.E1_PORTADO=SA6.A6_COD
             AND SE1.E1_AGEDEP=SA6.A6_AGENCIA
             AND SE1.E1_CONTA=SA6.A6_NUMCON
+            AND SE1.E1_YSITAPI='2'
             AND SA6.A6_YTPINTB='1'
             AND SA1.A1_COD BETWEEN %exp:cA1CODDe% AND %exp:cA1CODAte%
             AND SE1.E1_VENCTO BETWEEN %exp:cE1VENCTODe% AND %exp:cE1VENCTOAte%
@@ -2256,6 +2260,95 @@ static method getQueryCon(aParamRet,aBCOIsFIDC,aFWTTables) class FIDC
 	uToXML():setXMLVar("BAIXADO","TOTAL",.T.)
 	uToXML():setXMLVar("ZK4_VLJURO","TOTAL",.T.)
 	uToXML():setXMLVar("ZK4_VLDESC","TOTAL",.T.)
+
+	return(cTmpAlias)
+
+static method getQueryMovBco(dDataRef) class FIDC
+
+	local cSQLPath
+	local cSQLFile
+	local cSQLQuery
+
+	local cDataRef
+
+	local cTmpAlias	as character
+
+	local cUnidadeCodigo
+
+	paramtype dDataRef as date optional default Date()
+
+	cDataRef:=DToS(dDataRef)
+
+    cUnidadeCodigo:=&("cEmpAnt")
+    cUnidadeCodigo+=&("cFilAnt")
+
+	cTmpAlias:=getNextAlias()
+
+	beginSQL alias cTmpAlias
+	
+		%noparser%
+
+		SELECT SUM(SE1.E1_VALOR-SE1.E1_YFDCVAL) AS NVLR
+			  ,COUNT(1) AS NQTDE
+		FROM %table:SE1% SE1
+		JOIN (
+			SELECT SE1RECNO=Boleto.NumeroControleParticipante 
+				  ,CodigoBanco
+				  ,Agencia
+				  ,Conta
+				  ,Lote.NomeArquivo
+			  FROM APIFINANCEIRO.dbo.Boleto  (NOLOCK)
+			  JOIN APIFINANCEIRO.dbo.Unidade (NOLOCK) ON (Unidade.ID=Boleto.UnidadeID)
+			  JOIN APIFINANCEIRO.dbo.Lote    (NOLOCK) ON (Lote.ID = Boleto.LoteID)
+			  JOIN APIFINANCEIRO.dbo.Cedente (NOLOCK) ON (Cedente.ID=Boleto.CedenteID)
+			  JOIN APIFINANCEIRO.dbo.ContaBancaria (NOLOCK) ON (ContaBancaria.ID=Cedente.ContaBancariaID)
+			 WHERE Lote.NomeArquivo<>''
+			   AND Unidade.Codigo=%exp:cUnidadeCodigo%
+			   AND CONVERT(DATE,APIFINANCEIRO.dbo.Boleto.InsertDate) BETWEEN CONVERT(DATE,%exp:cDataRef%) AND CONVERT(DATE,%exp:cDataRef%)
+		) QAPI ON (
+						SE1.R_E_C_N_O_=QAPI.SE1RECNO
+					AND SE1.E1_PORTADO=QAPI.CodigoBanco
+					AND SE1.E1_AGEDEP=QAPI.Agencia
+					AND SE1.E1_CONTA=QAPI.Conta
+					AND QAPI.NomeArquivo<>''
+		)
+		JOIN %table:SA6% SA6 ON (
+								SA6.A6_COD=SE1.E1_PORTADO
+							AND SA6.A6_AGENCIA=SE1.E1_AGEDEP
+							AND SA6.A6_NUMCON=SE1.E1_CONTA
+							AND SA6.%notDel%
+							AND SA6.A6_YTPINTB='1'
+		)
+		WHERE (1=1)
+			AND SE1.E1_FILIAL=%xFilial:SE1%
+			AND SE1.E1_NUMBOR<>' '
+			AND SE1.E1_DATABOR=%exp:cDataRef%
+			AND SE1.%notDel%
+			AND SE1.E1_YSITAPI='2'
+			AND SA6.A6_FILIAL=' '
+			AND SA6.%notDel%
+			AND SA6.A6_YTPINTB='1'
+	   GROUP BY SE1.E1_FILIAL
+			   ,SE1.E1_PORTADO
+			   ,SE1.E1_AGEDEP
+			   ,SE1.E1_CONTA
+
+	endSQL
+
+	cSQLQuery:=getLastQuery()[2]
+
+    if (IsBlind())
+        cSQLPath:="\tmp\"
+    else
+        cSQLPath:=getTempPath()
+        if (!right(cSQLPath,1)=="\")
+            cSQLPath+="\"
+        endif
+    endif
+    cSQLPath+="FIDC\SQL\"
+
+    cSQLFile:=""
+	A35():writeSQLFile(@cSQLQuery,&("cEmpAnt"),&("cFilAnt"),"FIDCMovBcoFIDC","00","qry_final",@cSQLPath,@cSQLFile)
 
 	return(cTmpAlias)
 
@@ -2889,7 +2982,6 @@ static method movBcoFIDC(dDataRef) class FIDC
 	
 	local cTo			as character
 	local cMsg			as character
-	local cDataRef		as character
 
 	local cTmpAlias		as character
 
@@ -2913,6 +3005,7 @@ static method movBcoFIDC(dDataRef) class FIDC
 
 	local lRet			as logical
 	local lHasError		as logical
+    local lNewMovBco    as logical
 
 	local lPicture		as logical
 	local lX3Titulo		as logical
@@ -2931,62 +3024,11 @@ static method movBcoFIDC(dDataRef) class FIDC
 
 	paramtype dDataRef as date optional default Date()
 
-	cDataRef:=DToS(dDataRef)
-
 	aArea:=getArea()
 
 	begin sequence
 
-		aFields:=array(0)
-
-		aAdd(aFields,{"E5_RECPAG",getSX3Cache("E5_RECPAG","X3_TIPO"),getSX3Cache("E5_RECPAG","X3_TAMANHO"),getSX3Cache("E5_RECPAG","X3_DECIMAL")})
-		aAdd(aFields,{"E5_DATA",getSX3Cache("E5_DATA","X3_TIPO"),getSX3Cache("E5_DATA","X3_TAMANHO"),getSX3Cache("E5_DATA","X3_DECIMAL")})
-		aAdd(aFields,{"E5_DTDIGIT",getSX3Cache("E5_DTDIGIT","X3_TIPO"),getSX3Cache("E5_DTDIGIT","X3_TAMANHO"),getSX3Cache("E5_DTDIGIT","X3_DECIMAL")})
-		aAdd(aFields,{"E5_DTDISPO",getSX3Cache("E5_DTDISPO","X3_TIPO"),getSX3Cache("E5_DTDISPO","X3_TAMANHO"),getSX3Cache("E5_DTDISPO","X3_DECIMAL")})
-		aAdd(aFields,{"E5_MOEDA",getSX3Cache("E5_MOEDA","X3_TIPO"),getSX3Cache("E5_MOEDA","X3_TAMANHO"),getSX3Cache("E5_MOEDA","X3_DECIMAL")})
-		aAdd(aFields,{"E5_VALOR",getSX3Cache("E5_VALOR","X3_TIPO"),getSX3Cache("E5_VALOR","X3_TAMANHO"),getSX3Cache("E5_VALOR","X3_DECIMAL")})
-		aAdd(aFields,{"E5_NATUREZ",getSX3Cache("E5_NATUREZ","X3_TIPO"),getSX3Cache("E5_NATUREZ","X3_TAMANHO"),getSX3Cache("E5_NATUREZ","X3_DECIMAL")})
-		aAdd(aFields,{"E5_BANCO",getSX3Cache("E5_BANCO","X3_TIPO"),getSX3Cache("E5_BANCO","X3_TAMANHO"),getSX3Cache("E5_BANCO","X3_DECIMAL")})
-		aAdd(aFields,{"E5_AGENCIA",getSX3Cache("E5_AGENCIA","X3_TIPO"),getSX3Cache("E5_AGENCIA","X3_TAMANHO"),getSX3Cache("E5_AGENCIA","X3_DECIMAL")})
-		aAdd(aFields,{"E5_CONTA",getSX3Cache("E5_CONTA","X3_TIPO"),getSX3Cache("E5_CONTA","X3_TAMANHO"),getSX3Cache("E5_CONTA","X3_DECIMAL")})
-		aAdd(aFields,{"E5_HISTOR",getSX3Cache("E5_HISTOR","X3_TIPO"),getSX3Cache("E5_HISTOR","X3_TAMANHO"),getSX3Cache("E5_HISTOR","X3_DECIMAL")})
-		aAdd(aFields,{"E5_CC",getSX3Cache("E5_CCD","X3_TIPO"),getSX3Cache("E5_CCD","X3_TAMANHO"),getSX3Cache("E5_CCD","X3_DECIMAL")})
-		aAdd(aFields,{"E5_CLVL",getSX3Cache("E5_CLVLDB","X3_TIPO"),getSX3Cache("E5_CLVLDB","X3_TAMANHO"),getSX3Cache("E5_CLVLDB","X3_DECIMAL")})
-		
-		aAdd(aFields,{"STATUS","C",10,0})
-		aAdd(aFields,{"MSG","M",80,0})
-
-		cTSQLite:=criaTrab(nil,.F.)
-		dbCreate(cTSQLite,aFields,"SQLITE_MEM")
-		cASQLite:=getNextAlias()
-		dbUseArea(.T.,"SQLITE_MEM",cTSQLite,cASQLite,.F.,.F.)
-
-		cTmpAlias:=getNextAlias()
-		beginSQL alias cTmpAlias
-			SELECT SUM(SE1.E1_VALOR-SE1.E1_YFDCVAL) AS NVLR
-				  ,COUNT(1) AS NQTDE
-			FROM %table:SE1% SE1
-	       WHERE (1=1)
-	         AND SE1.E1_FILIAL=%xFilial:SE1%
-             AND SE1.E1_NUMBOR<>' '
-			 AND SE1.E1_DATABOR=%exp:cDataRef%
-             AND SE1.%notDel%
-	         AND SE1.E1_YSITAPI='2'
-			 AND EXISTS (
-							SELECT 1 FROM %table:SA6% SA6
-						     WHERE SA6.A6_FILIAL=%xFilial:SA6%
-							   AND SA6.A6_COD=SE1.E1_PORTADO
-							   AND SA6.A6_AGENCIA=SE1.E1_AGEDEP
-							   AND SA6.A6_NUMCON=SE1.E1_CONTA
-							   AND SA6.%notDel%
-							   AND SA6.A6_YTPINTB='1'
-			)
-			GROUP BY SE1.E1_FILIAL
-				    ,SE1.E1_PORTADO
-				    ,SE1.E1_AGEDEP
-				    ,SE1.E1_CONTA
-
-		endSQL
+		cTmpAlias:=FIDC():getQueryMovBco(@dDataRef)
 
 		lRet:=(cTmpAlias)->(!eof())
 
@@ -3024,56 +3066,88 @@ static method movBcoFIDC(dDataRef) class FIDC
 			end while
 		endif
 
-		if (cASQLite)->(recLock(cASQLite,.T.))
-			(cASQLite)->E5_RECPAG:="R"
-			(cASQLite)->E5_DATA:=dDataRef
-			(cASQLite)->E5_DTDIGIT:=dDataRef
-			(cASQLite)->E5_DTDISPO:=dDataRef
-			(cASQLite)->E5_MOEDA:="M1"
-			(cASQLite)->E5_VALOR:=(cTmpAlias)->NVLR
-			(cASQLite)->E5_NATUREZ:="1220"
-			(cASQLite)->E5_BANCO:=cBanco
-			(cASQLite)->E5_AGENCIA:=cAgencia
-			(cASQLite)->E5_CONTA:=cConta
-			(cASQLite)->E5_HISTOR:="REPASSE GOLDEN"
-			(cASQLite)->E5_CC:="1000"
-			(cASQLite)->E5_CLVL:="1101"
-			(cASQLite)->(msUnLock())
-		endif
+		aFields:=array(0)
 
-		if (cASQLite)->(recLock(cASQLite,.T.))
-			(cASQLite)->E5_RECPAG:="P"
-			(cASQLite)->E5_DATA:=dDataRef
-			(cASQLite)->E5_DTDIGIT:=dDataRef
-			(cASQLite)->E5_DTDISPO:=dDataRef
-			(cASQLite)->E5_MOEDA:="M1"
-			(cASQLite)->E5_VALOR:=nTTED
-			(cASQLite)->E5_NATUREZ:=cNTED
-			(cASQLite)->E5_BANCO:=cBanco
-			(cASQLite)->E5_AGENCIA:=cAgencia
-			(cASQLite)->E5_CONTA:=cConta
-			(cASQLite)->E5_HISTOR:=cHTED
-			(cASQLite)->E5_CC:="1000"
-			(cASQLite)->E5_CLVL:="1215"
-			(cASQLite)->(msUnLock())
-		endif
+		aAdd(aFields,{"E5_RECPAG",getSX3Cache("E5_RECPAG","X3_TIPO"),getSX3Cache("E5_RECPAG","X3_TAMANHO"),getSX3Cache("E5_RECPAG","X3_DECIMAL")})
+		aAdd(aFields,{"E5_DATA",getSX3Cache("E5_DATA","X3_TIPO"),getSX3Cache("E5_DATA","X3_TAMANHO"),getSX3Cache("E5_DATA","X3_DECIMAL")})
+		aAdd(aFields,{"E5_DTDIGIT",getSX3Cache("E5_DTDIGIT","X3_TIPO"),getSX3Cache("E5_DTDIGIT","X3_TAMANHO"),getSX3Cache("E5_DTDIGIT","X3_DECIMAL")})
+		aAdd(aFields,{"E5_DTDISPO",getSX3Cache("E5_DTDISPO","X3_TIPO"),getSX3Cache("E5_DTDISPO","X3_TAMANHO"),getSX3Cache("E5_DTDISPO","X3_DECIMAL")})
+		aAdd(aFields,{"E5_MOEDA",getSX3Cache("E5_MOEDA","X3_TIPO"),getSX3Cache("E5_MOEDA","X3_TAMANHO"),getSX3Cache("E5_MOEDA","X3_DECIMAL")})
+		aAdd(aFields,{"E5_VALOR",getSX3Cache("E5_VALOR","X3_TIPO"),getSX3Cache("E5_VALOR","X3_TAMANHO"),getSX3Cache("E5_VALOR","X3_DECIMAL")})
+		aAdd(aFields,{"E5_NATUREZ",getSX3Cache("E5_NATUREZ","X3_TIPO"),getSX3Cache("E5_NATUREZ","X3_TAMANHO"),getSX3Cache("E5_NATUREZ","X3_DECIMAL")})
+		aAdd(aFields,{"E5_BANCO",getSX3Cache("E5_BANCO","X3_TIPO"),getSX3Cache("E5_BANCO","X3_TAMANHO"),getSX3Cache("E5_BANCO","X3_DECIMAL")})
+		aAdd(aFields,{"E5_AGENCIA",getSX3Cache("E5_AGENCIA","X3_TIPO"),getSX3Cache("E5_AGENCIA","X3_TAMANHO"),getSX3Cache("E5_AGENCIA","X3_DECIMAL")})
+		aAdd(aFields,{"E5_CONTA",getSX3Cache("E5_CONTA","X3_TIPO"),getSX3Cache("E5_CONTA","X3_TAMANHO"),getSX3Cache("E5_CONTA","X3_DECIMAL")})
+		aAdd(aFields,{"E5_HISTOR",getSX3Cache("E5_HISTOR","X3_TIPO"),getSX3Cache("E5_HISTOR","X3_TAMANHO"),getSX3Cache("E5_HISTOR","X3_DECIMAL")})
+		aAdd(aFields,{"E5_CC",getSX3Cache("E5_CCD","X3_TIPO"),getSX3Cache("E5_CCD","X3_TAMANHO"),getSX3Cache("E5_CCD","X3_DECIMAL")})
+		aAdd(aFields,{"E5_CLVL",getSX3Cache("E5_CLVLDB","X3_TIPO"),getSX3Cache("E5_CLVLDB","X3_TAMANHO"),getSX3Cache("E5_CLVLDB","X3_DECIMAL")})
+		
+		aAdd(aFields,{"STATUS","C",10,0})
+		aAdd(aFields,{"MSG","M",80,0})
 
-		if (cASQLite)->(recLock(cASQLite,.T.))
-			(cASQLite)->E5_RECPAG:="P"
-			(cASQLite)->E5_DATA:=dDataRef
-			(cASQLite)->E5_DTDIGIT:=dDataRef
-			(cASQLite)->E5_DTDISPO:=dDataRef
-			(cASQLite)->E5_MOEDA:="M1"
-			(cASQLite)->E5_VALOR:=(nTCobranca*(cTmpAlias)->NQTDE)
-			(cASQLite)->E5_NATUREZ:=cNCobranca
-			(cASQLite)->E5_BANCO:=cBanco
-			(cASQLite)->E5_AGENCIA:=cAgencia
-			(cASQLite)->E5_CONTA:=cConta
-			(cASQLite)->E5_HISTOR:=cHCobranca
-			(cASQLite)->E5_CC:="1000"
-			(cASQLite)->E5_CLVL:="1215"
-			(cASQLite)->(msUnLock())
-		endif
+		cTSQLite:=criaTrab(nil,.F.)
+		dbCreate(cTSQLite,aFields,"SQLITE_MEM")
+		cASQLite:=getNextAlias()
+		dbUseArea(.T.,"SQLITE_MEM",cTSQLite,cASQLite,.F.,.F.)
+
+		while (cTmpAlias)->(!eof())
+
+			if (cASQLite)->(recLock(cASQLite,.T.))
+				(cASQLite)->E5_RECPAG:="R"
+				(cASQLite)->E5_DATA:=dDataRef
+				(cASQLite)->E5_DTDIGIT:=dDataRef
+				(cASQLite)->E5_DTDISPO:=dDataRef
+				(cASQLite)->E5_MOEDA:="M1"
+				(cASQLite)->E5_VALOR:=(cTmpAlias)->NVLR
+				(cASQLite)->E5_NATUREZ:="1220"
+				(cASQLite)->E5_BANCO:=cBanco
+				(cASQLite)->E5_AGENCIA:=cAgencia
+				(cASQLite)->E5_CONTA:=cConta
+				(cASQLite)->E5_HISTOR:="REPASSE GOLDEN"
+				(cASQLite)->E5_CC:="1000"
+				(cASQLite)->E5_CLVL:="1101"
+				(cASQLite)->(msUnLock())
+			endif
+
+			if (cASQLite)->(recLock(cASQLite,.T.))
+				(cASQLite)->E5_RECPAG:="P"
+				(cASQLite)->E5_DATA:=dDataRef
+				(cASQLite)->E5_DTDIGIT:=dDataRef
+				(cASQLite)->E5_DTDISPO:=dDataRef
+				(cASQLite)->E5_MOEDA:="M1"
+				(cASQLite)->E5_VALOR:=nTTED
+				(cASQLite)->E5_NATUREZ:=cNTED
+				(cASQLite)->E5_BANCO:=cBanco
+				(cASQLite)->E5_AGENCIA:=cAgencia
+				(cASQLite)->E5_CONTA:=cConta
+				(cASQLite)->E5_HISTOR:=cHTED
+				(cASQLite)->E5_CC:="1000"
+				(cASQLite)->E5_CLVL:="1215"
+				(cASQLite)->(msUnLock())
+			endif
+
+			if (cASQLite)->(recLock(cASQLite,.T.))
+				(cASQLite)->E5_RECPAG:="P"
+				(cASQLite)->E5_DATA:=dDataRef
+				(cASQLite)->E5_DTDIGIT:=dDataRef
+				(cASQLite)->E5_DTDISPO:=dDataRef
+				(cASQLite)->E5_MOEDA:="M1"
+				(cASQLite)->E5_VALOR:=(nTCobranca*(cTmpAlias)->NQTDE)
+				(cASQLite)->E5_NATUREZ:=cNCobranca
+				(cASQLite)->E5_BANCO:=cBanco
+				(cASQLite)->E5_AGENCIA:=cAgencia
+				(cASQLite)->E5_CONTA:=cConta
+				(cASQLite)->E5_HISTOR:=cHCobranca
+				(cASQLite)->E5_CC:="1000"
+				(cASQLite)->E5_CLVL:="1215"
+				(cASQLite)->(msUnLock())
+			endif
+
+			(cTmpAlias)->(dbSkip())
+
+		end while
+
+		(cTmpAlias)->(dbCloseArea())
 
 		oMovBco:=TAFMovimentoBancario():New()
 
@@ -3096,28 +3170,38 @@ static method movBcoFIDC(dDataRef) class FIDC
 				oMovBco:cCentroCusto:=(cASQLite)->E5_CC
 				oMovBco:cClasseValor:=(cASQLite)->E5_CLVL
 				oMovBco:nIdApi:=0
-				lRet:=oMovBco:Insert()
-				if (cASQLite)->(recLock(cASQLite,.F.))
-					(cASQLite)->STATUS:=if(lRet,"1-OK","0-ERROR")
-					if (!lRet)
-						lHasError:=.T.
-						aErros:=GetAutoGRLog()
-						nErros:=Len(aErros)
-						cMsg:=""
-						if (nErros>0)
-							for nErro:= 1 to nErros
-								cMsg+=aErros[nErro]
-							next nErros
-						else
-							cMsg+="Ocorreram erros na inclusao do Movimento Bancario"
-						endif
-						(cASQLite)->MSG:=cMsg
-					else
-						cMsg:="Movimento Bancario Incluido com Sucesso"
-						(cASQLite)->MSG:=cMsg
-					endif
-					(cASQLite)->(MsUnLock())
-				endif
+                lNewMovBco:=(!oMovBco:Exists())
+                if (lNewMovBco)
+                    lRet:=oMovBco:Insert()
+                    if (cASQLite)->(recLock(cASQLite,.F.))
+                        (cASQLite)->STATUS:=if(lRet,"1-OK","0-ERROR")
+                        if (!lRet)
+                            lHasError:=.T.
+                            aErros:=GetAutoGRLog()
+                            nErros:=Len(aErros)
+                            cMsg:=""
+                            if (nErros>0)
+                                for nErro:= 1 to nErros
+                                    cMsg+=aErros[nErro]
+                                next nErros
+                            else
+                                cMsg+="Ocorreram erros na inclusao do Movimento Bancario"
+                            endif
+                            (cASQLite)->MSG:=cMsg
+                        else
+                            cMsg:="Movimento Bancario Incluido com Sucesso"
+                            (cASQLite)->MSG:=cMsg
+                        endif
+                        (cASQLite)->(MsUnLock())
+                    endif
+                else
+                    if (cASQLite)->(recLock(cASQLite,.F.))
+                        (cASQLite)->STATUS:="2-Exists"
+                        cMsg:="Ja Existe Este Movimento Bancario"
+                        (cASQLite)->MSG:=cMsg
+                        (cASQLite)->(MsUnLock())
+                    endif
+                endif
 				(cASQLite)->(dbSkip())
 			end while
 

@@ -1,6 +1,8 @@
 #include "totvs.ch"
 #include "parmtype.ch"
 
+static __cCRLF  as character
+
 /*/{Protheus.doc} TAutDevIntQry
 @author Marinaldo de Jesus (Facile)
 @since 12/03/2021
@@ -14,6 +16,10 @@ class TAutDevIntQry
     static method GetDocOri(cDoc as character,cSerie as character,cCliente as character,cLoja as character,cCodFor as character,cLojaFor as character) as character
     static method ProcessaDevolucao(cCodigosCli as character) as character
     static method DocOriCmpAut(nZL9RecNo) as character
+    static method ProcessaSaida() as character
+    static method fDistribui(cDoc,cSerie,cCliente,cLoja) as character
+    static method FaturarPedido() as character
+    static method GetEndereco(cCodCli,cLojaCli,cDoc,cSerie) as character
 end class
 
 static method GetDocOri(cDoc,cSerie,cCliente,cLoja,cCodFor,cLojaFor) class TAutDevIntQry
@@ -59,7 +65,7 @@ static method GetDocOri(cDoc,cSerie,cCliente,cLoja,cCodFor,cLojaFor) class TAutD
 
     beginContent var cQuery
 
-        SELECT SD1_O.R_E_C_N_O_ SD1RECNO
+        SELECT DISTINCT SD1_O.R_E_C_N_O_ SD1RECNO
         FROM %exp:cSD2Table% SD2
         JOIN %exp:cSD1Table% SD1 ON (
                                         SD1.D_E_L_E_T_=''
@@ -136,73 +142,101 @@ static method GetDocOri(cDoc,cSerie,cCliente,cLoja,cCodFor,cLojaFor) class TAutD
 static method ProcessaDevolucao(cCodigosCli) class TAutDevIntQry
 
     local cSQL  as character
+    local cCRLF as character
 
     paramtype cCodigosCli as character
 
-	cSQL := ""
+	cSQL:= ""
+
+    DEFAULT __cCRLF:=CRLF    
+    cCRLF:=__cCRLF
     
-    cSQL += " SELECT D1_FILIAL, D1_LOCAL, F1_COND, F1_FORMUL, D1_DOC, D1_SERIE, D1_FORNECE, D1_LOJA, D1_EMISSAO, D1_COD, D1_QUANT, "
-	cSQL += " 		 D1_TES, D1_ITEM, D1_VUNIT, D1_TOTAL, D1_LOTECTL, D1_DTVALID, D1_PEDIDO, D1_ITEMPV, D2_LOTECTL, C5_YEMPPED, C5_YPEDORI, C6_LOCAL, C6_ITEM "
-	cSQL += " FROM " + RetSQLName("SF1") + " SF1 ( NOLOCK ) "
+    cSQL+=" SELECT D1_FILIAL"+cCRLF
+    cSQL+=" 	    ,D1_LOCAL"+cCRLF
+    cSQL+=" 	    ,F1_COND"+cCRLF
+    cSQL+=" 		,F1_FORMUL"+cCRLF
+    cSQL+=" 		,D1_DOC"+cCRLF
+    cSQL+=" 		,D1_SERIE"+cCRLF
+    cSQL+=" 		,D1_FORNECE"+cCRLF
+    cSQL+=" 		,D1_LOJA"+cCRLF
+    cSQL+=" 		,D1_EMISSAO"+cCRLF
+    cSQL+=" 		,D1_COD"+cCRLF
+    cSQL+=" 		,D1_QUANT"+cCRLF
+	cSQL+=" 		,D1_TES"+cCRLF
+    cSQL+=" 		,D1_ITEM"+cCRLF
+    cSQL+=" 		,D1_VUNIT"+cCRLF
+    cSQL+=" 		,D1_TOTAL"+cCRLF
+    cSQL+=" 		,D1_LOTECTL"+cCRLF
+    cSQL+=" 		,D1_DTVALID"+cCRLF
+    cSQL+=" 		,D1_PEDIDO"+cCRLF
+    cSQL+=" 		,D1_ITEMPV"+cCRLF
+    cSQL+=" 		,D2_LOTECTL"+cCRLF
+    cSQL+=" 		,C5_YEMPPED"+cCRLF
+    cSQL+=" 		,C5_YPEDORI"+cCRLF
+    cSQL+=" 		,C6_LOCAL"+cCRLF
+    cSQL+=" 		,C6_ITEM"+cCRLF
+	cSQL+=" FROM "+RetSQLName("SF1")+" SF1 ( NOLOCK )"+cCRLF
 
-	cSQL += " JOIN " + RetSQLName("SD1") + " SD1 (NOLOCK) ON "
-	cSQL += " ( "
-	cSQL += " 	SD1.D1_FILIAL 		= SF1.F1_FILIAL "
-	cSQL += " 	AND SD1.D1_DOC 		= SF1.F1_DOC "
-	cSQL += " 	AND SD1.D1_SERIE 	= SF1.F1_SERIE "
-	cSQL += " 	AND SD1.D1_FORNECE 	= SF1.F1_FORNECE "
-	cSQL += " 	AND SD1.D1_LOJA 	= SF1.F1_LOJA "
-	cSQL += " 	AND SD1.D_E_L_E_T_	= '' "
-	cSQL += " ) "
+	cSQL+=" JOIN "+RetSQLName("SD1")+" SD1 (NOLOCK) ON"+cCRLF
+	cSQL+=" ( "+cCRLF
+	cSQL+=" 	SD1.D1_FILIAL=SF1.F1_FILIAL"+cCRLF
+	cSQL+=" 	AND SD1.D1_DOC=SF1.F1_DOC"+cCRLF
+	cSQL+=" 	AND SD1.D1_SERIE=SF1.F1_SERIE"+cCRLF
+	cSQL+=" 	AND SD1.D1_FORNECE=SF1.F1_FORNECE"+cCRLF
+	cSQL+=" 	AND SD1.D1_LOJA=SF1.F1_LOJA"+cCRLF
+	cSQL+=" 	AND SD1.D_E_L_E_T_=''"+cCRLF
+	cSQL+=" ) "+cCRLF
 
-	cSQL += " JOIN " + RetSQLName("SD2") + " SD2 (NOLOCK) ON "
-	cSQL += " ( "
-	cSQL += " 	SD1.D1_FILIAL 		= SD2.D2_FILIAL "
-	cSQL += " 	AND SD1.D1_NFORI	= SD2.D2_DOC "
-	cSQL += " 	AND SD1.D1_SERIORI 	= SD2.D2_SERIE "
-	cSQL += " 	AND SD1.D1_FORNECE 	= SD2.D2_CLIENTE "
-	cSQL += " 	AND SD1.D1_LOJA 	= SD2.D2_LOJA "
-	cSQL += " 	AND SD1.D1_ITEMORI 	= SD2.D2_ITEM "
-	cSQL += " 	AND SD2.D_E_L_E_T_	= '' "
-	cSQL += " ) "
+	cSQL+=" JOIN "+RetSQLName("SD2")+" SD2 (NOLOCK) ON"+cCRLF
+	cSQL+=" ( "+cCRLF
+	cSQL+=" 	SD1.D1_FILIAL=SD2.D2_FILIAL"+cCRLF
+	cSQL+=" 	AND SD1.D1_NFORI=SD2.D2_DOC"+cCRLF
+	cSQL+=" 	AND SD1.D1_SERIORI=SD2.D2_SERIE"+cCRLF
+	cSQL+=" 	AND SD1.D1_FORNECE=SD2.D2_CLIENTE"+cCRLF
+	cSQL+=" 	AND SD1.D1_LOJA=SD2.D2_LOJA"+cCRLF
+	cSQL+=" 	AND SD1.D1_ITEMORI=SD2.D2_ITEM"+cCRLF
+	cSQL+=" 	AND SD2.D_E_L_E_T_=''"+cCRLF
+	cSQL+=" ) "+cCRLF
 
-	cSQL += " JOIN " + RetSQLName("SC5") + " SC5 (NOLOCK) ON "
-	cSQL += " ( "
-	cSQL += " 	SC5.C5_FILIAL 		= SD2.D2_FILIAL "
-	cSQL += " 	AND SC5.C5_NUM 		= SD2.D2_PEDIDO "
-	cSQL += " 	AND SC5.D_E_L_E_T_	= '' "
-	cSQL += " ) "
+	cSQL+=" JOIN "+RetSQLName("SC5")+" SC5 (NOLOCK) ON"+cCRLF
+	cSQL+=" ( "+cCRLF
+	cSQL+=" 	SC5.C5_FILIAL=SD2.D2_FILIAL"+cCRLF
+	cSQL+=" 	AND SC5.C5_NUM=SD2.D2_PEDIDO"+cCRLF
+	cSQL+=" 	AND SC5.D_E_L_E_T_= '' "+cCRLF
+	cSQL+=" ) "+cCRLF
 
-	cSQL += " JOIN " + RetSQLName("SC6") + " SC6 (NOLOCK) ON "
-	cSQL += " ( "
-	cSQL += " 	SC6.C6_FILIAL 		= SD2.D2_FILIAL "
-	cSQL += " 	AND SC6.C6_NUM 		= SD2.D2_PEDIDO "
-	cSQL += " 	AND SC6.C6_ITEM		= SD2.D2_ITEMPV "
-	cSQL += " 	AND SC6.D_E_L_E_T_	= '' "
-	cSQL += " ) "
+	cSQL+=" JOIN "+RetSQLName("SC6")+" SC6 (NOLOCK) ON "+cCRLF
+	cSQL+=" ( "+cCRLF
+	cSQL+=" 	SC6.C6_FILIAL=SD2.D2_FILIAL"+cCRLF
+	cSQL+=" 	AND SC6.C6_NUM=SD2.D2_PEDIDO"+cCRLF
+	cSQL+=" 	AND SC6.C6_ITEM=SD2.D2_ITEMPV"+cCRLF
+	cSQL+=" 	AND SC6.D_E_L_E_T_=''"+cCRLF
+	cSQL+=" ) "+cCRLF
 
-	cSQL += " WHERE SF1.F1_FILIAL 	= " + ValToSql(xFilial("SF1"))
-	cSQL += " AND F1_TIPO   	    = 'D' "
-	cSQL += " AND C5_YEMPPED        <> '' "
-	cSQL += " AND D1_EMISSAO        >= '"+DtoS(getNewPar("BIA_DTIICP",CToD("07/01/2021")))+"' " // TO DO: COLOCAR DATA PARA SUBIDA.
-	cSQL += " AND D1_FORNECE    NOT IN " + FormatIn(cCodigosCli, "/")
+	cSQL+=" WHERE SF1.F1_FILIAL=" + ValToSql(xFilial("SF1"))+cCRLF
+	cSQL+="   AND F1_TIPO='D'"+cCRLF
+	cSQL+="   AND C5_YEMPPED<>'' "+cCRLF
+	cSQL+="   AND D1_EMISSAO>='"+DtoS(getNewPar("BIA_DTIICP",CToD("07/01/2021")))+"' "+cCRLF // TO DO: COLOCAR DATA PARA SUBIDA.
+	cSQL+="   AND D1_FORNECE NOT IN " + FormatIn(cCodigosCli, "/")+cCRLF
 
-	cSQL += " AND NOT EXISTS "
-	cSQL += " ( "
-	cSQL += "   SELECT NULL "
-	cSQL += "   FROM " + RetSQLName("ZL9") + " ZL9 (NOLOCK) "
-	cSQL += "   WHERE ZL9.ZL9_FILIAL    = " + ValToSql(xFilial("ZL9"))
-	cSQL += "   AND ZL9.ZL9_CODEMP 	    = " + ValToSql(cEmpAnt)
-	cSQL += "   AND ZL9.ZL9_CODFIL 	    = " + ValToSql(cFilAnt)
-	cSQL += "   AND ZL9.ZL9_DOCDEV 	    = SF1.F1_DOC "
-	cSQL += "   AND ZL9.ZL9_SERDEV 	    = SF1.F1_SERIE "
-	cSQL += "   AND ZL9.ZL9_CLIDEV      = SF1.F1_FORNECE "
-	cSQL += "   AND ZL9.ZL9_LOJDEV 	    = SF1.F1_LOJA "
-	cSQL += "   AND ZL9.ZL9_STATUS IN ('4','F') "
-	cSQL += "   AND ZL9.D_E_L_E_T_	    = '' "
-	cSQL += " ) "
+	cSQL+=" AND NOT EXISTS"+cCRLF
+	cSQL+=" ( "+cCRLF
+	cSQL+="   SELECT NULL"+cCRLF
+	cSQL+="    FROM "+RetSQLName("ZL9")+" ZL9 (NOLOCK) "+cCRLF
+	cSQL+="   WHERE ZL9.ZL9_FILIAL="+ValToSql(xFilial("ZL9"))+cCRLF
+	cSQL+="     AND ZL9.ZL9_CODEMP="+ValToSql(cEmpAnt)+cCRLF
+	cSQL+="     AND ZL9.ZL9_CODFIL="+ValToSql(cFilAnt)+cCRLF
+	cSQL+="     AND ZL9.ZL9_DOCDEV=SF1.F1_DOC"+cCRLF
+	cSQL+="     AND ZL9.ZL9_SERDEV=SF1.F1_SERIE"+cCRLF
+	cSQL+="     AND ZL9.ZL9_CLIDEV=SF1.F1_FORNECE"+cCRLF
+	cSQL+="     AND ZL9.ZL9_LOJDEV=SF1.F1_LOJA"+cCRLF
+	cSQL+="     AND ZL9.ZL9_STATUS IN ('4','F') "+cCRLF
+	cSQL+="     AND ZL9.D_E_L_E_T_='' "+cCRLF
+	cSQL+=" ) "+cCRLF
 
-	cSQL += " AND SF1.D_E_L_E_T_ = '' "
+	cSQL+=" AND SF1.D_E_L_E_T_ = '' "+cCRLF
+
+    cSQL+="ORDER BY D1_FILIAL,D1_DOC,D1_SERIE,D1_FORNECE,D1_LOJA,C5_YEMPPED,D1_ITEM"+cCRLF
 
     return(cSQL)
 
@@ -256,5 +290,98 @@ static method DocOriCmpAut(nZL9RecNo) class TAutDevIntQry
     
     cSQL:=strTran(cSQL,"['","[")
     cSQL:=strTran(cSQL,"']","]")
+
+    return(cSQL)
+
+static method ProcessaSaida() class TAutDevIntQry
+
+    local cSQL
+
+    DEFAULT __cCRLF:=CRLF
+
+    cSQL:=" SELECT ZL9.R_E_C_N_O_ ZL9RECNO "+__cCRLF
+    cSQL+="   FROM "+RetSQLName("ZL9")+" ZL9 ( NOLOCK )"+__cCRLF
+    cSQL+="  WHERE ZL9.ZL9_FILIAL ="+ValToSql(xFilial("ZL9"))+__cCRLF
+    cSQL+="    AND ZL9.ZL9_CODEMP ="+ValToSql(cEmpAnt)+__cCRLF
+    cSQL+="    AND ZL9.ZL9_CODFIL ="+ValToSql(cFilAnt)+__cCRLF
+    cSQL+="    AND ( "+__cCRLF
+    cSQL+="           ( ZL9.ZL9_STADOC NOT IN ( '5','8' ) ) "+__cCRLF // 1=Emitida;2=Transmitida;3=Autorizada;4=Rejeitada;5=Cancelada;6=PDF criado;7=PDF enviado;8=Finalizado
+    cSQL+=" 		    OR "+__cCRLF
+    cSQL+=" 			( "+__cCRLF
+    cSQL+=" 				ZL9.ZL9_STADOC <> '5' AND "+__cCRLF
+    cSQL+=" 				ZL9.ZL9_DOC <> '' AND "+__cCRLF
+    cSQL+=" 				NOT EXISTS "+__cCRLF
+    cSQL+=" 				( "+__cCRLF
+    cSQL+=" 					SELECT NULL "+__cCRLF
+    cSQL+=" 					FROM "+RetSQLName("SF2")+" SF2 "+__cCRLF
+    cSQL+=" 					WHERE SF2.F2_FILIAL ="+ValToSql(xFilial("SF2"))+__cCRLF
+    cSQL+=" 					AND SF2.F2_DOC 		=ZL9.ZL9_DOC "+__cCRLF
+    cSQL+=" 					AND SF2.F2_SERIE 	=ZL9.ZL9_SERIE "+__cCRLF
+    cSQL+=" 					AND SF2.D_E_L_E_T_ 	=''"+__cCRLF
+    cSQL+=" 				) "+__cCRLF
+    cSQL+=" 			) "+__cCRLF
+    cSQL+="	 ) "+__cCRLF
+    cSQL+="    AND ZL9.D_E_L_E_T_ ='' "+__cCRLF
+
+    return(cSQL)
+
+static method fDistribui(cDoc,cSerie,cCliente,cLoja) class TAutDevIntQry
+
+    local cSQL  as character
+
+    DEFAULT __cCRLF:=CRLF
+
+    cSQL:=" SELECT SDA.R_E_C_N_O_ SDARECNO "+__cCRLF
+    cSQL+="   FROM "+RetSQLName("SDA")+" SDA ( NOLOCK ) "+__cCRLF
+    cSQL+="  WHERE SDA.DA_FILIAL 	="+ValToSql(xFilial("SDA"))+__cCRLF
+    cSQL+="    AND SDA.DA_TIPONF	='D' "+__cCRLF
+    cSQL+="    AND SDA.DA_ORIGEM 	='SD1' "+__cCRLF
+    cSQL+="    AND SDA.DA_DOC 	="+ValToSql(cDoc)+__cCRLF
+    cSQL+="    AND SDA.DA_SERIE   ="+ValToSql(cSerie)+__cCRLF
+    cSQL+="    AND SDA.DA_CLIFOR 	="+ValToSql(cCliente)+__cCRLF
+    cSQL+="    AND SDA.DA_LOJA 	="+ValToSql(cLoja)+__cCRLF
+    cSQL+="    AND SDA.D_E_L_E_T_ ='' "+__cCRLF
+
+    return(cSQL)
+
+static method FaturarPedido() class TAutDevIntQry
+
+    local cSQL as character
+
+    DEFAULT __cCRLF:=CRLF
+
+    cSQL:=" SELECT * "+__cCRLF
+    cSQL+=" FROM "+RetSQLName("ZL9")+" ZL9 ( NOLOCK ) "+__cCRLF
+    cSQL+=" WHERE ZL9.ZL9_FILIAL 	="+ValToSql(xFilial("ZL9"))+__cCRLF
+    cSQL+=" AND ZL9.ZL9_CODEMP    ="+ValToSql(cEmpAnt)+__cCRLF
+    cSQL+=" AND ZL9.ZL9_CODFIL    ="+ValToSql(cFilAnt)+__cCRLF
+    cSQL+=" AND ZL9.ZL9_STATUS    ='3' " +__cCRLF// Devolucao Intercompany - Pedido Gerado
+    cSQL+=" AND ZL9.ZL9_STAERR   <> 'E' "+__cCRLF
+    cSQL+=" AND ZL9.ZL9_MSBLQL   <> '1' "+__cCRLF
+    cSQL+=" AND ZL9.ZL9_DOC       ='' "+__cCRLF
+    cSQL+=" AND ZL9.D_E_L_E_T_    ='' "+__cCRLF
+
+    return(cSQL)
+
+static method GetEndereco(cCodCli,cLojaCli,cDoc,cSerie) class TAutDevIntQry
+
+    local cSQL as character
+
+    DEFAULT __cCRLF:=CRLF
+
+    cSQL:=" SELECT DISTINCT Z25_NUM,Z25_RETMRC "
+    cSQL+=" FROM "+RetSQLName("Z26")+" Z26 "
+    cSQL+=" JOIN "+RetSQLName("Z25")+" Z25 ON "
+    cSQL+=" ( "
+    cSQL+=" 	Z25.Z25_FILIAL="+ValToSQL(xFilial("Z25"))
+    cSQL+="   AND Z25.Z25_CODCLI="+ValToSQL(cCodCli)
+    cSQL+="   AND Z25.Z25_LOJCLI="+ValToSQL(cLojaCli)
+    cSQL+="   AND Z25.Z25_NUM=Z26_NUMPRC "
+    cSQL+=" 	AND Z25.D_E_L_E_T_ ='' "
+    cSQL+=" ) "
+    cSQL+=" WHERE Z26_FILIAL="+ValToSQL(xFilial("Z26"))
+    cSQL+=" AND Z26.Z26_NFISC="+ValToSQL(cDoc)
+    cSQL+=" AND Z26.Z26_SERIE="+ValToSQL(cSerie)
+    cSQL+=" AND Z26.D_E_L_E_T_='' "
 
     return(cSQL)

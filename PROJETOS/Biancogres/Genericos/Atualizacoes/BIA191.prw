@@ -57,6 +57,12 @@ User Function BIA191()
 		{               "Incluir"	    ,"U_BIA191_I"	,0,3},;
 		{               "Alterar"  	   	,"U_BIA191_MNT"	,0,4} }
 
+	ElseIf (FWIsAdmin(__cUserID))
+		aRotina   := { {"Pesquisar"    	,"AxPesqui"    	,0,1},;
+				{               "Visualizar"  	,"U_BIA191_MNT"	,0,2},;
+				{               "Incluir"	    ,"U_BIA191_I"	,0,3},;
+				{               "Alterar"  	   	,"U_BIA191_MNT"	,0,4},;
+				{               "Excluir"		,"U_BIA191_E"	,0,5} }
 	Else
 
 		MsgALERT("Você não tem acesso para prosseguir a partir deste ponto! Abra ticket para ter acesso à rotina BIA191 se necessitar realmente a esta rotina.", "Atenção")

@@ -82,7 +82,10 @@ Local cHtml := ""
 	cSQL += " ON ZKS_PRODUT = B1_COD	
 	cSQL += " WHERE ZKS_FILIAL = " + ValToSQL(xFilial("ZKS"))
 	cSQL += " AND ZKS_DATVIS = '' "
-	cSQL += " AND DATEDIFF(DAY, ZKS_DATPRE, " + ValToSQL(::dData) + ")" + If (::cType == "1", " BETWEEN 1 AND 15 ", " > 15 ")
+	
+	//ticket 31378: enviar notificação para representantes de todos em atraso e não apenas os que forem vistoriados nos próximos 15 dias
+	cSQL += " AND DATEDIFF(DAY, ZKS_DATPRE, " + ValToSQL(::dData) + ")" + If (::cType == "1", " > 0 ", " > 15 ")
+
 	cSQL += " AND ZKS.D_E_L_E_T_ = '' 
 	cSQL += " AND A1_FILIAL = " + ValToSQL(xFilial("SA1"))
 	cSQL += " AND SA1.D_E_L_E_T_ = '' 

@@ -231,7 +231,14 @@ User Function BIA436()
 								BeginSql Alias __cAliasTmp
 								%NoParser%
 
-								select Z69_PRCVEN from %Exp:__nTabZ68% where Z69_FILIAL = %XFilial:Z68% and Z69_NUM+Z69_REV = %Exp:AllTRim(M->C5_YNPRENG)% and Z69_CODPRO = %Exp:wProduto% and D_E_L_E_T_=''
+								select Z69_PRCVEN 
+								from %Exp:__nTabZ68% 
+								where Z69_FILIAL = %XFilial:Z68% 
+								and Z69_NUM+Z69_REV = %Exp:AllTRim(M->C5_YNPRENG)% 
+								and Z69_CODPRO = %Exp:wProduto% 
+								and Z69_ITEM = %Exp:wItem%
+								and D_E_L_E_T_=''   
+								ORDER BY Z69_CODPRO, Z69_ITEM
 
 								EndSql
 
@@ -246,6 +253,7 @@ User Function BIA436()
 									aCols[n,nPosDOut] := __nDESP
 									aCols[n,nPosDesc] := __nDTOT
 									wC6YDESC	:= aCols[n,nPosDesc]
+									__nDESP := 0
 
 									wNPrcVen := aCols[n,nPosVlTab] - (aCols[n,nPosVlTab] * (wC6YDESC / 100))
 

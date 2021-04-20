@@ -27,7 +27,7 @@ Return
 Static Function fProcGrava()
 
 	Local aRetCF8   := {}
-	Local msEnter   := CHR(13)+CHR(10)
+	// Local msEnter   := CHR(13)+CHR(10)
 	Local msDeData  := MV_PAR01 + "01"
 	Local msAtData  := dtos(UltimoDia(stod(MV_PAR01 + "01")))  
 
@@ -47,7 +47,12 @@ Static Function fProcGrava()
 	Aadd( aRetCF8, {"414", "16", "1", "2", "06", "06", 0.00, 0.00, "911"} )	
 	Aadd( aRetCF8, {"414", "17", "1", "2", "06", "06", 0.00, 0.00, "911"} )
 	Aadd( aRetCF8, {"415", "01", "2", "2", "07", "07", 0.00, 0.00, "999"} )
+	Aadd( aRetCF8, {"415", "03", "2", "1", "01", "01", 1.65, 7.60, "911"} )
 	Aadd( aRetCF8, {"415", "05", "2", "2", "07", "07", 0.00, 0.00, "999"} )
+	Aadd( aRetCF8, {"415", "08", "2", "1", "01", "01", 1.65, 7.60, "911"} )
+	Aadd( aRetCF8, {"415", "09", "2", "1", "01", "01", 1.65, 7.60, "911"} )
+	Aadd( aRetCF8, {"415", "10", "2", "1", "01", "01", 1.65, 7.60, "911"} )
+	Aadd( aRetCF8, {"415", "11", "2", "1", "01", "01", 1.65, 7.60, "911"} )
 	Aadd( aRetCF8, {"415", "13", "2", "1", "01", "01", 1.65, 7.60, "999"} )
 
 	aSort(aRetCF8,,, { |x, y| x[1] + x[2] < y[1] + y[2] }) // Reordena Conta + Empr
@@ -60,7 +65,7 @@ Static Function fProcGrava()
 	BX009 += "   FROM " + RetSqlName("CQ1") + " CQ1 "
 	BX009 += "  WHERE CQ1_DATA BETWEEN '" + msDeData + "' AND '" + msAtData + "' "
 	BX009 += "    AND ( SUBSTRING(CQ1_CONTA, 1, 3) IN( '414' ) "
-	BX009 += "          OR CQ1_CONTA IN('41501010') ) "
+	BX009 += "          OR CQ1_CONTA IN('41501010','41501007') ) "
 	BX009 += "    AND CQ1.D_E_L_E_T_ = ' ' "
 	BX009 += "  GROUP BY CQ1_CONTA "
 	BXIndex := CriaTrab(Nil,.f.)
@@ -100,6 +105,7 @@ Static Function fProcGrava()
 				CF8->CF8_SCORGP := aRetCF8[nPosColG][9]
 				CF8->CF8_SALDO  := BX09->SALDO
 				CF8->CF8_CODIGO := msCodigoSeq	
+				CF8->CF8_RECBRU := '2'	
 				
 				ConfirmSx8()
 				

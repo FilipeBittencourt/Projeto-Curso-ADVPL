@@ -264,7 +264,7 @@ User Function M410STTS()
 
 			If(SB1->(DbSeek(XFilial("SB1")+SC6->C6_PRODUTO)))
 
-				If AllTrim(SB1->B1_TIPO) == "PA" .Or. ALLTRIM(SC5->C5_YSUBTP) $ "A_G_B_M"
+				If AllTrim(SB1->B1_TIPO) == "PA" .Or. ALLTRIM(SC5->C5_YSUBTP) $ "A_G_B_M_O" //Ticket 30911 - Adicionado o tipo 'O'
 
 					If (Alltrim(SC5->C5_TIPO) == 'N')
 						oBloqPedVenda := TBloqueioPedidoVenda():New(M->C5_NUM)

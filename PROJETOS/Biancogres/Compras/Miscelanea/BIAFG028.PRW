@@ -309,12 +309,12 @@ Static Function fGeraGer()
 
 	While (_cAlias)->(!EOF())
 		If MV_PAR04 == "2" .Or. (MV_PAR04 == "1" .And. (ABS(ROUND((_cAlias)->SAIANT,2)) > 0 ;
-							.Or. ROUND((_cAlias)->SAID1,2) > 0 ;
-							.Or. ROUND((_cAlias)->SAID2,2) > 0	;
-							.Or. ROUND((_cAlias)->SAID3,2) > 0	;
-							.Or. ROUND((_cAlias)->SAID4,2) > 0	;
-							.Or. ROUND((_cAlias)->SAID1,2) > 0)) 	
-	
+		.Or. ROUND((_cAlias)->SAID1,2) > 0 ;
+		.Or. ROUND((_cAlias)->SAID2,2) > 0	;
+		.Or. ROUND((_cAlias)->SAID3,2) > 0	;
+		.Or. ROUND((_cAlias)->SAID4,2) > 0	;
+		.Or. ROUND((_cAlias)->SAID1,2) > 0)) 	
+
 			aAdd(aCGeral,{	"BR_VERDE"			,;
 			(_cAlias)->PRODUTO	,;
 			(_cAlias)->UNIDMED	,;
@@ -369,7 +369,7 @@ Static Function fAltGeral()
 	Local _aSemanas	:=	{0,0,0,0,0}
 	Local _nPosDig	:=	aScan(oGdSol:aHeader,{|x| Alltrim(x[2]) == "DATDIG"})
 	Local _nPosQtd	:=	aScan(oGdSol:aHeader,{|x| Alltrim(x[2]) == "QTDDIG"})
-	
+
 
 	cSyDsProd := ""
 	SB1->(dbSetOrder(1))
@@ -541,9 +541,9 @@ Static Function fPopGraf(_aSemanas)
 
 	Local _nPosSal5	:=	aScan(oGdGeral:aHeader,{|x| Alltrim(x[2]) == "SAL5"})
 	Local _nPosSai5 :=	aScan(oGdGeral:aHeader,{|x| Alltrim(x[2]) == "SAI5"})
-	
+
 	Local _nPosEstS	:=	aScan(oGdGeral:aHeader,{|x| Alltrim(x[2]) == "ESTSEG"	})
-	
+
 	Local _nPosNCom1	:=	aScan(oGdGeral:aHeader,{|x| Alltrim(x[2]) == "NECOM1"	})
 	Local _nPosNCom2	:=	aScan(oGdGeral:aHeader,{|x| Alltrim(x[2]) == "NECOM2"	})
 	Local _nPosNCom3	:=	aScan(oGdGeral:aHeader,{|x| Alltrim(x[2]) == "NECOM3"	})
@@ -558,9 +558,9 @@ Static Function fPopGraf(_aSemanas)
 	Local _nPosEstS	:=	aScan(oGdGeral:aHeader,{|x| Alltrim(x[2]) == "ESTSEG"	})
 
 	Local _nPosDisp	:=	aScan(oGdGeral:aHeader,{|x| Alltrim(x[2]) == "DISPO"})
-	
+
 	Local nPosDelGer	:= Len(ogdGeral:aHeader) + 1
-	
+
 	Local _cStatus	:=	""
 
 	Local _nI
@@ -579,7 +579,7 @@ Static Function fPopGraf(_aSemanas)
 	oGdGeral:aCols[oGdGeral:nAt] := aClone(aBkpCGeral[oGdGeral:nAt])
 
 	oGdGeral:aCols[oGdGeral:nAt,1]	:=	_cStatus
-	
+
 	For _nI	:=	1 to Len(oGdGeral:aCols)
 
 		If _nI == oGdGeral:nAt
@@ -622,7 +622,7 @@ Static Function fPopGraf(_aSemanas)
 	{"Semana3",oGdGeral:aCols[oGdGeral:nAt,_nPosNCom3]},;
 	{"Semana4",oGdGeral:aCols[oGdGeral:nAt,_nPosNCom4]},;
 	{"Semana5",oGdGeral:aCols[oGdGeral:nAt,_nPosNCom5]}})
-	
+
 	//Pedidos Aberto
 	oChart:addSerie("Pc. Aberto",{ {"Semana1",oGdGeral:aCols[oGdGeral:nAt,_nPosPcAb1]},;
 	{"Semana2",oGdGeral:aCols[oGdGeral:nAt,_nPosPcAb2]},;
@@ -964,10 +964,10 @@ Static Function fCriaTemp()
 	_cSql	+=	"	                                                              AND SB1.B1_CONTRAT <> 'S'	"+CRLF
 	_cSql	+=	"	                                                              AND SB1.D_E_L_E_T_ = ' '	"+CRLF
 	_cSql	+=	"	                      WHERE     SC7.C7_FILIAL = " +ValtoSql(xFilial("SC7"))+ "	"+CRLF
-	
+
 	//_cSql	+=	"	                                AND SC7.C7_YDTNECE BETWEEN " + ValtoSql(_dIniHist) + " AND " +ValtoSql(dDataRef) + "	"+CRLF
 	_cSql	+=	"	                                AND SC7.C7_YDATCHE BETWEEN " + ValtoSql(_dIniHist) + " AND " +ValtoSql(dDataRef) + "	"+CRLF
-	
+
 	_cSql	+=	"	                                AND SC7.C7_RESIDUO = ' '	"+CRLF
 	_cSql	+=	"	                                AND SC7.C7_QUANT - SC7.C7_QUJE <> 0	"+CRLF
 	_cSql	+=	"	                                AND SC7.C7_LOCAL IN "+ _cInLocal +" "+CRLF	
@@ -1029,9 +1029,8 @@ Static Function fCriaTemp()
 	_cSql	+=	"	                                INNER JOIN "+ RETSQLNAME('SBZ') + " SBZ ( NOLOCK ) ON SBZ.BZ_FILIAL = " +ValtoSql(xFilial("SBZ"))+ "	"+CRLF
 	_cSql	+=	"	                                                              AND SBZ.BZ_COD = SD4.D4_COD	"+CRLF
 	_cSql	+=	"	                                                              AND SBZ.D_E_L_E_T_ = ' '	"+CRLF
-	//_cSql	+=	"	                               								  AND SBZ.BZ_YBLSCPC <> '1'	"+CRLF
 	_cSql	+=	"	                      WHERE     SD4.D4_FILIAL = " +ValtoSql(xFilial("SD4"))+ "	"+CRLF
-	_cSql	+=	"	                                AND SD4.D4_DATA BETWEEN " + ValtoSql(_dIniHist) + " AND " +ValtoSql(dDataRef) + "	"+CRLF
+	_cSql	+=	"	                                AND CONVERT(CHAR(10), CONVERT(DATETIME, SD4.D4_DATA) - (SBZ.BZ_YTMPIND + SBZ.BZ_YTMPFAB), 112) BETWEEN " + ValtoSql(_dIniHist) + " AND " +ValtoSql(dDataRef) + "	"+CRLF
 	_cSql	+=	"	                                AND (SD4.D4_LOCAL IN "+ _cInLocal +" OR D4_LOCAL = '99') "+CRLF	
 	_cSql	+=	"	                                AND SD4.D4_QUANT > 0	"+CRLF
 	_cSql	+=	"	                                AND SD4.D_E_L_E_T_ = ' '	"+CRLF
@@ -1096,11 +1095,11 @@ Static Function fCriaTemp()
 	_cSql	+=	"	                                SC7.C7_PRODUTO PRODATU ,	"+CRLF
 	_cSql	+=	"	                                SB1.B1_YCODCOM VIGENTE ,	"+CRLF
 	_cSql	+=	"	                                SC7.C7_LOCAL XLOCAL ,	"+CRLF
-	
+
 	//Solicitação Ticket 28921 - Pablo S Nascimento 04/01/2021
 	//_cSql	+=	"	                                SC7.C7_YDTNECE DTREF ,	"+CRLF
 	_cSql	+=	"	                                SC7.C7_YDATCHE DTREF ,	"+CRLF
-	
+
 	_cSql	+=	"	                                SC7.C7_NUM DOCREF ,	"+CRLF
 	_cSql	+=	"	                                SUM(SC7.C7_QUANT - SC7.C7_QUJE) QUANT	"+CRLF
 	_cSql	+=	"	                      FROM      "+ RETSQLNAME('SC7') + " SC7 ( NOLOCK )	"+CRLF
@@ -1119,11 +1118,11 @@ Static Function fCriaTemp()
 	_cSql	+=	"	                                                              AND SB1.B1_CONTRAT <> 'S'	"+CRLF
 	_cSql	+=	"	                                                              AND SB1.D_E_L_E_T_ = ' '	"+CRLF
 	_cSql	+=	"	                      WHERE     SC7.C7_FILIAL = " +ValtoSql(xFilial("SC7"))+ "	"+CRLF
-	
+
 	//Solicitação Ticket 28921 - Pablo S Nascimento 04/01/2021
 	//_cSql	+=	"	                                AND SC7.C7_YDTNECE BETWEEN "+ValToSql(_dIniSem1)+" AND "+ValToSql(_dFimHist)+"	"+CRLF
 	_cSql	+=	"	                                AND SC7.C7_YDATCHE BETWEEN "+ValToSql(_dIniSem1)+" AND "+ValToSql(_dFimHist)+"	"+CRLF
-	
+
 	_cSql	+=	"	                                AND SC7.C7_RESIDUO = ' '	"+CRLF
 	_cSql	+=	"	                                AND SC7.C7_LOCAL IN "+ _cInLocal +" "+CRLF
 	_cSql	+=	"	                                AND SC7.C7_QUANT - SC7.C7_QUJE <> 0	"+CRLF
@@ -1131,11 +1130,11 @@ Static Function fCriaTemp()
 	_cSql	+=	"	                      GROUP BY  SC7.C7_PRODUTO ,	"+CRLF
 	_cSql	+=	"	                                SB1.B1_YCODCOM ,	"+CRLF
 	_cSql	+=	"	                                SC7.C7_LOCAL ,	"+CRLF
-	
+
 	//Solicitação Ticket 28921 - Pablo S Nascimento 04/01/2021
 	//_cSql	+=	"	                                SC7.C7_YDTNECE ,	"+CRLF
 	_cSql	+=	"	                                SC7.C7_YDATCHE ,	"+CRLF
-	
+
 	_cSql	+=	"	                                SC7.C7_NUM	"+CRLF
 	_cSql	+=	"	                      UNION ALL	"+CRLF
 	_cSql	+=	"	                      SELECT * FROM (SELECT    'A7-D4ATU' ORIG ,	"+CRLF
@@ -1194,7 +1193,7 @@ Static Function fCriaTemp()
 	_cSql	+=	"	                                                              AND ZCN.ZCN_POLIT = '2'	"+CRLF
 	_cSql	+=	"	                                                              AND ZCN.D_E_L_E_T_ = ' '	"+CRLF	
 	_cSql	+=	"	                      WHERE     SD4.D4_FILIAL = " +ValtoSql(xFilial("SD4"))+ "	"+CRLF
-	_cSql	+=	"	                                AND SD4.D4_DATA BETWEEN "+ValToSql(_dIniSem1)+" AND "+ValToSql(_dFimHist)+"	"+CRLF
+	_cSql	+=	"	                                AND CONVERT(CHAR(10), CONVERT(DATETIME, SD4.D4_DATA) - (SBZ.BZ_YTMPIND + SBZ.BZ_YTMPFAB), 112) BETWEEN "+ValToSql(_dIniSem1)+" AND "+ValToSql(_dFimHist)+"	"+CRLF
 	_cSql	+=	"	                                AND (SD4.D4_LOCAL IN "+ _cInLocal +" OR D4_LOCAL = '99') "+CRLF	
 	_cSql	+=	"	                                AND SD4.D4_QUANT > 0	"+CRLF
 	_cSql	+=	"	                                AND SD4.D_E_L_E_T_ = ' '	"+CRLF
@@ -1220,13 +1219,13 @@ Static Function fCriaTemp()
 	_cSql	+=	"	        ) AS ARQTRABTMP	"+CRLF
 
 	_nError := TcSqlExec(_cSql)
-	
+
 
 	If _nError <> 0 .And. !Empty(TcSqlError()) 
-		MsgInfo("Ocorreu um Erro ao Gerar os Dados!")
-		_lRet	:=	.F.
+	MsgInfo("Ocorreu um Erro ao Gerar os Dados!")
+	_lRet	:=	.F.
 	Endi
-	
+
 Return _lRet
 
 //Validação de campos do grid de Solicitações
@@ -1363,7 +1362,7 @@ Static Function fProjSol()
 
 			If oGdGeral:aCols[_nI,_nPosLtEco] > 0
 				_aSemanas[3]	:=	oGdGeral:aCols[_nI,_nPosLtEco] * (Ceiling((oGdGeral:aCols[_nI,_nPosSal3]+ _nSalAcu)/oGdGeral:aCols[_nI,_nPosLtEco] * -1) )
-			
+
 			Else
 				_aSemanas[3]	:=	(oGdGeral:aCols[_nI,_nPosSal3] + _nSalAcu) * -1
 			EndIf
@@ -1598,7 +1597,7 @@ Static Function fGrava()
 			ZC3->ZC3_SAISM5	:=	oGdGeral:aCols[_nI,_nPosSai5]
 			ZC3->ZC3_SLDSM5	:=	oGdGeral:aCols[_nI,_nPosSal5]
 			ZC3->ZC3_DISPON	:=	oGdGeral:aCols[_nI,_nPosDisp]
-			
+
 			ZC3->ZC3_NECOM1	:=	oGdGeral:aCols[_nI,_nPosNCom1]
 			ZC3->ZC3_NECOM2	:=	oGdGeral:aCols[_nI,_nPosNCom2]
 			ZC3->ZC3_NECOM3	:=	oGdGeral:aCols[_nI,_nPosNCom3]
@@ -1719,15 +1718,15 @@ Static Function fVerTemp()
 	Local _cAlias	:=	GetNextAlias()
 	Local _cQry		:=	""
 	Local _lret
-	
+
 	_cQry	+=	" SELECT COUNT(*) QTD FROM "+ _cTabTemp +"	"+CRLF
-		
+
 	_cInd := CriaTrab(Nil,.f.)
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,_cQry),_cAlias,.F.,.T.)
 
 	_lRet	:=	(_cAlias)->QTD > 0
-	
-	
+
+
 	Ferase(_cInd+GetDBExtension())     //arquivo de trabalho
 	Ferase(_cInd+OrdBagExt())          //indice gerado
 	(_cAlias)->(DbCloseArea())

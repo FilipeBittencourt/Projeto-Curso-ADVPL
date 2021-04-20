@@ -140,6 +140,7 @@ User Function BIA188(cPedOri, cEmpPed, lRpc)
 	C_HTML += '  </tr> '
 	C_HTML += '<tr> '
 	C_HTML += '    <td><div align="left"> País: <b>BRASIL</b></td> '
+	C_HTML += '    <td><div align="left"> Cliente Ped. Compra: <b> '+ Alltrim(SC5->C5_YPC) +'<b></td> '
 	C_HTML += '  </tr> '
 	//C_HTML += '<tr> '
 	//C_HTML += '    <td><div align="left"> Nome do Contato: <b>'+cContato+'</b></td> '

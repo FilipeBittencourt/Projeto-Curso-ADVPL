@@ -338,25 +338,12 @@ Local nCount := 0
 Local cDsc := "'
 Local cSEA := ""
 Local cSE2 := ""
-Local cAgency := ""
-Local cAccount := ""
-Local cBankData := ""
 
 	//Ticket 26225 - Restringir do Saldo no F9 lançamentos da SP300 referentes a recebimentos das outras empresas já feitos pela Tesouraria (Pablo Nascimento)
 	if(cEmpAnt == "11")
 		return cSQL
 	endif
 	
-	cAgency := Replace(AllTrim(::cAgency), ".", Space(0))
-	cAgency := Replace(cAgency, "-", Space(0))
-
-	cAccount := Replace(AllTrim(::cAccount), ".", Space(0))
-	cAccount := Replace(cAccount, "-", Space(0))
-	
-	cBankData := Alltrim(::cBank) + Alltrim(::cAgency) + Alltrim(::cAccount)
-	cBankData := Replace(cBankData, ".", Space(0))
-	cBankData := Replace(cBankData, "-", Space(0))
-
 	If !cEmpAnt == "01"
 		aAdd(aEmp, "01")
 	Else
@@ -427,15 +414,16 @@ Local cBankData := ""
 		cSQL += " 	AND E2_FORNECE = EA_FORNECE "
 		cSQL += " 	AND E2_LOJA = EA_LOJA "
 		cSQL += " 	AND EXISTS "
+		
 		cSQL += " 	( "
 		cSQL += "		SELECT NULL "
 		cSQL += "		FROM " + cSA2 + " SA2"
 		cSQL += "		WHERE A2_FILIAL = " + ValToSQL(xFilial("SA2"))
 		cSQL += " 		AND A2_COD = EA_FORNECE "
 		cSQL += " 		AND A2_LOJA = EA_LOJA "
-		cSQL += " 		AND A2_BANCO = " + ValToSQL(AllTrim(::cBank))
-		cSQL += " 		AND (A2_AGENCIA = "+ ValToSQL(cAgency) +" OR A2_AGENCIA LIKE "+ ValToSQL("%" + cAgency + "%") +")"
-		cSQL += " 		AND (A2_NUMCON = "+ ValToSQL(cAccount) +" OR A2_NUMCON LIKE "+ ValToSQL("%" + cAccount + "%") +")"
+		cSQL += " 		AND A2_BCOIC = " + ValToSQL(AllTrim(::cBank))
+		cSQL += " 		AND A2_AGEIC = "+ ValToSQL(::cAgency)
+		cSQL += " 		AND A2_CONIC = "+ ValToSQL(::cAccount)
 		cSQL += " 		AND SA2.D_E_L_E_T_ = '' "
 		cSQL += " 	) "
 

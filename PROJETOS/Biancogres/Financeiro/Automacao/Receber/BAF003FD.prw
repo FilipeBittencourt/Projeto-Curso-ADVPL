@@ -1,8 +1,33 @@
 #INCLUDE "TOTVS.CH"
 #INCLUDE "TOPCONN.CH"
 
-
 User Function BAF003FD()
+
+    Local cMsg      as character
+
+    local dDate     as date
+    local dDateVld  as date
+
+    local lDateVld  as logical
+
+    dDate:=Date()
+    dDateVld:=DataValida(dDate,.T.)
+    lDateVld:=(dDate==dDateVld)
+
+
+    if (lDateVld)
+        BAF003FD()
+    else
+        cMsg := "TAF => BAF003FD - [PROCESSO FIDC NAO EXECUTADO (DATA 
+        cMsg += DTOC(dDate)
+        cMsg += " E FERIADO OU FINAL DE SEMANA. PROXIMA EXECUCAO PREVISTA PARA:"
+        cMsg += DtoC(dDateVld)+")] - INICIO DO PROCESSO - DATE: "+DTOC(dDate)+" TIME: "+Time()
+        ConOut(cMsg)
+    endif
+
+    return    
+
+static Function BAF003FD()
 	
 	Local oObj		:= Nil
 	

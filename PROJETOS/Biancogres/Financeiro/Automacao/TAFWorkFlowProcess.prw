@@ -12,21 +12,30 @@
 
 Class TAFWorkFlowProcess From TAFWorkFlow
 	
-	Data lAviso
+	Data aTables	as array
 	
+	Data bGetSQL 	as block
+	Data bSetField	as block
+
+	Data cSX2Alias	as character
+	Data cFieldFil	as character
+	
+	Data lAviso		as logical
+
 	Method New() Constructor
 	Method Get()
 	Method Set(cTab, cFil, cID)
 	Method SetProperty(cID)
 	Method SetField(cTab, cFil, cID)
 	Method AddField(cField)
-	Method AddUserField(cField, cTitulo, cTipo, cPict, nWidth)
+	Method AddUserField(cField, cTitulo, cTipo, cPict, nWidth,lUserField)
 	Method FormatField(cType, cPict, uValue)
 	Method GetSQL(cTab, cFil, cID)
 	Method GetDscType(cType)
 	Method GetMethod(cID)
 	Method Send()
 	Method Validate()
+	Method setTable(lTable,cTab,cID,cFil,cIDProc)
 
 EndClass
 
@@ -35,14 +44,20 @@ Method New() Class TAFWorkFlowProcess
 
 	_Super:New()
 	
-	::lAviso := .F.
+	::lAviso:=.F.
+	::aTables:=array(0)
 	
 Return()
 
 
 Method Get() Class TAFWorkFlowProcess
+	
 	Local cSQL := ""
 	Local cQry := GetNextAlias()
+	
+	Local cID
+	Local cFil
+	Local cTab
 
 	cSQL := " SELECT ZK2_TABELA, ZK2_FIL, ZK2_METODO "
 	cSQL += " FROM "+ RetSQLName("ZK2")
@@ -51,11 +66,18 @@ Method Get() Class TAFWorkFlowProcess
 	cSQL += " AND D_E_L_E_T_ = '' "
 	cSQL += " GROUP BY ZK2_TABELA, ZK2_FIL, ZK2_METODO "
 
-	TcQuery cSQL New Alias (cQry)
+	TCQUERY (cSQL) ALIAS (cQry) NEW
 
-	While !(cQry)->(Eof())
+	While (cQry)->(!Eof())
 
-		If ::Set(AllTrim((cQry)->ZK2_TABELA), (cQry)->ZK2_FIL, AllTrim((cQry)->ZK2_METODO))
+		cID:=AllTrim((cQry)->ZK2_METODO)
+		cTab:=AllTrim((cQry)->ZK2_TABELA)
+		
+		cFil:=(cQry)->ZK2_FIL
+
+		cTab:=::setTable(cTab,cTab,cID,cFil,::cIDProc)
+
+		If ::Set(cTab,cFil,cID)
 			
 			If ::Validate()
 			
@@ -75,6 +97,7 @@ Return()
 
 
 Method Set(cTab, cFil, cID) Class TAFWorkFlowProcess
+	
 	Local lRet := .F.
 	Local cSQL := ""
 	Local cQry := GetNextAlias()
@@ -82,15 +105,19 @@ Method Set(cTab, cFil, cID) Class TAFWorkFlowProcess
 
 	::SetProperty(cID)
 
-	If ::SetField(cTab, cFil, cID)
+	DEFAULT ::bSetField:={|cTab,cFil,cID|::SetField(@cTab,@cFil,@cID)}
+	
+	If (eval(::bSetField,@cTab,@cFil,@cID))
 		
-		cSQL := ::GetSQL(cTab, cFil, cID)
-
-		TcQuery cSQL New Alias (cQry)
-
-		lRet := !(cQry)->(Eof())
+		DEFAULT ::bGetSQL:={|cTab,cFil,cID|::GetSQL(@cTab,@cFil,@cID)}
 		
-		While !(cQry)->(Eof())
+		cSQL := eval(::bGetSQL,@cTab,@cFil,@cID)
+
+		TCQUERY (cSQL) ALIAS (cQry) NEW
+
+		lRet := (cQry)->(!Eof())
+		
+		While (cQry)->(!Eof())
 
 			For nCount := 1 To ::oLst:GetCount()
 
@@ -110,6 +137,7 @@ Return(lRet)
 
 
 Method SetProperty(cID) Class TAFWorkFlowProcess
+	
 	Local cSQL := ""
 	Local cQry := GetNextAlias()
 
@@ -120,7 +148,7 @@ Method SetProperty(cID) Class TAFWorkFlowProcess
 	cSQL += " AND D_E_L_E_T_ = '' "
 	cSQL += " ORDER BY ZK2_DTINI, ZK2_HRINI "
 
-	TcQuery cSQL New Alias (cQry)
+	TCQUERY (cSQL) ALIAS (cQry) NEW
 
 	If !Empty((cQry)->ZK2_OPERAC)
 
@@ -135,11 +163,12 @@ Method SetProperty(cID) Class TAFWorkFlowProcess
 		::cSubject := "Automação Financeira - " + ::cMethod
 
 	EndIf
-
-Return()
+	
+	Return()
 
 
 Method SetField(cTab, cFil, cID) Class TAFWorkFlowProcess
+	
 	Local lRet := .T.
 
 	::oLst:Clear()
@@ -307,18 +336,31 @@ Return(lRet)
 
 
 Method AddField(cField) Class TAFWorkFlowProcess
-	Local oField := Nil
 
-	DbSelectArea("SX3")
-	DbSetOrder(2)
-	If DbSeek(cField)
+	local cTipo
+	local cTitulo
+	local cPicture
 
-		oField := TAFWorkFlowField():New()
-		oField:cName := cField
-		oField:cType := SX3->X3_TIPO
-		oField:cPict := AllTrim(SX3->X3_PICTURE)
-		oField:cTitle := AllTrim(SX3->X3_TITULO)
-		oField:nWidth := CalcFieldSize(SX3->X3_TIPO, SX3->X3_TAMANHO, SX3->X3_DECIMAL, AllTrim(SX3->X3_PICTURE), SX3->X3_TITULO)
+	local nTamanho
+	local nDecimal
+
+	local oField
+
+	cTipo:=getSX3Cache(cField,"X3_TIPO")
+	
+	If (!empty(cTipo))
+
+		cTitulo:=allTrim(getSX3Cache(cField,"X3_TITULO"))
+		cPicture:=allTrim(getSX3Cache(cField,"X3_PICTURE"))
+		nTamanho:=getSX3Cache(cField,"X3_TAMANHO")
+		nDecimal:=getSX3Cache(cField,"X3_DECIMAL")
+
+		oField:=TWorkFlowField():New()
+		oField:cName:=cField
+		oField:cType:=cTipo
+		oField:cPict:=cPicture
+		oField:cTitle:=cTitulo
+		oField:nWidth:=CalcFieldSize(cTipo,nTamanho,nDecimal,cPicture,cTitulo)
 		
 		::oLst:Add(oField)
 
@@ -326,16 +368,18 @@ Method AddField(cField) Class TAFWorkFlowProcess
 
 Return()
 
-
-Method AddUserField(cField, cTitulo, cTipo, cPict, nWidth) Class TAFWorkFlowProcess
+Method AddUserField(cField, cTitulo, cTipo, cPict, nWidth,lUserField) Class TAFWorkFlowProcess
+	
 	Local oField := TAFWorkFlowField():New()
+
+	DEFAULT lUserField:=.T.
 
 	oField:cName := cField
 	oField:cType := cTipo
 	oField:cPict := cPict
 	oField:cTitle := cTitulo
 	oField:nWidth := nWidth
-	oField:lUser := .T.
+	oField:lUser := lUserField
 
 	::oLst:Add(oField)
 
@@ -359,9 +403,11 @@ Return(uRet)
 
 
 Method GetSQL(cTab, cFil, cID) Class TAFWorkFlowProcess
+	
 	Local cSQL := ""
 	Local cFSelect := ""
 	Local cSep := ","
+	Local cXFilial
 	Local nCount := 0
 	
 	If ::lAviso
@@ -374,10 +420,15 @@ Method GetSQL(cTab, cFil, cID) Class TAFWorkFlowProcess
 		cSQL += " AND D_E_L_E_T_ = '' "
 	
 	Else
-	
+
+		DEFAULT ::cFieldFil:=(PrefixoCpo(SubStr(cTab,1,3))+"_FILIAL")
+		DEFAULT ::cSX2Alias:=SubStr(cTab,1,3)
+
+		cXFilial:=xFilial(::cSX2Alias,cFil)
+
 		For nCount := 1 To ::oLst:GetCount()
 	
-			If !::oLst:GetItem(nCount):lUser
+			If (!::oLst:GetItem(nCount):lUser)
 	
 				If !Empty(cFSelect)
 					cFSelect += cSep
@@ -404,7 +455,7 @@ Method GetSQL(cTab, cFil, cID) Class TAFWorkFlowProcess
 		cSQL += " ), '') AS RETMEN "
 	
 		cSQL += " FROM " + cTab
-		cSQL += " WHERE " + PrefixoCpo(SubStr(cTab, 1, 3)) + "_FILIAL = " + ValToSQL(xFilial(SubStr(cTab, 1, 3)))
+		cSQL += " WHERE " + ::cFieldFil + " = " + ValToSQL(cXFilial)
 		cSQL += " AND R_E_C_N_O_ IN "
 		cSQL += " ( "
 		cSQL += " 	SELECT ZK2_IDTAB "
@@ -417,7 +468,7 @@ Method GetSQL(cTab, cFil, cID) Class TAFWorkFlowProcess
 		cSQL += " )"
 	
 		// Controle para enviar somente uma vez por dia o mesmo RECNO e mensagem de retorno diferente quando for JOB.
-		If ::cType $ "P/R/C" .And. IsBlind()
+		If ((::cType$"P/R/C").and.(!"##"$cTab).and.(IsBlind()))
 		
 			cSQL += " AND ( "
 			cSQL += " 		NOT EXISTS "
@@ -589,3 +640,19 @@ Method Validate() Class TAFWorkFlowProcess
 	lRet := !Empty(::cTo)
 
 Return(lRet)
+
+Method setTable(cRealTable,cTab,cID,cFil,cIDProc) Class TAFWorkFlowProcess
+
+	local nTab
+
+	cTab:=allTrim(cTab)
+	cID:=allTrim(cID)
+
+	nTab:=aScan(::aTables,{|t|((t[1]==cTab).and.(t[2]==cID).and.(t[3]==cFil).and.(t[4]==cIDProc))})
+	if (nTab==0)
+		aAdd(::aTables,{cTab,cID,cFil,cIDProc,cRealTable})
+		nTab:=len(::aTables)
+	endif
+	cRealTable:=::aTables[nTab][5]
+
+	return(cRealTable)

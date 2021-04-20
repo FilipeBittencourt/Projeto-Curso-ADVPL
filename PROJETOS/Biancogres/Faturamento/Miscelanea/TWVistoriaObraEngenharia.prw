@@ -48,7 +48,7 @@ Class TWVistoriaObraEngenharia From LongClassName
 	Data cChk
 	Data cUnChk
 	Data oChk
-	Data lMarkAll	
+	Data lMarkAll
 	Data oBrw	
 	Data oField
 	Data lConfirm
@@ -596,6 +596,10 @@ Local bValid := {|x| If ( x[nP_MARK] == ::cChk .And. x[nP_LEG] + x[nP_DATVIS] + 
 		
 		EndIf
 	
+	ElseIf  ::cVisBlo <> cPar .And. (nPos := aScan(::oBrw:aCols, {|x| x[nP_MARK] == ::cChk .And. x[nP_LEG] == ::cVisBlo })) > 0
+
+		MsgStop("VISTORIA BLOQUEADA - Aguardando Aprovação", TIT_WND)
+
 	Else
 	
 		MsgStop("Não existem itens selecionados para a operação executada!", TIT_WND)

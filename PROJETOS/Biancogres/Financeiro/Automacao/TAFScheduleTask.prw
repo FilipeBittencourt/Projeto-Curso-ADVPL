@@ -108,13 +108,13 @@ Method ChkJobExec(_cRotina) class TAFScheduleTask
 
 		If (ZK5->ZK5_TIPEXE == "1")
 
-			_cHora := SubStr(_cTimeExec,1,2)
-			_nMinuto := Val(SubStr(_cTimeExec,4,2))
-			_cMinuto := "00"
+			_cHora 		:= SubStr(_cTimeExec,1,2)
+			_nMinuto	:= Val(SubStr(_cTimeExec,4,2))
+			_cMinuto	:= "00"
 
 			While _nMinuto >= 0
 
-				_cMinuto := StrZero(_nMinuto,2)
+				_cMinuto := StrZero(_nMinuto, 2)
 
 				If ( _cMinuto $ "00_05_10_15_20_25_30_35_40_45_50_55")
 
@@ -126,9 +126,10 @@ Method ChkJobExec(_cRotina) class TAFScheduleTask
 
 			EndDo
 
-			_cTimeComp := _cHora+":"+_cMinuto
-
-			ConOut("ChkJobExec => TIME COMPARE="+_cTimeComp)
+			_cTimeComp		:= _cHora+":"+_cMinuto
+			_cTimeAntComp 	:= _cHora+":"+StrZero((_nMinuto - 5), 2)
+			
+			ConOut("ChkJobExec => TIME COMPARE="+_cTimeComp+", TIME ANTERIOR COMPARE="+_cTimeAntComp)
 
 
 			If 	( ZK5->ZK5_DIAS1 .And. _nDiaSem == 1 ) .Or.;
@@ -144,9 +145,11 @@ Method ChkJobExec(_cRotina) class TAFScheduleTask
 
 				ConOut("ChkJobExec => ZK5_TIME="+_cTime)
 
-				If 	( _cTimeComp $ AllTrim(_cTime) ) .And.;
-						( ZK5->ZK5_ULTDAT <> dDataBase .Or. ZK5->ZK5_ULTHOR <> _cTimeComp )
-
+				If 	(( _cTimeComp $ AllTrim(_cTime)) .Or. ( _cTimeAntComp $ AllTrim(_cTime))) .And.;
+						( ZK5->ZK5_ULTDAT 	<>	 dDataBase .Or. ;
+						   (ZK5->ZK5_ULTHOR	<>	_cTimeComp .And.;
+							ZK5->ZK5_ULTHOR	<>	_cTimeAntComp) )
+							
 					::ExecJob(_cTimeComp)
 				
 				Else

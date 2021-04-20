@@ -84,7 +84,8 @@ Local nVlrTotCom := 0
 	cSQL += " AND A3_CGC <> '' AND A3_CGC <> '00000000000000' "
 	cSQL += " AND (A3_EMAIL <> '' OR A3_YEMAIL <> '') "
 	cSQL += " AND D_E_L_E_T_ = '' "
-	cSQL += " AND A3_MSBLQL <> '1' "
+	//Ticket 31510 Se o representante possui comissão, envia mesmo se o cadastro estiver bloqueado.
+	//cSQL += " AND A3_MSBLQL <> '1' "
 	cSQL += " GROUP BY A3_CGC, A3_COD, A3_NOME, A3_NREDUZ, A3_EMAIL, A3_YEMAIL "
 	cSQL += " ORDER BY A3_CGC, A3_COD, A3_EMAIL, A3_YEMAIL "
 			

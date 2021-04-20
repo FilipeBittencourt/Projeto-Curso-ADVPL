@@ -55,7 +55,8 @@ Class TAFMovimentoBancario From LongClassName
 	Method New() Constructor
 	Method Insert()
 	Method Transfer()
-	
+	Method Exists()
+
 EndClass
 
 
@@ -213,3 +214,79 @@ Private Inclui := .T.
 	End Transaction
 	
 Return(!lMsErroAuto)
+
+Method Exists() Class TAFMovimentoBancario
+
+    static oExistsPS as object
+
+    local aArea     as array
+
+    local cSQL      as character
+    local cTblTmp   as character
+
+    local lExists   as logical
+
+    aArea:=getArea()
+
+    if (!(valtype(oExistsPS)=="O"))
+        BeginContent var cSQL
+            SELECT ISNULL(x.nEXISTS,0) nEXISTS 
+            FROM(
+                    SELECT  1 AS nEXISTS                                                                              
+                    FROM [?] SE5                                                                
+                    WHERE SE5.E5_FILIAL=?                           
+                      AND SE5.E5_RECPAG=?                                     
+                      AND SE5.E5_DATA=?                                    
+                      AND SE5.E5_BANCO=?                                                
+                      AND SE5.E5_AGENCIA=?
+                      AND SE5.E5_CONTA=?
+                      AND SE5.E5_CLVLCR=?
+                      AND SE5.E5_CCC=?
+                      AND SE5.E5_NATUREZ=?
+                      AND SE5.E5_VALOR=?
+                      AND SE5.E5_HISTOR=?
+                      AND SE5.D_E_L_E_T_=''          
+                ) x
+        EndContent 
+        oExistsPS:=FWPreparedStatement():New(cSQL)
+    EndIf
+
+    oExistsPS:setString(1,retSQLName("SE5"))
+    
+    oExistsPS:setString(2,xFilial('SE5'))
+    oExistsPS:setString(3,self:cRecPag)
+
+    oExistsPS:setDate(4,self:dData)
+    oExistsPS:setString(5,self:cBanco)
+
+    oExistsPS:setString(6,self:cAgencia)
+    oExistsPS:setString(7,self:cConta)
+
+    oExistsPS:setString(8,self:cClasseValor)
+    oExistsPS:setString(9,self:cCentroCusto)
+   
+    oExistsPS:setString(10,self:cNatureza)
+    oExistsPS:setNumeric(11,self:nValor)
+
+    oExistsPS:setString(12,self:cHistorico)
+
+    cSQL:=oExistsPS:GetFixQuery()
+    
+    cSQL:=strTran(cSQL,"['","[")
+    cSQL:=strTran(cSQL,"']","]")
+
+    if (self:cRecPag=="P")
+        cSQL:=strTran(cSQL,"E5_CCC","E5_CCD")
+        cSQL:=strTran(cSQL,"E5_CLVLCR","E5_CLVLDB")
+	endif
+
+    cTblTmp:=MpSysOpenQuery(cSQL)
+
+    if (lExists:=Select(cTblTmp)>0)
+        lExists:=((cTblTmp)->nEXISTS==1)
+        (cTblTmp)->(dbCloseArea())
+    endif
+
+    restArea(aArea)
+
+    Return(lExists)

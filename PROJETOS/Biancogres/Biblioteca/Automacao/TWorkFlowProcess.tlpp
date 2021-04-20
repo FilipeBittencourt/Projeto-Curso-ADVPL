@@ -19,14 +19,13 @@ Class TWorkFlowProcess From TAutomacaoWorkFlow
 	Public Method Set(cTab, cFil, cID)
 	Public Method SetProperty(cID)
 	Public Method AddField(cField)
-	Public Method AddUserField(cField, cTitulo, cTipo, cPict, nWidth)
+	Public Method AddUserField(cField, cTitulo, cTipo, cPict, nWidth,lUserField)
 	Public Method FormatField(cType, cPict, uValue)
 	Public Method GetSQL(cTab, cFil, cID)
 	Public Method Send()
 	Public Method Validate()
 
 EndClass
-
 
 Method New() Class TWorkFlowProcess
 
@@ -142,18 +141,31 @@ Return()
 
 
 Method AddField(cField) Class TWorkFlowProcess
-	Local oField := Nil
+	
+	local cTipo
+	local cTitulo
+	local cPicture
 
-	DbSelectArea("SX3")
-	DbSetOrder(2)
-	If DbSeek(cField)
+	local nTamanho
+	local nDecimal
 
-		oField := TWorkFlowField():New()
-		oField:cName := cField
-		oField:cType := SX3->X3_TIPO
-		oField:cPict := AllTrim(SX3->X3_PICTURE)
-		oField:cTitle := AllTrim(SX3->X3_TITULO)
-		oField:nWidth := CalcFieldSize(SX3->X3_TIPO, SX3->X3_TAMANHO, SX3->X3_DECIMAL, AllTrim(SX3->X3_PICTURE), SX3->X3_TITULO)
+	local oField
+
+	cTipo:=getSX3Cache(cField,"X3_TIPO")
+	
+	If (!empty(cTipo))
+
+		cTitulo:=allTrim(getSX3Cache(cField,"X3_TITULO"))
+		cPicture:=allTrim(getSX3Cache(cField,"X3_PICTURE"))
+		nTamanho:=getSX3Cache(cField,"X3_TAMANHO")
+		nDecimal:=getSX3Cache(cField,"X3_DECIMAL")
+
+		oField:=TWorkFlowField():New()
+		oField:cName:=cField
+		oField:cType:=cTipo
+		oField:cPict:=cPicture
+		oField:cTitle:=cTitulo
+		oField:nWidth:=CalcFieldSize(cTipo,nTamanho,nDecimal,cPicture,cTitulo)
 		
 		::oLst:Add(oField)
 
@@ -162,15 +174,18 @@ Method AddField(cField) Class TWorkFlowProcess
 Return()
 
 
-Method AddUserField(cField, cTitulo, cTipo, cPict, nWidth) Class TWorkFlowProcess
+Method AddUserField(cField, cTitulo, cTipo, cPict, nWidth,lUserField) Class TWorkFlowProcess
+	
 	Local oField := TWorkFlowField():New()
+
+	DEFAULT lUserField:=.T.
 
 	oField:cName := cField
 	oField:cType := cTipo
 	oField:cPict := cPict
 	oField:cTitle := cTitulo
 	oField:nWidth := nWidth
-	oField:lUser := .T.
+	oField:lUser := lUserField
 
 	::oLst:Add(oField)
 

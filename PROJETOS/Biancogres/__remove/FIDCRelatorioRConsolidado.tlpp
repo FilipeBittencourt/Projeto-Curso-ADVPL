@@ -1,0 +1,6 @@
+#include "totvs.ch"
+static function __DummyFIDCConRel()
+    if (.F.)
+        __DummyFIDCConRel()
+    endif
+    return

@@ -19,7 +19,7 @@ Class TAprovaPedidoVendaEMail From LongClassName
 	Data cEmailAprT
 	Data lEnvMail
 	Data lBlqCondPag
-
+	
 
 	Data oServidor
 	Data oMensagem
@@ -33,9 +33,9 @@ Class TAprovaPedidoVendaEMail From LongClassName
 	Data cIDMsg
 	Data cPtSMTP
 	Data cPtPOP3
-	Data lUseTLS
+	Data lUseTLS	
 	Data lUseSSL
-	Data lUseAut
+	Data lUseAut	
 
 	Method New() Constructor
 	Method Inclui()
@@ -81,7 +81,7 @@ Method New() Class TAprovaPedidoVendaEMail
 
 	::oServidor := TMailManager():New()
 	::oMensagem := TMailMessage():New()
-
+	
 	::cServidor := SubStr(GetMv("MV_RELSERV"),1,RAT(':',GetMv("MV_RELSERV"))-1)
 	::cSrvPOP	:= SubStr(GetMv("MV_YSRVPOP"),1,RAT(':',GetMv("MV_YSRVPOP"))-1)
 	::cConta 	:= GetMv("MV_YPVCTAP")
@@ -92,9 +92,9 @@ Method New() Class TAprovaPedidoVendaEMail
 	::lUseAUT 	:= GetMv("MV_RELAUTH")
 	::cContaRec := GetMv("MV_YPVCTAP")
 	::cSenhaRec := GetMv("MV_YPVSNAP")
-	::cPtSMTP   := Val(SubStr(GetMv("MV_RELSERV"),RAT(':',GetMv("MV_RELSERV"))+1,Len(Alltrim(GetMv("MV_RELSERV")))))
-	::cPtPOP3   := Val(SubStr(GetMv("MV_YSRVPOP"),RAT(':',GetMv("MV_YSRVPOP"))+1,Len(Alltrim(GetMv("MV_YSRVPOP")))))
-
+	::cPtSMTP   := Val(SubStr(GetMv("MV_RELSERV"),RAT(':',GetMv("MV_RELSERV"))+1,Len(Alltrim(GetMv("MV_RELSERV")))))    
+	::cPtPOP3   := Val(SubStr(GetMv("MV_YSRVPOP"),RAT(':',GetMv("MV_YSRVPOP"))+1,Len(Alltrim(GetMv("MV_YSRVPOP")))))    
+	
 
 	::cIDMsg 	:= ""
 
@@ -114,7 +114,7 @@ Method Inclui() Class TAprovaPedidoVendaEMail
 	ZC1->ZC1_FILIAL		:= xFilial("ZC1")
 	ZC1->ZC1_EMP 		:= cEmpAnt
 	ZC1->ZC1_FIL 		:= cFilAnt
-	ZC1->ZC1_PEDIDO		:= AllTrim(::cNumPed)
+	ZC1->ZC1_PEDIDO		:= ::cNumPed
 	ZC1->ZC1_APROV 		:= ::cCodApr
 	ZC1->ZC1_EMAIL 		:= ::cEmailApr
 	ZC1->ZC1_APROVT 	:= ::cCodAprT
@@ -187,7 +187,7 @@ Method Recusar() Class TAprovaPedidoVendaEMail
 
 	oLibBloq:cEmp 		:= ZC1->ZC1_EMP
 	oLibBloq:cFil 		:= ZC1->ZC1_FIL
-	oLibBloq:cNumPed	:= AllTrim(ZC1->ZC1_PEDIDO)
+	oLibBloq:cNumPed	:= ZC1->ZC1_PEDIDO
 	oLibBloq:cCodAprov	:= If (!Empty(ZC1->ZC1_APROVT), ZC1->ZC1_APROVT, ZC1->ZC1_APROV)
 	oLibBloq:lAprovTemp	:= If (!Empty(ZC1->ZC1_APROVT), .T., .F.)
 	oLibBloq:cOrigem	:= 'E'
@@ -204,7 +204,7 @@ Method Revisar() Class TAprovaPedidoVendaEMail
 
 	oLibBloq:cEmp 		:= ZC1->ZC1_EMP
 	oLibBloq:cFil 		:= ZC1->ZC1_FIL
-	oLibBloq:cNumPed	:= AllTrim(ZC1->ZC1_PEDIDO)
+	oLibBloq:cNumPed	:= ZC1->ZC1_PEDIDO
 	oLibBloq:cCodAprov	:= If (!Empty(ZC1->ZC1_APROVT), ZC1->ZC1_APROVT, ZC1->ZC1_APROV)
 	oLibBloq:lAprovTemp	:= If (!Empty(ZC1->ZC1_APROVT), .T., .F.)
 	oLibBloq:cOrigem	:= 'E'
@@ -221,7 +221,7 @@ Method Aprova() Class TAprovaPedidoVendaEMail
 
 	oLibBloq:cEmp 		:= ZC1->ZC1_EMP
 	oLibBloq:cFil 		:= ZC1->ZC1_FIL
-	oLibBloq:cNumPed	:= AllTrim(ZC1->ZC1_PEDIDO)
+	oLibBloq:cNumPed	:= ZC1->ZC1_PEDIDO
 	oLibBloq:cCodAprov	:= If (!Empty(ZC1->ZC1_APROVT), ZC1->ZC1_APROVT, ZC1->ZC1_APROV)
 	oLibBloq:lAprovTemp	:= If (!Empty(ZC1->ZC1_APROVT), .T., .F.)
 	oLibBloq:cOrigem	:= 'E'
@@ -272,19 +272,19 @@ Method Envia() Class TAprovaPedidoVendaEMail
 
 	ConOut(cValToChar(dDataBase) +"-"+ Time() + " -- TAprovaPedidoVendaEMail:Envia() -- Empresa: "+ cEmpAnt +" -- Pedido: "+ ::cNumPed + " - STARTED")
 
-	//TICKET 23728 - ocorreu alguma mudanca no servidor de email que passou a nao aceitar poerta 25 - mudando para 587
+	//TICKET 23728 - ocorreu alguma mudanca no servidor de email que passou a nao aceitar poerta 25 - mudando para 587	
 	::oServidor:SetUseTLS(::lUseTLS)
 
 	::oServidor:SetUseSSL(::lUseSSL)
-
-	::oServidor:Init("", ::cServidor, ::cConta, ::cSenha, 0, ::cPtSMTP)
-
+	
+	::oServidor:Init("", ::cServidor, ::cConta, ::cSenha, 0, ::cPtSMTP)	
+	
 	::oServidor:SetSmtpTimeOut(60)
 
 	If ::oServidor:SmtpConnect() == 0
 		ConOut(cValToChar(dDataBase) +"-"+ Time() + " -- TAprovaPedidoVendaEMail:Envia() -- Empresa: "+ cEmpAnt +" -- Pedido: "+ ::cNumPed + " - CONNECTED")
 
-		If ::lUseAUT
+		If ::lUseAUT 
 			_nErro := ::oServidor:SmtpAuth(::cConta, ::cSenha)
 		Else
 			_nErro := 0
@@ -298,7 +298,7 @@ Method Envia() Class TAprovaPedidoVendaEMail
 			::oMensagem := TMailMessage():New()
 
 			//'barbara.madeira@biancogres.com.br;pedro@facilesistemas.com.br'//
-
+			
 			::oMensagem:cFrom		:= ::cEmail
 			::oMensagem:cTo 		:= ::RetEmailApr()
 			::oMensagem:cCc 		:= ""
@@ -313,7 +313,7 @@ Method Envia() Class TAprovaPedidoVendaEMail
 			If (cRetAnexo <> Nil .And. !Empty(cRetAnexo))
 				::oMensagem:AttachFile(cRetAnexo)
 			EndIf
-
+			
 			If ::oMensagem:Send(::oServidor) == 0
 
 				ConOut(cValToChar(dDataBase) +"-"+ Time() + " -- TAprovaPedidoVendaEMail:Envia() -- Empresa: "+ cEmpAnt +" -- Pedido: "+ ::cNumPed + " - SENDED")
@@ -325,9 +325,9 @@ Method Envia() Class TAprovaPedidoVendaEMail
 				::Inclui()
 
 			EndIf
-
+		
 		Else
-
+		
 			ConOut( "TAprovaPedidoVendaEMail:Envia() => ERRO ao autenticar: " + str(_nErro,6), ::oServidor:GetErrorString( _nErro ) )
 
 		EndIf
@@ -487,7 +487,7 @@ Method Recebe() Class TAprovaPedidoVendaEMail
 	Local nTotMsg := 0
 	Local nRet
 	Local nI
-
+	
 	::oServidor:SetUseSSL(::lUseSSL)
 
 	::oServidor:Init(::cSrvPOP, "", ::cContaRec, ::cSenhaRec, ::cPtPOP3, 0)
@@ -645,7 +645,7 @@ Return(cRet)
 Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 
 	Local aArea			:= GetArea()
-
+	
 	Local cCRLF
 	Local cAliasTmp 	:= GetNextAlias()
 	Local cQuery		:= ""
@@ -679,7 +679,7 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 	DbSelectArea('SE4')
 	SE4->(DbSetOrder(1))
 	SE4->(DbSeek(xFilial("SE4")+SC5->C5_CONDPAG))
-
+	
 	cCRLF:=CRLF
 
 	//Ticket 30360 - Aumentado o VARCHAR de 1024 para o MAX para contemplar a informação completa
@@ -794,15 +794,15 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 	cHTML += ' 						<tr>                                                                                                                                                                        '
 	cHTML += ' 							<td>                                                                                                                                                                    '
 	cHTML += ' 								<table width="100%" class="tblItensPedido" cellpadding="0" cellspacing="0">                                                                                         '
-
+	
 	cHTML += ' 									 <tr style="color: red;">                                                                                                                                                           '
 	cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> TIPO BLOQUEIO(S): </td>                                                                                   '
 	cHTML += ' 										<td colspan="3" align="left"> '+::RetMotBlq()+' </td>                                                                                                                                   '
 	cHTML += ' 									 </tr>                                                                                                                                                          '
-
+	
 	_cMotivoRej := ""
 	While !SC6->(Eof())  .And. SC6->C6_FILIAL == xFilial('SC6') .AND. SC6->C6_NUM == ::cNumPed
-
+		
 		If (!Empty(SC6->C6_YMOTFRA))
 			DbSelectArea('PZ7')
 			PZ7->(DbSetOrder(1))
@@ -810,23 +810,23 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 				If(!Empty(_cMotivoRej))
 					_cMotivoRej += "/"
 				EndIf
-				_cMotivoRej += PZ7->PZ7_DESCRI
+				_cMotivoRej += PZ7->PZ7_DESCRI 
 			EndIf
-		EndIf
+		EndIf		
 		SC6->(DbSkip())
 	EndDo
-
-
+	
+	
 	If (!Empty(_cMotivoRej))
 		cHTML += ' 									 <tr style="color: red;">                                                                                                                                                           '
 		cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> MOTIVO REJEIÇÃO: </td>                                                                                   '
 		cHTML += ' 										<td colspan="3" align="left"> '+_cMotivoRej+' </td>                                                                                                                                   '
 		cHTML += ' 									 </tr>                                                                                                                                                          '
 	EndIf
-
+	
 	SC6->(DbGoTop())
-
-
+	
+	
 	cHTML += ' 									 <tr>                                                                                                                                                           '
 	cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> NÚMERO: </td>                                                                                          '
 	cHTML += ' 										<td align="left"> '+SC5->C5_NUM+' </td>                                                                                                                     '
@@ -841,34 +841,34 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 
 
 	If (::lBlqCondPag)
-
+		
 		cHTML += ' 									  <tr style="color: red;">                                                                                                                                                          '
 		cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> COND.DE PAG: </td>                                                                           '
 		cHTML += ' 										<td align="left"> '+AllTrim(SE4->E4_DESCRI)+' </td>                                                                                                                                   '
-
+		
 		DbSelectArea('SE4')
 		SE4->(DbSetOrder(1))
 		SE4->(DbSeek(xFilial("SE4")+SA1->A1_COND))
 		cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> COND.DE PAG. CAD.: </td>                                                                           '
 		cHTML += ' 										<td align="left"> '+AllTrim(SE4->E4_DESCRI)+' </td>                                                                                                                                   '
-		cHTML += ' 									 </tr>
-		'
+		cHTML += ' 									 </tr>  
+		                                                                                                                                                        '
 	Else
-
+	
 		cHTML += ' 									  <tr>                                                                                                                                                          '
 		cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> CONDIÇÃO DE PAGAMENTO: </td>                                                                           '
 		cHTML += ' 										<td colspan="3" align="left"> '+AllTrim(SE4->E4_DESCRI)+' </td>                                                                                                                                   '
-		cHTML += ' 									 </tr>
-		'
+		cHTML += ' 									 </tr>     
+		                                                                                                                                                     '
 	EndIf
-
-
+	
+	
 	cHTML += ' 									  <tr>                                                                                                                                                          '
 	cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> TIPO PEDIDO: </td>                                                                           '
 	if(!Empty(STR(SC5->C5_YPRZINC)) .And. SC5->C5_YPRZINC > 0)
 		cHTML += ' 										<td colspan="1" align="left" class="pedido-detalhe-cor"> '+AllTrim(cSubTp)+' </td>                                                                                                                                   '
 		cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> Incr. Vencimento: </td>                                                                                          '
-		cHTML += ' 										<td align="left"> '+ STR(SC5->C5_YPRZINC)+' dias </td>
+		cHTML += ' 										<td align="left"> '+ STR(SC5->C5_YPRZINC)+' dias </td>  
 	else
 		cHTML += ' 										<td colspan="3" align="left" class="pedido-detalhe-cor"> '+AllTrim(cSubTp)+' </td>                                                                                                                                   '
 	endif
@@ -879,13 +879,13 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 	if !Empty(DTOS(SC5->C5_YDTINC))
 		cHTML += ' 										<td colspan="1" align="left"> '+AllTrim(SA3->A3_COD)+" - "+AllTrim(SA3->A3_NREDUZ)+' </td>                                                                                                                                   '
 		cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> Data Incremento: </td>                                                                                          '
-		cHTML += ' 										<td align="left"> '+ DTOS(SC5->C5_YDTINC)+' </td>
+		cHTML += ' 										<td align="left"> '+ DTOS(SC5->C5_YDTINC)+' </td>  
 	else
 		cHTML += ' 										<td colspan="3" align="left"> '+AllTrim(SA3->A3_COD)+" - "+AllTrim(SA3->A3_NREDUZ)+' </td>                                                                                                                                   '
 	endif
 	cHTML += ' 									 </tr>                                                                                                                                                          '
 
-
+	
 	If (!Empty(SC5->C5_YOBS))
 		cHTML += ' 									 <tr>                                                                                                                                                           '
 		cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> OBSERVAÇÃO: </td>                                                                                   '
@@ -962,53 +962,53 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 	_cARejeicao		:= ""
 	_cAExclusivo	:= ""
 	_lNaoPalete		:= .F.
-
+	
 	DbSelectArea('SC6')
 	SC6->(DbSetOrder(1))
 	SC6->(DbSeek(xFilial('SC6')+::cNumPed))
-
+	
 	while !SC6->(Eof())  .And. SC6->C6_FILIAL == xFilial('SC6') .AND. SC6->C6_NUM == ::cNumPed
 		cYDNV 	:= cYDNV + SC6->C6_YDNV
 		cYDACO 	:= cYDACO + SC6->C6_YDACO
 		cYDVER 	:= cYDVER + SC6->C6_YDVER
 		cYDAI 	:= cYDAI + SC6->C6_YDAI
 		nYDFRA 	:= nYDFRA + SC6->C6_YDFRA
-
-
+		
+		
 		If (!_lNaoPalete)
 			aRetPalete := StaticCall( FROPGA02, CalcPalete, SC6->C6_QTDVEN)
 			If (aRetPalete[2] <> SC6->C6_QTDVEN)
 				_lNaoPalete := .T.
 			EndIf
 		EndIf
-
+		
 		If (AllTrim(_cARejeicao) =="")
 			_cARejeicao := IIF(!Empty(SC6->C6_YMOTREJ) .Or. !Empty(SC6->C6_YMOTFRA), 'X', '')
 		EndIf
-
-
-		cYEXCL := Posicione('SB1',1,xFilial('SB1')+SC6->C6_PRODUTO, 'B1_YEXCL')
-
+		
+		
+		cYEXCL := Posicione('SB1',1,xFilial('SB1')+SC6->C6_PRODUTO, 'B1_YEXCL') 
+		
 		If (AllTrim(_cAExclusivo) == "")
 			If (cYEXCL == 'H' .And. AllTrim(SA1->A1_YTPSEG) <> 'E')
 				_cAExclusivo := AllTrim(NGRetSX3Box("B1_YEXCL", cYEXCL))
 			EndIf
-
+			
 			If (cYEXCL == 'E' .And. AllTrim(SA1->A1_YCAT) <> 'LOJA ESPEC')
 				_cAExclusivo := AllTrim(NGRetSX3Box("B1_YEXCL", cYEXCL))
 			EndIf
 		EndIf
-
+		
 		conout("_lNaoPalete: "+cvaltochar(_lNaoPalete)+", _cAExclusivo:"+_cAExclusivo+", _cARejeicao:"+_cARejeicao)
 
-
+	
 		SC6->(DbSkip())
 
 	EndDo()
-
+	
 	conout("_lNaoPalete: "+cvaltochar(_lNaoPalete)+", _cAExclusivo:"+_cAExclusivo+", _cARejeicao:"+_cARejeicao)
-
-
+		
+	
 	DbSelectArea('SC6')
 	SC6->(DbSetOrder(1))
 	SC6->(DbSeek(xFilial('SC6')+::cNumPed))
@@ -1028,36 +1028,36 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 	If(cYDAI > 0)
 		cHTML += ' 										<th>   AI % </th>   	                                                                                                                                    	'
 	EndIf
-
+	
 	If(nYDFRA > 0)
 		cHTML += ' 										<th>   Fra. % </th>   	                                                                                                                                    	'
 	EndIf
-
-	cHTML += ' 										<th> OUTROS % </th>
-
-	cHTML += ' 										<th> DT. ENT. </th>
-	cHTML += ' 										<th> DT. NECE. </th>
-
+	
+	cHTML += ' 										<th> OUTROS % </th>        
+	
+	cHTML += ' 										<th> DT. ENT. </th>        
+	cHTML += ' 										<th> DT. NECE. </th>    
+	
 	If (AllTrim(SA1->A1_YTPSEG) == 'E')
 		cHTML += ' 										<th> DT.NEC.REAL </th>
 	EndIf
-
-	If (AllTrim(_cARejeicao) != "")
-		cHTML += ' 										<th> REJEIÇÃO % </th>
+	
+	If (AllTrim(_cARejeicao) != "")    
+		cHTML += ' 										<th> REJEIÇÃO % </th>        
 	EndIf
-
-	If (AllTrim(_cAExclusivo) != "")
+	
+	If (AllTrim(_cAExclusivo) != "")   
 		cHTML += ' 										<th> PROD. EXCLUSIVO </th>                                                                                                                                  '
 	EndIf
-
+	
 	If (_lNaoPalete)
 		cHTML += ' 										<th> DESPALETIZADO </th>                                                                                                                                  '
 	EndIf
-
+	
 	cHTML += ' 									 </tr>                                                                                                                                                          '
 	cHTML += ' 		                                                                                                                                                                                            '
 
-
+	
 	//ITENS
 	While !SC6->(Eof())  .And. SC6->C6_FILIAL == xFilial('SC6') .AND. SC6->C6_NUM == ::cNumPed
 
@@ -1086,48 +1086,48 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 		If(cYDAI > 0)
 			cHtml += '								<td align="right" class="tblItensPedido-border-left">'+ TRANSFORM(SC6->C6_YDAI, "@E 999.99") +' %</td>
 		EndIf
-
+		
 		If(nYDFRA > 0)
 			cHtml += '								<td align="right" class="tblItensPedido-border-left">'+ TRANSFORM(SC6->C6_YDFRA, "@E 999.99") +' %</td>
 		EndIf
-
+		
 		cHtml += '								<td align="right" class="tblItensPedido-border-right">'+ TRANSFORM(SC6->C6_YDESP, "@E 999,999,999.99") +' %</td>
-
+		
 		cHtml += '								<td align="right" class="tblItensPedido-border-right">'+cvaltochar(DTOC(SC6->C6_ENTREG)) +' </td>
 		cHtml += '								<td align="right" class="tblItensPedido-border-right">'+cvaltochar(DTOC(SC6->C6_YDTNECE)) +' </td>
-
+		
 		If (AllTrim(SA1->A1_YTPSEG) == 'E')
 			cHTML += ' 							<td align="right" class="tblItensPedido-border-right">'+cvaltochar(DTOC(SC6->C6_YDTNERE)) +' </td>
 		EndIf
-
-		If (AllTrim(_cARejeicao) != "")
+		
+		If (AllTrim(_cARejeicao) != "")    
 			cHtml += '								<td align="right" style="color: red;" class="tblItensPedido-border-right">'+IIF(!Empty(SC6->C6_YMOTREJ) .Or. !Empty(SC6->C6_YMOTFRA), 'X', '') +' </td>
 		EndIf
-
-		cYEXCL := Posicione('SB1',1,xFilial('SB1')+SC6->C6_PRODUTO, 'B1_YEXCL')
-
+		
+		cYEXCL := Posicione('SB1',1,xFilial('SB1')+SC6->C6_PRODUTO, 'B1_YEXCL') 
+		
 		_cExclusivo := ""
 		If (cYEXCL == 'H' .And. AllTrim(SA1->A1_YTPSEG) <> 'E')
 			_cExclusivo := AllTrim(NGRetSX3Box("B1_YEXCL", cYEXCL))
 		EndIf
-
+		
 		If (cYEXCL == 'E' .And. AllTrim(SA1->A1_YCAT) <> 'LOJA ESPEC')
 			_cExclusivo := AllTrim(NGRetSX3Box("B1_YEXCL", cYEXCL))
 		EndIf
-
-		If (AllTrim(_cAExclusivo) != "")
+		
+		If (AllTrim(_cAExclusivo) != "")   
 			cHtml += '								<td align="right" style="color: red;" class="tblItensPedido-border-right">'+_cExclusivo +' </td>
 		EndIf
-
+		
 		If (_lNaoPalete)
-
+			
 			aRetPalete := StaticCall(FROPGA02, CalcPalete, SC6->C6_QTDVEN)
 			cHtml += '								<td align="right" style="color: red;" class="tblItensPedido-border-right">'+IIf (aRetPalete[2] <> SC6->C6_QTDVEN, 'X', '')+'</td>
 		EndIf
-
+		
 		cHtml += '							 </tr>'
 
-
+		
 		nSomaQuant += SC6->C6_QTDVEN
 		nSomaPreco += SC6->C6_PRCVEN
 		nSomaValor += SC6->C6_VALOR
@@ -1163,23 +1163,23 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 	If(cYDAI > 0)
 		cHtml += '								<td align="right" class="tblItensPedido-border-left"></td>
 	EndIf
-
+	
 	If(nYDFRA > 0)
 		cHtml += '								<td align="right" class="tblItensPedido-border-left"></td>
 	EndIf
 
-	If (AllTrim(_cARejeicao) != "")
+	If (AllTrim(_cARejeicao) != "")    
 		cHtml += '								<td align="right" class="tblItensPedido-border-left"></td>
 	EndIf
-
-	If (AllTrim(_cAExclusivo) != "")
+	
+	If (AllTrim(_cAExclusivo) != "")   
 		cHtml += '								<td align="right" class="tblItensPedido-border-left"></td>
 	EndIf
-
+	
 	If (_lNaoPalete)
 		cHtml += '								<td align="right" class="tblItensPedido-border-right"></td>
 	EndIf
-
+	
 	cHtml += '							 </tr>'
 
 	cHTML += '                                                                                                                                                                                                    '
@@ -1338,13 +1338,13 @@ Method RetMotBlq() Class TAprovaPedidoVendaEMail
 				If (!Empty(cRet))
 					cRet += "/"
 				EndIf
-
+				
 				cRet += ZKI->ZKI_DESBLQ
-
+				
 				If (AllTrim(ZKI->ZKI_TPBLQ) == 'D')
 					::lBlqCondPag	:= .T.
 				EndIf
-
+				
 			EndIf
 
 		Next nI

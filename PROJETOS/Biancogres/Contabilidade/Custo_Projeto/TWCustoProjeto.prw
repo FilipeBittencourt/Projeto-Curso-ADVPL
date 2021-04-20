@@ -40,7 +40,8 @@ Class TWCustoProjeto From LongClassName
 	Method GetData02()
 	Method GetData03()
 	Method GetData04()
-	Method GetDataCtr(cNumero, cItemCta, cSubItem)			
+	Method GetDataCtr(cNumero, cItemCta, cSubItem)
+	Method GetCurrency(cTipo, cFornec, cLoja, cDoc, nValor)			
 	Method ParamBox()
 	Method Refresh()
 	Method Export()
@@ -271,6 +272,9 @@ Local aLine04 := {}
 	oFWExcel:AddColumn(cWork01, cTable01, "Descrição", 1, 1)			
 	oFWExcel:AddColumn(cWork01, cTable01, "Data", 1, 1)	
 	oFWExcel:AddColumn(cWork01, cTable01, "Valor", 3, 2, .T.)
+	oFWExcel:AddColumn(cWork01, cTable01, "Moeda", 3, 2, .F.)
+	oFWExcel:AddColumn(cWork01, cTable01, "Cotação", 3, 2, .F.)
+	oFWExcel:AddColumn(cWork01, cTable01, "Valor", 3, 2, .T.)		
 	  		
 	aLine01 := ::GetData01()
 	
@@ -370,6 +374,7 @@ Method GetData01() Class TWCustoProjeto
 Local aRet := {}
 Local cSQL := ""
 Local cQry := GetNextAlias()
+Local aCurrency := {}
 
 	cSQL := " SELECT * " 
 	cSQL += " FROM FNC_CTR_CUSTO_" + cEmpAnt + "(" +; 
@@ -383,9 +388,13 @@ Local cQry := GetNextAlias()
 	TcQuery cSQL New Alias (cQry)
 
 	While !(cQry)->(Eof())
+	
+		aCurrency := {}
+	
+		aCurrency := ::GetCurrency((cQry)->TIPO, (cQry)->FORNECEDOR, (cQry)->LOJA, (cQry)->DOC, (cQry)->VALOR)
 
 		aAdd(aRet, {(cQry)->CONTRATO, (cQry)->CLVL, (cQry)->ITEMCT, (cQry)->SUBITEM, (cQry)->NOME_FOR, (cQry)->TIPO, (cQry)->STATUS,;
-									(cQry)->DOC, (cQry)->DESCRICAO, dToC(sToD((cQry)->DATA)), (cQry)->VALOR})
+								(cQry)->DOC, (cQry)->DESCRICAO, dToC(sToD((cQry)->DATA)), (cQry)->VALOR, aCurrency[1, 1], aCurrency[1, 2], aCurrency[1, 3]})
 	  
 	  (cQry)->(DbSkip())
 
@@ -637,5 +646,73 @@ Local lCtrGen := SubStr(cNumero, 3, 1) == "9"
 	EndIf
 	
 	(cQry)->(DbCloseArea())
+
+Return(aRet)
+
+
+Method GetCurrency(cTipo, cFornec, cLoja, cDoc, nValor) Class TWCustoProjeto
+Local aRet := {}
+Local cSQL := ""
+Local cQry := GetNextAlias()
+Local nMoeda := 0
+Local nCotacao := 0
+Local nVlrCot := 0
+Local cSerie := ""
+Local cNumero := ""
+Local cParcela := ""
+
+	If AllTrim(cTipo) $ "PC/NF/MB"
+
+		cSQL := " SELECT TOP 1 C7_MOEDA, C7_TXMOEDA "
+		cSQL += " FROM " + RetSQLName("SC7") + " WITH (NOLOCK) "
+		cSQL += " WHERE C7_FILIAL = " + ValToSQL(xFilial("SC7"))
+		cSQL += " AND C7_FORNECE = " + ValToSQL(cFornec)
+		cSQL += " AND C7_LOJA = " + ValToSQL(cLoja)	
+		
+		If AllTrim(cTipo) == "PC"
+		
+			cSQL += " AND C7_NUM = " + ValToSQL(cDoc)
+			
+		Else
+
+			cSQL += " AND C7_NUM = "
+			cSQL += " ( "
+			cSQL += " 	SELECT TOP 1 D1_PEDIDO "
+			cSQL += " 	FROM " + RetSQLName("SD1") + " WITH (NOLOCK) "
+			cSQL += " 	WHERE D1_FILIAL = " + ValToSQL(xFilial("SD1"))
+			cSQL += " 	AND D1_SERIE = " + ValToSQL(SubStr(cDoc, 1, AT("-", cDoc) - 1))
+			cSQL += " 	AND D1_DOC = " + ValToSQL(SubStr(cDoc, AT("-", cDoc) + 1, 9))
+			cSQL += " 	AND D1_FORNECE = " + ValToSQL(cFornec)
+			cSQL += " 	AND D1_LOJA = " + ValToSQL(cLoja)
+			cSQL += " 	AND D_E_L_E_T_ = '' "
+			cSQL += " ) "
+
+		EndIf
+
+		cSQL += " AND D_E_L_E_T_ = ''	
+	
+		TcQuery cSQL New Alias (cQry)
+	
+		If (cQry)->C7_MOEDA > 1
+				
+			nMoeda := (cQry)->C7_MOEDA
+			nCotacao := (cQry)->C7_TXMOEDA
+			nVlrCot := nValor * nCotacao
+					  
+		  aAdd(aRet, {nMoeda, nCotacao, nVlrCot})
+		  		
+		Else
+		
+			aAdd(aRet, {0, 0, 0})
+			  
+		EndIf
+		
+		(cQry)->(DbCloseArea())
+	
+	Else
+	
+		aAdd(aRet, {0, 0, 0})
+	
+	EndIf	
 
 Return(aRet)

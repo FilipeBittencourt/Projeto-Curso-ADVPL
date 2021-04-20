@@ -92,7 +92,12 @@ User Function VRESPEDI(_aCols, _aHeader, cPed)
 					
 					If ((cAliasTemp)->(Eof()))
 						__lOK 	:= .F.
-						__cMsg	+= " O Produto/Lote: "+__cProd+"/"+__cLote+" teve sua reserva temporária excluida. Favor selecionar a linha do pedido e reservar o produto novamente."+CRLF
+						__cMsg	+= " O Produto/Lote: "+__cProd+"/"+__cLote+" teve sua reserva temporária excluida. Favor selecionar a linha do pedido apertar seta para baixo para reservar o produto novamente."+CRLF
+						
+						If (__nI == Len(_aCols))
+							__cMsg	+= "Ultima linha do pedido, favor apertar seta para baixo para a reserva temporária ser criada."+CRLF
+						EndIf
+						
 					EndIf
 					(cAliasTemp)->(DbCloseArea())					
 				EndIf						
@@ -103,7 +108,7 @@ User Function VRESPEDI(_aCols, _aHeader, cPed)
 	Next __nI
 	
 	If (!__lOK)
-		MsgAlert(__cMsg, "MT410TOK")
+		MsgAlert('<p style="color:red">'+__cMsg+'</p>', "MT410TOK")
 	EndIf
 
 Return __lOK

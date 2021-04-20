@@ -2,23 +2,31 @@
 #Include "Protheus.CH"
 #Include "TOPCONN.CH"
 
-User Function TWMICMAE(cEmp, cFil, cData, nIcmAuto, cNatureza, cBanco, cAgencia, cConta, cCC, cCLVL)
+User Function TWMICMAE(cEmp, cFil, cData, nIcmAuto, cNatureza, cBanco, cAgencia, cConta, cCC, cCLVL, cHistorico)
 	
 	Local lRet := .T.
 	
 	RpcSetEnv(cEmp, cFil)
 
 	_ObjMICMSAut := TWMovimentoICMSAutonomo():New()
-	lRet := _ObjMICMSAut::ExecMovBanc(cData, nIcmAuto, cNatureza, cBanco, cAgencia, cConta, cCC, cCLVL)
+	lRet := _ObjMICMSAut::ExecMovBanc(cData, nIcmAuto, cNatureza, cBanco, cAgencia, cConta, cCC, cCLVL, cHistorico)
 	
 	RpcClearEnv()
 	
 Return lRet
 
+User Function MVICMSAJ()
+	
+	_Obj := TWMovimentoICMSAutonomo():New()
+	_Obj:ExecuteEmp()
+		
+Return
+
 User Function TWMICMAJ()
 	_Obj := TWMovimentoICMSAutonomo():New()
 	_Obj:ShowModal()		
-Return 
+Return
+ 
 
 Class TWMovimentoICMSAutonomo From LongClassName
 	
@@ -317,7 +325,7 @@ Return
 
 Method Execute() Class TWMovimentoICMSAutonomo
 
-	Local cData			:= ::GetData() + 1 //movimento sempre dia + 1
+	Local cData			:= DataValida(::GetData() + 1, .T.) 	 //movimento sempre dia + 1
 	Local cBanco		:= ''
 	Local cAgencia		:= ''
 	Local cConta		:= ''
@@ -325,6 +333,7 @@ Method Execute() Class TWMovimentoICMSAutonomo
 	Local cNatureza		:= ''
 	Local cCC			:= ''
 	Local cMsg			:= ''
+	Local cHistorico	:= ''
 				
 	nIcmAuto		:= ::GetValor()
 	//nIcmAuto		:= 10
@@ -336,24 +345,24 @@ Method Execute() Class TWMovimentoICMSAutonomo
 	//Biancogres 55097-3 e LM 5286-8
 	//001
 	//
-	
+	cHistorico := 'REC ICMS do DIA '+cvaltochar(DTOC(::GetData()))
 	// B=1101, LM=1150, INCESA=1003, Vinilico=1035
-	If AllTrim(cEmpAnt)+AllTrim(cFilAnt) == '0101'
+	If AllTrim(::cCodEmp)+AllTrim(::cCodFil) == '0101'
 		cCLVL 		:= '1101'
 		cBanco		:= '001'
 		cAgencia	:= '34312'
 		cConta		:= '55.097-3'
-	ElseIf AllTrim(cEmpAnt)+AllTrim(cFilAnt) == '0501'
+	ElseIf AllTrim(::cCodEmp)+AllTrim(::cCodFil) == '0501'
 		cCLVL		:= '1003'
 		cBanco		:= '021'
 		cAgencia	:= '552'
 		cConta		:= '10.532.885'
-	ElseIf AllTrim(cEmpAnt)+AllTrim(cFilAnt) == '0701'
+	ElseIf AllTrim(::cCodEmp)+AllTrim(::cCodFil) == '0701'
 		cCLVL		:= '1150'
 		cBanco		:= '001'
 		cAgencia	:= '34312'
 		cConta		:= '52868'
-	ElseIf AllTrim(cEmpAnt)+AllTrim(cFilAnt) == '1301'
+	ElseIf AllTrim(::cCodEmp)+AllTrim(::cCodFil) == '1301'
 		cCLVL		:= '1035'
 		cBanco		:= '001'
 		cAgencia	:= '34312'
@@ -363,12 +372,11 @@ Method Execute() Class TWMovimentoICMSAutonomo
 	cNatureza		:= '1225'
 	cCC				:= '1000'
 	
-	cMsg			+= '<p><b>Empresa: </b>'+::cCodEmp+'/'+::cCodFil+'</p>'
+	cMsg			+= '<p><b>Empresa: </b>'+::cCodEmp+'/'+::cCodFil+', <b>Valor: </b>'+cValToChar(nIcmAuto)+'</p>'
 	cMsg			+= '<p><b>Data: </b>'+cvaltochar(DTOC(cData))+'</p>'
 	cMsg			+= '<p><b>Banco: </b>'+cBanco+', <b>Agência: </b>'+cAgencia+', <b>Conta: </b>'+cConta+'</p>'
 	cMsg			+= '<p><b>Natureza: </b>'+cNatureza+'</p>'
 	cMsg			+= '<p><b>Centro de Custo: </b>'+cCC+', <b>Classe de Valor: </b>'+cCLVL+'</p>'
-	cMsg			+= '<p><b>Valor: </b>'+cValToChar(nIcmAuto)+'</p>'
 	cMsg			+= '<p>Deseja lançar o movimento?</p>'
 	
 	ConOut(cMsg)
@@ -377,9 +385,16 @@ Method Execute() Class TWMovimentoICMSAutonomo
 	If (!::Exist('R', dtos(cData), cBanco, cAgencia, cConta, cCLVL, cCC, cNatureza, nIcmAuto))
 		If (nIcmAuto > 0)
 			
-			If MsgNoYes(cMsg, "Confirma?")
+			_lConfirm := .F.
+			If (IsBlind())
+				_lConfirm := .T.
+			Else
+				_lConfirm := MsgNoYes(cMsg, "Confirma?")
+			EndIf
+			
+			If (_lConfirm)
 				
-				lRet := StartJob("U_TWMICMAE", GetEnvServer(), .T., ::cCodEmp, ::cCodFil, cData, nIcmAuto, cNatureza, cBanco, cAgencia, cConta, cCC, cCLVL)
+				lRet := StartJob("U_TWMICMAE", GetEnvServer(), .T., ::cCodEmp, ::cCodFil, cData, nIcmAuto, cNatureza, cBanco, cAgencia, cConta, cCC, cCLVL, cHistorico)
 				
 				If lRet
 					MsgAlert('Movimentação de ICMS Frete inserido com sucesso.', 'Sucesso')
@@ -395,7 +410,7 @@ Method Execute() Class TWMovimentoICMSAutonomo
 		
 Return 
 
-Method ExecMovBanc(cData, nIcmAuto, cNatureza, cBanco, cAgencia, cConta, cCC, cCLVL) Class TWMovimentoICMSAutonomo
+Method ExecMovBanc(cData, nIcmAuto, cNatureza, cBanco, cAgencia, cConta, cCC, cCLVL, cHistorico) Class TWMovimentoICMSAutonomo
 
 	Local lRet := .T.
 	
@@ -411,7 +426,7 @@ Method ExecMovBanc(cData, nIcmAuto, cNatureza, cBanco, cAgencia, cConta, cCC, cC
 	oObjMovBanc:cBanco 			:= PADR(cBanco, TamSx3("A6_COD")[1]) 
 	oObjMovBanc:cAgencia 		:= PADR(cAgencia, TamSx3("A6_AGENCIA")[1]) 
 	oObjMovBanc:cConta 			:= PADR(cConta, TamSx3("A6_NUMCON")[1]) 
-	oObjMovBanc:cHistorico 		:= 'REC ICMS do DIA '+cvaltochar(DTOC(cData))
+	oObjMovBanc:cHistorico 		:= cHistorico
 	oObjMovBanc:cCentroCusto 	:= cCC
 	oObjMovBanc:cClasseValor 	:= cCLVL
 	oObjMovBanc:nIdApi 			:= 0
