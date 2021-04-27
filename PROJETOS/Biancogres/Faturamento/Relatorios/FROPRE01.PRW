@@ -37,28 +37,52 @@ Static Function ReportDef()
 	oReport:SetLandScape()
 	//oReport:SetPortrait()
 
+	//oSection1 := TRSection():New( oReport  ,"RC",{"QUERY"} )
+	//TRCell():New(oSection1	,"C2_NUM"			,,"Num.Op"				,"@!", 6,/*lPixel*/,  {|| (cQUERY)->C2_NUM } )
+	//TRCell():New(oSection1	,"C2_PRODUTO"		,,"Produto"	  			,"@!", 15,/*lPixel*/, {|| (cQUERY)->C2_PRODUTO } )
+	//TRCell():New(oSection1	,"B1_DESC"			,,"Descricao"			,"@!", 30,/*lPixel*/, {|| (cQUERY)->B1_DESC } )
+	//TRCell():New(oSection1	,"C2_EMISSAO"  		,,"Emissão"				,"@!", 10,/*lPixel*/, {|| DTOC(STOD((cQUERY)->C2_EMISSAO))  } )
+	//TRCell():New(oSection1	,"C2_DATPRI"  		,,"Prev.Inicio"			,"@!", 10,/*lPixel*/, {|| DTOC(STOD((cQUERY)->C2_DATPRI))  } )
+	//TRCell():New(oSection1	,"C2_DATPRF"  		,,"Prev.Fim"			,"@!", 10,/*lPixel*/, {|| DTOC(STOD((cQUERY)->C2_DATPRF))  } )
+	//TRCell():New(oSection1	,"C2_YDTDISP"  		,,"Disponibilidade"		,"@!", 10,/*lPixel*/, {|| DTOC(STOD((cQUERY)->C2_YDTDISP))  } )
+	//TRCell():New(oSection1	,"C2_DATRF"  		,,"Dt.Encerramento"		,"@!", 10,/*lPixel*/, {|| DTOC(STOD((cQUERY)->C2_DATRF))  } )
+	//TRCell():New(oSection1	,"C2_QUANT"  		,,"Qtde"				,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->C2_QUANT  } )
+	//TRCell():New(oSection1	,"C2_YQTRTFC"  		,,"Qt.Retífica"			,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->C2_YQTRTFC  } )
+	//TRCell():New(oSection1	,"C2_QUJE"  		,,"Qt.Ja Produzida"		,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->C2_QUJE  } )
+	//TRCell():New(oSection1	,"TOT_DISPO_VENDA"  ,,"Total p/Reserva"		,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->TOT_DISPO_VENDA  } )
+	//TRCell():New(oSection1	,"RESERVADA"  		,,"Qt.Reservada"		,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->RESERVADA  } )
+	//TRCell():New(oSection1	,"SALDO_VENDA"  	,,"Saldo p/Reserva"		,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->SALDO_VENDA  } )
+
+
+	//TRCell():New(oSection1	,"C2_LINHA"			,,"Linha"				,"@!", 6,/*lPixel*/,  {|| (cQUERY)->C2_LINHA } )
+	//TRCell():New(oSection1	,"ZZ6_DESC"			,,"Desc"				,"@!", 10,/*lPixel*/,  {|| (cQUERY)->ZZ6_DESC } )
+	//TRCell():New(oSection1	,"ZZ6_FORNOP"			,,"Forno"				,"@!", 6,/*lPixel*/,  {|| (cQUERY)->ZZ6_FORNOP } )
+	//TRCell():New(oSection1	,"PERCENT_OP"  ,,"Disp OP%"		,"@E 99.99", 10,/*lPixel*/, {|| (cQUERY)->PERCENT_OP  } )
+	//TRCell():New(oSection1	,"C2_YDTDORI"  		,,"Dt.Disp.Ori"		,"@!", 10,/*lPixel*/, {|| DTOC(STOD((cQUERY)->C2_YDTDORI))  } )
+	//TRCell():New(oSection1	,"C2_OBS"			,,"Obs."				,"@!", 10,/*lPixel*/,  {|| (cQUERY)->C2_OBS } )
+
 	oSection1 := TRSection():New( oReport  ,"RC",{"QUERY"} )
-	TRCell():New(oSection1	,"C2_NUM"			,,"Num.Op"				,"@!", 6,/*lPixel*/,  {|| (cQUERY)->C2_NUM } )
-	TRCell():New(oSection1	,"C2_PRODUTO"		,,"Produto"	  			,"@!", 15,/*lPixel*/, {|| (cQUERY)->C2_PRODUTO } )
-	TRCell():New(oSection1	,"B1_DESC"			,,"Descricao"			,"@!", 30,/*lPixel*/, {|| (cQUERY)->B1_DESC } )
-	TRCell():New(oSection1	,"C2_EMISSAO"  		,,"Emissão"				,"@!", 10,/*lPixel*/, {|| DTOC(STOD((cQUERY)->C2_EMISSAO))  } )
-	TRCell():New(oSection1	,"C2_DATPRI"  		,,"Prev.Inicio"			,"@!", 10,/*lPixel*/, {|| DTOC(STOD((cQUERY)->C2_DATPRI))  } )
-	TRCell():New(oSection1	,"C2_DATPRF"  		,,"Prev.Fim"			,"@!", 10,/*lPixel*/, {|| DTOC(STOD((cQUERY)->C2_DATPRF))  } )
+	TRCell():New(oSection1	,"ZZ6_FORNOP"		    ,,"Forno"				            ,"@!", 3,/*lPixel*/,  {|| (cQUERY)->ZZ6_FORNOP } )
+	TRCell():New(oSection1	,"C2_LINHA"			    ,,"Linha"				            ,"@!", 3,/*lPixel*/,  {|| (cQUERY)->C2_LINHA } )
+	TRCell():New(oSection1	,"ZZ6_DESC"			    ,,"Desc"				            ,"@!", 10,/*lPixel*/,  {|| (cQUERY)->ZZ6_DESC } )
+	TRCell():New(oSection1	,"C2_NUM"			      ,,"Num.Op"			            ,"@!", 6,/*lPixel*/,  {|| (cQUERY)->C2_NUM } )
+	TRCell():New(oSection1	,"C2_PRODUTO"		    ,,"Produto"	  	            ,"@!", 8 ,.F., {|| (cQUERY)->C2_PRODUTO } )
+	TRCell():New(oSection1	,"B1_DESC"			    ,,"Descricao"		            ,"@!", 30,/*lPixel*/, {|| (cQUERY)->B1_DESC } )
+	TRCell():New(oSection1	,"C2_EMISSAO"  	    ,,"Emissão"				          ,"@!", 8 ,.F., {|| ALLTrim(DTOC(STOD((cQUERY)->C2_EMISSAO)))  } )
+	TRCell():New(oSection1	,"C2_DATPRI"  	    ,,"Prev."+CRLF+"Inicio"     ,"@!", 8 ,.F., {|| DTOC(STOD((cQUERY)->C2_DATPRI))  } )
+	TRCell():New(oSection1	,"C2_DATPRF"  	    ,,"Prev."+CRLF+"Fim"			  ,"@!", 8 ,.F., {|| DTOC(STOD((cQUERY)->C2_DATPRF))  } )
+	TRCell():New(oSection1	,"C2_YDTDISP"  	    ,,"Dt."+CRLF+"Disponib"		  ,"@!", 8 ,.F., {|| DTOC(STOD((cQUERY)->C2_YDTDISP))  } )
+	TRCell():New(oSection1	,"C2_DATRF"  		    ,,"Dt."+CRLF+"Encerra"		  ,"@!", 8 ,.F., {|| DTOC(STOD((cQUERY)->C2_DATRF))  } )
+	TRCell():New(oSection1	,"C2_QUANT"  		    ,,"Qtde"				            ,"@E 99,999.99", 9 ,/*lPixel*/,  {|| (cQUERY)->C2_QUANT  } )
+	TRCell():New(oSection1	,"C2_YQTRTFC"  	    ,,"Qt."+CRLF+"Retífica"			,"@E 99,999.99", 9,/*lPixel*/,   {|| (cQUERY)->C2_YQTRTFC  } )
+	TRCell():New(oSection1	,"C2_QUJE"  		    ,,"Qt."+CRLF+"Ja Produzida"	,"@E 99,999.99", 9,/*lPixel*/,   {|| (cQUERY)->C2_QUJE  } )
+	TRCell():New(oSection1	,"TOT_DISPO_VENDA"  ,,"Total"+CRLF+"p/Reserva"	,"@E 99,999.99", 9,/*lPixel*/,   {|| (cQUERY)->TOT_DISPO_VENDA  } )
+	TRCell():New(oSection1	,"RESERVADA"  		  ,,"Qt."+CRLF+"Reservada"		,"@E 99,999.99", 9,/*lPixel*/,   {|| (cQUERY)->RESERVADA  } )
+	TRCell():New(oSection1	,"SALDO_VENDA"  	  ,,"Saldo"+CRLF+"p/Reserva"	,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->SALDO_VENDA  } )
 
-	TRCell():New(oSection1	,"C2_DATRF"  		,,"Dt.Encerramento"		,"@!", 10,/*lPixel*/, {|| DTOC(STOD((cQUERY)->C2_DATRF))  } )
-	TRCell():New(oSection1	,"C2_QUANT"  		,,"Qtde"				,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->C2_QUANT  } )
-	TRCell():New(oSection1	,"C2_YQTRTFC"  		,,"Qt.Retífica"			,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->C2_YQTRTFC  } )
-	TRCell():New(oSection1	,"C2_QUJE"  		,,"Qt.Ja Produzida"		,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->C2_QUJE  } )
-	TRCell():New(oSection1	,"TOT_DISPO_VENDA"  ,,"Total p/Reserva"		,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->TOT_DISPO_VENDA  } )
-	TRCell():New(oSection1	,"RESERVADA"  		,,"Qt.Reservada"		,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->RESERVADA  } )
-	TRCell():New(oSection1	,"SALDO_VENDA"  	,,"Saldo p/Reserva"		,"@E 999,999.99", 10,/*lPixel*/, {|| (cQUERY)->SALDO_VENDA  } )
-
-	TRCell():New(oSection1	,"C2_LINHA"			,,"Linha"				,"@!", 6,/*lPixel*/,  {|| (cQUERY)->C2_LINHA } )
-	TRCell():New(oSection1	,"ZZ6_DESC"			,,"Desc"				,"@!", 10,/*lPixel*/,  {|| (cQUERY)->ZZ6_DESC } )
-	TRCell():New(oSection1	,"ZZ6_FORNOP"			,,"Forno"				,"@!", 6,/*lPixel*/,  {|| (cQUERY)->ZZ6_FORNOP } )
-	TRCell():New(oSection1	,"PERCENT_OP"  ,,"Disp OP%"		,"@E 99.99", 10,/*lPixel*/, {|| (cQUERY)->PERCENT_OP  } )
-	TRCell():New(oSection1	,"C2_YDTDORI"  		,,"Dt.Disp.Ori"		,"@!", 10,/*lPixel*/, {|| DTOC(STOD((cQUERY)->C2_YDTDORI))  } )
-	TRCell():New(oSection1	,"C2_OBS"			,,"Obs."				,"@!", 10,/*lPixel*/,  {|| (cQUERY)->C2_OBS } )
+	TRCell():New(oSection1	,"PERCENT_OP"       ,,"Disp"+CRLF+"OP%"		      ,"@E 99.99", 5,/*lPixel*/, {|| (cQUERY)->PERCENT_OP  } )
+	TRCell():New(oSection1	,"C2_YDTDORI"  		  ,,"Dt."+CRLF+"Disp.Ori"		  ,"@!", 8 ,.F., {|| DTOC(STOD((cQUERY)->C2_YDTDORI))  } )
+	TRCell():New(oSection1	,"C2_OBS"			      ,,"Obs."				            ,"@!", 20,/*lPixel*/,  {|| (cQUERY)->C2_OBS } )
 
 
 Return oReport
@@ -87,6 +111,7 @@ Static Function ReportPrint( oReport )
 	CSQL += " C2_DATRF, "+CRLF
 	CSQL += " C2_QUANT, "+CRLF
 	CSQL += " C2_YQTRTFC, "+CRLF
+	CSQL += " C2_YDTDISP, "+CRLF
 
 	CSQL += " C2_QUJE, "+CRLF
 	CSQL += " C2_LINHA,"+CRLF
@@ -138,7 +163,7 @@ Static Function ReportPrint( oReport )
 	CSQL += " C2_QUANT, "+CRLF
 	CSQL += " C2_YQTRTFC, "+CRLF
 	CSQL += " C2_QUJE, "+CRLF
-
+	CSQL += " C2_YDTDISP, "+CRLF
 	CSQL += " C2_LINHA, "+CRLF
 	CSQL += " C2_OBS, "+CRLF
 	CSQL += " ZZ6.ZZ6_DESC,"+CRLF
@@ -169,7 +194,7 @@ Static Function ReportPrint( oReport )
 	If nOrder = 1
 		CSQL += " ORDER BY C2_PRODUTO "+CRLF
 	ElseIf nOrder = 2
-		CSQL += " ORDER BY C2_YDTDORI "+CRLF
+		CSQL += " ORDER BY C2_YDTDISP "+CRLF
 	Else
 		CSQL += " ORDER BY C2_NUM "+CRLF
 	EndIf
