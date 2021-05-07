@@ -5,10 +5,10 @@
 // U_TSTFIL
 User Function TSTFIL()
 
-  RpcClearEnv()
+  /*RpcClearEnv()
   If Select("SX6") <= 0
     RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
-  EndIf
+  EndIf*/
 
 
 
@@ -16,11 +16,13 @@ User Function TSTFIL()
   //TSTFIL002() // Teste pedidos provisionados
   //TSTFIL003()
   //TSTFIL004()
-  TSTFIL005() //Montar classe de envio de email e enviando
+  //TSTFIL005() //Montar classe de envio de email e enviando
+  TSTFIL006()
 
-  //DbSelectArea("ZDK")
+  
 
-  // X31UPDTABLE('ZDK')
+  //DbSelectArea("SC0")
+  //X31UPDTABLE('SC0')
 
 
 RETURN
@@ -438,3 +440,17 @@ Static Function TSTFIL005A(cEmail,cNumPed, cChave)
   cHtml += " </html> "
 
 Return cHtml
+
+Static Function TSTFIL006()
+
+  Local nX       := 1
+  Local aArrX    := {}
+
+  AADD(aArrX, 'BD0433B1')
+  AADD(aArrX, 'BD0433B2')
+  AADD(aArrX, 'BD0433B3')
+
+  ALERT( ASCAN(aArrX, { |x| UPPER(x) == "BD0433B3" }) )
+
+  if ASCAN(aArrX, { |x| UPPER(AllTrim(x)) == UPPER(AllTrim((cAliasTmp)->COD })))
+Return

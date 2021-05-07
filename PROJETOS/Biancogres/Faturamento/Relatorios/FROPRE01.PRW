@@ -130,8 +130,8 @@ Static Function ReportPrint( oReport )
 	CSQL += " END AS PERCENT_OP "+CRLF
 
 	CSQL += " FROM "+RetSQLName("SC2")+" SC2 (nolock) "+CRLF
-	CSQL += " JOIN "+RetSQLName("SB1")+" SB1 (nolock) ON B1_COD = C2_PRODUTO "+CRLF
-	CSQL += " JOIN "+RetSQLName("ZZ6")+" ZZ6 (nolock) ON ZZ6_COD = B1_YFORMAT "+CRLF
+	CSQL += " JOIN "+RetSQLName("SB1")+" SB1 (nolock) ON SB1.B1_COD = C2_PRODUTO  and SB1.D_E_L_E_T_= ''  "+CRLF
+	CSQL += " JOIN "+RetSQLName("ZZ6")+" ZZ6 (nolock) ON ZZ6_COD = SB1.B1_YFORMAT AND ZZ6.D_E_L_E_T_ = '' "+CRLF
 	CSQL += " WHERE "+CRLF
 	CSQL += " C2_FILIAL = '"+XFilial("SC2")+"' "+CRLF
 	CSQL += " and B1_TIPO = 'PA' "+CRLF
@@ -180,8 +180,8 @@ Static Function ReportPrint( oReport )
 
 	CSQL += " FROM TAB_OP "+CRLF
 
-	CSQL += " JOIN "+RetSQLName("SB1")+" SB1 (nolock) ON SB1.B1_COD = C2_PRODUTO "+CRLF
-	CSQL += " JOIN "+RetSQLName("ZZ6")+" ZZ6 (nolock) ON ZZ6_COD = SB1.B1_YFORMAT "+CRLF
+	CSQL += " JOIN "+RetSQLName("SB1")+" SB1 (nolock) ON SB1.B1_COD = C2_PRODUTO  and SB1.D_E_L_E_T_= ''  "+CRLF
+	CSQL += " JOIN "+RetSQLName("ZZ6")+" ZZ6 (nolock) ON ZZ6_COD = SB1.B1_YFORMAT AND ZZ6.D_E_L_E_T_ = '' "+CRLF
 	CSQL += " WHERE "+CRLF
 
 	CSQL += " 1 = 1 "+CRLF
