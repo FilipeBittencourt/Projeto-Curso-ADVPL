@@ -1,4 +1,5 @@
 #include "totvs.ch"
+#include "topconn.ch"
 
 /*/{Protheus.doc} BIA702
 @author Wlysses Cerqueira (Facile)
@@ -202,7 +203,8 @@ static function MenuDef()
     aRotina:=array(0)
 
     aAdd(aRotina,{"Pesquisa","AxPesqui",0,1})
-    aAdd(aRotina,{"Visualizar","AxVisual",0,2})
+    aAdd(aRotina,{"Visualizar","U_BIA702xV",0,2})
+    aAdd(aRotina,{"Proc. Devol.","U_BI702PRC",0,2})
     aAdd(aRotina,{"Doc. Entrada","U_BI702DOE",0,2})
     aAdd(aRotina,{"Doc. Original","U_BI702DOO",0,2})
     aAdd(aRotina,{"Doc. Saida","U_BI702DOS",0,2})
@@ -218,6 +220,8 @@ static function aColorsDef()
 
     local aColors as array
 
+    aColors:=array(0)
+
     aAdd(aColors,{"ZL9_STAERR=='E'","BR_PRETO"})
     
     aAdd(aColors,{"empty(ZL9_STATUS)","BR_VERDE"})
@@ -232,3 +236,40 @@ static function aColorsDef()
     aAdd(aColors,{"ZL9_STATUS=='F'","BR_VERMELHO"})
 
     return(aColors)
+
+user function BIA702xV(cAlias,nReg,nOpc,aAcho,nColMens,cMensagem,cFunc,aButtons,lMaximized)
+    DEFAULT aButtons:=array(0)
+    if (empty(aButtons))
+        aAdd(aButtons,{"pesquisa",{||U_BI702PRC()},"Proc. Devol.","Proc. Devol."})
+        aAdd(aButtons,{"pesquisa",{||U_BI702DOE()},"Doc. Entrada","Doc. Entrada"})
+        aAdd(aButtons,{"pesquisa",{||U_BI702DOO()},"Doc. Original","Doc. Original"})
+        aAdd(aButtons,{"pesquisa",{||U_BI702DOS()},"Doc. Saida","Doc. Saida"})
+        aAdd(aButtons,{"pesquisa",{||U_BI702PEV()},"Ped. Venda","Ped. Venda"})
+    endif
+    return(AxVisual(@cAlias,@nReg,@nOpc,@aAcho,@nColMens,@cMensagem,@cFunc,@aButtons,@lMaximized))
+
+user function BI702PRC()
+    
+    local aArea     as array
+    local aAreaZL9  as array
+
+    local cProcDev  as character
+
+    aArea:=getArea()
+    aAreaZL9:=ZL9->(getArea())
+
+    nZL9RecNo:=ZL9->(recNo())
+
+	oObjDev:=TAutomacaoDevolucaoIntercompany():New(.F.)
+	oObjDev:nZL9RecNo:=nZL9RecNo
+    
+    cProcDev:=oObjDev:GetProcDev(nZL9RecNo)
+    
+    if (!empty(cProcDev))
+        ExecBlock("BIA267B",.F.,.F.,"V")
+    endif
+
+    restArea(aAreaZL9)
+    restArea(aArea)
+
+    return(nil)

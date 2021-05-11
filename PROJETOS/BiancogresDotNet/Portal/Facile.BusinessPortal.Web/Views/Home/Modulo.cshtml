@@ -1,0 +1,42 @@
+﻿@using Facile.BusinessPortal.Model
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+@{
+    ViewData["Title"] = "Tipo de usuário";
+}
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Módulo
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    @foreach (var item in (ViewBag.ListaUsuarioGrupo as List<UsuarioGrupo>))
+                    {
+                        
+                        <div class="row mt-2">
+                            <div class="col-md-12">
+                                <a asp-action="SetModulo" asp-route-id="@item.ID" class="btn btn-primary btn-lg btn-block waves-effect waves-themed">
+                                    @item.GrupoUsuario.Nome
+                                </a>
+                            </div>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+}

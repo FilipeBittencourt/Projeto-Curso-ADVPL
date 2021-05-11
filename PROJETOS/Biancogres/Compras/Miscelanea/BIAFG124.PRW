@@ -94,7 +94,9 @@ User Function BIAFG124(_cCod,_nQtd,_cPedido,_cCodImp,_cSufix,_cAlmox)
 
 		BeginSql Alias _cAlias
 			%NoParser%
-			SELECT ISNULL(C1_SOLICIT,'') C1_SOLICIT , C7_NUM, C7_LOCAL
+			SELECT ISNULL(SC1.C1_YMAT ,'') C1_YMAT,
+				ISNULL(SC1.C1_YMATRIC ,'') C1_YMATRIC,
+				C7_NUM, C7_LOCAL
 			FROM %TABLE:SC7% (NOLOCK) SC7
 			LEFT JOIN %TABLE:SC1% (NOLOCK) SC1 ON C1_FILIAL = %XFILIAL:SC1%
 			AND C1_NUM = C7_NUMSC
@@ -106,10 +108,23 @@ User Function BIAFG124(_cCod,_nQtd,_cPedido,_cCodImp,_cSufix,_cAlmox)
 			AND SC7.%NotDel%
 
 		EndSql
-
 		If (_cAlias)->(!EOF())
-			_cSolicit	:=	(_cAlias)->C1_SOLICIT
 			_cNumPc		:=	(_cAlias)->C7_NUM
+			
+			_cSolicit	:=	""
+			
+			If !Empty((_cAlias)->C1_YMATRIC)
+			
+				_cSolicit	:=	fGetFunc((_cAlias)->C1_YMATRIC)
+				
+			ElseIf !Empty((_cAlias)->C1_YMAT)
+			
+				_cSolicit	:=	fGetFunc((_cAlias)->C1_YMAT)
+			
+			EndIf
+			
+			
+			
 			If Empty(_cAlmox)
 				_cAlmox		:=	(_cAlias)->C7_LOCAL
 			EndIf
@@ -188,3 +203,34 @@ Static Function fRetCEsp(_cTexto)
 	Next _nI
 
 Return _cRet
+
+Static Function fGetFunc(_cMat)
+
+	Local _aArea	:=	GetArea()
+
+	Local _cAlias	:=	GetNextAlias()
+
+	Local _cEmpresa	:=	Alltrim(Str(Val(cEmpAnt)))
+	
+	Local _cSolic	:=	""
+	
+	_cMat	:=	Iif(Len(_cMat) == 8,Substr(_cMat,3,6),_cMat)
+	
+	BeginSql Alias _cAlias
+	%NoParser%
+	SELECT TOP 1 NOMFUN
+	FROM VETORH..R034FUN
+	WHERE NUMEMP = %Exp:_cEmpresa%
+		AND TIPCOL = 1
+		AND NUMCAD = %Exp:_cMat%
+	
+	EndSql
+
+	If (_cAlias)->(!EOF())
+	
+		_cSolic	:=	SUBSTR((_cAlias)->NOMFUN,1,10)
+
+	EndIf
+	(_cAlias)->(DbCloseArea())
+	RestArea(_aArea)
+Return _cSolic

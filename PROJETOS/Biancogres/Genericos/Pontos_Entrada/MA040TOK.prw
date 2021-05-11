@@ -64,70 +64,6 @@ USER FUNCTION MA040TOK()
 			Return(.F.)
 		END IF
 
-		// VALIDANDO A COMISSAO PARA NAO PERMITIR INFORMAR A COMISSAO DO CLIENTE MAIOR QUE ESTA NO PEDIDO
-		CSQL := "SELECT C5_CLIENTE 	" + ENTER
-		CSQL += "FROM SC5010		" + ENTER
-		CSQL += "WHERE	C5_FILIAL = '"+xFilial("SC5")+"' AND 						" + ENTER
-		CSQL += "		C5_NUM IN (SELECT C6_NUM FROM SC6010 SC6 , SF4010 SF4  		" + ENTER
-		CSQL += "					WHERE	C6_FILIAL = '"+xFilial("SC6")+"' AND  	" + ENTER
-		CSQL += "							C6_QTDVEN - C6_QTDENT > 0 AND  			" + ENTER
-		CSQL += "							C6_TES	= F4_CODIGO  AND " + ENTER
-		CSQL += "							F4_DUPLIC = 'S' 	 AND " + ENTER
-		CSQL += "							C6_BLQ <> 'R' 		 AND " + ENTER
-		CSQL += "							SC6.D_E_L_E_T_ = ''  AND " + ENTER
-		CSQL += "							SF4.D_E_L_E_T_ = '') AND " + ENTER
-		CSQL += "   	C5_CLIENTE <> '010064' AND " + ENTER
-		CSQL += "		D_E_L_E_T_ = '' AND        " + ENTER
-		CSQL += "	   ((C5_VEND1 = '"+CC_VEND+"' AND C5_COMIS1 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND2 = '"+CC_VEND+"' AND C5_COMIS2 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND3 = '"+CC_VEND+"' AND C5_COMIS3 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND4 = '"+CC_VEND+"' AND C5_COMIS4 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND5 = '"+CC_VEND+"' AND C5_COMIS5 > "+CC_COM+"))    " + ENTER
-		CSQL += "ORDER BY C5_CLIENTE, C5_VEND1 " + ENTER
-		IF CHKFILE("_COMIS")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
-		ENDIF
-		TCQUERY CSQL ALIAS "_COMIS" NEW
-		IF ! _COMIS->(EOF())
-			MsgBox("Comissão do Representante, está MENOR do que lançado nos Pedidos de Venda da Biancogres!","MA040TOK","STOP")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
-			Return(.F.)
-		END IF
-
-		// VALIDANDO A COMISSAO PARA NAO PERMITIR INFORMAR A COMISSAO DO CLIENTE MAIOR QUE ESTA NO PEDIDO
-		CSQL := "SELECT C5_CLIENTE 	" + ENTER
-		CSQL += "FROM SC5070		" + ENTER
-		CSQL += "WHERE	C5_FILIAL = '"+xFilial("SC5")+"' 	AND 					" + ENTER
-		CSQL += "		C5_YLINHA = '1' 					AND     				" + ENTER	
-		CSQL += "		C5_NUM IN (SELECT C6_NUM FROM SC6070 SC6 , SF4070 SF4  		" + ENTER
-		CSQL += "					WHERE	C6_FILIAL 	= '"+xFilial("SC6")+"'	AND	" + ENTER
-		CSQL += "							C6_QTDVEN - C6_QTDENT > 0 			AND " + ENTER
-		CSQL += "							C6_TES		= F4_CODIGO  			AND " + ENTER
-		CSQL += "							F4_DUPLIC 	= 'S' 	 AND " + ENTER
-		CSQL += "							C6_BLQ 		<> 'R' 	 AND " + ENTER
-		CSQL += "							SC6.D_E_L_E_T_ = ''  AND " + ENTER
-		CSQL += "							SF4.D_E_L_E_T_ = '') AND " + ENTER
-		CSQL += "		D_E_L_E_T_ = '' AND        " + ENTER
-		CSQL += "	   ((C5_VEND1 = '"+CC_VEND+"' AND C5_COMIS1 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND2 = '"+CC_VEND+"' AND C5_COMIS2 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND3 = '"+CC_VEND+"' AND C5_COMIS3 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND4 = '"+CC_VEND+"' AND C5_COMIS4 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND5 = '"+CC_VEND+"' AND C5_COMIS5 > "+CC_COM+"))    " + ENTER
-		CSQL += "ORDER BY C5_CLIENTE, C5_VEND1 " + ENTER
-		IF CHKFILE("_COMIS")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
-		ENDIF
-		TCQUERY CSQL ALIAS "_COMIS" NEW
-		IF ! _COMIS->(EOF())
-			MsgBox("Comissão do Representante, está MENOR do que lançado nos Pedidos de Venda da LM!","MA040TOK","STOP")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
-			Return(.F.)
-		END IF
-
 	ENDIF
 
 	//Validação para Incesa
@@ -154,71 +90,6 @@ USER FUNCTION MA040TOK()
 			Return(.F.)
 		END IF
 
-		// VALIDANDO A COMISSAO PARA NAO PERMITIR INFORMAR A COMISSAO DO CLIENTE MENOR QUE ESTA NO PEDIDO
-		CSQL := "SELECT C5_CLIENTE	" + ENTER
-		CSQL += "FROM SC5050		" + ENTER
-		CSQL += "WHERE	C5_FILIAL = '"+xFilial("SC5")+"'	AND " + ENTER
-		CSQL += "		C5_YLINHA = '2' 					AND " + ENTER	
-		CSQL += "		C5_NUM IN (SELECT C6_NUM FROM SC6050 SC6, SF4050 SF4  " + ENTER
-		CSQL += "					WHERE	C6_FILIAL = '"+xFilial("SC6")+"' AND  " + ENTER
-		CSQL += "							C6_QTDVEN - C6_QTDENT > 0 AND  " + ENTER
-		CSQL += "							C6_TES	= F4_CODIGO AND " + ENTER
-		CSQL += "							F4_DUPLIC = 'S' AND " + ENTER
-		CSQL += "							C6_BLQ <> 'R' AND " + ENTER
-		CSQL += "							SC6.D_E_L_E_T_ = '' AND " + ENTER
-		CSQL += "							SF4.D_E_L_E_T_ = '') AND " + ENTER
-		CSQL += "   	C5_CLIENTE <> '010064' AND " + ENTER
-		CSQL += "		D_E_L_E_T_ = '' AND " + ENTER
-		CSQL += "		((C5_VEND1 = '"+CC_VEND+"' AND C5_COMIS1 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND2 = '"+CC_VEND+"' AND C5_COMIS2 > "+CC_COM+")  OR  " + ENTER
-		CSQL += "		(C5_VEND3 = '"+CC_VEND+"' AND C5_COMIS3 > "+CC_COM+")  OR  " + ENTER
-		CSQL += "		(C5_VEND4 = '"+CC_VEND+"' AND C5_COMIS4 > "+CC_COM+")  OR  " + ENTER
-		CSQL += "		(C5_VEND5 = '"+CC_VEND+"' AND C5_COMIS5 > "+CC_COM+"))  " + ENTER
-		CSQL += "ORDER BY C5_CLIENTE, C5_VEND1 " + ENTER
-		IF CHKFILE("_COMIS")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
-		ENDIF
-		TCQUERY CSQL ALIAS "_COMIS" NEW
-		IF ! _COMIS->(EOF())
-			MsgBox("Comissão do Representante, está MENOR do que lançado nos Pedidos de Venda da Incesa!","MA040TOK","STOP")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
-			Return(.F.)
-		END IF
-
-		// VALIDANDO A COMISSAO PARA NAO PERMITIR INFORMAR A COMISSAO DO CLIENTE MAIOR QUE ESTA NO PEDIDO
-		CSQL := "SELECT C5_CLIENTE 	" + ENTER
-		CSQL += "FROM SC5070		" + ENTER
-		CSQL += "WHERE	C5_FILIAL = '"+xFilial("SC5")+"' 	AND 					" + ENTER
-		CSQL += "		C5_YLINHA = '2' 					AND     				" + ENTER	
-		CSQL += "		C5_NUM IN (SELECT C6_NUM FROM SC6070 SC6 , SF4070 SF4  		" + ENTER
-		CSQL += "					WHERE	C6_FILIAL 	= '"+xFilial("SC6")+"'	AND	" + ENTER
-		CSQL += "							C6_QTDVEN - C6_QTDENT > 0 			AND " + ENTER
-		CSQL += "							C6_TES		= F4_CODIGO  			AND " + ENTER
-		CSQL += "							F4_DUPLIC 	= 'S' 	 AND " + ENTER
-		CSQL += "							C6_BLQ 		<> 'R' 	 AND " + ENTER
-		CSQL += "							SC6.D_E_L_E_T_ = ''  AND " + ENTER
-		CSQL += "							SF4.D_E_L_E_T_ = '') AND " + ENTER
-		CSQL += "		D_E_L_E_T_ = '' AND        " + ENTER
-		CSQL += "	   ((C5_VEND1 = '"+CC_VEND+"' AND C5_COMIS1 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND2 = '"+CC_VEND+"' AND C5_COMIS2 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND3 = '"+CC_VEND+"' AND C5_COMIS3 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND4 = '"+CC_VEND+"' AND C5_COMIS4 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND5 = '"+CC_VEND+"' AND C5_COMIS5 > "+CC_COM+"))    " + ENTER
-		CSQL += "ORDER BY C5_CLIENTE, C5_VEND1 " + ENTER
-		IF CHKFILE("_COMIS")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
-		ENDIF
-		TCQUERY CSQL ALIAS "_COMIS" NEW
-		IF ! _COMIS->(EOF())
-			MsgBox("Comissão do Representante, está MAIOR do que lançado nos Pedidos de Venda da LM!","MA040TOK","STOP")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
-			Return(.F.)
-		END IF
-
 	ENDIF
 
 	//Validação para Bellacasa
@@ -240,71 +111,6 @@ USER FUNCTION MA040TOK()
 		TCQUERY CSQL ALIAS "_COMIS" NEW	
 		IF ! _COMIS->(EOF())
 			MsgBox("Comissão no Representante, MENOR que o informado no Cadastro de Clientes!","MA040TOK","STOP")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
-			Return(.F.)
-		END IF
-
-		// VALIDANDO A COMISSAO PARA NAO PERMITIR INFORMAR A COMISSAO DO CLIENTE MENOR QUE ESTA NO PEDIDO
-		CSQL := "SELECT C5_CLIENTE 	" + ENTER
-		CSQL += "FROM SC5050		 " + ENTER
-		CSQL += "WHERE	C5_FILIAL = '"+xFilial("SC5")+"' 	AND " + ENTER
-		CSQL += "		C5_YLINHA = '3' 					AND " + ENTER	
-		CSQL += "		C5_NUM IN (SELECT C6_NUM FROM SC6050 SC6 , SF4050 SF4		" + ENTER
-		CSQL += "					WHERE	C6_FILIAL = '"+xFilial("SC5")+"' AND	" + ENTER
-		CSQL += "							C6_QTDVEN - C6_QTDENT > 0 AND  			" + ENTER
-		CSQL += "							C6_TES	= F4_CODIGO AND 				" + ENTER
-		CSQL += "							F4_DUPLIC = 'S' AND 					" + ENTER
-		CSQL += "							C6_BLQ <> 'R' AND " + ENTER
-		CSQL += "							SC6.D_E_L_E_T_ = '' AND " + ENTER
-		CSQL += "							SF4.D_E_L_E_T_ = '') AND " + ENTER
-		CSQL += "   	C5_CLIENTE <> '010064' AND " + ENTER
-		CSQL += "		D_E_L_E_T_ = '' AND " + ENTER
-		CSQL += "		((C5_VEND1 = '"+CC_VEND+"' AND C5_COMIS1 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND2 = '"+CC_VEND+"' AND C5_COMIS2 > "+CC_COM+")  OR  " + ENTER
-		CSQL += "		(C5_VEND3 = '"+CC_VEND+"' AND C5_COMIS3 > "+CC_COM+")  OR  " + ENTER
-		CSQL += "		(C5_VEND4 = '"+CC_VEND+"' AND C5_COMIS4 > "+CC_COM+")  OR  " + ENTER
-		CSQL += "		(C5_VEND5 = '"+CC_VEND+"' AND C5_COMIS5 > "+CC_COM+"))  " + ENTER
-		CSQL += "ORDER BY C5_CLIENTE, C5_VEND1 " + ENTER
-		IF CHKFILE("_COMIS")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
-		ENDIF
-		TCQUERY CSQL ALIAS "_COMIS" NEW
-		IF ! _COMIS->(EOF())
-			MsgBox("Comissão do Representante, está MENOR do que lançado nos Pedidos de Venda da Bellacasa!","MA040TOK","STOP")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
-			Return(.F.)
-		END IF
-
-		// VALIDANDO A COMISSAO PARA NAO PERMITIR INFORMAR A COMISSAO DO CLIENTE MAIOR QUE ESTA NO PEDIDO
-		CSQL := "SELECT C5_CLIENTE 	" + ENTER
-		CSQL += "FROM SC5070		" + ENTER
-		CSQL += "WHERE	C5_FILIAL = '"+xFilial("SC5")+"' 	AND 					" + ENTER
-		CSQL += "		C5_YLINHA = '3' 					AND     				" + ENTER	
-		CSQL += "		C5_NUM IN (SELECT C6_NUM FROM SC6070 SC6 , SF4070 SF4  		" + ENTER
-		CSQL += "					WHERE	C6_FILIAL 	= '"+xFilial("SC6")+"'	AND	" + ENTER
-		CSQL += "							C6_QTDVEN - C6_QTDENT > 0 			AND " + ENTER
-		CSQL += "							C6_TES		= F4_CODIGO  			AND " + ENTER
-		CSQL += "							F4_DUPLIC 	= 'S' 	 AND " + ENTER
-		CSQL += "							C6_BLQ 		<> 'R' 	 AND " + ENTER
-		CSQL += "							SC6.D_E_L_E_T_ = ''  AND " + ENTER
-		CSQL += "							SF4.D_E_L_E_T_ = '') AND " + ENTER
-		CSQL += "		D_E_L_E_T_ = '' AND        " + ENTER
-		CSQL += "	   ((C5_VEND1 = '"+CC_VEND+"' AND C5_COMIS1 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND2 = '"+CC_VEND+"' AND C5_COMIS2 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND3 = '"+CC_VEND+"' AND C5_COMIS3 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND4 = '"+CC_VEND+"' AND C5_COMIS4 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND5 = '"+CC_VEND+"' AND C5_COMIS5 > "+CC_COM+"))    " + ENTER
-		CSQL += "ORDER BY C5_CLIENTE, C5_VEND1 " + ENTER
-		IF CHKFILE("_COMIS")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
-		ENDIF
-		TCQUERY CSQL ALIAS "_COMIS" NEW
-		IF ! _COMIS->(EOF())
-			MsgBox("Comissão do Representante, está MENOR do que lançado nos Pedidos de Venda da LM!","MA040TOK","STOP")
 			DBSELECTAREA("_COMIS")
 			DBCLOSEAREA()
 			Return(.F.)
@@ -338,38 +144,6 @@ USER FUNCTION MA040TOK()
 			Return(.F.)
 		END IF
 
-		// VALIDANDO A COMISSAO PARA NAO PERMITIR INFORMAR A COMISSAO DO CLIENTE MAIOR QUE ESTA NO PEDIDO
-		CSQL := "SELECT C5_CLIENTE 	" + ENTER
-		CSQL += "FROM SC5070		" + ENTER
-		CSQL += "WHERE	C5_FILIAL = '"+xFilial("SC5")+"' 	AND 					" + ENTER
-		CSQL += "		C5_YLINHA = '4' 					AND     				" + ENTER	
-		CSQL += "		C5_NUM IN (SELECT C6_NUM FROM SC6070 SC6 , SF4070 SF4  		" + ENTER
-		CSQL += "					WHERE	C6_FILIAL 	= '"+xFilial("SC6")+"'	AND	" + ENTER
-		CSQL += "							C6_QTDVEN - C6_QTDENT > 0 			AND " + ENTER
-		CSQL += "							C6_TES		= F4_CODIGO  			AND " + ENTER
-		CSQL += "							F4_DUPLIC 	= 'S' 	 AND " + ENTER
-		CSQL += "							C6_BLQ 		<> 'R' 	 AND " + ENTER
-		CSQL += "							SC6.D_E_L_E_T_ = ''  AND " + ENTER
-		CSQL += "							SF4.D_E_L_E_T_ = '') AND " + ENTER
-		CSQL += "		D_E_L_E_T_ = '' AND        " + ENTER
-		CSQL += "	   ((C5_VEND1 = '"+CC_VEND+"' AND C5_COMIS1 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND2 = '"+CC_VEND+"' AND C5_COMIS2 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND3 = '"+CC_VEND+"' AND C5_COMIS3 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND4 = '"+CC_VEND+"' AND C5_COMIS4 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND5 = '"+CC_VEND+"' AND C5_COMIS5 > "+CC_COM+"))    " + ENTER
-		CSQL += "ORDER BY C5_CLIENTE, C5_VEND1 " + ENTER
-		IF CHKFILE("_COMIS")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
-		ENDIF
-		TCQUERY CSQL ALIAS "_COMIS" NEW
-		IF ! _COMIS->(EOF())
-			MsgBox("Comissão do Representante, está MENOR do que lançado nos Pedidos de Venda da LM!","MA040TOK","STOP")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
-			Return(.F.)
-		END IF
-
 	ENDIF
 
 	//Validação para Vitcer
@@ -391,38 +165,6 @@ USER FUNCTION MA040TOK()
 
 		IF ! _COMIS->(EOF())
 			ALERT("COMISSÃO NO REPRESENTANTE MENOR DO QUE NO CLIENTE")
-			Return(.F.)
-		END IF
-
-		// VALIDANDO A COMISSAO PARA NAO PERMITIR INFORMAR A COMISSAO DO CLIENTE MAIOR QUE ESTA NO PEDIDO
-		CSQL := "SELECT C5_CLIENTE 	" + ENTER
-		CSQL += "FROM SC5140		" + ENTER
-		CSQL += "WHERE	C5_FILIAL = '"+xFilial("SC5")+"' 	AND 					" + ENTER
-		CSQL += "		C5_YLINHA = '1' 					AND     				" + ENTER	
-		CSQL += "		C5_NUM IN (SELECT C6_NUM FROM SC6140 SC6 , SF4140 SF4  		" + ENTER
-		CSQL += "					WHERE	C6_FILIAL 	= '"+xFilial("SC6")+"'	AND	" + ENTER
-		CSQL += "							C6_QTDVEN - C6_QTDENT > 0 			AND " + ENTER
-		CSQL += "							C6_TES		= F4_CODIGO  			AND " + ENTER
-		CSQL += "							F4_DUPLIC 	= 'S' 	 AND " + ENTER
-		CSQL += "							C6_BLQ 		<> 'R' 	 AND " + ENTER
-		CSQL += "							SC6.D_E_L_E_T_ = ''  AND " + ENTER
-		CSQL += "							SF4.D_E_L_E_T_ = '') AND " + ENTER
-		CSQL += "		D_E_L_E_T_ = '' AND        " + ENTER
-		CSQL += "	   ((C5_VEND1 = '"+CC_VEND+"' AND C5_COMIS1 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND2 = '"+CC_VEND+"' AND C5_COMIS2 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND3 = '"+CC_VEND+"' AND C5_COMIS3 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND4 = '"+CC_VEND+"' AND C5_COMIS4 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND5 = '"+CC_VEND+"' AND C5_COMIS5 > "+CC_COM+"))    " + ENTER
-		CSQL += "ORDER BY C5_CLIENTE, C5_VEND1 " + ENTER
-		IF CHKFILE("_COMIS")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
-		ENDIF
-		TCQUERY CSQL ALIAS "_COMIS" NEW
-		IF ! _COMIS->(EOF())
-			MsgBox("Comissão do Representante, está MENOR do que lançado nos Pedidos de Venda da Vitcer!","MA040TOK","STOP")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
 			Return(.F.)
 		END IF
 
@@ -450,38 +192,6 @@ USER FUNCTION MA040TOK()
 			Return(.F.)
 		END IF
 
-		// VALIDANDO A COMISSAO PARA NAO PERMITIR INFORMAR A COMISSAO DO CLIENTE MAIOR QUE ESTA NO PEDIDO
-		CSQL := "SELECT C5_CLIENTE 	" + ENTER
-		CSQL += "FROM SC5070		" + ENTER
-		CSQL += "WHERE	C5_FILIAL = '"+xFilial("SC5")+"' 	AND 					" + ENTER
-		CSQL += "		C5_YLINHA = '5' 					AND     				" + ENTER	
-		CSQL += "		C5_NUM IN (SELECT C6_NUM FROM SC6070 SC6 , SF4070 SF4  		" + ENTER
-		CSQL += "					WHERE	C6_FILIAL 	= '"+xFilial("SC6")+"'	AND	" + ENTER
-		CSQL += "							C6_QTDVEN - C6_QTDENT > 0 			AND " + ENTER
-		CSQL += "							C6_TES		= F4_CODIGO  			AND " + ENTER
-		CSQL += "							F4_DUPLIC 	= 'S' 	 AND " + ENTER
-		CSQL += "							C6_BLQ 		<> 'R' 	 AND " + ENTER
-		CSQL += "							SC6.D_E_L_E_T_ = ''  AND " + ENTER
-		CSQL += "							SF4.D_E_L_E_T_ = '') AND " + ENTER
-		CSQL += "		D_E_L_E_T_ = '' AND        " + ENTER
-		CSQL += "	   ((C5_VEND1 = '"+CC_VEND+"' AND C5_COMIS1 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND2 = '"+CC_VEND+"' AND C5_COMIS2 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND3 = '"+CC_VEND+"' AND C5_COMIS3 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND4 = '"+CC_VEND+"' AND C5_COMIS4 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND5 = '"+CC_VEND+"' AND C5_COMIS5 > "+CC_COM+"))    " + ENTER
-		CSQL += "ORDER BY C5_CLIENTE, C5_VEND1 " + ENTER
-		IF CHKFILE("_COMIS")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
-		ENDIF
-		TCQUERY CSQL ALIAS "_COMIS" NEW
-		IF ! _COMIS->(EOF())
-			MsgBox("Comissão do Representante, está MENOR do que lançado nos Pedidos de Venda da Marca PEGASUS!","MA040TOK","STOP")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
-			Return(.F.)
-		END IF
-
 	ENDIF
 	
 	//Validação para Vinilico
@@ -502,38 +212,6 @@ USER FUNCTION MA040TOK()
 
 		IF ! _COMIS->(EOF())
 			ALERT("COMISSÃO NO REPRESENTANTE MENOR DO QUE NO CLIENTE")
-			Return(.F.)
-		END IF
-
-		// VALIDANDO A COMISSAO PARA NAO PERMITIR INFORMAR A COMISSAO DO CLIENTE MAIOR QUE ESTA NO PEDIDO
-		CSQL := "SELECT C5_CLIENTE 	" + ENTER
-		CSQL += "FROM SC5070		" + ENTER
-		CSQL += "WHERE	C5_FILIAL = '"+xFilial("SC5")+"' 	AND 					" + ENTER
-		CSQL += "		C5_YLINHA = '6' 					AND     				" + ENTER	
-		CSQL += "		C5_NUM IN (SELECT C6_NUM FROM SC6070 SC6 , SF4070 SF4  		" + ENTER
-		CSQL += "					WHERE	C6_FILIAL 	= '"+xFilial("SC6")+"'	AND	" + ENTER
-		CSQL += "							C6_QTDVEN - C6_QTDENT > 0 			AND " + ENTER
-		CSQL += "							C6_TES		= F4_CODIGO  			AND " + ENTER
-		CSQL += "							F4_DUPLIC 	= 'S' 	 AND " + ENTER
-		CSQL += "							C6_BLQ 		<> 'R' 	 AND " + ENTER
-		CSQL += "							SC6.D_E_L_E_T_ = ''  AND " + ENTER
-		CSQL += "							SF4.D_E_L_E_T_ = '') AND " + ENTER
-		CSQL += "		D_E_L_E_T_ = '' AND        " + ENTER
-		CSQL += "	   ((C5_VEND1 = '"+CC_VEND+"' AND C5_COMIS1 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND2 = '"+CC_VEND+"' AND C5_COMIS2 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND3 = '"+CC_VEND+"' AND C5_COMIS3 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND4 = '"+CC_VEND+"' AND C5_COMIS4 > "+CC_COM+") OR  " + ENTER
-		CSQL += "		(C5_VEND5 = '"+CC_VEND+"' AND C5_COMIS5 > "+CC_COM+"))    " + ENTER
-		CSQL += "ORDER BY C5_CLIENTE, C5_VEND1 " + ENTER
-		IF CHKFILE("_COMIS")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
-		ENDIF
-		TCQUERY CSQL ALIAS "_COMIS" NEW
-		IF ! _COMIS->(EOF())
-			MsgBox("Comissão do Representante, está MENOR do que lançado nos Pedidos de Venda da Marca VINILICO!","MA040TOK","STOP")
-			DBSELECTAREA("_COMIS")
-			DBCLOSEAREA()
 			Return(.F.)
 		END IF
 

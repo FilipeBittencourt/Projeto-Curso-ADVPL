@@ -1,0 +1,360 @@
+﻿@model Facile.BusinessPortal.Model.Compra.Servico.SolicitacaoServicoMedicao
+@using Facile.BusinessPortal.Model.Compra.Servico
+
+@{
+    ViewData["Title"] = "Solicitação de Serviço";
+}
+
+<ol class="breadcrumb">
+    <li class="breadcrumb-item">
+        <a asp-action="Index">Listagem</a>
+    </li>
+    <li class="breadcrumb-item active">solicitação de serviço</li>
+</ol>
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Médição
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <form id="FormCad" accept-charset="UTF-8" asp-action="CreateMedicao" method="POST" enctype="multipart/form-data">
+
+                        @{
+
+                            var Result = (ViewBag.ListaSolicitacaoServicoItem as ICollection<SolicitacaoServicoItem>);
+                            long SolicitacaoServicoID = 0;
+                            if (Result != null)
+                            {
+                                SolicitacaoServicoID = Result.FirstOrDefault().SolicitacaoServicoID;
+                            }
+                            <input name="SolicitacaoServicoID" type="hidden" value="@SolicitacaoServicoID">
+
+                            if (ViewBag.SolicitacaoServicoMedicao != null)
+                            {
+                                var SolicitacaoServicoMedicao = (ViewBag.SolicitacaoServicoMedicao as SolicitacaoServicoMedicao);
+                                <div class="card">
+                                    <div class="row">
+                                        <div class="col-md-12"><h2>Ações</h2></div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 div-anexo-nota-fiscal">
+                                            @if (SolicitacaoServicoMedicao.Status == StatusSolicitacaoServicoMedicao.NotaFiscalAdicionada)
+                                            {
+                                                <a title="Nota Fiscal" href="/Compra/SolicitacaoServicoMedicao/GetAnexoNotaFiscal/@SolicitacaoServicoMedicao.ID" target="_blank" class="btn btn-inline-block mr-1">
+                                                    Anexo <i class="fal fa-paperclip color-fusion-300"></i>
+                                                </a>
+                                                <a title="Aprovar Nota Fiscal" href="javascript:void(0)" SolicitacaoServicoMedicaoID="@SolicitacaoServicoMedicao.ID" Status="AF" class="btn btn-inline-block mr-1 btn-atualizar-status-nf">
+                                                    Aprovar Nota Fiscal  <i class="fal fa-check color-fusion-300"></i>
+                                                </a>
+                                                <a title="Reprovar Nota Fiscal" href="javascript:void(0)" SolicitacaoServicoMedicaoID="@SolicitacaoServicoMedicao.ID" Status="RF" class="btn btn-inline-block mr-1 btn-atualizar-status-nf">
+                                                    Reprovar Nota Fiscal <i class="fal fa-ban color-fusion-300"></i>
+                                                </a>
+                                            }
+
+                                            @if (SolicitacaoServicoMedicao.Status == StatusSolicitacaoServicoMedicao.Concluido)
+                                            {
+                                                <a title="Nota Fiscal" href="/Compra/SolicitacaoServicoMedicao/GetAnexoNotaFiscal/@SolicitacaoServicoMedicao.ID" target="_blank" class="btn btn-inline-block mr-1">
+                                                    Anexo <i class="fal fa-paperclip color-fusion-300"></i>
+                                                </a>
+                                            }
+
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12"></div>
+                                    </div>
+                                </div>
+                            }
+
+
+
+                        }
+                        <div class="accordion accordion-hover" id="accordion-0">
+                            @{
+                                int i = 0;
+
+
+                                var ListaSolicitacaoServicoCotacaoItem = (ViewBag.ListaSolicitacaoServicoCotacaoItem as ICollection<SolicitacaoServicoCotacaoItem>);
+                                var SolicitacaoServicoCotacaoItem = new SolicitacaoServicoCotacaoItem();
+
+                                foreach (var item in (ViewBag.ListaSolicitacaoServicoItem as ICollection<SolicitacaoServicoItem>))
+                                {
+
+                                    if (ListaSolicitacaoServicoCotacaoItem != null && ListaSolicitacaoServicoCotacaoItem.Count() > 0)
+                                    {
+                                        SolicitacaoServicoCotacaoItem = ListaSolicitacaoServicoCotacaoItem.FirstOrDefault(x => x.SolicitacaoServicoItemID == item.ID);
+                                        if (SolicitacaoServicoCotacaoItem == null)
+                                        {
+                                            SolicitacaoServicoCotacaoItem = new SolicitacaoServicoCotacaoItem();
+                                        }
+                                    }
+
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <a href="javascript:void(0);" class="card-title" data-toggle="collapse" data-target="#accordion-0-@i" aria-expanded="true">
+                                                @item.Descricao
+                                                <span class="ml-auto">
+                                                    <span class="collapsed-reveal">
+                                                        <i class="fal fa-chevron-up fs-xl"></i>
+                                                    </span>
+                                                    <span class="collapsed-hidden">
+                                                        <i class="fal fa-chevron-down fs-xl"></i>
+                                                    </span>
+                                                </span>
+                                            </a>
+                                        </div>
+                                        <div id="accordion-0-@i" class="collapse show" data-parent="#accordion-0">
+                                            <div class="card-body" style="overflow-x: scroll;">
+                                                <input name="SolicitacaoServicoItemID" type="hidden" value="@item.ID">
+
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <h2>Histórico das Medições</h2>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        @{
+                                                            var SaldoMedicao = item.Quantidade;
+
+                                                            if (item.UnidadeMedicao.Equals("1"))
+                                                            {
+                                                                SaldoMedicao = SolicitacaoServicoCotacaoItem.Preco;
+                                                            }
+
+                                                            var Status = true;
+                                                            SaldoMedicao = 0;
+                                                            <table class="table tabela-medicao" id="tabela-medicao" style="width: 1900px;">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Quantidade</th>
+                                                                        <th>Valor Serviço</th>
+                                                                        <th>Saldo Medição</th>
+                                                                        <th>Data</th>
+                                                                        <th>@item.UnidadeMedicaoDescricao()</th>
+                                                                        <th>Valor</th>
+                                                                        <th>Total</th>
+                                                                        <th width="400px">Observação</th>
+                                                                        <th width="200px">Anexo</th>
+                                                                        <th width="200px">Status</th>
+                                                                        <th width="200px">Ações</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @if (item.SolicitacaoServicoMedicaoItem != null && item.SolicitacaoServicoMedicaoItem.Count > 0)
+                                                                    {
+                                                                        foreach (var item_m in item.SolicitacaoServicoMedicaoItem)
+                                                                        {
+                                                                            <tr>
+                                                                                <td>@(string.Format("{0:N}", item_m.Quantidade))</td>
+                                                                                <td>@(string.Format("{0:N}", item_m.ValorServico))</td>
+                                                                                <td>@(string.Format("{0:N}", item_m.SaldoMedicao))</td>
+                                                                                <td>@(item_m.Data.ToString("dd/MM/yyyy"))</td>
+                                                                                <td>@(string.Format("{0:N}", item_m.Medicao))</td>
+                                                                                <td>
+                                                                                    @if (item_m.UnidadeMedicao.Equals("1"))
+                                                                                    {
+                                                                                        @string.Format("{0:N}", ((item_m.Medicao / 100) * item_m.SaldoMedicao));
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        @string.Format("{0:N}", 0);
+                                                                                    }
+                                                                                </td>
+                                                                                <td>
+                                                                                    @if (item_m.UnidadeMedicao.Equals("1"))
+                                                                                    {
+                                                                                        @string.Format("{0:N}", ((item_m.Medicao / 100) * item_m.SaldoMedicao));
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        @string.Format("{0:N}", (item_m.Medicao * item_m.ValorServico));
+                                                                                    }
+                                                                                </td>
+                                                                                <td>@(item_m.Observacao)</td>
+                                                                                <td>
+                                                                                    <a title="Anexo" href="/Compra/SolicitacaoServicoMedicao/GetAnexo/@item_m.ID" target="_blank" Status="AF" class="">
+                                                                                        @item_m.NomeAnexo
+                                                                                    </a>
+                                                                                </td>
+                                                                                <th>@(item_m.StatusDescricao())</th>
+                                                                                <th>
+                                                                                    <div class="d-flex demo">
+
+                                                                                        @if (item_m.Status == StatusSolicitacaoServicoMedicao.Aguardando)
+                                                                                        {
+
+                                                                                            <a title="Aprovar" href="javascript:void(0)" SolicitacaoServicoItemMedicaoID="@item_m.ID" Status="A" class="btn btn-icon btn-inline-block mr-1 btn-atualizar-status">
+                                                                                                <i class="fal fa-check color-fusion-300"></i>
+                                                                                            </a>
+                                                                                            <a title="Reprovar" href="javascript:void(0)" SolicitacaoServicoItemMedicaoID="@item_m.ID" Status="R" class="btn btn-icon btn-inline-block mr-1 btn-atualizar-status">
+                                                                                                <i class="fal fa-ban color-fusion-300"></i>
+                                                                                            </a>
+                                                                                        }
+
+                                                                                    </div>
+                                                                                </th>
+                                                                            </tr>
+
+                                                                        }
+                                                                    }
+                                                                </tbody>
+                                                            </table>
+                                                        }
+                                                    </div>
+                                                </div>
+
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                    i = i + 1;
+
+                                }
+                            }
+
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal-item-medicao-aprovar-reprovada" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    Aprovar/Reprovar
+                </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"><i class="fal fa-times"></i></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="cadItemMedicaoAprovarReprovar" name="cadItemMedicaoAprovarReprovar" enctype="multipart/form-data">
+
+                    <input name="SolicitacaoServicoItemMedicaoID" type="hidden" value="" />
+                    <input name="MedicaoEvento" type="hidden" value="" />
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-label" for="Observacao">Observação</label>
+                                <textarea name="Observacao" id="Observacao" class="form-control"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success btn-salvar-aprovar-reprovar">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade" id="modal-item-medicao-aprovar-reprovada-nf" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    Aprovar/Reprovar
+                </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"><i class="fal fa-times"></i></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="cadMedicaoAprovarReprovarNF" name="cadMedicaoAprovarReprovarNF" enctype="multipart/form-data">
+
+                    <input name="SolicitacaoServicoMedicaoID" type="hidden" value="" />
+                    <input name="MedicaoEvento" type="hidden" value="" />
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-label" for="Observacao">Observação</label>
+                                <textarea name="Observacao" id="Observacao" class="form-control"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success btn-salvar-aprovar-reprovar-nf">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="modal-anexo-medicao" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    Anexo Nota Fiscal
+                </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"><i class="fal fa-times"></i></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="cadAnexoMedicao" name="cadAnexoMedicao" enctype="multipart/form-data">
+
+                    <input name="SolicitacaoServicoItemMedicaoID" type="hidden" value="" />
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-label">Arquivo</label>
+                                <div class="custom-file">
+                                    <input type="file" name="customFile" class="custom-file-input" id="customFile">
+                                    <label class="custom-file-label" for="customFile">Selecionar Anexo</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </form>
+
+                <div class="row mt-3">
+                    <div class="col-md-12 ml-sm-auto">
+                        <div class="alert alert-info hide" role="alert">
+                            <strong class="info-alteracao"></strong>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success btn-salvar-documento">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="~/js/Util.js" asp-append-version="true"></script>
+    <script src="~/js/SolicitacaoServicoMedicao.js" asp-append-version="true"></script>
+}

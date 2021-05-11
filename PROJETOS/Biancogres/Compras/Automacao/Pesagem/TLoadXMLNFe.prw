@@ -205,7 +205,8 @@ Class TNotaStruct from LongClassName
 	Data cTipo
 	Data cChave
 	Data cCond
-
+	Data cNatureza
+	Data cCodNFe
 	Data oNotaItens
 
 	Method New() Constructor
@@ -223,7 +224,8 @@ Method New() Class TNotaStruct
 	::cTipo					:= "N"
 	::cChave				:= ""
 	::cCond					:= ""
-
+	::cNatureza				:= ""
+	::cCodNFe				:= ""
 	::oNotaItens	    	:= ArrayList():New()
 
 Return()
@@ -244,8 +246,8 @@ Class TNotaItemStruct From LongClassName
 	Data cNfOri
 	Data cSerieOri
 	Data cNumTicket
-
-
+	Data nAliqISS
+	
 	Method New() Constructor
 
 EndClass
@@ -266,6 +268,7 @@ Method New() Class TNotaItemStruct
 	::cNfOri		:= ""
 	::cSerieOri		:= ""
 	::cNumTicket	:= ""
+	::nAliqISS		:= 0
 
 Return()
 

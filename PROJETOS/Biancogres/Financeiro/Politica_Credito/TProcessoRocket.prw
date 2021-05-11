@@ -217,7 +217,9 @@ Local cSQL := ""
 	For nCount := 1 To Len(aEmp)
 	
 		cSQL := " UPDATE " + RetFullName("SA1", aEmp[nCount])
-		cSQL += " SET A1_LC = " + ValToSQL(If (::nLimApr > 0, ::nLimApr, ::nLimSug)) + ", A1_VENCLC = " + ValToSQL(MonthSum(dDataBase, ::nValLim))
+		cSQL += " SET A1_LC = " + ValToSQL(If (::nLimApr > 0, ::nLimApr, ::nLimSug)) 
+		cSQL += ", A1_VENCLC = " + ValToSQL(MonthSum(dDataBase, ::nValLim))
+		cSQL += ", A1_YULTALT = " + ValToSQL(dDataBase)
 		
 		If !Empty(cRisk)
 		

@@ -152,7 +152,7 @@ User Function BPOLGA01()
 			MsgAlert("Para desconto de outras AI's - É obrigatório informar o Número da AI no cabeçalho no campo 'No.AI Outras'.","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
 			aCols[N][_nPDAI] := 0
 
-		ElseIf !CheckAOValid(M->C5_YNUMSI)
+		ElseIf !CheckAOValid(M->C5_YNOUTAI)
 			MsgAlert("Percentual de Desconto de outras AI's não permitido.","ATENÇÃO! DESCONTO DE AI -> BPOLGA01")
 
 			aCols[N][_nPDAI] := 0
@@ -475,7 +475,29 @@ Static Function CheckAO(_NUMSI, _NPDACO)
 	Local cTabPZ5
 	Local cQrySZO
 	Local _cEmp
-
+	Local _cMarca	:= ""
+	Local _cMarcaDesc:= ""
+	
+	Do Case
+		Case M->C5_YLINHA == "1"
+		_cMarca	:= "0101"
+		_cMarcaDesc:= 'Biancogres'
+		Case M->C5_YLINHA == "2"
+		_cMarca	:= "0501"
+		_cMarcaDesc:= 'Incesa'
+		Case M->C5_YLINHA == "3"
+		_cMarca	:= "0599"
+		_cMarcaDesc:= 'BelaCasa'
+		Case M->C5_YLINHA == "4"
+		_cMarca	:= "1399"
+		_cMarcaDesc:= 'Mudiali'
+		Case M->C5_YLINHA == "5"
+		_cMarca	:= "0199"
+		_cMarcaDesc:= 'Pegasus'
+		Case M->C5_YLINHA == "6"
+		_cMarca	:= "1302"
+		_cMarcaDesc:= 'Vinilico'
+	EndCase
 
 	If Alltrim(M->C5_YLINHA) $ "2#3" .And. AllTrim(CEMPANT) $ "05"  //ticket 10958 marreta provisoria AI Incesa na Bianco
 		cTabSZO := "% SZO050 %"
@@ -509,78 +531,108 @@ Static Function CheckAO(_NUMSI, _NPDACO)
 	_nPMaxAO := 0
 	_nPBonAO := 0
 
+	cQryTemp := GetNextAlias()
+	BeginSql Alias cQryTemp
+		%NoParser%
+
+		SELECT ZO_EMP FROM %Exp:cTabSZO% WHERE ZO_FILIAL = '01' AND ZO_SI = %Exp:_NUMSI% AND %NotDel%
+		AND ZO_EMP != %Exp:_cMarca%
+		
+	EndSql
+	
+	If (!(cQryTemp)->(Eof()))
+		MsgAlert("AI informada não e da não é da marca "+_cMarcaDesc+".","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
+		lRet := .F.
+	EndIf	
+	(cQryTemp)->(DbCloseArea())
+	
+	
 	//pesquisa AO na empresa origem
 	cQrySZO := GetNextAlias()
 	BeginSql Alias cQrySZO
 		%NoParser%
 
-		SELECT ZO_ITEMCTA FROM %Exp:cTabSZO% WHERE ZO_FILIAL = '01' AND ZO_SI = %Exp:_NUMSI% AND %NotDel%
+		SELECT ZO_ITEMCTA, ZO_FPAGTO FROM %Exp:cTabSZO% WHERE ZO_FILIAL = '01' AND ZO_SI = %Exp:_NUMSI% AND %NotDel%
+		AND ZO_EMP = %Exp:_cMarca%
 		
 		
 	EndSql
 	//and ZO_FPAGTO = '2'
 
 	(cQrySZO)->(DbGoTop())
-	IF !(cQrySZO)->(Eof()) .And. AllTrim((cQrySZO)->ZO_ITEMCTA) == "I0201"
-
-		//Buscar se acordo tem percentuais de sugestao e maximo cadastrados - OS. 2508-17 - Fernando em 15/08/2017
-		cAliasTmp := GetNextAlias()
-		BeginSql Alias cAliasTmp
-			%NoParser%
-
-			select PZ5_PPGSUG, PZ5_PPGMAX
-			from %Exp:cTabPZ6% PZ6 
-			join %Exp:cTabPZ5% PZ5 on PZ5_CODIGO = PZ6_CODIGO 
-			where PZ6_SI = %Exp:_NUMSI% 
-			and PZ6.D_E_L_E_T_ = ''
-			and PZ5.D_E_L_E_T_ = ''
-
-		EndSql
-
-		(cAliasTmp)->(DbGoTop())
-		If !(cAliasTmp)->(Eof())
-
-			_nPBonAO := (cAliasTmp)->PZ5_PPGSUG
-			_nPMaxAO := (cAliasTmp)->PZ5_PPGMAX
-
-			If _nPBonAO > 0 .And. _nPMaxAO <= 0
-				_nPMaxAO := _nPBonAO + nAdDMax
-			EndIf
-
+	
+	
+	If (!(cQrySZO)->(Eof()) .And.  AllTrim((cQrySZO)->ZO_FPAGTO) != '2' )
+		If ((cQrySZO)->ZO_FPAGTO != "")
+			MsgAlert("AI informada não é do 'Tipo de Pagamento:Desconto em Pedido'.","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
+			lRet := .F.
 		EndIf
-		(cAliasTmp)->(DbCloseArea())
-
-
-		IF ( _nPBonAO <= 0 )
-
+	EndIf
+	
+	
+	If (lRet)
+		IF !(cQrySZO)->(Eof()) .And. AllTrim((cQrySZO)->ZO_ITEMCTA) == "I0201"
+	
+			//Buscar se acordo tem percentuais de sugestao e maximo cadastrados - OS. 2508-17 - Fernando em 15/08/2017
 			cAliasTmp := GetNextAlias()
 			BeginSql Alias cAliasTmp
 				%NoParser%
-
-				select PBONUS = case when PZ6_METAF5 > 0 and PZ6_VALREA >= PZ6_METAF5 then PZ6_PBONF5
-				when PZ6_METAF4 > 0 and PZ6_VALREA >= PZ6_METAF4 then PZ6_PBONF4
-				when PZ6_METAF3 > 0 and PZ6_VALREA >= PZ6_METAF3 then PZ6_PBONF3
-				when PZ6_METAF2 > 0 and PZ6_VALREA >= PZ6_METAF2 then PZ6_PBONF2
-				else PZ6_PBONF1 end
-				from %Exp:cTabPZ6% where PZ6_SI = %Exp:_NUMSI% and D_E_L_E_T_ = ''
-
+	
+				select PZ5_PPGSUG, PZ5_PPGMAX
+				from %Exp:cTabPZ6% PZ6 
+				join %Exp:cTabPZ5% PZ5 on PZ5_CODIGO = PZ6_CODIGO 
+				where PZ6_SI = %Exp:_NUMSI% 
+				and PZ6.D_E_L_E_T_ = ''
+				and PZ5.D_E_L_E_T_ = ''
+	
 			EndSql
-
+	
 			(cAliasTmp)->(DbGoTop())
 			If !(cAliasTmp)->(Eof())
-
-				_nPBonAO := (cAliasTmp)->PBONUS
-				_nPMaxAO := _nPBonAO + nAdDMax
-
+	
+				_nPBonAO := (cAliasTmp)->PZ5_PPGSUG
+				_nPMaxAO := (cAliasTmp)->PZ5_PPGMAX
+	
+				If _nPBonAO > 0 .And. _nPMaxAO <= 0
+					_nPMaxAO := _nPBonAO + nAdDMax
+				EndIf
+	
 			EndIf
 			(cAliasTmp)->(DbCloseArea())
-
-		ENDIF
-
-	Else
-		MsgAlert("AI não localizada ou não é proveniente de Acordo Objetivo.","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
-		lRet := .F.
+	
+	
+			IF ( _nPBonAO <= 0 )
+	
+				cAliasTmp := GetNextAlias()
+				BeginSql Alias cAliasTmp
+					%NoParser%
+	
+					select PBONUS = case when PZ6_METAF5 > 0 and PZ6_VALREA >= PZ6_METAF5 then PZ6_PBONF5
+					when PZ6_METAF4 > 0 and PZ6_VALREA >= PZ6_METAF4 then PZ6_PBONF4
+					when PZ6_METAF3 > 0 and PZ6_VALREA >= PZ6_METAF3 then PZ6_PBONF3
+					when PZ6_METAF2 > 0 and PZ6_VALREA >= PZ6_METAF2 then PZ6_PBONF2
+					else PZ6_PBONF1 end
+					from %Exp:cTabPZ6% where PZ6_SI = %Exp:_NUMSI% and D_E_L_E_T_ = ''
+	
+				EndSql
+	
+				(cAliasTmp)->(DbGoTop())
+				If !(cAliasTmp)->(Eof())
+	
+					_nPBonAO := (cAliasTmp)->PBONUS
+					_nPMaxAO := _nPBonAO + nAdDMax
+	
+				EndIf
+				(cAliasTmp)->(DbCloseArea())
+	
+			ENDIF
+	
+		Else
+			MsgAlert("AI não localizada ou não é proveniente de Acordo Objetivo.","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
+			lRet := .F.
+		EndIf
 	EndIf
+	
 	(cQrySZO)->(DbCloseArea())
 
 	If lRet .And. _nPMaxAO > 0
@@ -598,6 +650,29 @@ Static Function CheckAOValid(_NUMSI)
 	Local cTabSZO	:= Nil
 	Local cQrySZO	:= Nil
 	Local _cEmp		:= Nil
+	Local _cMarca	:= ""
+	Local _cMarcaDesc:= ""
+	
+	Do Case
+		Case M->C5_YLINHA == "1"
+		_cMarca	:= "0101"
+		_cMarcaDesc:= 'Biancogres'
+		Case M->C5_YLINHA == "2"
+		_cMarca	:= "0501"
+		_cMarcaDesc:= 'Incesa'
+		Case M->C5_YLINHA == "3"
+		_cMarca	:= "0599"
+		_cMarcaDesc:= 'BellaCasa'
+		Case M->C5_YLINHA == "4"
+		_cMarca	:= "1399"
+		_cMarcaDesc:= 'Mudiali'
+		Case M->C5_YLINHA == "5"
+		_cMarca	:= "0199"
+		_cMarcaDesc:= 'Pegasus'
+		Case M->C5_YLINHA == "6"
+		_cMarca	:= "1302"
+		_cMarcaDesc:= 'Vinilico'
+	EndCase
 	
 	If Alltrim(M->C5_YLINHA) $ "2#3" .And. AllTrim(CEMPANT) $ "05"  //ticket 10958 marreta provisoria AI Incesa na Bianco
 		cTabSZO := "% SZO050 %"
@@ -619,6 +694,22 @@ Static Function CheckAOValid(_NUMSI)
 		EndIf
 
 	EndIf
+	
+	cQryTemp := GetNextAlias()
+	BeginSql Alias cQryTemp
+		%NoParser%
+
+		SELECT ZO_EMP FROM %Exp:cTabSZO% WHERE ZO_FILIAL = '01' AND ZO_SI = %Exp:_NUMSI% AND %NotDel%
+		AND ZO_EMP != %Exp:_cMarca%
+		
+	EndSql
+	
+	If (!(cQryTemp)->(Eof()))
+		MsgAlert("AI informada da não é da marca "+_cMarcaDesc+".","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
+		lRet := .F.
+	EndIf	
+	(cQryTemp)->(DbCloseArea())
+	
 
 	//pesquisa AO na empresa origem
 	cQrySZO := GetNextAlias()
@@ -626,17 +717,26 @@ Static Function CheckAOValid(_NUMSI)
 		%NoParser%
 
 		SELECT * FROM %Exp:cTabSZO% WHERE ZO_FILIAL = '01' AND ZO_SI = %Exp:_NUMSI% AND %NotDel%
-		
+		AND ZO_EMP = %Exp:_cMarca%  
 		
 	EndSql
 	
-	//and ZO_FPAGTO = '2'
-
+	
+	
 	(cQrySZO)->(DbGoTop())
 	If (cQrySZO)->(Eof())
 		MsgAlert("AI não localizada ou não é proveniente de Acordo Objetivo.","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
 		lRet := .F.
+	Else
+		If (AllTrim((cQrySZO)->ZO_FPAGTO) != '2')
+			If ((cQrySZO)->ZO_FPAGTO != "") 
+				MsgAlert("AI informada não é do 'Tipo de Pagamento:Desconto em Pedido'.","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
+				lRet := .F.
+			EndIf
+		EndIf
 	EndIf
+	
+	
 	(cQrySZO)->(DbCloseArea())
 
 

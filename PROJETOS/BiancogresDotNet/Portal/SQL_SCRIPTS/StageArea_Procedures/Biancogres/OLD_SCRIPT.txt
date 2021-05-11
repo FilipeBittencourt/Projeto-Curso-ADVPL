@@ -1,0 +1,390 @@
+
+INSERT INTO [DADOSADV].[dbo].[BZINTEGRACAO_SOLCOMP_PORTAL]
+           ([CODIGO]
+           ,[EMPRESA]
+           ,[FILIAL]
+           ,[CENTRO_CUSTO]
+           ,[CLASSE_VALOR]
+           ,[ITEM_CONTA]
+		   ,[SUB_ITEM_CONTA]
+		   ,[DATA_EMISSAO]
+           ,[DATA_NECESSIDADE]
+           ,[STATUS]
+           ,[DATA_INCLUSAO]
+           ,[SOLICITANTE]
+           ,[ITEM]
+		   ,[CONTA]
+           ,[PRODUTO]
+           ,[DESCRICAO]
+           ,[QUANTIDADE]
+           ,[UNIDADE]
+           ,[APLICACAO]
+           ,[TAG]
+           ,[DRIVER]
+           ,[ARMAZEM]
+           ,[TIPO_SERVICO]
+		   ,[PRIORIDADE]
+		   ,[SETOR_APROVACAO]
+		   ,[CONTRATO]
+		   ,[ARQUIVO_ANEXO] 
+		   ,[NOME_ANEXO]
+		   ,[DESCRICAO_ANEXO] 
+			,[TIPO_ANEXO]
+		   )
+
+select 
+Numero,
+EMP=SUBSTRING(UN.Codigo, 1, 2), 
+FIL=SUBSTRING(UN.Codigo, 3, 2), 
+CENTRO_CUSTO = CV.CentroCusto,
+CLASSE_VALOR = CV.Codigo,
+ITEM_CONTA= ISNULL(IC.Codigo, ''),
+SUB_ITEM_CONTA=ISNULL(SIC.Codigo, ''),
+DATA_EMISSAO = GETDATE(),
+DATA_NECESSIDADE = DataNecessidade,
+STATUS='A',
+DATA_INCLUSAO=  GETDATE(),
+SOLICITANTE=ISNULL(US.Nome, ''),
+--ITEM = REPLICATE('0', 4 - LEN((ROW_NUMBER() OVER(ORDER BY SS.ID ASC)))) + RTrim((ROW_NUMBER() OVER(ORDER BY SS.ID ASC))),
+ITEM = SSI.Item,
+CONTA = (select B1_CONTA from [DADOSADV].[dbo].SB1010 where B1_COD = PROD.Codigo COLLATE  Latin1_General_BIN AND D_E_L_E_T_ = ''),
+PRODUTO	= PROD.Codigo,
+DESCRICAO= SSI.Descricao,
+QUANTIDADE= SSI.Quantidade,
+UNIDADE= PROD.UnidadeMedida,
+APLICACAO= AP.Codigo,
+TAG= ISNULL(TAG.Codigo, ''),
+DRIVER= DR.Codigo,
+ARMAZEM= ARM.Codigo,
+TIPO_SERVICO=TipoServico,
+PRIORIDADE=PS.Codigo,
+SETOR_APROVACAO=SA.Codigo,
+CONTRATO=ISNULL(CON.Codigo, ''),
+ARQUIVO_ANEXO=SS.ArquivoAnexo, 
+NOME_ANEXO =SS.NomeAnexo,
+DESCRICAO_ANEXO=SS.DescricaoAnexo, 
+TIPO_ANEXO =SS.TipoAnexo
+
+from SolicitacaoServico SS
+join Unidade UN ON UN.ID = SS.UnidadeID
+join Usuario US ON US.ID = SS.UsuarioID
+
+join ClasseValor CV  ON CV.ID = SS.ClasseValorID
+join SolicitacaoServicoItem SSI  ON SS.ID = SSI.SolicitacaoServicoID
+join Produto PROD  ON PROD.ID = SSI.ProdutoID
+join Aplicacao AP  ON AP.ID = SSI.AplicacaoID
+join Driver DR  ON DR.ID = SSI.DriverID
+left join TAG TAG  ON TAG.ID = SSI.TAGID
+join Armazem ARM  ON ARM.ID = SSI.ArmazemID
+join PrioridadeServico PS ON PS.ID= PrioridadeServicoID
+join SetorAprovacao SA ON SA.ID= SetorAprovacaoID
+left join ContaContabil CC ON CC.ID= SSI.ContaContabilID
+left join ItemConta IC ON IC.ID= ItemContaID
+left join SubItemConta SIC ON SIC.ID= SubItemContaID
+left join Contrato CON ON CON.ID= ContratoID
+where 
+ not exists(
+select 1 from [DADOSADV].[dbo].[BZINTEGRACAO_SOLCOMP_PORTAL] 
+	where CODIGO  COLLATE  Latin1_General_BIN = Numero
+)
+And SS.Status = 1
+
+
+
+
+INSERT INTO [DADOSADV].[dbo].[BZINTEGRACAO_COTACAO_PORTAL](
+	[EMPRESA] 				,
+	[FILIAL] 				,
+	[FORNE_COD] 			,
+	[FORNE_LOJA] 			,
+	[CONTATO] 				,
+	[MOEDA] 				,
+	[DATA_EMISSAO] 			,
+	[TIPO_FRETE] 			,
+	[NUMERO_SC] 			,
+	[ITEM_SC] 				,
+	[PROPOSTA] 				,
+	[PRODUTO] 				,
+	[ITEM] 					,
+	[UNIDADE] 				,
+	[QUANTIDADE] 			,
+	[PRECO] 				,
+	[MARCA] 				,
+	[ALIQ_IPI] 				,
+	[OBSERVACAO] 			,
+	[PRAZO] 				,
+	[FORNE_ORCAMENTO] 		,
+	[COND_PAG] 				,
+	[DATA_VALIDADE] 		,
+	[VALOR_SUB] 			,
+	[STATUS] 				,
+	[CODIGO]				,
+	[TIPO_SERVICO]			,
+	[DATA_INICIO_CONTRATO]	,
+	[DATA_FINAL_CONTRATO], 
+	[DATA_NECESSIDADE],
+	[COTACAO],
+	[COTACAO_ITEM]
+	
+)                           
+
+
+select 
+EMP=SUBSTRING(UN.Codigo, 1, 2), 
+FIL=SUBSTRING(UN.Codigo, 3, 2), 
+FORNE_COD=FO.CodigoERP,
+FORNE_LOJA='01',
+CONTATO= 'Teste',
+MOEDA=Moeda,
+DATA_EMISSAO=GetDate(),
+TIPO_FRETE=TipoFrete,
+NUMERO_SC=ISNULL(SC_NUM, ''),
+ITEM_SC=ISNULL(SC_ITEM, ''),
+PROPOSTA='01',
+PRODUTO=PROD.Codigo,
+ITEM=SSI.Item,
+UNIDADE=PROD.UnidadeMedida,
+QUANTIDADE=Quantidade,
+PRECO=Preco,
+MARCA=Marca,
+ALIQ_IPI=IPI,
+OBSERVACAO=SSCI.Observacao,
+PRAZO=PrazoEntrega,
+FORNE_ORCAMENTO=SUBSTRING(NumeroOrcamento, 1, 20),
+COND_PAG=CondicaoPagamento,
+DATA_VALIDADE=(CASE  WHEN DataValidade > GETDATE() THEN DataValidade ELSE GETDATE() END),
+VALOR_SUB=ValorSubstituicao,
+STATUS='A',
+SOLICITACAOSERVICO_PORTAL= SS.Numero,
+TIPO_SERVICO=SS.TipoServico,
+DataInicioContrato,
+DataFinalContrato,
+DataNecessidade,
+Cotacao=ISNULL(SSI.Cotacao, ''),
+CotacaoItem=ISNULL(SSI.CotacaoItem, '')
+from SolicitacaoServico SS
+join Unidade UN ON UN.ID = SS.UnidadeID
+join SolicitacaoServicoItem SSI ON SS.ID = SSI.SolicitacaoServicoID
+join SolicitacaoServicoFornecedor SSF ON SS.ID = SSF.SolicitacaoServicoID
+join Fornecedor FO ON FO.ID = SSF.FornecedorID
+join SolicitacaoServicoCotacao SSC ON 
+	SS.ID = SSC.SolicitacaoServicoID 
+	AND SS.ID = SSC.SolicitacaoServicoID
+	AND SSF.FornecedorID = SSC.FornecedorID
+
+join SolicitacaoServicoCotacaoItem SSCI ON 
+	SSC.ID = SSCI.SolicitacaoServicoCotacaoID 
+	AND  SSI.ID = SSCI.SolicitacaoServicoItemID
+join Produto PROD ON PROD.ID = SSI.ProdutoID
+
+join [DADOSADV].[dbo].[BZINTEGRACAO_SOLCOMP_PORTAL] SOLPORTAL ON 
+	SOLPORTAL.CODIGO COLLATE  Latin1_General_BIN = SS.Numero 
+	AND SOLPORTAL.PRODUTO COLLATE Latin1_General_BIN = PROD.Codigo
+	AND SOLPORTAL.ITEM COLLATE Latin1_General_BIN = SSI.Item
+
+join [DADOSADV].[dbo].[BZINTEGRACAO_SOLCOMP] SOL 
+	ON SOL.SC_YBIZAGI = 
+	(
+		select TOP 1 PROCESSO_BIZAGI from [DADOSADV].[dbo].[BZINTEGRACAO_SOLCOMP_PORTAL] A 
+		where A.CODIGO = SOLPORTAL.CODIGO
+		AND A.PROCESSO_BIZAGI is not null
+	)
+	AND SOL.SC_PRODUTO = SOLPORTAL.PRODUTO
+AND SOL.SC_ITEM = SOLPORTAL.ITEM
+where Aprovado=1
+and SC_NUM <> ''
+and SSC.Habilitado=1 
+And not exists (
+
+select 1 from 
+	 [DADOSADV].[dbo].[BZINTEGRACAO_COTACAO_PORTAL]
+	where CODIGO COLLATE  Latin1_General_BIN = SS.Numero
+)
+
+
+
+UPDATE SolicitacaoServico
+SET Status = (case when BZ.STATUS = 'P' or BZ.STATUS = 'A'  then 2 else 3 end)
+FROM SolicitacaoServico SS
+INNER JOIN  [DADOSADV].[dbo].[BZINTEGRACAO_SOLCOMP_PORTAL]  BZ ON CODIGO  COLLATE  Latin1_General_BIN = Numero
+WHERE 
+PROCESSO_BIZAGI IS NOT NULL
+AND Status = 1
+ 
+
+ 
+UPDATE SolicitacaoServicoFornecedor SET Vencedor = ISNULL(BZCP.VENCEDOR,0), StatusIntegracao = 1
+from
+ SolicitacaoServicoFornecedor SSF
+ join SolicitacaoServico SS ON SSF.SolicitacaoServicoID = SS.ID
+ join [DADOSADV].[dbo].[BZINTEGRACAO_COTACAO_PORTAL] BZCP on SS.Numero = CODIGO COLLATE  Latin1_General_BIN
+ join Fornecedor FO ON SSF.FornecedorID = FO.ID AND FO.CodigoERP = BZCP.FORNE_COD COLLATE  Latin1_General_BIN
+where 1=1
+AND BZCP.COTACAO <> ''
+AND (BZCP.CONTRATO <> '' or BZCP.PEDIDO <>'')
+AND SSF.StatusIntegracao = 0
+
+UPDATE SolicitacaoServicoItem SET 
+Contrato = ISNULL(BZCP.CONTRATO,''), ContratoItem=ISNULL(BZCP.CONTRATO_ITEM,''), 
+Pedido = ISNULL(BZCP.PEDIDO,''), PedidoItem=ISNULL(BZCP.PEDIDO_ITEM,''),
+StatusIntegracao = 1
+from
+ SolicitacaoServicoItem SSI
+ join SolicitacaoServico SS ON SSI.SolicitacaoServicoID = SS.ID
+ join [DADOSADV].[dbo].[BZINTEGRACAO_COTACAO_PORTAL] BZCP on SS.Numero = CODIGO COLLATE  Latin1_General_BIN
+ join Produto PO ON SSI.ProdutoID = PO.ID AND PO.Codigo = BZCP.PRODUTO COLLATE  Latin1_General_BIN
+where 1=1
+AND BZCP.COTACAO <> ''
+AND (BZCP.CONTRATO <> '' or BZCP.PEDIDO <>'')
+AND SSI.StatusIntegracao = 0
+
+
+update SolicitacaoServico SET STATUS = 5
+where ID IN(
+select 
+DISTINCT SS.ID
+from SolicitacaoServico SS with (nolock)
+JOIN [DADOSADV].[dbo].[BZINTEGRACAO_SOLCOMP_PORTAL] SCP with (nolock) ON SS.Numero = SCP.CODIGO COLLATE  Latin1_General_BIN
+JOIN [DADOSADV].[dbo].[BZINTEGRACAO_SOLCOMP] SCB with (nolock) ON PROCESSO_BIZAGI = SC_YBIZAGI  
+JOIN [DADOSADV].[dbo].[SC8010] SC8 with (nolock) ON C8_NUMSC = SC_NUM AND C8_ITEMSC = SC_ITEM AND SC8.D_E_L_E_T_ = ''
+JOIN [DADOSADV].[dbo].[SA2010] SA2 with (nolock) ON A2_COD = C8_FORNECE AND A2_LOJA = C8_LOJA AND SA2.D_E_L_E_T_ = ''
+JOIN Fornecedor f with (nolock) ON f.CPFCNPJ =  SA2.A2_CGC COLLATE  Latin1_General_BIN
+	where not exists (
+		select 1 from SolicitacaoServicoFornecedor SSF where SS.ID = SSF.SolicitacaoServicoID
+	)
+)
+
+
+
+UPDATE SolicitacaoServicoItem SET 
+Cotacao = C8_NUM,
+CotacaoItem = C8_ITEM
+FROM 
+(select 
+	DISTINCT
+	C8_NUM,
+	C8_ITEM,
+	SSIID= SSI.ID
+	from SolicitacaoServicoItem SSI with (nolock)
+	JOIN Produto Prod with (nolock) ON Prod.ID = SSI.ProdutoID
+	JOIN SolicitacaoServico SS with (nolock) ON SS.ID = SSI.SolicitacaoServicoID
+
+	JOIN [DADOSADV].[dbo].[BZINTEGRACAO_SOLCOMP_PORTAL] SCP with (nolock) ON 
+		SS.Numero = SCP.CODIGO  COLLATE  Latin1_General_BIN
+		AND Prod.Codigo = SCP.PRODUTO COLLATE  Latin1_General_BIN
+		AND SSI.Item = SCP.ITEM COLLATE  Latin1_General_BIN
+
+	join [DADOSADV].[dbo].[BZINTEGRACAO_SOLCOMP] SOL 
+		ON SOL.SC_YBIZAGI = 
+		(
+			select TOP 1 PROCESSO_BIZAGI from [DADOSADV].[dbo].[BZINTEGRACAO_SOLCOMP_PORTAL] A 
+			where A.CODIGO = SCP.CODIGO
+			AND A.PROCESSO_BIZAGI is not null
+		)
+		AND SOL.SC_PRODUTO = SCP.PRODUTO
+		AND SOL.SC_ITEM = SCP.ITEM
+
+	JOIN [DADOSADV].[dbo].[SC8010] SC8 with (nolock) ON 
+		C8_NUMSC = SC_NUM 
+		AND C8_ITEMSC = SC_ITEM 
+		AND SC8.D_E_L_E_T_ = ''
+	JOIN [DADOSADV].[dbo].[SA2010] SA2 with (nolock) ON A2_COD = C8_FORNECE AND A2_LOJA = C8_LOJA AND SA2.D_E_L_E_T_ = ''
+	JOIN Fornecedor f with (nolock) ON f.CPFCNPJ =  SA2.A2_CGC COLLATE  Latin1_General_BIN
+	where not exists (
+		select 1 from SolicitacaoServicoFornecedor SSF where SS.ID = SSF.SolicitacaoServicoID
+	)
+) A WHERE ID = SSIID
+
+
+insert into SolicitacaoServicoFornecedor (StatusIntegracao, EmpresaID, UnidadeID, Habilitado, Deletado, DeleteID,
+ SolicitacaoServicoID, FornecedorID, AgendarVisita, Vencedor, Observacao)
+select 
+DISTINCT
+StatusIntegracao=0, 
+EmpresaID=SS.EmpresaID,
+UnidadeID=SS.UnidadeID, 
+Habilitado=1, 
+Deletado=0, 
+DeleteID=0,
+SolicitacaoServicoID=SS.ID, 
+FornecedorID=f.ID,
+AgendarVisita=0,   
+Vencedor=0, 
+Observacao=''
+from SolicitacaoServico SS with (nolock)
+JOIN [DADOSADV].[dbo].[BZINTEGRACAO_SOLCOMP_PORTAL] SCP with (nolock) ON SS.Numero = SCP.CODIGO COLLATE  Latin1_General_BIN
+JOIN [DADOSADV].[dbo].[BZINTEGRACAO_SOLCOMP] SCB with (nolock) ON PROCESSO_BIZAGI = SC_YBIZAGI  
+JOIN [DADOSADV].[dbo].[SC8010] SC8 with (nolock) ON C8_NUMSC = SC_NUM AND C8_ITEMSC = SC_ITEM AND SC8.D_E_L_E_T_ = ''
+JOIN [DADOSADV].[dbo].[SA2010] SA2 with (nolock) ON A2_COD = C8_FORNECE AND A2_LOJA = C8_LOJA AND SA2.D_E_L_E_T_ = ''
+JOIN Fornecedor f with (nolock) ON f.CPFCNPJ =  SA2.A2_CGC COLLATE  Latin1_General_BIN
+where not exists (
+	select 1 from SolicitacaoServicoFornecedor SSF where SS.ID = SSF.SolicitacaoServicoID
+)
+
+
+
+ 
+ INSERT INTO [DADOSADV].[dbo].[BZINTEGRACAO_PREAE]
+           ([EMPRESA]
+           ,[FILIAL]
+           ,[CONTRATO]
+           ,[ITEM]
+           ,[COD_PRODUTO]
+           ,[NOME_PRODUTO]
+           ,[QUANT]
+           ,[DATA_HORA_INCLUSAO]
+           ,[USUARIO_INCLUSAO]
+           ,[DATA_HORA_PORTAL]
+           ,[USUARIO_PORTAL]
+           ,[USUARIO_PROTHEUS]
+           ,[STATUS]
+		   ,[VALOR],
+		   [CODIGO],
+		   [APLICACAO],
+		   [TAG]
+          )
+
+
+SELECT 
+EMP=SUBSTRING(UN.Codigo, 1, 2) ,
+FIL=SUBSTRING(UN.Codigo, 3, 2),
+CONTRATO=ISNULL(SSI.Contrato, ''),
+ITEM=ISNULL(SSI.ContratoItem, SSI.Item) ,
+COD_PRODUTO=PROD.Codigo,
+NOME_PRODUTO=SSI.Descricao,
+QUANT=(CASE WHEN  SSIM.UnidadeMedicao=1 then (((Medicao/100)*SaldoMedicao) / (SSIM.Quantidade*ValorServico) )  else Medicao END),
+DATA_HORA_INCLUSAO=GETDATE(),
+USUARIO_INCLUSAO='',
+DATA_HORA_PORTAL='',
+USUARIO_PORTAL='',
+USUARIO_PROTHEUS='',
+STATUS='P',
+VALOR=(CASE WHEN  SSIM.UnidadeMedicao=1 then SSIM.Quantidade*ValorServico  else PRECO END),
+convert(varchar,SSIM.ID),
+APL.Codigo,
+T.Codigo
+
+FROM 
+SolicitacaoServicoCotacao SSC
+join Unidade UN ON UN.ID = SSC.UnidadeID
+join SolicitacaoServicoFornecedor SSF ON 
+	SSC.FornecedorID = SSF.FornecedorID	
+	AND SSC.SolicitacaoServicoID = SSF.SolicitacaoServicoID	
+	AND SSF.Vencedor = 1
+join SolicitacaoServicoCotacaoItem SSCI ON SSC.ID = SSCI.SolicitacaoServicoCotacaoID 
+join SolicitacaoServicoItem SSI ON SSCI.SolicitacaoServicoItemID = SSI.ID
+left join Aplicacao APL ON APL.ID = SSI.AplicacaoID
+left join TAG T ON T.ID = SSI.TAGID
+
+join Produto PROD  ON PROD.ID = SSI.ProdutoID
+join SolicitacaoServicoMedicaoItem SSIM ON SSI.ID = SSIM.SolicitacaoServicoItemID
+
+where 1=1
+AND SSIM.Status = 2
+AND CONTRATO <> ''
+And not exists (
+
+select 1 from 
+	 [DADOSADV].[dbo].[BZINTEGRACAO_PREAE]
+	where CODIGO COLLATE  Latin1_General_BIN = convert(varchar,SSIM.ID)
+)

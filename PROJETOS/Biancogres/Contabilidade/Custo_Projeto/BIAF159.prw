@@ -87,11 +87,10 @@ Local cQry := GetNextAlias()
 	
 	While !(cQry)->(Eof())
 
-		RecLock("ZMA", .T.)			
+		cCodRef := U_NumZMA()
 		
-			//cCodRef := fGetNum()
-			cCodRef := GETSXENUM('ZMA', 'ZMA_CODIGO')
-
+		RecLock("ZMA", .T.)
+			
 			ZMA->ZMA_FILIAL := xFilial("ZMA")
 			ZMA->ZMA_CODIGO := cCodRef
 			ZMA->ZMA_CLVL := cClvlDes
@@ -143,19 +142,24 @@ Local cQry := GetNextAlias()
 Return()
 
 
-Static Function fGetNum()
+User Function NumZMA()
 Local cRet := ""
-Local cSQL := ""
-Local cQry := GetNextAlias()	
-
-	cSQL := " SELECT MAX(ZMA_CODIGO) AS ZMA_CODIGO
-	cSQL += " FROM ZMA010
-	cSQL += " WHERE D_E_L_E_T_ = ''	
+Local cCodRef := ""
 	
-	TcQuery cSQL New Alias (cQry)
+	cCodRef := GetSxEnum('ZMA', 'ZMA_CODIGO')
 	
-	cRet := Soma1((cQry)->ZMA_CODIGO)
+	ConfirmSx8()
 	
-	(cQry)->(DbCloseArea())	
-
+	DbSelectArea("ZMA")
+	ZMA->(dbSetOrder(1))
+	While (DbSeek(xFilial("ZMA") + cCodRef))
+		
+		cCodRef := GetSxEnum('ZMA', 'ZMA_CODIGO')
+	
+		ConfirmSx8()
+				
+	EndDo	
+			
+	cRet := cCodRef
+	
 Return(cRet)

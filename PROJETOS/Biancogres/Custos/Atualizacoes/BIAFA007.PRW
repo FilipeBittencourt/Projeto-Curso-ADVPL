@@ -420,108 +420,60 @@ User Function BIAF7FOK()
 		ElseIf Alltrim(M->Z91_RECURS) $ "ATM090/ATM140"
 			_cAlias		:=	GetNextAlias()
 			_cAlias2	:=	GetNextAlias()
-			If vfDtRef >= '20201023'
-				BeginSql Alias _cAlias
-					%NoParser%
-					WITH PORCELANATO
-					AS (
+
+			BeginSql Alias _cAlias
+				%NoParser%
+				WITH PORCELANATO
+				AS (
 					SELECT B1_COD PRODUT
-					FROM %TABLE:SB1%
+						,B1_YFORMAT FORMATO
+					FROM %TABLE:SB1% (NOLOCK)
 					WHERE B1_FILIAL = %XFILIAL:SB1%
-					AND B1_YSTATUS = '1'
-					AND B1_YCLASSE = ' '
-					AND B1_YTPPROD <> 'RP'
-					AND B1_YFORMAT NOT IN (
-					'BN'
-					,'BP'
-					,'AL'
-					)
-					AND %NotDel%
-					)
-					SELECT ISNULL(SUM(PESO)/SUM(PRODUC),0) QUANT FROM (
-					SELECT PRODUT
-					,SUM(D3_QUANT) PRODUC
-					,SUM(D3_QUANT) * (
-					SELECT ISNULL(AVG(G1_QUANT), 0)
-					FROM %TABLE:SG1% SG1
-					INNER JOIN %TABLE:SB1% SB1 ON B1_FILIAL = %XFILIAL:SB1%
-					AND B1_COD = G1_COMP
-					AND B1_COD IN (
-									SELECT  SD3M.D3_COD
-									FROM    %TABLE:SD3% SD3M
-									INNER JOIN %TABLE:SB1% SB1M ON SB1M.B1_FILIAL = %XFILIAL:SB1%
-									AND SB1M.B1_COD = SD3M.D3_COD
-									AND SB1M.B1_DESC NOT LIKE 'PBI%'
-									AND SB1M.B1_GRUPO = 'PI01'
-									AND SB1M.%NotDel%
-									WHERE   SD3M.D3_FILIAL = %XFILIAL:SD3%
-									AND SD3M.D3_EMISSAO = %Exp:vfDtRef%
-									AND SD3M.D3_TM = '010'
-									AND SD3M.D3_YRECURS	= %Exp:M->Z91_RECURS%
-									AND SD3M.D3_ESTORNO = ' '
-									AND SD3M.%NotDel%
-									)
-					AND B1_GRUPO = 'PI01'
-					AND SB1.%NotDel%
-					WHERE G1_FILIAL = %XFILIAL:SG1%
-					AND G1_COD = PRODUT
-					AND SG1.%NotDel%
-					) PESO
-					FROM PORCELANATO PRC
-					INNER JOIN %TABLE:SD3% SD3 ON SD3.D3_FILIAL = %XFILIAL:SD3%
-					AND SD3.D3_COD = PRODUT
-					AND SD3.D3_TM = '010'
-					AND SD3.D3_ESTORNO <> 'S'
-					AND SD3.%NotDel%
-					AND SD3.D3_EMISSAO = %Exp:vfDtRef%
-					GROUP BY PRODUT
-					)PRODUC
-					WHERE PESO > 0
-				EndSql
-	
-				If (_cAlias)->QUANT <= 0
-					(_cAlias)->(DbCloseArea())
-					_cAlias	:=	GetNextAlias()
-					
-					BeginSql Alias _cAlias
-						%NoParser%
-						WITH    PORCELANATO
-						AS ( SELECT   B1_COD PRODUT
-						FROM     %TABLE:SB1%
-						WHERE    B1_FILIAL = %XFILIAL:SB1%
 						AND B1_YSTATUS = '1'
 						AND B1_YCLASSE = ' '
+						AND B1_TIPO = 'PP'
 						AND B1_YTPPROD <> 'RP'
-						AND B1_YFORMAT NOT IN ('BN','BP','AL')
+						AND B1_YFORMAT NOT IN (
+							'BN'
+							,'BP'
+							,'AL'
+							)
 						AND %NotDel%
-						)
-						SELECT  ISNULL(AVG(G1_QUANT),0) QUANT
-						FROM    PORCELANATO PRC
-						INNER JOIN %TABLE:SG1% SG1 ON G1_FILIAL = %XFILIAL:SG1%
-						AND G1_COD = PRODUT
-						AND SG1.%NotDel%
-						INNER JOIN %TABLE:SB1% SB1 ON B1_FILIAL = %XFILIAL:SB1%
-						AND B1_COD = G1_COMP
-						AND B1_COD IN (
-										SELECT  SD3M.D3_COD
-										FROM    %TABLE:SD3% SD3M
-										INNER JOIN %TABLE:SB1% SB1M ON SB1M.B1_FILIAL = %XFILIAL:SB1%
-										AND SB1M.B1_COD = SD3M.D3_COD
-										AND SB1M.B1_DESC NOT LIKE 'PBI%'
-										AND SB1M.B1_GRUPO = 'PI01'
-										AND SB1M.%NotDel%
-										WHERE   SD3M.D3_FILIAL = %XFILIAL:SD3%
-										AND SD3M.D3_EMISSAO = %Exp:vfDtRef%
-										AND SD3M.D3_TM = '010'
-										AND SD3M.D3_ESTORNO = ' '
-										AND SD3M.%NotDel%
-										)
-						AND B1_GRUPO = 'PI01'
-						AND SB1.%NotDel%
-					EndSql
-				
-				EndIf
-	
+					)
+				SELECT 
+					SUM(CASE 
+						WHEN PERDA = 0
+							THEN 0
+						ELSE QTDM / (1+(PERDA/100))
+						END)/SUM(QTDPRD)QUANT
+				FROM (
+					SELECT PRODUT
+						,FORMATO
+						,D3M.D3_COD
+						,D3M.D3_QUANT QTDM
+						,SD3.D3_QUANT QTDPRD
+						,ISNULL(ZRX.ZRX_PERDA, 0) PERDA
+					FROM PORCELANATO PRC
+					INNER JOIN %TABLE:SD3% SD3 (NOLOCK) ON SD3.D3_FILIAL = %XFILIAL:SD3%
+						AND SD3.D3_COD = PRODUT
+						AND SD3.D3_TM = '010'
+						AND SD3.D3_ESTORNO <> 'S'
+						AND SD3.%NotDel%
+						AND SD3.D3_EMISSAO = %Exp:vfDtRef%
+					INNER JOIN %TABLE:SD3% D3M (NOLOCK) ON SD3.D3_FILIAL = D3M.D3_FILIAL
+						AND SD3.D3_NUMSEQ = D3M.D3_NUMSEQ
+					INNER JOIN %TABLE:SB1% B1FIL (NOLOCK) ON B1FIL.B1_FILIAL = %XFILIAL:SB1%
+						AND B1FIL.B1_COD = D3M.D3_COD
+						AND B1FIL.B1_GRUPO = 'PI01'
+						AND B1FIL.%NotDel%
+					LEFT JOIN %TABLE:ZRX% ZRX ON ZRX.ZRX_FORMAT = FORMATO
+						AND SD3.D3_EMISSAO BETWEEN ZRX.ZRX_INI
+							AND ZRX.ZRX_FIM
+						AND ZRX.%NotDel%
+					) A			
+			EndSql
+
+			If vfDtRef >= '20201023'
 				BeginSql Alias _cAlias2
 					SELECT  ISNULL(SUM(D3_QUANT),0) QUANT
 					FROM    %TABLE:SD3% SD3
@@ -538,79 +490,6 @@ User Function BIAF7FOK()
 					AND SD3.%NotDel%					
 				EndSql
 			Else
-
-				BeginSql Alias _cAlias
-					%NoParser%
-					WITH PORCELANATO
-					AS (
-					SELECT B1_COD PRODUT
-					FROM %TABLE:SB1%
-					WHERE B1_FILIAL = %XFILIAL:SB1%
-					AND B1_YSTATUS = '1'
-					AND B1_YCLASSE = ' '
-					AND B1_YTPPROD <> 'RP'
-					AND B1_YFORMAT NOT IN (
-					'BN'
-					,'BP'
-					,'AL'
-					)
-					AND %NotDel%
-					)
-					SELECT ISNULL(SUM(PESO)/SUM(PRODUC),0) QUANT FROM (
-					SELECT PRODUT
-					,SUM(D3_QUANT) PRODUC
-					,SUM(D3_QUANT) * (
-					SELECT ISNULL(AVG(G1_QUANT), 0)
-					FROM %TABLE:SG1% SG1
-					INNER JOIN %TABLE:SB1% SB1 ON B1_FILIAL = %XFILIAL:SB1%
-					AND B1_COD = G1_COMP
-					AND B1_GRUPO = 'PI01'
-					AND SB1.%NotDel%
-					WHERE G1_FILIAL = %XFILIAL:SG1%
-					AND G1_COD = PRODUT
-					AND SG1.%NotDel%
-					) PESO
-					FROM PORCELANATO PRC
-					INNER JOIN %TABLE:SD3% SD3 ON SD3.D3_FILIAL = %XFILIAL:SD3%
-					AND SD3.D3_COD = PRODUT
-					AND SD3.D3_TM = '010'
-					AND SD3.D3_ESTORNO <> 'S'
-					AND SD3.%NotDel%
-					AND SD3.D3_EMISSAO = %Exp:vfDtRef%
-					GROUP BY PRODUT
-					)PRODUC
-					WHERE PESO > 0
-				EndSql
-	
-				If (_cAlias)->QUANT <= 0
-					(_cAlias)->(DbCloseArea())
-					_cAlias	:=	GetNextAlias()
-					
-					BeginSql Alias _cAlias
-						%NoParser%
-						WITH    PORCELANATO
-						AS ( SELECT   B1_COD PRODUT
-						FROM     %TABLE:SB1%
-						WHERE    B1_FILIAL = %XFILIAL:SB1%
-						AND B1_YSTATUS = '1'
-						AND B1_YCLASSE = ' '
-						AND B1_YTPPROD <> 'RP'
-						AND B1_YFORMAT NOT IN ('BN','BP','AL')
-						AND %NotDel%
-						)
-						SELECT  ISNULL(AVG(G1_QUANT),0) QUANT
-						FROM    PORCELANATO PRC
-						INNER JOIN %TABLE:SG1% SG1 ON G1_FILIAL = %XFILIAL:SG1%
-						AND G1_COD = PRODUT
-						AND SG1.%NotDel%
-						INNER JOIN %TABLE:SB1% SB1 ON B1_FILIAL = %XFILIAL:SB1%
-						AND B1_COD = G1_COMP
-						AND B1_GRUPO = 'PI01'
-						AND SB1.%NotDel%
-					EndSql
-				
-				EndIf
-	
 				BeginSql Alias _cAlias2
 					SELECT  ISNULL(SUM(D3_QUANT),0) QUANT
 					FROM    %TABLE:SD3% SD3
@@ -626,8 +505,6 @@ User Function BIAF7FOK()
 					AND SD3.%NotDel%					
 				EndSql
 			EndIf
-
-
 
 			GdFieldPut("Z91_INDCAL", (_cAlias)->QUANT, n)
 			GdFieldPut("Z91_PRODUC", (_cAlias2)->QUANT, n)
@@ -645,72 +522,53 @@ User Function BIAF7FOK()
 				%NoParser%
 				WITH PORCELANATO
 				AS (
-				SELECT B1_COD PRODUT
-				FROM %TABLE:SB1%
-				WHERE B1_FILIAL = %XFILIAL:SB1%
-				AND B1_YSTATUS = '1'
-				AND B1_YCLASSE = ' '
-				AND B1_YTPPROD <> 'RP'
-				AND B1_YFORMAT IN (
-				'BN'
-				,'BP'
-				,'AL'
-				)
-				AND %NotDel%
-				)
-				SELECT SUM(PESO)/SUM(PRODUC) QUANT FROM (
-				SELECT PRODUT
-				,SUM(D3_QUANT) PRODUC
-				,SUM(D3_QUANT) * (
-				SELECT ISNULL(AVG(G1_QUANT), 0)
-				FROM %TABLE:SG1% SG1
-				INNER JOIN %TABLE:SB1% SB1 ON B1_FILIAL = %XFILIAL:SB1%
-				AND B1_COD = G1_COMP
-				AND B1_GRUPO = 'PI01'
-				AND SB1.%NotDel%
-				WHERE G1_FILIAL = %XFILIAL:SG1%
-				AND G1_COD = PRODUT
-				AND SG1.%NotDel%
-				) PESO
-				FROM PORCELANATO PRC
-				INNER JOIN %TABLE:SD3% SD3 ON SD3.D3_FILIAL = %XFILIAL:SD3%
-				AND SD3.D3_COD = PRODUT
-				AND SD3.D3_TM = '010'
-				AND SD3.D3_ESTORNO <> 'S'
-				AND SD3.%NotDel%
-				AND SD3.D3_EMISSAO = %Exp:vfDtRef%
-				GROUP BY PRODUT
-				)PRODUC
-			EndSql
-
-			If (_cAlias)->QUANT <= 0
-				(_cAlias)->(DbCloseArea())
-				_cAlias	:=	GetNextAlias()
-				
-				BeginSql Alias _cAlias
-					%NoParser%
-					WITH    PORCELANATO
-					AS ( SELECT   B1_COD PRODUT
-					FROM     %TABLE:SB1%
-					WHERE    B1_FILIAL = %XFILIAL:SB1%
-					AND B1_YSTATUS = '1'
-					AND B1_YCLASSE = ' '
-					AND B1_YTPPROD <> 'RP'
-					AND B1_YFORMAT IN ('BN','BP','AL')
-					AND %NotDel%
+					SELECT B1_COD PRODUT
+						,B1_YFORMAT FORMATO
+					FROM %TABLE:SB1% (NOLOCK)
+					WHERE B1_FILIAL = %XFILIAL:SB1%
+						AND B1_YSTATUS = '1'
+						AND B1_YCLASSE = ' '
+						AND B1_TIPO = 'PP'
+						AND B1_YTPPROD <> 'RP'
+						AND B1_YFORMAT IN (
+							'BN'
+							,'BP'
+							,'AL'
+							)
+						AND %NotDel%
 					)
-					SELECT  ISNULL(AVG(G1_QUANT),0) QUANT
-					FROM    PORCELANATO PRC
-					INNER JOIN %TABLE:SG1% SG1 ON G1_FILIAL = %XFILIAL:SG1%
-					AND G1_COD = PRODUT
-					AND SG1.%NotDel%
-					INNER JOIN %TABLE:SB1% SB1 ON B1_FILIAL = %XFILIAL:SB1%
-					AND B1_COD = G1_COMP
-					AND B1_GRUPO = 'PI01'
-					AND SB1.%NotDel%
-				EndSql
-			
-			EndIf
+				SELECT 
+					SUM(CASE 
+						WHEN PERDA = 0
+							THEN 0
+						ELSE QTDM / (1+(PERDA/100))
+						END)/SUM(QTDPRD)QUANT
+				FROM (
+					SELECT PRODUT
+						,FORMATO
+						,D3M.D3_COD
+						,D3M.D3_QUANT QTDM
+						,SD3.D3_QUANT QTDPRD
+						,ISNULL(ZRX.ZRX_PERDA, 0) PERDA
+					FROM PORCELANATO PRC
+					INNER JOIN %TABLE:SD3% SD3 (NOLOCK) ON SD3.D3_FILIAL = %XFILIAL:SD3%
+						AND SD3.D3_COD = PRODUT
+						AND SD3.D3_TM = '010'
+						AND SD3.D3_ESTORNO <> 'S'
+						AND SD3.%NotDel%
+						AND SD3.D3_EMISSAO = %Exp:vfDtRef%
+					INNER JOIN %TABLE:SD3% D3M (NOLOCK) ON SD3.D3_FILIAL = D3M.D3_FILIAL
+						AND SD3.D3_NUMSEQ = D3M.D3_NUMSEQ
+					INNER JOIN %TABLE:SB1% B1FIL (NOLOCK) ON B1FIL.B1_FILIAL = %XFILIAL:SB1%
+						AND B1FIL.B1_COD = D3M.D3_COD
+						AND B1FIL.B1_GRUPO = 'PI01'
+						AND B1FIL.%NotDel%
+					LEFT JOIN %TABLE:ZRX% ZRX ON ZRX.ZRX_FORMAT = FORMATO
+						AND SD3.D3_EMISSAO BETWEEN ZRX.ZRX_INI
+							AND ZRX.ZRX_FIM
+						AND ZRX.%NotDel%
+					) A			
+			EndSql
 
 			BeginSql Alias _cAlias2
 				SELECT  ISNULL(SUM(D3_YQTUMID),0) QUANTSM, ISNULL(SUM(D3_QUANT),0) QUANTLB
@@ -1514,7 +1372,7 @@ Static Function fContrato(_cData)
 	BeginSql Alias _cAlias
 
 		SELECT ROUND(ISNULL(SUM(Z91_VAZNM3) / 105000 * 100,0),2) PERC
-		FROM Z91010 Z91
+		FROM %TABLE:Z91% Z91
 		WHERE Z91_FILIAL = %xFilial:Z91%
 		AND Z91_DATA = %Exp:_cData%
 		AND Z91_RECURS = 'EST001'
@@ -1547,7 +1405,7 @@ Static Function fContrato(_cData)
 		AS (SELECT '1' CHV, 
 		Z91_DATA DTMES, 
 		SUM(Z91_VAZNM3) VLRMES
-		FROM Z91010 Z91
+		FROM %TABLE:Z91% Z91
 		WHERE Z91_FILIAL = %xFilial:Z91%
 		AND Z91_DATA LIKE %Exp:_cAnoMes%
 		AND Z91_RECURS = 'EST001'
@@ -1557,7 +1415,7 @@ Static Function fContrato(_cData)
 		ULTDIAS
 		AS (SELECT '1' CHV, 
 		SUM(Z91_VAZNM3) VLRDIAS
-		FROM Z91010 Z91
+		FROM %TABLE:Z91% Z91
 		WHERE Z91_FILIAL = %xFilial:Z91%
 		AND Z91_DATA BETWEEN (SELECT DATEADD(DAY, -7 + 1, CONVERT(DATE, MAX(DTMES))) FROM REGMES) AND (SELECT MAX(DTMES) FROM REGMES)
 		AND Z91_RECURS = 'EST001'

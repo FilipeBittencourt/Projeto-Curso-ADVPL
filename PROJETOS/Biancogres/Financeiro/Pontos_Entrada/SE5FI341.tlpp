@@ -1,0 +1,13 @@
+#include "totvs.ch"
+/*/{Protheus.doc} SE5FI341
+@author Marinaldo de Jesus (Facile)
+@since 22/04/2021
+@project Automação Entrada
+@version 1.0
+@description Ponto de Entrada SE5FI341 na função FinMovCmp do programa FINXAPI.PRX 
+             Usado para Identificar se a Compensação Automatica Ocorreu.
+@type function
+/*/
+user function SE5FI341()
+    cacheData():set("SE5FI341","lRet",.T.)
+    return

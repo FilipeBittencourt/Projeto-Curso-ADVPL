@@ -1,0 +1,83 @@
+﻿@model Facile.BusinessPortal.Model.Compra.Servico.ResponsavelFornecedor
+@using Facile.BusinessPortal.Model
+
+
+@{
+    ViewData["Title"] = "Responsável Fornecedor";
+}
+
+
+<ol class="breadcrumb">
+    <li class="breadcrumb-item">
+        <a asp-action="Index">Listagem</a>
+    </li>
+    <li class="breadcrumb-item active">responsável fornecedor</li>
+</ol>
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Novo Responsável Fornecedor
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <form id="FormCad" name="FormCad" accept-charset="UTF-8" asp-action="Create" method="POST">
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label" for="input-name">Usuário</label>
+                                    <select asp-for="UsuarioID" class="form-control select2">
+                                        <option>Selecione...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label" for="input-name">Fornecedor</label>
+                                    <select asp-for="FornecedorID" class="form-control select2">
+                                        <option>Selecione...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="custom-control custom-checkbox mr-2 mr-lg-2 d-inline-block">
+                                    <input asp-for="Habilitado" type="checkbox" class="custom-control-input" id="Habilitado">
+                                    <label class="custom-control-label bolder" for="Habilitado"> Habilitado</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-2 text-right">
+                            <div class="col-md-12">
+                                <a asp-action="Index" class="btn btn-secondary shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed">Listagem</a>
+                                <button type="submit" class="btn btn-success shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed">Salvar</button>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="~/js/Util.js" asp-append-version="true"></script>
+
+    <script>
+        var UrlBase = '@Url.Action("Index", "ResponsavelFornecedor")';
+    </script>
+
+    <script src="~/js/SolicitacaoServicoUtil.js" asp-append-version="true"></script>
+    <script src="~/js/ResponsavelFornecedor.js" asp-append-version="true"></script>
+}

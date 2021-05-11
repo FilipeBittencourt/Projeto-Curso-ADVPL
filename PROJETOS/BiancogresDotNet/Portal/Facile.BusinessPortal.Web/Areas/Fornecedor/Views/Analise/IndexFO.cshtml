@@ -1,0 +1,213 @@
+﻿@{
+    ViewData["Title"] = "Titulos a Pagar";
+}
+
+<div class="row analise">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Filtros
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-success waves-effect waves-themed btn-filtrar">
+                        Filtrar
+                    </button>
+                </div>
+            </div>
+            <div class="panel-content">
+                <div class="frame-wrap m-3">
+
+                    <div class="form-group row">
+
+                        <div class="form-group col-12 col-lg-3">
+                            <label class="form-label" for="Unidade-ID">
+                                Cliente
+                            </label>
+                            <select asp-items="ViewBag.Unidades" name="UnidadeID" class="form-control w-100" id="Unidade-ID"></select>
+                        </div>
+
+                        <div class="form-group col-12 col-lg-3">
+                            <label class="form-label" for="DataVencimentoInicio">
+                                Data Vencimento De
+                            </label>
+                            <div class="input-group">
+                                <input name="DataVencimentoInicio" type="text" id="DataVencimentoInicio" value="@ViewBag.DataInicio" class="form-control data-datepicker">
+                                <div class="input-group-append">
+                                    <span class="input-group-text fs-xl">
+                                        <i class="fal fa-calendar-alt"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group col-12 col-lg-3">
+                            <label class="form-label" for="DataVencimentoFim">
+                                Data Vencimento Até
+                            </label>
+                            <div class="input-group">
+                                <input type="text" name="DataVencimentoFim" id="DataVencimentoFim" class="form-control data-datepicker">
+                                <div class="input-group-append">
+                                    <span class="input-group-text fs-xl">
+                                        <i class="fal fa-calendar-alt"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group col-12 col-lg-3">
+                            <label class="form-label" for="single-default">
+                                Data do Recebimento
+                            </label>
+                            <div class="input-group">
+                                <input type="text" name="DataPagamento" class="form-control data-datepicker">
+                                <div class="input-group-append">
+                                    <span class="input-group-text fs-xl">
+                                        <i class="fal fa-calendar-alt"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group col-12 col-lg-3">
+                            <label class="form-label" for="single-default">
+                                Data do Recebimento
+                            </label>
+                            <div class="input-group">
+                                <input type="text" name="DataPagamento" class="form-control data-datepicker">
+                                <div class="input-group-append">
+                                    <span class="input-group-text fs-xl">
+                                        <i class="fal fa-calendar-alt"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    @*<div class="form-group row">
+                        <div class="form-group col-12 col-lg-2">
+                            <label class="form-label">
+                                Tipo Antecipação?
+                            </label>
+                            <select name="TipoAntecipacao" class="form-control w-100">
+                                <option value="0">Normal</option>
+                                <option value="1">FIDC</option>
+                            </select>
+                        </div>
+                    </div>*@
+
+                </div>
+            </div>
+        </div>
+
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Resultado
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-success waves-effect waves-themed btn-gerar-antecipacoes">
+                        Gerar Antecipação(es)
+                    </button>
+                </div>
+            </div>
+            <div class="panel-content">
+
+                <div class="form-group row m-3">
+
+                    <div class="form-group col-6 col-lg-4">
+                        <label class="form-label" for="single-default">
+                            Total Bruto
+                        </label>
+                        <div class="input-group">
+                            <input type="text" name="TotalBruto" disabled class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="form-group col-6 col-lg-4">
+                        <label class="form-label" for="single-default">
+                            Total Liquido
+                        </label>
+                        <div class="input-group">
+                            <input type="text" name="TotalLiquido" disabled class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="form-group col-6 col-lg-4">
+                        <label class="form-label" for="single-default">
+                            Ganho
+                        </label>
+                        <div class="input-group">
+                            <input type="text" name="TotalGanho" disabled class="form-control">
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Listagem de Titulos
+                </h2>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content ">
+
+                    <!-- datatable start -->
+                    <!-- class="bg-highlight"-->
+                    <table id="myTable" class="table table-bordered table-hover table-striped w-100">
+                        <thead class="bg-primary-600">
+                            <tr>
+                                <th>
+                                    <div class="custom-control custom-checkbox mt-3 mr-3 order-1">
+                                        <input type="checkbox" class="custom-control-input checkAll" checked="checked" id="checkAll">
+                                        <label class="custom-control-label" for="checkAll"></label>
+                                    </div>
+                                </th>
+                                <th>Numero Documento</th>
+                                <th>Data Emissão</th>
+                                <th>Data Vencimento</th>
+                                <th>Taxa</th>
+                                <th>Valor</th>
+                                <th>Valor Antecipado</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                        <tfoot>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <!-- datatable end -->
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+<input type="hidden" name="FieldSearch" value="">
+
+
+@section Scripts {
+    <script>
+        var TipoUsuario = '@ViewBag.TipoUsuario';
+        var DataInicio = '@ViewBag.DataInicio';
+    </script>
+
+    <script src="~/js/Util.js" asp-append-version="true"></script>
+    <script src="~/js/Analise.js" asp-append-version="true"></script>
+}

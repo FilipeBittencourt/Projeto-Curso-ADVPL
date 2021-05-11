@@ -192,15 +192,23 @@ User Function MT100TOK()
 				WHILE !EOF() .AND. SC3->C3_NUM == cContrat
 					IF ALLTRIM(CLVL) == ALLTRIM(SC3->C3_YCLVL)
 						lPassei := .T.
-						IF SC3->C3_MSBLQL == '1'
-							MsgBox("Este contrato está bloqueado.","MT100TOK","STOP")
-							lRet := .F.
+						IF SC3->C3_MSBLQL == '1' .and. cCtrBloq <> 2
+						    cCtrBloq := 1							
+						ELSE
+						   cCtrBloq := 2
 						ENDIF
 					ENDIF
 
 					DbSelectArea("SC3")
 					DbSkip()
 				END
+				
+				IF cCtrBloq == 1
+				   MsgBox("[MT100TOK] Este contrato está bloqueado.","MT100TOK","STOP")
+				   cCtrBloq := 0
+				   lRet := .F.
+				ENDIF
+				
 				IF !lPassei
 					MsgBox("A Classe de Valor desta NF deverá ser igual a Classe de Valor do Contrato informado.","MT100TOK","STOP")
 					lRet := .F.

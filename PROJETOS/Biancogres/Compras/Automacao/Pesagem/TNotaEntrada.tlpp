@@ -19,6 +19,7 @@ Class TNotaEntrada from TAbstractClass
 	Public Method Execute()
 	Public Method DelPorChave()
 	Public Method DelPorDocFor()
+	Public Method Classificar()
 	Public Method New() Constructor		
 EndClass
 
@@ -72,6 +73,9 @@ Method GetCabecalho() Class TNotaEntrada
 		aAdd(aCabec,{"F1_STATUS"     	, PADR('', TamSx3("F1_STATUS")[1]) 		 						, NIL, Nil})
 	EndIf
 	
+	If (!Empty(::oNota:cNatureza))
+		aAdd(aCabec,{"E2_NATUREZ"     	, PADR(::oNota:cNatureza, TamSx3("E2_NATUREZ")[1]) 		 						, NIL, Nil})
+	EndIf	
 	
 Return aCabec
 
@@ -108,7 +112,7 @@ Method GetItens() Class TNotaEntrada
 		
 		aAdd(aItem,{"D1_QUANT"    	, oItem:nQuantidade  											, Nil, Nil})
 		aAdd(aItem,{"D1_VUNIT"    	, oItem:nValor   												, Nil, Nil})
-		aAdd(aItem,{"D1_TOTAL"    	, (oItem:nQuantidade * oItem:nValor)/*oItem:nTotal*/   			, Nil, Nil})
+		aAdd(aItem,{"D1_TOTAL"    	, (IIF(oItem:nQuantidade==0,1, oItem:nQuantidade) * oItem:nValor)/*oItem:nTotal*/   			, Nil, Nil})
 		
 		If !Empty(oItem:cPedido) .And. !Empty(oItem:cItemPed)
 
@@ -140,6 +144,11 @@ Method GetItens() Class TNotaEntrada
 			aAdd(aItem,{"D1_NFORI"    	, oItem:cNfOri  										, Nil, Nil})
 			aAdd(aItem,{"D1_SERIORI"   	, oItem:cSerieOri  										, Nil, Nil})
 		EndIf
+		
+		If (oItem:nAliqISS > 0)
+			aAdd(aItem,{"D1_ALIQISS"    	, oItem:nAliqISS  										, Nil, Nil})
+		EndIf
+		
 		
 		AAdd(aItens, aItem)
 	
@@ -309,7 +318,7 @@ Method Execute(_oNotaResulStruct, lPreNota) Class TNotaEntrada
 			EndIf
     		
 			If (!lMsErroAuto)
-			
+				
 				lOk			:= .T.
 				cMsgLog 	:= "[Nota: "+::oNota:cDoc+", Serie:"+::oNota:cSerie+", Fornecedor: "+::oNota:cFornece+"] => inserido com sucesso."
 			
@@ -342,6 +351,113 @@ Method Execute(_oNotaResulStruct, lPreNota) Class TNotaEntrada
 
 Return ::oResult
 
+
+Method Classificar(_oNotaResulStruct) Class TNotaEntrada
+
+	Local aCabec			:= {}
+	Local aItens			:= {}
+	
+	Local lOk				:= .F.
+	Local cMsgLog			:= ""
+	Local nI				:= 0
+	Local nOpc				:= 0
+	
+	Local aPerg 			:= {}
+	Local aErroAuto			:= {}
+	
+	Private lMsErroAuto 	:= .F.
+	Private lMsHelpAuto 	:= .T.
+	Private lAutoErrNoFile	:= .T.
+
+	Pergunte("MTA103",.F.,,,,, @aPerg)
+
+	MV_PAR01 := 2
+	MV_PAR02 := 1
+	MV_PAR06 := 1
+	
+	__SaveParam("MTA103", aPerg)
+	
+	::oNota 		:= _oNotaResulStruct
+	
+	cChave		:= ""
+	cChave		+= xFilial('SF1')
+	cChave		+= PADR(::oNota:cDoc, TamSx3("D1_DOC")[1])
+	cChave		+= PADR(::oNota:cSerie, TamSx3("D1_SERIE")[1])
+	cChave		+= PADR(::oNota:cFornece, TamSx3("D1_FORNECE")[1])
+	cChave		+= PADR(::oNota:cLoja, TamSx3("D1_LOJA")[1])
+	
+	DbSelectArea("SF1")
+	SF1->(DbSetOrder(1))
+	If (SF1->(DbSeek(cChave)))
+		
+		If Empty(SF1->F1_STATUS)
+
+			If (::oNota:oNotaItens:GetCount() > 0)
+		
+				DbSelectArea("SA2")
+				SA2->(DbSetOrder(1))
+				SA2->(DbSeek(XFilial("SA2")+PADR(::oNota:cFornece, TamSx3("D1_FORNECE")[1])+PADR(::oNota:cLoja, TamSx3("D1_LOJA")[1])))
+			
+				DbSelectArea("SF4")
+				SF4->(DbSetOrder(1))
+				SF4->(DbSeek(XFilial("SF4")+PADR(::oNota:oNotaItens:GetItem(1):cTES, TamSx3("D1_TES")[1])))
+			
+				aCabec	:= ::GetCabecalho()
+				aItens	:= ::GetItens()
+				
+				Begin Transaction
+					
+					MSExecAuto({|x,y,z| MATA103(x,y,z)}, aCabec,aItens, 4, .T.)
+					
+					If (!lMsErroAuto)
+					
+						If (!Empty(::oNota:cCodNfe))
+							RecLock("SF1",.F.)
+								SF1->F1_CODNFE := ::oNota:cCodNFe
+							SF1->(MsUnlock()) 	
+						EndIf
+					
+						lOk			:= .T.
+						cMsgLog 	:= "[Nota: "+::oNota:cDoc+", Serie:"+::oNota:cSerie+", Fornecedor: "+::oNota:cFornece+"] => classificada com sucesso."
+					
+					Else
+						
+						DisarmTransaction()
+						
+						lOk			:= .F.
+						cMsgLog 	:= "[Nota: "+::oNota:cDoc+", Serie:"+::oNota:cSerie+", Fornecedor: "+::oNota:cFornece+"] Erro => "+ CRLF
+						
+						aErroAuto	:= GetAutoGRLog()
+						
+						For nI := 1 To Len(aErroAuto)
+							cMsgLog += StrTran(StrTran(aErroAuto[nI], "<", ""), "-", "") + " "
+						Next nI		
+						
+					EndIf
+					
+				End Transaction 	
+			
+			Else
+				lOk			:= .F.
+				cMsgLog 	:= "[Nota: "+::oNota:cDoc+", Serie:"+::oNota:cSerie+", Fornecedor: "+::oNota:cFornece+"] => não tem itens."
+			EndIf	
+		
+		Else
+			lOk			:= .F.
+			cMsgLog 	:= "[Nota: "+::oNota:cDoc+", Serie:"+::oNota:cSerie+", Fornecedor: "+::oNota:cFornece+"] => já classificada."			
+		EndIf	
+	
+	Else
+		
+		lOk			:= .F.
+		cMsgLog 	:= "[Nota: "+::oNota:cDoc+", Serie:"+::oNota:cSerie+", Fornecedor: "+::oNota:cFornece+"] => não existe."
+		
+	EndIf
+	
+	::oResult:Add(lOk, cMsgLog)
+	
+	
+Return ::oResult
 
 Class TNFeEntradaResultStruct From LongClassName
 	

@@ -26,6 +26,7 @@
 #DEFINE _Tag 13
 #DEFINE _Clvl 14
 #DEFINE _DtDigit 15
+#DEFINE _MD 16
 
 
 User Function BIAF116(nOpc, nConfirm)
@@ -42,17 +43,28 @@ Local cBizagi := U_fGetBase("2")
 	If cEmpAnt $ "01/05" .And. SF1->F1_TIPO == "N" .And. nConfirm == 1 .And. (nOpc >= 3 .And. nOpc <= 4)
 	
 		cSQL := " SELECT ISNULL(EMAIL, '') AS EMAIL, C1_USER, "+ ValToSQL(Capital(FWEmpName(cEmpAnt))) +" AS EMP, C1_YBIZAGI, C1_NUM, C1_PEDIDO, "
-		cSQL += " C1_PRODUTO, C1_DESCRI, D1_QUANT, D1_UM, D1_VUNIT, D1_YTAG, D1_CLVL, D1_DTDIGIT, D1_LOCAL "
+		cSQL += " C1_PRODUTO, C1_DESCRI, D1_QUANT, D1_UM, D1_VUNIT, D1_YTAG, D1_CLVL, D1_DTDIGIT, D1_LOCAL, ZCN_MD "
 		cSQL += " FROM "+ RetSQLName("SD1") +" SD1 "
 		cSQL += " INNER JOIN "+ RetSQLName("SA2") +" SA2 "
 		cSQL += " ON D1_FORNECE = A2_COD "
 		cSQL += " AND D1_LOJA = A2_LOJA "
+		cSQL += " AND SA2.D_E_L_E_T_ = '' "
+		cSQL += " AND A2_FILIAL = " + ValToSQL(xFilial("SA2"))
 		cSQL += " INNER JOIN "+ RetSQLName("SC7") +" SC7 "
 		cSQL += " ON D1_PEDIDO = C7_NUM "
 		cSQL += " AND D1_ITEMPC = C7_ITEM "
+		cSQL += " AND SC7.D_E_L_E_T_ = '' "
+		cSQL += " AND C7_FILIAL = " + ValToSQL(xFilial("SC7"))	
 		cSQL += " INNER JOIN "+ RetSQLName("SC1") +" SC1 "
 		cSQL += " ON C7_NUMSC = C1_NUM "
 		cSQL += " AND C7_ITEMSC = C1_ITEM "
+		cSQL += " AND SC1.D_E_L_E_T_ = '' "
+		cSQL += " AND C1_FILIAL = " + ValToSQL(xFilial("SC1"))
+		cSQL += " INNER JOIN "+ RetSQLName("ZCN") +" ZCN "
+		cSQL += " ON C1_PRODUTO = ZCN_COD "
+		cSQL += " AND C1_LOCAL = ZCN_LOCAL "
+		cSQL += " AND ZCN.D_E_L_E_T_ = '' "
+		cSQL += " AND ZCN_FILIAL = " + ValToSQL(xFilial("ZCN"))
 		cSQL += " LEFT JOIN "+cBizagi+".dbo.BZ_DADOS_SC SC_BIZ " 
 		cSQL += " ON BIZAGI COLLATE Latin1_General_BIN = C1_YBIZAGI "
 		cSQL += " AND PROTHEUS COLLATE Latin1_General_BIN = C1_NUM "
@@ -64,13 +76,7 @@ Local cBizagi := U_fGetBase("2")
 		cSQL += " AND D1_LOJA = "+ ValToSQL(SF1->F1_LOJA)
 		cSQL += " AND D1_TIPO = 'N' "
 		cSQL += " AND SD1.D_E_L_E_T_ = '' "
-		cSQL += " AND A2_FILIAL = " + ValToSQL(xFilial("SA2"))
-		cSQL += " AND SA2.D_E_L_E_T_ = '' "
-		cSQL += " AND C7_FILIAL = " + ValToSQL(xFilial("SC7"))
-		cSQL += " AND SC7.D_E_L_E_T_ = '' "
-		cSQL += " AND C1_FILIAL = " + ValToSQL(xFilial("SC1"))
-		cSQL += " AND C1_NUM <> '' "
-		cSQL += " AND SC1.D_E_L_E_T_ = '' "
+		cSQL += " AND C1_NUM <> '' "		
 		cSQL += " ORDER BY EMAIL, C1_USER, BIZAGI, C1_NUM, C7_NUM, C1_DESCRI "
 
 		TcQuery cSQL New Alias (cQry)
@@ -88,7 +94,7 @@ Local cBizagi := U_fGetBase("2")
 			If !Empty(cMailSol)
 
 				aAdd(aSolCom, {cMailSol, (cQry)->C1_USER, (cQry)->EMP, (cQry)->D1_LOCAL, (cQry)->C1_YBIZAGI, (cQry)->C1_NUM, (cQry)->C1_PEDIDO, AllTrim((cQry)->C1_PRODUTO), AllTrim((cQry)->C1_DESCRI),;
-											cValToChar((cQry)->D1_QUANT), (cQry)->D1_UM, cValToChar((cQry)->D1_VUNIT), (cQry)->D1_YTAG, (cQry)->D1_CLVL, dToC(sToD((cQry)->D1_DTDIGIT))})											
+										 cValToChar((cQry)->D1_QUANT), (cQry)->D1_UM, cValToChar((cQry)->D1_VUNIT), (cQry)->D1_YTAG, (cQry)->D1_CLVL, dToC(sToD((cQry)->D1_DTDIGIT)), (cQry)->ZCN_MD})											
 				
 		  EndIf
 		  
@@ -121,7 +127,13 @@ Local cBizagi := U_fGetBase("2")
 				cHtml	+= cItem
 				cHtml	+= fRetRod()
 				
-				fSendMail(cMailSol, cHtml)
+				cAssunto := "Recebimento de Material"
+				
+				if aSolCom[_MD] = 'S'
+				  cAssunto := "Recebimento de Material - RETIRADA IMEDIATA"
+				endif
+				
+				fSendMail(cMailSol, cHtml, cAssunto)
 							
 				cItem := ""
 				
@@ -250,9 +262,9 @@ Local cRet := ""
 Return(cRet)
 
 
-Static Function fSendMail(cMail, cHtml)
+Static Function fSendMail(cMail, cHtml, cAssunto)
 			
-	If U_BIAEnvMail(,cMail, "Recebimento de Material", cHtml)
+	If U_BIAEnvMail(,cMail, cAssunto, cHtml)
 	
 		ConOut("[" + cValToChar(dDataBase) + Space(1) + Time() + "] - BIAF116:fSendMail('"+ cMail +"')")
 	

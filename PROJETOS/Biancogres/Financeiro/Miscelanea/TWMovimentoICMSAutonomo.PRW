@@ -255,13 +255,17 @@ Method GetEmp() class TWMovimentoICMSAutonomo
 	Private cFileName   := __cUserID +"_"+ cRefPer
 	Private aRetPerg	:= {""}
 	
-	aAdd( aPergs ,{1, "Ex: (0101/0501) - Empresas", cListEmp  ,"","","",'.T.',50,.T.})
+	If (!IsBlind())
 		
-	If !ParamBox(aPergs ,"Filtro - Empresas", aRetPerg,,,,,,,cRefPer,.F.,.F.)
-		Return aListEmpSel
+		aAdd( aPergs ,{1, "Ex: (0101/0501) - Empresas", cListEmp  ,"","","",'.T.',50,.T.})
+			
+		If !ParamBox(aPergs ,"Filtro - Empresas", aRetPerg,,,,,,,cRefPer,.F.,.F.)
+			Return aListEmpSel
+		EndIf
+	
+		cListEmp	:= ParamLoad(cFileName,, 2	, cListEmp)		
 	EndIf
 
-	cListEmp	:= ParamLoad(cFileName,, 2	, cListEmp)
 	aListEmpSel	:= StrTokArr(cListEmp, "/" )
 	
 Return aListEmpSel
@@ -293,6 +297,7 @@ Method GetValorEmp() Class TWMovimentoICMSAutonomo
 		
 	Next nI
 	cMsg	+= '</p>'
+	
 	
 	If (lOk)
 		MsgAlert(cMsg, '')

@@ -14,6 +14,7 @@ User Function BIAFG026(_cAnoMes, _lTela)
 
 	Local _cAlias	
 	Local _aArea	:=	GetArea()
+	Local _aDatas	:=	{}
 	
 	Default _lTela	:=	.F.
 	If cEmpAnt	== "01"
@@ -33,6 +34,10 @@ User Function BIAFG026(_cAnoMes, _lTela)
 
 		While (_cAlias)->(!EOF())
 
+			If aScan(_aDatas,{|x| x == (_cAlias)->Z91_DATA}) == 0
+				fWfPeso((_cAlias)->Z91_DATA)
+				aAdd(_aDatas,(_cAlias)->Z91_DATA)
+			EndIf
 			//Recalcula a Produção
 			fCalcProd((_cAlias)->Z91_DATA)
 			
@@ -149,108 +154,59 @@ Static Function fCalcProd(_cData)
 			_cAlias		:=	GetNextAlias()
 			_cAlias2	:=	GetNextAlias()
 
-			If _cData >= '20201023'
-				BeginSql Alias _cAlias
-					%NoParser%
-					WITH PORCELANATO
-					AS (
+			BeginSql Alias _cAlias
+				%NoParser%
+				WITH PORCELANATO
+				AS (
 					SELECT B1_COD PRODUT
-					FROM %TABLE:SB1%
+						,B1_YFORMAT FORMATO
+					FROM %TABLE:SB1% (NOLOCK)
 					WHERE B1_FILIAL = %XFILIAL:SB1%
-					AND B1_YSTATUS = '1'
-					AND B1_YCLASSE = ' '
-					AND B1_YTPPROD <> 'RP'
-					AND B1_YFORMAT NOT IN (
-					'BN'
-					,'BP'
-					,'AL'
-					)
-					AND %NotDel%
-					)
-					SELECT ISNULL(SUM(PESO)/SUM(PRODUC),0) QUANT FROM (
-					SELECT PRODUT
-					,SUM(D3_QUANT) PRODUC
-					,SUM(D3_QUANT) * (
-					SELECT ISNULL(AVG(G1_QUANT), 0)
-					FROM %TABLE:SG1% SG1
-					INNER JOIN %TABLE:SB1% SB1 ON B1_FILIAL = %XFILIAL:SB1%
-					AND B1_COD = G1_COMP
-					AND B1_COD IN (
-									SELECT  SD3M.D3_COD
-									FROM    %TABLE:SD3% SD3M
-									INNER JOIN %TABLE:SB1% SB1M ON SB1M.B1_FILIAL = %XFILIAL:SB1%
-									AND SB1M.B1_COD = SD3M.D3_COD
-									AND SB1M.B1_DESC NOT LIKE 'PBI%'
-									AND SB1M.B1_GRUPO = 'PI01'
-									AND SB1M.%NotDel%
-									WHERE   SD3M.D3_FILIAL = %XFILIAL:SD3%
-									AND SD3M.D3_EMISSAO = %Exp:_cData%
-									AND SD3M.D3_TM = '010'
-									AND SD3M.D3_YRECURS	= %Exp:(_cAliasD)->Z91_RECURS%
-									AND SD3M.D3_ESTORNO = ' '
-									AND SD3M.%NotDel%
-									)
-					AND B1_GRUPO = 'PI01'
-					AND SB1.%NotDel%
-					WHERE G1_FILIAL = %XFILIAL:SG1%
-					AND G1_COD = PRODUT
-					AND SG1.%NotDel%
-					) PESO
-					FROM PORCELANATO PRC
-					INNER JOIN %TABLE:SD3% SD3 ON SD3.D3_FILIAL = %XFILIAL:SD3%
-					AND SD3.D3_COD = PRODUT
-					AND SD3.D3_TM = '010'
-					AND SD3.D3_ESTORNO <> 'S'
-					AND SD3.%NotDel%
-					AND SD3.D3_EMISSAO = %Exp:_cData%
-					GROUP BY PRODUT
-					)PRODUC
-					WHERE PESO > 0
-				EndSql
-	
-				If (_cAlias)->QUANT <= 0
-					(_cAlias)->(DbCloseArea())
-					_cAlias	:=	GetNextAlias()
-					
-					BeginSql Alias _cAlias
-						%NoParser%
-						WITH    PORCELANATO
-						AS ( SELECT   B1_COD PRODUT
-						FROM     %TABLE:SB1%
-						WHERE    B1_FILIAL = %XFILIAL:SB1%
 						AND B1_YSTATUS = '1'
 						AND B1_YCLASSE = ' '
+						AND B1_TIPO = 'PP'
 						AND B1_YTPPROD <> 'RP'
-						AND B1_YFORMAT NOT IN ('BN','BP','AL')
+						AND B1_YFORMAT NOT IN (
+							'BN'
+							,'BP'
+							,'AL'
+							)
 						AND %NotDel%
-						)
-						SELECT  ISNULL(AVG(G1_QUANT),0) QUANT
-						FROM    PORCELANATO PRC
-						INNER JOIN %TABLE:SG1% SG1 ON G1_FILIAL = %XFILIAL:SG1%
-						AND G1_COD = PRODUT
-						AND SG1.%NotDel%
-						INNER JOIN %TABLE:SB1% SB1 ON B1_FILIAL = %XFILIAL:SB1%
-						AND B1_COD = G1_COMP
-						AND B1_COD IN (
-										SELECT  SD3M.D3_COD
-										FROM    %TABLE:SD3% SD3M
-										INNER JOIN %TABLE:SB1% SB1M ON SB1M.B1_FILIAL = %XFILIAL:SB1%
-										AND SB1M.B1_COD = SD3M.D3_COD
-										AND SB1M.B1_DESC NOT LIKE 'PBI%'
-										AND SB1M.B1_GRUPO = 'PI01'
-										AND SB1M.%NotDel%
-										WHERE   SD3M.D3_FILIAL = %XFILIAL:SD3%
-										AND SD3M.D3_EMISSAO = %Exp:_cData%
-										AND SD3M.D3_TM = '010'
-										AND SD3M.D3_ESTORNO = ' '
-										AND SD3M.%NotDel%
-										)
-						AND B1_GRUPO = 'PI01'
-						AND SB1.%NotDel%
-					EndSql
-				
-				EndIf
-	
+					)
+				SELECT 
+					SUM(CASE 
+						WHEN PERDA = 0
+							THEN 0
+						ELSE QTDM / (1+(PERDA/100))
+						END)/SUM(QTDPRD)QUANT
+				FROM (
+					SELECT PRODUT
+						,FORMATO
+						,D3M.D3_COD
+						,D3M.D3_QUANT QTDM
+						,SD3.D3_QUANT QTDPRD
+						,ISNULL(ZRX.ZRX_PERDA, 0) PERDA
+					FROM PORCELANATO PRC
+					INNER JOIN %TABLE:SD3% SD3 (NOLOCK) ON SD3.D3_FILIAL = %XFILIAL:SD3%
+						AND SD3.D3_COD = PRODUT
+						AND SD3.D3_TM = '010'
+						AND SD3.D3_ESTORNO <> 'S'
+						AND SD3.%NotDel%
+						AND SD3.D3_EMISSAO = %Exp:(_cAliasD)->Z91_DATA%
+					INNER JOIN %TABLE:SD3% D3M (NOLOCK) ON SD3.D3_FILIAL = D3M.D3_FILIAL
+						AND SD3.D3_NUMSEQ = D3M.D3_NUMSEQ
+					INNER JOIN %TABLE:SB1% B1FIL (NOLOCK) ON B1FIL.B1_FILIAL = %XFILIAL:SB1%
+						AND B1FIL.B1_COD = D3M.D3_COD
+						AND B1FIL.B1_GRUPO = 'PI01'
+						AND B1FIL.%NotDel%
+					LEFT JOIN %TABLE:ZRX% ZRX ON ZRX.ZRX_FORMAT = FORMATO
+						AND SD3.D3_EMISSAO BETWEEN ZRX.ZRX_INI
+							AND ZRX.ZRX_FIM
+						AND ZRX.%NotDel%
+					) A			
+			EndSql
+
+			If (_cAliasD)->Z91_DATA >= '20201023'
 				BeginSql Alias _cAlias2
 					SELECT  ISNULL(SUM(D3_QUANT),0) QUANT
 					FROM    %TABLE:SD3% SD3
@@ -260,86 +216,13 @@ Static Function fCalcProd(_cData)
 					AND B1_GRUPO = 'PI01'
 					AND SB1.%NotDel%
 					WHERE   D3_FILIAL = %XFILIAL:SD3%
-					AND D3_EMISSAO = %Exp:_cData%
+					AND D3_EMISSAO = %Exp:(_cAliasD)->Z91_DATA%
 					AND D3_TM = '010'
 					AND D3_YRECURS	= %Exp:(_cAliasD)->Z91_RECURS%
 					AND D3_ESTORNO = ' '
 					AND SD3.%NotDel%					
 				EndSql
 			Else
-
-				BeginSql Alias _cAlias
-					%NoParser%
-					WITH PORCELANATO
-					AS (
-					SELECT B1_COD PRODUT
-					FROM %TABLE:SB1%
-					WHERE B1_FILIAL = %XFILIAL:SB1%
-					AND B1_YSTATUS = '1'
-					AND B1_YCLASSE = ' '
-					AND B1_YTPPROD <> 'RP'
-					AND B1_YFORMAT NOT IN (
-					'BN'
-					,'BP'
-					,'AL'
-					)
-					AND %NotDel%
-					)
-					SELECT ISNULL(SUM(PESO)/SUM(PRODUC),0) QUANT FROM (
-					SELECT PRODUT
-					,SUM(D3_QUANT) PRODUC
-					,SUM(D3_QUANT) * (
-					SELECT ISNULL(AVG(G1_QUANT), 0)
-					FROM %TABLE:SG1% SG1
-					INNER JOIN %TABLE:SB1% SB1 ON B1_FILIAL = %XFILIAL:SB1%
-					AND B1_COD = G1_COMP
-					AND B1_GRUPO = 'PI01'
-					AND SB1.%NotDel%
-					WHERE G1_FILIAL = %XFILIAL:SG1%
-					AND G1_COD = PRODUT
-					AND SG1.%NotDel%
-					) PESO
-					FROM PORCELANATO PRC
-					INNER JOIN %TABLE:SD3% SD3 ON SD3.D3_FILIAL = %XFILIAL:SD3%
-					AND SD3.D3_COD = PRODUT
-					AND SD3.D3_TM = '010'
-					AND SD3.D3_ESTORNO <> 'S'
-					AND SD3.%NotDel%
-					AND SD3.D3_EMISSAO = %Exp:_cData%
-					GROUP BY PRODUT
-					)PRODUC
-					WHERE PESO > 0
-				EndSql
-	
-				If (_cAlias)->QUANT <= 0
-					(_cAlias)->(DbCloseArea())
-					_cAlias	:=	GetNextAlias()
-					
-					BeginSql Alias _cAlias
-						%NoParser%
-						WITH    PORCELANATO
-						AS ( SELECT   B1_COD PRODUT
-						FROM     %TABLE:SB1%
-						WHERE    B1_FILIAL = %XFILIAL:SB1%
-						AND B1_YSTATUS = '1'
-						AND B1_YCLASSE = ' '
-						AND B1_YTPPROD <> 'RP'
-						AND B1_YFORMAT NOT IN ('BN','BP','AL')
-						AND %NotDel%
-						)
-						SELECT  ISNULL(AVG(G1_QUANT),0) QUANT
-						FROM    PORCELANATO PRC
-						INNER JOIN %TABLE:SG1% SG1 ON G1_FILIAL = %XFILIAL:SG1%
-						AND G1_COD = PRODUT
-						AND SG1.%NotDel%
-						INNER JOIN %TABLE:SB1% SB1 ON B1_FILIAL = %XFILIAL:SB1%
-						AND B1_COD = G1_COMP
-						AND B1_GRUPO = 'PI01'
-						AND SB1.%NotDel%
-					EndSql
-				
-				EndIf
-	
 				BeginSql Alias _cAlias2
 					SELECT  ISNULL(SUM(D3_QUANT),0) QUANT
 					FROM    %TABLE:SD3% SD3
@@ -349,13 +232,12 @@ Static Function fCalcProd(_cData)
 					AND B1_GRUPO = 'PI01'
 					AND SB1.%NotDel%
 					WHERE   D3_FILIAL = %XFILIAL:SD3%
-					AND D3_EMISSAO = %Exp:_cData%
+					AND D3_EMISSAO = %Exp:(_cAliasD)->Z91_DATA%
 					AND D3_TM = '010'
 					AND D3_ESTORNO = ' '
 					AND SD3.%NotDel%					
 				EndSql
 			EndIf
-
 
 			Z91->(DbGoTo((_cAliasD)->R_E_C_N_O_))
 
@@ -373,17 +255,18 @@ Static Function fCalcProd(_cData)
 		ElseIf Alltrim((_cAliasD)->Z91_RECURS) $ "FLS001/LB0001/LB0002/FLS002"
 			_cAlias		:=	GetNextAlias()
 			_cAlias2	:=	GetNextAlias()
-			
+
 			BeginSql Alias _cAlias
-				
 				%NoParser%
 				WITH PORCELANATO
 				AS (
 					SELECT B1_COD PRODUT
-					FROM %TABLE:SB1%
+						,B1_YFORMAT FORMATO
+					FROM %TABLE:SB1% (NOLOCK)
 					WHERE B1_FILIAL = %XFILIAL:SB1%
 						AND B1_YSTATUS = '1'
 						AND B1_YCLASSE = ' '
+						AND B1_TIPO = 'PP'
 						AND B1_YTPPROD <> 'RP'
 						AND B1_YFORMAT IN (
 							'BN'
@@ -392,60 +275,38 @@ Static Function fCalcProd(_cData)
 							)
 						AND %NotDel%
 					)
-				SELECT SUM(PESO)/SUM(PRODUC) QUANT
-				 FROM (
-				SELECT PRODUT
-					,SUM(D3_QUANT) PRODUC
-					,SUM(D3_QUANT) * (
-						SELECT ISNULL(AVG(G1_QUANT), 0)
-						FROM %TABLE:SG1% SG1
-						INNER JOIN %TABLE:SB1% SB1 ON B1_FILIAL = %XFILIAL:SB1%
-							AND B1_COD = G1_COMP
-							AND B1_GRUPO = 'PI01'
-							AND SB1.%NotDel%
-						WHERE G1_FILIAL = %XFILIAL:SG1%
-							AND G1_COD = PRODUT
-							AND SG1.%NotDel%
-						) PESO
-				FROM PORCELANATO PRC
-				INNER JOIN %TABLE:SD3% SD3 ON SD3.D3_FILIAL = %XFILIAL:SD3%
-					AND SD3.D3_COD = PRODUT
-					AND SD3.D3_TM = '010'
-					AND SD3.D3_ESTORNO <> 'S'
-					AND SD3.%NotDel%
-					AND SD3.D3_EMISSAO = %Exp:_cData%
-				GROUP BY PRODUT
-				)PRODUC
+				SELECT 
+					SUM(CASE 
+						WHEN PERDA = 0
+							THEN 0
+						ELSE QTDM / (1+(PERDA/100))
+						END)/SUM(QTDPRD)QUANT
+				FROM (
+					SELECT PRODUT
+						,FORMATO
+						,D3M.D3_COD
+						,D3M.D3_QUANT QTDM
+						,SD3.D3_QUANT QTDPRD
+						,ISNULL(ZRX.ZRX_PERDA, 0) PERDA
+					FROM PORCELANATO PRC
+					INNER JOIN %TABLE:SD3% SD3 (NOLOCK) ON SD3.D3_FILIAL = %XFILIAL:SD3%
+						AND SD3.D3_COD = PRODUT
+						AND SD3.D3_TM = '010'
+						AND SD3.D3_ESTORNO <> 'S'
+						AND SD3.%NotDel%
+						AND SD3.D3_EMISSAO = %Exp:(_cAliasD)->Z91_DATA%
+					INNER JOIN %TABLE:SD3% D3M (NOLOCK) ON SD3.D3_FILIAL = D3M.D3_FILIAL
+						AND SD3.D3_NUMSEQ = D3M.D3_NUMSEQ
+					INNER JOIN %TABLE:SB1% B1FIL (NOLOCK) ON B1FIL.B1_FILIAL = %XFILIAL:SB1%
+						AND B1FIL.B1_COD = D3M.D3_COD
+						AND B1FIL.B1_GRUPO = 'PI01'
+						AND B1FIL.%NotDel%
+					LEFT JOIN %TABLE:ZRX% ZRX ON ZRX.ZRX_FORMAT = FORMATO
+						AND SD3.D3_EMISSAO BETWEEN ZRX.ZRX_INI
+							AND ZRX.ZRX_FIM
+						AND ZRX.%NotDel%
+					) A			
 			EndSql
-
-			If (_cAlias)->QUANT <= 0
-				(_cAlias)->(DbCloseArea())
-				_cAlias	:=	GetNextAlias()
-				
-				BeginSql Alias _cAlias
-					%NoParser%
-					WITH    PORCELANATO
-					AS ( SELECT   B1_COD PRODUT
-					FROM     %TABLE:SB1%
-					WHERE    B1_FILIAL = %XFILIAL:SB1%
-					AND B1_YSTATUS = '1'
-					AND B1_YCLASSE = ' '
-					AND B1_YTPPROD <> 'RP'
-					AND B1_YFORMAT IN ('BN','BP','AL')
-					AND %NotDel%
-					)
-					SELECT  ISNULL(AVG(G1_QUANT),0) QUANT
-					FROM    PORCELANATO PRC
-					INNER JOIN %TABLE:SG1% SG1 ON G1_FILIAL = %XFILIAL:SG1%
-					AND G1_COD = PRODUT
-					AND SG1.%NotDel%
-					INNER JOIN %TABLE:SB1% SB1 ON B1_FILIAL = %XFILIAL:SB1%
-					AND B1_COD = G1_COMP
-					AND B1_GRUPO = 'PI01'
-					AND SB1.%NotDel%
-				EndSql
-			
-			EndIf
 
 			BeginSql Alias _cAlias2
 				SELECT  ISNULL(SUM(D3_YQTUMID),0) QUANTSM, ISNULL(SUM(D3_QUANT),0) QUANTLB
@@ -945,15 +806,119 @@ Local	_nI
 	
 Return _nPeso
 
+Static Function fWfPeso(_cDtRef)
+
+	Local _cAlias	:=	GetNextAlias()
+	Local _cHtml	:=	""
+	Local df_Dest := U_EmailWF('INDCONTROLEPERDA', cEmpAnt)
+	Local df_Assu := "Workflow de Controle de Cadastro de Perda por Formato"
+	Local df_Erro := df_Assu + " não enviado. Favor verificar!!!"
+
+	BeginSql Alias _cAlias
+		%NoParser%
+		WITH PORCELANATO
+		AS (
+			SELECT B1_COD PRODUT
+				,B1_YFORMAT FORMATO
+			FROM %TABLE:SB1% (NOLOCK)
+			WHERE B1_FILIAL = %XFILIAL:SB1%
+				AND B1_YSTATUS = '1'
+				AND B1_TIPO = 'PP'
+				AND B1_YCLASSE = ' '
+				AND B1_YTPPROD <> 'RP'
+				AND %NotDel%
+			)
+		SELECT DISTINCT FORMATO
+			,PRODUT
+			,D3_COD
+		FROM (
+			SELECT PRODUT
+				,FORMATO
+				,D3M.D3_COD
+				,D3M.D3_QUANT QTDM
+				,SD3.D3_QUANT QTDPRD
+				,ISNULL(ZRX.ZRX_PERDA, 0) PERDA
+			FROM PORCELANATO PRC
+			INNER JOIN %TABLE:SD3% SD3 (NOLOCK) ON SD3.D3_FILIAL = %XFILIAL:SD3%
+				AND SD3.D3_COD = PRODUT
+				AND SD3.D3_TM = '010'
+				AND SD3.D3_ESTORNO <> 'S'
+				AND SD3.%NotDel%
+				AND SD3.D3_EMISSAO = %Exp:_cDtRef%
+			INNER JOIN %TABLE:SD3% D3M (NOLOCK) ON SD3.D3_FILIAL = D3M.D3_FILIAL
+				AND SD3.D3_NUMSEQ = D3M.D3_NUMSEQ
+			INNER JOIN %TABLE:SB1% B1FIL (NOLOCK) ON B1FIL.B1_FILIAL = %XFILIAL:SB1%
+				AND B1FIL.B1_COD = D3M.D3_COD
+				AND B1FIL.B1_GRUPO = 'PI01'
+				AND B1FIL.%NotDel%
+			LEFT JOIN %TABLE:ZRX% ZRX ON ZRX.ZRX_FORMAT = FORMATO
+				AND SD3.D3_EMISSAO BETWEEN ZRX.ZRX_INI
+					AND ZRX.ZRX_FIM
+				AND ZRX.%NotDel%
+			) A		
+			WHERE A.PERDA = 0	
+	EndSql
+	
+	If (_cAlias)->(!EOF())
+		_cHtml	:=	'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">	'
+		_cHtml	+=	'<html xmlns="http://www.w3.org/1999/xhtml">                                                                                '
+		_cHtml	+=	'<head>                                                                                                                     '
+		_cHtml	+=	'    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />                                                  '
+		_cHtml	+=	'    <title>Untitled Document</title>                                                                                       '
+		_cHtml	+=	'    <style type="text/css">                                                                                                '
+		_cHtml 	+= '			<!--
+		_cHtml 	+= '			.headClass {background-color: #D3D3D3;	color: #747474;	font: 12px Arial, Helvetica, sans-serif}
+		_cHtml 	+= '			.headProd {background: #0c2c65;	color: #FFF; font: 12px Arial, Helvetica, sans-serif}
+		_cHtml 	+= '			.headTexto {color: #1f3d71; font: 16px Arial, Helvetica, sans-serif; font-weight: Bold;}
+		_cHtml 	+= '			.headTexto1 {color: #1f3d71; font: 16px Arial, Helvetica, sans-serif}
+		_cHtml 	+= '			.style12  {background: #f6f6f6;	color: #747474;	font: 11px Arial, Helvetica, sans-serif}
+		_cHtml 	+= '			.style123 {font face="Arial"; font-size: 12px; background: #f6f6f6;}
+		_cHtml 	+= '			.cabtab {background: #eff4ff;	color: #1f3d71; font: 12px Arial, Helvetica, sans-serif}
+		_cHtml 	+= '			.cabtab1 {background: #eff4ff;	border-top: 2px solid #FFF; border-right: 1px solid #ced9ec;	color: #1f3d71; font: 12px Arial, Helvetica, sans-serif }
+		_cHtml 	+= '			.tottab {border:1px solid #0c2c65; background-color: #D3D3D3;	color: #0c2c65;	font: 12px Arial, Helvetica, sans-serif }
+		_cHtml 	+= '			-->
+		_cHtml	+=	'    </style>                                                                                                               '
+		_cHtml	+=	'</head>                                                                                                                    '
+		_cHtml	+=	'<body>                                                                                                                     '
+		_cHtml	+=	'    <p align="center"> Listagem de formatos sem perda cadastrada para o dia '+ DtoC(Stod(_cDtRef)) +' </p>                                                              '
+		_cHtml 	+= 	'         <table align="center" width="100%" border="1" cellspacing="0" cellpadding="1">'
+		_cHtml	+=	'        <tr>                                                                                                               '
+		_cHtml	+=	'            <th class = "cabtab" scope="col"> Formato				 </th>        '
+		_cHtml	+=	'            <th class = "cabtab" scope="col"> PP	 </th>        '
+		_cHtml	+=	'            <th class = "cabtab" scope="col"> Massa			 </th>        '
+		_cHtml	+=	'        </tr>																												'																												'
+		
+		While (_cAlias)->(!EOF())
+			_cHtml	+=	'<tr>																												'
+			_cHtml	+=	'	<td><div align="center">'+	Alltrim((_cAlias)->FORMATO)							+ '</div></td>'
+			_cHtml	+=	'	<td><div align="center">'+	Alltrim((_cAlias)->PRODUT)							+ '</div></td>'
+			_cHtml	+=	'	<td><div align="center">'+	Alltrim((_cAlias)->D3_COD)							+ '</div></td>'
+			_cHtml	+=	'</tr>
+		
+			(_cAlias)->(DbSkip())
+		EndDo
+		_cHtml	+=	'	 </table>                                                                                                                     '
+		_cHtml	+=	'	<p>by BIAFG026</p> '
+		_cHtml	+=	'	</body>                                                                                                                       '
+		_cHtml	+=	'	</html>
+		
+		U_BIAEnvMail(, df_Dest, df_Assu, _cHtml, df_Erro)
+		
+	EndIf
+
+Return
+
+
 User Function BFG026PR()
 
 RpcSetType(3)
 RpcSetEnv('01','01')
 
-
-U_BIAFG026("20201019")
+fWfPeso('20200401')
+//U_BIAFG026("20201019")
 
 
 RpcClearEnv()
 
 Return
+

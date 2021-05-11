@@ -1,0 +1,62 @@
+﻿@{
+    ViewData["Title"] = "Antecipação Historico";
+}
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Antecipação Historico
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <!-- datatable start -->
+                    <!-- class="bg-highlight"-->
+                    <table id="dt-registro" class="table table-bordered table-hover table-striped w-100">
+                        <thead class="bg-primary-600">
+                            <tr>
+                                <th>Data</th>
+                                <th>Usuário</th>
+                                <th>Observação</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ViewBag.Lista != null)
+                            {
+                                foreach (var item in ViewBag.Lista)
+                                {
+                                    <tr>
+                                        <th>@item.Data</th>
+                                        <th>@item.Usuario</th>
+                                        <th>@Html.Raw(item.Observacao)</th>
+                                        <th>@item.Status</th>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <!-- datatable end -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+}

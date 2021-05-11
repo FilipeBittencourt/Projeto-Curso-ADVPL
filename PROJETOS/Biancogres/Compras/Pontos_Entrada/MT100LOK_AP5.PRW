@@ -761,10 +761,14 @@ User Function MT100LOK()
 									If (oNFeResulStruct:lOk)
 										nPos := oNFeResulStruct:oResult:oCTeItens:GetCount()
 										If (nPos > 0)
-											cDocOri := oNFeResulStruct:oResult:oCTeItens:GetItem(nPos):cDoc
+											/*cDocOri := oNFeResulStruct:oResult:oCTeItens:GetItem(nPos):cDoc
 											cSerieOri := oNFeResulStruct:oResult:oCTeItens:GetItem(nPos):cSerie
 											cFornOri := oNFeResulStruct:oResult:oCTeItens:GetItem(nPos):cFornece
-											cLojaOri := oNFeResulStruct:oResult:oCTeItens:GetItem(nPos):cLoja								
+											cLojaOri := oNFeResulStruct:oResult:oCTeItens:GetItem(nPos):cLoja	*/
+											cDocOri := oNFeResulStruct:oResult:oCTeItens:GetItem(n):cDoc
+											cSerieOri := oNFeResulStruct:oResult:oCTeItens:GetItem(n):cSerie
+											cFornOri := oNFeResulStruct:oResult:oCTeItens:GetItem(n):cFornece
+											cLojaOri := oNFeResulStruct:oResult:oCTeItens:GetItem(n):cLoja							
 										EndIf
 									EndIf	
 								EndIf

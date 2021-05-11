@@ -1,0 +1,65 @@
+﻿@using Facile.BusinessPortal.Model
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Lista de sacados com boletos pendentes
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+
+                    <div class="row text-left mb-2">
+                        <div class="col-md-12">
+                            <a asp-action="BoletoPendenteEnvMail" class="btn btn-secondary shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed" target="_blank">Criar/Atualizar Usuários</a>
+                            <a asp-action="BoletoPendenteEnvMail" asp-route-checkusuariosacado="true" class="btn btn-secondary shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed" target="_blank">Criar/Atualizar Usuários Com Check de Usuário</a>
+                        </div>
+                    </div>
+                    <!-- datatable start -->
+                    <!-- class="bg-highlight"-->
+                    <table id="dt-registro" class="table table-bordered table-hover table-striped w-100">
+                        <thead class="bg-primary-600">
+                            <tr>
+                                <th>Nome</th>
+                                <th>E-mail</th>
+                                <th>Quantidade Titulos Pendentes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ 
+                                var Lista = (ViewBag.ListaSacado as List<ViewModelBoletoPendente>);
+                                foreach (var item in Lista)
+                                {
+                                    <tr>
+                                        <th>@item.Nome</th>
+                                        <th>@item.Email</th>
+                                        <th>@item.Quantidade</th>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                        <tfoot>
+
+                        </tfoot>
+                    </table>
+                    <!-- datatable end -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+
+}

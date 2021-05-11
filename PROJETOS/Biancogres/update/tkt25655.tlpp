@@ -1764,16 +1764,16 @@ aAdd( aSX3, { ;
 	{ ''																	, .T. }, ; //X3_VALID
 	{ Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
 	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
-	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128)					, .T. }, ; //X3_USADO
+	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
 	{ ''																	, .T. }, ; //X3_RELACAO
 	{ ''																	, .T. }, ; //X3_F3
 	{ 0																		, .T. }, ; //X3_NIVEL
 	{ Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
 	{ ''																	, .T. }, ; //X3_CHECK
 	{ ''																	, .T. }, ; //X3_TRIGGER
-	{ ''																	, .T. }, ; //X3_PROPRI
+	{ 'U'																	, .T. }, ; //X3_PROPRI
 	{ 'S'																	, .T. }, ; //X3_BROWSE
-	{ 'A'																	, .T. }, ; //X3_VISUAL
+	{ 'V'																	, .T. }, ; //X3_VISUAL
 	{ 'R'																	, .T. }, ; //X3_CONTEXT
 	{ ''																	, .T. }, ; //X3_OBRIGAT
 	{ ''																	, .T. }, ; //X3_VLDUSER
@@ -1787,15 +1787,63 @@ aAdd( aSX3, { ;
 	{ ''																	, .T. }, ; //X3_FOLDER
 	{ ''																	, .T. }, ; //X3_CONDSQL
 	{ ''																	, .T. }, ; //X3_CHKSQL
-	{ 'N'																	, .T. }, ; //X3_IDXSRV
+	{ ''																	, .T. }, ; //X3_IDXSRV
 	{ 'N'																	, .T. }, ; //X3_ORTOGRA
 	{ ''																	, .T. }, ; //X3_TELA
-	{ '1'																	, .T. }, ; //X3_POSLGT
+	{ ''																	, .T. }, ; //X3_POSLGT
 	{ 'N'																	, .T. }, ; //X3_IDXFLD
 	{ ''																	, .T. }, ; //X3_AGRUP
-	{ '2'																	, .T. }, ; //X3_MODAL
-	{ 'S'																	, .T. }} ) //X3_PYME
+	{ ''																	, .T. }, ; //X3_MODAL
+	{ ''																	, .T. }} ) //X3_PYME    
 
+aAdd( aSX3, { ;
+	{ 'ZL9'																	, .T. }, ; //X3_ARQUIVO
+	{ '27'																	, .T. }, ; //X3_ORDEM
+	{ 'ZL9_PRCDEV'															, .T. }, ; //X3_CAMPO
+	{ 'C'																	, .T. }, ; //X3_TIPO
+	{ 6																		, .T. }, ; //X3_TAMANHO
+	{ 0																		, .T. }, ; //X3_DECIMAL
+	{ 'Proc. Dev.'															, .T. }, ; //X3_TITULO
+	{ 'Proc. Dev.'															, .T. }, ; //X3_TITSPA
+	{ 'Proc. Dev.'															, .T. }, ; //X3_TITENG
+	{ 'Proc. Dev.'															, .T. }, ; //X3_DESCRIC
+	{ 'Proc. Dev.'															, .T. }, ; //X3_DESCSPA
+	{ 'Proc. Dev.'															, .T. }, ; //X3_DESCENG
+	{ ''																	, .T. }, ; //X3_PICTURE
+	{ ''																	, .T. }, ; //X3_VALID
+	{ Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+	{ ''																	, .T. }, ; //X3_RELACAO
+	{ ''																	, .T. }, ; //X3_F3
+	{ 0																		, .T. }, ; //X3_NIVEL
+	{ Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+	{ ''																	, .T. }, ; //X3_CHECK
+	{ ''																	, .T. }, ; //X3_TRIGGER
+	{ 'U'																	, .T. }, ; //X3_PROPRI
+	{ 'S'																	, .T. }, ; //X3_BROWSE
+	{ 'V'																	, .T. }, ; //X3_VISUAL
+	{ 'R'																	, .T. }, ; //X3_CONTEXT
+	{ ''																	, .T. }, ; //X3_OBRIGAT
+	{ ''																	, .T. }, ; //X3_VLDUSER
+	{ ''																	, .T. }, ; //X3_CBOX
+	{ ''																	, .T. }, ; //X3_CBOXSPA
+	{ ''																	, .T. }, ; //X3_CBOXENG
+	{ ''																	, .T. }, ; //X3_PICTVAR
+	{ ''																	, .T. }, ; //X3_WHEN
+	{ ''																	, .T. }, ; //X3_INIBRW
+	{ ''																	, .T. }, ; //X3_GRPSXG
+	{ ''																	, .T. }, ; //X3_FOLDER
+	{ ''																	, .T. }, ; //X3_CONDSQL
+	{ ''																	, .T. }, ; //X3_CHKSQL
+	{ ''																	, .T. }, ; //X3_IDXSRV
+	{ 'N'																	, .T. }, ; //X3_ORTOGRA
+	{ ''																	, .T. }, ; //X3_TELA
+	{ ''																	, .T. }, ; //X3_POSLGT
+	{ 'N'																	, .T. }, ; //X3_IDXFLD
+	{ ''																	, .T. }, ; //X3_AGRUP
+	{ ''																	, .T. }, ; //X3_MODAL
+	{ ''																	, .T. }} ) //X3_PYME    
 
 //
 // Atualizando dicionário

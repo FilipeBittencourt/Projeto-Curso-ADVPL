@@ -124,7 +124,17 @@ USER FUNCTION MA440VLD()
 
 			aListRes := U_FRTE02LO("", _cPedido, Gdfieldget("C6_ITEM",I), "", "")
 			If Len(aListRes) > 0
+				
+				//armazena os dados da reserva de op antes de apagar
+				
+				aRetOp	:= U_GETOPPED(_cPedido, Gdfieldget("C6_ITEM",I))
+				
 				U_FRRT02EX(_cPedido, Gdfieldget("C6_ITEM",I),Nil,"LIB",,,.T.)
+				
+				//refas o reserva op com saldo restante
+				If (aRetOp != Nil .And. !Empty(aRetOp[2]))
+					U_REFAZPZ0(_cPedido, Gdfieldget("C6_ITEM",I), aRetOp[1], aRetOp[2], aRetOp[3], aRetOp[4], aRetOp[5])
+				EndIf 
 			EndIf
 
 		ENDIF

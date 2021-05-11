@@ -239,10 +239,10 @@ Local cQry := GetNextAlias()
 		lInsert := Empty((cQry)->ZMA_CODIGO)
 		
 		If lInsert
+		
+			cCodRef := U_NumZMA()
 
-			RecLock("ZMA", lInsert)			
-			
-				cCodRef := GETSXENUM('ZMA', 'ZMA_CODIGO') //::fGetNum()
+			RecLock("ZMA", lInsert)
 	
 				ZMA->ZMA_FILIAL := xFilial("ZMA")
 				ZMA->ZMA_CODIGO := cCodRef

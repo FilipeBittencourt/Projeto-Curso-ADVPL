@@ -128,14 +128,22 @@ User Function FROPTE06()
 		If lRet .And. SC6->(FieldPos("C6_YDVER")) > 0 .And. (M->C5_YSUBTP $ cTpDVER)  .And. (AllTrim(CEMPANT) $ _cEmpDACO)
 
 			cAliasTmp := GetNextAlias()
-			cQUERY := "exec SP_AI_COM_SALDO_CLIENTE_01 '"+SA1->A1_COD+"','"+SA1->A1_LOJA+"' "
+			cQUERY := "exec SP_AI_COM_SALDO_CLIENTE_01 '"+SA1->A1_COD+"','"+SA1->A1_LOJA+"', 1 "
 			TcQuery cQUERY New Alias (cAliasTmp)
-
-			If !(cAliasTmp)->(eof())
-
+			_lSaldoDP := .F.
+			While !(cAliasTmp)->(eof())
+				
+				If (AllTrim((cAliasTmp)->FPAGTO) == '2')
+					_lSaldoDP := .T.
+				EndIf
+				
+				(cAliasTmp)->(DbSkip())
+			EndDo
+			
+			If (_lSaldoDP)
 				MsgInfo("Este cliente tem AI(s) com saldo."+CRLF+"Selecione a AI no campo 'Numero AI'."+CRLF+"Será concecido desconto automaticamente nos produtos.","AUTORIZAÇÃO DE INVESTIMENTO - FROPTE06")
-
 			EndIf
+				
 			(cAliasTmp)->(DbCloseArea())
 
 		EndIf

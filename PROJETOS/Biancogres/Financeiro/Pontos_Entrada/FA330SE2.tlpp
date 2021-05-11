@@ -1,0 +1,41 @@
+#include "totvs.ch"
+/*/{Protheus.doc} FA330SE2
+@author Marinaldo de Jesus (Facile)
+@since 22/04/2021
+@project Automação Entrada
+@version 1.0
+@description Ponto de Entrada FA330SE2 na função FINCMPAUT do programa FINXAPI.PRX 
+             Usado para Identificar o Handle do arquivo de contabilizacao.
+@type function
+/*/
+user function FA330SE2()
+
+    local cArqCtb       as character
+    local cCacheData    as character
+    
+    local lchgHandler   as logical
+
+    aStack:=array(0)
+    aAdd(aStack,"FINCMPAUT")
+    aAdd(aStack,"MAINTBXCP")
+    aAdd(aStack,"MANFS2FIN")
+    aAdd(aStack,"MAPVLNFS2")
+    aAdd(aStack,"MAPVLNFS")
+    aAdd(aStack,"DOCSAIDA")
+    aAdd(aStack,"PROCFAT")
+    aAdd(aStack,"FATURARPEDIDO")
+    
+    lchgHandler:=(stackTools():IsInStackCall(aStack))
+
+    if (lchgHandler)
+        cPadrao:="597"
+        cCacheData:="FINCMPAUT"
+        if (cacheData():get(cCacheData,"nHdlPrv")<0)
+            &("nHdlPrv"):=HeadProva(&("cLoteCtb"),"FINA340",SubStr(&("cUsuario"),7,6),@cArqCtb)
+            cacheData():set(cCacheData,"nHdlPrv",&("nHdlPrv"))
+        else
+            &("nHdlPrv"):=cacheData():get(cCacheData,"nHdlPrv")
+        endif
+    endif
+    
+    return

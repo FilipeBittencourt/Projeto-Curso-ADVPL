@@ -1,0 +1,13 @@
+#include "totvs.ch"
+/*/{Protheus.doc} SE5FI340
+@author Marinaldo de Jesus (Facile)
+@since 22/04/2021
+@project Automação Entrada
+@version 1.0
+@description Ponto de Entrada SE5FI340 na função FinMovCmp do programa FINXAPI.PRX 
+             Usado para Identificar se a Compensação Automatica Ocorreu.
+@type function
+/*/
+user function SE5FI340()
+    cacheData():set("SE5FI340","lRet",.T.)
+    return

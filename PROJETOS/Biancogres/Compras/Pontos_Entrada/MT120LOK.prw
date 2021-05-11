@@ -48,6 +48,7 @@ Private cRegSBM	:= 0
 Private cArqSF4	:= ""
 Private cIndSF4	:= 0
 Private cRegSF4	:= 0
+Private cCtrBloq := 0
 
 cArq := Alias()
 cInd := IndexOrd()
@@ -374,16 +375,23 @@ IF !EMPTY(wContrat)
 	WHILE !EOF() .AND. SC3->C3_NUM == wContrat
 		IF ALLTRIM(wCLVL) == ALLTRIM(SC3->C3_YCLVL)
 			lPassei := .T.
-			IF SC3->C3_MSBLQL == '1'
-				MsgAlert("Este contrato está bloqueado.")
-				lRet := .F.
-				Return(lret)
+			IF SC3->C3_MSBLQL == '1' .and. cCtrBloq <> 2 
+				cCtrBloq := 1
+			ELSE
+				cCtrBloq := 2
 			ENDIF
 		ENDIF
 		
 		DbSelectArea("SC3")
 		DbSkip()
 	END
+	
+	IF cCtrBloq == 1
+	   MsgAlert("[MT120LOK] Este contrato está bloqueado.")
+	   cCtrBloq := 0
+	   lRet := .F.
+	   Return(lret)	   
+	ENDIF
 	
 	IF !lPassei
 		MsgAlert("A Classe de Valor deste PC deverá ser igual a Classe de Valor do Contrato informado.")

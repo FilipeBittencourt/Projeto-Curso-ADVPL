@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <UserSecretsId>aspnet-Facile.BusinessPortal.Web-C79A9F3E-D571-4834-98A0-5836F4A82F93</UserSecretsId>
+    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.2.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="2.2.6" />
+    <PackageReference Include="System.ServiceModel.Duplex" Version="4.4.*" />
+    <PackageReference Include="System.ServiceModel.Http" Version="4.4.*" />
+    <PackageReference Include="System.ServiceModel.NetTcp" Version="4.4.*" />
+    <PackageReference Include="System.ServiceModel.Security" Version="4.4.*" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Folder Include="Connected Services\" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\Facile.BusinessPortal.Controllers\Facile.BusinessPortal.Controllers.csproj" />
+    <ProjectReference Include="..\Facile.BusinessPortal.Library\Facile.BusinessPortal.Library.csproj" />
+    <ProjectReference Include="..\Facile.BusinessPortal.Model\Facile.BusinessPortal.Model.csproj" />
+    <ProjectReference Include="..\Facile.BusinessPortal.ViewModels\Facile.BusinessPortal.ViewModels.csproj" />
+  </ItemGroup>
+
+</Project>

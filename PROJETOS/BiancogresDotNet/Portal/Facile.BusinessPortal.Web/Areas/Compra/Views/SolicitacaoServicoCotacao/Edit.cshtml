@@ -1,0 +1,235 @@
+﻿@model Facile.BusinessPortal.Model.Compra.Servico.SolicitacaoServicoCotacao
+@using Facile.BusinessPortal.Model.Compra.Servico
+
+@{
+    ViewData["Title"] = "Solicitação de Serviço";
+}
+
+<ol class="breadcrumb">
+    <li class="breadcrumb-item">
+        <a asp-action="Index">Listagem</a>
+    </li>
+    <li class="breadcrumb-item active">solicitação de serviço</li>
+</ol>
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Cotação
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <form id="FormCad" name="FormCad" accept-charset="UTF-8" asp-action="Cotacao" enctype="multipart/form-data" method="POST">
+
+                        <input asp-for="SolicitacaoServicoID" type="hidden">
+                        <input asp-for="FornecedorID" type="hidden">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label" for="simpleinput">Atende Cotação</label>
+                                    <select class="form-control select2-select" asp-for="AtendeCotacao">
+                                        <option value="1">Sim</option>
+                                        <option value="2">Não</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label" for="input-name">Data Validade Orçamento</label>
+                                    <input type="text" asp-for="DataValidade" value="@(Model.DataValidade != DateTime.MinValue? Model.DataValidade.ToString("dd/MM/yyyy"):"")" class="form-control data-datepicker">
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label" for="input-name">Numero Orçamento</label>
+                                    <input type="text" asp-for="NumeroOrcamento" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label" for="input-name">Tipo Frete</label>
+                                    <select class="form-control select2-select" asp-for="TipoFrete">
+                                        <option value="1">CIF</option>
+                                        <option value="2">FOB</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label" for="input-name">Condição Pagamento</label>
+                                    <input type="text" asp-for="CondicaoPagamento" class="form-control">
+                                </div>
+                            </div>
+
+
+
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(Model.NomeAnexo))
+                        {
+                            <div class="row">
+                                <div class="col-md-12">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <a asp-action="GetAnexo" asp-route-id="@Model.ID" target="_blank">[Anexo]</a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="form-label">Cotação</label>
+                                    <div class="custom-file">
+                                        <input type="file" name="customFile" class="custom-file-input" id="customFile">
+                                        <label class="custom-file-label" for="customFile">Selecionar Anexo</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br />
+
+                        <div class="accordion accordion-hover" id="accordion-0">
+                            @{
+                                int i = 0;
+                                foreach (var item in (ViewBag.ListaSolicitacaoServicoItem as ICollection<SolicitacaoServicoItem>))
+                                {
+                                    var oo = (Model.SolicitacaoServicoCotacaoItem as ICollection<SolicitacaoServicoCotacaoItem>).FirstOrDefault(x => x.SolicitacaoServicoItemID == item.ID);
+                                    if (oo == null)
+                                    {
+                                        oo = new SolicitacaoServicoCotacaoItem();
+                                    }
+
+                                    Model.SolicitacaoServicoCotacaoItem.ElementAt(i).AtendeItem = oo.AtendeItem;
+                                    Model.SolicitacaoServicoCotacaoItem.ElementAt(i).Moeda = oo.Moeda;
+                                    Model.SolicitacaoServicoCotacaoItem.ElementAt(i).AtendeTotalmente = oo.AtendeTotalmente;
+                                    Model.SolicitacaoServicoCotacaoItem.ElementAt(i).CodigoProduto = oo.CodigoProduto;
+                                    Model.SolicitacaoServicoCotacaoItem.ElementAt(i).Observacao = oo.Observacao;
+
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <a href="javascript:void(0);" class="card-title" data-toggle="collapse" data-target="#accordion-0-@i" aria-expanded="true">
+                                                @(item.Descricao)
+                                                <span class="ml-auto">
+                                                    <span class="collapsed-reveal">
+                                                        <i class="fal fa-chevron-up fs-xl"></i>
+                                                    </span>
+                                                    <span class="collapsed-hidden">
+                                                        <i class="fal fa-chevron-down fs-xl"></i>
+                                                    </span>
+                                                </span>
+                                            </a>
+                                        </div>
+                                        <div id="accordion-0-@i" class="collapse show" data-parent="#accordion-0">
+                                            <div class="card-body">
+
+                                                <input name="SolicitacaoServicoCotacaoItem[@i].SolicitacaoServicoItemID" type="hidden" value="@item.ID">
+                                                <div class="row">
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label" for="simpleinput">Atende Item</label>
+                                                            <select class="form-control select2-select" asp-for="SolicitacaoServicoCotacaoItem.ElementAt(i).AtendeItem" name="SolicitacaoServicoCotacaoItem[@i].AtendeItem">
+                                                                <option value="1">Sim</option>
+                                                                <option value="2">Não</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label" for="input-name">Valor Unitário</label>
+                                                            <input asp-for="SolicitacaoServicoCotacaoItem.ElementAt(i).Preco" name="SolicitacaoServicoCotacaoItem[@i].Preco" value="@string.Format("{0:N}", @oo.Preco).Replace(".","")" type="text" class="form-control calc-preco">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label" for="input-name">Quantidade</label>
+                                                            <input disabled value="@string.Format("{0:N}", item.Quantidade.ToString()).Replace(".","")" name="SolicitacaoServicoCotacaoItem[@i].Quantidade" type="text" class="form-control calc-quantidade">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label" for="input-name">Total</label>
+                                                            <input disabled value="@string.Format("{0:N}", @oo.Preco*item.Quantidade).Replace(".","")" name="SolicitacaoServicoCotacaoItem[@i].Total" type="text" class="form-control calc-total">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label" for="input-name">Prazo Entrega</label>
+                                                            <input asp-for="SolicitacaoServicoCotacaoItem.ElementAt(i).PrazoEntrega" name="SolicitacaoServicoCotacaoItem[@i].PrazoEntrega" value="@oo.PrazoEntrega" type="number" class="form-control">
+                                                        </div>
+                                                    </div>
+                                                    @*<div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label" for="input-name">Marca</label>
+                                                            <input asp-for="SolicitacaoServicoCotacaoItem.ElementAt(i).Marca" value="@oo.Marca" name="SolicitacaoServicoCotacaoItem[@i].Marca" type="text" class="form-control">
+                                                        </div>
+                                                    </div>*@
+
+
+                                                    <div class="col-md-4">
+                                                        <div class="form-group">
+                                                            <label class="form-label" for="simpleinput">Atende Totalmente</label>
+                                                            <select class="form-control select2-select" asp-for="SolicitacaoServicoCotacaoItem.ElementAt(i).AtendeTotalmente" name="SolicitacaoServicoCotacaoItem[@i].AtendeTotalmente">
+                                                                <option value="1">Sim</option>
+                                                                <option value="2">Não</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-12">
+                                                        <div class="form-group">
+                                                            <label class="form-label" for="input-name">Observação</label>
+                                                            <input name="SolicitacaoServicoCotacaoItem[@i].Observacao" value="@oo.Observacao" type="text" class="form-control">
+                                                        </div>
+                                                    </div>
+
+
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                    i = i + 1;
+
+                                }
+                            }
+
+                        </div>
+
+                        <div class="row mt-2 text-right">
+                            <div class="col-md-12">
+                                <a asp-action="Index" class="btn btn-secondary shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed">Voltar</a>
+                                <button type="button" class="btn btn-success shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed btn-salvar-ss">
+                                    Salvar
+                                </button>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    <script src="~/js/Util.js" asp-append-version="true"></script>
+    <script src="~/js/SolicitacaoServicoCotacao.js" asp-append-version="true"></script>
+}

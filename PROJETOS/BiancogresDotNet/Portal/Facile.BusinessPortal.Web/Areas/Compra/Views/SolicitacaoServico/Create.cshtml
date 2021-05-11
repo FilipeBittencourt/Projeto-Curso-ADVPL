@@ -1,0 +1,591 @@
+﻿@model Facile.BusinessPortal.Model.Compra.Servico.SolicitacaoServico
+@using Facile.BusinessPortal.Model
+
+
+@{
+    ViewData["Title"] = "Solicitação de Serviço";
+}
+
+
+<ol class="breadcrumb">
+    <li class="breadcrumb-item">
+        <a asp-action="Index">Listagem</a>
+    </li>
+    <li class="breadcrumb-item active">solicitação de serviço</li>
+</ol>
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Nova Solicitação de Serviço
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <form id="FormCad" name="FormCad" accept-charset="UTF-8" asp-action="Create" method="POST" enctype="multipart/form-data">
+
+
+                        <div class="accordion accordion-hover" id="accordion-0">
+                            <div class="card">
+                                <div class="card-header">
+                                    <a href="javascript:void(0);" class="card-title" data-toggle="collapse" data-target="#accordion-0-a" aria-expanded="true">
+                                        @*<i class="fal fa-cog width-2 fs-xl"></i>*@
+                                        Informações Gerais
+                                        <span class="ml-auto">
+                                            <span class="collapsed-reveal">
+                                                <i class="fal fa-chevron-up fs-xl"></i>
+                                            </span>
+                                            <span class="collapsed-hidden">
+                                                <i class="fal fa-chevron-down fs-xl"></i>
+                                            </span>
+                                        </span>
+                                    </a>
+                                </div>
+                                <div id="accordion-0-a" class="collapse show" data-parent="#accordion-0">
+                                    <div class="card-body">
+
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="Unidade-ID">
+                                                        Unidade
+                                                    </label>
+                                                    <select asp-items="ViewBag.Unidades" name="UnidadeID" class="form-control w-100" id="Unidade-ID">
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="simpleinput">Tipo Serviço</label>
+                                                    <select class="form-control select2-select select2" asp-for="TipoServico">
+                                                        <option value="">Selecione...</option>
+                                                        <option value="1">Contrato</option>
+                                                        <option value="2">Pedido</option>
+                                                        <option value="3">Reparo</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="simpleinput">Prioridade</label>
+                                                    <select asp-items="ViewBag.ListaPrioridadeServico" class="form-control select2-select" asp-for="PrioridadeServicoID">
+                                                        <option value="">Selecione...</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="input-name">Data Necessidade</label>
+                                                    <input asp-for="DataNecessidade" data-inputmask="'mask': '99/99/9999'" type="text" id="input-name" class="form-control data-datepicker">
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="simpleinput">Classe de Valor</label>
+                                                    <select asp-items="ViewBag.ListaClasseValor" class="form-control select2-select" asp-for="ClasseValorID">
+                                                        <option value="">Selecione...</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="simpleinput">Setor Aprovação</label>
+                                                    <select class="form-control select2-select" asp-for="SetorAprovacaoID">
+                                                        <option value="">Selecione...</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="simpleinput">Item Conta</label>
+                                                    <select class="form-control select2-select" asp-for="ItemContaID">
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="simpleinput">Sub Item Conta</label>
+                                                    <select class="form-control select2-select" asp-for="SubItemContaID">
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="simpleinput">Contrato</label>
+                                                    <select class="form-control select2-select" asp-for="ContratoID">
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="simpleinput">Solicitante Real</label>
+                                                    <select class="form-control select2-select" asp-for="UsuarioOrigemID">
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            @*<div class="col-md-3">
+                <div class="form-group">
+                    <label class="form-label" for="simpleinput">Usuario Medição</label>
+                    <select class="form-control select2-select" asp-for="UsuarioMedicaoID">
+                    </select>
+                </div>
+            </div>*@
+
+
+                                            <div class="col-md-3 habilita-tipo-servico">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="simpleinput">Tipo Visita</label>
+                                                    <select class="form-control select2-select" asp-for="TipoVisita">
+                                                        <option value="">Selecione...</option>
+                                                        <option value="0">Sem visita</option>
+                                                        <option value="1">Unica</option>
+                                                        <option value="2">Individual</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3 habilita-data-visita hide">
+                                                <div class="form-group">
+                                                    <label class="form-label" for="input-name">Data Visita</label>
+                                                    <input asp-for="DataHoraVisita" type="text" id="input-name" data-inputmask="'mask': '99/99/9999'" class="form-control date-rangepicker">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label class="form-label">Descrição Breve (Até 30 caracteres)</label>
+                                                    <input asp-for="Descricao"  type="text" maxlength="30" class="form-control">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label class="form-label">Observação</label>
+                                                    <input asp-for="Observacao" type="text" class="form-control">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label class="form-label">(Escopo Serviço/Carta Convite)</label>
+                                                    <div class="custom-file">
+                                                        <input type="file" name="customFile" class="custom-file-input" id="customFile">
+                                                        <label class="custom-file-label" for="customFile">Selecionar Anexo</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <a href="javascript:void(0);" class="card-title collapsed" data-toggle="collapse" data-target="#accordion-0-b" aria-expanded="false">
+                                        @*<i class="fal fa-code-merge width-2 fs-xl"></i>*@
+                                        Serviços
+                                        <span class="ml-auto">
+                                            <span class="collapsed-reveal">
+                                                <i class="fal fa-chevron-up fs-xl"></i>
+                                            </span>
+                                            <span class="collapsed-hidden">
+                                                <i class="fal fa-chevron-down fs-xl"></i>
+                                            </span>
+                                        </span>
+                                    </a>
+                                </div>
+                                <div id="accordion-0-b" class="collapse" data-parent="#accordion-0">
+                                    <div class="card-body">
+
+                                        <div class="row mt-2 text-right">
+                                            <div class="col-md-12">
+                                                <button type="button" class="btn btn-primary shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed btn-novo-servico">Novo</button>
+                                            </div>
+                                        </div>
+
+                                        <div class="row mt-2">
+                                            <table class="table" id="tabela-servico-item">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Código</th>
+                                                        <th width="30%">Descrição</th>
+                                                        <th>Quantidade</th>
+                                                        <th>Aplicação</th>
+                                                        <th>Driver</th>
+                                                        <th>Tag</th>
+                                                        <th>Armazem</th>
+                                                        <th>Und. Medição</th>
+                                                        <th width="8%"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <a href="javascript:void(0);" class="card-title collapsed" data-toggle="collapse" data-target="#accordion-0-c" aria-expanded="false">
+                                        @*<i class="fal fa-cloud-upload-alt width-2 fs-xl"></i>*@
+                                        Fornecedores
+                                        <span class="ml-auto">
+                                            <span class="collapsed-reveal">
+                                                <i class="fal fa-chevron-up fs-xl"></i>
+                                            </span>
+                                            <span class="collapsed-hidden">
+                                                <i class="fal fa-chevron-down fs-xl"></i>
+                                            </span>
+                                        </span>
+                                    </a>
+                                </div>
+                                <div id="accordion-0-c" class="collapse" data-parent="#accordion-0">
+                                    <div class="card-body">
+                                        <div class="row mt-2 text-right">
+                                            <div class="col-md-12">
+                                                <button type="button" class="btn btn-primary shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed btn-novo-fornecedor-solicitacao">Novo</button>
+                                            </div>
+                                        </div>
+
+                                        <div class="row mt-2">
+                                            <table class="table" id="tabela-fornecedor-item">
+                                                <thead>
+                                                    <tr>
+                                                        <th width="20%">CNPJ</th>
+                                                        <th>Nome</th>
+                                                        <th width="10%">Visita?</th>
+                                                        <th width="8%"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="row mt-2 text-right">
+                            <div class="col-md-12">
+                                <a asp-action="Index" class="btn btn-secondary shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed">Voltar</a>
+                                <button type="button" class="btn btn-success shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed btn-salvar-ss">Salvar</button>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<div class="modal fade" id="modal-solicitacao-servico" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    Novo/Editar Serviço
+                </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"><i class="fal fa-times"></i></span>
+                </button>
+            </div>
+            <div class="modal-body" style="overflow: hidden;">
+                <form id="cadSolicitacaoServico" name="cadSolicitacaoServico" enctype="multipart/form-data">
+                    <input name="ServicoLinha" id="ServicoLinha" type="hidden">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">Código</label>
+                                <select name="ServicoID" class="form-control select2" style="z-index:9999">
+                                    <option></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">Descrição</label>
+                                <input name="ServicoDescricao" type="text" id="ServicoDescricao" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">Classificação Contábil</label>
+                                <input name="ServicoClassificaoContabil" type="text" id="ServicoClassificaoContabil" disabled class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">Quantidade</label>
+                                <input name="ServicoQuantidade" type="text" id="ServicoQuantidade" class="form-control calc-quantidade">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="simpleinput">Aplicação</label>
+                                <select asp-items="ViewBag.ListaAplicacaoServico" class="form-control select2-select" name="ServicoAplicacao" id="ServicoAplicacao">
+                                    <option value="">Selecione...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="simpleinput">Driver</label>
+                                <select class="form-control select2-select" name="ServicoDriver" id="ServicoDriver">
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="simpleinput">Tag</label>
+                                <select class="form-control select2-select" name="ServicoTag" id="ServicoTag">
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2 tipo-servico-pedido">
+                            <div class="form-group">
+                                <label class="form-label" for="simpleinput">Unidade Medição</label>
+                                <select class="form-control select2-select" name="ServicoUnidadeMedicao" id="ServicoUnidadeMedicao">
+                                    <option value="1">Percentual</option>
+                                    <option value="2">Hora</option>
+                                    <option value="3">M2</option>
+                                    <option value="4">M3</option>
+                                    <option value="5">Quantidade</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="simpleinput">Armazem</label>
+                                <select asp-items="ViewBag.ListaArmazemServico" class="form-control select2-select" name="ServicoArmazem" id="ServicoArmazem">
+                                    <option value="">Selecione...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 habilita-tipo-servico tipo-servico-pedido">
+                            <div class="form-group">
+                                <label class="form-label" for="simpleinput">Data Início Contrato</label>
+                                <input name="ServicoDataInicioContrato" type="text" id="DataInicio" data-inputmask="'mask': '99/99/9999'" class="form-control data-datepicker">
+                            </div>
+                        </div>
+                        <div class="col-md-4 habilita-tipo-servico tipo-servico-pedido">
+                            <div class="form-group">
+                                <label class="form-label" for="simpleinput">Data Final Contrato</label>
+                                <input name="ServicoDataFinalContrato" type="text" id="DataInicio" data-inputmask="'mask': '99/99/9999'" class="form-control data-datepicker">
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">Código Cliente</label>
+                                <select name="ServicoCodigoCliente" class="form-control select2" style="z-index:9999">
+                                    <option></option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+                </form>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success btn-salvar-servico">Salvar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal-solicitacao-fornecedor" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    Novo/Editar Fornecedor
+                </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"><i class="fal fa-times"></i></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12 text-right">
+                        <div class="form-group">
+                            <button type="button" class="btn btn-primary btn-novo-fornecedor">Novo</button>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="cadSolicitacaoFornecedor" name="cadSolicitacaoFornecedor" enctype="multipart/form-data">
+                    <input name="FornecedorLinha" id="FornecedorLinha" type="hidden">
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">CNPJ</label>
+                                <select name="FornecedorID" class="form-control select2" style="z-index:9999">
+                                    <option></option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">Nome</label>
+                                <input name="FornecedorNome" type="text" id="FornecedorNome" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-4 habilitar-visita-fornecedor">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">Visita?</label>
+                                <select class="form-control select2-select" name="FornecedorVisita" id="FornecedorVisita">
+                                    <option value="">Selecione...</option>
+                                    <option value="true">Sim</option>
+                                    <option value="false">Não</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+                </form>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success btn-salvar-fornecedor">Salvar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="modal-novo-fornecedor" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    Novo Fornecedor
+                </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"><i class="fal fa-times"></i></span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <form id="cadNovoFornecedor" name="cadNovoFornecedor" enctype="multipart/form-data">
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">CPF/CNPJ</label>
+                                <input name="CPFCNPJ" type="text" id="CPFCNPJ" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">Razão Social</label>
+                                <input name="RazaoSocial" type="text" id="RazaoSocial" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">Nome</label>
+                                <input name="Nome" type="text" id="Nome" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">Contato</label>
+                                <input name="Contato" type="text" id="Contato" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">E-mail</label>
+                                <input name="Email" type="text" id="Email" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">Telefone</label>
+                                <input name="Telefone" type="text" id="Telefone" class="form-control">
+                            </div>
+                        </div>
+                      
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">CEP</label>
+                                <input name="CEP" type="text" id="CEP" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">Logradouro</label>
+                                <input name="Logradouro" type="text" id="Logradouro" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">Numero</label>
+                                <input name="Numero" type="text" id="Numero" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">Bairro</label>
+                                <input name="Bairro" type="text" id="Bairro" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">Cidade</label>
+                                <input name="Cidade" type="text" id="Cidade" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label class="form-label" for="input-name">UF</label>
+                                <input name="UF" type="text" id="UF" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success btn-salvar-novo-fornecedor">Salvar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Util.js" asp-append-version="true"></script>
+    <script src="~/js/SolicitacaoServico.js" asp-append-version="true"></script>
+    <script src="~/js/SolicitacaoServicoUtil.js" asp-append-version="true"></script>
+}

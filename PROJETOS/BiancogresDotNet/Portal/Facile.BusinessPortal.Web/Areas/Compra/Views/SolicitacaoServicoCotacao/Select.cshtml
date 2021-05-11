@@ -1,0 +1,153 @@
+﻿@model ICollection<Facile.BusinessPortal.Model.Compra.Servico.SolicitacaoServicoFornecedor>
+@using Facile.BusinessPortal.Model.Compra.Servico
+
+
+@{
+    ViewData["Title"] = "Solicitação de Serviço";
+}
+
+
+<ol class="breadcrumb">
+    <li class="breadcrumb-item">
+        <a asp-action="Index">Listagem</a>
+    </li>
+    <li class="breadcrumb-item active">solicitação de serviço</li>
+</ol>
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Escolher Cotação
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <form id="FormCad" name="FormCad" accept-charset="UTF-8" asp-action="Select" method="POST">
+
+                        <div class="accordion accordion-hover" id="accordion-0">
+                            @{
+                                int i = 0;
+                                foreach (var item in (ViewBag.ListaSolicitacaoServicoFornecedor as ICollection<SolicitacaoServicoFornecedor>))
+                                {
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <a href="javascript:void(0);" class="card-title" data-toggle="collapse" data-target="#accordion-0-@i" aria-expanded="true">
+                                                @item.Fornecedor.Nome
+                                                <span class="ml-auto">
+                                                    <span class="collapsed-reveal">
+                                                        <i class="fal fa-chevron-up fs-xl"></i>
+                                                    </span>
+                                                    <span class="collapsed-hidden">
+                                                        <i class="fal fa-chevron-down fs-xl"></i>
+                                                    </span>
+                                                </span>
+                                            </a>
+                                        </div>
+                                        <div id="accordion-0-@i" class="collapse show" data-parent="#accordion-0">
+                                            <div class="card-body">
+
+                                                <div class="col-md-12 habilitar-observacao">
+                                                    <div class="form-group">
+                                                        <label class="form-label" for="input-name">Observação</label>
+                                                        <input name="List[@i].Observacao" value="" type="text" id="input-name" class="form-control">
+                                                    </div>
+                                                </div>
+
+                                                <div class="row mt-2 text-right">
+                                                    <div class="col-md-12">
+                                                        <input type="hidden" name="List[@i].SolicitacaoServicoID" value="@item.SolicitacaoServicoID" class="solicitacao-servico" />
+                                                        <input type="hidden" name="List[@i].FornecedorID" value="@item.FornecedorID" class="fornecedor" />
+                                                        <input type="hidden" name="List[@i].ID" value="@item.ID" />
+                                                        <input type="hidden" name="List[@i].Aprovado" class="aprovar" value="" />
+                                                        <button type="button" class="btn btn-primary shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed btn-selecionar-cotacao">Marcar</button>
+                                                    </div>
+                                                </div>
+
+
+
+                                                <div class="row mt-2">
+                                                    <table class="table" id="">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Atende Item</th>
+                                                                <th>Produto</th>
+                                                                <th>Preço</th>
+                                                                <th>Quantidade</th>
+                                                                <th>Total</th>
+                                                                <th>Prazo</th>
+                                                                <th>Atende Totalmente</th>
+                                                                <th>Observação</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @{
+                                                                var ListaSolicitacaoServicoCotacao = (ViewBag.ListaSolicitacaoServicoCotacao as ICollection<SolicitacaoServicoCotacao>);
+                                                                if (ListaSolicitacaoServicoCotacao.Count > 0)
+                                                                {
+
+                                                                    var SolicitacaoServicoCotacao = ListaSolicitacaoServicoCotacao.FirstOrDefault(x => x.FornecedorID == item.FornecedorID);
+
+                                                                    if (SolicitacaoServicoCotacao != null)
+                                                                    {
+                                                                        @if (SolicitacaoServicoCotacao.ArquivoAnexo != null)
+                                                                        {
+                                                                            <tr>
+                                                                                <td colspan="9">
+                                                                                    <a asp-action="GetAnexo" asp-route-id="@SolicitacaoServicoCotacao.ID" target="_blank">[Anexo]</a>
+                                                                                </td>
+                                                                            </tr>
+                                                                        }
+                                                                        foreach (var itemCotacao in SolicitacaoServicoCotacao.SolicitacaoServicoCotacaoItem)
+                                                                        {
+                                                                            <tr>
+                                                                                <td>@(itemCotacao.AtendeItem==1? "Sim" : "Não")</td>
+                                                                                <td>@(itemCotacao.SolicitacaoServicoItem.Descricao)</td>
+                                                                                <td>@string.Format("{0:N}", itemCotacao.Preco)</td>
+                                                                                <td>@string.Format("{0:N}", itemCotacao.SolicitacaoServicoItem.Quantidade)</td>
+                                                                                <td>@string.Format("{0:N}", itemCotacao.Preco * itemCotacao.SolicitacaoServicoItem.Quantidade)</td>
+                                                                                <td>@itemCotacao.PrazoEntrega</td>
+                                                                                <td>@(itemCotacao.AtendeTotalmente==1?"Sim":"Não")</td>
+                                                                                <td>@itemCotacao.Observacao</td>
+                                                                            </tr>
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                    i = i + 1;
+                                }
+                            }
+
+                        </div>
+
+                        <div class="row mt-2 text-right">
+                            <div class="col-md-12">
+                                <a asp-action="Index" class="btn btn-secondary shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed">Voltar</a>
+                                <button type="button" class="btn btn-success shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed btn-escolher-cotacao">Salvar</button>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Util.js" asp-append-version="true"></script>
+    <script src="~/js/SolicitacaoServicoCotacao.js" asp-append-version="true"></script>
+}

@@ -192,8 +192,7 @@ static function M410LIOK()
 	EndIf
 
 	//Ticket 30997 - Valida se cliente for segmento engenharia obrigar preenchimento de Data Necessidade Real C6_YDTNERE
-	
-	If Alltrim(SA1->A1_YTPSEG) == "E" .And. Empty(DTOS(Gdfieldget("C6_YDTNERE",n))) 
+	If !(Alltrim(M->C5_TIPO) $ "D_B") .And. Alltrim(SA1->A1_YTPSEG) == "E" .And. Empty(DTOS(Gdfieldget("C6_YDTNERE",n))) 
 		MsgAlert("Antes de realizar a liberação deste item, é obrigatório o preenchimento do campo Dt.Nec.Real.", "Data de Necessidade Real")
 		Return(.F.)
 	EndIf

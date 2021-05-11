@@ -28,7 +28,7 @@ User Function SD3240I()
 			_cMatOri	:=	Iif(!Empty(SD3->D3_YMATORI),SD3->D3_YMATORI,SD3->D3_YMATRIC)
 	
 			_oMd:InsereMovimentacao(SD3->D3_FILIAL,SD3->D3_DOC,"","","","",SD3->D3_COD,SD3->D3_QUANT,SD3->D3_LOCAL,;
-			    				 		"501",SD3->D3_YMATRIC,_cMatOri,cUserName,Alltrim(funname()),SD3->D3_EMISSAO,"SD3",SD3->(RECNO())) //Insere Movimentação na Tabela	
+			    				 		"501",_cMatOri,SD3->D3_YMATRIC,cUserName,Alltrim(funname()),SD3->D3_EMISSAO,"SD3",SD3->(RECNO())) //Insere Movimentação na Tabela	
 
 		
 		Else

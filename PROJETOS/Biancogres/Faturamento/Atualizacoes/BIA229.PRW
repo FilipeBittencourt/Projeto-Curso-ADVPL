@@ -31,10 +31,12 @@ User Function BIA229()
 	oBrowse:SetMenuDef('BIA229')
 	oBrowse:SetFilterDefault( FilDef() )
 
-	oBrowse:AddLegend("ZZO_STATUS=='1'", "GREEN", "Em Especificação")
-	oBrowse:AddLegend("ZZO_STATUS=='2'", "RED", "Fechado")
-	oBrowse:AddLegend("ZZO_STATUS=='3'", "BLACK", "Perdido")
-	oBrowse:AddLegend("ZZO_STATUS=='4'", "YELLOW", "Adiado")
+	oBrowse:AddLegend("ZZO_STATUS=='0'", "GRAY", 	"Em Especificacao") //CINZA
+	oBrowse:AddLegend("ZZO_STATUS=='1'", "BLUE", 	"Em Negociacao") //AZUL
+	oBrowse:AddLegend("ZZO_STATUS=='2'", "GREEN", 	"Fechado") //VERDE
+	oBrowse:AddLegend("ZZO_STATUS=='3'", "RED", 	"Perdido") //VERMELHO
+	oBrowse:AddLegend("ZZO_STATUS=='4'", "YELLOW", 	"Adiado") //YELOW
+	oBrowse:AddLegend("ZZO_STATUS=='5'", "WHITE", 	"Em Aberto") //BRANCO
 
 	oBrowse:Activate()
 
@@ -74,8 +76,24 @@ Static Function MenuDef()
 	ADD OPTION aRotina TITLE 'Imprimir' ACTION 'U_BIA564' OPERATION 8 ACCESS 0
 	ADD OPTION aRotina TITLE 'Copiar' ACTION 'VIEWDEF.BIA229' OPERATION 9 ACCESS 0
 	ADD OPTION aRotina TITLE 'Propostas' ACTION 'U_BFATTE01(.T.)' OPERATION 10 ACCESS 0
+	ADD OPTION aRotina TITLE 'Legenda' ACTION 'U_BIA229LEG()' OPERATION 11 ACCESS 0
 
 Return aRotina
+
+User Function BIA229LEG()
+	Local aLegenda := {}
+
+	//Monta as cores
+	AADD(aLegenda,{"BR_CINZA"		, "Em Especificacao"  })
+	AADD(aLegenda,{"BR_AZUL"		, "Em Negociacao"})
+	AADD(aLegenda,{"BR_VERDE"		, "Fechado"})
+	AADD(aLegenda,{"BR_VERMELHO"	, "Perdido"})
+	AADD(aLegenda,{"BR_AMARELO"		, "Adiado"})	
+	AADD(aLegenda,{"BR_BRANCO"		, "Em Aberto"})
+
+	BrwLegenda("Status", "Status", aLegenda)
+
+Return
 
 
 Static Function ModelDef()

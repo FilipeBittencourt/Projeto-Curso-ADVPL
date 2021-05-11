@@ -1031,7 +1031,9 @@ Static Function SalvProc()
 
 						//ESTORNAR TODOS OS ITENS E GERAR AS LIBERAOES CORRETAS - ITENS NAO FATURADOS
 						If Empty(SC9->C9_NFISCAL) .AND. (SC9->C9_QTDLIB <> _aCols[I][6])
-
+							
+							__cLoteLib	:= SC9->C9_LOTECTL
+							
 							U_GravaPZ2(0,"ZZV",M->ZZV_CARGA,"INI_ALTEMP","EMP:"+CEMPANT,"EMP",CUSERNAME)
 
 							__BECDTLORI := SC9->C9_DATALIB
@@ -1062,7 +1064,14 @@ Static Function SalvProc()
 
 							SC6->(DbSetOrder(1))
 							IF SC6->(DbSeek(XFilial("SC6")+SC9->(C9_PEDIDO+C9_ITEM)))
-
+								
+								//fazer a liberaçao no mesmo lote que estava liberado
+								RecLock("SC6", .F.)
+									SC6->C6_LOTECTL	:= __cLoteLib
+								SC6->(MsUnlock())
+							
+							
+								
 								//VALIDAR A QUANTIDADE A LIBERAR DO PEDIDO - 1a LIBERACAO
 								IF !ChkSalPed(SC9->C9_PEDIDO, SC9->C9_ITEM, _aCols[I][6])
 									DisarmTransaction()

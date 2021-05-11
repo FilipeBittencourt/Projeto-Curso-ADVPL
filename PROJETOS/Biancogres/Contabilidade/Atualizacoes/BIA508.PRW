@@ -107,6 +107,18 @@ User Function BIA508B()
 			AADD(aCols,Array(nUsado+2))
 			For _ni := 1 to nUsado
 				aCols[Len(aCols),_ni] := FieldGet(FieldPos(aHeader[_ni,2]))
+				If aHeader[_ni,2] == "Z48_DDEB  "
+					aCols[Len(aCols),_ni] := Posicione("CT1", 1, xFilial("CT1") + FieldGet(FieldPos("Z48_DEBITO")), "CT1->CT1_DESC01")
+				EndIf
+				If aHeader[_ni,2] == "Z48_DCRD  "
+					aCols[Len(aCols),_ni] := Posicione("CT1", 1, xFilial("CT1") + FieldGet(FieldPos("Z48_CREDIT")), "CT1->CT1_DESC01")
+				EndIf
+				If aHeader[_ni,2] == "Z48_DCVDB "
+					aCols[Len(aCols),_ni] := Posicione("CTH", 1, xFilial("CTH") + FieldGet(FieldPos("Z48_CLVLDB")), "CTH->CTH_DESC01")
+				EndIf
+				If aHeader[_ni,2] == "Z48_DCVCR "
+					aCols[Len(aCols),_ni] := Posicione("CTH", 1, xFilial("CTH") + FieldGet(FieldPos("Z48_CLVLCR")), "CTH->CTH_DESC01")
+				EndIf
 			Next
 			aCols[Len(aCols),nUsado+1] := Recno()
 			aCols[Len(aCols),nUsado+2] := .F.

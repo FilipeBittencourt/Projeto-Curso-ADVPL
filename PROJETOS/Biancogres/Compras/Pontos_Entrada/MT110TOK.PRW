@@ -155,16 +155,23 @@ User Function MT110TOK()
 				WHILE !EOF() .AND. SC3->C3_NUM == wContrat
 					IF ALLTRIM(wCLVL) == ALLTRIM(SC3->C3_YCLVL)
 						lPassei := .T.
-						IF SC3->C3_MSBLQL == '1'
-							MsgAlert("Este contrato está bloqueado.", "ATENCAO")
-							AutoGrLog("Este contrato está bloqueado.")
-							Return .F.
+						IF SC3->C3_MSBLQL == '1' .and. cCtrBloq <> 2 							
+							cCtrBloq := 1
+				        ELSE
+				           cCtrBloq := 2
 						ENDIF
 					ENDIF
 
 					DbSelectArea("SC3")
 					DbSkip()
 				END
+				
+				IF cCtrBloq == 1
+				   MsgAlert("[MT110TOK] Este contrato está bloqueado.", "ATENCAO")
+				   AutoGrLog("[MT110TOK]Este contrato está bloqueado.")
+				   cCtrBloq := 0
+				   Return .F.
+				ENDIF
 
 				IF !lPassei
 					MsgAlert("A Classe de Valor desta SC deverá ser igual a Classe de Valor do Contrato informado.", "ATENCAO")

@@ -1,0 +1,142 @@
+﻿@model Facile.BusinessPortal.Model.GrupoUsuario
+@using Facile.BusinessPortal.Model
+
+@{
+    ViewData["Title"] = "Grupo de Usuário";
+}
+
+<ol class="breadcrumb">
+    <li class="breadcrumb-item">
+        <a asp-action="Index">Listagem</a>
+    </li>
+    <li class="breadcrumb-item active">grupo de usuário</li>
+</ol>
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Novo Grupo de Usuário
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <form id="FormCad" accept-charset="UTF-8" asp-action="Create" method="POST">
+
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label" for="simpleinput">Nome</label>
+                                    <input asp-for="Nome" type="text" id="" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-2">
+                            <div class="col-md-4">
+                                <div class="custom-control custom-checkbox mr-2 mr-lg-2 d-inline-block">
+                                    <input asp-for="Habilitado" value="" class="custom-control-input" id="Habilitado">
+                                    <label class="custom-control-label bolder" for="Habilitado"> Habilitado</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4 mb-2">
+                            <div class="col-md-12">
+                                <h4>
+                                    Permissões
+                                </h4>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="accordion" id="accordionMenu">
+                                    @{
+                                        int i = 0;
+                                        int j = 0;
+                                        @foreach (var menu in ((IEnumerable<Menu>)ViewBag.ListaMenu))
+                                        {
+                                            <div class="card">
+                                                <div class="card-header" id="heading-@Html.Raw(i)">
+                                                    <a href="javascript:void(0);" class="card-title collapsed" data-toggle="collapse" data-target="#collapse-@Html.Raw(i)" aria-expanded="false" aria-controls="collapse-@Html.Raw(i)">
+                                                        @menu.Nome
+                                                        <span class="ml-auto">
+                                                            <span class="collapsed-reveal">
+                                                                <i class="fal fa-minus-circle text-danger"></i>
+                                                            </span>
+                                                            <span class="collapsed-hidden">
+                                                                <i class="fal fa-plus-circle text-success"></i>
+                                                            </span>
+                                                        </span>
+                                                    </a>
+                                                </div>
+                                                <div id="collapse-@Html.Raw(i)" class="collapse" aria-labelledby="heading-@Html.Raw(i)" data-parent="#accordionMenu" style="">
+                                                    <div class="card-body">
+                                                        @foreach (var acao in menu.MenuAcao)
+                                                        {
+                                                            <div class="row mt-2">
+                                                                <div class="col-md-4">
+                                                                    <div class="custom-control custom-checkbox mr-2 mr-lg-2 d-inline-block">
+                                                                        <input name="Acesso" type="checkbox" class="custom-control-input" id="status-@Html.Raw(j)">
+                                                                        <label class="custom-control-label bolder" for="status-@Html.Raw(j)">@acao.Acao.Nome</label>
+
+                                                                        <input type="hidden" name="Menu" value="@menu.ID" />
+                                                                        <input type="hidden" name="Acao" value="@acao.AcaoID" />
+
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            j++;
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            i++;
+                                        }
+                                    }
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-2 text-right">
+                            <div class="col-md-12">
+                                <a asp-action="Index" class="btn btn-secondary shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed">Listagem</a>
+                                <button type="submit" class="btn btn-success shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed">Salvar</button>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="~/js/Util.js"></script>
+    <script>
+        $(function () {
+
+            $('#FormCad').on('submit', function (e) {
+                checkCheckBox('accordionMenu')
+                this.submit();
+            });
+
+            $('input[name="Habilitado"]').on('click',
+                function () {
+                    $(this).val($(this).prop('checked'));
+                }
+            );
+
+        });
+    </script>
+}

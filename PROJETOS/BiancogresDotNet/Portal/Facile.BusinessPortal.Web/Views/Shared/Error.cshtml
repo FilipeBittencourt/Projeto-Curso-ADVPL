@@ -1,0 +1,46 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Erro";
+}
+
+@if (Model.ShowUserId)
+{
+    <p>
+        <strong>User ID:</strong> <code>@Model.UserId</code>
+    </p>
+}
+
+<h4 class="text-danger">@Model.ErrorTitle</h4>
+<h5 class="text-danger">@Model.ErrorDescription</h5>
+
+@if (Model.ErrorType == ErroType.Exception)
+{
+    <h7><b>A equipe de suporte da Facile Sistemas já foi notificada deste erro e tomará as providências que forem necessárias.</b></h7>
+}
+
+<h7>Em caso de dúvida contate o suporte através dos canais:</h7>
+<p> E-mail: <a href="mailto: suporte@facilesistemas.com.br">suporte@facilesistemas.com.br</a></p>
+
+@if (!string.IsNullOrEmpty(Model.ControllerName))
+{
+    <p>
+        <strong>c-name:</strong> @Model.ControllerName
+    </p>
+    <p>
+        <strong>a-name:</strong> @Model.ControllerAction
+    </p>
+}
+
+@if (Model.ErrorType == ErroType.Access)
+{
+    <h2>@Model.ErrorDetails</h2>
+}
+
+@if (Model.ErrorType == ErroType.Exception && !string.IsNullOrEmpty(Model.ErrorDetails))
+{
+    <div class="col-md-12 col-xs-12">
+        <p>Detalhes do Erro:</p>
+        @Html.TextAreaFor(o => o.ErrorDetails, 20, 1, new { @class = "form-control" })
+    </div>
+}
+

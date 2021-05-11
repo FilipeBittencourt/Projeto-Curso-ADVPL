@@ -14,13 +14,13 @@ User Function BIPROCSC()
 
     Local oObj := Nil
 
-    //RpcSetEnv("01", "01")
+  // RpcSetEnv("01", "01")
 
     oObj := TBizagiIntegracaoSolicitCompra():New()
 
     oObj:Processa()
 
-    //RpcClearEnv()
+   // RpcClearEnv()
 
 Return()
 
@@ -145,10 +145,16 @@ Method Processa() Class TBizagiIntegracaoSolicitCompra
             EndIf
 
             aAdd(aLinha, { "C1_QTSEGUM", ConvUm((cQry)->SC_PRODUTO, (cQry)->SC_QUANT, 0, 2) , Nil })
-
+            
             If (cQry)->SC_YOBS != Nil
 
-                aAdd(aLinha, { "C1_YOBS",   Upper((cQry)->SC_YOBS)     , Nil })
+                aAdd(aLinha, { "C1_YOBS",   Upper(AllTrim((cQry)->SC_YOBS))     , Nil })
+
+            EndIf
+            
+            If (cQry)->SC_YTIPO != Nil
+
+                aAdd(aLinha, { "C1_YTIPO",  (cQry)->SC_YTIPO     , Nil })
 
             EndIf
 
@@ -160,6 +166,7 @@ Method Processa() Class TBizagiIntegracaoSolicitCompra
             aAdd(aLinha, { "C1_COTACAO", IIF(!Empty((cQry)->SC_IMPORT), IIF((cQry)->SC_IMPORT == '1' .Or. (cQry)->SC_IMPORT == 'S' .Or. UPPER((cQry)->SC_IMPORT) == 'TRUE', 'IMPORT', '' ), ''  )	 , Nil })
             aAdd(aLinha, { "C1_APROV",  "L"                             , Nil })
             aAdd(aLinha, { "C1_YMAT",   (cQry)->SC_YMAT                 , Nil })
+            aAdd(aLinha, { "C1_YMATRIC",   (cQry)->SC_YMATRIC                 , Nil })
             aAdd(aLinha, { "C1_YSOLEMP", (cQry)->SC_YSOLEMP             , Nil })
 
             aAdd(aLinha, { "C1_YSTATUS", (cQry)->SC_YSTATUS             , Nil }) // N=Normal;U=Urgente;E=Emergencia;P=Parada

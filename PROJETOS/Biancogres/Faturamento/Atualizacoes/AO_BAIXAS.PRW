@@ -382,13 +382,26 @@ User Function AO_VAL_E(_NUM_SI)
 		QRY->(DbCloseArea())
 	EndIf
 
-	cQUERY := "select ZO_SI, ZO_ITEMCTA from "+_cTabSZO+" where ZO_SI = '"+_NUM_SI+"' and RTRIM(ZO_STATUS) not in ('Baixa Total','Aguard. Aprovação','Aguard. Aprov. Dir.') and D_E_L_E_T_ = '' "
+	cQUERY := "select ZO_SI, ZO_ITEMCTA, ZO_FPAGTO from "+_cTabSZO+" where ZO_SI = '"+_NUM_SI+"' and RTRIM(ZO_STATUS) not in ('Baixa Total','Aguard. Aprovação','Aguard. Aprov. Dir.') and D_E_L_E_T_ = '' "
 
 	TcQuery cQUERY New Alias "QRY"
 
 	QRY->(dbGoTop())
 
 	IF !QRY->(Eof())
+		
+		If Alltrim(M->C5_YSUBTP) == "B" .And. AllTrim(QRY->ZO_FPAGTO) != "1"
+			Aviso("AUTORIZAÇÃO DE INVESTIMENTO","Atenção: A SI informada não é do 'Tipo de Pagamento: Bonificacao' e não está autorizada para esse tipo de pedido",{"OK"},2,"SI informada: "+_NUM_SI)
+			QRY->(DbCloseArea())
+			Return(.F.)		
+		EndIf
+		
+		If Alltrim(M->C5_YSUBTP) != "B" .And. AllTrim(QRY->ZO_FPAGTO) == "1"
+			Aviso("AUTORIZAÇÃO DE INVESTIMENTO","Atenção: A SI informada é do 'Tipo de Pagamento: Bonificacao' e não está autorizada para esse tipo de pedido",{"OK"},2,"SI informada: "+_NUM_SI)
+			QRY->(DbCloseArea())
+			Return(.F.)		
+		EndIf
+		
 
 		If AllTrim(ReadVar()) == "M->C5_YNUMSI" .And. AllTrim(QRY->ZO_ITEMCTA) <> "I0201"
 			Aviso("AUTORIZAÇÃO DE INVESTIMENTO","Atenção: A SI informada não é proveniente de Acordo de Objetivos."+CRLF+"Utilize o campo 'No.AI Outras'",{"OK"},2,"SI informada: "+_NUM_SI)

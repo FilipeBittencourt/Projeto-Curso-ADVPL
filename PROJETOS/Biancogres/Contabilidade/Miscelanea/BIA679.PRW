@@ -17,7 +17,7 @@ User Function BIA679()
 
 	Local oEmp 	:= Nil
 	Local nW	:= 0
-	Local lRet  := .F.
+	Local lRet  := .T.
 	Local oProcess
 	Local oPrcZera
 
@@ -30,12 +30,20 @@ User Function BIA679()
 	Private xAnoRef
 	Private xCodPla
 	Private xRubVis
-	Private msCanPrc  := .F.
 	Private msEnter   := CHR(13) + CHR(10)
 	Private msEmpAtu  := cEmpAnt
 	Private msFilAtu  := cFilAnt
-	Private hhTmpINI  := TIME()
+	Private hhTmpINI
 	Private smMsnPrc
+	Private msCanPrc  := .F.
+	Private xVerRet   := .T.
+	Private msErroQuery
+
+	Private xoButton1
+	Private xoMultiGe1
+	Private xcMultiGe1 := "Define variable value"
+	Private xoSay1
+	Private xoDlg
 
 	oEmp := TLoadEmpresa():New()
 
@@ -52,15 +60,20 @@ User Function BIA679()
 
 		If Len(oEmp:aEmpSel) > 0
 
+			hhTmpINI  := TIME()
+
+			//Begin Transaction
+
 			For nW := 1 To Len(oEmp:aEmpSel)
 
 				RpcSetType(3)
 				RpcSetEnv( oEmp:aEmpSel[nW][1], Substr(oEmp:aEmpSel[nW][2], 1, 2) )
 
-				xVerRet := .F.
 				smMsnPrc := oEmp:aEmpSel[nW][1] + "/" + Substr(oEmp:aEmpSel[nW][2], 1, 2) + " - " + Alltrim(oEmp:aEmpSel[nW][4])
 				oPrcZera := MsNewProcess():New({|lEnd| ExistThenD(@oPrcZera) }, "Deletando...", smMsnPrc, .T.)
 				oPrcZera:Activate()
+
+				lRet := xVerRet
 
 				If xVerRet
 
@@ -69,9 +82,19 @@ User Function BIA679()
 
 					lRet := xVerRet
 
+					If !xVerRet
+
+						//DisarmTransaction()
+						msCanPrc  := .F.
+						Exit
+
+					EndIf
+
 				Else
 
-					msCanPrc  := .T.
+					//DisarmTransaction()
+					msCanPrc  := .F.
+					Exit
 
 				EndIf
 
@@ -79,17 +102,51 @@ User Function BIA679()
 
 			Next nW
 
+			//End Transaction
+
 		Else
 
-			Alert("Nenhuma empresa foi selecionada!")
+			msCanPrc  := .T.
 
 		EndIf
+
+	Else
+
+		msCanPrc  := .T.
 
 	EndIf
 
 	RpcSetEnv( msEmpAtu, msFilAtu )
 
-	MsgINFO("Fim do Processamento!!!", "Atenção!!!")
+	If Type("__cInternet") == "C"
+		__cInternet := Nil
+	EndIf
+
+	If !msCanPrc
+
+		If !lRet
+
+			xcMultiGe1 := "Erro de Query: " + msEnter + msEnter + msErroQuery
+
+			DEFINE MSDIALOG xoDlg TITLE "Atenção!!!" FROM 000, 000  TO 550, 490 COLORS 0, 16777215 PIXEL
+
+			@ 019, 006 GET xoMultiGe1 VAR xcMultiGe1 OF xoDlg MULTILINE SIZE 236, 249 COLORS 0, 16777215 HSCROLL PIXEL
+			@ 008, 008 SAY xoSay1 PROMPT "Log de Erro. Apanhe o erro e abra um ticket." SIZE 111, 007 OF xoDlg COLORS 0, 16777215 PIXEL
+			@ 006, 205 BUTTON xoButton1 PROMPT "Fecha" SIZE 037, 012 OF xoDlg ACTION xoDlg:End() PIXEL
+
+			ACTIVATE MSDIALOG xoDlg CENTERED
+
+		Else
+
+			MsgINFO("Fim do Processamento!!!" + msEnter + msEnter + Alltrim(ElapTime(hhTmpINI, TIME())), "Atenção!!!")
+
+		EndIf
+
+	Else
+
+		MsgALERT("Processamento Abortado", "Atenção!!!")
+
+	EndIf
 
 Return
 
@@ -194,6 +251,8 @@ Static Function Prc679EX(oProcess)
 	Local pk
 	Local msVerCon
 	Local msQryPrc
+	Local msCampoQ
+	Local lRet	:= .T.
 
 	oProcess:SetRegua1(1)
 	oProcess:SetRegua2(1000)             
@@ -238,21 +297,25 @@ Static Function Prc679EX(oProcess)
 			CVF->(dbGoTo(GT07->REGCVF))
 
 			xRubVis  := CVF->CVF_CONTAG
+			xYRFDre  := CVF->CVF_YRFDRE
 
 			If pk == 1                                  // Query REALIZADO
 
 				msVerCon := "A01"
 				msQryPrc := CVF->CVF_YQRYRE
+				msCampoQ := "Query Realizado"
 
 			ElseIf pk == 2                              // Query ORCADO
 
 				msVerCon := "B01"
 				msQryPrc := CVF->CVF_YQRYOR
+				msCampoQ := "Query Orçado"
 
 			ElseIf pk == 3                              // Query AJUSTADO
 
 				msVerCon := "F01"
 				msQryPrc := CVF->CVF_YQRYAJ
+				msCampoQ := "Query Ajustado"
 
 			EndIf
 
@@ -287,21 +350,44 @@ Static Function Prc679EX(oProcess)
 				msQryPrc = Replace(msQryPrc, "@RUBVIS"  , xRubVis)
 				msQryPrc = Replace(msQryPrc, "@EMPANT"  , cEmpAnt)
 				msQryPrc = Replace(msQryPrc, "@FILANT"  , cFilAnt)
+				msQryPrc = Replace(msQryPrc, "@PERIODO" , Substr(dtos(dDataFin), 5, 2))
+				msQryPrc = Replace(msQryPrc, "@YRFDRE"  , xYRFDre)
 
 				QPIndex := CriaTrab(Nil,.f.)
-				dbUseArea(.T.,"TOPCONN",TcGenQry(,,msQryPrc),'QP001',.T.,.T.)
+
+				lEvalBlock := EvalBlock():EvalBlock(@{|| dbUseArea(.T.,"TOPCONN",TcGenQry(,,msQryPrc),'QP001',.T.,.T.) },,.T.,,)
+				If !lEvalBlock
+					msErroQuery := "Rubrica: " + CVF->CVF_CONTAG + " - " + CVF->CVF_DESCCG + msEnter + msEnter
+					msErroQuery += "Campo: " + msCampoQ + msEnter + msEnter
+					msErroQuery += msQryPrc
+					lRet := .F.
+					Exit
+				EndIf
+
 				dbSelectArea("QP001")
 				dbGoTop()
 
-				Reclock("ZN6",.T.)
-				ZN6->ZN6_FILIAL := xFilial("ZN6")
-				ZN6->ZN6_DATREF := dDataFin
-				ZN6->ZN6_VERCON := msVerCon
-				ZN6->ZN6_CODPLA := xCodPla
-				ZN6->ZN6_RUBVIS := xRubVis
-				ZN6->ZN6_TIPO1  := "A"
-				ZN6->ZN6_VALOR  := QP001->VALOR
-				ZN6->(MsUnLock())		
+				While !QP001->(Eof())
+
+					If QP001->VALOR <> 0
+
+						Reclock("ZN6",.T.)
+						ZN6->ZN6_FILIAL := xFilial("ZN6")
+						ZN6->ZN6_DATREF := dDataFin
+						ZN6->ZN6_VERCON := msVerCon
+						ZN6->ZN6_CODPLA := xCodPla
+						ZN6->ZN6_RUBVIS := xRubVis
+						ZN6->ZN6_TIPO1  := "A"
+						ZN6->ZN6_OPERAC := QP001->OPERAC
+						ZN6->ZN6_VALOR  := QP001->VALOR
+						ZN6->ZN6_DENOMI := QP001->DENOMI
+						ZN6->(MsUnLock())
+
+					EndIf
+
+					QP001->(dbSkip())
+
+				End
 
 				QP001->(dbCloseArea())
 				Ferase(QPIndex+GetDBExtension())
@@ -319,6 +405,6 @@ Static Function Prc679EX(oProcess)
 
 	Next pk
 
-	xVerRet := .T.
+	xVerRet := lRet
 
-Return
+Return( lRet )

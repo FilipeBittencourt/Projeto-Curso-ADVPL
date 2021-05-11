@@ -207,6 +207,7 @@ Return()
 
 Class TPCItemStruct From LongClassName
 
+	Public Data cItem
 	Public Data cNumSc
 	Public Data cItemSc
 	Public Data nQuantSc
@@ -219,6 +220,13 @@ Class TPCItemStruct From LongClassName
 	Public Data nTotal
 	Public Data cTes
 	Public Data cTransp
+	Public Data cUM
+	Public Data cSegUM
+	Public Data cQtdSegUM
+	Public Data cCC
+	Public Data cClVl
+	Public Data cDriver
+	Public Data cObsCom
 		
 	Public Method New() Constructor
 
@@ -226,6 +234,7 @@ EndClass
 
 Method New() Class TPCItemStruct
 
+	::cItem			:= ""
 	::cNumSc		:= ""
 	::cItemSc		:= ""
 	::nQuantSc		:= 0
@@ -238,7 +247,14 @@ Method New() Class TPCItemStruct
 	::nTotal		:= 0
 	::cTES			:= ""
 	::cTransp		:= ""
-		
+	::cUM			:= ""
+	::cSegUM		:= ""
+	::cQtdSegUM		:= ""
+	::cCC			:= ""
+	::cClVl			:= ""
+	::cDriver		:= ""
+	::cObsCom		:= ""
+			
 Return()
 
 

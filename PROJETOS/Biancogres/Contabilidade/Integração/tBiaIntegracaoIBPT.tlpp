@@ -1,0 +1,86 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "TOPCONN.CH"
+
+/*/{Protheus.doc} TBiaIntegracaoIBPT
+@author Gabriel Rossi Mafioletti (Facile)
+@since 04/05/2020
+@version 1.0
+@description s
+@type class
+/*/
+
+User Function GTSTNCM()
+
+	Local _oteste
+	
+	RpcSetEnv("01","01")
+	_oTeste	:=	TBiaIntegracaoIBPT():NEW()
+	_oTeste:GetNCM("01042010")
+	
+
+RETURN
+
+Class TBiaIntegracaoIBPT From LongClassName
+
+	Data _cToken
+	Data _cCnPj
+	Data _cNcm
+	Data _cDescricao
+	Data _cErro
+	
+	PUBLIC Method New() Constructor
+	PUBLIC Method GetNCM(_cNcm)
+
+
+EndClass
+
+Method New() Class TBiaIntegracaoIBPT
+
+	::_cToken		:=	"QwlmeXNCU9gRbOvAPS_yPhmthy2Nh-AI_iFCKHeA0bEoYo2KhbCX3rxpr_Dpyyig"
+	::_cCnpj		:=	"21795105000154"
+	::_cNcm			:=	""
+	::_cDescricao	:=	""
+	::_cErro		:=	""
+
+Return
+
+Method GetNCM(_cNcm) Class TBiaIntegracaoIBPT
+
+	Local _lRet	:=	.T.
+	Local _cUrl	:=	""
+	Local _jRet
+	Local _oJson	:=	JsonObject():New()
+		
+	_cUrl	:=	"https://apidoni.ibpt.org.br/api/v1/produtos?"
+	_cUrl	+=	"token=" + ::_cToken
+	_cUrl	+=	"&cnpj=" + ::_cCnpj 
+	_cUrl	+=	"&codigo=" + _cNcm
+	_cUrl	+=	"&UF=ES"  
+	_cUrl	+=	"&EX=0"
+	_cUrl	+=	"&descricao="
+	_cUrl	+=	"&unidadeMedida="
+	_cUrl	+=	"&valor=0"
+	_cUrl	+=	"&gtin="
+
+	_cRet	:=	httpget(_cUrl)
+
+	If _cRet <> Nil
+		_jRet	:=	_oJson:FromJson(_cRet)
+		If ValType(_jRet) <> "U"
+			_lRet	:=	.F.
+			::_cErro	:=	"Erro ao Converter o Retorno da Pesquisa"
+		Else
+			If _oJson:hasProperty("Codigo") .And. _oJson:hasProperty("Descricao")
+				::_cNcm	:=	_oJson:GetJsonObject("Codigo")
+				::_cDescricao	:=	UPPER(_oJson:GetJsonObject("Descricao"))
+			Else
+				_lRet	:=	.F.
+				::_cErro	:=	"WS Retornou propriedades inválidas"
+			EndIf
+		EndIf
+	Else
+		_lRet	:=	.F.
+		::_cErro	:=	"Erro no Retorno da Pesquisa"
+	EndIF
+	
+Return _lRet

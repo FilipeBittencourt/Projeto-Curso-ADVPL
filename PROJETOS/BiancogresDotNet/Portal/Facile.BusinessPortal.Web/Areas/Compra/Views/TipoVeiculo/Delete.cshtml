@@ -1,0 +1,28 @@
+﻿@model Facile.BusinessPortal.Model.TipoVeiculo
+@using Facile.BusinessPortal.Model
+
+@{
+    ViewData["Title"] = "Tipo Veiculo";
+}
+
+
+<ol class="breadcrumb">
+    <li class="breadcrumb-item">
+        <a asp-action="Index">Listagem</a>
+    </li>
+    <li class="breadcrumb-item active">tipo veiculo</li>
+</ol>
+
+<h3>Tem certeza que deseja excluir o registro: @Model.ID ?</h3>
+<div>
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="ID" />
+        <a asp-action="Index" class="btn btn-secondary shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed">Listagem</a>
+        <button type="submit" class="btn btn-danger shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed">Deletar</button>
+    </form>
+</div>
+
+
+@section Scripts {
+    <script></script>
+}

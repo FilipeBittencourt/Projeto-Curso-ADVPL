@@ -50,7 +50,9 @@ Class TWSubitemProjeto From LongClassName
 	Method GDEditableField()
 	Method GDFieldProperty()
 	Method GDFieldData()
-	Method Valid()	
+	Method Valid()
+	Method ValidItem()
+	Method ValidSubitem()	
 	Method Save()	
 	Method Confirm()
 	Method Cancel(lClose)
@@ -165,7 +167,7 @@ Method LoadBrowser() Class TWSubitemProjeto
 Local cVldDef := "AllwaysTrue"
 Local nMaxLine := 1000
 
-	RegToMemory(::cFDTable, ::nFDOpc == 3)
+	//RegToMemory(::cFDTable, ::nFDOpc == 3)
 	
 	::oGD := MsNewGetDados():New(0, 0, 0, 0, GD_INSERT + GD_UPDATE + GD_DELETE, cVldDef, cVldDef, "", ::GDEditableField(),, nMaxLine, cVldDef,, cVldDef, ::oContainer:GetPanel(::cItemBox), ::GDFieldProperty(), ::GDFieldData())
 	::oGD:oBrowse:Align := CONTROL_ALIGN_ALLCLIENT
@@ -280,21 +282,83 @@ Method Valid() Class TWSubitemProjeto
 Local lRet := .T.
 Local nCount := 0
 Local lExist := .T.
+
+	lRet := ::ValidItem() .And. ::ValidSubitem()
 	
-	lExist := aScan(::oGD:aCols, {|x| !Empty(x[nP_SUBITEM]) .And. x[Len(x)] == .F.}) > 0
-	
-	If lExist
-	
-		lRet := ::oGD:TudoOK()
-			
-	Else
-	
-		lRet := .F.
+	If lRet
+
+		lExist := aScan(::oGD:aCols, {|x| !Empty(x[nP_SUBITEM]) .And. x[Len(x)] == .F.}) > 0
 		
-		MsgStop("É necessário informar ao menos um Subitem no cadastro.")
+		If lExist
+		
+			lRet := ::oGD:TudoOK()
+				
+		Else
+		
+			lRet := .F.
+			
+			MsgStop("É necessário informar ao menos um Subitem no cadastro.")
+		
+		EndIf
+		
+	EndIf
+			
+Return(lRet)
+
+
+Method ValidItem() Class TWSubitemProjeto
+Local lRet := .T.
+Local cSQL := ""
+Local cQry := GetNextAlias()
+	
+	If ::nFDOpc == 3
+
+		cSQL := " SELECT ISNULL(ZMA_CODIGO, '') AS ZMA_CODIGO "
+		cSQL += " FROM "+ RetSQLName("ZMA")
+		cSQL += " WHERE ZMA_FILIAL = "+ ValToSQL(xFilial("ZMA")) 
+		cSQL += " AND ZMA_CLVL = " + ValToSQL(M->ZMA_CLVL)
+		cSQL += " AND ZMA_ITEMCT = " + ValToSQL(M->ZMA_ITEMCT)
+		cSQL += " AND D_E_L_E_T_ = '' "
+		
+		TcQuery cSQL New Alias (cQry)
+		
+		If !Empty((cQry)->ZMA_CODIGO)
+	
+			lRet := .F.
+			
+			MsgStop("A classe de valor: "+ AllTrim(M->ZMA_CLVL) +" e o Item: "+ AllTrim(M->ZMA_ITEMCT) +" já foram cadastrados, favor verificar o código: " + (cQry)->ZMA_CODIGO)
+			
+		EndIf
+		
+		(cQry)->(DbCloseArea())
+		
+	EndIf
+
+Return(lRet)
+
+
+Method ValidSubitem() Class TWSubitemProjeto
+Local lRet := .T.
+Local nCount := 1
+		
+	While lRet .And. nCount <= Len(::oGD:aCols)
+
+		If !GdDeleted(nCount, ::oGD:aHeader, ::oGD:aCols)
+
+			lRet := aScan(::oGD:aCols, {|x| Upper(AllTrim(x[nP_SUBITEM])) == Upper(AllTrim(::oGD:aCols[nCount, nP_SUBITEM])) .And. x[Len(x)] == .F.}) == nCount
+			
+		EndIf
+		
+		nCount++
+	
+	EndDo()
+	
+	If !lRet
+			
+		MsgStop("Existem Subitens duplicados, favor verificar.")
 	
 	EndIf
-		
+
 Return(lRet)
 
 
@@ -424,7 +488,11 @@ Method Cancel(lClose) Class TWSubitemProjeto
 
 	Default lClose := .F.
 
-	RollBackSx8()
+	//If ::nFDOpc == 3
+
+		//RollBackSx8()
+		
+	//EndIf
 
 	If lClose
 		

@@ -1,0 +1,162 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\Desenvolvimento1\\Documents\\Projetos\\Biancogres\\Projetos.NET\\Portal\\Facile.BusinessPortal.StageArea.Model\\Facile.BusinessPortal.StageArea.Model.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\Desenvolvimento1\\Documents\\Projetos\\Biancogres\\Projetos.NET\\Portal\\Facile.BusinessPortal.Library\\Facile.BusinessPortal.Library.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Desenvolvimento1\\Documents\\Projetos\\Biancogres\\Projetos.NET\\Portal\\Facile.BusinessPortal.Library\\Facile.BusinessPortal.Library.csproj",
+        "projectName": "Facile.BusinessPortal.Library",
+        "projectPath": "C:\\Users\\Desenvolvimento1\\Documents\\Projetos\\Biancogres\\Projetos.NET\\Portal\\Facile.BusinessPortal.Library\\Facile.BusinessPortal.Library.csproj",
+        "packagesPath": "C:\\Users\\Desenvolvimento1\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Desenvolvimento1\\Documents\\Projetos\\Biancogres\\Projetos.NET\\Portal\\Facile.BusinessPortal.Library\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\Desenvolvimento1\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "netstandard2.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "netstandard2.0": {
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netstandard2.0": {
+          "dependencies": {
+            "Microsoft.AspNetCore.Diagnostics": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "Microsoft.AspNetCore.Mvc": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[2.2.6, )"
+            },
+            "Microsoft.Extensions.Logging": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "NETStandard.Library": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.0.3, )",
+              "autoReferenced": true
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.300\\RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\Desenvolvimento1\\Documents\\Projetos\\Biancogres\\Projetos.NET\\Portal\\Facile.BusinessPortal.StageArea.Model\\Facile.BusinessPortal.StageArea.Model.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Desenvolvimento1\\Documents\\Projetos\\Biancogres\\Projetos.NET\\Portal\\Facile.BusinessPortal.StageArea.Model\\Facile.BusinessPortal.StageArea.Model.csproj",
+        "projectName": "Facile.BusinessPortal.StageArea.Model",
+        "projectPath": "C:\\Users\\Desenvolvimento1\\Documents\\Projetos\\Biancogres\\Projetos.NET\\Portal\\Facile.BusinessPortal.StageArea.Model\\Facile.BusinessPortal.StageArea.Model.csproj",
+        "packagesPath": "C:\\Users\\Desenvolvimento1\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Desenvolvimento1\\Documents\\Projetos\\Biancogres\\Projetos.NET\\Portal\\Facile.BusinessPortal.StageArea.Model\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\Desenvolvimento1\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "netstandard2.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "netstandard2.0": {
+            "projectReferences": {
+              "C:\\Users\\Desenvolvimento1\\Documents\\Projetos\\Biancogres\\Projetos.NET\\Portal\\Facile.BusinessPortal.Library\\Facile.BusinessPortal.Library.csproj": {
+                "projectPath": "C:\\Users\\Desenvolvimento1\\Documents\\Projetos\\Biancogres\\Projetos.NET\\Portal\\Facile.BusinessPortal.Library\\Facile.BusinessPortal.Library.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netstandard2.0": {
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[2.2.6, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "target": "Package",
+              "version": "[2.2.6, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[2.2.6, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.2.6, )"
+            },
+            "NETStandard.Library": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.0.3, )",
+              "autoReferenced": true
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.300\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

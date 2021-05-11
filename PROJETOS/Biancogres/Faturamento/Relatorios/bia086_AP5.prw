@@ -314,7 +314,8 @@ User Function BIA086()
 		//Este período foi alterado por Wanisay no dia 10/12/15 conforme solicitação por e-mail e OS 4636-15  
 		//Esta parametrização fará com que a performance do relatório seja prejudicada.
 		//wEntrDe	  := IF(DTOS(MV_PAR05)<DTOS(ddatabase - 90),(ddatabase - 90),MV_PAR05) // emissao da NF 90 DIAS ANTES DA DATABASE
-		wEntrDe	  := IF(DTOS(MV_PAR05)<DTOS(ddatabase - 360),(ddatabase - 360),MV_PAR05) // emissao da NF 360 DIAS ANTES DA DATABASE	
+		//wEntrDe	  := IF(DTOS(MV_PAR05)<DTOS(ddatabase - 360),(ddatabase - 360),MV_PAR05) // emissao da NF 360 DIAS ANTES DA DATABASE	
+		wEntrDe	  := IF(DTOS(MV_PAR05)<DTOS(ddatabase - 1825),(ddatabase - 1825),MV_PAR05) // emissao da NF 360 DIAS ANTES DA DATABASE	
 		wEntrAte  := mv_par06	// emissao da NF ate
 	ELSE
 		wEntrDe	  := mv_par05	// emissao da NF de

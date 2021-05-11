@@ -1,0 +1,76 @@
+﻿@model Facile.BusinessPortal.Model.NotaFiscalCompra
+@using Facile.BusinessPortal.Model
+
+
+@{
+    ViewData["Title"] = "";
+}
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Detalhes da Nota Fiscal
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <!-- datatable start -->
+                    <!-- class="bg-highlight"-->
+                    <table id="dt-registro" class="table table-bordered table-hover table-striped w-100">
+                        <thead class="bg-primary-600">
+                            <tr>
+                                <th>Campo</th>
+                                <th>Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th>Data Agendamento</th>
+                                <td>@(Model.DataAgendamento.HasValue? Model.DataAgendamento.Value.ToString("dd/MM/yyyy HH:ss") : "")</td>
+                            </tr>
+                            <tr>
+                                <th>Local Entrega</th>
+                                <td>@(Model.LocalEntregaID.HasValue ? Model.LocalEntrega.Nome : "")</td>
+                            </tr>
+                            <tr>
+                                <th>Pedido</th>
+                                <td>@(Model.PedidoCompraID.HasValue ? Model.PedidoCompra.Numero : "")</td>
+                            </tr>
+                            <tr>
+                                <th>Pedido Item</th>
+                                <td>@(Model.PedidoCompraID.HasValue ? Model.PedidoCompra.Item : "")</td>
+                            </tr>
+                            <tr>
+                                <th>Motorista</th>
+                                <td>@Model.Motorista</td>
+                            </tr>
+                            <tr>
+                                <th>Placa</th>
+                                <td>@Model.Placa</td>
+                            </tr>
+                            <tr>
+                                <th>Tipo Veiculo</th>
+                                <td>@(Model.TipoVeiculoID.HasValue? Model.TipoVeiculo.Nome: "")</td>
+                            </tr>
+                            <tr>
+                                <th>Tipo Produto</th>
+                                <td>@(Model.TipoProdutoID.HasValue? Model.TipoProduto.Nome : "")</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <!-- datatable end -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+}

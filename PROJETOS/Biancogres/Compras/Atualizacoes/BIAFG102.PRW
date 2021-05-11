@@ -160,9 +160,12 @@ Static Function fImpEtiq(_cNota,_cSerie,_cFornece,_cLoja,_cItem,_cCod,_nEtiq)
 	Local _cPcEtiq	:=	""
 	Local _cArqEtiq	:=	""
 	
+	Local _cSolicit :=	""
+	
 	BeginSql Alias _cAlias
 	
-		SELECT ISNULL(SC1.C1_SOLICIT ,'') SOLICIT,
+		SELECT ISNULL(SC1.C1_YMAT ,'') C1_YMAT,
+				ISNULL(SC1.C1_YMATRIC ,'') C1_YMATRIC,
 		 		SC7.C7_NUM NUMPED,
 		 		SB1.B1_UM UM,
 		 		ZCN.ZCN_LOCALI LOCALI,
@@ -204,6 +207,17 @@ Static Function fImpEtiq(_cNota,_cSerie,_cFornece,_cLoja,_cItem,_cCod,_nEtiq)
 
 		_cArqEtiq	:=	(_cAlias)->NUMPED+'-'+Alltrim((_cAlias)->CODPRO) + ".TMP"
 
+		_cSolicit	:=	""
+		
+		If !Empty((_cAlias)->C1_YMATRIC)
+		
+			_cSolicit	:=	fGetFunc((_cAlias)->C1_YMATRIC)
+			
+		ElseIf !Empty((_cAlias)->C1_YMAT)
+		
+			_cSolicit	:=	fGetFunc((_cAlias)->C1_YMAT)
+		
+		EndIf
 
 		If File("D:\PROTHEUS12\Protheus_Data\ImpAutoEtiq\" + _cArqEtiq)
 			_nRet	:=	FErase( "D:\PROTHEUS12\Protheus_Data\ImpAutoEtiq\" + _cArqEtiq )
@@ -230,7 +244,7 @@ Static Function fImpEtiq(_cNota,_cSerie,_cFornece,_cLoja,_cItem,_cCod,_nEtiq)
 		wString := wString + "113100000800140" + AllTrim((_cAlias)->CODPRO) + Chr(13)
 		wString := wString + "121100000550020" + SUBSTR((_cAlias)->DESPRO   ,01,48) + Chr(13)
 		wString := wString + "121100000420020" + SUBSTR((_cAlias)->DESPRO   ,49,48) + Chr(13)		
-		wString := wString + "121100000220007   PC: " + (_cAlias)->NUMPED + "      SOLIC: "  + (_cAlias)->SOLICIT + Chr(13)
+		wString := wString + "121100000220007   PC: " + (_cAlias)->NUMPED + "      SOLIC: "  + _cSolicit + Chr(13)
 		wString := wString + "121100000020007   MARCA: "     + Alltrim((_cAlias)->MARCA) + "  P/N: " + Alltrim((_cAlias)->PN) + Chr(13)
 		wString := wString + "Q"                           + StrZero(_nEtiq,4)                               + Chr(13)
 		wString := wString + "E"                                                                           + Chr(13)
@@ -258,3 +272,34 @@ Static Function fImpEtiq(_cNota,_cSerie,_cFornece,_cLoja,_cItem,_cCod,_nEtiq)
 	
 	
 Return
+
+Static Function fGetFunc(_cMat)
+
+	Local _aArea	:=	GetArea()
+
+	Local _cAlias	:=	GetNextAlias()
+
+	Local _cEmpresa	:=	Alltrim(Str(Val(cEmpAnt)))
+	
+	Local _cSolic	:=	""
+	
+	_cMat	:=	Iif(Len(_cMat) == 8,Substr(_cMat,3,6),_cMat)
+	
+	BeginSql Alias _cAlias
+	%NoParser%
+	SELECT TOP 1 NOMFUN
+	FROM VETORH..R034FUN
+	WHERE NUMEMP = %Exp:_cEmpresa%
+		AND TIPCOL = 1
+		AND NUMCAD = %Exp:_cMat%
+	
+	EndSql
+
+	If (_cAlias)->(!EOF())
+	
+		_cSolic	:=	SUBSTR((_cAlias)->NOMFUN,1,10)
+
+	EndIf
+	(_cAlias)->(DbCloseArea())
+	RestArea(_aArea)
+Return _cSolic

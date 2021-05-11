@@ -1,0 +1,73 @@
+﻿@{
+    ViewData["Title"] = "Atendimento";
+}
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Atendimento Detalhes
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <!-- datatable start -->
+                    <!-- class="bg-highlight"-->
+                    <table id="dt-registro" class="table table-bordered table-hover table-striped w-100">
+                        <tbody>
+                            <tr>
+                                <th width="30%">Reclamante</th>
+                                <td>@Model.NomeReclamante</td>
+                            </tr>
+                            <tr>
+                                <th>CEP</th>
+                                <td>@Model.CepReclamante</td>
+                            </tr>
+                            <tr>
+                                <th>Estado</th>
+                                <td>@Model.EstadoReclamante</td>
+                            </tr>
+                            <tr>
+                                <th>Cidade</th>
+                                <td>@Model.CidadeReclamante</td>
+                            </tr>
+                            <tr>
+                                <th>Bairro</th>
+                                <td>@Model.BairroReclamante</td>
+                            </tr>
+                            <tr>
+                                <th>Endereço</th>
+                                <td>@Model.EnderecoReclamante</td>
+                            </tr>
+                            <tr>
+                                <th>Telefone</th>
+                                <td>@Model.TelefoneReclamante</td>
+                            </tr>
+                            <tr>
+                                <th>Contato</th>
+                                <td>@Model.ContatoReclamante</td>
+                            </tr>
+                            <tr>
+                                <th>Horário Contato</th>
+                                <td>@Model.HorarioContatoReclamante</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            
+                        </tfoot>
+                    </table>
+                    <!-- datatable end -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+}

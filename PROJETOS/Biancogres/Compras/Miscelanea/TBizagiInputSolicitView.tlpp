@@ -222,6 +222,7 @@ Return()
         Public Data Empresa            AS STRING
         Public Data Filial 	        AS STRING
         Public Data Matricula			AS String
+        Public Data MatriculaOrigem		AS String
         Public Data NomeSolicitante    AS String
         Public Data DataEmissao		AS String
         Public Data DataAprovacao		AS String
@@ -602,6 +603,7 @@ Method InputSolicit() Class TBizagiInputSolicitView
     cSQL += ", SUBSTRING(E.Code,3,2)                                                          AS 'CAB_Filial'	                            "
     cSQL += ", US.Matricula                                                                   AS 'CAB_Matricula'	                        "
     cSQL += ", US.fullName                                                                    AS 'CAB_NomeSolicitante'	                    "
+    cSQL += ", ISNULL(USO.Matricula,'')                                                       AS 'CAB_MatriculaO'	                        "    
     cSQL += ", CONVERT(NVARCHAR, SC.DataEmissaoSolicitacao, 23)                               AS 'CAB_DataEmissao'	                        "
     cSQL += ",'Recuperada dentro do WS no Momento da Integração'                              AS 'CAB_DataAprovacao'	                    "
     cSQL += ", CONVERT(NVARCHAR, SC.Necessidade, 23)                                          AS 'CAB_Necessidade'	                        "
@@ -645,6 +647,7 @@ Method InputSolicit() Class TBizagiInputSolicitView
     cSQL += "INNER JOIN "+cBizagi+".DBO.CASESTATE CS WITH (NOLOCK) ON CS.idCaseState = W.idCaseState	                                    "
     cSQL += "INNER JOIN "+cBizagi+".DBO.Empresa E WITH (NOLOCK) ON E.idEmpresa = SC.Empresa	                                            "
     cSQL += "INNER JOIN "+cBizagi+".DBO.WFUSER US WITH (NOLOCK) ON US.idUser = SC.Solicitante	                                        "
+    cSQL += "LEFT JOIN "+cBizagi+".DBO.WFUSER USO WITH (NOLOCK) ON USO.idUser = SC.MatriculaOrigem	                                        "
     cSQL += "INNER JOIN "+cBizagi+"D.DBO.ItemSolicitacaoDeCompra IT WITH (NOLOCK) ON IT.SolicitacaodeCompra = SC.idSolicitacaodeCompra    "
     cSQL += "LEFT JOIN ( SELECT CC.* , EK.idVW_BZ_CONTA_CONTABIL FROM "+cBizagi+".DBO.VW_BZ_CONTA_CONTABIL CC WITH (NOLOCK) INNER JOIN "+cBizagi+".DBO.VW_BZ_CONTA_CONTABIL_EK EK WITH (NOLOCK) ON EK.Codigo = CC.Codigo ) CCSC ON CCSC.idVW_BZ_CONTA_CONTABIL = SC.ContaContabil												"
     cSQL += "LEFT JOIN ( SELECT PD.* , EK.idVW_BZ_PRODUTO FROM "+cBizagi+".DBO.VW_BZ_PRODUTO PD WITH (NOLOCK) INNER JOIN "+cBizagi+".DBO.VW_BZ_PRODUTO_EK EK WITH (NOLOCK) ON EK.Codigo = PD.Codigo AND EK.Empresa = PD.Empresa ) PD ON PD.idVW_BZ_PRODUTO = IT.Produto                                                       "
@@ -705,6 +708,7 @@ Method InputSolicit() Class TBizagiInputSolicitView
         LP:SCCab:Empresa           := (cQry)->CAB_Empresa
         LP:SCCab:Filial            := (cQry)->CAB_Filial
         LP:SCCab:Matricula         := (cQry)->CAB_Matricula
+        LP:SCCab:MatriculaOrigem   := (cQry)->CAB_MatriculaO
         LP:SCCab:NomeSolicitante   := (cQry)->CAB_NomeSolicitante
         LP:SCCab:DataEmissao       := (cQry)->CAB_DataEmissao
         LP:SCCab:DataAprovacao     := (cQry)->DataAprovacaoBizagi //(cQry)->CAB_DataAprovacao
@@ -1198,6 +1202,7 @@ Method put_SolicitacaoCompra(SC) Class TBizagiInputSolicitView
 
     Local i
     Local cMatric 		:= ''
+    Local cMatricO		:= ''
     Local cSolicEmp		:= ''
     Local cEmpresa		:= ''
     Local cDataAprov 	:= ''
@@ -1210,6 +1215,7 @@ Method put_SolicitacaoCompra(SC) Class TBizagiInputSolicitView
 
     cSolicEmp := IIF(SC:SCCab:SolicEmpresa == Nil,'',Substring(SC:SCCab:SolicEmpresa,1,2))
     cMatric   := SC:SCCab:Matricula
+    cMatricO   := SC:SCCab:MatriculaOrigem
     cEmpresa  := SC:SCCab:Empresa
 
     // Sera rodado via tela
@@ -1364,6 +1370,7 @@ Method put_SolicitacaoCompra(SC) Class TBizagiInputSolicitView
             SC1->C1_Cotacao	:= IIF(!Empty(SC:SCItem[i]:Importado), IIF(SC:SCItem[i]:Importado == '1' .Or. SC:SCItem[i]:Importado == 'S' .Or. UPPER(SC:SCItem[i]:Importado) == 'TRUE', 'IMPORT', '' ), ''  )
             SC1->C1_APROV  	:= "L"
             SC1->C1_YMAT    := CMATRIC
+            SC1->C1_YMATRIC    := CMATRICO
             SC1->C1_YSOLEMP := cSolicEmp
             SC1->C1_SOLICIT := UPPER(SC:SCCab:NomeSolicitante)
             SC1->C1_EMISSAO := STOD(Replace(SUBSTR(SC:SCCab:DataEmissao,1,10), "-", ""))

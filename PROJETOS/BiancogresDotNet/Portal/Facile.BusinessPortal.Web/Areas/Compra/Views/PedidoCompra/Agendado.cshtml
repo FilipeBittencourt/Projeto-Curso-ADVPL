@@ -1,0 +1,119 @@
+﻿@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+@{
+    ViewData["Title"] = "Agenda Entregas";
+}
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Agenda das Entregas
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <div class="row">
+                        <div class="col-md-12"><br /></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div id="calendar" class="fc fc-ltr fc-bootstrap" style=""></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Util.js" asp-append-version="true"></script>
+    <script asp-append-version="true" src="~/smartadmin/js/dependency/moment/moment.js"></script>
+    <script asp-append-version="true" src="~/smartadmin/js/miscellaneous/fullcalendar/fullcalendar.bundle.js"></script>
+    <script asp-append-version="true" src="~/smartadmin/js/miscellaneous/fullcalendar/locales-all.js"></script>
+
+    <script asp-append-version="true" >
+
+
+        $(function () {
+
+            var calendarEl = document.getElementById('calendar');
+
+            var calendar = new FullCalendar.Calendar(calendarEl,
+                {
+                    locale: 'pt-br',
+                    firstDay: 1,
+                    aspectRatio: 1.6,
+                    fixedWeekCount: false,
+                    eventLimit: true,
+                    plugins: ['dayGrid', 'list', 'timeGrid', 'interaction', 'bootstrap'],
+                    themeSystem: 'bootstrap',
+                    timeZone: 'UTC',
+                    dateAlignment: "month", //week, month
+                    buttonText:
+                    {
+                        today: 'Hoje',
+                        month: 'Mês',
+                        week: 'Semana',
+                        day: 'Dia',
+                        list: 'Lista'
+                    },
+                    eventTimeFormat:
+                    {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        meridiem: 'short'
+                    },
+                    navLinks: true,
+                    header:
+                    {
+                        left: 'prev,next today addEventButton',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+                    },
+                    footer:
+                    {
+                        left: '',
+                        center: '',
+                        right: ''
+                    },
+                    customButtons:
+                    {
+
+                    },
+                    //height: 700,
+                    editable: true,
+                    eventLimit: true, // allow "more" link when too many events
+                    events: function (info, successCallback) {
+
+                        $.get(
+                            "../PedidoCompra/GetAgenda",
+                            {
+                                start: moment(info.start).format("YYYY-MM-DD"),
+                                end: moment(info.end).format("YYYY-MM-DD")
+                            },
+                            function (d) {
+                                if (d.ok == 1) {
+                                    successCallback(d.events);
+                                }
+                            },
+                            'JSON'
+                        );
+
+                    },
+
+                });
+
+            calendar.render();
+            
+        });
+        
+    </script>
+}

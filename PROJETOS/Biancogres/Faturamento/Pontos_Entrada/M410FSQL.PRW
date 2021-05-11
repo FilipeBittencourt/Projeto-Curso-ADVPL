@@ -20,7 +20,8 @@ User Function M410FSQL()
 	If !Empty(Alltrim(cRepAtu))
 		//cFiltro := " C5_FILIAL = '"+xFilial("SC5")+"' AND C5_VEND1 = '"+cRepAtu+"' AND C5_EMISSAO >= '"+Dtos(ddatabase - 90)+"' "
 		
-		cFiltro := " C5_FILIAL = '"+xFilial("SC5")+"' .AND. C5_VEND1 = '"+cRepAtu+"' .AND. DTOS(C5_EMISSAO) >= '"+DTOS(ddatabase - 90)+"' "
+		//Ticket 31627 - Liberar para que representantes consigam visualizar pedidos de até 5 anos. 365*5=1825
+		cFiltro := " C5_FILIAL = '"+xFilial("SC5")+"' .AND. C5_VEND1 = '"+cRepAtu+"' .AND. DTOS(C5_EMISSAO) >= '"+DTOS(ddatabase - 1825)+"' "
 			  
 	EndIf
 

@@ -65,6 +65,16 @@ Method GetSC7(cNum, cItem) Class TLoadPedidoCompra
 			oPCItemStruct:nTotal	 	:= SC7->C7_TOTAL
 			oPCItemStruct:cTES          := SC7->C7_TES	
 			oPCItemStruct:cTransp		:= SC7->C7_YTRANSP
+			oPCItemStruct:cItem			:= SC7->C7_ITEM
+			
+			oPCItemStruct:cUM			:= SC7->C7_UM
+			oPCItemStruct:cSegUM		:= SC7->C7_SEGUM
+			oPCItemStruct:cQtdSegUM		:= SC7->C7_QTSEGUM
+			oPCItemStruct:cCC			:= SC7->C7_CC
+			oPCItemStruct:cClVl			:= SC7->C7_CLVL
+			oPCItemStruct:cDriver		:= SC7->C7_YDRIVER
+			oPCItemStruct:cObsCom		:= SC7->C7_YOBSCOM
+			//cItem
 				
 			oPCStruct:oPcItens:Add(oPCItemStruct)
 				

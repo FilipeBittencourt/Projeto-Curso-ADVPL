@@ -44,11 +44,11 @@ User Function BFATTE01(lObraAc)
 
 	//Legenda
 	Private aCores    := {	{  'Z68_STATUS=="0"'	, 'BR_BRANCO' 	},;
-		{  'Z68_STATUS=="1"'	, 'BR_AMARELO' 	},;
-		{  'Z68_STATUS=="2"'	, 'BR_VERDE' 	},;
-		{  'Z68_STATUS=="3"'	, 'BR_VERMELHO'	},;
-		{  'Z68_STATUS=="4"'	, 'BR_AZUL'		},;
-		{  'Z68_STATUS=="5"'	, 'BR_PRETO'	} }
+							{  'Z68_STATUS=="1"'	, 'BR_AMARELO' 	},;
+							{  'Z68_STATUS=="2"'	, 'BR_VERDE' 	},;
+							{  'Z68_STATUS=="3"'	, 'BR_VERMELHO'	},;
+							{  'Z68_STATUS=="4"'	, 'BR_AZUL'		},;
+							{  'Z68_STATUS=="5"'	, 'BR_PRETO'	} }
 
 	//Filtro pelo cadastro de Obras
 	If (lObraAc)
@@ -71,11 +71,11 @@ Return
 
 User Function BFTE01LE()
 	Local aLegenda := {	{ 'BR_BRANCO'	,	"Nova Prosposta" 		},;
-		{ 'BR_AMARELO'	,   "Revisada"  			},;
-		{ 'BR_VERDE'	,   "Aprovada"			  	},;
-		{ 'BR_AZUL'		,   "Pedido Gerado"		  	},;
-		{ 'BR_VERMELHO'	,   "Rejeitada"			  	},;
-		{ 'BR_PRETO'	,   "Vencida"			  	} }
+						{ 'BR_AMARELO'	,   "Revisada"  			},;
+						{ 'BR_VERDE'	,   "Aprovada"			  	},;
+						{ 'BR_AZUL'		,   "Pedido Gerado"		  	},;
+						{ 'BR_VERMELHO'	,   "Rejeitada"			  	},;
+						{ 'BR_PRETO'	,   "Vencida"			  	} }
 
 	BRWLEGENDA( cCadastro, "Legenda", aLegenda )
 Return
@@ -108,6 +108,7 @@ User Function BFTE01MA(_cOpca)
 	Private lAprova := .F.
 	Private lAltStatus := .F.
 	Private nDiasVenc := GetNewPar("MV_YDVCPE", 15)  //Dias para vencimento de proposta
+	Private nDiaVenc := GetNewPar("MV_YDVPE", 4)  //1+4=5, Dia do vencimento de proposta
 
 	Private cRevisa := ""
 	Private aAltEnch
@@ -208,6 +209,14 @@ User Function BFTE01MA(_cOpca)
 		M->Z68_CNPJ		:= ZZO->ZZO_CNPJ
 		M->Z68_CNOME	:= ZZO->ZZO_CONT1
 		M->Z68_CTEL		:= ZZO->ZZO_TELC1
+
+		//Ticket 31691: solicitação do Claudeir para que a data de validade seja definida na inclusão e não mais na aprovação
+		if ( Day(dDataBase) <= 28 )
+			M->Z68_DTVALI := Lastday(dDataBase,  0)
+		else
+			//se nDiaVenc é 4, a data é dia 05 do mês subsequente
+			M->Z68_DTVALI := DaySum(Firstday(MonthSum(dDataBase, 1)), nDiaVenc)
+		endif
 
 	EndIf
 
@@ -328,11 +337,15 @@ User Function BFTE01MA(_cOpca)
 
 		//definicao do comercial
 		//Validade para "dentro do mês" e para as propostas feitas a partir do dia 20, validade de 15 dias.
-		if ( Day(dDataBase) <= 20 )
+		//Esta regra foi alterada e a data de validade é setada ao incluir a proposta. 
+		//apenas para manter as propostas já correntes funcionando, atribuir conforme nova regra memso na aprovação.
+		if ( Day(dDataBase) <= 28 )
 			M->Z68_DTVALI := Lastday(dDataBase,  0)
 		else
-			M->Z68_DTVALI := dDataBase + nDiasVenc
+			//se nDiaVenc é 4, a data é dia 05 do mês subsequente
+			M->Z68_DTVALI := DaySum(Firstday(MonthSum(dDataBase, 1)), nDiaVenc)
 		endif
+
 
 		aAltEnch := {"Z68_STATUS", "Z68_OBSAPR"} //campos para alterar
 
@@ -419,11 +432,21 @@ User Function BFTE01MA(_cOpca)
 			Z68->Z68_DTAPRO	:= dDataBase
 			Z68->Z68_HRAPRO	:= SubStr(Time(),1,5)
 			Z68->Z68_USUAPR	:= "AUTO"
-			if ( Day(dDataBase) <= 20 )
+			
+			//Ticket 31691: data é definida na inclusão da proposta e não mais na aprovação.
+				// if ( Day(dDataBase) <= 20 )
+				// 	Z68->Z68_DTVALI := Lastday(dDataBase,  0)
+				// else
+				// 	Z68->Z68_DTVALI := dDataBase + nDiasVenc
+				// endif
+
+			if ( Day(dDataBase) <= 28 )
 				Z68->Z68_DTVALI := Lastday(dDataBase,  0)
 			else
-				Z68->Z68_DTVALI := dDataBase + nDiasVenc
+				//se nDiaVenc é 4, a data é dia 05 do mês subsequente
+				Z68->Z68_DTVALI := DaySum(Firstday(MonthSum(dDataBase, 1)), nDiaVenc)
 			endif
+
 			Z68->(MsUnlock())
 
 		Else
@@ -664,6 +687,7 @@ Static Function fProcessa()
 			Z68->Z68_FILIAL	:= XFilial("Z68")
 			Z68->Z68_NUM	:= cNumZ68
 			Z68->Z68_REV	:= M->Z68_REV
+			Z68->Z68_DTVALI	 := M->Z68_DTVALI
 		Else
 			RecLock("Z68",.F.)
 		EndIf

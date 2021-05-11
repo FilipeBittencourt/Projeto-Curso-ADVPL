@@ -156,7 +156,7 @@ Method InputCredito(cQry) Class TBizagiIntegracaoCredito
 						SA1->(DbSetOrder(1))
 						If SA1->(DbSeek(xFilial("SA1") + SZU->ZU_CODCLI))
 
-							SZU->ZU_CODPRO := U_BIAF146(dDataBase, SA1->A1_COD, SA1->A1_LOJA, SA1->A1_GRPVEN, SA1->A1_CGC, SZU->ZU_VALOR, 0, "2", .F.)
+							SZU->ZU_CODPRO := U_BIAF146(dDataBase, SA1->A1_COD, SA1->A1_LOJA, SA1->A1_GRPVEN, SA1->A1_CGC, SZU->ZU_VALOR, 0, "3", .F.)
 						
 						EndIf
 						

@@ -1,0 +1,125 @@
+#include "totvs.ch"
+
+static __aCT5       as array
+static __cCT5Key    as character
+
+/*/{Protheus.doc} CT5CPOS
+@author Marinaldo de Jesus (Facile)
+@since 22/04/2021
+@project Automação Entrada
+@version 1.0
+@description Ponto de Entrada CT5CPOS na função DetProva do programa MATXFUNA.PRX 
+             Usado para efetuar o posicionamento do LP 
+@type function
+/*/
+user function CT5CPOS() 
+    CT5CPOS():GoTo()
+    return(nil)
+
+class CT5CPOS
+    static method GoTo() as array
+    static method PushPopStack() as array
+end class
+
+static method GoTo() class CT5CPOS
+
+    local aCT5          as array
+
+    local cPadrao       as character
+    local cSequen       as character
+    local cCT5Filial    as character
+    local cCT5KeySeek   as character
+
+    local nATCT5        as numeric
+    local nCT5RecNo     as numeric
+    local nCT5Order     as numeric
+    local nCT5Filial    as numeric
+    local nCT5Sequen    as numeric
+   
+    begin sequence
+
+        if (!stackTools():IsInCallStack("U_CT5CPOS"))
+            break
+        endif        
+
+        if (!type("ParamIXB")=="A")
+            break
+        endif
+        
+        aCT5:=&("ParamIXB")
+
+        CT5CPOS():PushPopStack()
+
+        nATCT5:=aScan(__aCT5,{|e|(aUtils():Compare(e[1],aCT5))})
+    
+        if (nATCT5>0)
+            nCT5RecNo:=__aCT5[nATCT5][2]
+            CT5->(MsGoTo(nCT5RecNo))
+            break
+        endif
+        
+        if (empty(aCT5))
+            break
+        endif
+
+        cPadrao:=aCT5[1][1]
+
+        nCT5Order:=retOrder("CT5","CT5_FILIAL+CT5_LANPAD+CT5_SEQUEN")
+
+        nCT5Filial:=aScan(aCT5[1][2][1],{|x|x[1]=="CT5_FILIAL"})
+        if (nCT5Filial>0)
+            cCT5Filial:=aCT5[1][2][1][nCT5Filial][2]
+        else
+            cCT5Filial:=xFilial("CT5")
+        endif
+
+        nCT5Sequen:=aScan(aCT5[1][2][1],{|x|x[1]=="CT5_SEQUEN"})
+
+        if (nCT5Sequen>0)
+            cSequen:=aCT5[1][2][1][nCT5Sequen][2]
+        else
+            cSequen:=""
+        endif
+
+        cCT5KeySeek:=cCT5Filial
+        cCT5KeySeek+=cPadrao
+        cCT5KeySeek+=cSequen
+        CT5->(dbSetOrder(nCT5Order))
+        CT5->(MsSeek(cCT5KeySeek,.F.))
+        CT5->(aAdd(__aCT5,{aCT5,RecNo()}))
+
+    end sequence
+
+    return(__aCT5)
+
+static method PushPopStack() class CT5CPOS
+
+    local cCT5Key   as character
+
+    local nCT5Size  as numeric
+
+    DEFAULT __aCT5:=array(0)
+
+    begin sequence
+
+        if (!stackTools():IsInCallStack("U_CT5CPOS"))
+            break
+        endif        
+
+        cCT5Key:=&("cEmpAnt")
+        cCT5Key+=&("cFilAnt")
+
+        if (!cCT5Key==__cCT5Key)
+            __cCT5Key:=cCT5Key
+            aSize(__aCT5,0)
+        endif
+
+        nCT5Size:=len(__aCT5)
+        while (nCT5Size>500)
+            aDel(__aCT5,1)
+            aSize(__aCT5,--nCT5Size)
+        end while
+
+    end sequence
+
+    return(__aCT5)

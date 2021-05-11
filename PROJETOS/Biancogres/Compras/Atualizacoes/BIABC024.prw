@@ -79,7 +79,7 @@ User Function BIABC024()
 		DbSelectArea("QRY1")
 		DbSkip()
 	END
-	DbCloseArea("QRY1")
+	(QRY1)->(DbCloseArea())
 	
 	if bInsere
 		Aviso('Cálculo Limite de Compras por Departamento', "Sucesso! Cálculo executado sem problemas para o período : " + sAnoMes ,{'Ok'})

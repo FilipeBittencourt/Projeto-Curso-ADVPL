@@ -1,0 +1,233 @@
+﻿@{
+    ViewData["Title"] = "Antecipação";
+}
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Antecipação
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <!-- datatable start -->
+                    <!-- class="bg-highlight"-->
+                    <table id="dt-registro" class="table table-bordered table-hover table-striped w-100">
+                        <thead class="bg-primary-600">
+                            <tr>
+                                <th>#</th>
+                                <th>Unidade</th>
+                                <th width="30%">Fornecedor</th>
+                                <th>Tipo</th>
+                                <th>Data Emissão</th>
+                                <th>Data Pagamento</th>
+                                <th>Taxa</th>
+                                <th>Valor</th>
+                                <th>Origem</th>
+                                <th>Status</th>
+                                <th width="10%">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                        <tfoot>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <!-- datatable end -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal-detalhe-antecipacao" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    Detalhes Antecipação
+                </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"><i class="fal fa-times"></i></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12" style="overflow-y: scroll;height: 120px;">
+                        <table class="table" id="table-antecipacao-detalhe">
+                            <thead>
+                                <tr>
+                                    <th width="20%" class="border-top-0 table-scale-border-bottom fw-700">Numero Documento</th>
+                                    <th width="20%" class="border-top-0 table-scale-border-bottom fw-700">Parcela</th>
+                                    <th width="20%" class="border-top-0 table-scale-border-bottom fw-700">Data Vencimento</th>
+                                    <th width="20%" class="text-right border-top-0 table-scale-border-bottom fw-700">Valor</th>
+                                    <th width="20%" class="text-right border-top-0 table-scale-border-bottom fw-700">Valor Antecipado</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+
+                    </div>
+                    <div class="col-md-12" style="padding-right: 30px;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th width="20%" class="border-top-0 table-scale-border-bottom fw-700">Totais</th>
+                                    <th width="20%" class="border-top-0 table-scale-border-bottom fw-700"></th>
+                                    <th width="20%" class="border-top-0 table-scale-border-bottom fw-700"></th>
+                                    <th width="20%" class="text-right border-top-0 table-scale-border-bottom fw-700">
+                                        <div class="soma-total"></div>
+                                    </th>
+                                    <th width="20%" class="text-right border-top-0 table-scale-border-bottom fw-700">
+                                        <div class="soma-total-antecipacao"></div>
+                                    </th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+                @*<div class="row mt-3">
+                    <div class="col-sm-6 ml-sm-auto">
+                        <table class="table table-clean">
+                            <tbody>
+                                <tr class="table-scale-border-top border-left-0 border-right-0 border-bottom-0">
+                                    <td class="text-left keep-print-font">
+                                        <h4 class="m-0 fw-700 h4 keep-print-font color-primary-700">Total</h4>
+                                    </td>
+                                    <td class="text-right keep-print-font">
+                                        <h4 class="m-0 fw-700 h4 keep-print-font soma-total"></h4>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-sm-6 ml-sm-auto">
+                        <table class="table table-clean">
+                            <tbody>
+                                <tr class="table-scale-border-top border-left-0 border-right-0 border-bottom-0">
+                                    <td class="text-left keep-print-font">
+                                        <h4 class="m-0 fw-700 h4 keep-print-font color-primary-700">Total Antecipado</h4>
+                                    </td>
+                                    <td class="text-right keep-print-font">
+                                        <h4 class="m-0 fw-700 h4 keep-print-font soma-total-antecipacao"></h4>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>*@
+
+                <div class="row mt-3">
+                    <div class="col-md-12 ml-sm-auto">
+                        <div class="alert alert-info hide" role="alert">
+                            <strong class="info-alteracao"></strong>
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" name="AntecipacaoId" id="AntecipacaoId" value="" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn-cancelar">Cancelar</button>
+                <button type="button" class="btn btn-danger btn-recusar">Recusar</button>
+                <button type="button" class="btn btn-success btn-alterar">Alterar</button>
+                <button type="button" class="btn btn-success btn-aprovar">Aprovar</button>
+                <button type="button" class="btn btn-success btn-aceitar">Aceitar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal-atualizar-antecipacao" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    Atualizar Antecipação
+                </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"><i class="fal fa-times"></i></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <label class="form-label" for="NovaTaxa">
+                            Nova Taxa (%)
+                        </label>
+                        <div class="input-group">
+                            <input type="number" name="NovaTaxa" id="NovaTaxa" step="0.010"  class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2 mb-2">
+                    <div class="col-md-12 text-left">
+                        <div class="custom-control custom-checkbox">
+                            <input value="true" name="AtualizarCadastro" type="checkbox" class="custom-control-input" id="AtualizarCadastro">
+                            <label class="custom-control-label" for="AtualizarCadastro"> Atualizar Taxa Cadastro do Fornecedor </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <label class="form-label" for="DataRecebimento">
+                            Data de Recebimento
+                        </label>
+                        <div class="input-group">
+                            <input type="text" name="DataRecebimento" id="DataRecebimento" class="form-control data-datepicker">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="form-label" for="Observacao">Observação</label>
+                            <textarea name="Observacao" id="Observacao" class="form-control"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-atualizar ">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" name="FieldSearch" value="">
+
+@section Scripts {
+
+    <script asp-append-version="true">
+
+        var TipoUsuario = '@ViewBag.TipoUsuario'
+        var FiltroStatus = '@ViewBag.FiltroStatus'
+
+    </script>
+
+    <script src="~/js/Util.js" asp-append-version="true"></script>
+    <script src="~/js/Antecipacao.js" asp-append-version="true"></script>
+}

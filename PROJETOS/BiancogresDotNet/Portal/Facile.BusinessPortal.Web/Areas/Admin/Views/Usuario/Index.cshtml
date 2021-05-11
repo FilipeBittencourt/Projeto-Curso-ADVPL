@@ -1,0 +1,168 @@
+﻿@model IEnumerable<Facile.BusinessPortal.Model.Usuario>
+@using Facile.BusinessPortal.Model
+
+
+@{
+    ViewData["Title"] = "Usuário";
+}
+
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Usuário
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <!-- datatable start -->
+                    <!-- class="bg-highlight"-->
+                    <table id="dt-registro" class="table table-bordered table-hover table-striped w-100">
+                        <thead class="bg-primary-600">
+                            <tr>
+                                <th>CPF</th>
+                                <th>Nome</th>
+                                <th>E-mail</th>
+                                <th>Status</th>
+                                <th width="8%">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <th>@Html.DisplayFor(modelItem => item.CPF)</th>
+                                    <th>@Html.DisplayFor(modelItem => item.Nome)</th>
+                                    <th>@Html.DisplayFor(modelItem => item.Email)</th>
+                                    <th>@item.Status()</th>
+                                    <th>
+                                        <a title="Editar Usuário" class="btn btn-icon waves-effect waves-themed" asp-route-id="@item.ID" asp-action="Edit">
+                                            <i class="fal fa-pencil text-info"></i>
+                                        </a>
+                                        @*<a class="btn btn-icon waves-effect waves-themed" asp-route-id="@item.ID" asp-action="Delete"><i class="fal fa-trash-alt text-danger"></i></a>*@
+                                        <a title="Resetar Usuário" href="javascript:void(0)" id="@item.ID" class="btn btn-icon waves-effect waves-themed btn-criar-reset">
+                                            <i class="fal fa-user color-fusion-300"></i>
+                                        </a>
+                                    </th>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <!-- datatable end -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    <script src="~/js/Util.js"></script>
+    <script>
+
+        var linkNovo = '@Url.Action("Create")';
+
+        
+        $(document).ready(function () {
+
+            $('.btn-criar-reset').on('click', function () {
+                var id = $(this).attr('id');
+                $('#preloader').removeClass('hide');
+				$('#preloader div#status').html('Aguarde...');
+
+                $.get(
+                    '../Admin/Usuario/ResetEmailAsync',
+                    { id: id },
+                    function (d) {
+                        $('#preloader').addClass('hide');
+
+                        Swal.fire({
+                            type: d.ok ? 'success' : 'error',
+                            title: "",
+                            text: d.ok ? 'Usuário resetado com sucesso.' : 'Erro ao resetar usuário.',
+                        });
+                    },
+                    'JSON'
+                );
+            });
+
+            
+            var table = $('#dt-registro').DataTable(
+                    {
+                        'columnDefs': [{ "orderable": false, "targets": 3 }],
+                        orderCellsTop: true,
+                        fixedHeader: true,
+                        dom: "<'row mb-3'<'col-sm-12 col-md-6 d-flex align-items-center justify-content-start'B><'col-sm-12 col-md-6 d-flex align-items-center justify-content-end'l>>" +
+                            "<'row'<'col-sm-12'tr>>" +
+                        "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                        buttons: [
+                        {
+                            text: 'Novo',
+                            className: 'btn btn-outline-primary waves-effect waves-themed',
+                                action: function (e, dt, node, config) {
+                                    window.location.href = linkNovo;
+                            }
+                        }],
+                        "lengthMenu": [[10, 20, 30, -1], [10, 20, 30, "All"]],
+                        "aaSorting": [],
+                        "oLanguage": {
+                            "oPaginate": {
+                                "sNext": ">",
+                                "sFirst": "<<",
+                                "sLast": ">>",
+                                "sPrevious": "<"
+                            },
+                            "sLengthMenu": "Mostrar:  _MENU_",
+                            "sZeroRecords": "Não há registros correspondentes foram encontrados",
+                            "sInfo": "Mostrando _START_ a _END_ de _TOTAL_ no total",
+                            "sInfoEmpty": "Mostrando 0 a 0 de 0 no total",
+                            "sInfoFiltered": "(filtrado das _MAX_ entradas totais)",
+                            "sSearch": "Filtrar: ",
+                            "sEmptyTable": "Não há dados disponíveis na tabela",
+                            "sLoadingRecords": "Carregando...",
+                            "sProcessing": "Processando..."
+                        },
+                });
+
+                $('#dt-registro thead tr').clone(true).appendTo('#dt-registro thead');
+                $('#dt-registro thead tr:eq(1) th').each(function (i) {
+
+                    if (i < $('#dt-registro thead tr:eq(1) th').length - 1) {
+
+                        var title = $(this).text();
+                        $(this).html('<input type="text" class="form-control form-control-sm search" placeholder="" />');
+
+                        $('input', this).on('keyup change', function () {
+                            if (table.column(i).search() !== this.value) {
+                                table
+                                    .column(i)
+                                    .search(this.value)
+                                    .draw();
+                            }
+                        });
+
+                    } else {
+                        $(this).html('');
+                    }
+
+                });
+            });
+
+    </script>
+}

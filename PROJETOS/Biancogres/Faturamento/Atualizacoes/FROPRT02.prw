@@ -759,6 +759,97 @@ User Function FRRT02C9(_cPedido)
 	RestArea(cAreaC5)
 Return
 
+User Function GETOPPED(_cPedido, _cItem)
+	
+	Local cAliasTrab	:= Nil
+	Local cQuery		:= ""
+	Local aRet			:= {"", "", "", "", ""}
+	
+	cQuery := " select * from "+RetSQLName("PZ0")+"						"
+	cQuery += " where 1=1							 					"
+	cQuery += " AND PZ0_FILIAL 		= '"+xFilial('PZ0')+"' 				"
+	cQuery += "	AND PZ0_PEDIDO 		= '"+_cPedido+"' 					"
+	cQuery += "	AND PZ0_ITEMPV 		= '"+_cItem+"' 						"
+	cQuery += "	AND PZ0_STATUS 		= 'P'								"
+	cQuery += "	AND D_E_L_E_T_ 		= ''			 					"
+	cQuery += "	ORDER BY R_E_C_N_O_ DESC								"
+	
+	cAliasTrab := GetNextAlias()
+	TCQUERY cQuery ALIAS (cAliasTrab) NEW
+	
+	If !(cAliasTrab)->(Eof())
+		
+		aRet	:= {;
+			(cAliasTrab)->PZ0_FILIAL,;
+			(cAliasTrab)->PZ0_OPNUM,;
+			(cAliasTrab)->PZ0_OPITEM,;
+			(cAliasTrab)->PZ0_OPSEQ,;
+			(cAliasTrab)->PZ0_DATENT;
+			}			
+					
+	EndIf						
+	(cAliasTrab)->(DbCloseArea())	
+		
+Return aRet
+
+User Function REFAZPZ0(_cPedido, _cItem, _cFilOp, _cNumOp, _cItemOp, _cSeqOp, _cDataEnt)
+	
+	Local cAreaC6 		:= SC6->(GetArea())
+	Local cAliasTmp		:= Nil
+				
+	SC6->(DbSetOrder(1))
+	If SC6->(DbSeek(XFilial("SC6")+_cPedido+_cItem))
+
+		cAliasTmp := GetNextAlias()
+		BeginSql Alias cAliasTmp
+			%NOPARSER%
+
+			select SALDO = C6_QTDVEN - isnull((select SUM(C9_QTDLIB) from %Table:SC9% SC9 where C9_FILIAL = C6_FILIAL and C9_PEDIDO = C6_NUM and C9_ITEM = C6_ITEM and SC9.%NotDel%),0)
+			from %Table:SC6% SC6 where C6_FILIAL = %XFILIAL:SC6% and C6_NUM = %EXP:SC6->C6_NUM% and C6_ITEM = %EXP:SC6->C6_ITEM% and SC6.%NotDel%
+
+		EndSql
+			
+		If !(cAliasTmp)->(Eof()) .And. (cAliasTmp)->SALDO > 0
+
+			__aListRes := U_FRTE02LO("", SC6->C6_NUM, SC6->C6_ITEM, "", "")
+
+			If Len(__aListRes) <= 0 .And. Alltrim(SC6->C6_BLQ) <> "R"
+
+				__nSaldoOp	:= U_FRSALDOP(cEmpAnt, _cFilOp, _cNumOp, _cItemOp, _cSeqOp, '', '')
+				
+				If .T.//(__nSaldoOp > 0 .And. (__nSaldoOp - (cAliasTmp)->SALDO) >= 0 )
+					
+					RecLock("PZ0",.T.)
+						PZ0->PZ0_FILIAL	:= XFilial("PZ0")
+						PZ0->PZ0_OPNUM 	:= _cNumOp
+						PZ0->PZ0_OPITEM := _cItemOp
+						PZ0->PZ0_OPSEQ 	:= _cSeqOp
+						PZ0->PZ0_CODPRO := SC6->C6_PRODUTO
+						PZ0->PZ0_PEDIDO := SC6->C6_NUM
+						PZ0->PZ0_ITEMPV := SC6->C6_ITEM
+						PZ0->PZ0_QUANT 	:= (cAliasTmp)->SALDO
+						PZ0->PZ0_USUINC := CUSERNAME
+						PZ0->PZ0_DATINC := Date()
+						PZ0->PZ0_HORINC := SubStr(Time(),1,5)
+						PZ0->PZ0_DATENT := stod(_cDataEnt)
+						PZ0->PZ0_STATUS := 'P'
+					PZ0->(MsUnlock()) 
+					
+					RecLock("SC6",.F.)
+						SC6->C6_YTPEST := "R"
+					SC6->(MsUnlock())
+			
+				EndIf
+														
+			EndIf
+		EndIf
+		(cAliasTmp)->(DbCloseArea())
+	EndIf
+
+	RestArea(cAreaC6)	
+Return
+
+
 //Grava os campos de arremate de lote ao gerar novo SC9
 User Function FR2C9LOT()
 	Local cAliasAux

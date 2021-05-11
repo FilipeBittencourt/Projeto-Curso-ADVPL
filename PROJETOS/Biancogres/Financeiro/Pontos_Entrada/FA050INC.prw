@@ -4,7 +4,8 @@
 
 User Function FA050INC()
 
-	Private cValida           
+	Private cValida   
+	Private cCtrBloq := 0        
 
 	//RUBENS JUNIOR (FACILE SISTEMAS) 01/11/13
 	//TITULOS MANUAIS SEREM INSERIDOS BLOQUEADOS, PARA APROVACAO
@@ -56,15 +57,23 @@ User Function FA050INC()
 				WHILE !EOF() .AND. SC3->C3_NUM == M->E2_YCONTR
 					IF ALLTRIM(M->E2_CLVL) == ALLTRIM(SC3->C3_YCLVL)
 						lPassei := .T.
-						IF SC3->C3_MSBLQL == '1'
-							MsgAlert("Este contrato está bloqueado.")
-							Return .F.
+						
+						IF SC3->C3_MSBLQL == '1' .AND. cCtrBloq <> 2
+						    cCtrBloq := 1							
+						ELSE
+						  cCtrBloq := 2
 						ENDIF
 					ENDIF
 
 					DbSelectArea("SC3")
 					DbSkip()
 				END
+				
+				IF cCtrBloq == 1
+				   MsgAlert("[FA050INC] Este contrato está bloqueado.")
+				   cCtrBloq := 0
+				   Return .F.
+				ENDIF
 
 				IF !lPassei
 					MsgAlert("A Classe de Valor deste PA deverá ser igual a Classe de Valor do Contrato informado.")

@@ -1,0 +1,65 @@
+﻿@model IEnumerable<Facile.BusinessPortal.StageArea.Model.ProcessoEmpresa>
+
+@{
+    ViewData["Title"] = "Processos de Sicronismo Cloud Apps";
+}
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Processos
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <!-- datatable start -->
+                    <!-- class="bg-highlight"-->
+                    <table id="dt-registro" class="table table-bordered table-hover table-striped w-100">
+                        <thead class="bg-primary-600">
+                            <tr>
+                                <th>CNPJ</th>
+                                <th>Processo</th>
+                                <th>Última Execução</th>
+                                <th width="8%">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                var lastdate = item.LastEditDate.HasValue ? item.LastEditDate.Value.ToString("dd/MM/yyyy HH:MM:ss") : "";
+
+                                <tr>
+                                    <th>@Html.DisplayFor(modelItem => item.EmpresaInterface.CNPJ)</th>
+                                    <th>@Html.DisplayFor(modelItem => item.ProcessoIntegracao)</th>
+                                    <th>@Html.DisplayFor(modelItem => lastdate)</th>
+
+
+                                    <th>
+                                        <a class="" asp-route-id="@item.ID" asp-action="Edit"><i class="fal fa-pencil text-info"></i></a>
+                                        <a class="" asp-route-id="@item.ID" asp-action="Delete"><i class="fal fa-trash-alt text-danger"></i></a>
+                                    </th>
+
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <!-- datatable end -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

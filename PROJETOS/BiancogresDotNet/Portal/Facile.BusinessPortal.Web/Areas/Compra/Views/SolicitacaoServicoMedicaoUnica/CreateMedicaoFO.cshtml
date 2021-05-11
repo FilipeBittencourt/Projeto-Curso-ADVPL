@@ -1,0 +1,192 @@
+﻿@model Facile.BusinessPortal.Model.Compra.Servico.SolicitacaoServicoMedicaoUnica
+@using Facile.BusinessPortal.Model.Compra.Servico
+
+@{
+    ViewData["Title"] = "Solicitação de Serviço";
+}
+
+<ol class="breadcrumb">
+    <li class="breadcrumb-item">
+        <a asp-action="Index">Listagem</a>
+    </li>
+    <li class="breadcrumb-item active">solicitação de serviço</li>
+</ol>
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Médição
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <form id="FormCad" accept-charset="UTF-8" asp-action="CreateMedicao" method="POST" enctype="multipart/form-data">
+
+                        @{
+
+                            <input name="SolicitacaoServicoID" type="hidden" value="@ViewBag.SolicitacaoServicoID">
+
+                            if (ViewBag.SolicitacaoServicoMedicaoUnica != null)
+                            {
+                                var SolicitacaoServicoMedicaoUnica = (ViewBag.SolicitacaoServicoMedicaoUnica as SolicitacaoServicoMedicaoUnica);
+                                <div class="card">
+                                    <div class="row">
+                                        <div class="col-md-12"><h2>Ações</h2></div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 div-anexo-nota-fiscal">
+
+                                            @if (SolicitacaoServicoMedicaoUnica.Status == StatusSolicitacaoServicoMedicaoUnica.Concluido)
+                                            {
+                                                <a title="Nota Fiscal" href="/Compra/SolicitacaoServicoMedicaoUnica/GetAnexo/@SolicitacaoServicoMedicaoUnica.ID" target="_blank" class="btn btn-inline-block mr-1">
+                                                    Anexo <i class="fal fa-paperclip color-fusion-300"></i>
+                                                </a>
+                                            }
+                                            @if (SolicitacaoServicoMedicaoUnica.Status == StatusSolicitacaoServicoMedicaoUnica.NotaFiscalAdicionada)
+                                            {
+                                                <a title="Nota Fiscal" href="javascript:void(0)" Status="AF" class="btn btn-inline-block mr-1 btn-anexo-medicao-nota-fiscal">
+                                                    Anexo Nota Fiscal <i class="fal fa-upload color-fusion-300"></i>
+                                                </a>
+                                                <a title="Nota Fiscal" href="/Compra/SolicitacaoServicoMedicaoUnica/GetAnexo/@SolicitacaoServicoMedicaoUnica.ID" target="_blank" class="btn btn-inline-block mr-1">
+                                                    Anexo <i class="fal fa-paperclip color-fusion-300"></i>
+                                                </a>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12"></div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="card">
+                                    <div class="row">
+                                        <div class="col-md-12"><h2>Ações</h2></div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 div-anexo-nota-fiscal">
+                                            <a title="Nota Fiscal" href="javascript:void(0)" Status="AF" class="btn btn-inline-block mr-1 btn-anexo-medicao-nota-fiscal">
+                                                Anexo Nota Fiscal <i class="fal fa-upload color-fusion-300"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12"></div>
+                                    </div>
+                                </div>
+                            }
+
+
+
+                        }
+
+                        <div class="row mt-2">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th width="30%">Descrição</th>
+                                        <th>Quantidade</th>
+                                        <th>Preço</th>
+                                        <th>Und. Medição</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                    @{
+                                        var SolicitacaoServicoCotacaoItem = (ViewBag.SolicitacaoServicoCotacaoItem as List<SolicitacaoServicoCotacaoItem>);
+
+                                        if (SolicitacaoServicoCotacaoItem != null)
+                                        {
+                                            foreach (var item in SolicitacaoServicoCotacaoItem)
+                                            {
+                                                <tr>
+                                                    <td>@item.SolicitacaoServicoItem.Produto.Codigo</td>
+                                                    <td>@item.SolicitacaoServicoItem.Descricao</td>
+                                                    <td>@string.Format("{0:N}", item.SolicitacaoServicoItem.Quantidade)</td>
+                                                    <td>@string.Format("{0:N}", item.Preco)</td>
+                                                    <td>@item.SolicitacaoServicoItem.UnidadeMedicaoDescricao()</td>
+                                                </tr>
+                                            }
+                                        }
+                                    }
+
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="row mt-2 text-right">
+                            <div class="col-md-12">
+                                <a asp-action="Index" asp-controller="SolicitacaoServico" class="btn btn-secondary shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed">Voltar</a>
+
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="modal-anexo-medicao-nota-fiscal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    Anexo Nota Fiscal
+                </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"><i class="fal fa-times"></i></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="cadAnexoMedicaoNotaFiscal" name="cadAnexoMedicaoNotaFiscal" enctype="multipart/form-data">
+
+                    <input name="SolicitacaoServicoID" type="hidden" value="" />
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-label">Arquivo</label>
+                                <div class="custom-file">
+                                    <input type="file" name="customFile" class="custom-file-input" id="customFile">
+                                    <label class="custom-file-label" for="customFile">Selecionar Anexo</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </form>
+
+                <div class="row mt-3">
+                    <div class="col-md-12 ml-sm-auto">
+                        <div class="alert alert-info hide" role="alert">
+                            <strong class="info-alteracao"></strong>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success btn-salvar-anexo-nota-fiscal">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="~/js/Util.js" asp-append-version="true"></script>
+    <script src="~/js/SolicitacaoServicoMedicaoUnica.js" asp-append-version="true"></script>
+}

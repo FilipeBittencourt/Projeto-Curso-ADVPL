@@ -61,6 +61,8 @@ Function u_UPDNewAmb( cEmpAmb, cFilAmb )
 	aAdd(  aButton, {  1, .T., { || lOk := .T., FechaBatch() } } )
 	aAdd(  aButton, {  2, .T., { || lOk := .F., FechaBatch() } } )
 
+	lAuto:=.F.
+	
 	If lAuto
 		lOk := .T.
 	Else
@@ -155,9 +157,9 @@ Static Function FSTProc( lEnd, aMarcadas, lAuto )
 	If ( lOpen := MyOpenSm0(.T.) )
 
 		dbSelectArea( "SM0" )
-		dbGoTop()
+		SM0->(dbGoTop())
 
-		While !SM0->( EOF() )
+		While SM0->( !EOF() )
 			// Só adiciona no aRecnoSM0 se a empresa for diferente
 			If aScan( aRecnoSM0, { |x| x[2] == SM0->M0_CODIGO } ) == 0 ;
 					.AND. aScan( aMarcadas, { |x| x[1] == SM0->M0_CODIGO } ) > 0
@@ -168,7 +170,7 @@ Static Function FSTProc( lEnd, aMarcadas, lAuto )
 
 		SM0->( dbCloseArea() )
 
-		If lOpen
+		If (lOpen)
 
 			For nI := 1 To Len( aRecnoSM0 )
 
@@ -240,6 +242,24 @@ Static Function FSTProc( lEnd, aMarcadas, lAuto )
 				oProcess:SetRegua2(0)
 				oProcess:IncRegua2("Atualizando MV_AMBIENT ...")
 				MsAguarde({||FSAtuSPEDURL()},"Atualizando MV_AMBIENT ..." )
+				
+				oProcess:IncRegua2("...")
+
+				oProcess:SetRegua2(0)
+				oProcess:IncRegua2("Atualizando Tabela Z28 ...")
+				MsAguarde({||FSAtuZ28()},"Atualizando Tabela Z28 ..." )
+				
+				oProcess:IncRegua2("...")
+
+				oProcess:SetRegua2(0)
+				oProcess:IncRegua2("Atualizando Tabela SA1 ...")
+				MsAguarde({||FSAtuSA1()},"Atualizando Tabela SA1 ..." )
+				
+				oProcess:IncRegua2("...")
+
+				oProcess:SetRegua2(0)
+				oProcess:IncRegua2("Atualizando Tabela SA2 ...")
+				MsAguarde({||FSAtuSA2()},"Atualizando Tabela SA2 ..." )
 				
 				oProcess:IncRegua2("...")
 
@@ -349,6 +369,166 @@ static function FSAtuSPEDURL()
 
 	return()
 
+static function FSAtuZ28()
+	
+	local cEmp			as character
+	local cFil			as character
+	local cQuery		as character
+    local cTable        as character
+
+	local nTCLink		as numeric
+	local nRpcType		as numeric
+	local nConnection	as numeric
+
+	nConnection:=AdvConnection()
+
+	cEmp:=&("cEmpAnt")
+	cFil:=&("cFilAnt")
+
+	nRpcType:=3
+	SetTopType("A")
+	Connect(nil,.T.,@cEmp,@cFil,nRpcType,.F.)
+	
+	nTCLink:=AdvConnection()
+
+    cTable:=retFullName("Z28")
+	if (TCCanOpen(cTable))
+		if (ChkFile("Z28"))
+			cQuery:="UPDATE "+cTable+" SET Z28_EMAIL=REPLACE(REPLACE(Z28_EMAIL,'@','&'),'.','!')"
+			if (TCSQLExec(cQuery)<0)
+				AutoGrLog(CRLF+"Erro na Atualizacao da Tabela "+cTable+" :: " + "Empresa[" +&("cEmpAnt")+"] " + CRLF + TCSQLError() + CRLF + Replicate( "-", 128 ) + CRLF )
+			else
+				AutoGrLog(CRLF+"Tabela "+cTable+" Atualizada com Sucesso :: " + "Empresa[" +&("cEmpAnt")+"] " + CRLF + Replicate( "-", 128 ) + CRLF )
+			endif
+			Z28->(dbCloseArea())
+		else
+			AutoGrLog(CRLF+"Tabela "+cTable+" Não Atualizada :: " + "Empresa[" +&("cEmpAnt")+"] " + CRLF + Replicate( "-", 128 ) + CRLF )
+		endif
+	else
+		AutoGrLog(CRLF+"Tabela "+cTable+" Não Encontrada :: " + "Empresa[" +&("cEmpAnt")+"] " + CRLF + Replicate( "-", 128 ) + CRLF )
+	endif
+
+	if (!nTCLink==nConnection)
+		TCULink(nTCLink)
+		TCSetConn(nTCLink)
+	endif
+
+	return()
+
+static function FSAtuSA1()
+	
+	local cEmp			as character
+	local cFil			as character
+	local cQuery		as character
+    local cTable        as character
+	local cWhere		as character
+
+	local nTCLink		as numeric
+	local nRpcType		as numeric
+	local nConnection	as numeric
+
+	nConnection:=AdvConnection()
+
+	cEmp:=&("cEmpAnt")
+	cFil:=&("cFilAnt")
+
+	nRpcType:=3
+	SetTopType("A")
+	Connect(nil,.T.,@cEmp,@cFil,nRpcType,.F.)
+	
+	nTCLink:=AdvConnection()
+
+    cTable:=retFullName("SA1")
+	if (TCCanOpen(cTable))
+        if (ChkFile("SA1"))
+			cWhere:=""
+			cQuery:="UPDATE "+cTable
+			cQuery+="   SET A1_EMAIL=REPLACE(REPLACE(A1_EMAIL,'@','&'),'.','!')"
+			if (SA1->(FieldPos("A1_YEMABOL")>0))
+				cQuery+="      ,A1_YEMABOL=REPLACE(REPLACE(A1_YEMABOL,'@','&'),'.','!')"
+				cWhere+=" OR A1_YEMABOL<>''
+			endif
+			if (SA1->(FieldPos("A1_YMAILNF")>0))
+				cQuery+="      ,A1_YMAILNF=REPLACE(REPLACE(A1_YMAILNF,'@','&'),'.','!')" 
+				cWhere+=" OR A1_YMAILNF<>' '"
+			endif
+			cQuery+=" WHERE A1_EMAIL<>''"
+			cQuery+=cWhere
+			if (TCSQLExec(cQuery)<0)
+				AutoGrLog(CRLF+"Erro na Atualizacao da Tabela "+cTable+" :: " + "Empresa[" +&("cEmpAnt")+"] " + CRLF + TCSQLError() + CRLF + Replicate( "-", 128 ) + CRLF )
+			else
+				AutoGrLog(CRLF+"Tabela "+cTable+" Atualizada com Sucesso :: " + "Empresa[" +&("cEmpAnt")+"] " + CRLF + Replicate( "-", 128 ) + CRLF )
+			endif
+			SA1->(dbCloseArea())
+		else
+			AutoGrLog(CRLF+"Tabela "+cTable+" Não Atualizada :: " + "Empresa[" +&("cEmpAnt")+"] " + CRLF + Replicate( "-", 128 ) + CRLF )
+		endif
+	else
+		AutoGrLog(CRLF+"Tabela "+cTable+" Não Encontrada :: " + "Empresa[" +&("cEmpAnt")+"] " + CRLF + Replicate( "-", 128 ) + CRLF )
+	endif
+
+	if (!nTCLink==nConnection)
+		TCULink(nTCLink)
+		TCSetConn(nTCLink)
+	endif
+
+	return()	
+
+static function FSAtuSA2()
+	
+	local cEmp			as character
+	local cFil			as character
+	local cQuery		as character
+    local cTable        as character
+	local cWhere		as character
+
+	local nTCLink		as numeric
+	local nRpcType		as numeric
+	local nConnection	as numeric
+
+	nConnection:=AdvConnection()
+
+	cEmp:=&("cEmpAnt")
+	cFil:=&("cFilAnt")
+
+	nRpcType:=3
+	SetTopType("A")
+	Connect(nil,.T.,@cEmp,@cFil,nRpcType,.F.)
+	
+	nTCLink:=AdvConnection()
+
+    cTable:=retFullName("SA2")
+	if (TCCanOpen(cTable))
+        if (ChkFile("SA2"))
+			cWhere:=""
+			cQuery:="UPDATE "+cTable
+			cQuery+="   SET A2_EMAIL=REPLACE(REPLACE(A2_EMAIL,'@','&'),'.','!')"
+			if (SA2->(FieldPos("A2_YEMAFIN")>0))
+				cQuery+="      ,A2_YEMAFIN=REPLACE(REPLACE(A2_YEMAFIN,'@','&'),'.','!')"
+				cWhere+=" OR A2_YEMAFIN<>'' "
+			endif
+			cQuery+=" WHERE A2_EMAIL<>''"
+			cQuery+=cWhere
+			if (TCSQLExec(cQuery)<0)
+				AutoGrLog(CRLF+"Erro na Atualizacao da Tabela "+cTable+" :: " + "Empresa[" +&("cEmpAnt")+"] " + CRLF + TCSQLError() + CRLF + Replicate( "-", 128 ) + CRLF )
+			else
+				AutoGrLog(CRLF+"Tabela "+cTable+" Atualizada com Sucesso :: " + "Empresa[" +&("cEmpAnt")+"] " + CRLF + Replicate( "-", 128 ) + CRLF )
+			endif
+			SA2->(dbCloseArea())
+		else
+			AutoGrLog(CRLF+"Tabela "+cTable+" Não Atualizada :: " + "Empresa[" +&("cEmpAnt")+"] " + CRLF + Replicate( "-", 128 ) + CRLF )
+		endif
+	else
+		AutoGrLog(CRLF+"Tabela "+cTable+" Não Encontrada :: " + "Empresa[" +&("cEmpAnt")+"] " + CRLF + Replicate( "-", 128 ) + CRLF )
+	endif
+
+	if (!nTCLink==nConnection)
+		TCULink(nTCLink)
+		TCSetConn(nTCLink)
+	endif
+
+	return()	
+
 Static Function EscEmpresa()
 
 	Local   aRet      := {}
@@ -425,7 +605,7 @@ Static Function EscEmpresa()
 
 	RestArea( aSalvAmb )
 	dbSelectArea( "SM0" )
-	dbCloseArea()
+	SM0->(dbCloseArea())
 
 Return  aRet
 

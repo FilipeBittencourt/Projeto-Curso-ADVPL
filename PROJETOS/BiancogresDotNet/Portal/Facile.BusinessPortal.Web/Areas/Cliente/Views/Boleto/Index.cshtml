@@ -1,0 +1,165 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Meus Boletos
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <!-- datatable start -->
+                    <!-- class="bg-highlight"-->
+                    <table id="dt-registro" class="table table-bordered table-hover table-striped w-100">
+                        <thead class="bg-primary-600">
+                            <tr>
+                                <th>#</th>
+                                <th>Unidade</th>
+                                <th width="20%">Sacado</th>
+                                <th>Numero Documento</th>
+                                <th>Data Emissão</th>
+                                <th>Data Vencimento</th>
+                                <th>Status</th>
+                                <th>Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                        <tfoot>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <!-- datatable end -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="modal-boleto" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    Atualização Boleto
+                </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"><i class="fal fa-times"></i></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form name="cadBoleto">
+
+                    <input type="hidden" name="Acao" value="">
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-label" for="data">Data Atualização</label>
+                                <input class="form-control data-datepicker" id="DataAtualizacao" type="text" name="DataAtualizacao" value="">
+                            </div>
+
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary btn-atualizar">Atualizar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" name="FieldSearch" value="">
+<a href="" page="@Url.Action("Index", "Boleto")" class="hide new-page" target="_blank"></a>
+
+@section Scripts {
+    <script src="~/js/Util.js" asp-append-version="true"></script>
+
+    <script>
+
+        var UrlBase = '@Url.Action("Index", "Boleto")';
+
+        ButtonsAcoes = [];
+
+        if (eval('@ViewBag.AcaoImprimir'.toLowerCase())) {
+            ButtonsAcoes.push({
+                text: '<i class="fal fa-print mr-1"></i> Imprimir',
+                className: 'btn btn-outline-primary waves-effect waves-themed',
+                action: function (e, dt, node, config) {
+                    ImprimirBoleto();
+                }
+            });
+        }
+
+        if (eval('@ViewBag.AcaoEnviarEmail'.toLowerCase())) {
+            ButtonsAcoes.push({
+                text: '<i class="fal fa-envelope mr-1"></i> Enviar Email',
+                className: 'btn btn-outline-primary waves-effect waves-themed',
+                action: function (e, dt, node, config) {
+                    EnviarEmailBoleto();
+                }
+            });
+        }
+
+        if (eval('@ViewBag.AcaoAtualizar'.toLowerCase())) {
+            ButtonsAcoes.push({
+                text: '<i class="fal fa-edit mr-1"></i> Atualizar',
+                className: 'btn btn-outline-primary waves-effect waves-themed',
+                action: function (e, dt, node, config) {
+
+                    $('input[name=Acao]').val('A');
+                    CheckVencido(function () {
+                        AtualizarBoleto();
+                    })
+                }
+            });
+        }
+
+        if (eval('@ViewBag.AcaoAtualizarEnviarEmail'.toLowerCase())) {
+            ButtonsAcoes.push({
+                text: '<i class="fal fa-paper-plane mr-1"></i> Atualizar e Enviar Email',
+                className: 'btn btn-outline-primary waves-effect waves-themed',
+                action: function (e, dt, node, config) {
+
+                    $('input[name=Acao]').val('AE');
+                    CheckVencido(function () {
+                        AtualizarEnviarEmailBoleto();
+                    })
+                }
+            });
+        }
+
+        if (eval('@ViewBag.AcaoExportaExcel'.toLowerCase())) {
+            ButtonsAcoes.push({
+                text: '<i class="fal fa-file-excel mr-1"></i> Exportar p/ Excel',
+                className: 'btn btn-outline-primary waves-effect waves-themed',
+                action: function (e, dt, node, config) {
+                    ExportarExcel();
+                }
+            });
+        }
+
+    </script>
+
+    <script src="~/js/Boleto.js" asp-append-version="true"></script>
+}

@@ -11,7 +11,7 @@ User Function BIA926()
 	cArqSB1 := cArqSA1 := lFuncao := " "
 	
 	If IsInCallStack("U_TACLNFJB") .Or. IsInCallStack("U_BACP0012") .Or. IsInCallStack("U_PNFM0002") .Or. IsInCallStack("U_PNFM0005") .Or. IsInCallStack("U_JOBFATPARTE")
-		Return M->D1_TES
+		Return IIF(M->D1_TES != nil, M->D1_TES, "")
 	EndIf
 
 	If IsInCallStack("U_COPYDOCE") .And. IsBlind()

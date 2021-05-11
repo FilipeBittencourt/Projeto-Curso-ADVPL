@@ -348,9 +348,9 @@ Static Function Monta_Arq()
 		EndCase
 	ElseIf cEmpAnt == "13"
 		Do Case
-			Case MV_PAR08 == 6	//VINILICO
+		Case MV_PAR08 == 6	//VINILICO
 			cLinPed	:= "'6'"
-		EndCase	
+		EndCase
 	Else
 		Do Case
 		Case MV_PAR08 == 5 	//MUNDI
@@ -482,15 +482,15 @@ Static Function Monta_Arq()
 	//__oSemaforo:lShowMsg	:= .F. //Nao Exibir mensagem de LOCK
 	//If __oSemaforo:GeraSemaforo("FAT:Mapa de Pedido - Atualiza Status")
 
-		//NOVA FUNÇÃO PARA CALCULAR O STATUS DO PEDIDO DE VENDA
-		//U_BIAMsgRun("Aguarde... Atualizando status do Pedido...",,{|| U_fUpdSC62() })
+	//NOVA FUNÇÃO PARA CALCULAR O STATUS DO PEDIDO DE VENDA
+	//U_BIAMsgRun("Aguarde... Atualizando status do Pedido...",,{|| U_fUpdSC62() })
 
 		/*
-		If Upper(AllTrim(getenvserver())) == "PRODUCAO"
+	If Upper(AllTrim(getenvserver())) == "PRODUCAO"
 			U_BIAMsgRun("Aguarde... Atualizando status do Pedido...",,{|| U_fUpdSC63() })
-		Else
+	Else
 			U_BIAMsgRun("Aguarde... Atualizando status do Pedido...",,{|| U_fUpdSC62() })
-		EndIf
+	EndIf
 		*/
 
 	//	__oSemaforo:LiberaSemaforo()
@@ -515,7 +515,8 @@ Static Function Monta_Arq()
 		//ITENS DE PEDIDO BIANCOGRES
 		cSql += " SELECT '01' AS EMP, '01'   AS EMPRESA, C6.C6_FILIAL, C5.C5_NUM, C5.C5_EMISSAO, ISNULL(LC5.C5_CLIENTE, C5.C5_CLIENTE) AS C5_CLIENTE,  C5.C5_VEND1, C6.C6_ITEM,	C6.C6_PRODUTO,	C6_YEMPPED=C5.C5_YEMPPED, " + Enter
 		cSql += "		C6.C6_DESCRI,	C6.C6_UM,	C6.C6_QTDVEN,	ISNULL(LC6.C6_PRCVEN,C6.C6_PRCVEN) AS C6_PRCVEN,	C6.C6_VALOR,	C6.C6_QTDLIB,	C6.C6_TES,	C6.C6_CF,	C6.C6_SEGUM,	C6.C6_UNSVEN,	C6.C6_LOCAL,	C6.C6_QTDEMP,	" + Enter
-		cSql += "		C6.C6_QTDENT,	C6.C6_CLI,	C6.C6_YPERC,	C6.C6_YDESC,	C6.C6_DESCONT,	C6.C6_VALDESC,	ISNULL(LC6.C6_ENTREG, C6.C6_ENTREG) AS C6_ENTREG, ISNULL(LC6.C6_YDTNECE, C6.C6_YDTNECE) AS C6_YDTNECE, ISNULL(LC6.C6_YDTNERE, C6.C6_YDTNERE) AS C6_YDTNERE,	C6.C6_LA,	" + Enter
+		cSql += "		C6.C6_QTDENT,	C6.C6_CLI,	C6.C6_YPERC,	C6.C6_YDESC,	C6.C6_DESCONT,	C6.C6_VALDESC,	ISNULL(LC6.C6_ENTREG, C6.C6_ENTREG) AS C6_ENTREG, 	" + Enter
+		cSql += "		C6.C6_YDTNECE AS C6_YDTNECE, C6_YDTNERE,	C6.C6_LA,	" + Enter
 		cSql += "		C6.C6_LOJA,	C6.C6_NOTA,	C6.C6_SERIE,	C6.C6_DATFAT,	C6.C6_NUM,	C6.C6_COMIS1,	C6.C6_COMIS2,	C6.C6_COMIS3,	C6.C6_COMIS4,	C6.C6_COMIS5,	C6.C6_YPALLET,	C6.C6_PEDCLI,	ISNULL(LC6.C6_PRUNIT, C6.C6_PRUNIT) AS C6_PRUNIT, " + Enter
 		cSql += "		C6.C6_BLOQUEI,	C6.C6_GEROUPV,	C6.C6_RESERVA,	C6.C6_OP,	C6.C6_OK,	C6.C6_NFORI,	C6.C6_SERIORI,	C6.C6_ITEMORI,	C6.C6_IPIDEV,	C6.C6_IDENTB6,	C6.C6_BLQ,	C6.C6_PICMRET,	C6.C6_CODISS,	C6.C6_GRADE,	C6.C6_ITEMGRD,	" + Enter
 		cSql += "		C6.C6_LOTECTL,	C6.C6_NUMLOTE,	C6.C6_DTVALID,	C6.C6_NUMORC,	C6.C6_CHASSI,	C6.C6_OPC,	C6.C6_LOCALIZ,	C6.C6_NUMSERI,	C6.C6_NUMOP,	C6.C6_ITEMOP,	C6.C6_CLASFIS,	C6.C6_YPESOL,	C6.C6_QTDRESE,	C6.C6_NUMOS,	" + Enter
@@ -540,7 +541,7 @@ Static Function Monta_Arq()
 		cSql += " LEFT  JOIN SC6070 LC6 WITH (NOLOCK) ON LC6.C6_FILIAL = LC5.C5_FILIAL AND LC6.C6_NUM = LC5.C5_NUM AND LC6.C6_ITEM 	= C6.C6_ITEM	AND LC6.C6_PRODUTO = C6.C6_PRODUTO AND LC6.D_E_L_E_T_ = ''" + Enter
 		cSql += " LEFT  JOIN SF4070 LF4 WITH (NOLOCK) ON LC6.C6_FILIAL = LF4.F4_FILIAL AND LC6.C6_TES = LF4.F4_CODIGO AND LF4.D_E_L_E_T_   = '' " + Enter
 		cSql += " WHERE B1_FILIAL = '"+xFilial("SB1")+"' " + Enter
-		
+
 		If (cEmpAnt == '07')
 			cSql += "	AND C5.C5_FILIAL IN ('01', '05') " + Enter
 			cSql += "	AND C6.C6_FILIAL IN ('01', '05') " + Enter
@@ -548,7 +549,7 @@ Static Function Monta_Arq()
 			cSql += "	AND C5.C5_FILIAL = '01' " + Enter
 			cSql += "	AND C6.C6_FILIAL = '01' " + Enter
 		EndIf
-		
+
 		cSql += "	AND Z7.ZZ7_FILIAL = '"+xFilial("ZZ7")+"' " + Enter
 		cSql += "	AND (ROUND(C6.C6_QTDVEN,2) - ROUND(C6.C6_QTDENT,2)) > 0 " + Enter
 		cSql += "	AND (LC6.C6_BLQ <> 'R' OR LC6.C6_NUM IS NULL) " + Enter
@@ -561,7 +562,8 @@ Static Function Monta_Arq()
 		//ITENS DE PEDIDO INCESA
 		cSql += " SELECT '05' AS EMP, '05'   AS EMPRESA, C6.C6_FILIAL, C5.C5_NUM, C5.C5_EMISSAO, ISNULL(LC5.C5_CLIENTE, C5.C5_CLIENTE) AS C5_CLIENTE,  C5.C5_VEND1, C6.C6_ITEM,	C6.C6_PRODUTO,	C6_YEMPPED=C5.C5_YEMPPED, " + Enter
 		cSql += "		C6.C6_DESCRI,	C6.C6_UM,	C6.C6_QTDVEN,	ISNULL(LC6.C6_PRCVEN,C6.C6_PRCVEN) AS C6_PRCVEN,	C6.C6_VALOR,	C6.C6_QTDLIB,	C6.C6_TES,	C6.C6_CF,	C6.C6_SEGUM,	C6.C6_UNSVEN,	C6.C6_LOCAL,	C6.C6_QTDEMP,	" + Enter
-		cSql += "		C6.C6_QTDENT,	C6.C6_CLI,	C6.C6_YPERC,	C6.C6_YDESC,	C6.C6_DESCONT,	C6.C6_VALDESC,	ISNULL(LC6.C6_ENTREG, C6.C6_ENTREG) AS C6_ENTREG, ISNULL(LC6.C6_YDTNECE, C6.C6_YDTNECE) AS C6_YDTNECE, ISNULL(LC6.C6_YDTNERE, C6.C6_YDTNERE) AS C6_YDTNERE,	C6.C6_LA,	" + Enter
+		cSql += "		C6.C6_QTDENT,	C6.C6_CLI,	C6.C6_YPERC,	C6.C6_YDESC,	C6.C6_DESCONT,	C6.C6_VALDESC,	ISNULL(LC6.C6_ENTREG, C6.C6_ENTREG) AS C6_ENTREG, 		" + Enter
+		cSql += "		C6.C6_YDTNECE AS C6_YDTNECE, C6_YDTNERE,	C6.C6_LA,	" + Enter
 		cSql += "		C6.C6_LOJA,	C6.C6_NOTA,	C6.C6_SERIE,	C6.C6_DATFAT,	C6.C6_NUM,	C6.C6_COMIS1,	C6.C6_COMIS2,	C6.C6_COMIS3,	C6.C6_COMIS4,	C6.C6_COMIS5,	C6.C6_YPALLET,	C6.C6_PEDCLI,	ISNULL(LC6.C6_PRUNIT, C6.C6_PRUNIT) AS C6_PRUNIT, " + Enter
 		cSql += "		C6.C6_BLOQUEI,	C6.C6_GEROUPV,	C6.C6_RESERVA,	C6.C6_OP,	C6.C6_OK,	C6.C6_NFORI,	C6.C6_SERIORI,	C6.C6_ITEMORI,	C6.C6_IPIDEV,	C6.C6_IDENTB6,	C6.C6_BLQ,	C6.C6_PICMRET,	C6.C6_CODISS,	C6.C6_GRADE,	C6.C6_ITEMGRD,	" + Enter
 		cSql += "		C6.C6_LOTECTL,	C6.C6_NUMLOTE,	C6.C6_DTVALID,	C6.C6_NUMORC,	C6.C6_CHASSI,	C6.C6_OPC,	C6.C6_LOCALIZ,	C6.C6_NUMSERI,	C6.C6_NUMOP,	C6.C6_ITEMOP,	C6.C6_CLASFIS,	C6.C6_YPESOL,	C6.C6_QTDRESE,	C6.C6_NUMOS,	" + Enter
@@ -599,7 +601,8 @@ Static Function Monta_Arq()
 		//ITENS DE PEDIDO MUNDI/MUNDIALLI
 		cSql += " SELECT '13' AS EMP, '13'   AS EMPRESA, C6.C6_FILIAL, C5.C5_NUM, C5.C5_EMISSAO, ISNULL(LC5.C5_CLIENTE, C5.C5_CLIENTE) AS C5_CLIENTE,  C5.C5_VEND1, C6.C6_ITEM,	C6.C6_PRODUTO,	C6_YEMPPED=C5.C5_YEMPPED, " + Enter
 		cSql += "		C6.C6_DESCRI,	C6.C6_UM,	C6.C6_QTDVEN,	ISNULL(LC6.C6_PRCVEN,C6.C6_PRCVEN) AS C6_PRCVEN,	C6.C6_VALOR,	C6.C6_QTDLIB,	C6.C6_TES,	C6.C6_CF,	C6.C6_SEGUM,	C6.C6_UNSVEN,	C6.C6_LOCAL,	C6.C6_QTDEMP,	" + Enter
-		cSql += "		C6.C6_QTDENT,	C6.C6_CLI,	C6.C6_YPERC,	C6.C6_YDESC,	C6.C6_DESCONT,	C6.C6_VALDESC,	ISNULL(LC6.C6_ENTREG, C6.C6_ENTREG) AS C6_ENTREG, ISNULL(LC6.C6_YDTNECE, C6.C6_YDTNECE) AS C6_YDTNECE, ISNULL(LC6.C6_YDTNERE, C6.C6_YDTNERE) AS C6_YDTNERE,	C6.C6_LA,	" + Enter
+		cSql += "		C6.C6_QTDENT,	C6.C6_CLI,	C6.C6_YPERC,	C6.C6_YDESC,	C6.C6_DESCONT,	C6.C6_VALDESC,	ISNULL(LC6.C6_ENTREG, C6.C6_ENTREG) AS C6_ENTREG, 	" + Enter
+		cSql += "		C6.C6_YDTNECE AS C6_YDTNECE, C6_YDTNERE,	C6.C6_LA,	" + Enter
 		cSql += "		C6.C6_LOJA,	C6.C6_NOTA,	C6.C6_SERIE,	C6.C6_DATFAT,	C6.C6_NUM,	C6.C6_COMIS1,	C6.C6_COMIS2,	C6.C6_COMIS3,	C6.C6_COMIS4,	C6.C6_COMIS5,	C6.C6_YPALLET,	C6.C6_PEDCLI,	ISNULL(LC6.C6_PRUNIT, C6.C6_PRUNIT) AS C6_PRUNIT, " + Enter
 		cSql += "		C6.C6_BLOQUEI,	C6.C6_GEROUPV,	C6.C6_RESERVA,	C6.C6_OP,	C6.C6_OK,	C6.C6_NFORI,	C6.C6_SERIORI,	C6.C6_ITEMORI,	C6.C6_IPIDEV,	C6.C6_IDENTB6,	C6.C6_BLQ,	C6.C6_PICMRET,	C6.C6_CODISS,	C6.C6_GRADE,	C6.C6_ITEMGRD,	" + Enter
 		cSql += "		C6.C6_LOTECTL,	C6.C6_NUMLOTE,	C6.C6_DTVALID,	C6.C6_NUMORC,	C6.C6_CHASSI,	C6.C6_OPC,	C6.C6_LOCALIZ,	C6.C6_NUMSERI,	C6.C6_NUMOP,	C6.C6_ITEMOP,	C6.C6_CLASFIS,	C6.C6_YPESOL,	C6.C6_QTDRESE,	C6.C6_NUMOS,	" + Enter
@@ -649,7 +652,8 @@ Static Function Monta_Arq()
 
 		cSql += " SELECT '"+cEmpAnt+"' AS EMP, '"+cEmpAnt+"'   AS EMPRESA, C6.C6_FILIAL, C5.C5_NUM, C5.C5_EMISSAO, ISNULL(LC5.C5_CLIENTE, C5.C5_CLIENTE) AS C5_CLIENTE,  C5.C5_VEND1, C6.C6_ITEM,	C6.C6_PRODUTO,	C6_YEMPPED=C5.C5_YEMPPED, " + Enter
 		cSql += "		C6.C6_DESCRI,	C6.C6_UM,	C6.C6_QTDVEN,	ISNULL(LC6.C6_PRCVEN,C6.C6_PRCVEN) AS C6_PRCVEN,	C6.C6_VALOR,	C6.C6_QTDLIB,	C6.C6_TES,	C6.C6_CF,	C6.C6_SEGUM,	C6.C6_UNSVEN,	C6.C6_LOCAL,	C6.C6_QTDEMP,	" + Enter
-		cSql += "		C6.C6_QTDENT,	C6.C6_CLI,	C6.C6_YPERC,	C6.C6_YDESC,	C6.C6_DESCONT,	C6.C6_VALDESC,	ISNULL(LC6.C6_ENTREG, C6.C6_ENTREG) AS C6_ENTREG, ISNULL(LC6.C6_YDTNECE, C6.C6_YDTNECE) AS C6_YDTNECE, ISNULL(LC6.C6_YDTNERE, C6.C6_YDTNERE) AS C6_YDTNERE,	C6.C6_LA,	" + Enter
+		cSql += "		C6.C6_QTDENT,	C6.C6_CLI,	C6.C6_YPERC,	C6.C6_YDESC,	C6.C6_DESCONT,	C6.C6_VALDESC,	ISNULL(LC6.C6_ENTREG, C6.C6_ENTREG) AS C6_ENTREG, 	" + Enter
+		cSql += "		C6.C6_YDTNECE AS C6_YDTNECE, C6_YDTNERE,	C6.C6_LA,	" + Enter
 		cSql += "		C6.C6_LOJA,	C6.C6_NOTA,	C6.C6_SERIE,	C6.C6_DATFAT,	C6.C6_NUM,	C6.C6_COMIS1,	C6.C6_COMIS2,	C6.C6_COMIS3,	C6.C6_COMIS4,	C6.C6_COMIS5,	C6.C6_YPALLET,	C6.C6_PEDCLI,	ISNULL(LC6.C6_PRUNIT, C6.C6_PRUNIT) AS C6_PRUNIT, " + Enter
 		cSql += "		C6.C6_BLOQUEI,	C6.C6_GEROUPV,	C6.C6_RESERVA,	C6.C6_OP,	C6.C6_OK,	C6.C6_NFORI,	C6.C6_SERIORI,	C6.C6_ITEMORI,	C6.C6_IPIDEV,	C6.C6_IDENTB6,	C6.C6_BLQ,	C6.C6_PICMRET,	C6.C6_CODISS,	C6.C6_GRADE,	C6.C6_ITEMGRD,	" + Enter
 		cSql += "		C6.C6_LOTECTL,	C6.C6_NUMLOTE,	C6.C6_DTVALID,	C6.C6_NUMORC,	C6.C6_CHASSI,	C6.C6_OPC,	C6.C6_LOCALIZ,	C6.C6_NUMSERI,	C6.C6_NUMOP,	C6.C6_ITEMOP,	C6.C6_CLASFIS,	C6.C6_YPESOL,	C6.C6_QTDRESE,	C6.C6_NUMOS,	" + Enter
@@ -855,7 +859,7 @@ Static Function Monta_Arq()
 		//Atendente - Projeto consolidacao esta tudo na empresa 01
 		//cQuery += " , ATENDE = ISNULL((SELECT TOP 1 ZZI_ATENDE FROM ZZI010 X WITH (NOLOCK) WHERE ZZI_VEND = C5.C5_VEND AND ZZI_TPSEG = A1.A1_YTPSEG),'')  " + Enter
 		cQuery += "  , ATENDE = ISNULL((SELECT ATENDE FROM [dbo].[GET_ZKP] (A1.A1_YTPSEG, C5_YEMP, A1.A1_EST, C5_VEND, A1.A1_YCAT, A1.A1_GRPVEN)),'')   "+ Enter
-		
+
 
 		cQuery += " , A1.A1_NOME " + Enter
 		cQuery += " , C6.C9_DATALIB " + Enter
@@ -970,8 +974,8 @@ Static Function Monta_Arq()
 			If Alltrim(MV_PAR19) <> ""
 
 				cQuery += " ISNULL((SELECT ATENDE FROM [dbo].[GET_ZKP] (A1.A1_YTPSEG, C5_YEMP, A1.A1_EST, C5_VEND, A1.A1_YCAT, A1.A1_GRPVEN)), '') = '"+MV_PAR19+"'  AND "+ Enter
-				
-				//(SELECT ATENDE FROM [dbo].[GET_ZKP] (A1.A1_YTPSEG, C5_YEMP, A1.A1_EST, C5_VEND, '', '')) 
+
+				//(SELECT ATENDE FROM [dbo].[GET_ZKP] (A1.A1_YTPSEG, C5_YEMP, A1.A1_EST, C5_VEND, '', ''))
 				//cQuery += "	C5.C5_VEND IN (SELECT ZZI_VEND FROM ZZI010 WITH (NOLOCK) WHERE ZZI_FILIAL = '"+xFilial("ZZI")+"'	AND ZZI_ATENDE = '"+MV_PAR19+"'	AND D_E_L_E_T_ = '') AND " + Enter
 
 			EndIf
@@ -1114,168 +1118,168 @@ Static Function Monta_Arq()
 		cQuery += " 	 	C6.OBS       													" + Enter
 		//Fernando em 07/01 - separar coluna do saldo empenhado - acertado alguns conceitos acima no calculo deste Estoque disponivel total/parcial
 		cQuery += " , QTDEMP = C6.C6_QTDEMP " + Enter
-		
+
 		/*If cEmpAnt == '01'
 			cQuery += " , ATENDE = ISNULL((SELECT TOP 1 ZZI_ATENDE FROM "+RetSqlName("ZZI")+" X WITH (NOLOCK) WHERE ZZI_VEND = C5.C5_VEND AND ZZI_TPSEG = A1.A1_YTPSEG),'')  " + Enter
-		Else
+	Else
 			cQuery += " , ATENDE = ISNULL((SELECT TOP 1 ZZI_ATENDE FROM ZZI050 X WITH (NOLOCK) WHERE ZZI_VEND = C5.C5_VEND AND ZZI_TPSEG = A1.A1_YTPSEG),'')  " + Enter
-		EndIf
+	EndIf
 		*/
-		cQuery += "  , ATENDE =  ISNULL((SELECT ATENDE FROM [dbo].[GET_ZKP] (A1.A1_YTPSEG, C5_YEMP, A1.A1_EST, C5_VEND, A1.A1_YCAT, A1.A1_GRPVEN)),'')   "+ Enter
-	
-		cQuery += " , A1.A1_NOME " + Enter
-		cQuery += " , C6.C9_DATALIB " + Enter
-		cQuery += " , B1.B1_YCLASSE " + Enter
-		cQuery += " , B1.B1_YLINHA " + Enter
-		cQuery += " , B1.B1_YLINSEQ " + Enter
-		cQuery += " , B1.B1_YPCGMR3 " + Enter
+	cQuery += "  , ATENDE =  ISNULL((SELECT ATENDE FROM [dbo].[GET_ZKP] (A1.A1_YTPSEG, C5_YEMP, A1.A1_EST, C5_VEND, A1.A1_YCAT, A1.A1_GRPVEN)),'')   "+ Enter
 
-		cQuery += " , FORMATO " + Enter
-		cQuery += " , FORNO " + Enter
-		cQuery += " , ITEM_PED=C6_ITEM 	" + Enter
-		cQuery += " , TIPO_PED=C5_YSUBTP " + Enter
-		cQuery += " , TP_SEG=A1.A1_YTPSEG " + Enter
-		cQuery += " , CATEGORIA=A1.A1_YCAT " + Enter
-		cQuery += " , GRP_CLI=A1.A1_GRPVEN " + Enter
-		cQuery += " , DIAS_EMP=DATEDIFF(day, C6.C9_DATALIB, GETDATE()) " + Enter
+	cQuery += " , A1.A1_NOME " + Enter
+	cQuery += " , C6.C9_DATALIB " + Enter
+	cQuery += " , B1.B1_YCLASSE " + Enter
+	cQuery += " , B1.B1_YLINHA " + Enter
+	cQuery += " , B1.B1_YLINSEQ " + Enter
+	cQuery += " , B1.B1_YPCGMR3 " + Enter
+
+	cQuery += " , FORMATO " + Enter
+	cQuery += " , FORNO " + Enter
+	cQuery += " , ITEM_PED=C6_ITEM 	" + Enter
+	cQuery += " , TIPO_PED=C5_YSUBTP " + Enter
+	cQuery += " , TP_SEG=A1.A1_YTPSEG " + Enter
+	cQuery += " , CATEGORIA=A1.A1_YCAT " + Enter
+	cQuery += " , GRP_CLI=A1.A1_GRPVEN " + Enter
+	cQuery += " , DIAS_EMP=DATEDIFF(day, C6.C9_DATALIB, GETDATE()) " + Enter
 
 
-		cQuery += " , DESCPACOTE = ISNULL((SELECT TOP 1 X5_DESCRI FROM SX5010 PCT WITH (NOLOCK) WHERE PCT.X5_TABELA = 'ZH' AND PCT.X5_CHAVE = B1.B1_YPCGMR3 AND PCT.D_E_L_E_T_=''),' ') " + Enter
-		cQuery += " , MARCA = ISNULL((SELECT TOP 1 ZZ7_EMP FROM ZZ7010 ZZ7 WITH (NOLOCK) WHERE ZZ7_FILIAL = ' ' AND ZZ7_COD = B1_YLINHA AND ZZ7_LINSEQ = B1_YLINSEQ AND ZZ7.D_E_L_E_T_=' '),' ') " + Enter
+	cQuery += " , DESCPACOTE = ISNULL((SELECT TOP 1 X5_DESCRI FROM SX5010 PCT WITH (NOLOCK) WHERE PCT.X5_TABELA = 'ZH' AND PCT.X5_CHAVE = B1.B1_YPCGMR3 AND PCT.D_E_L_E_T_=''),' ') " + Enter
+	cQuery += " , MARCA = ISNULL((SELECT TOP 1 ZZ7_EMP FROM ZZ7010 ZZ7 WITH (NOLOCK) WHERE ZZ7_FILIAL = ' ' AND ZZ7_COD = B1_YLINHA AND ZZ7_LINSEQ = B1_YLINSEQ AND ZZ7.D_E_L_E_T_=' '),' ') " + Enter
 
-		//Fernando em 07/01 - transportadora original do orcamento
-		cQuery += " , TRANSP_ORC = (SELECT TOP 1 A42.A4_NOME FROM "+RetSqlName("SCJ")+" CJ WITH (NOLOCK), "+RetSqlName("SCK")+" CK WITH (NOLOCK), SA4010 A42 WITH (NOLOCK) WHERE CJ_FILIAL = CK_FILIAL and CJ_NUM = CK_NUM and CK_NUM+CK_ITEM = C6.C6_NUMORC and CJ.CJ_YTRANSP = A42.A4_COD and CK.D_E_L_E_T_=' ' and CJ.D_E_L_E_T_=' ' and A42.D_E_L_E_T_=' ') " + Enter
+	//Fernando em 07/01 - transportadora original do orcamento
+	cQuery += " , TRANSP_ORC = (SELECT TOP 1 A42.A4_NOME FROM "+RetSqlName("SCJ")+" CJ WITH (NOLOCK), "+RetSqlName("SCK")+" CK WITH (NOLOCK), SA4010 A42 WITH (NOLOCK) WHERE CJ_FILIAL = CK_FILIAL and CJ_NUM = CK_NUM and CK_NUM+CK_ITEM = C6.C6_NUMORC and CJ.CJ_YTRANSP = A42.A4_COD and CK.D_E_L_E_T_=' ' and CJ.D_E_L_E_T_=' ' and A42.D_E_L_E_T_=' ') " + Enter
 
-		//11/02/2016 - ALTERAÇÃO DE MODIFICAÇÃO DOS SELECTS, INCLUINDO JOINS - LUANA MARIN RIBEIRO
-		cQuery += "FROM " + nNomeSC5 + " AS C5 " + Enter
-		cQuery += "	INNER JOIN  (SELECT * " + Enter
-		cQuery += "					,(SELECT MAX(C9_DATALIB) FROM " + nNomeSC9 + " AS XXX WHERE C9_FILIAL = '" + xFilial('SC9') + "' AND C9_PRODUTO = C6_PRODUTO AND C9_PEDIDO = C6_NUM AND C9_ITEM = C6_ITEM AND XXX.EMPRESA = ZZZ.EMPRESA) C9_DATALIB " + Enter
-		cQuery += "			FROM " + nNomeSC6 + " AS ZZZ WHERE C6_FILIAL = '" + xFilial('SC6') + "') C6 " + Enter
-		cQuery += "		ON C5.EMPRESA		= C6.EMPRESA	AND " + Enter
-		cQuery += "			C5.C5_NUM		= C6.C6_NUM		AND " + Enter
-		cQuery += "			C5.C5_CLIENTE	= C6.C6_CLI		AND " + Enter
-		cQuery += "			C5.C5_LOJACLI	= C6.C6_LOJA	AND " + Enter
-		
-		If (cEmpAnt+cFilAnt != '0705')
-			cQuery += "			C5.C5_YEMPPED   = C6.C6_YEMPPED	AND " + Enter
-		Endif
-		
-		cQuery += "			C6_FILIAL = '" + xFilial('SC6') + "' AND " + Enter
-		IF MV_PAR13 = 1
-			cQuery += "			C6.F4_DUPLIC = 'S' AND " + Enter
-		ELSEIF MV_PAR13 = 2
-			cQuery += "			C6.F4_DUPLIC = 'N' AND " + Enter
-		END IF
-		IF MV_PAR14 = 1
-			cQuery += "			C6.F4_ESTOQUE = 'S' AND " + Enter
-		ELSEIF MV_PAR14 = 2
-			cQuery += "			C6.F4_ESTOQUE = 'N' AND " + Enter
-		END IF
-		cQuery += "			C6.C6_BLQ		<>	'R'				AND " + Enter
-		cQuery += "			(ROUND(C6.C6_QTDVEN,2) - ROUND(C6.C6_QTDENT,2)) > 0 " + Enter
-		cQuery += "	INNER JOIN (SELECT * " + Enter
-		cQuery += "			FROM " + Enter
-		cQuery += "			(SELECT A1_FILIAL, A1_COD, A1_LOJA, A1_NOME, A1_MUN, A1_BAIRRO, A1_CEP, A1_EST, A1_COD_MUN, A1_RISCO, A1_GRPVEN, A1_YREDCOM, A1_SATIV1, A1_YVENDB2, A1_YVENDB3, A1_YTPSEG, A1_VENCLC, A1_YCAT, A1_VEND, A1_YVENDI " + Enter
-		cQuery += "			FROM " + RetSqlName("SA1") + " WITH (NOLOCK) " + Enter
-		cQuery += "			WHERE A1_FILIAL = '" + xFilial('SA1') + "' AND D_E_L_E_T_ = '' ) AS TMP)  A1 " + Enter
-		cQuery += "		ON C5.CLI_ORIG     = A1.A1_COD      AND " + Enter
-		cQuery += "		   C5.LOJ_ORIG     = A1.A1_LOJA     AND " + Enter
-		IF alltrim(cRepAtu) <> ""
-			// VERIFICANDO SE E O GERENTE // BRUNO MADALENO
-			IF SUBSTRING(cRepAtu,1,1) = "1"
-				IF CEMPANT == "01"
-					cQuery += "			(A1_YVENDB2 = '"+cRepAtu+"' OR  A1_YVENDB3 = '"+cRepAtu+"') AND " + Enter
-				ELSE
-					cQuery += "			(A1_YVENDI2 = '"+cRepAtu+"' OR  A1_YVENDI3 = '"+cRepAtu+"') AND " + Enter
-				END IF
+	//11/02/2016 - ALTERAÇÃO DE MODIFICAÇÃO DOS SELECTS, INCLUINDO JOINS - LUANA MARIN RIBEIRO
+	cQuery += "FROM " + nNomeSC5 + " AS C5 " + Enter
+	cQuery += "	INNER JOIN  (SELECT * " + Enter
+	cQuery += "					,(SELECT MAX(C9_DATALIB) FROM " + nNomeSC9 + " AS XXX WHERE C9_FILIAL = '" + xFilial('SC9') + "' AND C9_PRODUTO = C6_PRODUTO AND C9_PEDIDO = C6_NUM AND C9_ITEM = C6_ITEM AND XXX.EMPRESA = ZZZ.EMPRESA) C9_DATALIB " + Enter
+	cQuery += "			FROM " + nNomeSC6 + " AS ZZZ WHERE C6_FILIAL = '" + xFilial('SC6') + "') C6 " + Enter
+	cQuery += "		ON C5.EMPRESA		= C6.EMPRESA	AND " + Enter
+	cQuery += "			C5.C5_NUM		= C6.C6_NUM		AND " + Enter
+	cQuery += "			C5.C5_CLIENTE	= C6.C6_CLI		AND " + Enter
+	cQuery += "			C5.C5_LOJACLI	= C6.C6_LOJA	AND " + Enter
+
+	If (cEmpAnt+cFilAnt != '0705')
+		cQuery += "			C5.C5_YEMPPED   = C6.C6_YEMPPED	AND " + Enter
+	Endif
+
+	cQuery += "			C6_FILIAL = '" + xFilial('SC6') + "' AND " + Enter
+	IF MV_PAR13 = 1
+		cQuery += "			C6.F4_DUPLIC = 'S' AND " + Enter
+	ELSEIF MV_PAR13 = 2
+		cQuery += "			C6.F4_DUPLIC = 'N' AND " + Enter
+	END IF
+	IF MV_PAR14 = 1
+		cQuery += "			C6.F4_ESTOQUE = 'S' AND " + Enter
+	ELSEIF MV_PAR14 = 2
+		cQuery += "			C6.F4_ESTOQUE = 'N' AND " + Enter
+	END IF
+	cQuery += "			C6.C6_BLQ		<>	'R'				AND " + Enter
+	cQuery += "			(ROUND(C6.C6_QTDVEN,2) - ROUND(C6.C6_QTDENT,2)) > 0 " + Enter
+	cQuery += "	INNER JOIN (SELECT * " + Enter
+	cQuery += "			FROM " + Enter
+	cQuery += "			(SELECT A1_FILIAL, A1_COD, A1_LOJA, A1_NOME, A1_MUN, A1_BAIRRO, A1_CEP, A1_EST, A1_COD_MUN, A1_RISCO, A1_GRPVEN, A1_YREDCOM, A1_SATIV1, A1_YVENDB2, A1_YVENDB3, A1_YTPSEG, A1_VENCLC, A1_YCAT, A1_VEND, A1_YVENDI " + Enter
+	cQuery += "			FROM " + RetSqlName("SA1") + " WITH (NOLOCK) " + Enter
+	cQuery += "			WHERE A1_FILIAL = '" + xFilial('SA1') + "' AND D_E_L_E_T_ = '' ) AS TMP)  A1 " + Enter
+	cQuery += "		ON C5.CLI_ORIG     = A1.A1_COD      AND " + Enter
+	cQuery += "		   C5.LOJ_ORIG     = A1.A1_LOJA     AND " + Enter
+	IF alltrim(cRepAtu) <> ""
+		// VERIFICANDO SE E O GERENTE // BRUNO MADALENO
+		IF SUBSTRING(cRepAtu,1,1) = "1"
+			IF CEMPANT == "01"
+				cQuery += "			(A1_YVENDB2 = '"+cRepAtu+"' OR  A1_YVENDB3 = '"+cRepAtu+"') AND " + Enter
+			ELSE
+				cQuery += "			(A1_YVENDI2 = '"+cRepAtu+"' OR  A1_YVENDI3 = '"+cRepAtu+"') AND " + Enter
 			END IF
 		END IF
+	END IF
 
-		cQuery += "			A1.A1_GRPVEN BETWEEN '"+MV_PAR16+"' AND '"+MV_PAR17+"' AND " + Enter
-		cQuery += "			A1.A1_SATIV1 BETWEEN '"+MV_PAR20+"' AND '"+MV_PAR21+"' AND " + Enter
-		cQuery += "			A1.A1_YREDCOM BETWEEN '"+MV_PAR31+"' AND '"+MV_PAR32+"' " + Enter
-		cQuery += "	INNER JOIN " + RetSqlName("SE4") + " E4 WITH (NOLOCK) " + Enter
-		cQuery += "		ON C5.C5_CONDPAG	= E4.E4_CODIGO	  AND " + Enter
-		cQuery += "			E4_FILIAL = '" + xFilial('SE4') + "' AND " + Enter
-		cQuery += "			E4.D_E_L_E_T_ = '' " + Enter
-		cQuery += "	INNER JOIN " + RetSqlName("SA3") + " A3 WITH (NOLOCK) " + Enter
-		cQuery += "		ON ISNULL(C5.C5_VEND,'999999')	= A3.A3_COD		  AND " + Enter
-		cQuery += "			A3_FILIAL = '" + xFilial('SA3') + "' AND " + Enter
-		cQuery += "			A3.D_E_L_E_T_ = '' " + Enter
-		cQuery += "	INNER JOIN " + RetSqlName("SB1") + " B1 WITH (NOLOCK) " + Enter
-		cQuery += "		ON C6.C6_PRODUTO	= B1.B1_COD		  AND " + Enter
-		cQuery += "			B1.B1_COD BETWEEN '" + MV_PAR11 + "' AND '" + MV_PAR12 + "' AND " + Enter
-		IF !EMPTY(MV_PAR27)
-			cQuery += " 		B1.B1_YCLASSE >= '"+MV_PAR27+"' AND " + Enter
-		ENDIF
+	cQuery += "			A1.A1_GRPVEN BETWEEN '"+MV_PAR16+"' AND '"+MV_PAR17+"' AND " + Enter
+	cQuery += "			A1.A1_SATIV1 BETWEEN '"+MV_PAR20+"' AND '"+MV_PAR21+"' AND " + Enter
+	cQuery += "			A1.A1_YREDCOM BETWEEN '"+MV_PAR31+"' AND '"+MV_PAR32+"' " + Enter
+	cQuery += "	INNER JOIN " + RetSqlName("SE4") + " E4 WITH (NOLOCK) " + Enter
+	cQuery += "		ON C5.C5_CONDPAG	= E4.E4_CODIGO	  AND " + Enter
+	cQuery += "			E4_FILIAL = '" + xFilial('SE4') + "' AND " + Enter
+	cQuery += "			E4.D_E_L_E_T_ = '' " + Enter
+	cQuery += "	INNER JOIN " + RetSqlName("SA3") + " A3 WITH (NOLOCK) " + Enter
+	cQuery += "		ON ISNULL(C5.C5_VEND,'999999')	= A3.A3_COD		  AND " + Enter
+	cQuery += "			A3_FILIAL = '" + xFilial('SA3') + "' AND " + Enter
+	cQuery += "			A3.D_E_L_E_T_ = '' " + Enter
+	cQuery += "	INNER JOIN " + RetSqlName("SB1") + " B1 WITH (NOLOCK) " + Enter
+	cQuery += "		ON C6.C6_PRODUTO	= B1.B1_COD		  AND " + Enter
+	cQuery += "			B1.B1_COD BETWEEN '" + MV_PAR11 + "' AND '" + MV_PAR12 + "' AND " + Enter
+	IF !EMPTY(MV_PAR27)
+		cQuery += " 		B1.B1_YCLASSE >= '"+MV_PAR27+"' AND " + Enter
+	ENDIF
 
-		IF !EMPTY(MV_PAR28)
-			cQuery += " 		B1.B1_YCLASSE <= '"+MV_PAR28+"' AND " + Enter
+	IF !EMPTY(MV_PAR28)
+		cQuery += " 		B1.B1_YCLASSE <= '"+MV_PAR28+"' AND " + Enter
+	ENDIF
+	cQuery += "			B1.B1_TIPO	IN ('PA','PR')			AND " + Enter  //colocado o IN PA,PR ticket 4910 - produto ISOMANTA
+	cQuery += "			B1_FILIAL = '" + xFilial('SB1') + "' AND " + Enter
+	cQuery += "			B1.D_E_L_E_T_ = '' " + Enter
+	cQuery += "	LEFT JOIN " + RetSqlName("ZZ9") + " Z9 WITH (NOLOCK) -- LEFT? INNER? " + Enter  //modificado para LEFT ticket 4910 - produto ISOMANTA
+	cQuery += "		ON C6.C6_LOTECTL = Z9.ZZ9_LOTE  AND " + Enter
+	cQuery += "			(B1.B1_YFORMAT+B1.B1_YFATOR+B1.B1_YLINHA+B1.B1_YCLASSE) = Z9.ZZ9_PRODUT AND " + Enter
+	cQuery += "			ZZ9_FILIAL  = '" + xFilial('ZZ9') + "' AND " + Enter
+	cQuery += "			Z9.D_E_L_E_T_ = '' " + Enter
+	cQuery += "	LEFT JOIN " + RetSqlName("SA4") + " A4 WITH (NOLOCK) " + Enter
+	cQuery += "		ON C5.C5_TRANSP1	= A4.A4_COD		  AND " + Enter
+	cQuery += "			A4_FILIAL = '" + xFilial('SA4') + "' AND " + Enter
+	cQuery += "			A4.D_E_L_E_T_ = '' " + Enter
+	cQuery += "WHERE C5_FILIAL = '"+xFilial('SC5')+"' AND	" + Enter
+	cQuery += "			C5.C5_NUM BETWEEN '"+MV_PAR01+"'  AND '"+MV_PAR02+"' AND	" + Enter
+	IF alltrim(cRepAtu) = ""
+		IF MV_PAR18 == 2
+			cQuery += "			C5.C5_VEND BETWEEN '"+MV_PAR03+"' AND '"+MV_PAR04+"' AND " + Enter
+		ELSE
+			cQuery += "			C5.C5_VEND IN ("+cVend+") AND " + Enter
 		ENDIF
-		cQuery += "			B1.B1_TIPO	IN ('PA','PR')			AND " + Enter  //colocado o IN PA,PR ticket 4910 - produto ISOMANTA
-		cQuery += "			B1_FILIAL = '" + xFilial('SB1') + "' AND " + Enter
-		cQuery += "			B1.D_E_L_E_T_ = '' " + Enter
-		cQuery += "	LEFT JOIN " + RetSqlName("ZZ9") + " Z9 WITH (NOLOCK) -- LEFT? INNER? " + Enter  //modificado para LEFT ticket 4910 - produto ISOMANTA
-		cQuery += "		ON C6.C6_LOTECTL = Z9.ZZ9_LOTE  AND " + Enter
-		cQuery += "			(B1.B1_YFORMAT+B1.B1_YFATOR+B1.B1_YLINHA+B1.B1_YCLASSE) = Z9.ZZ9_PRODUT AND " + Enter
-		cQuery += "			ZZ9_FILIAL  = '" + xFilial('ZZ9') + "' AND " + Enter
-		cQuery += "			Z9.D_E_L_E_T_ = '' " + Enter
-		cQuery += "	LEFT JOIN " + RetSqlName("SA4") + " A4 WITH (NOLOCK) " + Enter
-		cQuery += "		ON C5.C5_TRANSP1	= A4.A4_COD		  AND " + Enter
-		cQuery += "			A4_FILIAL = '" + xFilial('SA4') + "' AND " + Enter
-		cQuery += "			A4.D_E_L_E_T_ = '' " + Enter
-		cQuery += "WHERE C5_FILIAL = '"+xFilial('SC5')+"' AND	" + Enter
-		cQuery += "			C5.C5_NUM BETWEEN '"+MV_PAR01+"'  AND '"+MV_PAR02+"' AND	" + Enter
-		IF alltrim(cRepAtu) = ""
-			IF MV_PAR18 == 2
-				cQuery += "			C5.C5_VEND BETWEEN '"+MV_PAR03+"' AND '"+MV_PAR04+"' AND " + Enter
-			ELSE
-				cQuery += "			C5.C5_VEND IN ("+cVend+") AND " + Enter
-			ENDIF
-			If Alltrim(MV_PAR19) <> ""
-				
-				cQuery += " ISNULL((SELECT ATENDE FROM [dbo].[GET_ZKP] (A1.A1_YTPSEG, C5_YEMP, A1.A1_EST, C5_VEND, A1.A1_YCAT, A1.A1_GRPVEN)), '') = '"+MV_PAR19+"'  AND "+ Enter
-				
-				//cQuery += " ( SELECT COUNT(*) FROM [dbo].[GET_ZKP] (A1.A1_YTPSEG, C5.C5_YEMP, A1.A1_EST, C5.C5_VEND, '', '') where ATENDE = '"+MV_PAR19+"'  > 0) AND "+ Enter
-				
-					
+		If Alltrim(MV_PAR19) <> ""
+
+			cQuery += " ISNULL((SELECT ATENDE FROM [dbo].[GET_ZKP] (A1.A1_YTPSEG, C5_YEMP, A1.A1_EST, C5_VEND, A1.A1_YCAT, A1.A1_GRPVEN)), '') = '"+MV_PAR19+"'  AND "+ Enter
+
+			//cQuery += " ( SELECT COUNT(*) FROM [dbo].[GET_ZKP] (A1.A1_YTPSEG, C5.C5_YEMP, A1.A1_EST, C5.C5_VEND, '', '') where ATENDE = '"+MV_PAR19+"'  > 0) AND "+ Enter
+
+
 				/*If cEmpAnt == '01'
 					cQuery += "			C5.C5_VEND IN (SELECT ZZI_VEND FROM "+RetSqlName("ZZI")+" WITH (NOLOCK) WHERE ZZI_FILIAL = '"+xFilial("ZZI")+"'	AND ZZI_ATENDE = '"+MV_PAR19+"'	AND D_E_L_E_T_ = '') AND " + Enter
-				Else
+		Else
 					cQuery += "			C5.C5_VEND IN (SELECT ZZI_VEND FROM ZZI050 WITH (NOLOCK) WHERE ZZI_FILIAL = '"+xFilial("ZZI")+"'	AND ZZI_ATENDE = '"+MV_PAR19+"'	AND D_E_L_E_T_ = '') AND " + Enter
-				EndIf*/
-			EndIf
-		ELSE
+		EndIf*/
+	EndIf
+ELSE
 			// VERIFICANDO SE E O GERENTE // BRUNO MADALENO
-			IF SUBSTRING(cRepAtu,1,1) = "1"
-				IF CEMPANT == "01"
+	IF SUBSTRING(cRepAtu,1,1) = "1"
+		IF CEMPANT == "01"
 					cQuery += "			C5.C5_VEND BETWEEN '"+MV_PAR03+"' AND '"+MV_PAR04+"' AND " + Enter
-				ELSE
+		ELSE
 					cQuery += "			C5.C5_VEND BETWEEN '"+MV_PAR03+"' AND '"+MV_PAR04+"' AND " + Enter
-				END IF
-			ELSE
+		END IF
+	ELSE
 				cQuery += "			C5.C5_VEND = '"+cRepAtu+"' AND " + Enter
-			END IF
+	END IF
 
 			MV_PAR03 := cRepAtu
 			MV_PAR04 := cRepAtu
-		END IF
+END IF
 		cQuery += "			C5.C5_EMISSAO BETWEEN '"+cData_ini+"' AND '"+cData_fim+"' AND " + Enter
-		If !Empty(cLinPed)
+If !Empty(cLinPed)
 			cQuery += "			C5.C5_YLINHA IN ("+cLinPed+") AND " + Enter
-		EndIf
+EndIf
 		cQuery += "			C5.CLI_ORIG BETWEEN '"+MV_PAR09+"' AND '" + MV_PAR10 + "' AND " + Enter
-		IF MV_PAR15 = 1
+IF MV_PAR15 = 1
 			cQuery += "			C5.C5_TIPOCLI <> 'X' AND " + Enter
-		ELSEIF MV_PAR15 = 2
+ELSEIF MV_PAR15 = 2
 			cQuery += "			C5.C5_TIPOCLI = 'X' AND " + Enter
-		END IF
-		IF !EMPTY(MV_PAR22)
+END IF
+IF !EMPTY(MV_PAR22)
 			cQuery += "			C5.C5_YSUBTP = '"+MV_PAR22+"' AND " + Enter
-		ENDIF
-		IF !EMPTY(MV_PAR24)
+ENDIF
+IF !EMPTY(MV_PAR24)
 			cQuery += "			C5.C5_YPC = '"+MV_PAR24+"' AND " + Enter
-		ENDIF
+ENDIF
 
 		// Tiago Rossini Coradini - 01/06/2016 - OS: 1961-16 - Jaqueline Alves
 		cQuery += " CASE WHEN C5_TIPO = 'N' THEN (RTRIM(A1.A1_EST))	"
@@ -1283,26 +1287,26 @@ Static Function Monta_Arq()
 
 		cQuery += "	AND C5.D_E_L_E_T_ = '' " + Enter
 
-		If (oAceTela:UserTelemaketing())
+If (oAceTela:UserTelemaketing())
 
 			// vendedor de = MV_PAR03
 			// vendedor até = MV_PAR04
 
-			If (AllTrim(MV_PAR03) == AllTrim(MV_PAR04))
+	If (AllTrim(MV_PAR03) == AllTrim(MV_PAR04))
 				cQuery += " AND  ( "+oAceTela:FiltroSA1('S', '', MV_PAR03)+" ) 								" + Enter
-			Else
+	Else
 				cQuery += " AND  ( "+oAceTela:FiltroSA1('S')+" ) 											" + Enter
-			EndIf
+	EndIf
 
-		EndIf
+EndIf
 
 		cQuery += "ORDER BY C5.C5_YTPTRAN, A3.A3_COD, A3.A3_NOME, C5.CLI_ORIG, C5.C5_NUM, C6.C6_ITEM " + Enter
 		MemoWrite("\SQLMAPAPEDIDOS.TXT",cQuery)
-	ENDIF
-	IF chkfile("cTrab")
+ENDIF
+IF chkfile("cTrab")
 		dbSelectArea("cTrab")
 		dbCloseArea()
-	ENDIF
+ENDIF
 	TCQUERY cQuery ALIAS "cTrab" NEW
 	cTrab->(dbGoTop())
 
@@ -2690,7 +2694,7 @@ Static Function ReportPrint(oReport)
 		oSection1:Cell('CONDPAG'	  	):Disable()
 		oSection1:Cell('GRP_CLI'	  	):Disable()
 		oSection1:Cell('TP_SEG'	  		):Disable()
-		oSection1:Cell('DIAS_EMP'	  	):Disable()
+		//oSection1:Cell('DIAS_EMP'	  	):Disable()
 		oSection1:Cell('ITEM_PED'	  	):Disable()
 		oSection1:Cell('CATEGORIA'	  	):Disable()
 

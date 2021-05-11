@@ -1,0 +1,89 @@
+﻿@model Facile.BusinessPortal.Model.Compra.Servico.SolicitacaoServicoFornecedorVisitante
+@using Facile.BusinessPortal.Model
+
+
+@{
+    ViewData["Title"] = "Solicitação de Serviço";
+}
+
+
+<ol class="breadcrumb">
+    <li class="breadcrumb-item">
+        <a asp-action="Index">Listagem</a>
+    </li>
+    <li class="breadcrumb-item active">solicitação de serviço</li>
+</ol>
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                   Visitantes
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <form id="FormCad" accept-charset="UTF-8" asp-action="Visitante" method="POST">
+
+                        <input name="SolicitacaoServicoFornecedorID" type="hidden" value="@ViewBag.SolicitacaoServicoFornecedorID">
+
+                        <div class="row mt-2 text-right">
+                            <div class="col-md-12">
+                                <button type="button" class="btn btn-primary shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed btn-novo-visitante">Novo Visitante</button>
+                            </div>
+                        </div>
+
+                        <div class="row mt-2">
+                            <table class="table" id="tabela-novo-visitante">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>CPF</th>
+                                        <th width="8%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int i = 0;
+                                        foreach (var item in (ViewBag.SolicitacaoServicoFornecedorVisitante))
+                                        {
+                                            <tr>
+                                                <th>@item.Nome</th>
+                                                <th>@item.CPF</th>
+                                                <th>
+                                                    <input type="hidden" name="SolicitacaoServicoFornecedorVisitanteID" value="@item.ID" />
+                                                    <a href="javascript:void(0)" class="btn btn-icon fs-xl waves-effect waves-themed btn-delete-visitante-list"><i class="fal fa-trash-alt color-fusion-300"></i></a>
+                                                </th>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="row mt-2 text-right">
+                            <div class="col-md-12">
+                                <a asp-action="Index" class="btn btn-secondary shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed">Voltar</a>
+                                <button type="submit" class="btn btn-success shadow-0 btn-sm ml-auto flex-shrink-0 waves-effect waves-themed">Salvar</button>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    <script src="~/js/Util.js" asp-append-version="true"></script>
+    <script src="~/js/SolicitacaoServico.js" asp-append-version="true"></script>
+}

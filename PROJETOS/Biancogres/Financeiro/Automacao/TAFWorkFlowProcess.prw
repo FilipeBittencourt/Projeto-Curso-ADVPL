@@ -35,7 +35,7 @@ Class TAFWorkFlowProcess From TAFWorkFlow
 	Method GetMethod(cID)
 	Method Send()
 	Method Validate()
-	Method setTable(lTable,cTab,cID,cFil,cIDProc)
+	Method setTable(cRealTable,cTab,cID,cFil,cIDProc)
 
 EndClass
 
@@ -98,10 +98,24 @@ Return()
 
 Method Set(cTab, cFil, cID) Class TAFWorkFlowProcess
 	
-	Local lRet := .F.
-	Local cSQL := ""
-	Local cQry := GetNextAlias()
-	Local nCount := 0
+	Local aFields	as array
+
+	Local cSQL		as character
+	Local cQry		as character
+	
+	local cFPict	as character
+	Local cFType	as character
+	Local cFName	as character
+
+	Local lRet		as logical
+
+	Local nFPos		as numeric
+	Local nField	as numeric
+	Local nFields	as numeric
+
+	Local uFGet
+
+	lRet := .F.
 
 	::SetProperty(cID)
 
@@ -113,21 +127,52 @@ Method Set(cTab, cFil, cID) Class TAFWorkFlowProcess
 		
 		cSQL := eval(::bGetSQL,@cTab,@cFil,@cID)
 
+		cQry := GetNextAlias()
 		TCQUERY (cSQL) ALIAS (cQry) NEW
 
 		lRet := (cQry)->(!Eof())
-		
-		While (cQry)->(!Eof())
 
-			For nCount := 1 To ::oLst:GetCount()
+		if (lRet)
 
-				::oLst:GetItem(nCount):oRow:Add(::FormatField(::oLst:GetItem(nCount):cType, ::oLst:GetItem(nCount):cPict, &((cQry)->(::oLst:GetItem(nCount):cName))))
+			nFields:=::oLst:GetCount()
 
-			Next
+			lRet:=(nFields>0)
 
-			(cQry)->(DbSkip())
+			if (lRet)
+				
+				aFields:=Array(nFields,4)
+				For nField := 1 To nFields
+					cFName:=::oLst:GetItem(nField):cName
+					aFields[nField][1]:=cFName
+					aFields[nField][2]:=(cQry)->(FieldPos(cFName))
+					aFields[nField][3]:=::oLst:GetItem(nField):cPict
+					aFields[nField][4]:=::oLst:GetItem(nField):cType
+				next nField
+				
+				While (cQry)->(!Eof())
 
-		EndDo()
+					For nField := 1 To nFields
+
+						cFName:=aFields[nField][1]
+						nFPos:=aFields[nField][2]
+						
+						if (nFPos>0)
+							cFPict:=aFields[nField][3]
+							cFType:=aFields[nField][4]
+							uFGet:=(cQry)->(FieldGet(nFPos))
+							uFGet:=::FormatField(cFType,cFPict,uFGet)
+							::oLst:GetItem(nField):oRow:Add(uFGet)
+						endif
+
+					Next nField
+
+					(cQry)->(DbSkip())
+
+				EndDo()
+
+			endif
+
+		endif
 
 		(cQry)->(DbCloseArea())
 
@@ -421,8 +466,8 @@ Method GetSQL(cTab, cFil, cID) Class TAFWorkFlowProcess
 	
 	Else
 
-		DEFAULT ::cFieldFil:=(PrefixoCpo(SubStr(cTab,1,3))+"_FILIAL")
-		DEFAULT ::cSX2Alias:=SubStr(cTab,1,3)
+		::cFieldFil:=(PrefixoCpo(SubStr(cTab,1,3))+"_FILIAL")
+		::cSX2Alias:=SubStr(cTab,1,3)
 
 		cXFilial:=xFilial(::cSX2Alias,cFil)
 

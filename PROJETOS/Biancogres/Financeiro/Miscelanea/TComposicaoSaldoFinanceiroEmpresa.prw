@@ -383,9 +383,9 @@ Method GetRecEmp(cBanco, cAgencia, cConta) Class TComposicaoSaldoFinanceiroEmpre
 		cSQL += "		WHERE A2_FILIAL = " + ValToSQL(xFilial("SA2"))
 		cSQL += " 		AND A2_COD = EA_FORNECE "
 		cSQL += " 		AND A2_LOJA = EA_LOJA "
-		cSQL += " 		AND REPLICATE('0', 20 - LEN(REPLACE(REPLACE(RTRIM(LTRIM(A2_BANCO))		, '.', ''), '-', ''))) + REPLACE(REPLACE(RTRIM(LTRIM(A2_BANCO))		, '.', ''), '-', '') = " + ValToSQL(PADL(Replace(Replace(AllTrim(cBanco)		, ".", Space(0)), "-", Space(0)), 20, '0'))
-		cSQL += " 		AND REPLICATE('0', 20 - LEN(REPLACE(REPLACE(RTRIM(LTRIM(A2_AGENCIA))	, '.', ''), '-', ''))) + REPLACE(REPLACE(RTRIM(LTRIM(A2_AGENCIA))	, '.', ''), '-', '') = " + ValToSQL(PADL(Replace(Replace(AllTrim(cAgencia)		, ".", Space(0)), "-", Space(0)), 20, '0'))
-		cSQL += " 		AND REPLICATE('0', 20 - LEN(REPLACE(REPLACE(RTRIM(LTRIM(A2_NUMCON))		, '.', ''), '-', ''))) + REPLACE(REPLACE(RTRIM(LTRIM(A2_NUMCON))	, '.', ''), '-', '') = " + ValToSQL(PADL(Replace(Replace(AllTrim(cConta)		, ".", Space(0)), "-", Space(0)), 20, '0'))
+		cSQL += " 		AND A2_BCOIC = " + ValToSQL(AllTrim(cBanco))
+		cSQL += " 		AND A2_AGEIC = "+ ValToSQL(cAgencia)
+		cSQL += " 		AND A2_CONIC = "+ ValToSQL(cConta)
 		cSQL += " 		AND SA2.D_E_L_E_T_ = '' "
 		cSQL += " 	) "
 

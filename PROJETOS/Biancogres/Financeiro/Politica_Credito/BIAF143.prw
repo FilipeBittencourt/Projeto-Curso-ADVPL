@@ -1396,7 +1396,7 @@ aAdd( aSX3, { ;
 	{ 'R'																	, .T. }, ; //X3_CONTEXT
 	{ ''																	, .T. }, ; //X3_OBRIGAT
 	{ ''																	, .T. }, ; //X3_VLDUSER
-	{ '1=Manual;2=Vendedor;3=Bizagi;4=Rocket', .T. }, ; //X3_CBOX
+	{ '1=Manual;2=Sol.Cred.;3=Bizagi;4=Cart.Ativa', .T. }, ; //X3_CBOX
 	{ ''																	, .T. }, ; //X3_CBOXSPA
 	{ ''																	, .T. }, ; //X3_CBOXENG
 	{ ''																	, .T. }, ; //X3_PICTVAR

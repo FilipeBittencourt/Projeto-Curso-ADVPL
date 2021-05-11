@@ -1,0 +1,88 @@
+﻿@model IEnumerable<Facile.BusinessPortal.Model.Compra.Servico.SolicitacaoServicoHistorico>
+
+@{
+    ViewData["Title"] = "Solicitação de Serviço";
+}
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Solicitação de Serviço
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="custom-scroll flex-1 h-100">
+                            <div class="slimScrollDiv" style="position: relative; overflow: hidden; width: auto; height: 100%;">
+                                <div id="chat_container" class="w-100 p-4" style="overflow: hidden; width: auto; height: 100%;">
+                                    
+                                <div class="d-flex justify-content-center">
+                                    <div class="col-md-8">
+
+                                        @{
+                                            string Data = "";
+                                            int i = 0;
+
+                                            
+
+                                            foreach (var item in Model.OrderByDescending(x => x.DataEvento))
+                                            {
+                                                if (!item.DataEvento.ToString("dd/MM/yyyy").Equals(Data))
+                                                {
+                                                    <div class="chat-segment">
+                                                        <div class="time-stamp text-center mb-2 fw-400">
+                                                            @item.DataEvento.ToString("dd/MM/yyyy")
+                                                        </div>
+                                                    </div>
+                                                }
+                                                Data = item.DataEvento.ToString("dd/MM/yyyy");
+
+                                                <div class="chat-segment @(((i % 2) == 0)? "chat-segment-sent":"chat-segment-get")">
+                                                    <div class="chat-message">
+                                                        <p style="padding: 0.10rem 0 0;">
+                                                            @(item.UsuarioID != null ? item.Usuario.Nome : "Sistema")
+                                                        </p>
+                                                        <p style="padding: 0.10rem 0 0;">
+                                                            @item.Observacao
+                                                        </p>
+                                                    </div>
+                                                    <div class="@(((i % 2) == 0)? "text-right":"") fw-300 text-muted mt-1 fs-xs">
+                                                        @item.DataEvento.ToString("HH:mm")
+                                                    </div>
+                                                </div>
+                                                i++;
+                                            }
+
+                                        }
+
+                                    </div>
+                                </div>
+
+                                <!--  end .chat-segment for timestamp -->
+                                </div><div class="slimScrollBar" style="background: rgba(0, 0, 0, 0.6); width: 4px; position: absolute; top: 0px; opacity: 0.4; display: none; border-radius: 7px; z-index: 99; right: 4px; height: 574px;"></div><div class="slimScrollRail" style="width: 4px; height: 100%; position: absolute; top: 0px; display: none; border-radius: 7px; background: rgb(250, 250, 250); opacity: 0.2; z-index: 90; right: 4px;"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/Util.js" asp-append-version="true"></script>
+    <script>
+        var UrlBase = '@Url.Action("Index", "SolicitacaoServico")';
+    </script>
+}

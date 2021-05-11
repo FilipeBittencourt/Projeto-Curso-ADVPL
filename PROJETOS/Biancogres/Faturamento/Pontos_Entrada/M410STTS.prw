@@ -264,8 +264,11 @@ User Function M410STTS()
 
 			If(SB1->(DbSeek(XFilial("SB1")+SC6->C6_PRODUTO)))
 
-				If AllTrim(SB1->B1_TIPO) == "PA" .Or. ALLTRIM(SC5->C5_YSUBTP) $ "A_G_B_M_O" //Ticket 30911 - Adicionado o tipo 'O'
-
+				//If AllTrim(SB1->B1_TIPO) == "PA" .Or. (ALLTRIM(SC5->C5_YSUBTP) $ "A_G_B_M" //Ticket 30911 - Adicionado o tipo 'O'
+				If(	AllTrim(SB1->B1_TIPO) == "PA" ;	
+    				.Or. ALLTRIM(SC5->C5_YSUBTP) $ "A_G_B_M" ;
+    				.Or. (SC5->C5_YSUBTP == 'O' .And. AllTrim(SB1->B1_TIPO) == "PA") ;//Ticket 30911 - Adicionado o tipo 'O' //Ticket 31528 - Complemento da regra para tipos diferenets de PA
+					)
 					If (Alltrim(SC5->C5_TIPO) == 'N')
 						oBloqPedVenda := TBloqueioPedidoVenda():New(M->C5_NUM)
 						nBloq := oBloqPedVenda:Check()

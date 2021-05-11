@@ -1,0 +1,337 @@
+﻿@model IEnumerable<Facile.BusinessPortal.Model.PedidoCompra>
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+@{
+    ViewData["Title"] = "Lista de pedidos de compras";
+}
+
+<div class="row">
+    <div class="col-xl-12">
+        <div id="panel-1" class="panel">
+            <div class="panel-hdr">
+                <h2>
+                    Pedidos de compras
+                </h2>
+                <div class="panel-toolbar">
+                    <button class="btn btn-panel" data-action="panel-collapse" data-toggle="tooltip" data-offset="0,10" data-original-title="Minimizar"></button>
+                    <button class="btn btn-panel" data-action="panel-fullscreen" data-toggle="tooltip" data-offset="0,10" data-original-title="Tela Cheia"></button>
+                </div>
+            </div>
+            <div class="panel-container show">
+                <div class="panel-content">
+                    <!-- datatable start -->
+                    <!-- class="bg-highlight"-->
+                    <table id="dt-registro" class="table table-bordered table-hover table-striped w-100">
+                        <thead class="bg-primary-600">
+                            <tr>
+                                <th width="5%"></th>
+                                <th width="25%">Fornecedor</th>
+                                <th>Número</th>
+                                <th>Item</th>
+                                <th width="25%">Produto</th>
+                                <th>Quantidade</th>
+                                <th>Saldo</th>
+                                <th width="6%">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                        <tfoot>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <!-- datatable end -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" name="FieldSearch" value="">
+
+<div class="modal fade" id="modal-detalhe-nota-fiscal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    Nota Fiscais de Compras do Pedidos
+                </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"><i class="fal fa-times"></i></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12" style="overflow-y: scroll;height: 200px;">
+                        <table class="table" id="table-detalhe-nota-fiscal">
+                            <thead>
+                                <tr>
+                                    <th width="10%" class="border-top-0 table-scale-border-bottom fw-700">#</th>
+                                    <th width="40%" class="border-top-0 table-scale-border-bottom fw-700">Numero/Série</th>
+                                    <th width="30%" class="border-top-0 table-scale-border-bottom fw-700">Data Emissão</th>
+                                    <th width="20%" class="text-right border-top-0 table-scale-border-bottom fw-700">Quantidade</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+
+                    </div>
+
+                </div>
+
+
+                <div class="row mt-3">
+                    <div class="col-md-12 ml-sm-auto">
+                        <div class="alert alert-info hide" role="alert">
+                            <strong class="info-alteracao"></strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success btn-agendar">Agendar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal-agendamento" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    Agendamento
+                </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"><i class="fal fa-times"></i></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form name="cadAgendamento">
+
+                    <input id="IdNotaFiscais" type="hidden" name="IdNotaFiscais" value="">
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <div class="alert alert-danger nota-fiscal-agendamento" role="alert">
+                                    <p></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-label" for="data">Data Agendamento</label>
+                                <input disabled class="form-control data-datepicker" id="DataAgendamento" type="text" name="DataAgendamento" value="">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-label" for="data">Hora Agendamento</label>
+                                <input class="form-control" id="HoraAgendamento" type="time" name="HoraAgendamento" value="">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-label" for="Observacao">Observação</label>
+                                <textarea name="Observacao" id="Observacao" class="form-control"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary btn-salvar-agendamento">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal-agendamento-calendario" style="padding-left: 17px;padding-right: 17px;" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog mw-100 w-100" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">
+                    Agendamento
+                </h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"><i class="fal fa-times"></i></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="calendar" class="fc fc-ltr fc-bootstrap"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<a href="@Url.Action("Agendado", "PedidoCompra")" class="hide new-page" target="_blank"></a>
+
+
+@section Scripts {
+    <script src="~/js/Util.js" asp-append-version="true"></script>
+    <script src="~/js/PedidoCompra.js" asp-append-version="true"></script>
+    <script asp-append-version="true" src="~/smartadmin/js/dependency/moment/moment.js"></script>
+    <script asp-append-version="true" src="~/smartadmin/js/miscellaneous/fullcalendar/fullcalendar.bundle.js"></script>
+    <script asp-append-version="true" src="~/smartadmin/js/miscellaneous/fullcalendar/locales-all.js"></script>
+    <script asp-append-version="true">
+
+        var calendar = null;
+        var events = []
+        function loadCalendar() {
+            var calendarEl = document.getElementById('calendar');
+
+            calendar = new FullCalendar.Calendar(calendarEl,
+                {
+                    locale: 'pt-br',
+                    firstDay: 1,
+                    aspectRatio: 1.6,
+                    fixedWeekCount: false,
+                    eventLimit: true,
+                    plugins: ['dayGrid', 'list', 'timeGrid', 'interaction', 'bootstrap'],
+                    themeSystem: 'bootstrap',
+                    timeZone: 'UTC',
+                    dateAlignment: "month", //week, month
+                    buttonText:
+                    {
+                        today: 'Hoje',
+                        month: 'Mês',
+                        week: 'Semana',
+                        day: 'Dia',
+                        list: 'Lista'
+                    },
+                    eventTimeFormat:
+                    {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        meridiem: 'short'
+                    },
+                    navLinks: true,
+                    header:
+                    {
+                        left: 'prev,next today addEventButton',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+                    },
+                    footer:
+                    {
+                        left: '',
+                        center: '',
+                        right: ''
+                    },
+                    customButtons:
+                    {
+
+                    },
+                    // height: 700,
+                    editable: true,
+                    eventLimit: true, // allow "more" link when too many events
+
+                    events: function (info, successCallback) {
+
+                        $.get(
+                            "../Compra/PedidoCompra/GetAgenda",
+                            {
+                                start: moment(info.start).format("YYYY-MM-DD"),
+                                end: moment(info.end).format("YYYY-MM-DD")
+                            },
+                            function (d) {
+                                if (d.ok == 1) {
+                                    successCallback(d.events);
+                                }
+                            },
+                            'JSON'
+                        );
+
+                    },
+                    eventRender: function (info) {
+                        var classNames = info.event.classNames
+
+                        for (var i = 0; i < classNames.length; i++) {
+                            if (classNames[i] == 'not-available') {
+                                events.push(moment(info.event.start).utc().format('DD/MM/YYYY'))
+                            }
+                        }
+
+                    },
+
+                    dateClick: function (info) {
+
+                        for (var i = 0; i < events.length; i++) {
+                            if (events[i] == moment(info.dateStr).format('DD/MM/YYYY')) {
+                                return
+                            }
+                        }
+
+                        var el = $('#table-detalhe-nota-fiscal tr');
+                        var html = "<p>Notas fiscais: </p>"
+                        var IdNotaFiscais = "";
+                        for (var i = 0; i < el.length; i++) {
+                            if ($(el[i]).find('input[name=checkItemNota]').prop('checked')) {
+                                html += "<p>" + $(el[i]).find('td:nth-child(2)').text() + "</p>";
+
+                                if (IdNotaFiscais != "") {
+                                    IdNotaFiscais += ","
+                                }
+
+                                IdNotaFiscais += $(el[i]).find('input[name=Id]').val();
+                            }
+                        }
+                        $('form[name=cadAgendamento] input[name=IdNotaFiscais]').val(IdNotaFiscais);
+                        $('.nota-fiscal-agendamento').html(html);
+                        $('input[name=DataAgendamento]').val(moment(info.dateStr).format('DD/MM/YYYY'));
+                        $('form[name=cadAgendamento] input[name=HoraAgendamento]').val('');
+                        $('form[name=cadAgendamento] textarea[name=Observacao]').val('');
+                        $('#modal-agendamento').css('z-index', 2060);
+                        $('#modal-agendamento').modal('show');
+
+                    }
+
+                });
+
+            calendar.render();
+
+        }
+
+        $(function () {
+
+            $('#modal-agendamento-calendario').on('show.bs.modal', function (e) {
+                $(".modal").css("overflow-y", "scroll");
+                events = []
+                if (calendar == null) {
+                    setTimeout(function () { loadCalendar() }, 300);
+                } else {
+                    calendar.refetchEvents()
+                }
+
+            });
+
+        });
+
+    </script>
+}

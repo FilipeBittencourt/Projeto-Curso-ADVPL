@@ -15,7 +15,7 @@ static __cCRLF as character
 @since 09/09/2020
 @project Automação Entrada
 @version 1.0
-@description
+@description Processa as Devoluções Iniciadas em BIA267
 @type function
 /*/
 
@@ -84,13 +84,15 @@ class TAutomacaoDevolucaoIntercompany
     Data cEmailNfDev	as character
     Data cEmailTransf   as character
 
+    public Data nZL9RecNo as numeric
+
     public method New(lJob) Constructor
     public method Load()
     public method LoadFiliais()
     public method PercorreFiliais()
     public method ExisteFuncaoEmProcessamento(cFuncProc,cEmp,cFil)
     public method AddLog(cMsg)
-    public method AddErro(nRecno,cError)
+    public method AddErro(nRecNo,cError)
     public method GravaErro()
     public method GetErrorLog()
 
@@ -106,7 +108,7 @@ class TAutomacaoDevolucaoIntercompany
     public method ProcFat(cDoc,cSerie,cCliente,cLoja)
     public method DocSaida(cPedido,cDoc,cSerie,cCliente,cLoja,aPvlNfs)
     public method GetDocOri(cDoc,cSerie,cCliente,cLoja)
-    public method GetEndereco(cDoc,cSerie,cCodCli,cLojaCli,cCodFor,cLojaFor)
+    public method GetEndereco(cDoc,cSerie,cItem,cCodCli,cLojaCli)
     public method fDistribui(_cDoc,_cSerie,_cCli,_cLoja,cLocaliz,cStatus)
     public method MVNumItemVld(lLock)
     public method SetStatus(cEmpOri,cFilOri,cPedOri,cDoc,cSerie,cDocDes,cSerDes,cPedDes,cEmpDes,cFilDes)
@@ -114,10 +116,13 @@ class TAutomacaoDevolucaoIntercompany
     public method SetPedido(cDoc,cSerie,cCliente,cLoja,cPedido,cForDev,cLojaFor,aItensSC6)
     public method SetDocDev(cDoc,cSerie,cCliente,cLoja,cDocDev,cSerDev)
     public method DocOriCmpAut(nZL9RecNo)
+    public method GetProcDev(nZL9RecNo)
 
     public method CreatePath(cPath)
 
     public method InputZL9(cDoc,cSerie,cCliente,cLoja,cEmpFilOri,cFormul,cDocOri,cSerOri,cCodFor,cLojFor)
+
+    public method ZL9PutLog(cLog as character)
 
 endclass
 
@@ -228,7 +233,9 @@ method ProcessaSaida() class TAutomacaoDevolucaoIntercompany
 
     while (cZL9TmpAlias)->(!eof())
 
-        ZL9->(DBGoTo((cZL9TmpAlias)->ZL9RECNO))
+        self:nZL9RecNo:=(cZL9TmpAlias)->ZL9RECNO
+        
+        ZL9->(DBGoTo(self:nZL9RecNo))
 
         if (ZL9->(!eof()))
 
@@ -236,7 +243,7 @@ method ProcessaSaida() class TAutomacaoDevolucaoIntercompany
 
             if (ZL9->(RecLock("ZL9",.F.)))
 
-                nPos:=aScan(aNotas,{|x| x[1] ==ZL9->ZL9_PEDIDO })
+                nPos:=aScan(aNotas,{|x|(x[1]==ZL9->ZL9_PEDIDO)})
 
                 if (nPos==0)
 
@@ -264,7 +271,7 @@ method ProcessaSaida() class TAutomacaoDevolucaoIntercompany
 
                 else
 
-                    if !empty(ZL9->ZL9_DOC)
+                    if (!empty(ZL9->ZL9_DOC))
 
                         if SF2->(!DBSeek(cSF2Filial+ZL9->ZL9_DOC+ZL9->ZL9_SERIE))
 
@@ -277,7 +284,7 @@ method ProcessaSaida() class TAutomacaoDevolucaoIntercompany
                             ZL9->ZL9_PDF:=""
 
                             cLog:="A nota foi excluida! Para continuar o processo faça o desbloqueio!"
-                            ZL9->(ZL9PutLog(@cLog))
+                            ZL9->(self:ZL9PutLog(@cLog))
 
                             aNotas[if((nPos>0),nPos,Len(aNotas))][2]:=.F.
 
@@ -285,7 +292,7 @@ method ProcessaSaida() class TAutomacaoDevolucaoIntercompany
 
                     endif
 
-                    if ZL9->ZL9_MSBLQL <> '1' .and. !empty(ZL9->ZL9_PEDIDO) .and. !empty(ZL9->ZL9_DOC)
+                    if ((ZL9->ZL9_MSBLQL<>'1').and.(!empty(ZL9->ZL9_PEDIDO)).and.(!empty(ZL9->ZL9_DOC)))
 
                         if (ZL9->ZL9_STADOC=="1") // 1=Emitida
 
@@ -311,14 +318,14 @@ method ProcessaSaida() class TAutomacaoDevolucaoIntercompany
 
                             elseif (!(aRetorno[1,5]$"100"))
 
-                                if (!(upper('Aguardando processamento')$upper(AllTrim(aRetorno[1,9]))))
+                                if (!(upper('Aguardando processamento')$upper(allTrim(aRetorno[1,9]))))
 
                                     ZL9->ZL9_STADOC:="4" // 4=Rejeitada
                                     ZL9->ZL9_MSBLQL:="1"
 
-                                    self:AddLog(AllTrim(aRetorno[1,9]))
+                                    self:AddLog(allTrim(aRetorno[1,9]))
 
-                                    ZL9->ZL9_RETNFE:=AllTrim(aRetorno[1,9])
+                                    ZL9->ZL9_RETNFE:=allTrim(aRetorno[1,9])
 
                                     aNotas[if((nPos>0),nPos,Len(aNotas))][2]:=.F.
 
@@ -328,7 +335,7 @@ method ProcessaSaida() class TAutomacaoDevolucaoIntercompany
 
                                 ZL9->ZL9_STADOC:="3" // 3=Autorizada
 
-                                ZL9->ZL9_RETNFE:=AllTrim(aRetorno[1,9])
+                                ZL9->ZL9_RETNFE:=allTrim(aRetorno[1,9])
 
                             endif
 
@@ -336,18 +343,18 @@ method ProcessaSaida() class TAutomacaoDevolucaoIntercompany
 
                             aRetorno:=oTFatAut:MonitoraNFe(ZL9->ZL9_SERIE,ZL9->ZL9_DOC,.F.)
 
-                            nPos:=aScan(aNotas,{|x| x[1] ==ZL9->ZL9_PEDIDO })
+                            nPos:=aScan(aNotas,{|x| x[1]==ZL9->ZL9_PEDIDO })
 
                             if (!(aRetorno[1,5]$"100"))
 
-                                if (!(upper('Aguardando processamento')$upper(AllTrim(aRetorno[1,9]))))
+                                if (!(upper('Aguardando processamento')$upper(allTrim(aRetorno[1,9]))))
 
                                     ZL9->ZL9_STADOC:="4" // 4=Rejeitada
                                     ZL9->ZL9_MSBLQL:="1"
 
-                                    self:AddLog(AllTrim(aRetorno[1,9]))
+                                    self:AddLog(allTrim(aRetorno[1,9]))
 
-                                    ZL9->ZL9_RETNFE:=AllTrim(aRetorno[1,9])
+                                    ZL9->ZL9_RETNFE:=allTrim(aRetorno[1,9])
 
                                     aNotas[if((nPos>0),nPos,Len(aNotas))][2]:=.F.
 
@@ -357,7 +364,7 @@ method ProcessaSaida() class TAutomacaoDevolucaoIntercompany
 
                                 ZL9->ZL9_STADOC:="3" // 3=Autorizada
 
-                                ZL9->ZL9_RETNFE:=AllTrim(aRetorno[1,9])
+                                ZL9->ZL9_RETNFE:=allTrim(aRetorno[1,9])
 
                             endif
 
@@ -371,7 +378,7 @@ method ProcessaSaida() class TAutomacaoDevolucaoIntercompany
 
                                 aAdd(aNotasEnv[Len(aNotasEnv)],{ZL9->ZL9_DOC,ZL9->ZL9_SERIE,ZL9->ZL9_PDF,ZL9->(Recno())})
 
-                                aNotasEnv[Len(aNotasEnv)][2]:=File(AllTrim(ZL9->ZL9_PDF)) .and. !File(AllTrim(Replace(ZL9->ZL9_PDF,".pdf",".pd_")))
+                                aNotasEnv[Len(aNotasEnv)][2]:=File(allTrim(ZL9->ZL9_PDF)).and.!File(allTrim(Replace(ZL9->ZL9_PDF,".pdf",".pd_")))
 
                             else
 
@@ -379,7 +386,7 @@ method ProcessaSaida() class TAutomacaoDevolucaoIntercompany
 
                             endif
 
-                            nPos:=aScan(aNotas,{|x| x[1] ==ZL9->ZL9_PEDIDO })
+                            nPos:=aScan(aNotas,{|x| x[1]==ZL9->ZL9_PEDIDO })
 
                             aNotas[if((nPos>0),nPos,Len(aNotas))][2]:=.F.
 
@@ -387,7 +394,7 @@ method ProcessaSaida() class TAutomacaoDevolucaoIntercompany
 
                             ZL9->ZL9_STADOC:="8" // 8=Finalizado
 
-                            nPos:=aScan(aNotas,{|x| x[1] ==ZL9->ZL9_PEDIDO })
+                            nPos:=aScan(aNotas,{|x| x[1]==ZL9->ZL9_PEDIDO })
 
                             aNotas[if((nPos>0),nPos,Len(aNotas))][2]:=.F.
 
@@ -401,7 +408,7 @@ method ProcessaSaida() class TAutomacaoDevolucaoIntercompany
 
             else
 
-                self:AddLog("Nao consegui lockar ZL9 -> "+cValToChar(ZL9->(Recno())))
+                self:AddLog("Nao consegui Lock para registro da Tabela ZL9 -> "+cValToChar(ZL9->(Recno())))
 
             endif
 
@@ -490,7 +497,9 @@ method PDF(aNotas) class TAutomacaoDevolucaoIntercompany
 
         For nW:=3 To Len(aNotas)
 
-            ZL9->(DBGoTo(aNotas[nW][3]))
+            self:nZL9RecNo:=aNotas[nW][3]
+            
+            ZL9->(DBGoTo(self:nZL9RecNo))
 
             if (!empty(cIdEnt))
 
@@ -508,7 +517,7 @@ method PDF(aNotas) class TAutomacaoDevolucaoIntercompany
                     cLog:="Sem conexao com o TSS"
                     ZL9->ZL9_STADOC:="3"
                     ZL9->ZL9_PDF:=cLog
-                    ZL9->(ZL9PutLog(@cLog))
+                    ZL9->(self:ZL9PutLog(@cLog))
                     ZL9->(MSUnLock())
                 endif
 
@@ -552,9 +561,10 @@ method EnvioNFe(aNotasEnv) class TAutomacaoDevolucaoIntercompany
 
     nNotas:=Len(aNotasEnv)
     For nNota:=3 To nNotas
-        ZL9->(DBGoTo(aNotasEnv[nNota][4]))
+        self:nZL9RecNo:=aNotasEnv[nNota][4]
+        ZL9->(DBGoTo(self:nZL9RecNo))
         if (lEnv)
-            U_BIAEnvMail(nil,self:cEmailNfDev,"NF-e de Devolução de "+AllTrim(SM0->M0_NOME),"Segue nota fiscal eletrônica",nil,AllTrim(aNotasEnv[1]),.F.)
+            U_BIAEnvMail(nil,self:cEmailNfDev,"NF-e de Devolução de "+allTrim(SM0->M0_NOME),"Segue nota fiscal eletrônica",nil,allTrim(aNotasEnv[1]),.F.)
             lEnv:=.F.
         endif
         if (ZL9->(Reclock("ZL9",.F.)))
@@ -819,7 +829,7 @@ method FaturarPedido() class TAutomacaoDevolucaoIntercompany
 
                     ErrorBlock(bErrorBlock)
 
-                    if ( ValType(cError) <> "U" .and. !empty(cError) ) .or. !lRet
+                    if ( ValType(cError) <> "U".and.!empty(cError) ) .or. !lRet
 
                         if (InTransact())
                             DisarmTransaction()
@@ -910,7 +920,7 @@ method ProcPedido(aCabSC5,aItensSC6,cDoc,cSerie,cCliente,cLoja,cEmpFilOri,cFormu
 
                         cSC5Filial:=xFilial("SC5")
                         dbSelectArea("SC5")
-                        cMay:=("SC5"+Alltrim(cSC5Filial))
+                        cMay:=("SC5"+allTrim(cSC5Filial))
                         SC5->(dbSetOrder(1))
 
                         while (SC5->((DBSeek(cSC5Filial+cNumPed).or.!MayIUseCode(cMay+cNumPed))))
@@ -928,13 +938,15 @@ method ProcPedido(aCabSC5,aItensSC6,cDoc,cSerie,cCliente,cLoja,cEmpFilOri,cFormu
 
                         MsExecAuto({|x,y,z| Mata410(x,y,z)},aCabSC5,aItensSC6,3)
 
-                        cacheData():clear()
+                        cacheData():delSection("ProcPedido")
 
                         if (lMsErroAuto)
 
                             cLogTxt:=self:GetErrorLog()
 
-                            cLog:="Erro ao incluir pedido de venda "+__cCRLF+cLogTxt
+                            cLog:="Erro ao incluir pedido de venda"
+                            cLog+=__cCRLF
+                            cLog+=cLogTxt
 
                             VarInfo("cLogTxt",cLog)
 
@@ -952,6 +964,8 @@ method ProcPedido(aCabSC5,aItensSC6,cDoc,cSerie,cCliente,cLoja,cEmpFilOri,cFormu
                         else
 
                             ConfirmSX8()
+
+                            cLog:="Pedido de Venda [ "+allTrim(SC5->C5_NUM)+" ] Incluido com Sucesso"
 
                             self:SetPedido(cDoc,cSerie,cCliente,cLoja,SC5->C5_NUM,SC5->C5_CLIENTE,SC5->C5_LOJACLI,aItensSC6)
                             self:SetStatus(cDoc,cSerie,cCliente,cLoja,"3",@cLog)
@@ -1014,24 +1028,39 @@ method ProcPedido(aCabSC5,aItensSC6,cDoc,cSerie,cCliente,cLoja,cEmpFilOri,cFormu
 
 Return(!lMsErroAuto)
 
-method GetEndereco(cDoc,cSerie,cCodCli,cLojaCli,cCodFor,cLojaFor) class TAutomacaoDevolucaoIntercompany
+method GetEndereco(cDoc,cSerie,cItem,cCodCli,cLojaCli,nZL9RecNo) class TAutomacaoDevolucaoIntercompany
 
     local aArea     as array
     
     local cSQL      as character
-    local cAlias4   as character
+    local cTmpAlias as character
     local cEnderec  as character
 
+    local nZ25RecNo as numeric
+    local nZ26RecNo as numeric
+
     aArea:=getArea()
-    cAlias4:=GetNextAlias()
+    cTmpAlias:=GetNextAlias()
 
-    cSQL:=TAutDevIntQry():GetEndereco(cCodCli,cLojaCli,cDoc,cSerie)
+    if (empty(nZL9RecNo))
+        ::nZL9RecNo:=0
+        cSQL:=TAutDevIntQry():GetEndereco(cCodCli,cLojaCli,cDoc,cSerie,cItem)
+    else
+        ::nZL9RecNo:=nZL9RecNo
+        cSQL:=TAutDevIntQry():GetProcDev(nZL9RecNo)
+    endif
 
-    TCQUERY (cSQL) ALIAS (cAlias4) NEW
+    TCQUERY (cSQL) ALIAS (cTmpAlias) NEW
 
-    if ((cAlias4)->(!eof()))
+    if ((cTmpAlias)->(!eof()))
 
-        if ((cAlias4)->Z25_RETMRC=="S")
+        nZ25RecNo:=(cTmpAlias)->Z25RECNO
+        nZ26RecNo:=(cTmpAlias)->Z26RECNO
+        
+        Z25->(MsGoTo(nZ25RecNo))
+        Z26->(MsGoTo(nZ26RecNo))
+
+        if (Z25->Z25_RETMRC=="S")
 
             cEnderec:="DEVOLUCAO"
 
@@ -1043,11 +1072,11 @@ method GetEndereco(cDoc,cSerie,cCodCli,cLojaCli,cCodFor,cLojaFor) class TAutomac
 
     else
 
-        cEnderec:="NOTFOUND"
+        cEnderec:="P. DEVOL"
 
     endif
 
-    (cAlias4)->(dbCloseArea())
+    (cTmpAlias)->(dbCloseArea())
 
     restArea(aArea)
 
@@ -1130,13 +1159,17 @@ method fDistribui(cDoc,cSerie,cCliente,cLoja,cLocaliz,cStatus,lDestino,cCodFor,c
 
                 MsExecAuto({|x,y,z| MATA265(x,y,z) },aCabSDA,aItensSDB,3)
 
-                cacheData():clear()
+                cacheData():delSection("fDistribui")
 
                 if (lMsErroAuto)
 
                     cLogTxt:=self:GetErrorLog()
 
-                    cLog:="Distribuicao - ERRO: "+cLogTxt
+                    cLog:="Distribuicao - ERRO:"
+                    cLog+=__cCRLF
+                    cLog+=cLogTxt
+                    cLog+=__cCRLF
+                    cLog+="Local :"+cLocaliz
 
                     varInfo("cLogTxt",cLog)
 
@@ -1156,7 +1189,9 @@ method fDistribui(cDoc,cSerie,cCliente,cLoja,cLocaliz,cStatus,lDestino,cCodFor,c
 
                 else
 
-                    cLog:="Distribuicao - Produto "+SDA->DA_PRODUTO+" Distribuído com Sucesso!"
+                    cLog:="Distribuicao - Produto "+allTrim(SDA->DA_PRODUTO)+" Distribuído com Sucesso!"
+                    cLog+=__cCRLF
+                    cLog+="Local :"+cLocaliz
 
                     if (lDestino)
 
@@ -1303,6 +1338,10 @@ method InputZL9(cDoc,cSerie,cCliente,cLoja,cEmpFilOri,cFormul,cDocOri,cSerOri,cC
         lRet:=((lAddNew).or.(empty(ZL9->ZL9_PEDIDO)))
     endif
 
+    self:nZL9RecNo:=ZL9->(recNo())
+
+    self:GetProcDev(self:nZL9RecNo)
+
     if ((!lAddNew).and.!(lRet))
         lRet:=((lFound).and.(empty(ZL9->ZL9_PEDIDO)))
     endif
@@ -1328,12 +1367,20 @@ method ProcessaEntrada(aFiliais,lOnlyDistr) class TAutomacaoDevolucaoIntercompan
     local cEmpOri       as character
     local cFilOri       as character
     local cPedOri       as character
+    
     local cCodFor       as character
     local cLojaFor      as character
+    
     local cDoc          as character
     local cSerie        as character
     local cCliente      as character
     local cLoja         as character
+    
+    local cEmp          as character
+    local cFil          as character
+    local cEmpFilAtu    as character
+    local cEmpFilPrc    as character
+
     local cCondPag      as character
     local cSM0KeySeek   as character
 
@@ -1357,26 +1404,32 @@ method ProcessaEntrada(aFiliais,lOnlyDistr) class TAutomacaoDevolucaoIntercompan
 
     aDocEntrada:=array(0)
 
-    cSM0KeySeek:=cEmpAnt
-    cSM0KeySeek+=cFilAnt
+    cSM0KeySeek:=&("cEmpAnt")
+    cSM0KeySeek+=&("cFilAnt")
     if (SM0->(MsSeek(cSM0KeySeek,.F.)))
         nSM0RecNo:=SM0->(RecNo())
     endif
 
-    oEmpFilCom:SeekForCli(cEmpAnt,cFilAnt,nSM0RecNo)
+    oEmpFilCom:SeekForCli(&("cEmpAnt"),&("cFilAnt"),nSM0RecNo)
 
     bDocEntrada:={||{aCabSF1,aItensSF1,cEmpOri,cFilOri,cPedOri,cDoc,cSerie,cCodFor,cLojaFor,cCondPag,oEmpFilVen:cCodCli,oEmpFilVen:cLojaCli}}
 
+    cEmpFilAtu:=(&("cEmpAnt")+&("cFilAnt"))
+
     For nW:=1 To Len(aFiliais)
 
-        if ((cEmpAnt+cFilAnt)<>(aFiliais[nW][1]+AllTrim(aFiliais[nW][2])))
+        cEmp:=aFiliais[nW][1]
+        cFil:=aFiliais[nW][2]
 
-            self:AddLog("Buscando notas de devolucao na filial: "+aFiliais[nW][1]+AllTrim(aFiliais[nW][2])+" para dar entrada")
+        cEmpFilPrc:=(cEmp+allTrim(cFil))
+        if (cEmpFilAtu<>cEmpFilPrc)
+
+            self:AddLog("Buscando notas de devolucao na filial: "+cEmpFilPrc+" para dar entrada")
 
             nSM0RecNo:=aFiliais[nW][4]
             SM0->(MsGoTo(nSM0RecNo))
 
-            oEmpFilVen:SeekForCli(aFiliais[nW][1],aFiliais[nW][2],nSM0RecNo)
+            oEmpFilVen:SeekForCli(cEmp,cFil,nSM0RecNo)
 
             if (oEmpFilCom:lFornecedor)
 
@@ -1492,6 +1545,8 @@ method ProcessaEntrada(aFiliais,lOnlyDistr) class TAutomacaoDevolucaoIntercompan
                 cSQL+=" ORDER BY SD2.D2_FILIAL,SD2.D2_DOC,SD2.D2_SERIE,SD2.D2_CLIENTE,SD2.D2_LOJA"+__cCRLF
 
                 TCQUERY (cSQL) ALIAS (cTmpAlias) NEW
+                
+                TCSetField(cTmpAlias,"D2_EMISSAO","D",8,0)
 
                 while ((cTmpAlias)->(!eof()))
 
@@ -1519,7 +1574,7 @@ method ProcessaEntrada(aFiliais,lOnlyDistr) class TAutomacaoDevolucaoIntercompan
                     aAdd(aCabSF1,{"F1_SERIE",cSerie,nil,nil})
                     aAdd(aCabSF1,{"F1_FORNECE",oEmpFilVen:cCodCli,nil,nil})
                     aAdd(aCabSF1,{"F1_LOJA",oEmpFilVen:cLojaCli,nil,nil})
-                    aAdd(aCabSF1,{"F1_EMISSAO",STOD((cTmpAlias)->D2_EMISSAO),nil,nil})
+                    aAdd(aCabSF1,{"F1_EMISSAO",(cTmpAlias)->D2_EMISSAO,nil,nil})
                     aAdd(aCabSF1,{"F1_CHVNFE",(cTmpAlias)->CHAVE,nil,nil})
 
                     while ((cTmpAlias)->(!eof().and.(cDoc+cSerie+cCliente+cLoja)==(D2_DOC+D2_SERIE+D2_CLIENTE+D2_LOJA)))
@@ -1625,15 +1680,23 @@ method SetStatus(cDoc,cSerie,cCliente,cLoja,cStatus,cLog) class TAutomacaoDevolu
 
     if (ZL9->(MsSeek(xFilial("ZL9")+cEmpAnt+cFilAnt+cDoc+cSerie+cCliente+cLoja)))
 
+        self:nZL9RecNo:=ZL9->(recNo())
+
         if (ZL9->(RecLock("ZL9",.F.)))
             if (cStatus=="E")
-                ZL9->(ZL9PutLog(@cLog))      
+                ZL9->(self:ZL9PutLog(@cLog))      
             else
                 ZL9->ZL9_STATUS:=if(empty(cStatus),ZL9->ZL9_STATUS,cStatus)
-                ZL9->(ZL9PutLog(@cLog))
+                ZL9->(self:ZL9PutLog(@cLog))
             endif
             ZL9->(MsUnLock())
         endif
+
+        self:GetProcDev(self:nZL9RecNo)
+
+    else
+        
+        self:nZL9RecNo:=0
 
     endif
 
@@ -1660,15 +1723,27 @@ method SetStatusDest(cDoc,cSerie,cCliente,cLoja,cStatus,cLog) class TAutomacaoDe
 
     if (ZL9->(MsSeek(xFilial("ZL9")+cEmpAnt+cFilAnt+cDoc+cSerie+cCliente+cLoja)))
 
+        self:nZL9RecNo:=ZL9->(recNo())
+
         if (ZL9->(RecLock("ZL9",.F.)))
             if (cStatus=="E")
-                ZL9->(ZL9PutLog(@cLog))
+                ZL9->(self:ZL9PutLog(@cLog))
             else
-                ZL9->ZL9_STATUS:=if(empty(cStatus),ZL9->ZL9_STATUS,cStatus)
-                ZL9->(ZL9PutLog(@cLog))
+                cStatus:=if(empty(cStatus),ZL9->ZL9_STATUS,cStatus)
+                ZL9->ZL9_STATUS:=cStatus
+                if (cStatus=="F")
+                    ZL9->ZL9_STADOC:="8"
+                endif
+                ZL9->(self:ZL9PutLog(@cLog))
             endif
             ZL9->(MsUnLock())
         endif
+
+        self:GetProcDev(self:nZL9RecNo)
+
+    else
+        
+        self:nZL9RecNo:=0
 
     endif
 
@@ -1706,12 +1781,15 @@ method SetPedido(cDoc,cSerie,cCliente,cLoja,cPedido,cForDev,cLojaFor,aItensSC6) 
         ZL9->(dbSetOrder(1)) // ZL9_FILIAL,ZL9_CODEMP,ZL9_CODFIL,ZL9_DOCDEV,ZL9_SERDEV,ZL9_CLIDEV,ZL9_LOJDEV,R_E_C_N_O_,D_E_L_E_T_
 
         if (ZL9->(MsSeek(xFilial("ZL9")+cEmpAnt+cFilAnt+cDoc+cSerie+cCliente+cLoja)))
+            self:nZL9RecNo:=ZL9->(recNo())
             if (ZL9->(RecLock("ZL9",.F.)))
                 ZL9->ZL9_PEDIDO:=cPedido
                 ZL9->ZL9_FORNEC:=cForDev
                 ZL9->ZL9_LOJFOR:=cLojaFor
                 ZL9->(MsUnLock())
             endif
+        else
+            self:nZL9RecNo:=0
         endif
 
         SC6->(dbSetOrder(RetOrder("SC5","C6_FILIAL+C6_NUM+C6_ITEM+C6_PRODUTO")))
@@ -1727,8 +1805,8 @@ method SetPedido(cDoc,cSerie,cCliente,cLoja,cPedido,cForDev,cLojaFor,aItensSC6) 
             endif
             cSC6KeySeek:=SC5->C5_FILIAL
             cSC6KeySeek+=SC5->C5_NUM
-            cSC6KeySeek+=PadR(aItensSC6[nSC6Item][nATItem][2],getSX3Cache("C6_ITEM","X3_TAMANHO"))
-            cSC6KeySeek+=PadR(aItensSC6[nSC6Item][nATProduto][2],getSX3Cache("C6_PRODUTO","X3_TAMANHO"))
+            cSC6KeySeek+=PadR(aItensSC6[nSC6Item][nATItem][2],getSX3cache("C6_ITEM","X3_TAMANHO"))
+            cSC6KeySeek+=PadR(aItensSC6[nSC6Item][nATProduto][2],getSX3cache("C6_PRODUTO","X3_TAMANHO"))
             if (SC6->(dbSeek(cSC6KeySeek,.F.)))
                 if (SC6->(recLock("SC6",.F.)))
                     nATQTDVen:=aScan(aItensSC6[nSC6Item],{|x|x[1]=="C6_QTDVEN"})
@@ -1775,14 +1853,20 @@ method SetDocDev(cDoc,cSerie,cCliente,cLoja,cDocDev,cSerDev) class TAutomacaoDev
 
     if (ZL9->(DBSeek(xFilial("ZL9")+cEmpAnt+cFilAnt+cDoc+cSerie+cCliente+cLoja)))
 
+        self:nZL9RecNo:=ZL9->(recNo())
+
         if (ZL9->(RecLock("ZL9",.F.)))
             ZL9->ZL9_DOC:=cDocDev
             ZL9->ZL9_SERIE:=cSerDev
             ZL9->ZL9_STADOC:="1"
             ZL9->(MsUnLock())
-            ZL9->(self:DocOriCmpAut(RecNo()))
+            ZL9->(self:DocOriCmpAut(self:nZL9RecNo))
         endif
 
+    else
+        
+        self:nZL9RecNo:=0
+    
     endif
 
     RestArea(aArea)
@@ -1817,6 +1901,7 @@ method DocOriCmpAut(nZL9RecNo) class TAutomacaoDevolucaoIntercompany
     local lDigita       as logical
     local lCompTit      as logical
     local lAglutina     as logical
+    local lFinMovCmp    as logical
     local lContabiliza  as logical
 
     local nHdl          as numeric
@@ -1830,78 +1915,96 @@ method DocOriCmpAut(nZL9RecNo) class TAutomacaoDevolucaoIntercompany
 
     aArea:=getArea()
 
+    self:nZL9RecNo:=nZL9RecNo
     ZL9->(MsGoTo(nZL9RecNo))
 
     cLog:="Pedido: "+ZL9->ZL9_PEDIDO
-    cLog+=" Nota: "+ZL9->ZL9_DOC
+    cLog+=" Nota: "+allTrim(ZL9->ZL9_DOC)
     cLog+="-"
-    cLog+=ZL9->ZL9_SERIE
+    cLog+=allTrim(ZL9->ZL9_SERIE)
     cLog+="-"+" NF Devolucao: "
-    cLog+=ZL9->ZL9_DOCDEV
+    cLog+=allTrim(ZL9->ZL9_DOCDEV)
     cLog+="-"
-    cLog+=ZL9->ZL9_SERDEV
+    cLog+=allTrim(ZL9->ZL9_SERDEV)
     cLog+=" NF Original: "
-    cLog+=ZL9->ZL9_DOCORI
+    cLog+=allTrim(ZL9->ZL9_DOCORI)
     cLog+="-"
-    cLog+=ZL9->ZL9_SERORI
+    cLog+=allTrim(ZL9->ZL9_SERORI)
 
     self:AddLog("Inicio Compensação Titulos: "+cLog )
 
-    cSQL:=TAutDevIntQry():DocOriCmpAut(nZL9RecNo)
+    lFinMovCmp:=cacheData():get("SE5FI340","lRet",.F.)
     
-    cTblTmp:=MpSysOpenQuery(cSQL)
+    cacheData():delSection("SE5FI340")
 
-    aNF:=array(0)
-    aPA_NDF:=array(0)
+    if (!lFinMovCmp)
+        lFinMovCmp:=cacheData():get("SE5FI341","lRet",.F.)
+    endif
 
-    while ((cTblTmp)->(!eof()))
-        nSE2RECNO:=(cTblTmp)->SE2RECNO
-        SE2->(DbGoTo(nSE2RECNO))
-        if (SE2->E2_TIPO$(MVPAGANT+"|"+MV_CPNEG))
-            aAdd(aPA_NDF,nSE2RECNO)
-        else
-            aAdd(aNF,nSE2RECNO)
-        endif 
-        (cTblTmp)->(DbSkip())
-    end while
+    cacheData():delSection("SE5FI341")
 
-    (cTblTmp)->(dbCloseArea())
+    lCompTit:=lFinMovCmp
 
-    lCompTit:=(!empty(aPA_NDF).and.(!empty(aNF)))
+    if (!lCompTit)
 
-    if (lCompTit)
-    
-        Pergunte("AFI340",.F.,,,,,@aPerg)
-        MV_PAR09:=2
-        __SaveParam("AFI340",@aPerg)
+        cSQL:=TAutDevIntQry():DocOriCmpAut(nZL9RecNo)
+        
+        cTblTmp:=MpSysOpenQuery(cSQL)
 
-        lDigita:=(MV_PAR09==1)
-        lAglutina:=(MV_PAR08==1)
-        lContabiliza:=(MV_PAR11==1)
+        aNF:=array(0)
+        aPA_NDF:=array(0)
 
-        dDatabase:=Date()
+        while ((cTblTmp)->(!eof()))
+            nSE2RECNO:=(cTblTmp)->SE2RECNO
+            SE2->(DbGoTo(nSE2RECNO))
+            if (SE2->E2_TIPO$(MVPAGANT+"|"+MV_CPNEG))
+                aAdd(aPA_NDF,nSE2RECNO)
+            else
+                aAdd(aNF,nSE2RECNO)
+            endif 
+            (cTblTmp)->(DbSkip())
+        end while
 
-        lCompTit:=FinCmpAut(@aNF,@aPA_NDF,@aContabil,@bBlock,@aEstorno,@nSldComp,@dDatabase,@nTaxaPA,@nTaxaNF,@nHdl,@nOperacao,@aRecSE5,@aNDFDados,@lHelp)
+        (cTblTmp)->(dbCloseArea())
+
+        lCompTit:=(!empty(aPA_NDF).and.(!empty(aNF)))
+
+        if (lCompTit)
+        
+            Pergunte("AFI340",.F.,,,,,@aPerg)
+            MV_PAR09:=2
+            __SaveParam("AFI340",@aPerg)
+
+            lDigita:=(MV_PAR09==1)
+            lAglutina:=(MV_PAR08==1)
+            lContabiliza:=(MV_PAR11==1)
+
+            dDatabase:=Date()
+
+            lCompTit:=FinCmpAut(@aNF,@aPA_NDF,@aContabil,@bBlock,@aEstorno,@nSldComp,@dDatabase,@nTaxaPA,@nTaxaNF,@nHdl,@nOperacao,@aRecSE5,@aNDFDados,@lHelp)
+
+        endif
 
     endif
 
     cMsg:=cLog
 
     if (lCompTit)
-        cMsg+=":: Compensação realizada com sucesso"
+        cMsg+="self: Compensação Automática realizada com sucesso"
     else
-        cMsg+=":: Ocorreu um erro no processo de compensação"
+        cMsg+="self: Titulo Não Compensado. Efetuar compensação Manual."
         varInfo("aNF",aNF)
         varInfo("aPA_NDF",aPA_NDF)
-        if ZL9->(RecLock("ZL9",.F.))
-            ZL9->(ZL9PutLog(@cMsg))
-            ZL9->(MsUnLock())
-        endif
     endif
 
-    self:AddLog("Final Compensação Titulos: "+cMsg )
+    ZL9->(MsGoTo(nZL9RecNo))
+    
+    if (ZL9->(RecLock("ZL9",.F.)))
+        ZL9->(self:ZL9PutLog(@cMsg))
+        ZL9->(MsUnLock())
+    endif
 
-    self:AddLog("Final Compensação Titulos: "+cLog )
+    self:AddLog("Final Compensação Titulos: "+cMsg)
 
     restArea(aArea)
 
@@ -1982,7 +2085,7 @@ method ProcFat(cDoc,cSerie,cCliente,cLoja) class TAutomacaoDevolucaoIntercompany
 
     if (empty(SC5->C5_NOTA))
 
-        self:cSerieNF:=PADR(GetNewPar("MV_YSERFTP","1"),getSX3Cache("F2_DOC","X3_TAMANHO"))
+        self:cSerieNF:=PADR(GetNewPar("MV_YSERFTP","1"),getSX3cache("F2_DOC","X3_TAMANHO"))
 
         if (!empty(self:cSerieNF))
 
@@ -2004,13 +2107,13 @@ method ProcFat(cDoc,cSerie,cCliente,cLoja) class TAutomacaoDevolucaoIntercompany
                 nPesoBrut:=0
                 nPesoLiq:=0
 
-                while (SC6->(!eof() .and. SC5->C5_FILIAL+cNumPed==SC6->C6_FILIAL+SC6->C6_NUM))
+                while (SC6->(!eof().and.(SC5->C5_FILIAL+cNumPed)==(C6_FILIAL+SC6->C6_NUM)))
 
                     nQtdJaEnt:=SC6->C6_QTDENT
 
                     if ((SC6->C6_QTDVEN-nQtdJaEnt)>0)
 
-                        nPos01:=aScan(aRecSC6,{|x|(x[1]=="") .and. (x[2]=="")})
+                        nPos01:=aScan(aRecSC6,{|x|(x[1]=="").and.(x[2]=="")})
 
                         if (nPos01==0)
 
@@ -2048,7 +2151,7 @@ method ProcFat(cDoc,cSerie,cCliente,cLoja) class TAutomacaoDevolucaoIntercompany
                 SC9->(dbSetOrder(1))
                 if (SC9->(DBSeek(cSC9Filial+cNumPed)))
 
-                    while (SC9->(!eof() .and. cSC9Filial+cNumPed ==SC9->C9_FILIAL+SC9->C9_PEDIDO))
+                    while (SC9->(!eof().and.cSC9Filial+cNumPed==SC9->C9_FILIAL+SC9->C9_PEDIDO))
 
                         if (empty(SC9->C9_NFISCAL))
 
@@ -2088,7 +2191,7 @@ method ProcFat(cDoc,cSerie,cCliente,cLoja) class TAutomacaoDevolucaoIntercompany
                             SC9->(dbSetOrder(retOrder("SC9","C9_FILIAL+C9_PRODUTO+C9_PEDIDO+C9_ITEM")))
                             if (SC9->(dbSeek(SC6->(C6_FILIAL+C6_PRODUTO+C6_NUM+C6_ITEM),.F.)))
                                 nSC9RecNo:=SC9->(RecNo())
-                                if (aScan(aSC9RecNos,{|nRecNo|(nRecno==nSC9RecNo)})==0)
+                                if (aScan(aSC9RecNos,{|nRecNo|(nRecNo==nSC9RecNo)})==0)
                                     aAdd(aSC9RecNos,nSC9RecNo)
                                 endif
                             endif
@@ -2098,7 +2201,7 @@ method ProcFat(cDoc,cSerie,cCliente,cLoja) class TAutomacaoDevolucaoIntercompany
 
                 Next nX
 
-                self:AddLog("MaLiberOk ==>"+cValToChar(MaLiberOk({SC5->C5_NUM},.F.)))
+                self:AddLog("MaLiberOk==>"+cValToChar(MaLiberOk({SC5->C5_NUM},.F.)))
 
                 aSize(aPvlNfs,0)
                 aSize(aBloqueio,0)
@@ -2143,7 +2246,7 @@ method ProcFat(cDoc,cSerie,cCliente,cLoja) class TAutomacaoDevolucaoIntercompany
                 uMa410LbNfs:=Ma410LbNfs(2,@aPvlNfs,@aBloqueio)
                 lMa410LbNfs:=((valType(uMa410LbNfs)=="L").and.(uMa410LbNfs))
 
-                self:AddLog("Ma410LbNfs 2 ==>"+cValToChar(lMa410LbNfs))
+                self:AddLog("Ma410LbNfs 2==>"+cValToChar(lMa410LbNfs))
                 lMa410LbNfs:=((valType(uMa410LbNfs)=="L").and.(uMa410LbNfs))
 
                 if (lMa410LbNfs)
@@ -2163,7 +2266,7 @@ method ProcFat(cDoc,cSerie,cCliente,cLoja) class TAutomacaoDevolucaoIntercompany
                     uMa410LbNfs:=Ma410LbNfs(1,@aPvlNfs,@aBloqueio)
                     lMa410LbNfs:=((valType(uMa410LbNfs)=="L").and.(uMa410LbNfs))
 
-                    self:AddLog("Ma410LbNfs 1 ==>"+cValToChar(lMa410LbNfs))
+                    self:AddLog("Ma410LbNfs 1==>"+cValToChar(lMa410LbNfs))
 
                 endif
 
@@ -2230,6 +2333,7 @@ method DocSaida(cPedido,cDoc,cSerie,cCliente,cLoja,aPvlNfs) class TAutomacaoDevo
 
     local bAtuPGerNF    as block
 
+    local cLog          as character
     local cNota		    as character
     local cSerie		as character
     
@@ -2237,7 +2341,10 @@ method DocSaida(cPedido,cDoc,cSerie,cCliente,cLoja,aPvlNfs) class TAutomacaoDevo
     local cSF2KeySeek   as character
 
     local nX		    as numeric
+    local nY	        as numeric
+    local nNotas	    as numeric  
     local nItemNf	    as numeric
+    local nTotPvlNfs    as numeric
 
     local lSF2Foud      as logical
 
@@ -2256,7 +2363,8 @@ method DocSaida(cPedido,cDoc,cSerie,cCliente,cLoja,aPvlNfs) class TAutomacaoDevo
     //inclui no vetor principal para faturamento
     aAdd(aTotPvlNfs,{cCliente+cLoja,cSerie,aPvlNfs})
 
-    For nX:=1 to Len(aTotPvlNfs)
+    nTotPvlNfs:=Len(aTotPvlNfs)
+    For nX:=1 to nTotPvlNfs
 
         aSize(aNotas,0)
 
@@ -2264,28 +2372,23 @@ method DocSaida(cPedido,cDoc,cSerie,cCliente,cLoja,aPvlNfs) class TAutomacaoDevo
 
         aAdd(aNotas,{aTotPvlNfs[nX][2],array(0)})
 
+        nNotas:=Len(aNotas)
+
         //Quebra o pedido em notas caso tenha mais itens do que o determinado em parametro
-        if (Len(aTotPvlNfs[nX][3])>=nItemNf)
-
-            For nX:=1 To Len(aTotPvlNfs[nX][3])
-
-                if (Len(aNotas[Len(aNotas)][2]) >=nItemNf)
-
+        nY:=Len(aTotPvlNfs[nX][3])
+        if (nY>=nItemNf)
+            For nX:=1 To nY
+                if (Len(aNotas[nNotas][2])>=nItemNf)
                     aAdd(aNotas,{aTotPvlNfs[nX][2],array(0)})
-
+                    nNotas++
                 endif
-
-                aAdd(aNotas[Len(aNotas)][2],aClone(aTotPvlNfs[nX][3][nX]))
-
+                aAdd(aNotas[nNotas][2],aClone(aTotPvlNfs[nX][3][nX]))
             Next nX
-
         else
-
-            aNotas[Len(aNotas)][2]:=aClone(aTotPvlNfs[nX][3])
-
+            aNotas[nNotas][2]:=aClone(aTotPvlNfs[nX][3])
         endif
 
-        For nX:=1 To Len(aNotas)
+        For nX:=1 To nNotas
 
             //Chama grupo de perguntas para emissão da nf fiscal
             Pergunte("MT460A",.F.,,,,,@aPerg)
@@ -2308,12 +2411,13 @@ method DocSaida(cPedido,cDoc,cSerie,cCliente,cLoja,aPvlNfs) class TAutomacaoDevo
 
             //Rotina para geração da nf fiscal
             bAtuPGerNF:={||AtuPGerNF()}
+            cacheData():set("FINCMPAUT","nHdlPrv",(-1))
             cNota:=MaPvlNfs(aNotas[nX][2],aNotas[nX][1],(MV_PAR01==1),(MV_PAR02==1),(MV_PAR03==1),(MV_PAR04==1),(MV_PAR05==1),MV_PAR07,MV_PAR08,(MV_PAR15==1),(MV_PAR16==2),nil,nil,bAtuPGerNF)
 
-            cNota:=PadR(cNota,getsx3cache("F2_DOC","X3_TAMANHO"))
-            cSerie:=PadR(cSerie,getsx3cache("F2_SERIE","X3_TAMANHO"))
-            cCliente:=PadR(cCliente,getsx3cache("F2_CLIENTE","X3_TAMANHO"))
-            cLoja:=PadR(cLoja,getsx3cache("F2_LOJA","X3_TAMANHO"))
+            cNota:=PadR(cNota,getSX3cache("F2_DOC","X3_TAMANHO"))
+            cSerie:=PadR(cSerie,getSX3cache("F2_SERIE","X3_TAMANHO"))
+            cCliente:=PadR(cCliente,getSX3cache("F2_CLIENTE","X3_TAMANHO"))
+            cLoja:=PadR(cLoja,getSX3cache("F2_LOJA","X3_TAMANHO"))
 
             cSF2KeySeek:=cSF2Filial
             cSF2KeySeek+=cNota
@@ -2331,7 +2435,13 @@ method DocSaida(cPedido,cDoc,cSerie,cCliente,cLoja,aPvlNfs) class TAutomacaoDevo
 
                 self:SetDocDev(cDoc,cSerie,cCliente,cLoja,cNota,cSerie)
 
-                self:SetStatus(cDoc,cSerie,cCliente,cLoja,"4","Pedido faturado") // "Devolucao Intercompany - Pedido Faturado"
+                cLog:="Pedido faturado"
+                cLog+=__cCRLF
+                cLog+="Doc: "+cDoc
+                cLog+=" "
+                cLog+="Serie: "+cSerie
+                
+                self:SetStatus(cDoc,cSerie,cCliente,cLoja,"4",@cLog) // "Devolucao Intercompany - Pedido Faturado"
 
             else
 
@@ -2424,6 +2534,8 @@ method ProcEntrada(aDocEntrada,lOnlyDistr) class TAutomacaoDevolucaoIntercompany
             // Processa primeiro Documentos de entrada
             For nY:=1 To Len(aDocEntrada)
 
+                self:nZL9RecNo:=0
+
                 aCabSF1:=aClone(aDocEntrada[nY][1])
                 aItensSF1:=aClone(aDocEntrada[nY][2])
 
@@ -2459,7 +2571,7 @@ method ProcEntrada(aDocEntrada,lOnlyDistr) class TAutomacaoDevolucaoIntercompany
                     __SaveParam("MTA103",@aPerg)
 
                     SA1->(dbSetOrder(1))
-                    SA1->(DbSeek(cSA1Filial+PADR(cCodCli,GetSX3Cache("D1_FORNECE","X3_TAMANHO"))+PADR(cLojaCli,GetSX3Cache("D1_LOJA","X3_TAMANHO"))))
+                    SA1->(DbSeek(cSA1Filial+PADR(cCodCli,getSX3cache("D1_FORNECE","X3_TAMANHO"))+PADR(cLojaCli,getSX3cache("D1_LOJA","X3_TAMANHO"))))
 
                     // __cInternet:=""
 
@@ -2487,7 +2599,8 @@ method ProcEntrada(aDocEntrada,lOnlyDistr) class TAutomacaoDevolucaoIntercompany
 
                 if (lMsErroAuto)
 
-                    cLogTxt:="Erro ao gerar documento de entrada "
+                    cLogTxt:="Erro ao gerar documento de entrada"
+                    cLogTxt+=__cCRLF
                     cLogTxt+=cDoc
                     cLogTxt+="/"
                     cLogTxt+=cSerie+"-"
@@ -2510,10 +2623,21 @@ method ProcEntrada(aDocEntrada,lOnlyDistr) class TAutomacaoDevolucaoIntercompany
 
                     if (!lOnlyDistr)
                         cLogTxt:="Documento de entrada incluido"
+                        cLogTxt+=__cCRLF
+                        cLogTxt+="Doc: "+cDoc
+                        cLogTxt+=" "
+                        cLogTxt+="Serie: "+cSerie
                         self:SetStatusDest(cDoc,cSerie,cCodFor,cLojaFor,"5",@cLogTxt) // "Devolucao Intercompany - NF Incluida"
+                    else
+                        cLogTxt:="Endereçando"
+                        cLogTxt+=__cCRLF
+                        cLogTxt+="Doc: "+cDoc
+                        cLogTxt+=" "
+                        cLogTxt+="Serie: "+cSerie
+                        self:SetStatusDest(cDoc,cSerie,cCodFor,cLojaFor,"5",@cLogTxt) // "Devolucao Intercompany - Enderecando"
                     endif
 
-                    cEnderec:=self:GetEndereco(aItensSF1[1][13][2],aItensSF1[1][14][2],cCodCli,cLojaCli,cCodFor,cLojaFor)
+                    cEnderec:=self:GetEndereco(aItensSF1[1][13][2],aItensSF1[1][14][2],aItensSF1[1][15][2],cCodCli,cLojaCli,self:nZL9RecNo)
 
                     if (self:fDistribui(cDoc,cSerie,cCodCli,cLojaCli,cEnderec,"6",.T.,cCodFor,cLojaFor)) // "Devolucao Intercompany - NF Enderecada"
 
@@ -2580,7 +2704,7 @@ method LoadFiliais() class TAutomacaoDevolucaoIntercompany
 
     while SM0->( !eof() )
         if SM0->( !Deleted() )
-            if ( AllTrim(SM0->M0_CODIGO)$"01|05|07|13" )
+            if ( allTrim(SM0->M0_CODIGO)$"01|05|07|13" )
                 SM0->(aAdd(aFiliais,{M0_CODIGO,M0_CODFIL,M0_CGC,RECNO()}))
             endif
         endif
@@ -2647,16 +2771,17 @@ method AddLog(cMsg) class TAutomacaoDevolucaoIntercompany
     paramtype cMsg as character default ""
     cMsg:=("["+cEmpAnt+cFilAnt +"] ["+DToC(Date())+"] ["+Time() +"] "+"["+PadR("TAutomacaoDevolucaoIntercompany",32)+"] "+cMsg)
     ConOut(cMsg)
-    FWLogMsg("MESSAGE"/*<cSeverity>*/,/*[cTransactionId]*/,"LOG"/*<cGroup>*/,"TAutomacaoDevolucaoIntercompany"/*<cCategory>*/,ProcName()/*<cStep >*/,"TAutomacaoDevolucaoIntercompany"/*<cMsgId>*/,cMsg/*<cMessage>*/,0/*<nMensure>*/,0/*<nElapseTime>*/,array(0)/*<aMessage>*/)
+    FWLogMsg("MESSAGE"/*<cSeverity>*/,/*[cTransactionId]*/,"LOG"/*<cGroup>*/,"TAutomacaoDevolucaoIntercompany"/*<cCategory>*/,ProcName()/*<cStep>*/,"TAutomacaoDevolucaoIntercompany"/*<cMsgId>*/,cMsg/*<cMessage>*/,0/*<nMensure>*/,0/*<nElapseTime>*/,array(0)/*<aMessage>*/)
     return
 
-method AddErro(nRecno,cError) class TAutomacaoDevolucaoIntercompany
+method AddErro(nRecNo,cError) class TAutomacaoDevolucaoIntercompany
 
-    paramtype nRecno as numeric optional default ZL9->(recNo())
+    paramtype nRecNo as numeric optional default ZL9->(recNo())
     paramtype cError as character optional default ""
 
-    if (!empty(cError).and.(nRecno>0))
-        aAdd(self:aErros,{nRecno,cError})
+    if (!empty(cError).and.(nRecNo>0))
+        self:nZL9RecNo:=nRecNo
+        aAdd(self:aErros,{nRecNo,cError})
     endif
 
     return
@@ -2678,11 +2803,12 @@ method GravaErro() class TAutomacaoDevolucaoIntercompany
         self:AddLog("Gravando logs de erros") // Gravo aqui pois eh depois do rollback
         For nErro:=1 To nErros
             nZL9RecNo:=self:aErros[nW][1]
+            self:nZL9RecNo:=nZL9RecNo
             ZL9->(MsGoTo(nZL9RecNo))
             if (ZL9->(!eof().and.(RecNo()==nZL9RecNo)))
                 if (ZL9->(Reclock("ZL9",.F.)))
                     ZL9->ZL9_STAERR:="E"
-                    ZL9->(ZL9PutLog(@self:aErros[nErro][2]))
+                    ZL9->(self:ZL9PutLog(@self:aErros[nErro][2]))
                     ZL9->(MSUnLock())
                 endif
             endif
@@ -2761,6 +2887,115 @@ method MVNumItemVld(lLock) class TAutomacaoDevolucaoIntercompany
 
 Return(lLockX6)
 
+method GetProcDev(nZL9RecNo) class TAutomacaoDevolucaoIntercompany
+    
+    local aArea     as array
+    local aAreaZL9  as array
+
+    local cSQL      as character
+    local cTmpAlias as character
+
+    local cProcDev  as character
+
+    local nZ25RecNo as numeric
+    local nZ26RecNo as numeric
+
+    local nZ25Order as numeric
+
+    paramtype nZL9RecNo as numeric optional DEFAULT ZL9->(RecNo())
+
+    aArea:=getArea()
+    aAreaZL9:=ZL9->(getArea())
+
+    self:nZL9RecNo:=nZL9RecNo
+    ZL9->(MsGoto(nZL9RecNo))
+
+    if (empty(ZL9->ZL9_PRCDEV))
+
+        cSQL:=TAutDevIntQry():GetProcDev(nZL9RecNo)
+
+        cTmpAlias:=getNextAlias()
+        
+        TCQUERY (cSQL) ALIAS (cTmpAlias) NEW
+
+        if ((cTmpAlias)->(!eof()))
+            nZ25RecNo:=(cTmpAlias)->Z25RECNO
+            nZ26RecNo:=(cTmpAlias)->Z26RECNO
+        endif
+        (cTmpAlias)->(dbCloseArea())
+
+        if (nZ25RecNo>0)
+            Z25->(MsGoTo(nZ25RecNo))
+            if (ZL9->(RecLock("ZL9",.F.)))
+                ZL9->ZL9_PRCDEV:=Z25->Z25_NUM
+                ZL9->(MSUnLock())
+            endif
+            cProcDev:=ZL9->ZL9_PRCDEV
+        endif
+
+    else
+
+        cProcDev:=ZL9->ZL9_PRCDEV
+
+        nZ25Order:=retOrder("Z25","Z25_FILIAL+Z25_NUM")
+        Z25->(dbSetOrder(nZ25Order))
+        if (Z25->(dbSeek(xFilial("Z25")+cProcDev,.F.)))
+            nZ25RecNo:=Z25->(RecNo())
+        endif
+
+    endif
+
+    if (!empty(nZ25RecNo))
+        Z25->(MsGoTo(nZ25RecNo))
+        if (!empty(nZ26RecNo))
+            Z26->(MsGoTo(nZ26RecNo))
+        endif
+    endif
+
+    restArea(aAreaZL9)
+    restArea(aArea)
+
+    return(cProcDev)
+
+method ZL9PutLog(cLog as character) class TAutomacaoDevolucaoIntercompany
+    
+    local cZL9Log       as character
+    
+    local lZL9Lock      as logical
+    local lZL9IsLocked  as logical
+    
+    DEFAULT cLog:=""
+    
+    if (!empty(cLog))
+
+        lZL9IsLocked:=ZL9->(IsLocked())
+        lZL9Lock:=((lZL9IsLocked).or.(ZL9->((!eof()).and.(recLock("ZL9",.F.)))))
+
+        if (lZL9Lock)
+            DEFAULT __cCRLF:=CRLF
+            cZL9Log:=DToS(Date())
+            cZL9Log+="T"
+            cZL9Log+=Time()
+            cZL9Log+=__cCRLF
+            cZL9Log+=cLog
+            cZL9Log+=__cCRLF
+            cZL9Log+=replicate("-",80)
+            cZL9Log+=__cCRLF
+            cZL9Log+=ZL9->ZL9_LOG
+            ZL9->ZL9_LOG:=cZL9Log
+            if (!lZL9IsLocked)
+                SZ9->(MsUnLock())
+            endif
+        endif
+
+        cLog:=""
+
+    endif
+
+    DEFAULT lZL9Lock:=.F.
+
+    return(lZL9Lock)
+
 static function getaPvlNfs(aSC9RecNos as array) as array
 
     local aPvlNfs 		as array
@@ -2818,42 +3053,3 @@ static function getaPvlNfs(aSC9RecNos as array) as array
     next nRecNo
 
     return(aPvlNfs)
-
-static function ZL9PutLog(cLog as character) as logical
-    
-    local cZL9Log       as character
-    
-    local lZL9Lock      as logical
-    local lZL9IsLocked  as logical
-    
-    DEFAULT cLog:=""
-    
-    if (!empty(cLog))
-
-        lZL9IsLocked:=ZL9->(IsLocked())
-        lZL9Lock:=((lZL9IsLocked).or.(ZL9->((!eof()).and.(recLock("ZL9",.F.)))))
-
-        if (lZL9Lock)
-            DEFAULT __cCRLF:=CRLF
-            cZL9Log:=DToS(Date())
-            cZL9Log+="T"
-            cZL9Log+=Time()
-            cZL9Log+=__cCRLF
-            cZL9Log+=cLog
-            cZL9Log+=__cCRLF
-            cZL9Log+=replicate("-",80)
-            cZL9Log+=__cCRLF
-            cZL9Log+=ZL9->ZL9_LOG
-            ZL9->ZL9_LOG:=cZL9Log
-            if (!lZL9IsLocked)
-                SZ9->(MsUnLock())
-            endif
-        endif
-
-        cLog:=""
-
-    endif
-
-    DEFAULT lZL9Lock:=.F.
-
-    return(lZL9Lock)

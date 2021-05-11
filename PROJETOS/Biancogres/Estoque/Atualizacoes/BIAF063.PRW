@@ -217,7 +217,8 @@ Static Function fProcInteg(_cEmp,_cFil)
 		cQuery += "                                                AND CAB.ID_BORDERO NOT IN('1130','1131','1132','1133','1134','1135','1136','1457','1462'," + CRLF
 		cQuery += "                                                							 '2619','2626','2794','3061','3263','3796','3970','3972','4089'," + CRLF
 		cQuery += "                                                							 '4111','4276','4364','4638','4718','4833','4834','4835','4843'," + CRLF
-		cQuery += "                                                							 '4850','4852','4853','4855','4865','5193','5455','6031','6033','6034') " + CRLF
+		cQuery += "                                                							 '4850','4852','4853','4855','4865','5193','5455','6031','6033','6034'," + CRLF
+		cQuery += "                                                							 '6933', '7225', '7392', '8514', '8556', '9622') " + CRLF
 		cQuery += "                                                AND SUBSTRING(CONVERT(VARCHAR(10), CAB.BRD_DATA, 112), 1, 10) >= '" + dtos(dDataCorte) + "' " + CRLF
 		If lWind
 			If !Empty(dDtMovDe) .and. !Empty(dDtMovAte) 

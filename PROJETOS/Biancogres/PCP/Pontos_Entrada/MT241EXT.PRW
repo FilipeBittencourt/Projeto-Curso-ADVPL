@@ -7,7 +7,7 @@
 @author Gabriel Rossi Mafioletti
 @since 10/08/2020
 @version 1.0
-@description Tela principal do projeto MRP
+@description Permite validação de campos de Usuário
 @type function
 /*/
 

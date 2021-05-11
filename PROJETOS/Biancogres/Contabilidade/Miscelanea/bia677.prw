@@ -282,6 +282,70 @@ Static Function RptDetail()
 			Ferase(Q5Index+GetDBExtension())
 			Ferase(Q5Index+OrdBagExt())
 
+			// Redutor de Utilização placa, ItCus 065, Produto = Z1000071
+			msQry06 := U_BIA677N6()
+
+			Q6Index := CriaTrab(Nil,.f.)
+			dbUseArea(.T.,"TOPCONN",TcGenQry(,,msQry06),'QR06',.T.,.T.)
+			dbSelectArea("QR06")
+			QR06->(dbGoTop())
+			ProcRegua(RecCount())
+			While !QR06->(Eof())
+
+				msMsg := "ItCus 065, Produto = Z1000071"
+				IncProc("ItCus 065, Produto = Z1000071")
+
+				Reclock("ZN8",.T.)
+				ZN8->ZN8_FILIAL := xFilial("ZN8")
+				ZN8->ZN8_DTREF  := stod(QR06->DTREF)
+				ZN8->ZN8_TPPROD := "PA"
+				ZN8->ZN8_PRODUT := "Z1000071"
+				ZN8->ZN8_ITCUS  := "065"
+				ZN8->ZN8_TPCUS  := "CV"
+				ZN8->ZN8_CUS223 := QR06->CUS223
+				ZN8->ZN8_CUS224 := QR06->CUS224
+				ZN8->(MsUnlock())
+
+				QR06->(dbSkip())
+
+			End
+
+			QR06->(dbCloseArea())
+			Ferase(Q6Index+GetDBExtension())
+			Ferase(Q6Index+OrdBagExt())
+
+			// Redutores de quebra, ItCus 071, Produto = Z1000071
+			msQry07 := U_BIA677N7()
+
+			Q7Index := CriaTrab(Nil,.f.)
+			dbUseArea(.T.,"TOPCONN",TcGenQry(,,msQry07),'QR07',.T.,.T.)
+			dbSelectArea("QR07")
+			QR07->(dbGoTop())
+			ProcRegua(RecCount())
+			While !QR07->(Eof())
+
+				msMsg := "ItCus 071, Produto = Z1000071"
+				IncProc("ItCus 071, Produto = Z1000071")
+
+				Reclock("ZN8",.T.)
+				ZN8->ZN8_FILIAL := xFilial("ZN8")
+				ZN8->ZN8_DTREF  := stod(QR07->DTREF)
+				ZN8->ZN8_TPPROD := "PA"
+				ZN8->ZN8_PRODUT := "Z1000071"
+				ZN8->ZN8_ITCUS  := "071"
+				ZN8->ZN8_TPCUS  := "CV"
+				ZN8->ZN8_CUS223 := QR07->CUS223
+				ZN8->ZN8_CUS224 := QR07->CUS224
+				ZN8->(MsUnlock())
+
+				QR07->(dbSkip())
+
+			End
+
+			QR07->(dbCloseArea())
+			Ferase(Q7Index+GetDBExtension())
+			Ferase(Q7Index+OrdBagExt())
+
 		Endif
 
 	Else
@@ -1457,6 +1521,38 @@ User Function BIA677N5()
 	KR005 += Alltrim("      FROM PROCC101                                                                                                            ") + msEnter
 
 Return( KR005 )
+
+User Function BIA677N6()
+
+	KR006 := Alltrim(" SELECT DTREF = ZN8_DTREF,                                                                                    ") + msEnter
+	KR006 += Alltrim("        CUS223 = SUM(ZN8_CUS223) * (-1),                                                                      ") + msEnter
+	KR006 += Alltrim("        CUS224 = SUM(ZN8_CUS224) * (-1)                                                                       ") + msEnter
+	KR006 += Alltrim(" FROM " + RetSqlName("ZN8") + " ZN8(NOLOCK)                                                                   ") + msEnter
+	KR006 += Alltrim("      INNER JOIN " + RetSqlName("SB1") + " SB1(NOLOCK) ON B1_FILIAL = '" + xFilial("SB1") + "'                ") + msEnter
+	KR006 += Alltrim("                                       AND B1_COD = ZN8_PRODUT                                                ") + msEnter
+	KR006 += Alltrim("                                       AND B1_YFORMAT IN('B9', 'BO', 'C6')                                    ") + msEnter
+	KR006 += Alltrim("                                       AND SB1.D_E_L_E_T_ = ' '                                               ") + msEnter
+	KR006 += Alltrim(" WHERE ZN8_FILIAL = '" + xFilial("ZN8") + "'                                                                  ") + msEnter
+	KR006 += Alltrim("       AND ZN8_DTREF BETWEEN '" + cDatIni + "' AND '" + cDatFin + "'                                          ") + msEnter
+	KR006 += Alltrim("       AND ZN8_ITCUS = '065'                                                                                  ") + msEnter
+	KR006 += Alltrim("       AND ZN8.D_E_L_E_T_ = ' '                                                                               ") + msEnter
+	KR006 += Alltrim(" GROUP BY ZN8_DTREF                                                                                           ") + msEnter
+
+Return( KR006 )
+
+User Function BIA677N7()
+
+	KR007 := Alltrim(" SELECT DTREF = ZN8_DTREF,                                                                                    ") + msEnter
+	KR007 += Alltrim("        CUS223 = SUM(ZN8_CUS223) * (-1),                                                                      ") + msEnter
+	KR007 += Alltrim("        CUS224 = SUM(ZN8_CUS224) * (-1)                                                                       ") + msEnter
+	KR007 += Alltrim(" FROM " + RetSqlName("ZN8") + " ZN8(NOLOCK)                                                                   ") + msEnter
+	KR007 += Alltrim(" WHERE ZN8_FILIAL = '" + xFilial("ZN8") + "'                                                                  ") + msEnter
+	KR007 += Alltrim("       AND ZN8_DTREF BETWEEN '" + cDatIni + "' AND '" + cDatFin + "'                                          ") + msEnter
+	KR007 += Alltrim("       AND ZN8_ITCUS = '070'                                                                                  ") + msEnter
+	KR007 += Alltrim("       AND ZN8.D_E_L_E_T_ = ' '                                                                               ") + msEnter
+	KR007 += Alltrim(" GROUP BY ZN8_DTREF                                                                                           ") + msEnter
+
+Return( KR007 )
 
 /*___________________________________________________________________________
 ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦

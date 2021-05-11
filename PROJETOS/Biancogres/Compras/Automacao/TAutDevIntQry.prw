@@ -20,11 +20,12 @@ class TAutDevIntQry
     static method fDistribui(cDoc,cSerie,cCliente,cLoja) as character
     static method FaturarPedido() as character
     static method GetEndereco(cCodCli,cLojaCli,cDoc,cSerie) as character
+    static method GetProcDev(nZL9RecNo) as character
 end class
 
 static method GetDocOri(cDoc,cSerie,cCliente,cLoja,cCodFor,cLojaFor) class TAutDevIntQry
 
-    local cQuery    as character
+    local cSQL    as character
 
     local cDSSize   as character
 
@@ -63,7 +64,7 @@ static method GetDocOri(cDoc,cSerie,cCliente,cLoja,cCodFor,cLojaFor) class TAutD
     cDSSize:=cValToChar(nDSSize)
     cDSSize:="%"+cDSSize+"%"
 
-    beginContent var cQuery
+    beginContent var cSQL
 
         SELECT DISTINCT SD1_O.R_E_C_N_O_ SD1RECNO
         FROM %exp:cSD2Table% SD2
@@ -119,25 +120,25 @@ static method GetDocOri(cDoc,cSerie,cCliente,cLoja,cCodFor,cLojaFor) class TAutD
 
     endContent
 
-    cQuery:=strTran(cQuery,"%exp:cDoc%",valToSQL(cDoc))
-    cQuery:=strTran(cQuery,"%exp:cSerie%",valToSQL(cSerie))
-    cQuery:=strTran(cQuery,"%exp:cCliente%",valToSQL(cCliente))
-    cQuery:=strTran(cQuery,"%exp:cLoja%",valToSQL(cLoja))
+    cSQL:=strTran(cSQL,"%exp:cDoc%",valToSQL(cDoc))
+    cSQL:=strTran(cSQL,"%exp:cSerie%",valToSQL(cSerie))
+    cSQL:=strTran(cSQL,"%exp:cCliente%",valToSQL(cCliente))
+    cSQL:=strTran(cSQL,"%exp:cLoja%",valToSQL(cLoja))
 
-    cQuery:=strTran(cQuery,"%exp:cSC9Filial%",valToSQL(cSC9Filial))
-    cQuery:=strTran(cQuery,"%exp:cSD1Filial%",valToSQL(cSD1Filial))
-    cQuery:=strTran(cQuery,"%exp:cSD2Filial%",valToSQL(cSD2Filial))
+    cSQL:=strTran(cSQL,"%exp:cSC9Filial%",valToSQL(cSC9Filial))
+    cSQL:=strTran(cSQL,"%exp:cSD1Filial%",valToSQL(cSD1Filial))
+    cSQL:=strTran(cSQL,"%exp:cSD2Filial%",valToSQL(cSD2Filial))
 
-    cQuery:=strTran(cQuery,"%exp:cSC9Table%",strTran(cSC9Table,"%",""))
-    cQuery:=strTran(cQuery,"%exp:cSD1Table%",strTran(cSD1Table,"%",""))
-    cQuery:=strTran(cQuery,"%exp:cSD2Table%",strTran(cSD2Table,"%",""))
+    cSQL:=strTran(cSQL,"%exp:cSC9Table%",strTran(cSC9Table,"%",""))
+    cSQL:=strTran(cSQL,"%exp:cSD1Table%",strTran(cSD1Table,"%",""))
+    cSQL:=strTran(cSQL,"%exp:cSD2Table%",strTran(cSD2Table,"%",""))
 
-    cQuery:=strTran(cQuery,"%exp:cDSSize%",strTran(cDSSize,"%",""))
+    cSQL:=strTran(cSQL,"%exp:cDSSize%",strTran(cDSSize,"%",""))
 
-    cQuery:=strTran(cQuery,"%exp:cCodFor%",valToSQL(cCodFor))
-    cQuery:=strTran(cQuery,"%exp:cLojaFor%",valToSQL(cLojaFor))
+    cSQL:=strTran(cSQL,"%exp:cCodFor%",valToSQL(cCodFor))
+    cSQL:=strTran(cSQL,"%exp:cLojaFor%",valToSQL(cLojaFor))
 
-    return(cQuery)
+    return(cSQL)
 
 static method ProcessaDevolucao(cCodigosCli) class TAutDevIntQry
 
@@ -242,7 +243,7 @@ static method ProcessaDevolucao(cCodigosCli) class TAutDevIntQry
 
 static method DocOriCmpAut(nZL9RecNo) class TAutDevIntQry
 
-    static oFWPrepStatDocOriCmpAut as object
+    static oDocOriCmpAut as object
 
     local aTipos    as array
 
@@ -250,7 +251,7 @@ static method DocOriCmpAut(nZL9RecNo) class TAutDevIntQry
 
     paramtype nZL9RecNo as numeric optional DEFAULT ZL9->(RecNo())
 
-    if (!(valtype(oFWPrepStatDocOriCmpAut)=="O"))
+    if (!(valtype(oDocOriCmpAut)=="O"))
         
         beginContent var cSQL
             SELECT R_E_C_N_O_ SE2RECNO
@@ -264,29 +265,32 @@ static method DocOriCmpAut(nZL9RecNo) class TAutDevIntQry
                AND (SE2.E2_FORNECE=?)
                AND (SE2.E2_LOJA=?)
                AND (SE2.E2_TIPO IN (?))
+               AND (SE2.E2_FILIAL=(?))
         endContent
 
-        oFWPrepStatDocOriCmpAut:=FWPreparedStatement():New(cSQL)
+        oDocOriCmpAut:=FWPreparedStatement():New(cSQL)
 
     endif
 
     ZL9->(MsGoTo(nZL9RecNo))
 
-    oFWPrepStatDocOriCmpAut:setString(1,retSQLName("SE2"))
+    oDocOriCmpAut:setString(1,retSQLName("SE2"))
     
-    oFWPrepStatDocOriCmpAut:setString(2,ZL9->ZL9_DOCORI)
-    oFWPrepStatDocOriCmpAut:setString(3,ZL9->ZL9_SERORI)
+    oDocOriCmpAut:setString(2,ZL9->ZL9_DOCORI)
+    oDocOriCmpAut:setString(3,ZL9->ZL9_SERORI)
 
-    oFWPrepStatDocOriCmpAut:setString(4,ZL9->ZL9_DOCDEV)
-    oFWPrepStatDocOriCmpAut:setString(5,ZL9->ZL9_SERDEV)
+    oDocOriCmpAut:setString(4,ZL9->ZL9_DOCDEV)
+    oDocOriCmpAut:setString(5,ZL9->ZL9_SERDEV)
 
-    oFWPrepStatDocOriCmpAut:setString(6,ZL9->ZL9_FORNEC)
-    oFWPrepStatDocOriCmpAut:setString(7,ZL9->ZL9_LOJFOR)
+    oDocOriCmpAut:setString(6,ZL9->ZL9_FORNEC)
+    oDocOriCmpAut:setString(7,ZL9->ZL9_LOJFOR)
     
     aTipos:={"NF "/*,"PA "*/,"NDF"}
-    oFWPrepStatDocOriCmpAut:SetIn(8,aTipos)
+    oDocOriCmpAut:SetIn(8,aTipos)
 
-    cSQL:=oFWPrepStatDocOriCmpAut:GetFixQuery()
+    oDocOriCmpAut:setString(9,xFilial("SE2"))
+
+    cSQL:=oDocOriCmpAut:GetFixQuery()
     
     cSQL:=strTran(cSQL,"['","[")
     cSQL:=strTran(cSQL,"']","]")
@@ -363,25 +367,201 @@ static method FaturarPedido() class TAutDevIntQry
 
     return(cSQL)
 
-static method GetEndereco(cCodCli,cLojaCli,cDoc,cSerie) class TAutDevIntQry
+static method GetEndereco(cCodCli,cLojaCli,cDoc,cSerie,cItem) class TAutDevIntQry
+
+    static oGetEndereco as object
 
     local cSQL as character
 
-    DEFAULT __cCRLF:=CRLF
+    paramtype nZL9RecNo as numeric optional DEFAULT ZL9->(RecNo())
 
-    cSQL:=" SELECT DISTINCT Z25_NUM,Z25_RETMRC "
-    cSQL+=" FROM "+RetSQLName("Z26")+" Z26 "
-    cSQL+=" JOIN "+RetSQLName("Z25")+" Z25 ON "
-    cSQL+=" ( "
-    cSQL+=" 	Z25.Z25_FILIAL="+ValToSQL(xFilial("Z25"))
-    cSQL+="   AND Z25.Z25_CODCLI="+ValToSQL(cCodCli)
-    cSQL+="   AND Z25.Z25_LOJCLI="+ValToSQL(cLojaCli)
-    cSQL+="   AND Z25.Z25_NUM=Z26_NUMPRC "
-    cSQL+=" 	AND Z25.D_E_L_E_T_ ='' "
-    cSQL+=" ) "
-    cSQL+=" WHERE Z26_FILIAL="+ValToSQL(xFilial("Z26"))
-    cSQL+=" AND Z26.Z26_NFISC="+ValToSQL(cDoc)
-    cSQL+=" AND Z26.Z26_SERIE="+ValToSQL(cSerie)
-    cSQL+=" AND Z26.D_E_L_E_T_='' "
+    if (!(valtype(oGetEndereco)=="O"))
+
+        beginContent var cSQL
+
+              SELECT 
+            DISTINCT Z25.R_E_C_N_O_ Z25RECNO
+                  ,Z26.R_E_C_N_O_   Z26RECNO
+              FROM [?] Z25
+              JOIN [?] Z26 ON(
+                    Z25.Z25_FILIAL=Z26.Z26_FILIAL
+                AND Z25.Z25_NUM=Z26.Z26_NUMPRC
+            )
+              JOIN [?] SD1 ON(
+                 SD1.D1_FILIAL=Z26.Z26_FILIAL
+             AND SD1.D1_NFORI=Z26.Z26_NFISC
+             AND SD1.D1_SERIORI=Z26.Z26_SERIE
+             AND SD1.D1_ITEMORI=Z26.Z26_ITEMNF
+             AND SD1.D1_COD=Z26.Z26_PROD
+             AND SD1.D1_QUANT=Z26.Z26_QTDORI
+            )
+              JOIN [?] SF1 ON(
+                    SF1.F1_FILIAL=SD1.D1_FILIAL
+                AND SF1.F1_DOC=SD1.D1_DOC
+                AND SF1.F1_SERIE=SD1.D1_SERIE
+                AND SF1.F1_FORNECE=SD1.D1_FORNECE
+                AND SF1.F1_LOJA=SD1.D1_LOJA
+            )
+            LEFT JOIN [?] ZL9 ON (
+                    ZL9.ZL9_FILIAL=' '
+                AND ZL9.ZL9_FILORI=SF1.F1_FILIAL
+                AND ZL9.ZL9_DOCDEV=SF1.F1_DOC
+                AND ZL9.ZL9_SERDEV=SF1.F1_SERIE
+                AND ZL9.ZL9_CLIDEV=SF1.F1_FORNECE
+                AND ZL9.ZL9_LOJDEV=SF1.F1_LOJA
+                AND ZL9.ZL9_PRCDEV=Z25.Z25_NUM
+            )
+            WHERE Z25.D_E_L_E_T_=' '
+              AND Z26.D_E_L_E_T_=' '
+              AND SF1.D_E_L_E_T_=' '
+              AND SD1.D_E_L_E_T_=' '
+              AND Z25.Z25_CODCLI=?
+              AND Z25.Z25_LOJCLI=?
+              AND Z26.Z26_NFISC=?
+              AND Z26.Z26_SERIE=?
+              AND Z26.Z26_ITEMNF=?
+              AND ( 
+                        ( 
+                                ZL9.D_E_L_E_T_=' ' 
+                            AND ZL9.ZL9_PRCDEV=Z25.Z25_NUM 
+                            AND ZL9.ZL9_CODEMP=?
+                            AND ZL9.ZL9_CODFIL=?
+                        )
+                        OR NOT EXISTS(
+                                SELECT DISTINCT 1 
+                                  FROM [?] ZL9_t
+                                 WHERE ZL9_t.D_E_L_E_T_=' '
+                                   AND ZL9_t.ZL9_FILIAL=' '
+                                   AND ZL9_t.ZL9_CODEMP=?
+                                   AND ZL9_t.ZL9_CODFIL=?
+                                   AND ZL9_t.ZL9_PRCDEV=Z25.Z25_NUM
+                                )
+              )
+              AND Z26.Z26_ITEMNF<>'XX'
+
+        endContent
+
+        oGetEndereco:=FWPreparedStatement():New(cSQL)
+
+    endif
+
+    oGetEndereco:setString(1,retSQLName("Z25"))
+    oGetEndereco:setString(2,retSQLName("Z26"))
+    oGetEndereco:setString(3,retSQLName("SD1"))
+    oGetEndereco:setString(4,retSQLName("SF1"))
+    oGetEndereco:setString(5,retSQLName("ZL9"))
+
+    oGetEndereco:setString(6,cCodCli)
+    oGetEndereco:setString(7,cLojaCli)
+    oGetEndereco:setString(8,cDoc)
+    oGetEndereco:setString(9,cSerie)
+    oGetEndereco:setString(10,cItem)
+
+    oGetEndereco:setString(11,&("cEmpAnt"))
+    oGetEndereco:setString(12,&("cFilAnt"))
+
+    oGetEndereco:setString(13,retSQLName("ZL9"))
+    
+    oGetEndereco:setString(14,&("cEmpAnt"))
+    oGetEndereco:setString(15,&("cFilAnt"))
+
+    cSQL:=oGetEndereco:GetFixQuery()
+    
+    cSQL:=strTran(cSQL,"['","[")
+    cSQL:=strTran(cSQL,"']","]")
+
+    return(cSQL)
+
+static method GetProcDev(nZL9RecNo) class TAutDevIntQry
+
+    static oGetProcDev as object
+
+    local cSQL as character
+
+    paramtype nZL9RecNo as numeric optional DEFAULT ZL9->(RecNo())
+
+    if (!(valtype(oGetProcDev)=="O"))
+
+        beginContent var cSQL
+
+              SELECT 
+            DISTINCT Z25.R_E_C_N_O_ Z25RECNO
+                    ,Z26.R_E_C_N_O_ Z26RECNO
+                FROM [?] Z25
+                JOIN [?] Z26 ON(
+                    Z25.Z25_FILIAL=Z26.Z26_FILIAL
+                AND Z25.Z25_NUM=Z26.Z26_NUMPRC
+                )
+                JOIN [?] SD1 ON(
+                    SD1.D1_FILIAL=Z26.Z26_FILIAL
+                AND SD1.D1_NFORI=Z26.Z26_NFISC
+                AND SD1.D1_SERIORI=Z26.Z26_SERIE
+                AND SD1.D1_ITEMORI=Z26.Z26_ITEMNF
+                AND SD1.D1_COD=Z26.Z26_PROD
+                AND SD1.D1_QUANT=Z26.Z26_QTDORI
+                )
+                JOIN [?] SF1 ON(
+                    SF1.F1_FILIAL=SD1.D1_FILIAL
+                AND SF1.F1_DOC=SD1.D1_DOC
+                AND SF1.F1_SERIE=SD1.D1_SERIE
+                AND SF1.F1_FORNECE=SD1.D1_FORNECE
+                AND SF1.F1_LOJA=SD1.D1_LOJA
+                )
+                JOIN [?] ZL9 ON (
+                    ZL9.ZL9_FILIAL=' '
+                AND ZL9.ZL9_FILORI=SF1.F1_FILIAL
+                AND ZL9.ZL9_DOCDEV=SF1.F1_DOC
+                AND ZL9.ZL9_SERDEV=SF1.F1_SERIE
+                AND ZL9.ZL9_CLIDEV=SF1.F1_FORNECE
+                AND ZL9.ZL9_LOJDEV=SF1.F1_LOJA
+                AND ZL9.R_E_C_N_O_=?
+                )
+                WHERE Z25.D_E_L_E_T_=' '
+                  AND Z26.D_E_L_E_T_=' '
+                  AND SF1.D_E_L_E_T_=' '
+                  AND SD1.D_E_L_E_T_=' '
+                  AND ZL9.D_E_L_E_T_=' '
+                  AND Z26.Z26_ITEMNF<>'XX'
+                  AND ZL9.ZL9_CODEMP=?
+                  AND ZL9.ZL9_CODFIL=?
+                  AND NOT EXISTS(
+                    SELECT DISTINCT 1 
+                      FROM [?] ZL9_t
+                     WHERE ZL9_t.D_E_L_E_T_=' '
+                       AND ZL9_t.ZL9_FILIAL=' '
+                       AND ZL9_t.ZL9_CODEMP=?
+                       AND ZL9_t.ZL9_CODFIL=?
+                       AND ZL9_t.ZL9_PRCDEV=Z25.Z25_NUM
+                       AND ZL9_t.R_E_C_N_O_<>ZL9.R_E_C_N_O_
+                    )
+
+        endContent
+
+        oGetProcDev:=FWPreparedStatement():New(cSQL)
+
+    endif
+
+    ZL9->(MsGoTo(nZL9RecNo))
+
+    oGetProcDev:setString(1,retSQLName("Z25"))
+    oGetProcDev:setString(2,retSQLName("Z26"))
+    oGetProcDev:setString(3,retSQLName("SD1"))
+    oGetProcDev:setString(4,retSQLName("SF1"))
+    oGetProcDev:setString(5,retSQLName("ZL9"))
+    
+    oGetProcDev:setNumeric(6,nZL9RecNo)
+
+    oGetProcDev:setString(7,&("cEmpAnt"))
+    oGetProcDev:setString(8,&("cFilAnt"))
+
+    oGetProcDev:setString(9,retSQLName("ZL9"))
+    
+    oGetProcDev:setString(10,&("cEmpAnt"))
+    oGetProcDev:setString(11,&("cFilAnt"))
+
+    cSQL:=oGetProcDev:GetFixQuery()
+    
+    cSQL:=strTran(cSQL,"['","[")
+    cSQL:=strTran(cSQL,"']","]")
 
     return(cSQL)

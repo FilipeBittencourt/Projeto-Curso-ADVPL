@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
+   <NFe>
+      <infNFe Id="NFe35200608682214000105550010002315961761597649" versao="4.00">
+         <ide>
+            <cUF>35</cUF>
+            <cNF>76159764</cNF>
+            <natOp>VENDA</natOp>
+            <mod>55</mod>
+            <serie>1</serie>
+            <nNF>231596</nNF>
+            <dhEmi>2020-06-03T17:26:08-03:00</dhEmi>
+            <tpNF>1</tpNF>
+            <idDest>2</idDest>
+            <cMunFG>3550308</cMunFG>
+            <tpImp>1</tpImp>
+            <tpEmis>1</tpEmis>
+            <cDV>9</cDV>
+            <tpAmb>1</tpAmb>
+            <finNFe>1</finNFe>
+            <indFinal>1</indFinal>
+            <indPres>3</indPres>
+            <procEmi>0</procEmi>
+            <verProc>Versao 4.5.3.28498</verProc>
+         </ide>
+         <emit>
+            <CNPJ>08682214000105</CNPJ>
+            <xNome>AGS IMPORTADORA DE PRODUTOS INDS LTDA</xNome>
+            <xFant>AGS INDUSTRIAL</xFant>
+            <enderEmit>
+               <xLgr>RUA ITAPIRA</xLgr>
+               <nro>112</nro>
+               <xBairro>MOOCA</xBairro>
+               <cMun>3550308</cMun>
+               <xMun>SAO PAULO</xMun>
+               <UF>SP</UF>
+               <CEP>03102060</CEP>
+               <cPais>1058</cPais>
+               <xPais>BRASIL</xPais>
+               <fone>1130194700</fone>
+            </enderEmit>
+            <IE>149602956112</IE>
+            <CRT>3</CRT>
+         </emit>
+         <dest>
+            <CNPJ>02077546000176</CNPJ>
+            <xNome>BIANCOGRES CERAMICA S/A</xNome>
+            <enderDest>
+               <xLgr>AV TALMA RODRIGUES RIBEIRO</xLgr>
+               <nro>1145</nro>
+               <xBairro>CIVIT II</xBairro>
+               <cMun>3205002</cMun>
+               <xMun>SERRA</xMun>
+               <UF>ES</UF>
+               <CEP>29168080</CEP>
+               <cPais>1058</cPais>
+               <xPais>BRASIL</xPais>
+               <fone>2734219000</fone>
+            </enderDest>
+            <indIEDest>1</indIEDest>
+            <IE>081936443</IE>
+            <email>nf-e.biancogres@biancogres.com.br</email>
+         </dest>
+         <entrega>
+            <CNPJ>02077546000176</CNPJ>
+            <xLgr>AV MANGUINHOS</xLgr>
+            <nro>1145</nro>
+            <xBairro>CIVIT II</xBairro>
+            <cMun>3205002</cMun>
+            <xMun>SERRA</xMun>
+            <UF>ES</UF>
+         </entrega>
+         <det nItem="1">
+            <prod>
+               <cProd>480733</cProd>
+               <cEAN>SEM GTIN</cEAN>
+               <xProd>3310 C3</xProd>
+               <NCM>84821010</NCM>
+               <CFOP>6102</CFOP>
+               <uCom>PC</uCom>
+               <qCom>6.0000</qCom>
+               <vUnCom>350.0000</vUnCom>
+               <vProd>2100.00</vProd>
+               <cEANTrib>SEM GTIN</cEANTrib>
+               <uTrib>PC</uTrib>
+               <qTrib>6.0000</qTrib>
+               <vUnTrib>350.0000</vUnTrib>
+               <indTot>1</indTot>
+            </prod>
+            <imposto>
+               <vTotTrib>951.15</vTotTrib>
+               <ICMS>
+                  <ICMS00>
+                     <orig>2</orig>
+                     <CST>00</CST>
+                     <modBC>3</modBC>
+                     <vBC>2352.00</vBC>
+                     <pICMS>4.00</pICMS>
+                     <vICMS>94.08</vICMS>
+                  </ICMS00>
+               </ICMS>
+               <IPI>
+                  <cEnq>999</cEnq>
+                  <IPITrib>
+                     <CST>50</CST>
+                     <vBC>2100.00</vBC>
+                     <pIPI>12.00</pIPI>
+                     <vIPI>252.00</vIPI>
+                  </IPITrib>
+               </IPI>
+               <PIS>
+                  <PISAliq>
+                     <CST>01</CST>
+                     <vBC>2100.00</vBC>
+                     <pPIS>0.65</pPIS>
+                     <vPIS>13.65</vPIS>
+                  </PISAliq>
+               </PIS>
+               <COFINS>
+                  <COFINSAliq>
+                     <CST>01</CST>
+                     <vBC>2100.00</vBC>
+                     <pCOFINS>3.00</pCOFINS>
+                     <vCOFINS>63.00</vCOFINS>
+                  </COFINSAliq>
+               </COFINS>
+            </imposto>
+            <infAdProd>ROL. DUAS CARREIAS DE ESFERA</infAdProd>
+         </det>
+         <total>
+            <ICMSTot>
+               <vBC>2352.00</vBC>
+               <vICMS>94.08</vICMS>
+               <vICMSDeson>0.00</vICMSDeson>
+               <vFCP>0.00</vFCP>
+               <vBCST>0.00</vBCST>
+               <vST>0.00</vST>
+               <vFCPST>0.00</vFCPST>
+               <vFCPSTRet>0.00</vFCPSTRet>
+               <vProd>2100.00</vProd>
+               <vFrete>0.00</vFrete>
+               <vSeg>0.00</vSeg>
+               <vDesc>0.00</vDesc>
+               <vII>0.00</vII>
+               <vIPI>252.00</vIPI>
+               <vIPIDevol>0.00</vIPIDevol>
+               <vPIS>13.65</vPIS>
+               <vCOFINS>63.00</vCOFINS>
+               <vOutro>0.00</vOutro>
+               <vNF>2352.00</vNF>
+               <vTotTrib>951.15</vTotTrib>
+            </ICMSTot>
+         </total>
+         <transp>
+            <modFrete>1</modFrete>
+            <transporta>
+               <CNPJ>43244631002102</CNPJ>
+               <xNome>TRANSPORTADORA AMERICANA LTDA</xNome>
+               <IE>145853217112</IE>
+               <xEnder>AVENIDA DOMINGOS DE SOUZA MARQUES 604 PRQ ANHANGUERA</xEnder>
+               <xMun>SAO PAULO</xMun>
+               <UF>SP</UF>
+            </transporta>
+            <vol>
+               <qVol>1</qVol>
+               <esp>VOLUME</esp>
+               <nVol>1</nVol>
+               <pesoL>9.600</pesoL>
+               <pesoB>9.600</pesoB>
+            </vol>
+         </transp>
+         <cobr>
+            <fat>
+               <nFat>231596</nFat>
+               <vOrig>2352.00</vOrig>
+               <vDesc>0.00</vDesc>
+               <vLiq>2352.00</vLiq>
+            </fat>
+            <dup>
+               <nDup>001</nDup>
+               <dVenc>2020-07-08</dVenc>
+               <vDup>2352.00</vDup>
+            </dup>
+         </cobr>
+         <pag>
+            <detPag>
+               <tPag>15</tPag>
+               <vPag>2352.00</vPag>
+            </detPag>
+         </pag>
+         <infAdic>
+            <infCpl>Vend.:VAGNER OLIVEIRA PI: 2090405 ORDEM COMPRA: PAP345</infCpl>
+         </infAdic>
+      </infNFe>
+      <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+         <SignedInfo>
+            <CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" />
+            <SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" />
+            <Reference URI="#NFe35200608682214000105550010002315961761597649">
+               <Transforms>
+                  <Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
+                  <Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" />
+               </Transforms>
+               <DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+               <DigestValue>aYiVilbSV14g+/qHxnOqajepy8s=</DigestValue>
+            </Reference>
+         </SignedInfo>
+         <SignatureValue>dlklyOVBenpw+DyidKTOG+HaPyWURGzmhIcfWG5hbvJsJUeIuOjmlcqKglVVHC/C1O567aCR94W+96mKPTS8bfdUCAZgm2ZiLR6ttvU9U+VoeLFJATK6eD83QPqZuYpxJJ4nJB4/hwTCK2PwiYC1G0ovIqVFMxdcZ43nir2ABJWHzgfEE1WXjQ+4tlTKaqm37EQSrGJNnh+3nzGYZH6F+yyg7fKKWKXgAN84q5A1878k9hiQakmEFYFOXuxG1ifETDLgh9s5lJA1gJ/U+VJHU3MktNq8U2V8FiozI+uodrjJSh4eWheN8YsUrbsZ+7TZiFJI0+LzFlxt2y7DSkMiTA==</SignatureValue>
+         <KeyInfo>
+            <X509Data>
+               <X509Certificate>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</X509Certificate>
+            </X509Data>
+         </KeyInfo>
+      </Signature>
+   </NFe>
+   <protNFe versao="4.00">
+      <infProt Id="Id135200449005363">
+         <tpAmb>1</tpAmb>
+         <verAplic>SP_NFE_PL009_V4</verAplic>
+         <chNFe>35200608682214000105550010002315961761597649</chNFe>
+         <dhRecbto>2020-06-03T17:25:58-03:00</dhRecbto>
+         <nProt>135200449005363</nProt>
+         <digVal>aYiVilbSV14g+/qHxnOqajepy8s=</digVal>
+         <cStat>100</cStat>
+         <xMotivo>Autorizado o uso da NF-e</xMotivo>
+      </infProt>
+   </protNFe>
+</nfeProc>

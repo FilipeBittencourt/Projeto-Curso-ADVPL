@@ -1,12 +1,13 @@
 #Include "Protheus.ch"
 #Include "TOTVS.ch"
 
+
 User Function PNFM0003(cChave, cTipo, cSit, lJob)
 	
 	Local lRet		:= .T.
 	Local cArquivo	:= Nil
 	Default cTipo	:= "2"
-	Default cSit	:= "1"	
+	Default cSit	:= ""	
 	Default lJob	:= .F.
 	
 	Public __nAliqICMS := 0

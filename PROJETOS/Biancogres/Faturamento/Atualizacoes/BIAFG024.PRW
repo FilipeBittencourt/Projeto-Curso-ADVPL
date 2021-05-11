@@ -14,7 +14,7 @@
 User Function BIAFG024()
 
 	Local xv_Emps	:=	{}
-	Local _nI, xt
+	Local xt
 
 	If Select("SX6") == 0
 
@@ -45,13 +45,10 @@ Return
 
 Static Function fProcessa()
 
-	Local _cEmpresa := ""
 	Local _cAlias	:=	GetNextAlias()
 	Local _cHtml	:=	""
 	Local kt_BsDad
-	Local _cPedido	:=	""
 	Local _nI
-	Local _cHtml
 	Local _nSaldo
 
 	Private _aErros	:=	{}
@@ -76,6 +73,9 @@ Static Function fProcessa()
 		AND (B.cca_data_cancelamento = '' OR B.cca_data_cancelamento IS NULL)
 		WHERE SC6.C6_YSTTSAM = 'T'
 		AND SC6.C6_YECONAM <> ''
+		AND C6_NOTA = '         '
+		AND C6_BLQ <> 'R'
+		AND C6_QTDVEN - C6_QTDENT <> 0		
 		AND SC6.%NotDel%
 
 	EndSql
@@ -272,7 +272,6 @@ return _cHead
 
 static function wfSend(_cHtml)
 
-	Local df_Orig
 	Local df_Dest := U_EmailWF('BIAFG024', cEmpAnt)
 	Local df_Assu := "Log de Erros na Liberação de Pedidos de Amostra"
 	Local df_Erro := df_Assu + " não enviado. Favor verificar!!!"

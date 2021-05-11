@@ -13,7 +13,7 @@ User Function PNFM0001()
 	Private oGridNFS		:= Nil
 	Private oGridCTe		:= Nil
 	Private aFields			:= {'ZLL_CHNFE'}
-	Private aFieldsNFS		:= {'ZLL_NUMERO', 'ZLL_FORNECE', 'ZLL_LOJA', 'ZLL_EMISSAO'}
+	Private aFieldsNFS		:= {'ZLL_NUMERO', 'ZLL_FORNECE', 'ZLL_LOJA', 'ZLL_EMISSAO', 'ZLL_QUANT', 'ZLL_VALOR', 'ZLL_NATURE', 'ZLL_TES', 'ZLL_CODNFE', 'ZLL_ALIQISS'}
 	Private cGetNota 		:= Space(44)
 	Private cCodigo			:= Z11->Z11_PESAGE
 	Private lFreteServico	:= .F.
@@ -217,7 +217,47 @@ Static Function GetHeaderNFS()
 	_oField:FieldName("ZLL_EMISSAO"):cTitle	:= "Emissão"
 	_oField:FieldName("ZLL_EMISSAO"):cType	:= 'D'
 	_oField:FieldName("ZLL_EMISSAO"):nSize	:= 8
+	
+	_oField:AddField("ZLL_QUANT")
+	_oField:FieldName("ZLL_QUANT"):cTitle		:= "Quant."
+	_oField:FieldName("ZLL_QUANT"):cType		:= 'N'
+	_oField:FieldName("ZLL_QUANT"):nSize		:= 15
+	_oField:FieldName("ZLL_QUANT"):nDecimal		:= 4
+	_oField:FieldName("ZLL_QUANT"):cPict		:= "@E 999,999,999.9999"
+
+	_oField:AddField("ZLL_VALOR")
+	_oField:FieldName("ZLL_VALOR"):cTitle		:= "Valor"
+	_oField:FieldName("ZLL_VALOR"):cType		:= 'N'
+	_oField:FieldName("ZLL_VALOR"):nSize		:= 15
+	_oField:FieldName("ZLL_VALOR"):nDecimal		:= 4
+	_oField:FieldName("ZLL_VALOR"):cPict		:= "@E 999,999,999.9999"
+	
+	_oField:AddField("ZLL_NATURE")
+	_oField:FieldName("ZLL_NATURE"):cTitle	:= "Natureza"
+	_oField:FieldName("ZLL_NATURE"):cType	:= 'C'
+	_oField:FieldName("ZLL_NATURE"):cF3		:= 'SED'
+	_oField:FieldName("ZLL_NATURE"):nSize	:= 10
 		
+	_oField:AddField("ZLL_TES")
+	_oField:FieldName("ZLL_TES"):cTitle		:= "Tes"
+	_oField:FieldName("ZLL_TES"):cType		:= 'C'
+	_oField:FieldName("ZLL_TES"):cF3		:= 'SF4'
+	_oField:FieldName("ZLL_TES"):nSize		:= 3
+		
+	_oField:AddField("ZLL_CODNFE")
+	_oField:FieldName("ZLL_CODNFE"):cTitle	:= "Codigo NFE"
+	_oField:FieldName("ZLL_CODNFE"):cType	:= 'C'
+	_oField:FieldName("ZLL_CODNFE"):nSize	:= 50
+	
+	_oField:AddField("ZLL_ALIQISS")
+	_oField:FieldName("ZLL_ALIQISS"):cTitle		:= "Aliq. ISS"
+	_oField:FieldName("ZLL_ALIQISS"):cType		:= 'N'
+	_oField:FieldName("ZLL_ALIQISS"):nSize		:= 5
+	_oField:FieldName("ZLL_ALIQISS"):nDecimal	:= 2
+	_oField:FieldName("ZLL_ALIQISS"):cPict		:= "@E 99.99"
+	//_oField:FieldName("ZLL_ALIQISS"):cRelation	:= 5
+	
+	
 	aHeader := _oField:GetHeader()
 
 Return aHeader
@@ -287,6 +327,12 @@ Static Function ProcNovo()
 	Local cFornece		:= ""
 	Local cLoja			:= ""
 	Local dDtEmissao	:= ""
+	Local nQuantidade	:= 0
+	Local nValor		:= 0
+	Local cNatureza		:= ""
+	Local cTes			:= ""
+	Local cCodNFe		:= ""
+	Local nAliqISS		:= 0
 	
 	Local lEdit	:= .T.
 	
@@ -323,6 +369,13 @@ Static Function ProcNovo()
 			cLoja		:= aColsNFS[nI][3]
 			dDtEmissao	:= aColsNFS[nI][4]
 			
+			nQuantidade := aColsNFS[nI][5]
+			nValor		:= aColsNFS[nI][6]
+			cNatureza	:= aColsNFS[nI][7]
+			cTes		:= aColsNFS[nI][8]
+			cCodNFe		:= aColsNFS[nI][9]
+			nAliqISS	:= aColsNFS[nI][10]
+			
 			If (;
 				!Empty(cNumDoc) 			.And. 	;
 				!Empty(cFornece) 			.And. 	;
@@ -336,7 +389,7 @@ Static Function ProcNovo()
 					cListaNFS += "|"
 				EndIf
 				
-				cListaNFS += cNumDoc+'#'+cFornece+'#'+cLoja+'#'+dtos(dDtEmissao)
+				cListaNFS += cNumDoc+'#'+cFornece+'#'+cLoja+'#'+dtos(dDtEmissao)+'#'+cvaltochar(nQuantidade)+'#'+cvaltochar(nValor)+'#'+cNatureza+'#'+cTes+'#'+cCodNFe+'#'+cvaltochar(nAliqISS)
 				
 			EndIf
 		EndIf		
@@ -380,22 +433,26 @@ Static Function ProcNovo()
 	U_BIAMsgRun("Importando a NFe: "+cGetNota+", Aguarde... ",, {|| lRet := U_PNFM0002(cGetNota, cCodigo) })
 
 	If (lRet)
-		
-		//If MsgNoYes("Deseja realizar a importação dos CTe?", "Confirma?")
 			
-			For nI := 1 To Len(aCols)
-				If (aCols[nI, Len(aCols[nI])] == .F.)	
-					cCte	:= cvaltochar(aCols[nI][1])
-					If (!Empty(cCte))
-						U_BIAMsgRun("Importando a CTe: "+cCte+", Aguarde...",, {|| lRet := U_PNFM0003(cCte) })
-						
-						If (!lRet)
-							Exit
+			If (SUPERGETMV("MV_YENFMCT", .F., .F.))
+				MsgAlert('<p style="color:red">A importação do CTe será realizada (dentro de alguns minutos)JOB. Aguarde alguns minutos até a importação ser realizada. Caso demorar muito tempo, acesse a tela do "Conexão do NFe" que vai forçar a importação.</p>', '')
+			Else
+				
+				For nI := 1 To Len(aCols)
+					If (aCols[nI, Len(aCols[nI])] == .F.)	
+						cCte	:= cvaltochar(aCols[nI][1])
+						If (!Empty(cCte))
+							U_BIAMsgRun("Importando a CTe: "+cCte+", Aguarde...",, {|| lRet := U_PNFM0003(cCte) })
+							
+							If (!lRet)
+								Exit
+							EndIf
+							
 						EndIf
-						
-					EndIf
-				EndIf		
-			Next nI
+					EndIf		
+				Next nI
+				
+			EndIf
 			
 		//EndIf
 		
@@ -409,6 +466,12 @@ Static Function ProcNovo()
 					cFornece	:= aColsNFS[nI][2]
 					cLoja		:= aColsNFS[nI][3]
 					dDtEmissao	:= aColsNFS[nI][4]
+					nQuantidade := aColsNFS[nI][5]
+					nValor		:= aColsNFS[nI][6]
+					cNatureza	:= aColsNFS[nI][7]
+					cTes		:= aColsNFS[nI][8]
+					cCodNFe		:= aColsNFS[nI][9]
+					nAliqISS	:= aColsNFS[nI][10]
 					
 					If (;
 						!Empty(cNumDoc) 			.And. 	;
@@ -419,7 +482,7 @@ Static Function ProcNovo()
 						
 						cNumDoc := Right(REPLICATE("0", 9)+cNumDoc, 9)
 						
-						U_BIAMsgRun("Importando a NF serviço: "+cNumDoc+'/'+cFornece+'/'+cLoja+", Aguarde...",, {|| lRet := U_PNFM0005(cGetNota, cNumDoc, cFornece, cLoja, dDtEmissao) })
+						U_BIAMsgRun("Importando a NF serviço: "+cNumDoc+'/'+cFornece+'/'+cLoja+", Aguarde...",, {|| lRet := U_PNFM0005(cGetNota, cNumDoc, cFornece, cLoja, dDtEmissao, nQuantidade, nValor, cNatureza, cTes, cCodNFe, nAliqISS) })
 					
 						If (!lRet)
 							Exit
@@ -464,6 +527,13 @@ Static Function ProcDeleta()
 	Local cLoja			:= ""
 	Local dDtEmissao	:= ""
 	
+	Local nQuantidade	:= 0
+	Local nValor		:= 0
+	Local cNatureza		:= ""
+	Local cTes			:= ""
+	Local cCodNFe		:= ""
+	Local nAliqISS		:= 0
+	
 	Local aList			:= {}
 	Local aRegistro		:= {}
 	
@@ -488,12 +558,20 @@ Static Function ProcDeleta()
 		aList	:= StrTokArr(ZLL->ZLL_NFSERV, '|')
 		For nI=1 To Len(aList)
 			aRegistro := StrTokArr(aList[nI], '#')
-			If (Len(aRegistro) == 4)
+			If (Len(aRegistro) >= 4)
 			
 				cNumDoc		:= aRegistro[1]
 				cFornece	:= aRegistro[2]
 				cLoja		:= aRegistro[3]
 				dDtEmissao	:= aRegistro[4]
+				
+				nQuantidade	:= IIF(Type("aRegistro[5]") != "U" , val(aRegistro[5]), 0)
+				nValor		:= IIF(Type("aRegistro[6]") != "U" , val(aRegistro[6]), 0)
+				cNatureza	:= IIF(Type("aRegistro[7]") != "U" , aRegistro[7], "")
+				cTes		:= IIF(Type("aRegistro[8]") != "U" , aRegistro[8], "")
+				cCodNFe		:= IIF(Type("aRegistro[9]") != "U" , aRegistro[9], "")
+				nAliqISS	:= IIF(Type("aRegistro[10]") != "U" , val(aRegistro[10]), 0)
+				
 			
 				If (;
 					!Empty(cNumDoc) 			.And. 	;
@@ -542,6 +620,12 @@ Static Function ProcLoad()
 	Local aRegistro		:= {}
 	Local nI			:= 0
 	
+	Local nQuantidade	:= 0
+	Local nValor		:= 0
+	Local cNatureza		:= ""
+	Local cTes			:= ""
+	LOcal cCodNFe		:= ""
+	
 	
 	If (!Empty(cCodigo))
 		DbSelectArea("ZLL")
@@ -560,7 +644,16 @@ Static Function ProcLoad()
 			aList	:= StrTokArr(ZLL->ZLL_NFSERV, '|')
 			For nI=1 To Len(aList)
 				aRegistro := StrTokArr(aList[nI], '#')
-				Aadd(aDadosNFS, {aRegistro[1], aRegistro[2], aRegistro[3], stod(aRegistro[4]), .F.})
+				
+				nQuantidade	:= IIF(Type("aRegistro[5]") != "U" , val(aRegistro[5]), 0)
+				nValor		:= IIF(Type("aRegistro[6]") != "U" , val(aRegistro[6]), 0)
+				cNatureza	:= IIF(Type("aRegistro[7]") != "U" , aRegistro[7], "")
+				cTes		:= IIF(Type("aRegistro[8]") != "U" , aRegistro[8], "")
+				cCodNFe		:= IIF(Type("aRegistro[9]") != "U" , aRegistro[9], "")
+				nAliqISS	:= IIF(Type("aRegistro[10]") != "U" , val(aRegistro[10]), 0)
+				
+				
+				Aadd(aDadosNFS, {aRegistro[1], aRegistro[2], aRegistro[3], stod(aRegistro[4]), nQuantidade, nValor, cNatureza, cTes, cCodNFe, nAliqISS, .F.})
 			Next nI
 			
 		EndIf
