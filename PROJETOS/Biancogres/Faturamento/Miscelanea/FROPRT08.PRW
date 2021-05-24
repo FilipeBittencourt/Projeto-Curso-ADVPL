@@ -20,7 +20,8 @@ Mesmo caso para pedidos que ficam sem a replica da LM para empresa de origem - o
 colocacao do pedido na propria conexao do representante. Mas e sucessitevel a falhas.
 
 A rotina vai testar os pedidos incluidos a mais de 0.5 (meia) hora para processar.
-A funcao FROPRT07 apagar as reservas temporarias somente com mais de 2 horas de incluidas - paramentro FA_RDELRT - entao esta rotina tem que rodar primeiro.
+A funcao FROPRT07 apagar as reservas temporarias somente com mais de 2 horas de incluidas - paramentro FA_RDELRT - 
+entao esta rotina tem que rodar primeiro.
 */
 
 
@@ -33,6 +34,7 @@ User Function FROPRT08()
 	//REPLICAR PEDIDOS PENDENTES DA LM PARA ORIGEM
 	For nI := 1 to Len(xv_Emps)
 		//Inicializa o ambiente
+		RpcClearEnv()
 		RPCSetType(3)
 		WfPrepEnv(xv_Emps[nI,1], xv_Emps[nI,2])
 		//Gera o html do WF.
@@ -454,6 +456,8 @@ Static Function GetErro001()
 	Local  cMail :=  "filipe.bittencourt@facilesistemas.com.br;nadine.araujo@biancogres.com.br"
 	Local lErro := .F.
 
+
+	RpcClearEnv()
 	If Select("SX6") <= 0
 		RPCSetEnv("07", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
 	EndIf
@@ -534,7 +538,16 @@ Static Function GetErro001()
 	cHtml += " </html>   "
 
 	if lErro
+
 		U_BIAEnvMail(,cMail,'Erro Geração de Titulos de Pedidos Antecipados',cHtml)
+
+		//tenta enviar novamente o pedido em caso de erro.
+		(cQry)->(DbGoTop())
+		While (cQry)->(!EOF())
+			u_Env_Pedido((cQry)->(C5_YPEDORI),,,(cQry)->(C5_FILIAL),.T.)
+			(cQry)->(DBSkip())
+		EndDo
+
 	Endif
 
 Return

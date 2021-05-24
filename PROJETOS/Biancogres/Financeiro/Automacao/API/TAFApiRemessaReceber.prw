@@ -18,7 +18,7 @@ Data GArqRem // S=Gera arquivo de remessa; N=Nao gera
 Data CMovRem
 Data cIDProc // Identificador do Processo	
 Data oApi // Interface da API
-
+Data cTpAgrup
 Method New() Constructor
 Method Send() // Envia tirulos para a API
 Method SendBatch() // Envia lote de titulos
@@ -38,8 +38,9 @@ Method New() Class TAFApiRemessaReceber
 	::GArqRem := "N"
 	::CMovRem := ""
 	::cIDProc	:= ""		
+	::cTpAgrup	:= ""
 	::oApi := TIAFApiRemessa():New()
-
+	::oApi:nOperacao := 1//recebimento	
 Return()
 
 

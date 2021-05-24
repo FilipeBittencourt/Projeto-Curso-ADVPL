@@ -378,53 +378,7 @@ static function M410LIOK()
 		Return(.F.)
 	ENDIF
 
-	//Somente para Biancogres e Incesa, E TAMBEM LM A PARTIR DE 21/03/12
-	If cEmpAnt $ ("01_05_07") .And. SB1->B1_YCLASSE <> "5" .And. Alltrim(M->C5_YSUBTP) <> "A" .And. Alltrim(M->C5_YSUBTP) <> "B" .And. M->C5_YLINHA <> '6'//RETIRADO VALIDAÇÃO DOS PEDIDOS DE AMOSTRA OS 3227-15
-
-		//Define qual empresa será verificado o Custo Padrão. O custo deverá ser definido de acordo com o estoque do Produto.
-		nEmp := cEmpAnt
-		If cEmpAnt == "07"
-			nEmp := Gdfieldget("C6_YEMPPED",n)
-			If Empty(Alltrim(nEmp))
-				nEmp := Substr(SB1->B1_YEMPEST,1,2)
-			EndIf
-			If nEmp == "13" //Ticket 13955
-				nEmp := "01"
-			EndIf
-			
-			If (cEmpAnt == '07' .And. cFilAnt == '05' .And. M->C5_YLINHA == '6')
-				nEmp := "01"
-			Endif
-			 
-		EndIf
-		
-		If Upper(AllTrim(getenvserver())) == "PRODUCAO" .OR. Upper(AllTrim(getenvserver())) == "REMOTO" .OR. Upper(AllTrim(getenvserver())) == "SCHEDULE"
-
-			//MADALENO NAO PERMITE LANCAR O PRODUTO COM O CUSTO ZERO 2010 06 17
-			If !Alltrim(SB1->B1_YFORMAT) $ "AC" .AND. Alltrim(SB1->B1_TIPO) $ 'PA' .AND. Substr(SB1->B1_COD,4,4) <> '0000' .AND. Alltrim(SB1->B1_YTPPROD) <> 'RP' 
-				
-				
-				CSQL := "SELECT dbo.FN_CP_BI30('"+nEmp+"','"+Alltrim(SB1->B1_COD)+"','"+DTOS(M->C5_EMISSAO)+"','"+DTOS(M->C5_EMISSAO)+"') AS CP "   //FUNCAO PARA CUSTO PADRAO - TIPO 3
-				If Select("QRY") > 0
-					QRY->(DbCloseArea())
-				EndIf
-				TCQUERY CSQL ALIAS "QRY" NEW
-	
-				If (QRY->CP == 0)
-					Msgbox("O Produto "+Alltrim(SB1->B1_COD)+" esta com o Custo Padrão zerado. Favor entrar em contato com o setor de Custo","M410LIOK","ALERT")
-					QRY->(DbCloseArea())
-					Return(.F.)
-				EndIf
-	
-				QRY->(DbCloseArea())
-	
-			EndIf
-	
-		EndIf
-		
-		
-
-	EndIf
+	//Retirao validacao Custao Padrao - Ticket 32221
 
 	If Alltrim(M->C5_YRECR) == "S"
 		Alert("Não é permitido inclusão de pedidos para Clientes Distribuidores. Favor verificar!")

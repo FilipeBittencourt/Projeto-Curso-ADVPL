@@ -581,7 +581,7 @@ Local cRet := ""
 Local cSQL := ""
 Local cQry := GetNextAlias()
 	
-	cSQL := " SELECT A1_COD, A1_YTIPOLC "
+	cSQL := " SELECT A1_COD, A1_YTIPOLC, A1_RISCO "
 	cSQL += " FROM "+ RetSQLName("SA1")
 	cSQL += " WHERE A1_FILIAL = " + ValToSQL(xFilial("SA1"))
 	cSQL += " AND A1_COD IN "
@@ -597,13 +597,13 @@ Local cQry := GetNextAlias()
 	
 	TcQuery cSQL New Alias (cQry)
 	
-	If (cQry)->A1_YTIPOLC == "C" .And. !::FirstPurchase((cQry)->A1_COD)
+	If (cQry)->A1_YTIPOLC == "C" .And. (cQry)->A1_RISCO == "E"
 		
 		cRet := "D"
 	
-	ElseIf (cQry)->A1_YTIPOLC == "G"
+	ElseIf (cQry)->A1_YTIPOLC == "G" .And. ::MaxRisk() == "E"
 	
-		cRet := ::MaxRisk()
+		cRet := "D" 
 		
 	EndIf 
 	

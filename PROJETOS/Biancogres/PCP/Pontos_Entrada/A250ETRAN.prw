@@ -121,6 +121,7 @@ User Function A250ETRAN()
 				Replace D3_YDRIVER  With az_Driver
 				Replace D3_YTAG    With az_Tag
 				Replace D3_YMATRIC With az_Matrc
+				Replace D3_YMATORI With az_MatOri
 				Replace D3_YEMPR   With az_Emprx
 				MsUnlock()
 

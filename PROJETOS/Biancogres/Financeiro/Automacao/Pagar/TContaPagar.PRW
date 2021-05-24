@@ -1,42 +1,6 @@
 #INCLUDE "TOTVS.CH"
 #INCLUDE "TOPCONN.CH"
 
-User Function FIDC001()
-
-	RpcSetEnv('01', '01')
-
-	_nID		:= 917071
-	oCPStruct	:= TContaPagarStruct():New()
-
-	oCPLoad 	:= TContaPagarLoad():New()
-	oCPStruct	:= oCPLoad:BuscarPorRecno(_nID)
-	
-	If (oCPStruct != Nil)
-	
-		oCPStruct:cPrefixo 		:= "FDC"
-		oCPStruct:cNumero		:= ""
-		oCPStruct:cParcela 		:= ""
-		oCPStruct:cTipo 		:= "NF"
-		oCPStruct:cNatureza 	:= "2307"
-		oCPStruct:cFornecedor	:= "014161"
-		oCPStruct:cLoja			:= "01"
-		oCPStruct:dEmissao		:= dDataBase
-		oCPStruct:dVencto		:= oCPStruct:dVencOri
-	
-		oContaPagar				:=  TContaPagar():New()
-		oResult 				:= oContaPagar:Incluir(oCPStruct)
-		
-		If (oResult:lOk)
-			MsgAlert('<p style="color:green">'+oResult:cMensagem+'</p>', 'Sucesso')
-		Else
-			MsgAlert('<p style="color:red">'+oResult:cMensagem+'</p>', 'Erro')
-		EndIf
-		
-	EndIf
-	
-Return 
-
-
 Class TContaPagar From LongClassName
 	
 	Public Data oObj
@@ -93,7 +57,7 @@ Method Incluir(_oObj) Class TContaPagar
 	
 	varinfo("::oObj", ::oObj )
 	
-	::oObj:cNumero 		= IIF(Empty(::oObj:cNumero), ::RetNumTit(), ::oObj:cNumero)
+	::oObj:cNumero 		:= oContaPagar::RetNumTit()
 	
 	::oObj:cPrefixo		:= PADR(::oObj:cPrefixo		, TamSX3("E2_PREFIXO")[1])
 	::oObj:cNumero		:= PADR(::oObj:cNumero		, TamSX3("E2_NUM")[1])
@@ -114,10 +78,11 @@ Method Incluir(_oObj) Class TContaPagar
 	aAdd(aCabec, {"E2_VENCTO", 			::oObj:dVencto, Nil})
 	aAdd(aCabec, {"E2_VALOR", 			::oObj:nValor, Nil})
 	aAdd(aCabec, {"E2_PORCJUR", 		::oObj:nPerJur, Nil})
+	aAdd(aCabec, {"E2_DESDOBR", 		'N', Nil})
 	
 	//aAdd(aCabec, {"E2_VENCREA", 		::oObj:dVencReal, Nil})
 	//aAdd(aCabec, {"E2_VENCORI", 		::oObj:dVencOri, Nil})
-	//aAdd(aCabec, {"E2_SALDO", 			::oObj:nSaldo, Nil})
+	//aAdd(aCabec, {"E2_SALDO", 		::oObj:nSaldo, Nil})
 	
 	
 	Begin Transaction
@@ -135,7 +100,7 @@ Method Incluir(_oObj) Class TContaPagar
 		 	
 		If !SE2->(DbSeek(_cChave))
 			
-			MsExecAuto({|x,y| FINA050(x,y)}, aCabec, 3)
+			MSExecAuto({|x,y,z| FINA050(x,y,z)},aCabec,,3) //3-Inclusao //5-Exclusao
 			
 			If (!lMsErroAuto)
 					
@@ -189,6 +154,8 @@ Class TContaPagarStruct From LongClassName
 	Public Data dVencReal 
 	Public Data dVencOri 
 	Public Data nSaldo 	
+	Public Data nValorOri	
+	
 		
 	Public Method New() Constructor
 	
@@ -211,6 +178,7 @@ Method New() Class TContaPagarStruct
 	::dVencReal		:= dDataBase
 	::dVencOri 		:= dDataBase
 	::nSaldo 		:= 0
+	::nValorOri		:= 0	
 
 Return()
 

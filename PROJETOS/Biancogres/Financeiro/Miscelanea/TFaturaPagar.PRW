@@ -17,6 +17,7 @@ Class TFaturaPagar From LongClassName
 	Method _Valida()
 	Method _UpdateVenc()
 	Method _ExecBaixaDesc()
+	Method _BaixaDesc()
 	Method _CheckForn()
 	Method GetProxNumFat()
 	
@@ -333,22 +334,67 @@ Method _UpdateVenc() Class TFaturaPagar
 
 Return
 
-Method _ExecBaixaDesc() Class TFaturaPagar
-
-	Local aParcBaixa 		:= {}
+Method _BaixaDesc(nId, nValor) Class TFaturaPagar
+	
 	Local aArea				:= GetArea()
-	Local cAliasTrab		:= GetNextAlias()
-	Local cQuery			:= ""
-	Local nId				:= 0
+	Local aParcBaixa 		:= {}
 	Local lOk				:= .F.
 	Local cMsgLog			:= ""
-	Local nI
-
+	Local nI				:= 0
+	
 	Private lMsErroAuto 	:= .F.
 	Private lMsHelpAuto 	:= .T.
 	Private lAutoErrNoFile	:= .T.
 
+	DbSelectArea('SE2')
+	SE2->(DbSetOrder(0))
+	SE2->(DbGoTo(nId))
 
+	If (!SE2->(Eof()))
+
+		AADD(aParcBaixa, {"E2_FILIAL"   , SE2->E2_FILIAL   						, Nil})
+		AADD(aParcBaixa, {"E2_PREFIXO"  , SE2->E2_PREFIXO   					, Nil})
+		AADD(aParcBaixa, {"E2_NUM"      , SE2->E2_NUM      						, Nil})
+		AADD(aParcBaixa, {"E2_PARCELA"  , SE2->E2_PARCELA  						, Nil})
+		AADD(aParcBaixa, {"E2_TIPO"     , SE2->E2_TIPO      					, Nil})
+		AADD(aParcBaixa, {"E2_FORNECE"  , SE2->E2_FORNECE   					, Nil})
+		AADD(aParcBaixa, {"E2_LOJA"     , SE2->E2_LOJA      					, Nil})
+		AADD(aParcBaixa, {"AUTMOTBX"    , "DES"									, Nil})
+		AADD(aParcBaixa, {"AUTBANCO"    , ""	      							, Nil})
+		AADD(aParcBaixa, {"AUTDTBAIXA"  , dDataBase      						, Nil})
+		//AADD(aParcBaixa, {"AUTHIST"     , cHist			    					, Nil})
+
+		AADD(aParcBaixa,{"AUTVLRPG"  	, nValor	,Nil})
+
+		MsExecAuto ({|x,y| FINA080(x,y)}, aParcBaixa, 3)
+
+		If (!lMsErroAuto)
+			lOk			:= .T.
+		Else
+
+			lOk			:= .F.
+			aErroAuto	:= GetAutoGRLog()
+
+			For nI := 1 To Len(aErroAuto)
+				cMsgLog += StrTran(StrTran(aErroAuto[nI], "<", ""), "-", "") + " "
+			Next nI
+
+		EndIf
+
+		::_oResult:Add(lOk, cMsgLog)
+
+	EndIf
+	
+	RestArea(aArea)
+
+Return 
+
+Method _ExecBaixaDesc() Class TFaturaPagar
+
+	Local aArea				:= GetArea()
+	Local cAliasTrab		:= GetNextAlias()
+	Local cQuery			:= ""
+	Local nId				:= 0
 	
 	cQuery	+= "SELECT R_E_C_N_O_ FROM "+RetSQLName("SE2")+" (NOLOCK)						"
 	cQuery	+= " WHERE 																		"
@@ -366,49 +412,8 @@ Method _ExecBaixaDesc() Class TFaturaPagar
 	If !(cAliasTrab->(Eof()))
 
 		nId := cAliasTrab->R_E_C_N_O_
-
-		DbSelectArea('SE2')
-		SE2->(DbSetOrder(0))
-		SE2->(DbGoTo(nId))
-
-		If (!SE2->(Eof()))
-
-
-			AADD(aParcBaixa, {"E2_FILIAL"   , SE2->E2_FILIAL   						, Nil})
-			AADD(aParcBaixa, {"E2_PREFIXO"  , SE2->E2_PREFIXO   					, Nil})
-			AADD(aParcBaixa, {"E2_NUM"      , SE2->E2_NUM      						, Nil})
-			AADD(aParcBaixa, {"E2_PARCELA"  , SE2->E2_PARCELA  						, Nil})
-			AADD(aParcBaixa, {"E2_TIPO"     , SE2->E2_TIPO      					, Nil})
-			AADD(aParcBaixa, {"E2_FORNECE"  , SE2->E2_FORNECE   					, Nil})
-			AADD(aParcBaixa, {"E2_LOJA"     , SE2->E2_LOJA      					, Nil})
-			AADD(aParcBaixa, {"AUTMOTBX"    , "DES"									, Nil})
-			AADD(aParcBaixa, {"AUTBANCO"    , ""	      							, Nil})
-			AADD(aParcBaixa, {"AUTDTBAIXA"  , dDataBase      						, Nil})
-			//AADD(aParcBaixa, {"AUTHIST"     , cHist			    					, Nil})
-
-			AADD(aParcBaixa,{"AUTVLRPG"  	, ::_oFatPagStruct:nValorDesconto		,Nil})
-
-
-			MsExecAuto ({|x,y| FINA080(x,y)}, aParcBaixa, 3)
-
-
-			If (!lMsErroAuto)
-				lOk			:= .T.
-			Else
-
-				lOk			:= .F.
-				aErroAuto	:= GetAutoGRLog()
-
-				For nI := 1 To Len(aErroAuto)
-					cMsgLog += StrTran(StrTran(aErroAuto[nI], "<", ""), "-", "") + " "
-				Next nI
-
-			EndIf
-
-			::_oResult:Add(lOk, cMsgLog)
-
-		EndIf
-
+		::_BaixaDesc(nId, ::_oFatPagStruct:nValorDesconto)
+		
 	EndIf
 
 	cAliasTrab->(DbCloseArea())
@@ -425,6 +430,10 @@ Method Incluir(lDesc, lVenc, dDataDe, dDataAte, cForne, cLojaForne, cNatureza) C
 	Local aErroAuto			:= {}
 	Local aArea				:= GetArea()
 
+	Local _nId 				:= 0
+	Local _nDesc			:= 0
+	Local _nTaxa			:= 0
+
 	Default lDesc := .T.
 	Default lVenc := .T.
 	Default dDataDe		:= Nil
@@ -437,48 +446,98 @@ Method Incluir(lDesc, lVenc, dDataDe, dDataAte, cForne, cLojaForne, cNatureza) C
 	Private lMsHelpAuto 	:= .T.
 	Private lAutoErrNoFile	:= .T.
 
-	Begin Transaction
+	varinfo("::_oFatPagStruct: ", ::_oFatPagStruct)
+	
+	If (Empty(::_oFatPagStruct:cTipoAntecipacao) .Or. AllTrim(::_oFatPagStruct:cTipoAntecipacao) == 'N')
+		
+		Begin Transaction
+		
+			aFatPag	:= ::_GetCabecalho(dDataDe, dDataAte, cForne, cLojaForne, cNatureza)
 
-		aFatPag	:= ::_GetCabecalho(dDataDe, dDataAte, cForne, cLojaForne, cNatureza)
-
-		varinfo( "", aFatPag )
-
-		MsExecAuto( { |x,y| FINA290(x,y)}, 3, aFatPag )
-
-		If (!lMsErroAuto)
-			lOk	:= .T.
-
-			If lDesc
-				::_ExecBaixaDesc()
-			EndIF
-
-			If (::_oResult:Ok)
-
-				If lVenc
-					::_UpdateVenc()
+			varinfo( "Fatura => ", aFatPag )
+	
+			MsExecAuto( { |x,y| FINA290(x,y)}, 3, aFatPag )
+	
+			If (!lMsErroAuto)
+				lOk	:= .T.
+	
+				If lDesc
+					::_ExecBaixaDesc()
+				EndIF
+	
+				If (::_oResult:Ok)
+	
+					If lVenc
+						::_UpdateVenc()
+					EndIf
+	
+				Else
+					DisarmTransaction()
 				EndIf
-
+	
 			Else
+	
 				DisarmTransaction()
+	
+				lOk			:= .F.
+				aErroAuto	:= GetAutoGRLog()
+	
+				For nI := 1 To Len(aErroAuto)
+					cMsgLog += StrTran(StrTran(aErroAuto[nI], "<", ""), "-", "") + " "
+				Next nI
+	
 			EndIf
-
-		Else
-
-			DisarmTransaction()
-
-			lOk			:= .F.
-			aErroAuto	:= GetAutoGRLog()
-
-			For nI := 1 To Len(aErroAuto)
-				cMsgLog += StrTran(StrTran(aErroAuto[nI], "<", ""), "-", "") + " "
-			Next nI
-
-		EndIf
-
-		::_oResult:Add(lOk, cMsgLog)
-
-	End Transaction
-
+	
+			::_oResult:Add(lOk, cMsgLog)
+		
+		End Transaction
+		
+	Else //baixa normal no titulo : FIDC
+		
+		For nI := 1 To ::_oFatPagStruct:oFatPagItens:GetCount()
+			
+			Begin Transaction
+			
+				_oObj	:= ::_oFatPagStruct:oFatPagItens:GetItem(nI)
+				_nId 	:= _oObj:nId
+				_nDesc	:= _oObj:nValorDesc
+				_nTaxa	:= _oObj:nTaxa
+				
+				varinfo( "Registro => ", _oObj )
+				
+				If (_nId != 0)
+		
+					DbSelectArea('SE2')
+					SE2->(DbSetOrder(0))
+					SE2->(DbGoTo(_nId))
+		
+					If (!SE2->(Eof()))
+						
+						::_BaixaDesc(_nId, _nDesc) //executa a baixa
+						
+						Conout(::_oResult:Ok)
+						
+						If (::_oResult:Ok)
+							//aplicar desconto
+							RecLock("SE2", .F.)
+								SE2->E2_YANTTX	:= _nTaxa
+								SE2->E2_YANTDES	:= _nDesc
+								SE2->E2_VENCTO 	:= DataValida(::_oFatPagStruct:dDataRecebimento, .T.)
+								SE2->E2_VENCREA := DataValida(::_oFatPagStruct:dDataRecebimento, .T.)
+							SE2->(MsUnLock())
+						Else
+							DisarmTransaction()
+						EndIf
+						
+					EndIf
+		
+				EndIf
+			
+			End Transaction
+		Next nI
+		
+	EndIf
+		
 	RestArea(aArea)
 
 Return ::_oResult
@@ -575,29 +634,30 @@ Return ::_oResult
 
 //classes struct
 
-	Class TFaturaPagarStruct from LongClassName
+Class TFaturaPagarStruct from LongClassName
 
-		Data cPrefixo
-		Data cTipo
-		Data cNumero
-		Data cNatureza
-		Data dDataDe
-		Data dDataAte
-		Data cFornecedor
-		Data cLoja
-		Data cForneGeracao
-		Data cLojaGeracao
-		Data cCondPag
-		Data cMoeda
-		Data nValorDesconto
-		Data nValorAcrescimo
-		Data oFatPagItens
-		Data lLoadDados
-		Data dDataRecebimento
+	Data cPrefixo
+	Data cTipo
+	Data cNumero
+	Data cNatureza
+	Data dDataDe
+	Data dDataAte
+	Data cFornecedor
+	Data cLoja
+	Data cForneGeracao
+	Data cLojaGeracao
+	Data cCondPag
+	Data cMoeda
+	Data nValorDesconto
+	Data nValorAcrescimo
+	Data oFatPagItens
+	Data lLoadDados
+	Data dDataRecebimento
+	Data cTipoAntecipacao
 
-		Method New() Constructor
+	Method New() Constructor
 
-	EndClass
+EndClass
 
 Method New() Class TFaturaPagarStruct
 
@@ -617,37 +677,40 @@ Method New() Class TFaturaPagarStruct
 	::nValorAcrescimo		:= 0
 	::lLoadDados			:= .F.
 	::dDataRecebimento		:= Date()
+	::cTipoAntecipacao		:= ""
 	::oFatPagItens	    	:= ArrayList():New()
 
 Return()
 
 
-	Class TFaturaPagarItemStruct From LongClassName
+Class TFaturaPagarItemStruct From LongClassName
 
-		Data nId
-		Data nValorDesc
+	Data nId
+	Data nValorDesc
+	Data nTaxa
 
-		Method New() Constructor
+	Method New() Constructor
 
-	EndClass
+EndClass
 
 Method New() Class TFaturaPagarItemStruct
 
 	::nId			 := 0
 	::nValorDesc	 := 0
+	::nTaxa			 := 0
 
 Return()
 
-	Class TFaturaPagarResultadoStruct From LongClassName
+Class TFaturaPagarResultadoStruct From LongClassName
 
-		Data Ok			as logical
-		Data Mensagem	as character
-		Data ID			as numeric
+	Data Ok			as logical
+	Data Mensagem	as character
+	Data ID			as numeric
 
-		Method New() Constructor
-		Method Add()
+	Method New() Constructor
+	Method Add()
 
-	EndClass
+EndClass
 
 Method New() Class TFaturaPagarResultadoStruct
 

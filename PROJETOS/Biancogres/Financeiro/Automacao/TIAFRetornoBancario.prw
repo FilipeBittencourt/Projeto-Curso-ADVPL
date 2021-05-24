@@ -97,6 +97,8 @@ Class TIAFRetornoBancario From LongClassName
 	Data cDsHist // Descricao do historico do lancamento no banco
 	Data cNatFin // Natureza financeira
 	
+	Data cCodigoCedente
+	
 Method New() Constructor
 
 EndClass
@@ -185,5 +187,7 @@ Method New() Class TIAFRetornoBancario
 	::cCdHist := ""
 	::cDsHist := ""
 	::cNatFin := ""		
+	
+	::cCodigoCedente := ""
 
 Return()

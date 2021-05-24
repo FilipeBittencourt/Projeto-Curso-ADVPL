@@ -25,17 +25,18 @@ USER FUNCTION AVALCOPC
 	CA120FORN := SC7->C7_FORNECE
 	CA120LOJ  := SC7->C7_LOJA
 	U_WFW120P()
-
-	//Fernando em 29/06/2018 => Ticket 5309 => Envio de email para aprovação automatica
-	IF SC7->C7_CONAPRO == "B" 
-
-		dbSelectArea("ZC1")
-		If ZC1->(FieldPos("ZC1_TIPDOC")) > 0
-			U_FPFCRT01(SC7->C7_NUM)
-		EndIf
-
-	ENDIF
-
+	
+	If (!(Alltrim(FunName()) == 'MATA160' .And. AllTrim(SC8->C8_YTPPSS)=="1"))
+		//Fernando em 29/06/2018 => Ticket 5309 => Envio de email para aprovação automatica
+		IF SC7->C7_CONAPRO == "B" 
+	
+			dbSelectArea("ZC1")
+			If ZC1->(FieldPos("ZC1_TIPDOC")) > 0
+				U_FPFCRT01(SC7->C7_NUM)
+			EndIf
+	
+		ENDIF
+	EndIf
 	RestArea(aArea)
 
 RETURN   

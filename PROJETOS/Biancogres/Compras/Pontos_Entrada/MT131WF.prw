@@ -67,8 +67,14 @@ USER FUNCTION MT131WF
 			MsUnlock()
 		ENDIF
 		IF !EMPTY(cFornMail)
-
+			
 			lBizagi := .T.
+			
+			_cTipo := POSICIONE("SC1", 5, XFILIAL("SC1")+cCotacao, "C1_YTIPO")
+			If (AllTrim(_cTipo) $ '1_2')//quando vem do portal esse campo e preenchido
+				lBizagi := .F.
+			EndIf
+			
 
 			If lBizagi
 				//(04/05/15 - Thiago Dantas) -> Gera Processo de Cotação no BIZAGI.
@@ -90,6 +96,8 @@ USER FUNCTION MT131WF
 				cSQL += "        C8_OBS = ' ',"+CRLF
 			EndIf
 
+			cSQL += "        C8_YTPPSS   = "+ValToSql(_cTipo)+","+CRLF
+			
 			cSQL += "        C8_YFLAG   = ' ',"+CRLF
 			cSQL += "        C8_YMARCA  = ' ',"+CRLF
 			cSQL += "        C8_YDATCHE = ' ',"+CRLF
@@ -108,6 +116,15 @@ USER FUNCTION MT131WF
 
 			TCSQLEXEC(cSQL)
 
+			If (AllTrim(_cTipo) $ '1_2')//quando vem do portal esse campo e preenchido
+				If (SUPERGETMV("MV_YRTPAY", .F., .F.))
+					//força sincronização com portal
+					//If (TCSPExist("BPORTAL.dbo.Sp_BPortal_Sinc_Cotacao_Protheus_Solicitacao_Servico"))
+						TCSQLEXEC("exec BPORTAL.dbo.Sp_BPortal_Sinc_Cotacao_Protheus_Solicitacao_Servico")
+					//EndIf
+				EndIf
+			EndIf
+			
 			TCREFRESH(TabSC8)
 		ENDIF
 

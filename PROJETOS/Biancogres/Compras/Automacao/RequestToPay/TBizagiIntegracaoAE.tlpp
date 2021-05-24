@@ -76,8 +76,19 @@ Method Get() Class TBizagiIntegracaoAE
 	Local oAEStruct			:= Nil
 	Local oList				:= ArrayList():New()
 	
-	cQuery	+= " select * from BZINTEGRACAO_PREAE 										"
+	cQuery	+= " select * from BZINTEGRACAO_PREAE A										"
 	cQuery	+= " where STATUS = 'P' AND DATA_HORA_PROTHEUS IS NULL						"
+	
+	cQuery += " AND NOT EXISTS  														"
+    cQuery += " ( 																		"
+    cQuery += "     SELECT 1 															"
+    cQuery += "     FROM BZINTEGRACAO_PREAE B 											"
+    cQuery += "     WHERE B.EMPRESA  		= A.EMPRESA 								"
+    cQuery += "     AND B.FILIAL     		= A.FILIAL 									"
+    cQuery += "     AND B.CONTRATO			= A.CONTRATO 								"
+    cQuery += "     AND B.STATUS        	<> 'P'										"
+    cQuery += " ) 																		"
+	
 	
 	TcQuery cQuery New Alias (cAliasTemp)
 	
@@ -117,35 +128,77 @@ Method Get() Class TBizagiIntegracaoAE
 					
 					oAEItemStruct	 			:= TAEItemStruct():New()
 				
+					oAEItemStruct:cID			:= (cAliasTemp)->ID
+					oAEItemStruct:cCC			:= SC3->C3_CC
+					oAEItemStruct:cClVl			:= SC3->C3_YCLVL
+					oAEItemStruct:cDriver		:= SC3->C3_YDRIVER
+					oAEItemStruct:cAplicacao	:= (cAliasTemp)->APLICACAO
+					oAEItemStruct:cTag			:= (cAliasTemp)->TAG
 					
 					oAEItemStruct:cNumSc        := SC3->C3_NUM
 					oAEItemStruct:cItemSc       := SC3->C3_ITEM
 					oAEItemStruct:nQuantSc		:= 0
-
+						
 					oAEItemStruct:cCodTab       := ''
 					
 					oAEItemStruct:cCodProd      := SC3->C3_PRODUTO
+					oAEItemStruct:cDescProd		:= (cAliasTemp)->NOME_PRODUTO
 					oAEItemStruct:cLocal        := SC3->C3_LOCAL
 					
-					oAEItemStruct:cDescProd     := SB1->B1_DESC	
+					//oAEItemStruct:cDescProd     := SB1->B1_DESC	
 					
-					::PrecoItem(SC3->C3_NUM, SC3->C3_ITEM, (cAliasTemp)->QUANT)
-					//TODO VERIFICAR QUANTIDADE
-					If (::cTipo == '1')//valor fixo
-						oAEItemStruct:nQuant		:= 1
-						oAEItemStruct:nPreco	 	:= ::nPreco
-					ElseIf (::cTipo == '2')//valor por quantidade
-						oAEItemStruct:nQuant		:= 1
-						oAEItemStruct:nPreco	 	:= ::nPreco * (cAliasTemp)->QUANT
+					If ((cAliasTemp)->VALOR == 0)
+						::PrecoItem(SC3->C3_NUM, SC3->C3_ITEM, (cAliasTemp)->QUANT)
+						//TODO VERIFICAR QUANTIDADE
+						If (::cTipo == '1')//valor fixo
+							oAEItemStruct:nQuant		:= 1
+							oAEItemStruct:nPreco	 	:= ::nPreco
+						ElseIf (::cTipo == '2')//valor por quantidade
+							oAEItemStruct:nQuant		:= 1
+							oAEItemStruct:nPreco	 	:= ::nPreco * (cAliasTemp)->QUANT
+						EndIf
+					Else
+						oAEItemStruct:nQuant		:= (cAliasTemp)->QUANT
+						oAEItemStruct:nPreco	 	:= (cAliasTemp)->VALOR
 					EndIf
 		
 					oAEItemStruct:nTotal	 	:= oAEItemStruct:nQuant * oAEItemStruct:nPreco
 					oAEItemStruct:cTES          := ''	
 					oAEItemStruct:cTransp		:= ''
+					
+					cDiaEnt	:= U_GETBIAPAR('PORTAL_SS_DIAENT')
+					cDiaChe	:= U_GETBIAPAR('PORTAL_SS_DIACHE')
+					
+					If (!Empty(cDiaEnt) .And. !Empty(cDiaChe))
+						
+						cDataEnt := ctod(cDiaEnt+'/'+Month2Str(Date())+'/'+Year2Str(Date()))
+						cDataChe := MonthSum(ctod(cDiaChe+'/'+Month2Str(Date())+'/'+Year2Str(Date())), 1)
+						
+						If (dDataBase > cDataEnt)
+							cDataEnt := MonthSum(ctod(cDiaEnt+'/'+Month2Str(Date())+'/'+Year2Str(Date())), 1)
+						EndIf
+						
+						If (cDataChe < cDataEnt)
+							cDataChe := MonthSum(ctod(cDiaChe+'/'+Month2Str(Date())+'/'+Year2Str(Date())), 2)
+						EndIf
+						
+						
+						cDataEnt := DataValida(cDataEnt, .F.)
+						cDataChe := DataValida(cDataChe, .F.)
+						
+						If (cDataEnt != Nil .And. cDataChe != Nil)
+							
+							oAEItemStruct:dDataEntrega	:= cDataEnt
+							oAEItemStruct:dDataChegada	:= cDataChe
+						EndIf
+					
+					EndIf				
+					
+					varinfo( "", oAEItemStruct )	
 						
 					oAEStruct:oItens:Add(oAEItemStruct)
 					
-				EndIf				
+				EndIf		
 			
 				(cAliasTemp)->(DbSkip())
 			EndDo

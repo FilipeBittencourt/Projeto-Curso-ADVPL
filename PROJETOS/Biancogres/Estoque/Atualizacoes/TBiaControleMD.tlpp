@@ -60,7 +60,7 @@ Public Method CheckMD(_cCod, _cLocal) //Verifica se o Produto passado é MD naque
 Public Method CheckMDAlmoxarifado(_cCod,_cLocal)
 Public Method InsereMovimentacao(_cFilial,_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cCodPro,_nQuant,_cLocal,;
 _cTM,_cSolic,_cSolOri,_cUser,_cRotina,_dDtDig,_cTbOrig,_nRecId) //Insere Movimentação na Tabela
-Public Method DevolucaoMovimentacao(_cFilial,_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cCodPro,_nQuant,_cLocal,;
+Public Method DevolucaoMovimentacao(_cFilial,_cSolicit,_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cCodPro,_nQuant,_cLocal,;
 _cUser,_cRotina,_dDtDig,_cTbOrig,_nRecId)
 Public Method MovimentaEstoque(_cTes)
 Public Method NextNum()//Calcula o próximo NumSeq
@@ -937,7 +937,7 @@ Method EstornoNFS(_cDocOri,_cSerieOri,_cForOri,_cLojaOri,_cItemOri,_cDoc,_cSerie
 
 	Return
 
-Method DevolucaoMovimentacao(_cFilial,_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cCodPro,_nQuant,_cLocal,;
+Method DevolucaoMovimentacao(_cFilial,_cSolicit,_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cCodPro,_nQuant,_cLocal,;
 	_cUser,_cRotina,_dDtDig,_cTbOrig,_nRecId) Class TBiaControleMD
 
 	::_cFilial	:=	_cFilial
@@ -950,8 +950,8 @@ Method DevolucaoMovimentacao(_cFilial,_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cCo
 	::_nQuant	:=	_nQuant
 	::_cLocal	:=	PADR(_cLocal,TAMSX3("ZCZ_LOCAL")[1])
 	::_cTM		:=	'003'
-	::_cSolic	:=	"ZZZZZZZZ"
-	::_cSolOri	:=	'ZZZZZZZZ'
+	::_cSolic	:=	_cSolicit
+	::_cSolOri	:=	_cSolicit
 	::_cUser	:=	_cUSer
 	::_cRotina	:=	_cRotina
 	::_dDtDig	:=	_dDtDig

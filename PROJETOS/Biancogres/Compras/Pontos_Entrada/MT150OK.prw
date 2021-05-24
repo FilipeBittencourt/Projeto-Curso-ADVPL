@@ -30,6 +30,16 @@ Local lRet := .T.
 			c150Frete := U_BIPRCTFR()
 
 		EndIf
+		
+		If IsInCallStack("U_RETP0003")
+			
+			//varivel publica vindo da função U_RETP0003
+			If (Type("_cTpFreteA") <> "U" .And. !Empty(_cTpFreteA) )
+				c150Frete := _cTpFreteA
+			EndIf
+			
+		EndIf
+		
 	
 		If !Substr(c150Frete, 1, 1) $ "C/F/S"
 			

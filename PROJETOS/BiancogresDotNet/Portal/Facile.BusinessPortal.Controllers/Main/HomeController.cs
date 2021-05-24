@@ -24,11 +24,11 @@ namespace Facile.BusinessPortal.Controllers
 
         public IActionResult Index()
         {
-            /*var UsuarioGrupo = HttpContext.Session.GetObject<UsuarioGrupoViewModel>("UsuarioGrupo");
+            var UsuarioGrupo = HttpContext.Session.GetObject<UsuarioGrupoViewModel>("UsuarioGrupo");
             if (UsuarioGrupo == null)
             {
                 return RedirectToAction("Modulo");
-            }*/
+            }
 
             //carregando usuario logado
             Usuario usuario;

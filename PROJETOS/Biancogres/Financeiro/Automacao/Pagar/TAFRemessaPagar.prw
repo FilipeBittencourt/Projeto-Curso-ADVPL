@@ -71,12 +71,18 @@ Method Send() Class TAFRemessaPagar
 		::oApi:cTipo := "P"
 		::oApi:cOpcEnv := "L"
 		::oApi:oLst := ::SplitEnvironment(::oMrr:oLst, "2")
-		::oApi:GArqRem := If(::oMrr:oLst:GetItem(1):cTpCom $ "2", "S", "N")
+		::oApi:GArqRem := If(::oMrr:oLst:GetItem(1):cTpCom $ "2" .Or. ::oMrr:lFIDC, "S", "N")
 		::oApi:cIDProc := ::oPro:cIDProc
-
+		
+		If (::oMrr:lFIDC)
+			::oApi:cTpAgrup := "C"
+		EndIf
+		
 		::oApi:Send()
 
 	EndIf
+	
+	
 
 	::oLog:cIDProc := ::oPro:cIDProc
 	::oLog:cOperac := "P"	

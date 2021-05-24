@@ -653,7 +653,7 @@ method ToJSON(uAnyVar) class JSONArray
 
     cJSON:=cTools():UTF8(cJSON,@self:lUTF8,@self:lNoAccent,@self:lTrimSpace)
 
-    if (self:nPrettify)
+    if (self:lPrettify)
         cJSON:=cTools():StrPrettify(cJSON,3,self:nPrettify)
     endif
 

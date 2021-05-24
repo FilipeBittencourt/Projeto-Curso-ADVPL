@@ -59,7 +59,7 @@ Return(lRet)
 Method VldEnvAut() Class TEnviaPedidoCompraEmail
 Local lRet := .T.
  
-	lRet := SC7->C7_YENVAUT == "S" .And. ((AllTrim(FunName()) $ "MATA121/MATA150/MATA161" .And. SC7->C7_CONAPRO == "L") .Or. AllTrim(FunName()) == "MATA094" .Or. Upper(AllTrim(getenvserver())) $ "SCHEDULE###COMP-FERNANDO" .Or. IsInCallsTack("U_BIAFG030"))  
+	lRet := SC7->C7_YENVAUT == "S" .And. ((AllTrim(FunName()) $ "MATA121/MATA150/MATA161" .And. SC7->C7_CONAPRO == "L") .Or. AllTrim(FunName()) == "MATA094" .Or. Upper(AllTrim(getenvserver())) $ "SCHEDULE###COMP-FERNANDO" .Or. IsInCallsTack("U_BIAFG030") .Or. IsInCallsTack("U_RETP0001"))  
 		
 Return(lRet)
 

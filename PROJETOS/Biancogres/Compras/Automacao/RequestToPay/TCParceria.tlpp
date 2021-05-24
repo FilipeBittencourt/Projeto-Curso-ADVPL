@@ -77,8 +77,12 @@ Method GetItens() Class TCParceria
 		
 	//	aAdd(aItem,			{"C3_FILIAL"		, xFilial("SC3")										, Nil})	
 		aAdd(aItem,			{"C3_PRODUTO" 		, PADR(oItem:cCodProd, TamSx3("C3_PRODUTO")[1])			, Nil})
+		aAdd(aItem,			{"C3_YDESCRI" 		, PADR(oItem:cDescProd, TamSx3("C3_YDESCRI")[1])		, Nil})
+		
 		aAdd(aItem,			{"C3_ITEM"			, PADR(oItem:cItem, TamSx3("C3_ITEM")[1])				, Nil})  
 		aAdd(aItem,			{"C3_QUANT" 		, oItem:nQuant											, Nil})
+		
+		//	
 				
 		aAdd(aItem,			{"C3_PRECO" 		, oItem:nPreco	 										, Nil})
 		aAdd(aItem,			{"C3_TOTAL" 		, oItem:nTotal	 										, Nil})
@@ -93,7 +97,9 @@ Method GetItens() Class TCParceria
 		aAdd(aItem,			{"C3_TAXAFOR"		, 0														, Nil})	
 		aAdd(aItem,			{"C3_IPI"			, 0														, Nil})	
 		
-		aAdd(aItem,			{"C3_OBS"			, ""													, Nil})	
+		aAdd(aItem,			{"C3_YOBS"			, PADR(oItem:cObsInterna	, TamSx3("C3_YOBS")[1])												, Nil})	
+		aAdd(aItem,			{"C3_OBS"			, PADR(oItem:cObs			, TamSx3("C3_OBS")[1])												, Nil})	
+		
 		
 		If (Empty(oItem:cCC))
 			oItem:cCC := "3000"
@@ -105,13 +111,30 @@ Method GetItens() Class TCParceria
 		aAdd(aItem,			{"C3_CC"			, PADR(oItem:cCC, TamSx3("C3_CC")[1])					, Nil})	
 		aAdd(aItem,			{"C3_YCLVL"			, PADR(oItem:cClVl, TamSx3("C3_YCLVL")[1])				, Nil})	
 		
-		aAdd(aItem,			{"C3_UM"			, PADR(oItem:cUM, TamSx3("C3_UM")[1])					, Nil})	
-		aAdd(aItem,			{"C3_SEGUM"			, PADR(oItem:cSegUM, TamSx3("C3_SEGUM")[1])				, Nil})	
+		If (!Empty(oItem:cDriver))
+			aAdd(aItem,			{"C3_YDRIVER"		, PADR(oItem:cDriver, TamSx3("C3_YDRIVER")[1])			, Nil})	
+		EndIf
+		
+		DbSelectArea("SB1")
+		SB1->(DbSetOrder(1))
+		SB1->(DbSeek(xFilial("SB1")+PADR(oItem:cCodProd, TamSx3("C3_PRODUTO")[1])))		
+				
+		If (!Empty(oItem:cUM))
+			aAdd(aItem,			{"C3_UM"			, PADR(oItem:cUM, TamSx3("C3_UM")[1])					, Nil})	
+			aAdd(aItem,			{"C3_SEGUM"			, PADR(oItem:cSegUM, TamSx3("C3_SEGUM")[1])				, Nil})	
+		Else
+			aAdd(aItem,			{"C3_UM"			, PADR(SB1->B1_UM, TamSx3("C3_UM")[1])					, Nil})	
+			aAdd(aItem,			{"C3_SEGUM"			, PADR(SB1->B1_UM, TamSx3("C3_SEGUM")[1])				, Nil})	
+		EndIf
+	
 		aAdd(aItem,			{"C3_QTSEGUM"		, oItem:cQtdSegUM										, Nil})	
 				
 		aAdd(aItem,			{"C3_GRADE"			, PADR("", TamSx3("C3_GRADE")[1])						, Nil})	
 		aAdd(aItem,			{"C3_ITEMGRD"		, PADR("", TamSx3("C3_ITEMGRD")[1])												, Nil})	
 		
+		aAdd(aItem,			{"C3_MSBLQL"		, "2"												, Nil})	
+		
+		//
 				
 		oCVT := TValidarCampoTabela():New()
         oCVT:Validar('SC3', aItem)
@@ -140,6 +163,8 @@ Method Execute(_oObj) Class TCParceria
 	
 	::oObj 			:= _oObj
 	
+	cBkpFunName := FunName()
+	
 	Begin Transaction
 		
 		DbSelectArea("SC3")
@@ -149,6 +174,8 @@ Method Execute(_oObj) Class TCParceria
 			
 			aCabec	:= ::GetCabecalho()
 			aItens	:= ::GetItens()
+			
+			
 			
 			SetModulo("SIGACOM", "COM")
 	        SetFunName("MATA125")
@@ -185,6 +212,7 @@ Method Execute(_oObj) Class TCParceria
 	
 	End Transaction 
 	
+	SetFunName(cBkpFunName)
 	::oResult:Add(lOk, cMsgLog)
 	
 Return ::oResult
@@ -238,6 +266,11 @@ Class TCPItemStruct From LongClassName
 	Public Data cQtdSegUM
 	Public Data cCC
 	Public Data cClVl
+	Public Data cDriver
+	Public Data cObs
+	Public Data cObsInterna
+	
+	
 	Public Method New() Constructor
 
 EndClass
@@ -258,7 +291,10 @@ Method New() Class TCPItemStruct
 	::cQtdSegUM		:= ""
 	::cCC			:= ""
 	::cClVl			:= ""
-		
+	::cDriver		:= ""
+	::cObs			:= ""
+	::cObsInterna	:= ""
+	
 Return()
 
 

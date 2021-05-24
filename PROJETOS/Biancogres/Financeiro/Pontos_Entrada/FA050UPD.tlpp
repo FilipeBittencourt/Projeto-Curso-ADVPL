@@ -1,0 +1,29 @@
+#include "totvs.ch"
+
+/*/{Protheus.doc} FIDC
+@author Marinaldo de Jesus
+@since 21/05/2021
+@project FIDC
+@version 1.0
+@description: Ponto de Entrada Executado no progama FINA050.PRX (Inclusão, Alteração e Exclusao)
+              Será utilizado para Validar a Alteração de Titulos.
+@type class
+/*/
+
+function u_FA050UPD() as logical
+
+    local lFA050UPD as logical
+
+    begin sequence
+
+        if (stackTools():IsInCallStack("FA050Inclu"))
+            break
+        endif
+        
+        lFA050UPD:=(!FIDC():isPGFIDC(.T.))
+
+    end sequence
+
+    DEFAULT lFA050UPD:=.T.
+
+    return(lFA050UPD)

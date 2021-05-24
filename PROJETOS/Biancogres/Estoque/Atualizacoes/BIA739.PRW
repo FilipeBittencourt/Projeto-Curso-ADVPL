@@ -1733,7 +1733,7 @@ Static Function RptDetail()
 	//                                                                      Planilha 24
 	//=================================================================================
 	nxPlan := "Planilha 24"
-	nxTabl := "Notas fiscais de matéria prima do grupo 101 e 102 (massa e esmalte) que foram lançadas sem conhecimento de frete"
+	nxTabl := "Notas fiscais com produtos do grupo 101 ao 405 que foram lançadas sem conhecimento de frete"
 
 	oExcel:AddworkSheet(nxPlan)
 	oExcel:AddTable (nxPlan, nxTabl)
@@ -1783,7 +1783,10 @@ Static Function RptDetail()
 	ZP024 += "		AND D1N.D_E_L_E_T_ = ''" + CRLF
 	ZP024 += "	INNER JOIN " + RetSqlName("SB1") + " SB1 WITH(NOLOCK) ON SB1.B1_FILIAL = '" + xFilial("SB1") + "'" + CRLF
 	ZP024 += "		AND D1N.D1_COD = SB1.B1_COD" + CRLF
-	ZP024 += "		AND SUBSTRING(SB1.B1_GRUPO,1,3) IN ('101','102')" + CRLF
+	//Ticket 32454
+	//ZP024 += "		AND SUBSTRING(SB1.B1_GRUPO,1,3) IN ('101','102')" + CRLF
+	ZP024 += "		AND SUBSTRING(SB1.B1_GRUPO,1,3) > '100' " + CRLF 
+	ZP024 += "		AND SUBSTRING(SB1.B1_GRUPO,1,3) < '406' " + CRLF
 	ZP024 += "		AND SB1.D_E_L_E_T_ = ''" + CRLF
 	ZP024 += "	INNER JOIN " + RetSqlName("SA2") + " SA2 WITH(NOLOCK) ON SA2.A2_FILIAL = '" + xFilial("SA2") + "'" + CRLF
 	ZP024 += "		AND F1N.F1_FORNECE = SA2.A2_COD" + CRLF

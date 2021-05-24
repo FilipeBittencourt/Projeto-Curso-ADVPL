@@ -54,7 +54,7 @@ static Function BAF003FD()
 	oObj:oMrr:dEmissaoAte	:= dDataBase
 	oObj:Send()
 	
-	U_FIDCXML(@cDataRef)
+	U_FIDCXMLR(@cDataRef)
 
 	ConOut("TAF => BAF003 - [MOVIMENTACAO BANCARIA FIDC] - Inicio do Processo - DATE: "+DTOC(Date())+" TIME: "+Time())	
 

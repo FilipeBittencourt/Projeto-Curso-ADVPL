@@ -5,11 +5,12 @@
 User Function RETP0003()
 	
 	Local nI			:= 0
+	Local nJ			:= 0
 	Local oList 		:= Nil
 	Local cEmp			:= "01"
 	Local cFil			:= "01"
-	Local cUser			:= "FACILE"
-	Local cSenhaUser	:= "TESTE03"
+	Local cUser			:= ""
+	Local cSenhaUser	:= ""
 	
 	Local oAbstract 	:=	Nil
 	Local lLog			:= .F.
@@ -31,7 +32,7 @@ User Function RETP0003()
 	If (lLog)
 		oAbstract := TAbstractClass():New()
 		oAbstract:oPro:Start()	
-		oAbstract:oPro:oWFP:cMethod := "Inclusão Cotação" //Campos para workflow
+		oAbstract:oPro:oWFP:cMethod := "Inclusão/Atualização Cotação" //Campos para workflow
 	EndIf
 	
 	For nI := 1 To oList:GetCount()
@@ -46,19 +47,24 @@ User Function RETP0003()
 		
 	//	BEGIN SEQUENCE	
 			
-			_cTpFreteA	:= 'S'
-			
-			oList:GetItem(nI):cNumero	:= GETSX8NUM('SC8', 'C8_NUM')
-			
+			_lNovo	:= .F.
+			If (Empty(oList:GetItem(nI):cNumero))
+				_lNovo	:= .T.
+			EndIf
 			
 			oCC			:= TCotacaoCompra():New()//executa execauto
-			oCCResult	:= oCC:Execute(oList:GetItem(nI), .T.)
+			oCCResult	:= oCC:Execute(oList:GetItem(nI), _lNovo)
 			
 			If (oCCResult:lOk)
-				oPIntCCConfirm	:= TPortalIntegracaoCC():New()
-				oPIntCCConfirm:ConfirmReg(oList:GetItem(nI):cID)//confirma item como integrado
-				MsgAlert('<p style="color:green">Cotação inserida com sucesso.</p>', 'Sucesso')
-				ConfirmSX8()
+				
+				For nJ := 1 To oCC:oObj:oItens:GetCount()
+					oItem := oList:GetItem(nI):oItens:GetItem(nJ)
+					oPIntCCConfirm	:= TPortalIntegracaoCC():New()
+					oPIntCCConfirm:ConfirmReg(_lNovo, oItem:cID, oList:GetItem(nI):cNumero, oItem:cItem)//confirma item como integrado
+				Next nJ
+				
+				MsgAlert('<p style="color:green">Cotação inserida/atualizada com sucesso.</p>', 'Sucesso')
+				
 			Else
 				MsgAlert('<p style="color:red">'+oCCResult:cMensagem+'</p>', 'Erro')
 			EndIf

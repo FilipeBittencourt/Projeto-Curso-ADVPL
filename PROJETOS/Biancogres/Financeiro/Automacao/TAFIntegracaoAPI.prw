@@ -19,6 +19,7 @@ Data GArqRem
 Data CMovRem
 Data oLst // Objeto com a lista titulos a processar
 Data cIDProc // Identificador do Processo
+Data cTpAgrup
 
 Method New() Constructor
 Method Send() // Envia tirulos para a API
@@ -38,6 +39,7 @@ Method New() Class TAFIntegracaoAPI
 	::CMovRem := ""
 	::oLst := ArrayList():New()
 	::cIDProc	:= ""
+	::cTpAgrup	:= ""
 
 Return()
 
@@ -50,7 +52,7 @@ Method Send() Class TAFIntegracaoAPI
 		If ::cTipo == "P"
 
 			oObj := TAFApiRemessaPagar():New()
-
+			 
 		ElseIf ::cTipo == "R"
 
 			oObj := TAFApiRemessaReceber():New()
@@ -59,12 +61,14 @@ Method Send() Class TAFIntegracaoAPI
 		EndIf
 
 	EndIf
-
-	oObj:cOpcEnv := ::cOpcEnv
-	oObj:cReimpr := ::cReimpr
-	oObj:GArqRem := ::GArqRem
-	oObj:cIDProc := ::cIDProc
-	oObj:oLst := ::oLst
+	
+	
+	oObj:cTpAgrup	:= ::cTpAgrup
+	oObj:cOpcEnv 	:= ::cOpcEnv
+	oObj:cReimpr 	:= ::cReimpr
+	oObj:GArqRem 	:= ::GArqRem
+	oObj:cIDProc 	:= ::cIDProc
+	oObj:oLst 		:= ::oLst
 
 	oObj:Send(::cIDProc)
 

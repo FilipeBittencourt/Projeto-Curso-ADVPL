@@ -1,0 +1,732 @@
+#Include "totvs.ch"
+#Include "topconn.ch"
+#Include "Report.ch"
+#Include "FileIO.ch"
+
+#DEFINE STR0001 "Cadastro de Negativados"
+#DEFINE STR0002 "Cadastro PF - CPFs bloqueados"
+#DEFINE STR0003 "Sócios por CPF"
+
+/*/{Protheus.doc} BIAFJ001
+@author Jordan G. Lazarine (J&DO) 
+@partner	TDS-Enterprise
+			YUBE
+@since 28/01/2021
+@version 1.0
+
+@Projet TOTVS X YUBE
+@description Integração Protheus X YUBE.
+@type Function
+/*/
+
+procedure u_BIAFJ001()
+
+    Local oFWMBrowse   as object
+
+    // Instanciamento da classe de Browse
+    oFWMBrowse := FWMBrowse():New()
+
+    //Alias
+    oFWMBrowse:SetAlias("ZRY")
+
+    private cCadastro as character
+    cCadastro := STR0001
+
+    // Titulo da Browse
+    oFWMBrowse:SetDescription(cCadastro)
+
+    //Define o menu do Browse
+    oFWMBrowse:setMenuDef("BJ001MVC")
+
+    //Habilita o botao para fechar a janela
+    oFWMBrowse:ForceQuitButton()
+
+    // Ativacao da classe
+    ZRY->(oFWMBrowse:Activate())
+
+    freeObj(oFWMBrowse)
+
+    return
+
+procedure U_BJ001ACT()
+	Local aArea as array
+	
+	If (!Type("cCadastro")=="C")
+		private cCadastro as character
+		cCadastro := STR0002
+	EndIf
+	
+	aArea := GetArea()
+	BJ001ACT()
+	
+	restArea(aArea)
+	return
+
+Static Function BJ001ACT() as logical
+
+	Local bAbort		as block
+	Local bActive		as block
+
+	Local aPergs		as array
+	Local aRet			as array
+
+	Local lRet			as logical
+	
+	aPergs := array(0)
+	aAdd( aPergs ,{1, "Da Data Inicial", CTOD("  /  /  "), "@E 99/99/99", "", "", "", 50, .T.})
+	aAdd( aPergs ,{1, "Até Data Final ", CTOD("  /  /  "), "@E 99/99/99", "", "", "", 50, .T.})
+
+	lRet := ParamBox(aPergs, "Parametros - Período integração ", @aRet)
+		
+	if (lRet)
+
+		if (Len(aRet) > 0)
+
+			lRet := MsgYesNo("Deseja comunicar-se com a Yube visando obter dados atendendo ao período De : " + DtoC(aRet[1]) + " Até :" + DtoC(aRet[2]) + " ?")
+		
+		else
+
+			ApMsgAlert("Nenhum período foi definido!",&("cCadastro"))
+
+		endif
+
+	endif
+
+	return
+
+Static Function BIAFJ001Emp(otMultProcess as object,oEmpresa as character,cVersao as character,cRevisa as character,cAnoRef as character)
+
+	Local aMsg			as array
+
+	Local cMsg			as character
+	Local cEmp			as character
+	Local cCRLF			as character
+
+	Local nEmpresa		as numeric
+	Local nEmpresas		as numeric
+
+	Local nKeepResponse as numeric
+
+	Local lRet			as logical
+	Local lBIAFJ001Emp	as logical
+
+	nEmpresas:=Len(oEmpresa:aEmpSel)
+
+	otMultProcess:SetRegua(1,nEmpresas)
+
+	aMsg:=array(0)
+
+	nKeepResponse:=(-1)
+
+	for nEmpresa := 1 to nEmpresas
+
+		cEmp:=oEmpresa:aEmpSel[nEmpresa][1]
+
+		otMultProcess:IncRegua(1,"Processando Empresa: ["+cEmp+"]")
+
+		begin transaction
+			lRet:=BIAFJ001ExecProc(@otMultProcess,@cEmp,@cVersao,@cRevisa,@cAnoRef,@cMsg,@nKeepResponse)
+			if (!empty(cMsg))
+				aAdd(aMsg,cMsg)
+				cMsg:=""
+			endif
+			if (!lRet)
+				lBIAFJ001Emp:=lRet
+				DisarmTransaction()
+			endif
+		end transaction
+
+	next nEmpresa
+
+    if (!empty(aMsg))
+
+        cMsg:=""
+        cCRLF:=CRLF
+        nEmpresas:=len(aMsg)
+        for nEmpresa:=1 to nEmpresas
+            cMsg+=aMsg[nEmpresa]
+            cMsg+=cCRLF
+        next nEmpresa
+
+		txtEditMemo():txtFileEdit(cMsg,&("cCadastro")+" :: Log de Processamento :: ATENÇÃO")
+
+    endif
+
+	DEFAULT lBIAFJ001Emp:=.T.
+
+	return(lBIAFJ001Emp)
+
+Static Function BIAFJ001ExecProc(otMultProcess as object,cEmp as character,cVersao as character,cRevisa as character,cAnoRef as character,cMsg as character,nKeepResponse as numeric) as caracter
+
+	Local lRet as logical
+
+	otMultProcess:SetRegua(2,0)
+	otMultProcess:IncRegua(2)
+
+	MsAguarde({||lRet:=getQueryBP(@cEmp,@cVersao,@cRevisa,@cAnoRef,@cMsg,@nKeepResponse)},&("cCadastro"),"Aguarde... Obtendo dados no SGBD. Empresa :["+cEmp+"]")
+
+	Return(lRet)
+
+Static Function getQueryBP(cEmp as character,cVersao as character,cRevisa as character,cAnoRef as character,cMsg as character,nKeepResponse as numeric) as logical
+
+	Local cCRLF			as character
+	Local cZODTable		as character
+	Local cZRZFilial	as character
+
+	Local cSQLFile	  	as character
+	Local cSQLPath		as character
+	Local cSQLQuery		as character
+
+	Local cMsgNoYes		as character
+
+	Local dIDataRef		as date
+	Local dFDataRef		as date
+
+	Local lRet			as logical
+	Local lZODSeek		as logical
+	Local lZODFound		as logical
+
+	cCRLF:=CRLF
+	
+	begin sequence
+
+		cZODTable:=retFullName("ZOD",cEmp)
+		cZRZFilial:=xFilial("ZOD")
+
+		dIDataRef:=CToD("01"+"/"+"01"+"/"+cValToChar(Val(cAnoRef)-1))
+		dFDataRef:=LastDay(CTOD("01"+"/"+"01"+"/"+cValToChar(Val(cAnoRef)-1)))
+
+		lZODSeek:=ZODSeek(cZRZFilial,cZODTable,cVersao,cRevisa,cAnoRef,dFDataRef)
+		lZODFound:=lZODSeek
+
+		if (lZODFound)
+			if (nKeepResponse==(-1))
+				cMsgNoYes:="Já Existem dados para este Orçamento."
+				cMsgNoYes+=cCRLF
+				cMsgNoYes+=cCRLF
+				cMsgNoYes+=" Empresa:["+cEmp+"]"
+				cMsgNoYes+=" :: "
+				cMsgNoYes+="["
+				cMsgNoYes+=cVersao
+				cMsgNoYes+="]"
+				cMsgNoYes+="["
+				cMsgNoYes+=cRevisa
+				cMsgNoYes+="]"
+				cMsgNoYes+="["
+				cMsgNoYes+=cAnoRef
+				cMsgNoYes+="]"
+				cMsgNoYes+=cCRLF
+				cMsgNoYes+=" Deseja Reprocessar?"
+				lZODFound:=ApMsgNoYes(cMsgNoYes,&("cCadastro"))
+				nKeepResponse:=if(lZODFound,1,0)
+				lZODFound:=(!lZODFound)
+			else
+				lZODFound:=(nKeepResponse==1)
+			endif
+		endif
+
+		if (!lZODSeek)
+			cSQLQuery:="INSERT INTO "+cZODTable+" ("+cCRLF
+			cSQLQuery+="					ZOD_FILIAL"+cCRLF
+			cSQLQuery+="					,ZOD_VERSAO"+cCRLF
+			cSQLQuery+="					,ZOD_REVISA"+cCRLF
+			cSQLQuery+="					,ZOD_ANOREF"+cCRLF
+			cSQLQuery+="					,ZOD_TIPO"+cCRLF
+			cSQLQuery+="					,ZOD_DTREF"+cCRLF
+			cSQLQuery+="					,ZOD_DTPROC"+cCRLF
+			cSQLQuery+="					,ZOD_CONTA"+cCRLF
+			cSQLQuery+="					,ZOD_SALCTA"+cCRLF
+			cSQLQuery+="					,D_E_L_E_T_"+cCRLF
+			cSQLQuery+="					,R_E_C_N_O_"+cCRLF
+			cSQLQuery+="					,R_E_C_D_E_L_"+cCRLF
+			cSQLQuery+="		)"+cCRLF
+			cSQLQuery+="SELECT "+valtoSQL(cZRZFilial)+"	AS FILIAL"+cCRLF
+			cSQLQuery+="      ,"+valtoSQL(cVersao)+" 	AS ZOD_VERSAO"+cCRLF
+			cSQLQuery+="	  ,"+valtoSQL(cRevisa)+"  	AS ZOD_REVISA"+cCRLF
+			cSQLQuery+="	  ,"+valtoSQL(cAnoRef)+" 	AS ZOD_ANOREF"+cCRLF
+			cSQLQuery+="	  ,'2'					 	AS TIPO"+cCRLF
+			cSQLQuery+="	  ,"+valtoSQL(dFDataRef)+"	AS ZOD_DTREF"+cCRLF
+			cSQLQuery+="	  ,(REPLACE(CAST(CONVERT(date, getdate()) AS VARCHAR),'-','')) AS ZOD_DTPROC"+cCRLF
+			cSQLQuery+="	  ,BP.CONTA					AS ZOD_CONTA"+cCRLF
+			cSQLQuery+="	  ,BP.SALDOATU				AS ZOD_SALCTA"+cCRLF
+			cSQLQuery+="	  ,' '						AS D_E_L_E_T_"+cCRLF
+			cSQLQuery+="	  ,(ISNULL((SELECT MAX(ZOD.R_E_C_N_O_) FROM "+cZODTable+" ZOD),0)+ROW_NUMBER() OVER (PARTITION BY 1 ORDER BY BP.EMPRESA,BP.DATARF,BP.CONTA)) AS R_E_C_N_O_"+cCRLF
+			cSQLQuery+="	  ,0						AS R_E_C_D_E_L_"+cCRLF
+			cSQLQuery+="  FROM dbo.VW_BI_F_BALANCOPATRIMONIAL BP WITH (NOLOCK)"+cCRLF
+			cSQLQuery+=" WHERE BP.EMPRESA="+valtoSQL(cEmp)+cCRLF
+			cSQLQuery+="   AND BP.DATARF BETWEEN "+valtoSQL(dIDataRef)+" AND  "+valtoSQL(dFDataRef)+cCRLF
+			cSQLQuery+="   AND NOT EXISTS ("+cCRLF
+			cSQLQuery+="						SELECT DISTINCT 1 AS FOUND"+cCRLF 
+			cSQLQuery+="					      FROM "+cZODTable+" ZOD WITH (NOLOCK)"+cCRLF
+			cSQLQuery+="					     WHERE ZOD.ZOD_FILIAL="+valtoSQL(cZRZFilial)+cCRLF
+			cSQLQuery+="					       AND ZOD.ZOD_VERSAO="+valtoSQL(cVersao)+cCRLF
+			cSQLQuery+="					       AND ZOD.ZOD_REVISA="+valtoSQL(cRevisa)+cCRLF
+			cSQLQuery+="					       AND ZOD.ZOD_ANOREF="+valtoSQL(cAnoRef)+cCRLF
+			cSQLQuery+="					       AND ZOD.ZOD_TIPO='2'"+cCRLF
+			cSQLQuery+="					       AND ZOD.ZOD_DTREF=BP.DATARF"+cCRLF
+			cSQLQuery+="					       AND ZOD.ZOD_CONTA=BP.CONTA"+cCRLF
+			cSQLQuery+=")"+cCRLF
+		elseif ((!lZODFound).and.(lZODSeek))
+			cSQLQuery:="UPDATE ZOD SET ZOD.ZOD_SALCTA=BP.SALDOATU"+cCRLF
+			cSQLQuery+="  FROM dbo.VW_BI_F_BALANCOPATRIMONIAL BP WITH (NOLOCK)"+cCRLF
+			cSQLQuery+=","+cZODTable+" ZOD WITH (NOLOCK)"+cCRLF
+			cSQLQuery+=" WHERE BP.EMPRESA="+valtoSQL(cEmp)+cCRLF
+			cSQLQuery+="   AND BP.DATARF BETWEEN "+valtoSQL(dIDataRef)+" AND  "+valtoSQL(dFDataRef)+cCRLF
+			cSQLQuery+="   AND ZOD.ZOD_VERSAO="+valtoSQL(cVersao)+cCRLF
+			cSQLQuery+="   AND ZOD.ZOD_REVISA="+valtoSQL(cRevisa)+cCRLF
+			cSQLQuery+="   AND ZOD.ZOD_ANOREF="+valtoSQL(cAnoRef)+cCRLF
+			cSQLQuery+="   AND ZOD.ZOD_TIPO='2'"+cCRLF
+			cSQLQuery+="   AND ZOD.ZOD_DTREF=BP.DATARF"+cCRLF
+			cSQLQuery+="   AND ZOD.ZOD_CONTA=BP.CONTA"+cCRLF
+		endif
+
+		DEFAULT cSQLQuery:=""
+
+		cMsg:=cCRLF
+		cMsg+="Empresa:"
+		cMsg+=" "
+		cMsg+=cEmp
+		cMsg+=cCRLF
+		cMsg+="Versao:"
+		cMsg+=" "
+		cMsg+=cVersao
+		cMsg+=cCRLF
+		cMsg+="Revisao:"
+		cMsg+=" "
+		cMsg+=cRevisa
+		cMsg+=cCRLF
+		cMsg+="Referecia:"
+		cMsg+=" "
+		cMsg+=cAnoRef
+		cMsg+=cCRLF
+		cMsg+="Mensagem:"
+		cMsg+=cCRLF
+
+		lRet:=(!empty(cSQLQuery))
+		if (!lRet)
+			cMsg+=cCRLF
+			cMsg+="Nenhum Registro Processado."
+			cMsg+=cCRLF
+			cMsg+=cCRLF
+			break
+		endif
+			
+		lRet:=(TCSQLExec(cSQLQuery)==0)
+
+		if (!lRet)
+
+			if (IsBlind())
+				cSQLPath:="\tmp\"
+			else
+				cSQLPath:=getTempPath()
+				if (!right(cSQLPath,1)=="\")
+					cSQLPath+="\"
+				endif
+			endif
+			cSQLPath+="BIAFJ001\SQL\"
+
+			A35():writeSQLFile(@cSQLQuery,@cEmp,&("cFilAnt"),"BIAFJ001","00","qry_final",@cSQLPath,@cSQLFile)
+
+			cMsg+=cCRLF
+			cMsg+=TCSQLError()
+			cMsg+=cCRLF
+			cMsg+=cCRLF
+
+			break
+
+		endif
+
+		cMsg+=cCRLF
+		cMsg+="Registros Processados OK."
+		cMsg+=cCRLF
+		cMsg+=cCRLF
+
+	end sequece
+
+	return(lRet)
+
+Static Function ZODSeek(cZRZFilial as character,cZODTable as character,cVersao as character,cRevisa as character,cAnoRef as character,dFDataRef as date) as logical
+
+	Local aArea		as array
+	
+	Local cAlias	as character
+	Local cTable	as character
+	Local cDataRef  as character
+
+	Local lFound	as logical
+
+	aArea:=getArea()
+
+	cAlias:=getNextAlias()
+	cTable:="%"+cZODTable+"%"
+	cDataRef:=DToS(dFDataRef)
+	cDataRef:="%"+cDataRef+"%"
+
+	beginSQL alias cAlias
+
+		SELECT DISTINCT 1 AS FOUND
+		  FROM %exp:cTable% ZOD
+		 WHERE ZAZ.%notDel%
+		   AND ZAZ.ZAZ_FILIAL=%exp:cZRZFilial%
+		   AND ZAZ.ZAZ_IDPROC=%exp:cVersao%
+		   AND ZAZ.ZAZ_CIC=%exp:cRevisa%
+
+	endSQL
+
+	lFound:=(cAlias)->((!(eof().and.bof())).and.(FOUND==1))
+
+	(cAlias)->(dbCloseArea())
+	dbSelectArea("ZAZ")
+
+	restArea(aArea)
+
+	return(lFound)
+
+Function u_BJ001MVC()
+    Local aParameter    as array
+    Local xRet
+    begin sequence
+        if (!type("ParamIXB")=="A")
+            break
+        endif
+        aParameter := &("ParamIXB")
+        xRet := BIAFJ001MVC(aParameter)
+    end sequence
+    DEFAULT xRet:=.T.
+    return(xRet)
+
+Static Function BIAFJ001MVC(aParameter as array)
+
+    Local cIdPonto      as character
+    Local cIdModel      as character
+
+    Local nOperation    as numeric
+
+    Local oObj          as object
+
+    Local xRet
+
+    begin sequence
+
+        oObj:=aParameter[1]
+        cIdPonto:=aParameter[2]
+        cIdModel:=aParameter[3]
+
+        if (cIdPonto=="MODELPOS")
+            nOperation:=oObj:GetOperation()
+            if (nOperation==5)
+                break
+            endif
+            xRet:=.T.
+            break
+        endif
+
+        if (cIdPonto=="FORMPOS")
+            xRet:=.T.
+            break
+        endif
+
+        if (cIdPonto=="FORMLINEPRE")
+            if ((len(aParameter)>=5).and.(aParameter[5]=="DELETE"))
+                xRet:=.T.
+            endif
+            break
+        endif
+
+        if (cIdPonto=="FORMLINEPOS")
+            xRet:=.T.
+            break
+        endif
+
+        if (cIdPonto=="MODELCOMMITTTS")
+            xRet:=.T.
+            break
+        endif
+
+        if (cIdPonto=="MODELCOMMITNTTS")
+            xRet:=.T.
+            break
+        endif
+
+        if (cIdPonto=="FORMCOMMITTTSPRE")
+            xRet:=.T.
+            break
+        endif
+
+        if (cIdPonto=="FORMCOMMITTTSPOS")
+            xRet:=.T.
+            break
+        endif
+
+        if (cIdPonto=="MODELCANCEL")
+            xRet:=.T.
+            break
+        endif
+
+        if (cIdPonto=="BUTTONBAR")
+            xRet:=array(0)
+            break
+        endif
+
+    end sequence
+
+    return(xRet)
+
+procedure U_BIAJ01Excel()
+    
+    local aArea     as array
+    local aAreaZRZ  as array
+    
+    local cPerg 	as character
+    
+    aArea := getArea()
+    aAreaZRZ := ZRZ->(getArea())
+		cPerg := "BIAJ01"
+		CriaSx1(cPerg)
+		If Pergunte(cPerg, .T.)
+			BIAFJ001Excel(MV_PAR01)
+		endif
+    
+    restArea(aAreaZRZ)
+    restArea(aArea)
+    
+    return
+
+static function CriaSX1(cPerg)
+
+	PutSx1( cPerg, "01","CNPJ Referencia"			,"","","mv_ch1","C",14,0,0,"G","","","","","mv_par01")
+
+Return
+
+static procedure BIAFJ001Excel(cCNPJRef)
+
+    local aZRZQuery     as array
+	local cQuery		as character
+    local cCNPJ       	as character
+	
+    local cXMLPath      as character
+    local cXMLFile      as character
+    local cExcelTitle   as character
+
+    local cServerIP     as character
+    local cEnvServer    as character
+
+    local cZRZOrder     as character
+    local cZRZFilial    as character
+    local cZRZFilter    as character
+    local cZRZKeySeek   as character
+	local cQuery		as character
+
+    local lDev          as logical
+    local lPicture      as logical
+    local lX3Titulo     as logical
+    local ltxtEditMemo  as logical
+
+    local nZRZOrder     as numeric
+	local cAliasTMP
+    
+	cCNPJ := Left(cCNPJRef, GetSX3Cache("ZRZ_CNPJ","X3_TAMANHO"))
+    
+    cZRZOrder := "ZRZ_FILIAL+ZRZ_CNPJ"
+    nZRZOrder := retOrder("ZRZ", cZRZOrder)
+
+    ZRZ->(dbSetOrder(nZRZOrder))
+    
+    cZRZFilial := xFilial("ZRZ")
+    
+    cZRZKeySeek := cZRZFilial
+    cZRZKeySeek += cCNPJ
+    
+    ZRZ->(dbSeek(cZRZKeySeek,.F.))
+
+    aZRZQuery  := array(0)
+    cZRZFilter := "ZRZ_FILIAL=='"+ cZRZFilial +"' .AND. ZRZ_CNPJ=='"+ cCNPJ +"'"
+
+    MsAguarde({|| FilBrowse("ZRZ",@aZRZQuery,cZRZFilter)},&("cCadastro"),"Obtendo dados no SGBD...")
+
+    cXMLPath := "C:\TEMP\BIAFJ001\XML\"
+    if (MakeDir(cXMLPath))
+
+		cAliasTMP := GetNextAlias()
+		If (Select(cAliasTMP) > 0)
+			DbSelectArea(cAliasTMP)
+			(cAliasTMP)->(DbCloseArea())
+			cAliasTMP := GetNextAlias()
+		EndIf
+		// Query para formatar os dados a serem exibidos.
+		cQuery := " SELECT "
+		cQUery += "		ZRY_A1COD "	// Código do cliente
+		cQUery += "	,	ZRY_NOME  "	// Razão social
+		cQUery += " ,	ZRY_CNPJ  "	// CNPJ
+		cQUery += " ,	ZRY_MUN   "	// Cidade
+		cQUery += " ,	ZRY_EST   "	// Estado
+		cQUery += " ,	ZRY_GRPVEN"	// Grupo de cliente
+		cQUery += " ,	ZRZ_CGC   "	// CPF do(s) sócio(s)
+		cQUery += "	,	ZRZ_NOME  "	// Nome do(s) sócio(s)
+		cQUery += " ,	ZRY_VLPERD"	// Valor da perda
+		cQUery += " ,	ZRY_DTCAD "	// Data do registro
+		cQUery += " ,	ZRY_MSBLQL"	// Status (Bloqueado ou Ativo).
+		cQuery += " FROM "+ RetSqlName("ZRZ") +" ZRZ "
+		cQuery += " 	INNER JOIN "+ RetSqlName("ZRY") +" ZRY ON "
+		cQuery += "				ZRY.ZRY_FILIAL = ZRZ.ZRZ_FILIAL "
+		cQuery += "			AND	ZRY.ZRY_CNPJ = ZRZ.ZRZ_CNPJ "
+		cQuery += "			AND	ZRY.D_E_L_E_T_ = ' ' "
+		cQuery += " WHERE "
+		cQuery += "			ZRZ.ZRZ_FILIAL = '"+ cZRZFilial +"' "
+		cQuery += "		AND ZRZ.ZRZ_CNPJ = '"+ cCNPJ +"' "
+		cQuery += "		AND	ZRZ.D_E_L_E_T_ = ' ' "
+
+        ZRZ->(dbSeek(cZRZKeySeek,.F.))
+		MPSysOpenQuery( cQuery , cAliasTMP )
+        If (cAliasTMP)->(!EoF())
+			ProcExcel(cXMLPath, cAliasTMP)
+		EndIf
+		//(cAliasTMP)->(DbCloseArea())
+    endif
+
+    EndFilBrw("ZRZ", @aZRZQuery)
+
+    return
+
+
+static procedure ProcExcel(cXMLPath, cAliasI)
+Local oExcel	 := Nil
+Local oExcelRel  := Nil
+Local cDir		 := cXMLPath
+Local xNmArq	 := "NEGATIVADOS_"+ dToS(Date()) +"-"+ StrTran(Time(), ":", "")
+Local cFile		 := xNmArq + ".xml"
+Local cWorkSheet := ""
+Local cTabSheet  := ""
+Local cArqDest	 := ""
+
+	cWorkSheet := STR0001
+	cTabSheet  := STR0002
+
+	oExcel := FWMsExcel():New()
+	oExcel:AddWorkSheet(cWorkSheet)
+		oExcel:AddTable(cWorkSheet, cTabSheet)
+			oExcel:AddColumn(@cWorkSheet, @cTabSheet, "Código do cliente"		, 1, 1)
+			oExcel:AddColumn(@cWorkSheet, @cTabSheet, "Razão social"			, 1, 1)
+			oExcel:AddColumn(@cWorkSheet, @cTabSheet, "CNPJ"					, 1, 1)
+			oExcel:AddColumn(@cWorkSheet, @cTabSheet, "Cidade"				, 1, 1)
+			oExcel:AddColumn(@cWorkSheet, @cTabSheet, "Estado"				, 1, 1)
+			oExcel:AddColumn(@cWorkSheet, @cTabSheet, "Grupo de cliente"		, 1, 1)
+			oExcel:AddColumn(@cWorkSheet, @cTabSheet, "CPF do(s) sócio(s)"	, 1, 1)
+			oExcel:AddColumn(@cWorkSheet, @cTabSheet, "Nome do(s) sócio(s)"	, 1, 1)
+			oExcel:AddColumn(@cWorkSheet, @cTabSheet, "Valor da perda"		, 1, 1)
+			oExcel:AddColumn(@cWorkSheet, @cTabSheet, "Data do registro"		, 1, 1)
+			oExcel:AddColumn(@cWorkSheet, @cTabSheet, "Situação do registro"	, 1, 1)
+
+	(cAliasI)->(DbGoTop())
+	While !(cAliasI)->(EoF())
+		oExcel:AddRow(@cWorkSheet, @cTabSheet, {	(cAliasI)->ZRY_A1COD ,;
+													(cAliasI)->ZRY_NOME,;
+													(cAliasI)->ZRY_CNPJ,;
+													(cAliasI)->ZRY_MUN,;
+													(cAliasI)->ZRY_EST,;
+													(cAliasI)->ZRY_GRPVEN,;
+													(cAliasI)->ZRZ_CGC,;
+													(cAliasI)->ZRZ_NOME,;
+													(cAliasI)->ZRY_VLPERD,;
+													(cAliasI)->ZRY_DTCAD,;
+													(cAliasI)->ZRY_MSBLQL})
+		(cAliasI)->(DbSkip())	
+	EndDo
+	(cAliasI)->(DbCloseArea())
+	
+	If oExcel:Activate()
+		If !ApOleClient("MSExcel")
+			MsgAlert("Microsoft Excel não instalado!")
+			Return
+		EndIf
+		LjMsgRun( "Gerando o arquivo, aguarde...", "BIAFJ001", {|| oExcel:GetXMLFile( cFile ) } )
+		oExcel:DeActivate()
+		//If __CopyFile( cFile, cDir + cFile )
+			// Carregar o EXCEL.
+			cArqDest := ConvertXlsx(/*cDir*/, cFile)
+			If !Empty(cArqDest)
+				oExcelRel := MsExcel():New()
+				oExcelRel:SetVisible(.T.)
+				oExcelRel:WorkBooks:Open( cArqDest )
+			EndIf
+		//Endif
+	EndIf
+
+Return(cFile)
+
+static procedure ConvertXlsx(cDirOri,cArqOri)
+Local nHandler 
+Local cDrive	:= ""
+Local cDir		:= ""
+Local cNome		:= ""
+Local cExt		:= ""
+Local cVbs		:= ""
+Local cArqVbs	:= ""
+Local cDestino	:= AllTrim(GetTempPath())
+Local cArqDest	:= ""
+Local lContinua := .F.
+
+Default cDirOri	:= ""
+Default cArqOri := ""
+
+	If !Empty(cArqOri) .AnD. ApOleClient('MsExcel') 
+		If Empty(cDirOri)
+			If CpyS2T(cArqOri, cDestino, .F.)
+				lContinua := .T.
+				SplitPath(cDestino + cArqOri, @cDrive, @cDir, @cNome, @cExt)
+				cArqOri	 := cDrive + cDir + cArqOri
+				cArqDest := cDrive + cDir + cNome +".xlsx"
+				cArqVbs  := AllTrim(GetTempPath())+ cNome +".vbs"
+			EndIf
+		Else
+			If CpyS2T(cDirOri + cArqOri, cDestino, .F.)
+				lContinua := .T.
+				SplitPath(cDestino + cArqOri, @cDrive, @cDir, @cNome, @cExt)
+				cArqOri	 := cDrive + cDir + cArqOri
+				cArqDest := cDrive + cDir + cNome +".xlsx"
+				cArqVbs  := AllTrim(GetTempPath())+ cNome +".vbs"
+			EndIf
+		EndIf
+	EndIf
+	cVbs := 'Dim objXLApp, objXLWb '+CRLF
+	cVbs += 'Set objXLApp = CreateObject("Excel.Application") '+CRLF
+	cVbs += 'objXLApp.Visible = False '+CRLF
+	cVbs += 'Set objXLWb = objXLApp.Workbooks.Open("'+ cArqOri +'") '+CRLF
+	cVbs += 'objXLWb.SaveAs "'+ cArqDest +'", 51 '+CRLF
+	cVbs += 'objXLWb.Close (true) '+CRLF
+	cVbs += 'Set objXLWb = Nothing '+CRLF
+	cVbs += 'objXLApp.Quit '+CRLF
+	cVbs += 'Set objXLApp = Nothing '+CRLF
+	If lContinua
+		nHandler := FCreate(cArqVbs)
+		If ( nHandler <> -1 )
+			FWrite(nHandler, cVbs)
+			FClose(nHandler)                           
+			If WaitRun('cscript.exe '+ cArqVbs, 0) == 0 
+				If File(cArqDest)
+					If File(cArqOri)
+						FErase(cArqOri)
+					EndIf
+					If File(cArqVbs)
+						FErase(cArqVbs)
+					EndIf
+				Else
+					lContinua := .F.
+				EndIf
+			Else
+				lContinua := .F.
+			EndIf
+		Else
+			lContinua := .F.	  	 
+		EndIf
+	EndIf
+	If !lContinua
+		If File(cArqDest)
+			FErase(cArqDest)
+		EndIf
+		If File(cArqVbs)
+			FErase(cArqVbs)
+		EndIf
+	EndIf
+
+Return(cArqDest)

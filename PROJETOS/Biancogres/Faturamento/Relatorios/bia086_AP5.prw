@@ -14,7 +14,7 @@ User Function BIA086()
 
 	Local cLoad				:= "BIA086" + cEmpAnt
 	Local cFileName			:= RetCodUsr() +"_"+ cLoad
-	
+
 	Local cArq    := ""
 	Local cInd    := 0
 	Local cReg	  := 0
@@ -54,7 +54,7 @@ User Function BIA086()
 	Local cArqSF2	:= ""
 	Local cIndSF2	:= 0
 	Local cRegSF2	:= 0
-	
+
 	Private oAceTela 	:= TAcessoTelemarketing():New()
 
 	Private Enter 	:= CHR(13)+CHR(10)
@@ -146,50 +146,50 @@ User Function BIA086()
 	li 	        	:= 80
 	m_pag       	:= 1
 
-	
-	MV_PAR01 := SPACE(9) 		//		"NFe de 	?"	
-	MV_PAR02 := SPACE(9)    	//		"NFe ate	?"	
-	MV_PAR03 := SPACE(6)    	//		"Vendedor de	?"	   
-	MV_PAR04 := SPACE(6)    	//		"Vendedor ate	?     "	
-	MV_PAR05 := STOD("")    	//		"Emissao NFe de  ?	
-	MV_PAR06 := STOD("")    	//		"Emissao NFe ate ?	
-	MV_PAR07 := 0    			//		"Preço Unitario de  ?	
-	MV_PAR08 := 0    			//		"Preço Unitario ate ?	
-	MV_PAR09 := SPACE(1)    	//		"CFO 511,611,618,711?	
-	MV_PAR10 := SPACE(1)    	//		"Somente sem Dt.Emb.?	
-	MV_PAR11 := SPACE(1)   		//		"Indice 14§ Salario ?	
-	MV_PAR12 := SPACE(6)   		//		"Cliente de	?"	   
-	MV_PAR13 := SPACE(6)    	//		"Cliente ate	?     "	
-	MV_PAR14 := SPACE(8)    	//		"Produto de	?"	   
-	MV_PAR15 := SPACE(8)    	//		"Produto ate	?     "	
-	MV_PAR16 := SPACE(1)    	//		"Distribuidor ?	
-	MV_PAR17 := SPACE(6)    	//		"Grupo de	?"	   
-	MV_PAR18 := SPACE(6)    	//		"Grupo ate	?     "	
-	//MV_PAR19 := SPACE(1)    	//		"Tipo de Cliente ?	
-	MV_PAR19 := SPACE(1)    	//		"Tipo de Segmento ?	
-	MV_PAR20 := SPACE(2)    	//		"Tipo do Pedido ?	
-	MV_PAR21 := SPACE(1)    	//		"Qual Tipo          ?	
-	MV_PAR22 := SPACE(10)    	//		"Lote Inicial	?"	
-	MV_PAR23 := SPACE(10)    	//		"Lote Final	?"	
-	MV_PAR24 := SPACE(15)   	//		"Atendente?	"   
-	MV_PAR25 := SPACE(6)    	//		"Segmento De? "    	
-	MV_PAR26 := SPACE(6)    	//		"Segmento Ate? "    	
-	MV_PAR27 := SPACE(1)    	//		"Marca		?""	
+
+	MV_PAR01 := SPACE(9) 		//		"NFe de 	?"
+	MV_PAR02 := SPACE(9)    	//		"NFe ate	?"
+	MV_PAR03 := SPACE(6)    	//		"Vendedor de	?"
+	MV_PAR04 := SPACE(6)    	//		"Vendedor ate	?     "
+	MV_PAR05 := STOD("")    	//		"Emissao NFe de  ?
+	MV_PAR06 := STOD("")    	//		"Emissao NFe ate ?
+	MV_PAR07 := 0    			//		"Preço Unitario de  ?
+	MV_PAR08 := 0    			//		"Preço Unitario ate ?
+	MV_PAR09 := SPACE(1)    	//		"CFO 511,611,618,711?
+	MV_PAR10 := SPACE(1)    	//		"Somente sem Dt.Emb.?
+	MV_PAR11 := SPACE(1)   		//		"Indice 14§ Salario ?
+	MV_PAR12 := SPACE(6)   		//		"Cliente de	?"
+	MV_PAR13 := SPACE(6)    	//		"Cliente ate	?     "
+	MV_PAR14 := SPACE(8)    	//		"Produto de	?"
+	MV_PAR15 := SPACE(8)    	//		"Produto ate	?     "
+	MV_PAR16 := SPACE(1)    	//		"Distribuidor ?
+	MV_PAR17 := SPACE(6)    	//		"Grupo de	?"
+	MV_PAR18 := SPACE(6)    	//		"Grupo ate	?     "
+	//MV_PAR19 := SPACE(1)    	//		"Tipo de Cliente ?
+	MV_PAR19 := SPACE(1)    	//		"Tipo de Segmento ?
+	MV_PAR20 := SPACE(2)    	//		"Tipo do Pedido ?
+	MV_PAR21 := SPACE(1)    	//		"Qual Tipo          ?
+	MV_PAR22 := SPACE(10)    	//		"Lote Inicial	?"
+	MV_PAR23 := SPACE(10)    	//		"Lote Final	?"
+	MV_PAR24 := SPACE(15)   	//		"Atendente?	"
+	MV_PAR25 := SPACE(6)    	//		"Segmento De? "
+	MV_PAR26 := SPACE(6)    	//		"Segmento Ate? "
+	MV_PAR27 := SPACE(1)    	//		"Marca		?""
 	MV_PAR28 := SPACE(15)    	//		"Pedido de Compra Cliente?	"
 	MV_PAR29 := SPACE(1)    	//		"Exportar Para Excel?	"
-	MV_PAR30 := SPACE(2)    	//		"Regiao De?  "   	
-	MV_PAR31 := SPACE(2)    	//		"Regiao Ate? "    	
+	MV_PAR30 := SPACE(2)    	//		"Regiao De?  "
+	MV_PAR31 := SPACE(2)    	//		"Regiao Ate? "
 	MV_PAR32 := SPACE(6)    	//		"Rede de Compras De?  	"
-	MV_PAR33 := SPACE(6)    	//		"Rede de Compras Ate? "	
-	MV_PAR34 := SPACE(6)    	//		"Pedido De	?"	
-	MV_PAR35 := SPACE(6)   		//		"Pedido Ate?"	
-    
+	MV_PAR33 := SPACE(6)    	//		"Rede de Compras Ate? "
+	MV_PAR34 := SPACE(6)    	//		"Pedido De	?"
+	MV_PAR35 := SPACE(6)   		//		"Pedido Ate?"
+
 	aMarca		:= {'1=Biancogres', '2=Incesa', '3=Bellacasa', '4=Incesa/Bellacasa', '5=Pegasus','6=Vinilico', '7=Todas'}
 	aPergs		:= {}
-	
+
 	aAdd( aPergs ,{1,"NFe de"				, MV_PAR01	,"",,"",'.T.',50,.F.})
 	aAdd( aPergs ,{1,"NFe ate"				, MV_PAR02	,"",,"",'.T.',50,.F.})
-	aAdd( aPergs ,{1,"Vendedor de"	   		, MV_PAR03	,"",,"SA3",'.T.',50,.F.})	
+	aAdd( aPergs ,{1,"Vendedor de"	   		, MV_PAR03	,"",,"SA3",'.T.',50,.F.})
 	aAdd( aPergs ,{1,"Vendedor ate"     		, MV_PAR04	,"",,"SA3",'.T.',50,.F.})
 	aAdd( aPergs ,{1,"Emissao NFe de"		, MV_PAR05	,"",,"",'.T.',50,.F.})
 	aAdd( aPergs ,{1,"Emissao NFe ate"		, MV_PAR06	,"",,"",'.T.',50,.F.})
@@ -198,12 +198,12 @@ User Function BIA086()
 	aAdd( aPergs ,{2,"CFO 511,611,618,711"		, MV_PAR09, {'1=Sim', '2=Não'}, 50, ".T.",.F.})
 	aAdd( aPergs ,{2,"Somente sem Dt.Emb."		, MV_PAR10, {'1=Sim', '2=Não'}, 50, ".T.",.F.})
 	aAdd( aPergs ,{2,"Imprime Resumo"		, MV_PAR11, {'1=Sim', '2=Não'}, 50, ".T.",.F.})
-	aAdd( aPergs ,{1,"Cliente de"	   		, MV_PAR12	,"",,"SA1",'.T.',50,.F.})	
+	aAdd( aPergs ,{1,"Cliente de"	   		, MV_PAR12	,"",,"SA1",'.T.',50,.F.})
 	aAdd( aPergs ,{1,"Cliente ate"     		, MV_PAR13	,"",,"SA1",'.T.',50,.F.})
-	aAdd( aPergs ,{1,"Produto de"	   		, MV_PAR14	,"",,"SB1",'.T.',50,.F.})	
+	aAdd( aPergs ,{1,"Produto de"	   		, MV_PAR14	,"",,"SB1",'.T.',50,.F.})
 	aAdd( aPergs ,{1,"Produto ate"     		, MV_PAR15	,"",,"SB1",'.T.',50,.F.})
 	aAdd( aPergs ,{2,"Distribuidor "			, MV_PAR16, {'1=Sim', '2=Não', '3=Ambas'}, 50, ".T.",.F.})
-	aAdd( aPergs ,{1,"Grupo de"	   			, MV_PAR17	,"",,"ACY",'.T.',50,.F.})	
+	aAdd( aPergs ,{1,"Grupo de"	   			, MV_PAR17	,"",,"ACY",'.T.',50,.F.})
 	aAdd( aPergs ,{1,"Grupo ate"     			, MV_PAR18	,"",,"ACY",'.T.',50,.F.})
 	//aAdd( aPergs ,{2,"Tipo de Cliente"		, MV_PAR19, {'1=Revenda', '2=Construtora', '3=Ambos'}, 50, ".T.",.F.})
 	aAdd( aPergs ,{2,"Tipo de Segmento"		, MV_PAR19, {'1=Engenharia', '2=Home Center', '3=Revenda', '4=Exportação', '5=Todos'}, 50, ".T.",.F.})
@@ -211,32 +211,32 @@ User Function BIA086()
 	aAdd( aPergs ,{2,"Qual Tipo"		, MV_PAR21, {'1=Tipo A', '2=Tipo C', '3=Tipo D', '4=Tipo Caco', '5=Ambos'}, 50, ".T.",.F.})
 	aAdd( aPergs ,{1,"Lote Inicial"			, MV_PAR22	,"",,"",'.T.',50,.F.})
 	aAdd( aPergs ,{1,"Lote Final"			, MV_PAR23	,"",,"",'.T.',50,.F.})
-	aAdd( aPergs ,{1,"Atendente"	   			, MV_PAR24	,"",,"USR",'.T.',50,.F.})	
+	aAdd( aPergs ,{1,"Atendente"	   			, MV_PAR24	,"",,"USR",'.T.',50,.F.})
 	aAdd( aPergs ,{1,"Segmento De"     		, MV_PAR25	,"",,"T3",'.T.',50,.F.})
 	aAdd( aPergs ,{1,"Segmento Ate"     		, MV_PAR26	,"",,"T3",'.T.',50,.F.})
-	
+
 	aAdd( aPergs ,{2,"Marca"				, MV_PAR27, aMarca, 50, ".T.",.F.})
 	aAdd( aPergs ,{1,"Pedido de Compra Cliente", MV_PAR28	,"",,"",'.T.',50,.F.})
-	
+
 	aAdd( aPergs ,{2,"Exportar Para Excel"		, MV_PAR29, {'1=Sim', '2=Não'}, 50, ".T.",.F.})
-	
+
 	aAdd( aPergs ,{1,"Regiao De"     			, MV_PAR30	,"",,"12",'.T.',50,.F.})
 	aAdd( aPergs ,{1,"Regiao Ate"     			, MV_PAR31	,"",,"12",'.T.',50,.F.})
 	aAdd( aPergs ,{1,"Rede de Compras De"  	, MV_PAR32	,"",,"Z79",'.T.',50,.F.})
 	aAdd( aPergs ,{1,"Rede de Compras Ate" 	, MV_PAR33	,"",,"Z79",'.T.',50,.F.})
 	aAdd( aPergs ,{1,"Pedido De"				, MV_PAR34	,"",,"",'.T.',50,.F.})
 	aAdd( aPergs ,{1,"Pedido Ate"				, MV_PAR35	,"",,"",'.T.',50,.F.})
-	
-	
+
+
 
 	//Envia controle para a funcao SETPRINT
 	//se não está entrando pelo browser
 	If !GetRemoteType() == 5
-		
+
 		If !ParamBox(aPergs ,"Filtro",,,,,,,,cLoad,.T.,.T.)
 			Return()
 		EndIf
-		
+
 		//PERGUNTE(cPerg,.F.)
 
 		NomeProg := SetPrint(cString,NomeProg,"",@titulo,cDesc1,cDesc2,cDesc3,.F.,aOrd,.T.,tamanho,,.F.)
@@ -246,7 +246,7 @@ User Function BIA086()
 		ENDIF
 
 		MV_PAR29 := Val(ParamLoad(cFileName,,29,MV_PAR29))
-		
+
 		//Verifica Posicao do Formulario na Impressora
 		If MV_PAR29 == 2
 			SetDefault(aReturn,cString)
@@ -259,11 +259,11 @@ User Function BIA086()
 	Else
 		/*If !Pergunte(cPerg,.T.)
 			Return
-		EndIf*/
-		If !ParamBox(aPergs ,"Filtro",,,,,,,,cLoad,.T.,.T.)
+	EndIf*/
+	If !ParamBox(aPergs ,"Filtro",,,,,,,,cLoad,.T.,.T.)
 			Return()
-		EndIf
 	EndIf
+EndIf
 	
 	
 	MV_PAR01 := ParamLoad(cFileName,,1,MV_PAR01)
@@ -310,17 +310,17 @@ User Function BIA086()
 	wVendDe	  := IF(!EMPTY(CREPATU),CREPATU,MV_PAR03)
 	wVendAte  := IF(!EMPTY(CREPATU),CREPATU,MV_PAR04)
 
-	IF !EMPTY(CREPATU) 		//SE REPRESENTANTE (VARIAVEL PRG BIA125)
+IF !EMPTY(CREPATU) 		//SE REPRESENTANTE (VARIAVEL PRG BIA125)
 		//Este período foi alterado por Wanisay no dia 10/12/15 conforme solicitação por e-mail e OS 4636-15  
 		//Esta parametrização fará com que a performance do relatório seja prejudicada.
 		//wEntrDe	  := IF(DTOS(MV_PAR05)<DTOS(ddatabase - 90),(ddatabase - 90),MV_PAR05) // emissao da NF 90 DIAS ANTES DA DATABASE
 		//wEntrDe	  := IF(DTOS(MV_PAR05)<DTOS(ddatabase - 360),(ddatabase - 360),MV_PAR05) // emissao da NF 360 DIAS ANTES DA DATABASE	
 		wEntrDe	  := IF(DTOS(MV_PAR05)<DTOS(ddatabase - 1825),(ddatabase - 1825),MV_PAR05) // emissao da NF 360 DIAS ANTES DA DATABASE	
 		wEntrAte  := mv_par06	// emissao da NF ate
-	ELSE
+ELSE
 		wEntrDe	  := mv_par05	// emissao da NF de
 		wEntrAte  := mv_par06 	// emissao da NF ate
-	ENDIF
+ENDIF
 
 	wPrecoDe  := mv_par07 // Preco Unitario de
 	wPrecoAte := mv_par08 // Preco Unitario Ate
@@ -345,85 +345,85 @@ User Function BIA086()
 	cRegDe := MV_PAR30
 	cRegAte := MV_PAR31
 
-	If cEmpAnt == "01"
-		Do Case
-			Case MV_PAR27 == 1 	//BIANCOGRES
+If cEmpAnt == "01"
+	Do Case
+	Case MV_PAR27 == 1 	//BIANCOGRES
 			nEmp	:= "0101"
-			Case MV_PAR27 == 2 	//INCESA
+	Case MV_PAR27 == 2 	//INCESA
 			nEmp	:= "0501"
-			Case MV_PAR27 == 3 	//BELLACASA
+	Case MV_PAR27 == 3 	//BELLACASA
 			nEmp	:= "0599"
-			Case MV_PAR27 == 4	//INCESA/BELLACASA
+	Case MV_PAR27 == 4	//INCESA/BELLACASA
 			nEmp	:= "05"
-			Case MV_PAR27 == 5	//Pegaus
+	Case MV_PAR27 == 5	//Pegaus
 			nEmp	:= "0199"
-			Case MV_PAR27 == 6	//VINILICO
+	Case MV_PAR27 == 6	//VINILICO
 			nEmp	:= "1302"
-			Case MV_PAR27 == 7	//TODAS
+	Case MV_PAR27 == 7	//TODAS
 			nEmp	:= "XXXX"
-		EndCase
-	Elseif cEmpAnt == "05"
-		Do Case
-			Case MV_PAR27 == 1 	//BIANCOGRES
+	EndCase
+Elseif cEmpAnt == "05"
+	Do Case
+	Case MV_PAR27 == 1 	//BIANCOGRES
 			nEmp	:= "0101"
-			Case MV_PAR27 == 2 	//INCESA
+	Case MV_PAR27 == 2 	//INCESA
 			nEmp	:= "0501"
-			Case MV_PAR27 == 3 	//BELLACASA
+	Case MV_PAR27 == 3 	//BELLACASA
 			nEmp	:= "0599"
-			Case MV_PAR27 == 4	//INCESA/BELLACASA
+	Case MV_PAR27 == 4	//INCESA/BELLACASA
 			nEmp	:= "05"
-			Case MV_PAR27 == 5	//Pegaus
+	Case MV_PAR27 == 5	//Pegaus
 			nEmp	:= "0199"
-			Case MV_PAR27 == 6	//VINILICO
+	Case MV_PAR27 == 6	//VINILICO
 			nEmp	:= "1302"
-			Case MV_PAR27 == 7	//TODAS
+	Case MV_PAR27 == 7	//TODAS
 			nEmp	:= "XXXX"
-		EndCase
-	ElseIf cEmpAnt == "07"
-		Do Case
-			Case MV_PAR27 == 1 	//BIANCOGRES
+	EndCase
+ElseIf cEmpAnt == "07"
+	Do Case
+	Case MV_PAR27 == 1 	//BIANCOGRES
 			nEmp	:= "0101"
-			Case MV_PAR27 == 2 	//INCESA
+	Case MV_PAR27 == 2 	//INCESA
 			nEmp	:= "0501"
-			Case MV_PAR27 == 3 	//BELLACASA
+	Case MV_PAR27 == 3 	//BELLACASA
 			nEmp	:= "0599"
-			Case MV_PAR27 == 4	//INCESA/BELLACASA
+	Case MV_PAR27 == 4	//INCESA/BELLACASA
 			nEmp	:= "05"
-			Case MV_PAR27 == 5	//Pegaus
+	Case MV_PAR27 == 5	//Pegaus
 			nEmp	:= "0199"
-			Case MV_PAR27 == 6	//VINILICO
+	Case MV_PAR27 == 6	//VINILICO
 			nEmp	:= "1302"
-			Case MV_PAR27 == 7	//TODAS
+	Case MV_PAR27 == 7	//TODAS
 			nEmp	:= "XXXX"
-		EndCase	 
-	ElseIf cEmpAnt == "13"
-		Do Case
-			Case MV_PAR27 == 6	//VINILICO
+	EndCase
+ElseIf cEmpAnt == "13"
+	Do Case
+	Case MV_PAR27 == 6	//VINILICO
 			nEmp	:= "1302"
-		EndCase	  	  		
-	Else
-		Do Case
-			Case MV_PAR27 == 1 	//MUNDI
+	EndCase
+Else
+	Do Case
+	Case MV_PAR27 == 1 	//MUNDI
 			nEmp	:= "1301"
-			Case MV_PAR27 == 2 	//MUNDIALLI
+	Case MV_PAR27 == 2 	//MUNDIALLI
 			nEmp	:= "1399"
-			Case MV_PAR27 == 2 	//MUNDIALLI
+	Case MV_PAR27 == 2 	//MUNDIALLI
 			nEmp	:= "13"
-		EndCase	   			   			   			   			   		
-	EndIf
+	EndCase
+EndIf
 	
-	if MV_PAR19 <> 5  	 
-		Do Case
-			Case MV_PAR19 == 1 	//Engenharia
+if MV_PAR19 <> 5
+	Do Case
+	Case MV_PAR19 == 1 	//Engenharia
 			nTipoSeg	:= "E"
-			Case MV_PAR19 == 2 	//Home Center
+	Case MV_PAR19 == 2 	//Home Center
 			nTipoSeg	:= "H"
-			Case MV_PAR19 == 3 	//Revenda
+	Case MV_PAR19 == 3 	//Revenda
 			nTipoSeg	:= "R"
-			Case MV_PAR19 == 4 	//Exportação
+	Case MV_PAR19 == 4 	//Exportação
 			nTipoSeg	:= "X"
-		EndCase
-	endif
+	EndCase
+endif
 
 	//Analisar qual o vendedor/representante ativo
 	DBSELECTAREA("SF4")
@@ -446,16 +446,16 @@ User Function BIA086()
 	DBSETORDER(10) 
 
 	//caso seja representante entrado pelo browser
-	If GetRemoteType() == 5
+If GetRemoteType() == 5
 		RptStatus({|| BIA086TR() })
 		Return
-	EndIf
+EndIf
 
 	// Se deseja exportar para Excel - TReport
-	If MV_PAR29 == 1
+If MV_PAR29 == 1
 		RptStatus({|| BIA086TR() })
 		Return
-	EndIf
+EndIf
 
 	fCriaArq() 
 
@@ -473,83 +473,83 @@ User Function BIA086()
 	FERASE(cTrab2+".*")
 	FERASE(cInd2+".*")
 
-	If cArqSF4 <> ""
+If cArqSF4 <> ""
 		DbSelectArea(cArqSF4)
 		DbSetOrder(cIndSF4)
 		DbGoTo(cRegSF4)
 		RetIndex("SF4")
-	EndIf
+EndIf
 
-	If cArqSA1 <> ""
+If cArqSA1 <> ""
 		dbSelectArea(cArqSA1)
 		dbSetOrder(cIndSA1)
 		dbGoTo(cRegSA1)
 		RetIndex("SA1")
-	EndIf
+EndIf
 
-	If cArqSB1 <> ""
+If cArqSB1 <> ""
 		DbSelectArea(cArqSB1)
 		DbSetOrder(cIndSB1)
 		DbGoTo(cRegSB1)
 		RetIndex("SB1")
-	EndIf
+EndIf
 
-	If cArqSA4 <> ""
+If cArqSA4 <> ""
 		DbSelectArea(cArqSA4)
 		DbSetOrder(cIndSA4)
 		DbGoTo(cRegSA4)
 		RetIndex("SA4")
-	EndIf
+EndIf
 
-	If cArqSA3 <> ""
+If cArqSA3 <> ""
 		dbSelectArea(cArqSA3)
 		dbSetOrder(cIndSA3)
 		dbGoTo(cRegSA3)
 		RetIndex("SA3")
-	EndIf
+EndIf
 
-	If cArqSE4 <> ""
+If cArqSE4 <> ""
 		dbSelectArea(cArqSE4)
 		dbSetOrder(cIndSE4)
 		dbGoTo(cRegSE4)
 		RetIndex("SE4")
-	EndIf
+EndIf
 
-	If cArqSC5 <> ""
+If cArqSC5 <> ""
 		dbSelectArea(cArqSC5)
 		dbSetOrder(cIndSC5)
 		dbGoTo(cRegSC5)
 		RetIndex("SC5")
-	EndIf
+EndIf
 
-	If cArqSD2 <> ""
+If cArqSD2 <> ""
 		dbSelectArea(cArqSD2)
 		dbSetOrder(cIndSD2)
 		dbGoTo(cRegSD2)
 		RetIndex("SD2")
-	EndIf
+EndIf
 
-	If cArqSF2 <> ""
+If cArqSF2 <> ""
 		dbSelectArea(cArqSF2)
 		dbSetOrder(cIndSF2)
 		dbGoTo(cRegSF2)
 		RetIndex("SF2")
-	EndIf
+EndIf
 
-	If chkfile("_SX5")
+If chkfile("_SX5")
 		dbSelectArea("_SX5")
 		dbCloseArea()
-	EndIf
+EndIf
 
 	DbSelectArea(cArq)
 	DbSetOrder(cInd)
 	DbGoTo(cReg)
 
 	//Libera impressao
-	IF aReturn[5] == 1
+IF aReturn[5] == 1
 		Set Printer To
 		Ourspool(NomeProg)
-	ENDIF
+ENDIF
 
 	MS_FLUSH()
 
@@ -564,7 +564,7 @@ Static FUNCTION fCriaArq()
 	EndIf
 
 	//Cria Arquivo Temporario cTrab
-	aCampo	  := ARRAY(23,4)
+	aCampo	  := ARRAY(24,4)
 	aCampo[01] := { "PRODUTO ", "C", 15, 0 }
 	aCampo[02] := { "CLIENTE ", "C", 50, 0 }
 	aCampo[03] := { "ENDENT"  , "C", 40, 0 }
@@ -585,10 +585,11 @@ Static FUNCTION fCriaArq()
 	aCampo[18] := { "TRANSP  ", "C", 15, 0 } 
 	aCampo[19] := { "LOTE "   , "C", 10, 0 }
 	aCampo[20] := { "DESC_INCO"   , "N", 14, 2 }
-	aCampo[21] := { "PC      ", "C", 06, 0 }
+	aCampo[21] := { "PC      ", "C", 06, 0 }	
 	// Tiago Rossini Coradini - 01/06/2016 - OS: 1961-16 - Jaqueline Alves
 	aCampo[22] := {"CIDADE", "C", 36, 0 }
 	aCampo[23] := {"ESTADO", "C", 02, 0 }
+	aCampo[24] := {"YDTNERE", "D", 08, 0 }
 
 	cTrab := CriaTrab(aCampo,.T.)
 	dbUseArea(.T.,,cTrab,"cTrab",.F.,.F.)
@@ -651,7 +652,7 @@ Static FUNCTION fMapAtePed()
 	IF chkfile("cPed")
 		dbSelectArea("cPed")
 		dbCloseArea()
-	ENDIF      
+	ENDIF
 	cQuery := ChangeQuery(cQuery)
 	TCQUERY cQuery ALIAS "cPed" NEW
 	cPed->(dbGoTop())
@@ -671,48 +672,48 @@ Static FUNCTION fMapAtePed()
 			DBSELECTAREA("cPed")			
 			DBSKIP()
 			LOOP
-		ENDIF*/
+	ENDIF*/
 
-		IF EMPTY(CREPATU)
-			IF mv_par16 <> 3
-				IF wRestri = "S"
-					If cempant = "01"
-						IF cPed->A1_YRECR = "2" .OR. cPed->A1_YRECR = "4"
+	IF EMPTY(CREPATU)
+		IF mv_par16 <> 3
+			IF wRestri = "S"
+				If cempant = "01"
+					IF cPed->A1_YRECR = "2" .OR. cPed->A1_YRECR = "4"
 							DBSELECTAREA("cPed")							
 							DBSKIP()
 							LOOP
-						END IF
-					else
-						IF cPed->A1_YRECR = "1" .OR. cPed->A1_YRECR = "4"
+					END IF
+				else
+					IF cPed->A1_YRECR = "1" .OR. cPed->A1_YRECR = "4"
 							DBSELECTAREA("cPed")							
 							DBSKIP()
 							LOOP
-						END IF
-					end if
-				ELSE
-					IF cPed->A1_YRECR <> "4"
+					END IF
+				end if
+			ELSE
+				IF cPed->A1_YRECR <> "4"
 						DBSELECTAREA("cPed")						
 						DBSKIP()
 						LOOP
-					END IF
 				END IF
 			END IF
 		END IF
+	END IF
 
 		wcTransp := SPACE(6)
-		If Empty(cPed->C5_TRANSP)
+	If Empty(cPed->C5_TRANSP)
 			wcTransp	:= "      "
 			wTransp		:= "SEM FRETE     "
-		Else
+	Else
 			wcTransp := cPed->C5_TRANSP
 			wTransp  := cPed->A4_NREDUZ
-		EndIf
+	EndIf
 
 		fGrava()
 
 		DBSELECTAREA("cPed")
 		DBSKIP()
-	END
+END
 
 	fImprime()
 
@@ -757,6 +758,8 @@ STATIC FUNCTION fGrava()
 	cTrab->TRANSP   := wTransp
 	cTrab->DESC_INCO:= cPed->D2_DESCON
 	cTrab->PC       := cPed->C5_YPC
+	cTrab->YDTNERE  := STOD(cPed->C6_YDTNERE)
+
 
 	cTrab->(MSUNLOCK())
 
@@ -1118,7 +1121,7 @@ Static Function GetSqlSF2()
 		cSqlRet += "	AND F2_YEMP	= '"+nEmp+"' 													" + Enter
 	ElseIf Len(Alltrim(nEmp)) == 2
 		cSqlRet += "	AND SUBSTRING(F2_YEMP,1,2) = '"+nEmp+"' 									" + Enter
-	EndIf                
+	EndIf
 	
 	If (oAceTela:UserTelemaketing())
 	
@@ -1136,15 +1139,23 @@ Static Function GetSqlSD2()
 
 	cSqlRet := ""
 	cSqlRet += "SELECT * INTO "+nNomeSD2+" FROM (													" + Enter
-	cSqlRet += "	SELECT * 																		" + Enter
-	cSqlRet += "	FROM VW_SD2																		" + Enter
-	cSqlRet += "	WHERE 	D2_FILIAL 	= '"+xFilial("SC5")+"' AND 									" + Enter
-	cSqlRet += "			D2_EMISSAO  BETWEEN '"+DTOS(wEntrDe)+"' AND '" +DTOS(wEntrAte)+"' 	 	" + Enter
+	cSqlRet += "	SELECT VWSD2.* , VWSC6.C6_YDTNERE" + Enter
+	cSqlRet += "	FROM VW_SD2 VWSD2																" + Enter
+ 
+	cSqlRet += " INNER JOIN VW_SC6  VWSC6	                " + Enter
+	cSqlRet += " ON  VWSD2.D2_YEMPORI = VWSC6.C6_YEMPORI 	" + Enter
+	cSqlRet += " AND VWSD2.D2_FILIAL  = VWSC6.C6_FILIAL 	" + Enter
+	cSqlRet += " AND VWSD2.D2_PEDIDO  = VWSC6.C6_NUM 	    " + Enter
+	cSqlRet += " AND VWSD2.D2_COD     = VWSC6.C6_PRODUTO 	" + Enter
+	cSqlRet += " AND VWSD2.D2_ITEMPV  = VWSC6.C6_ITEM 	  " + Enter
+ 
+	cSqlRet += "	WHERE 	VWSD2.D2_FILIAL 	= '"+xFilial("SC5")+"' AND 									" + Enter
+	cSqlRet += "			VWSD2.D2_EMISSAO  BETWEEN '"+DTOS(wEntrDe)+"' AND '" +DTOS(wEntrAte)+"' 	 	" + Enter
 	If Len(Alltrim(nEmp)) == 4 .And. ( Alltrim(nEmp) <> "XXXX" )
-		cSqlRet += "	AND D2_YEMP	= '"+nEmp+"' 													" + Enter
+		cSqlRet += "	AND VWSD2.D2_YEMP	= '"+nEmp+"' 													" + Enter
 	ElseIf Len(Alltrim(nEmp)) == 2
-		cSqlRet += "	AND SUBSTRING(D2_YEMP,1,2) = '"+nEmp+"' 									" + Enter
-	EndIf                                 
+		cSqlRet += "	AND SUBSTRING(VWSD2.D2_YEMP,1,2) = '"+nEmp+"' 									" + Enter
+	EndIf
 	cSqlRet += " ) AS TMP	 																		" + Enter
 
 Return cSqlRet
@@ -1156,7 +1167,7 @@ Static Function GetSqlPed(lpOrdena)
 	cSqlRet +=" 			A1_YVENDB2, A1_YVENDB3, A1_YVENDB3, A1_YVENDI3, A1_SATIV1, A1_YRECR, A1_GRPVEN, A1_YRECR, A1_COD, A1_NOME, A1_ENDENT,	" + Enter
 	cSqlRet +=" 			C5_NUM, C5_YPC, C5_CLIENTE, C5_LOJACLI, C5_TRANSP, C5_CONDPAG, C5_EMISSAO, E4_DESCRI, 						            " + Enter
 	cSqlRet +=" 			D2_TIPO, D2_COD, D2_ITEMPV, D2_LOTECTL, D2_PRCVEN, D2_QUANT, D2_TOTAL, D2_PESO, D2_CF, D2_TES, 		             " + Enter
-	cSqlRet +=" 			B1_TIPO, B1_YREF, A4_NREDUZ, B1_YCLASSE, F4_DUPLIC, A3_NOME, F2_YEMP, C5_YPEDORI, D2_DESCON, 									" + Enter
+	cSqlRet +=" 			B1_TIPO, B1_YREF, A4_NREDUZ, B1_YCLASSE, F4_DUPLIC, A3_NOME, F2_YEMP, C5_YPEDORI, D2_DESCON, C6_YDTNERE , 					" + Enter
 	// Tiago Rossini Coradini - 01/06/2016 - OS: 1961-16 - Jaqueline Alves
 	cSqlRet +=" 			A1_EST, A1_MUN			" + Enter
 	cSqlRet +=" FROM "+nNomeSF2+" F2                                                                                                     			" + Enter
@@ -1209,14 +1220,14 @@ Static Function GetSqlPed(lpOrdena)
 	cSqlRet +=" AND		F2.F2_VEND1 	<> ''	                                                                                                    " + Enter
 	cSqlRet +=" AND		D2.D2_TIPO   	= 'N'	                                                                                                    " + Enter
 	cSqlRet +=" AND		B1.B1_TIPO  	in ('PA','PR')                                                                                              " + Enter
-	
+
 	cSqlRet +=" AND		(CASE WHEN C5.C5_YPEDORI <> '' THEN C5.C5_YPEDORI ELSE C5.C5_NUM END )  BETWEEN '"+MV_PAR34+"' AND '" +MV_PAR35+"' 			" + Enter
-	
+
 	If (!Empty(MV_PAR34) .And. !Empty(MV_PAR35))
 		cSqlRet +=" AND 	 F2_CLIENTE NOT IN ('010064','000481', '004536', '018410', '014395', '008615')												" + Enter
-	EndIf	
+	EndIf
 
-	If Len(Alltrim(nEmp)) == 4 .And. ( Alltrim(nEmp) <> "XXXX" )	
+	If Len(Alltrim(nEmp)) == 4 .And. ( Alltrim(nEmp) <> "XXXX" )
 		cSqlRet += "	AND		F2.F2_YEMP	 	= '"+nEmp+"' " + Enter
 		cSqlRet += "	AND		C5.C5_YEMP 		= '"+nEmp+"' " + Enter
 	ElseIf Len(Alltrim(nEmp)) == 2
@@ -1235,27 +1246,27 @@ Static Function GetSqlPed(lpOrdena)
 			cSqlRet += "	AND		(A1.A1_YVENDI2 = '"+CREPATU+"' OR A1.A1_YVENDI3 =  '"+CREPATU+"')  " + Enter
 		ElseIf nEmp == "0599"
 			cSqlRet += "	AND		(A1.A1_YVENBE2 = '"+CREPATU+"' OR A1.A1_YVENBE3 =  '"+CREPATU+"')  " + Enter
-		ElseIf nEmp == "05"                    
+		ElseIf nEmp == "05"
 			cSqlRet += "	AND		(A1.A1_YVENDI2 = '"+CREPATU+"' OR A1.A1_YVENDI3 =  '"+CREPATU+"' OR A1.A1_YVENBE2 = '"+CREPATU+"' OR A1.A1_YVENBE3 =  '"+CREPATU+"') " + Enter
 		EndIf
 		cSqlRet += "	AND		F2.F2_VEND1 BETWEEN '"+MV_PAR03+"' AND '"+MV_PAR04+"'  " + Enter
-	
+
 	Else
 		cSqlRet += "	AND		F2.F2_VEND1 BETWEEN '"+wVendDe+"' AND '"+wVendAte+"'  " + Enter
-		//Filtra Vendedor por Atendente	
-		If Alltrim(cAtend) <> "" 
+		//Filtra Vendedor por Atendente
+		If Alltrim(cAtend) <> ""
 			If cEmpAnt == '01'
 				cSqlRet += "	AND	F2.F2_VEND1 IN (SELECT ZZI_VEND FROM "+RetSqlName("ZZI")+" WHERE ZZI_FILIAL = '"+xFilial("ZZI")+"'	AND ZZI_ATENDE = '"+cAtend+"'	AND D_E_L_E_T_ = '')  " + Enter
 			Else
-				cSqlRet += "	AND	F2.F2_VEND1 IN (SELECT ZZI_VEND FROM ZZI050 WHERE ZZI_FILIAL = '"+xFilial("ZZI")+"'	AND ZZI_ATENDE = '"+cAtend+"'	AND D_E_L_E_T_ = '')  " + Enter	
+				cSqlRet += "	AND	F2.F2_VEND1 IN (SELECT ZZI_VEND FROM ZZI050 WHERE ZZI_FILIAL = '"+xFilial("ZZI")+"'	AND ZZI_ATENDE = '"+cAtend+"'	AND D_E_L_E_T_ = '')  " + Enter
 			EndIf
 		EndIf
 	EndIf
-	
+
 	If !Empty(MV_PAR19) .AND. MV_PAR19 <> 5
-		//1=Engenharia, 2=Home Center, 3=Revenda, 4=Exportação, 5=Todos	 
+		//1=Engenharia, 2=Home Center, 3=Revenda, 4=Exportação, 5=Todos
 		cSqlRet += " AND A1.A1_YTPSEG = '" + nTipoSeg + "'  " + Enter
-	EndIf 
+	EndIf
 
 	If !Empty(MV_PAR20)
 		cSqlRet += " AND F2.F2_YSUBTP = '"+MV_PAR20+"'  " + Enter
@@ -1284,7 +1295,7 @@ Static Function GetSqlPed(lpOrdena)
 	If lpOrdena
 		cSqlRet += " ORDER BY F2_VEND1, F2_CLIENTE, F2_DOC, F2.F2_EMISSAO " + Enter
 	Else
-		cSqlRet += " ORDER BY F2.F2_EMISSAO " + Enter                                 
+		cSqlRet += " ORDER BY F2.F2_EMISSAO " + Enter
 	EndIf
 
 Return cSqlRet
@@ -1300,11 +1311,11 @@ Static Function BIA086TR()
 	nNomeSD2	:= "##BIA086SD2"+cEmpAnt+__cUserID+strzero(seconds()*3500,10) //Alltrim(Str(randomize(1,34000)))
 
 	//Gerando tabela temporaria SF2
-	cSql := GetSqlSF2()   
+	cSql := GetSqlSF2()
 	U_BIAMsgRun("Aguarde... Gerando Base... Cabeçalho da NF",,{|| TcSQLExec(cSql)})
 
 	//Gerando tabela temporaria SD2
-	cSql := GetSqlSD2()   
+	cSql := GetSqlSD2()
 	U_BIAMsgRun("Aguarde... Gerando Base... Itens da NF",,{|| TcSQLExec(cSql)})
 
 	cSql := GetSqlPed(.T.)
@@ -1324,12 +1335,12 @@ Static Function BIA086TR()
 Return
 //----------------------------------------------------------------------------------
 Static Function ReportDef()
-	Local cNomeRep		:= "BIA086TR" 
+	Local cNomeRep		:= "BIA086TR"
 	Local cTituloRep 	:= "Mapa de Pedidos Atendidos"
 	Local cDescRep		:= "Este relatorio ira imprimir a relacao dos Pedidos de Venda Atendidos."
 	Local oBrNF
-	Local oBrCli 
-	Local oBrVend 
+	Local oBrCli
+	Local oBrVend
 
 	oReport:= TReport():New(cNomeRep,cTituloRep,cNomeRep, {|oReport| PrintReport(oReport)},cDescRep)
 	oReport:SetLandscape()
@@ -1343,11 +1354,11 @@ Static Function ReportDef()
 	oSection1 := TRSection():New(oReport,OemToAnsi("Pedidos"),{"BIA086TR"})
 	oSection1:SetTotalInLine(.F.)
 
-	oSection2 := TRSection():New(oReport,OemToAnsi("Vendedor"),{"BIA086TR"})    
+	oSection2 := TRSection():New(oReport,OemToAnsi("Vendedor"),{"BIA086TR"})
 	oSection2:SetTotalInLine(.F.)
 	oSection2:SetLineStyle(.T.)
 
-	oSection3 := TRSection():New(oReport,OemToAnsi("Cliente"),{"BIA086TR"})    
+	oSection3 := TRSection():New(oReport,OemToAnsi("Cliente"),{"BIA086TR"})
 	oSection3:SetTotalInLine(.F.)
 	oSection3:SetLineStyle(.T.)
 
@@ -1356,7 +1367,7 @@ Static Function ReportDef()
 	TRCell():New(oSection2,"PRCUNI",,"Preço Unit.",,14)//disable
 	TRCell():New(oSection2,"QTDPED",,"Quant.",,14)//disable
 	TRCell():New(oSection2,"VLRTOT",,"Total",,14)//disable
-	
+
 	// Thiago Haagensen - Ticket 24332 - Adicionado coluna com o valor da NF total com impostos (VLRTOTIPI)
 	TRCell():New(oSection2,"VLRTOTIPI",,"Total c/ IPI",,14)//disable
 
@@ -1367,7 +1378,7 @@ Static Function ReportDef()
 	TRCell():New(oSection3,"QTDPED",,"Quant.",,14)//disable
 	TRCell():New(oSection3,"VLRTOT",,"Total",,14)//disable
 	TRCell():New(oSection3,"VLRTOTIPI",,"Total c/ IPI",,14)//disable
-	
+
 
 	TRCell():New(oSection1,"VENDEDOR",,"Vendedor",,50)//disable
 	TRCell():New(oSection1,"CLIENTE",,"Cliente",,50)//disable
@@ -1381,11 +1392,11 @@ Static Function ReportDef()
 	TRCell():New(oSection1,"DESC",,"Descrição","@!",30,,,"LEFT",,"LEFT")
 	TRCell():New(oSection1,"PRCUNI",,"Preço Unit.","@E 999,999,999.99",14,,,"RIGHT",,"RIGHT")
 	TRCell():New(oSection1,"QTDPED",,"Quant.","@E 999,999,999.99",14,,,"RIGHT",,"RIGHT")
-	
+
 	TRCell():New(oSection1,"VLRTOT",,"Total","@E 999,999,999.99",14,,,"RIGHT",,"RIGHT")
 	TRCell():New(oSection1,"VLRTOTIPI",,"Total C/ IPI","@E 999,999,999.99",14,,,"RIGHT",,"RIGHT")
-	
-	TRCell():New(oSection1,"TRANSP",,".    Transp.","@!",25,,,"LEFT",,"LEFT") 
+
+	TRCell():New(oSection1,"TRANSP",,".    Transp.","@!",25,,,"LEFT",,"LEFT")
 	TRCell():New(oSection1,"PEDIDO",,"Pedido  ","@!",10,,,"CENTER",,"CENTER")
 	TRCell():New(oSection1,"EMISSAO",,"Emissão",,12,,,"CENTER",,"CENTER")
 	TRCell():New(oSection1,"EMBARQUE",,"Embarque",,12,,,"CENTER",,"CENTER")
@@ -1393,8 +1404,9 @@ Static Function ReportDef()
 	TRCell():New(oSection1,"PESOBRUT",,"Peso Bruto","@E 999,999,999.99",14,,,"RIGHT",,"RIGHT")
 	TRCell():New(oSection1,"DESC_INCO",,"Desc. Incond.","@E 999,999,999.99",18,,,"RIGHT",,"RIGHT")
 	TRCell():New(oSection1,"PC",,"PC","@!",10,,,"RIGHT",,"RIGHT")
+	TRCell():New(oSection1,"YDTNERE",,"Dt.Nec.Cliente","@!",10,,,"CENTER",,"CENTER")
 
-	oSection1:Cell("VENDEDOR"):Disable() 
+	oSection1:Cell("VENDEDOR"):Disable()
 	oSection1:Cell("CLIENTE"):Disable()
 	// Tiago Rossini Coradini - 01/06/2016 - OS: 1961-16 - Jaqueline Alves
 	oSection1:Cell("CIDADE"):Disable()
@@ -1403,26 +1415,26 @@ Static Function ReportDef()
 	oSection2:Cell("QTDPED"):Disable()
 	oSection2:Cell("VLRTOT"):Disable()
 	oSection2:Cell("VLRTOTIPI"):Disable()
-	
+
 	oSection3:Cell("PRCUNI"):Disable()
 	oSection3:Cell("QTDPED"):Disable()
 	oSection3:Cell("VLRTOT"):Disable()
 	oSection3:Cell("VLRTOTIPI"):Disable()
-	
+
 	//define as quebras no relatório...
 	oBrNF := TRBreak():New(oSection1,oSection1:Cell("NRNF"),"Total da NF")
 	TRFunction():New(oSection1:Cell("PRCUNI"),NIL,"AVERAGE",oBrNF, ,"@E 999,999,999.99")
 	TRFunction():New(oSection1:Cell("QTDPED"),NIL,"SUM",oBrNF, ,"@E 999,999,999.99")
 	TRFunction():New(oSection1:Cell("VLRTOT"),NIL,"SUM",oBrNF, ,"@E 999,999,999.99")
-	
+
 	TRFunction():New(oSection1:Cell("VLRTOTIPI"),NIL,"SUM",oBrNF, ,"@E 999,999,999.99")
-	
+
 	oBrCli := TRBreak():New(oSection1,oSection3:Cell("CLIENTE"),"Total do Cliente")
 	TRFunction():New(oSection3:Cell("PRCUNI"),NIL,"AVERAGE",oBrCli, ,"@E 999,999,999.99")
 	TRFunction():New(oSection3:Cell("QTDPED"),NIL,"SUM",oBrCli, ,"@E 999,999,999.99")
 	TRFunction():New(oSection3:Cell("VLRTOT"),NIL,"SUM",oBrCli, ,"@E 999,999,999.99")
 	TRFunction():New(oSection3:Cell("VLRTOTIPI"),NIL,"SUM",oBrNF, ,"@E 999,999,999.99")
-	
+
 	oBrVend := TRBreak():New(oSection2,oSection2:Cell("VENDEDOR"),"Total do Vendedor")
 	TRFunction():New(oSection2:Cell("PRCUNI"),NIL,"AVERAGE",oBrVend, ,"@E 999,999,999.99")
 	TRFunction():New(oSection2:Cell("QTDPED"),NIL,"SUM",oBrVend, ,"@E 999,999,999.99")
@@ -1450,7 +1462,7 @@ Static Function PrintReport(oReport)
 	If !Eof()
 
 		If oReport:nDevice == 4
-			oSection1:Cell("VENDEDOR"	):Enable() 
+			oSection1:Cell("VENDEDOR"	):Enable()
 			oSection1:Cell("CLIENTE"	):Enable()
 			// Tiago Rossini Coradini - 01/06/2016 - OS: 1961-16 - Jaqueline Alves
 			oSection1:Cell("CIDADE"  	):Enable()
@@ -1470,7 +1482,7 @@ Static Function PrintReport(oReport)
 
 				oSection3:SetHeaderSection(.T.)
 				oSection3:Init()
-				oSection3:Cell("CLIENTE"	):SetValue(SubStr(BIA086TR->A1_COD+"-"+BIA086TR->A1_NOME,1,40))	
+				oSection3:Cell("CLIENTE"	):SetValue(SubStr(BIA086TR->A1_COD+"-"+BIA086TR->A1_NOME,1,40))
 				// Tiago Rossini Coradini - 01/06/2016 - OS: 1961-16 - Jaqueline Alves
 				oSection3:Cell("CIDADE"  	):SetValue(AllTrim(BIA086TR->A1_MUN) + '/' + BIA086TR->A1_EST)
 				oSection3:PrintLine()
@@ -1484,7 +1496,7 @@ Static Function PrintReport(oReport)
 
 					If oReport:Cancel()
 						Exit
-					EndIf  
+					EndIf
 
 					oReport:IncMeter()
 
@@ -1508,7 +1520,7 @@ Static Function PrintReport(oReport)
 					oSection2:Cell("QTDPED"  	):SetValue(Transform(BIA086TR->D2_QUANT,"@E 999,999,999.99"))
 					oSection2:Cell("VLRTOT"  	):SetValue(Transform(BIA086TR->D2_TOTAL,"@E 999,999,999.99"))
 
-					oSection3:Cell("CLIENTE"	):SetValue(BIA086TR->A1_COD+"-"+BIA086TR->A1_NOME)	
+					oSection3:Cell("CLIENTE"	):SetValue(BIA086TR->A1_COD+"-"+BIA086TR->A1_NOME)
 					// Tiago Rossini Coradini - 01/06/2016 - OS: 1961-16 - Jaqueline Alves
 					oSection3:Cell("CIDADE"  	):SetValue(AllTrim(BIA086TR->A1_MUN) + '/' + BIA086TR->A1_EST)
 					oSection3:Cell("PRCUNI"  	):SetValue(Transform(BIA086TR->D2_PRCVEN,"@E 999,999,999.99"))
@@ -1517,7 +1529,7 @@ Static Function PrintReport(oReport)
 					oSection3:Cell("VLRTOTIPI" 	):SetValue(Transform(BIA086TR->D2_VALBRUT,"@E 999,999,999.99"))
 
 					oSection1:Cell("VENDEDOR"	):SetValue(BIA086TR->F2_VEND1 + "-" + BIA086TR->A3_NOME)
-					oSection1:Cell("CLIENTE"	):SetValue(BIA086TR->A1_COD+"-"+BIA086TR->A1_NOME)	
+					oSection1:Cell("CLIENTE"	):SetValue(BIA086TR->A1_COD+"-"+BIA086TR->A1_NOME)
 					// Tiago Rossini Coradini - 01/06/2016 - OS: 1961-16 - Jaqueline Alves
 					oSection1:Cell("CIDADE"  	):SetValue(AllTrim(BIA086TR->A1_MUN) + '/' + BIA086TR->A1_EST)
 					oSection1:Cell("NRNF"    	):SetValue(cNf)
@@ -1532,19 +1544,19 @@ Static Function PrintReport(oReport)
 						cLinha := ZZ7->ZZ7_EMP
 
 						DO Case
-							Case cLinha == "0101"
+						Case cLinha == "0101"
 							oSection1:Cell("MARCA"):SetValue("Biancogres")
-							Case cLinha == "0501"
+						Case cLinha == "0501"
 							oSection1:Cell("MARCA"):SetValue("Incesa")
-							Case cLinha == "0599"
+						Case cLinha == "0599"
 							oSection1:Cell("MARCA"):SetValue("Bellacasa")
-							Case cLinha == "1302"
-							oSection1:Cell("MARCA"):SetValue("Vinilico")							
-							Case cLinha == "1399"
-							oSection1:Cell("MARCA"):SetValue("Mundialli")							
-							Case cLinha == "1401"
-							oSection1:Cell("MARCA"):SetValue("Vitcer")							
-							OTHERWISE			
+						Case cLinha == "1302"
+							oSection1:Cell("MARCA"):SetValue("Vinilico")
+						Case cLinha == "1399"
+							oSection1:Cell("MARCA"):SetValue("Mundialli")
+						Case cLinha == "1401"
+							oSection1:Cell("MARCA"):SetValue("Vitcer")
+						OTHERWISE
 							oSection1:Cell("MARCA"):SetValue(cLinha)
 						EndCase
 					Else
@@ -1559,8 +1571,8 @@ Static Function PrintReport(oReport)
 					oSection1:Cell("QTDPED"  	):SetValue(BIA086TR->D2_QUANT)
 					oSection1:Cell("VLRTOT"  	):SetValue(BIA086TR->D2_TOTAL)
 					oSection1:Cell("VLRTOTIPI"  ):SetValue(BIA086TR->D2_VALBRUT)
-					
-					
+
+
 					oSection1:Cell("TRANSP"  	):SetValue(Space(5) + SubStr(wTransp,1,20))
 					oSection1:Cell("PEDIDO"  	):SetValue(cPedido)
 					oSection1:Cell("EMISSAO" 	):SetValue(DTOC(STOD(BIA086TR->C5_EMISSAO)))
@@ -1569,15 +1581,16 @@ Static Function PrintReport(oReport)
 					oSection1:Cell("PESOBRUT"	):SetValue(BIA086TR->D2_QUANT * BIA086TR->D2_PESO)
 					oSection1:Cell("DESC_INCO"	):SetValue(BIA086TR->D2_DESCON)
 					oSection1:Cell("PC"			):SetValue(BIA086TR->C5_YPC)
+					oSection1:Cell("YDTNERE"			):SetValue(DTOC(STOD(BIA086TR->C6_YDTNERE)))
 
 					//imprime as células...
 					oSection1:PrintLine()
 					BIA086TR->(DBSKIP())
 				End
 				oSection1:Finish()
-				oSection3:Finish()			
+				oSection3:Finish()
 			End
-			oSection2:Finish()	    
+			oSection2:Finish()
 		End
 	EndIf
 

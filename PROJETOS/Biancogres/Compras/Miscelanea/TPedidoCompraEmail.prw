@@ -946,11 +946,11 @@ Local _cPortaria	:= ""
 			        
 		ElseIf cEmpAnt == "14"
 			
-			cLin := PADR("VITCER RETIFICA E COMPLEMENTOS CERAMICOS LTDA ",62) + PADR("FORN..:"  + SA2->A2_COD + " " + SA2->A2_LOJA + " " + SA2->A2_NOME + " ",50)
+			cLin := PADR("BIANCOGRES VINILICO LTDA ",62) + PADR("FORN..:"  + SA2->A2_COD + " " + SA2->A2_LOJA + " " + SA2->A2_NOME + " ",50)
 			fWrite(nHdl,cLin+cEOL)
-			cLin := PADR("Rua Dois, Lote 07, Quadra VI, Civit II ",62) + PADR("END...:" + SA2->A2_END,50)
+			cLin := PADR("R CINCO, S/N, LOTE 001 QUADRA8-A, Civit II ",62) + PADR("END...:" + SA2->A2_END,50)
 			fWrite(nHdl,cLin+cEOL)     
-			cLin := PADR("Cep: 29.168-081, Serra/ES ",62)	+ PADR("CIDADE:" + SA2->A2_MUN,20) + PADR("UF..:" + SA2->A2_EST,8) + "CEP:" + SA2->A2_CEP
+			cLin := PADR("Cep: 29.160-073, Serra/ES ",62)	+ PADR("CIDADE:" + SA2->A2_MUN,20) + PADR("UF..:" + SA2->A2_EST,8) + "CEP:" + SA2->A2_CEP
 			fWrite(nHdl,cLin+cEOL)   
 			cLin := PADR("Tel: (27)3421-9000 ",62) + PADR("C.G.C.:" + SA2->A2_CGC,20) + PADR("I.E.:" + SA2->A2_INSCR,8)
 			fWrite(nHdl,cLin+cEOL)

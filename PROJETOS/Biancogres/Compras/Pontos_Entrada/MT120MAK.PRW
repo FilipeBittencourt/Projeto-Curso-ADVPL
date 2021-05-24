@@ -11,8 +11,13 @@
 /*/
 
 User Function MT120MAK()
-Local aRetTitle := {}
 
-aRetTitle := {"C1_YSTATUS"}
+	Local cOrigem		:= ParamIxb[1]
+	Local aRetTitle 	:= {}
+	
+	If(AllTrim(cOrigem) == 'SC1')
+		aRetTitle := {"C1_YSTATUS"}
+	EndIf
+	
 
 Return(aRetTitle)

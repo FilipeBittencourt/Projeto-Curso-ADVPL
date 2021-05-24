@@ -82,6 +82,7 @@ Static Function ReportDef()
 
 	TRCell():New(oSection1	,"PERCENT_OP"       ,,"Disp"+CRLF+"OP%"		      ,"@E 99.99", 5,/*lPixel*/, {|| (cQUERY)->PERCENT_OP  } )
 	TRCell():New(oSection1	,"C2_YDTDORI"  		  ,,"Dt."+CRLF+"Disp.Ori"		  ,"@!", 8 ,.F., {|| DTOC(STOD((cQUERY)->C2_YDTDORI))  } )
+	TRCell():New(oSection1	,"B1_YEMBALA"		      ,,"Embalagem"				            ,"@!", 20,/*lPixel*/,  {|| (cQUERY)->B1_YEMBALA } )
 	TRCell():New(oSection1	,"C2_OBS"			      ,,"Obs."				            ,"@!", 20,/*lPixel*/,  {|| (cQUERY)->C2_OBS } )
 
 
@@ -115,6 +116,7 @@ Static Function ReportPrint( oReport )
 
 	CSQL += " C2_QUJE, "+CRLF
 	CSQL += " C2_LINHA,"+CRLF
+	CSQL += " SB1.B1_YEMBALA,"+CRLF
 	CSQL += " C2_OBS,"+CRLF
 	CSQL += " ZZ6.ZZ6_DESC,"+CRLF
 	CSQL += " ZZ6.ZZ6_FORNOP,"+CRLF
@@ -165,6 +167,7 @@ Static Function ReportPrint( oReport )
 	CSQL += " C2_QUJE, "+CRLF
 	CSQL += " C2_YDTDISP, "+CRLF
 	CSQL += " C2_LINHA, "+CRLF
+	CSQL += " SB1.B1_YEMBALA, "+CRLF
 	CSQL += " C2_OBS, "+CRLF
 	CSQL += " ZZ6.ZZ6_DESC,"+CRLF
 	CSQL += " ZZ6.ZZ6_FORNOP, "+CRLF

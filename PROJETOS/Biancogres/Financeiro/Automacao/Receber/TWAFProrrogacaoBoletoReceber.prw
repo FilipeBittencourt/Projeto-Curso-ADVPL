@@ -40,7 +40,8 @@ Class TWAFProrrogacaoBoletoReceber From LongClassName
 	Data nPerc // Percentual de juros negociado
 	Data dVencto // Data de vencimento De
 	Data nValor // Valor do juros calculado
-	
+	Data dFIDC
+
 	Method New(oParam) Constructor
 	Method LoadInterface()
 	Method LoadWindow()
@@ -50,7 +51,7 @@ Class TWAFProrrogacaoBoletoReceber From LongClassName
 	Method GetEditableField()
 	Method GetFieldProperty()
 	Method GetFieldData()
-	Method GetLegend(dVencto, dDate, cCart)
+	Method GetLegend(dVencto, dDate, cCart,lDepAnt,lFIDC)
 	Method GetFilCar()
 	Method BrowserClick()
 	Method Mark()
@@ -108,11 +109,12 @@ Return()
 
 
 Method LoadWindow() Class TWAFProrrogacaoBoletoReceber
-Local aCoors := MsAdvSize()
+	
+	Local aCoors := MsAdvSize()
 
 	::oWindow := FWDialogModal():New()
 	::oWindow:SetBackground(.T.) 
-	::oWindow:SetTitle(TIT_WND)
+	::oWindow:SetTitle(TIT_WND+IF(::oParam:lFIDC," :: FIDC",""))
 	::oWindow:SetEscClose(.F.)
 	::oWindow:SetSize(aCoors[4], aCoors[3])
 	::oWindow:EnableFormBar(.T.)
@@ -145,7 +147,8 @@ Return()
 
 
 Method LoadBrowser() Class TWAFProrrogacaoBoletoReceber
-Local cVldDef := "AllwaysTrue"
+
+	Local cVldDef := "AllwaysTrue"
 	
 	::oPanel := ::oContainer:GetPanel(::cIdHBox)	
 	
@@ -183,7 +186,8 @@ Return()
 
 
 Method GetEditableField() Class TWAFProrrogacaoBoletoReceber
-Local aRet := {}
+	
+	Local aRet := {}
 	
 	aAdd(aRet, "E1_DATABOR")
 	aAdd(aRet, "E1_NUMBCO")
@@ -205,7 +209,10 @@ Method GetFieldProperty() Class TWAFProrrogacaoBoletoReceber
 		
 	::oField:AddField("E1_DATABOR")
 	::oField:FieldName("E1_DATABOR"):cTitle := "Dt. Referencia"
-	
+
+	::oField:AddField("ZKC_DIAS")
+	::oField:FieldName("ZKC_DIAS"):cTitle := "Dias"
+
 	::oField:AddField("E1_PREFIXO")
 	::oField:AddField("E1_NUM")
 	::oField:AddField("E1_PARCELA")
@@ -227,15 +234,16 @@ Return(::oField:GetHeader())
 
 
 Method GetFieldData() Class TWAFProrrogacaoBoletoReceber
-Local aRet := {}
-Local cSQL := ""
-Local cQry := GetNextAlias()
-Local cFilOri := ""
-Local dVencAux := Nil
-Local lDepAnt := .F.
-Local dDtVenc := dDataBase
 
-	cSQL := " SELECT E1_PREFIXO, E1_NUM, E1_PARCELA, E1_TIPO, E1_CLIENTE, E1_LOJA, A1_NOME, E1_VALOR, E1_SALDO, E1_EMISSAO, E1_VENCTO, E1_VENCREA, "
+	Local aRet := {}
+	Local cSQL := ""
+	Local cQry := GetNextAlias()
+	Local dVencAux := Nil
+	Local lDepAnt := .F.
+	Local lFIDC := .F.
+	Local dDtVenc := dDataBase
+
+	cSQL := " SELECT E1_PREFIXO, E1_NUM, E1_PARCELA, E1_TIPO, E1_CLIENTE, E1_LOJA, RTRIM(LTRIM(A1_NOME)) A1_NOME, E1_VALOR, E1_SALDO, E1_EMISSAO, E1_VENCTO, E1_VENCREA, "
 	cSQL += " E1_NUMBCO, E1_PORTADO, E1_AGEDEP, E1_CONTA, SE1.R_E_C_N_O_ AS SE1_RECNO, "
 	cSQL += " CASE WHEN "
 	cSQL += " ( "
@@ -265,7 +273,7 @@ Local dDtVenc := dDataBase
 	cSQL += " 			AND ZKC_TIPO		= E1_TIPO "
 	cSQL += " 			AND ZKC_CLIFOR		= E1_CLIENTE "
 	cSQL += " 			AND ZKC_LOJA		= E1_LOJA "
-	cSQL += " 			AND ZKC_STATUS NOT IN ('B', 'C') "
+	cSQL += " 			AND ZKC_STATUS NOT IN ('B','C','P') "
 	cSQL += " 			AND ZKC.D_E_L_E_T_ 	= '' "
 	cSQL += " 		 ) "
 	cSQL += " THEN 'S' ELSE 'N' END DEPIDENT "
@@ -277,17 +285,33 @@ Local dDtVenc := dDataBase
 	cSQL += " WHERE E1_FILIAL = "+ ValToSQL(xFilial("SE1"))
 	cSQL += " AND E1_SALDO > 0 "
 
-	cSQL += " AND NOT exists(															"
-	cSQL += " select 1  from "+ RetSQLName("SA6") + " SA6								"
-	cSQL += " where									 									"
-	cSQL += " 	A6_FILIAL			= '"+xFilial("SA6")+"'	 							"
-	cSQL += " 	AND A6_COD			= SE1.E1_PORTADO 									"
-	cSQL += " 	AND A6_AGENCIA		= SE1.E1_AGEDEP 									"
-	cSQL += " 	AND A6_NUMCON		= SE1.E1_CONTA 										"
-	cSQL += " 	AND SA6.D_E_L_E_T_	= ''												"
-	cSQL += " 	AND SA6.A6_YTPINTB	= '1'												"
-	cSQL += " )																			"
-	
+	if (!::oParam:lFIDC)
+
+		cSQL += " AND NOT exists(															"
+		cSQL += " select 1  from "+ RetSQLName("SA6") + " SA6								"
+		cSQL += " where									 									"
+		cSQL += " 	A6_FILIAL			= '"+xFilial("SA6")+"'	 							"
+		cSQL += " 	AND A6_COD			= SE1.E1_PORTADO 									"
+		cSQL += " 	AND A6_AGENCIA		= SE1.E1_AGEDEP 									"
+		cSQL += " 	AND A6_NUMCON		= SE1.E1_CONTA 										"
+		cSQL += " 	AND SA6.D_E_L_E_T_	= ''												"
+		cSQL += " 	AND SA6.A6_YTPINTB	= '1'												"
+		cSQL += " )																			"
+
+	else
+
+		cSQL += " AND exists(															"
+		cSQL += " select 1  from "+ RetSQLName("SA6") + " SA6								"
+		cSQL += " where									 									"
+		cSQL += " 	A6_FILIAL			= '"+xFilial("SA6")+"'	 							"
+		cSQL += " 	AND A6_COD			= SE1.E1_PORTADO 									"
+		cSQL += " 	AND A6_AGENCIA		= SE1.E1_AGEDEP 									"
+		cSQL += " 	AND A6_NUMCON		= SE1.E1_CONTA 										"
+		cSQL += " 	AND SA6.D_E_L_E_T_	= ''												"
+		cSQL += " 	AND SA6.A6_YTPINTB	= '1'												"
+		cSQL += " )																			"
+
+	endif
 
 	If Empty(::oParam:cProcesso)
 
@@ -344,32 +368,67 @@ Local dDtVenc := dDataBase
 	
 	TcQuery cSQL New Alias (cQry)
 
-	While !(cQry)->(Eof())
+	TCSetField(cQry,"DATE","D",8,0)
+	TCSetField(cQry,"E1_VENCTO","D",8,0)
+	TCSetField(cQry,"E1_EMISSAO","D",8,0)
+	TCSetField(cQry,"E1_VENCREA","D",8,0)
 
-		lDepAnt := .F.
+	lFIDC:=::oParam:lFIDC
 
-		If (cQry)->DEPIDENT == "S"
+	While (cQry)->(!Eof())
 
-			lDepAnt := .T.
+		lDepAnt:=((cQry)->DEPIDENT=="S")
 
-		EndIf
+		If ::oParam:lDepAnt .or. ::oParam:lFIDC
 
-		If ::oParam:lDepAnt
+			dVencAux:=(cQry)->E1_VENCTO
 
-			dVencAux := DataValida(sToD((cQry)->E1_VENCTO) + ::oParam:nQtdRef, .T.)
-			dDtVenc := dVencAux
+			if (::oParam:lFIDC)
+				lFIDC:=::oParam:lFIDC
+				if (!empty(::oParam:dReferenca))
+					dVencAux:=::oParam:dReferenca
+				else
+					dVencAux:=DataValida(dVencAux+::oParam:nQtdRef,.T.)
+				endif
+			else
+				dVencAux:=DataValida(dVencAux+::oParam:nQtdRef,.T.)
+			endif
+
+			dDtVenc:=dVencAux
 
 		Else
 
 			dVencAux := ::oParam:dReferenca
-			dDtVenc := sToD((cQry)->E1_VENCTO)
+			dDtVenc := (cQry)->E1_VENCTO
 
 		EndIf
 
-		aAdd(aRet, {::cUnChk, ::GetLegend(dDtVenc, sToD((cQry)->DATE), (cQry)->CART, lDepAnt), dVencAux,;
-								(cQry)->E1_PREFIXO, (cQry)->E1_NUM, (cQry)->E1_PARCELA, (cQry)->E1_TIPO, (cQry)->E1_CLIENTE, (cQry)->E1_LOJA, AllTrim((cQry)->A1_NOME),;
-								dToC(sToD((cQry)->E1_EMISSAO)), dToC(sToD((cQry)->E1_VENCTO)), dToC(sToD((cQry)->E1_VENCREA)), (cQry)->E1_VALOR, (cQry)->E1_SALDO,; 
-								(cQry)->E1_NUMBCO, (cQry)->E1_PORTADO, (cQry)->E1_AGEDEP, (cQry)->E1_CONTA, (cQry)->SE1_RECNO, .F.})
+		(cQry)->(aAdd(aRet,{;
+								::cUnChk,;
+								::GetLegend(dDtVenc,DATE,CART,lDepAnt,lFIDC),;
+								dVencAux,;
+								(dVencAux-E1_VENCTO),;
+								E1_PREFIXO,;
+								E1_NUM,;
+								E1_PARCELA,;
+								E1_TIPO,;
+								E1_CLIENTE,;
+								E1_LOJA,;
+								A1_NOME,;
+								DtoC(E1_EMISSAO),;
+								DtoC(E1_VENCTO),;
+								DtoC(E1_VENCREA),;
+								E1_VALOR,;
+								E1_SALDO,; 
+								E1_NUMBCO,;
+								E1_PORTADO,;
+								E1_AGEDEP,;
+								E1_CONTA,;
+								SE1_RECNO,;
+								.F.;
+							};
+						);
+					)
 
 		(cQry)->(DbSkip())
 
@@ -380,13 +439,17 @@ Local dDtVenc := dDataBase
 Return(aRet)
 
 
-Method GetLegend(dVencto, dDate, cCart, lDepAnt) Class TWAFProrrogacaoBoletoReceber
-Local cRet := ""
-Default lDepAnt := .F.
+Method GetLegend(dVencto, dDate, cCart, lDepAnt,lFIDC) Class TWAFProrrogacaoBoletoReceber
+
+	Local cRet := ""
 
 	If lDepAnt .And. dVencto > dDate // Eh dep ant e NAO esta vencido
 
-		cRet := "BR_AMARELO"
+		if (lFIDC)
+			cRet := "BR_AMARELO"
+		else
+			cRet := "BR_AMARELO"
+		endif
 
 	ElseIf dVencto < dDate // Esta vencido
 		
@@ -410,21 +473,22 @@ Return(cRet)
 
 
 Method GetFilCar() Class TWAFProrrogacaoBoletoReceber
-Local cRet := ""
 
-		If cEmpAnt == "01"
-			
-			cRet := "BI"
-			
-		ElseIf cEmpAnt == "05"
-			
-			cRet := "IN"
-			
-		ElseIf cEmpAnt == "07"
-			
-			cRet := "LM"
-			
-		EndIf
+	Local cRet := ""
+
+	If cEmpAnt == "01"
+		
+		cRet := "BI"
+		
+	ElseIf cEmpAnt == "05"
+		
+		cRet := "IN"
+		
+	ElseIf cEmpAnt == "07"
+		
+		cRet := "LM"
+		
+	EndIf
 
 Return(cRet)
 
@@ -460,7 +524,8 @@ Return()
 
 
 Method MarkAll() Class TWAFProrrogacaoBoletoReceber
-Local nCount := 0
+
+	Local nCount := 0
 
 	If Len(::oBrw:aCols) > 0
 		
@@ -482,7 +547,8 @@ Return()
 
 
 Method GetMark() Class TWAFProrrogacaoBoletoReceber
-Local aRet := {}
+
+	Local aRet := {}
 
 	//aEval(::oBrw:aCols, {|aPar| If (aPar[nP_MARK] == ::cChk, aAdd(aRet, {aPar[nP_DTREF], aPar[nP_RECNO]}), Nil) })
 	
@@ -492,15 +558,29 @@ Return(aRet)
 
 
 Method Validate() Class TWAFProrrogacaoBoletoReceber
-Local lRet := .T.
 
-	lRet := ::VldMark() .And. ::VldCalc()
+	Local lRet := .T.
+
+	lRet := ::VldMark() 
+	
+	if (lRet)
+ 		lRet:= ::VldCalc()
+		if (lRet)
+			if (::oParam:lFIDC)
+				if (!empty(::oParam:dReferenca))
+					::dFIDC:=::oParam:dReferenca
+					::oParam:nQtdRef:=0
+				endif
+			endif
+		endif
+	endif
 
 Return(lRet)
 
 
 Method VldMark() Class TWAFProrrogacaoBoletoReceber
-Local lRet := .F.
+
+	Local lRet := .F.
 
 	If !(lRet := aScan(::oBrw:aCols, {|x| x[nP_MARK] == ::cChk }) > 0)
 		
@@ -510,27 +590,34 @@ Local lRet := .F.
 	
 Return(lRet)
 
-
 Method VldCalc() Class TWAFProrrogacaoBoletoReceber
-Local lRet := .F.
+
+	Local lRet := .F.
+	Local cMsg
 	
 	::oParCalc:lDepAnt := ::oParam:lDepAnt
+	::oParCalc:lFIDC := ::oParam:lFIDC
 
 	If ::oParCalc:Box()
 
-		If Upper(SubStr(::oParCalc:cCalc, 1, 1)) == "S" .And. (::nValor := ::CalcVal(::oParCalc:nPerc)) > 0
+		If ((!::oParam:lFIDC).and.((Upper(SubStr(::oParCalc:cCalc,1,1))=="S").And.(::nValor:=::CalcVal(::oParCalc:nPerc))>0))
 					
 			::lCalc := .T.
 			::nPerc := ::oParCalc:nPerc
 			::dVencto := ::oParCalc:dVencto		
 														
-			If MsgYesNo("Confirma a geração do título de juros no valor de R$ " + Alltrim(Transform(::nValor, "@E 99,999,999.99")) +;
-									" com vencimento no dia " + dToC(::oParCalc:dVencto) + "?", TIT_WND)
-				
-				lRet := .T.
-				
-			EndIf
-				
+			cMsg:="Confirma a geração do título de juros no valor de R$ "
+			cMsg+=Alltrim(Transform(::nValor, "@E 99,999,999.99"))+" com vencimento no dia "
+			cMsg+=DtoC(::oParCalc:dVencto)
+			cMsg+="?"
+			
+			lRet:=MsgYesNo(cMsg,TIT_WND)
+
+		elseif (::oParam:lFIDC)
+
+			::nPerc := ::oParCalc:nPerc
+			lRet := .T.
+		
 		Else
 			
 			lRet := .T.
@@ -543,15 +630,16 @@ Return(lRet)
 
 
 Method CalcVal(nPerc) Class TWAFProrrogacaoBoletoReceber
-Local nRet := 0
-Local nCount := 0
-Local nDay := 0
+
+	Local nRet := 0
+	Local nCount := 0
+	Local nDay := 0
 
 	For nCount := 1 To Len(::oBrw:aCols)
 		
 		If ::oBrw:aCols[nCount, nP_MARK] == ::cChk
 
-			If ::oParam:lDepAnt
+			If ::oParam:lDepAnt .or. ::oParam:lFIDC
 
 				nDay := ::oParam:nQtdRef
 			
@@ -610,7 +698,8 @@ Return()
 
 
 Method Extend() Class TWAFProrrogacaoBoletoReceber
-Local oObj := Nil
+	
+	Local oObj := Nil
 		
 	oObj := TAFProrrogacaoBoletoReceber():New()
 	
@@ -626,13 +715,15 @@ Local oObj := Nil
 	oObj:cConta  := ::oParCalc:cConta
 	oObj:cObs := ::oParCalc:cObs
 	oObj:nDias := ::oParam:nQtdRef
+	oObj:dFIDC	:= ::dFIDC
+	oObj:lFIDC := ::oParam:lFIDC
 
 	If oObj:Process() .And. ::lCalc
 
 		MsgInfo("Título de juros criado com sucesso: " + Chr(13) + Chr(10) +;
 						"Número: " + Alltrim(oObj:oCR:cNumero) + Chr(13) + Chr(10) +;
 						"Valor: " + Alltrim(Transform(oObj:oCR:nValor, "@E 99,999,999.99")) + Chr(13) + Chr(10) +;
-						"Vencimento: " + dToC(oObj:oCR:dVencto) + Chr(13) + Chr(10) +;
+						"Vencimento: " + DtoC(oObj:oCR:dVencto) + Chr(13) + Chr(10) +;
 						"Cliente: " + oObj:oCR:cCliente + "-" + oObj:oCR:cLoja + "-" +;
 						AllTrim(Posicione("SA1", 1, xFilial("SA1") + oObj:oCR:cCliente + oObj:oCR:cLoja, "A1_NOME")), TIT_WND)
 																
@@ -651,8 +742,8 @@ Return()
 
 
 Method Sort(nCol) Class TWAFProrrogacaoBoletoReceber
-Local nSort := 0
-Local nCount := 0
+	
+	Local nSort := 0
 
 	If nCol > 2 .And. Len(::oBrw:aCols) > 1
 

@@ -16,10 +16,12 @@ Class TAFWorkFlowProcess From TAFWorkFlow
 	
 	Data bGetSQL 	as block
 	Data bSetField	as block
+	Data bFieldFil	as block
+	Data bSX2Alias	as block
 
 	Data cSX2Alias	as character
 	Data cFieldFil	as character
-	
+		
 	Data lAviso		as logical
 
 	Method New() Constructor
@@ -466,8 +468,11 @@ Method GetSQL(cTab, cFil, cID) Class TAFWorkFlowProcess
 	
 	Else
 
-		::cFieldFil:=(PrefixoCpo(SubStr(cTab,1,3))+"_FILIAL")
-		::cSX2Alias:=SubStr(cTab,1,3)
+		DEFAULT ::bFieldFil:={|cTab|(PrefixoCpo(SubStr(cTab,1,3))+"_FILIAL")}
+		DEFAULT ::bSX2Alias:={|cTab|SubStr(cTab,1,3)}
+
+		::cFieldFil:=eval(::bFieldFil,cTab)
+		::cSX2Alias:=eval(::bSX2Alias,cTab)
 
 		cXFilial:=xFilial(::cSX2Alias,cFil)
 
@@ -499,9 +504,13 @@ Method GetSQL(cTab, cFil, cID) Class TAFWorkFlowProcess
 		cSQL += " 	ORDER BY R_E_C_N_O_ DESC "
 		cSQL += " ), '') AS RETMEN "
 	
-		cSQL += " FROM " + cTab
-		cSQL += " WHERE " + ::cFieldFil + " = " + ValToSQL(cXFilial)
-		cSQL += " AND R_E_C_N_O_ IN "
+		cSQL += "  FROM " + cTab
+		cSQL += " WHERE "
+		if (!empty(::cFieldFil))
+			cSQL += ::cFieldFil + " = " + ValToSQL(cXFilial)
+			cSQL += " AND "
+		endif
+		cSQL += " R_E_C_N_O_ IN "
 		cSQL += " ( "
 		cSQL += " 	SELECT ZK2_IDTAB "
 		cSQL += " 	FROM "+ RetSQLName("ZK2")

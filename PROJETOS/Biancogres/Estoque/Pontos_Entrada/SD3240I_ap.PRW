@@ -32,7 +32,7 @@ User Function SD3240I()
 
 		
 		Else
-			_oMd:DevolucaoMovimentacao(SD3->D3_FILIAL,SD3->D3_DOC,"","","","",SD3->D3_COD,SD3->D3_QUANT,SD3->D3_LOCAL,;
+			_oMd:DevolucaoMovimentacao(SD3->D3_FILIAL,SD3->D3_YMATRIC,SD3->D3_DOC,"","","","",SD3->D3_COD,SD3->D3_QUANT,SD3->D3_LOCAL,;
 										cUserName,Alltrim(FunName()),SD3->D3_EMISSAO,"SD3",SD3->(Recno()))
 		EndIf
 	EndIf

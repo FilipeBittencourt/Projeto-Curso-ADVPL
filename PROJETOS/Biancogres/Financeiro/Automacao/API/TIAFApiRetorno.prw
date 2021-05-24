@@ -96,7 +96,9 @@ Method Receive() Class TIAFApiRetorno
 					oObj:cAgencia := ::oApi:oCedente:Agencia
 					oObj:cConta := ::oApi:oCedente:Conta
 					oObj:cCnpjEmissor := ::oRet:oRetorno:Arquivos[nX]:Registros[nY]:CpfCnpjEmissor
-
+					
+					oObj:cCodigoCedente := ::oRet:oRetorno:Arquivos[nX]:CodigoCedente
+					
 					// Identificacao do titulo
 					oObj:cNumero := ::oRet:oRetorno:Arquivos[nX]:Registros[nY]:NumeroDocumento
 					oObj:cEspecie := ::oRet:oRetorno:Arquivos[nX]:Registros[nY]:Especie

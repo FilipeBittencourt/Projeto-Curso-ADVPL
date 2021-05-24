@@ -622,6 +622,10 @@ Static Function RptDetail()
 
 							// Tratamento feito para comtemplar as MOD's que estão amarradas às linhas de produção/total. Além da MOD específica da Cogeração (COG).
 							xdContaC := Alltrim(Substr(MZ04->MODS, 5, 11))
+							// Conforme ticket 30233
+							If Alltrim(xdContaC) == "ATM"
+								xdContaC := "61103004"
+							EndIf
 							CT1->(dbSetOrder(1))
 							If !CT1->(dbSeek(xFilial("CT1")+xdContaC))
 								CT1->(dbSetOrder(1))

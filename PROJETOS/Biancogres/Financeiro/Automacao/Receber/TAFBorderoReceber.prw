@@ -25,6 +25,8 @@ Class TAFBorderoReceber From LongClassName
 	Method CleanBorSE1(nSE1RecNo, cStatus, cCodBar)
 	Method CleanBordero(cBordero, cPrefixo, cNum, cParcela, cTipo)
 	
+	Method CheckTrocaPortado()
+	
 EndClass
 
 
@@ -76,7 +78,9 @@ Method Create() Class TAFBorderoReceber
 				EndIf
 		 	
 				::oLst:GetItem(nCount):cNumBor := ::cNumBor
-							
+				
+				//::CheckTrocaPortado(nCount)	//Problemas na numeraçao
+						
 			 	// Analisar o preenchimento do nosso numero neste momento ou no retono da API
 			 	If Empty(::oLst:GetItem(nCount):cNumBco)
 			 		
@@ -186,6 +190,61 @@ Method Create() Class TAFBorderoReceber
 	::oLog:Insert()	
 	
 Return()
+
+Method CheckTrocaPortado(_nI) Class TAFBorderoReceber
+	
+	Local _lRet 		:= .F.
+	Local _aArea		:= SE1->(GetArea())
+	Local _cBanco		:= ""
+	Local _cAgencia		:= ""
+	Local _cConta		:= ""
+	Local _cID			:= ""
+	Local _cChave		:= ""
+	Local _cChaveBa1	:= ""
+	Local _cChaveBa2	:= ""
+	
+	_cBanco				:= ::oLst:GetItem(_nI):cBanco
+	_cAgencia			:= ::oLst:GetItem(_nI):cAgencia
+	_cConta				:= ::oLst:GetItem(_nI):cConta
+	_cID				:= ::oLst:GetItem(_nI):nRecNo
+	
+	DbSelectArea("SE1")
+	SE1->(MsGoTo(_cID))
+	
+	If (!SE1->(Eof()))
+		
+		If (!Empty(SE1->E1_PORTADO) .And. !Empty(SE1->E1_AGEDEP) .And. !Empty(SE1->E1_CONTA))
+		
+			If (;
+						AllTrim(_cBanco) 		!= AllTrim(SE1->E1_PORTADO) ;
+				.And.	AllTrim(_cAgencia)		!= AllTrim(SE1->E1_AGEDEP) ;
+				.And.	AllTrim(_cConta) 		!= AllTrim(SE1->E1_CONTA) ;
+			)
+				_lRet 		:= .T.
+				
+				_cChave	:= ""
+				_cChave += SE1->E1_PREFIXO
+				_cChave += SE1->E1_NUM
+				_cChave += SE1->E1_PARCELA
+				_cChave += SE1->E1_TIPO
+				_cChave += SE1->E1_CLIENTE
+				_cChave += SE1->E1_LOJA
+				
+				_cChaveBa1	:= _cBanco+_cAgencia+_cConta
+				_cChaveBa2	:= SE1->E1_PORTADO+SE1->E1_AGEDEP+SE1->E1_CONTA
+				
+				ConOut("TAF => TAFBorderoReceber:CheckTrocaPortado - " + cEmpAnt + cFilAnt + " -[Atual: "+_cChaveBa1+" / Anterior: "+_cChaveBa2+"] - DATE: "+DTOC(Date())+" TIME: "+Time())
+				ConOut("TAF => TAFBorderoReceber:CheckTrocaPortado - " + cEmpAnt + cFilAnt + " - " + _cChave+" - DATE: "+DTOC(Date())+" TIME: "+Time())
+			
+			EndIf
+			
+		EndIf
+		
+	EndIf
+	
+	SE1->(RetArea(_aArea))
+	
+Return _lRet
 
 
 Method GetNumBor() Class TAFBorderoReceber

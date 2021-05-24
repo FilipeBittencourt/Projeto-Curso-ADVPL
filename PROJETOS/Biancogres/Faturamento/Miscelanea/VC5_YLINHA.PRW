@@ -32,10 +32,16 @@ If Type("CREPATU")<>"U" .And. !Empty(CREPATU)
 	    ElseIf M->C5_YLINHA == "6" .And. !("1302" $ SA3->A3_YEMP)	                                                  
 	    	_lRet := .F.	
 	    EndIf
-	EndIf
-	
-	If !_lRet
-		MsgAlert("Empresa/Linha não permitida para o REPRESENTANTE.","Empresa do Pedido")
+
+		If !_lRet
+			MsgAlert("Empresa/Linha não permitida para o REPRESENTANTE.","Empresa do Pedido")
+		EndIf
+
+		//Ticket 32120, solicitação da Paloma
+		If _lRet .And. cEmpAnt != "07" .And. M->C5_YLINHA == "6"
+			MsgAlert("Pedidos Vinílico só podem ser feitos pela LM Comércio.","Empresa do Pedido")
+			_lRet := .F.
+		Endif
 	EndIf
 
 EndIf

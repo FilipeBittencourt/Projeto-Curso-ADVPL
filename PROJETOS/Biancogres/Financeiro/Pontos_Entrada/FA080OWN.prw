@@ -14,6 +14,21 @@
 ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 /*/
 User Function FA080OWN()
+
+	local lFA080OWN as logical
+
+		begin sequence
+			lFA080OWN:=(!FIDC():isPGFIDC(.T.))
+			if (!lFA080OWN)
+				break
+			endif
+			lFA080OWN:=FA080OWN()
+		end sequence
+
+	return(lFA080OWN)
+
+static function FA080OWN()
+
 LOCAL LRET := .T.
 
 If SE5->E5_DATA <= GETMV("MV_DATAFIN") .AND. SE5->E5_DATA <> DDATABASE

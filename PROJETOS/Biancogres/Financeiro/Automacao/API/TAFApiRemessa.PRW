@@ -15,6 +15,7 @@ Class TAFApiRemessa from LongClassName
 	Data oCedente
 	Data GArqRem
 	Data CMovRem
+	Data nOperacao
 
 	//dados para criacao de Lote
 	Data cLoteNumero
@@ -31,10 +32,11 @@ EndClass
 
 Method New(cCodEmp, cCodFil) Class TAFApiRemessa
 
-	::cCodEmp	:= cCodEmp
-	::cCodFil	:= cCodFil
-	::cCodBanco := ""
-	::oCedente := Nil
+	::cCodEmp		:= cCodEmp
+	::cCodFil		:= cCodFil
+	::cCodBanco 	:= ""
+	::oCedente		:= Nil
+	::nOperacao		:= 0
 
 	::cLoteNumero	:= Nil
 	::aLstBoleto := {}
@@ -115,6 +117,10 @@ Method Send() Class TAFApiRemessa
 		EndIf
 		
 		oLote:Operacao := 1
+		If (::nOperacao <> 0)
+			oLote:Operacao := ::nOperacao
+		EndIf
+		
 		//oLote:EmailCopia := UsrRetMail(__cUserId)
 
 		For nCount := 1 To Len(::aLstBoleto)
@@ -129,7 +135,7 @@ Method Send() Class TAFApiRemessa
 
 
 		//Nao enviar para PORTAL processos de alteracao de dados Bancarios via arquivo remessa
-		If Empty(::CMovRem)
+		If (::nOperacao == 0 .Or. ::nOperacao == 1) .And. Empty(::CMovRem)
 
 			/*
 			GRAVANDO BOLETOS NA STAGE AREA PARA PORTAL DE CLIENTES

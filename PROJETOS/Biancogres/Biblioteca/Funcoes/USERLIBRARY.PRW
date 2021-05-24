@@ -4451,7 +4451,7 @@ Local	lRet	:= .T.			//Retorno da Funcao
 		Else
 			//O Item Contabil deve ser preenchido apenas para a Classe de Valor do Investimento
 			//If SUBSTR(xClVl,1,1) <> "8" .AND. Alltrim(xClVl) <> '2130' .AND. Alltrim(xClVl) <> '2100' .AND. !EMPTY(xItemCta)
-			If SUBSTR(xClVl,1,1) <> "8" .AND. SUBSTR(xClVl,1,1) <> "2" .AND. !EMPTY(xItemCta) .AND. Alltrim(xClVl) <> '2130' .AND. Alltrim(xClVl) <> '1045' .AND. Alltrim(xClVl) <> '3145' .AND. Alltrim(xClVl) <> '3184' .AND. Alltrim(xClVl) <> '3185' .AND. Alltrim(xClVl) <> '3185' .AND. Alltrim(xClVl) <> '4011' .AND. Alltrim(xClVl) <> '6106'
+			If SUBSTR(xClVl,1,1) <> "8" .AND. SUBSTR(xClVl,1,1) <> "2" .AND. !EMPTY(xItemCta) .AND. Alltrim(xClVl) <> '1045' .AND. Alltrim(xClVl) <> '3145' .AND. Alltrim(xClVl) <> '3184' .AND. Alltrim(xClVl) <> '3185' .AND. Alltrim(xClVl) <> '4011' .AND. Alltrim(xClVl) <> '6106'
 				// Implementado Tratamento por Marcos Alberto Soprani para atender ao Projeto de Provisionamento de Comissão. Em 09/01/13
 				If Alltrim(FunName()) == "MATA103"
 					If Alltrim(SB1->B1_COD) <> "3060238" .and. Substr(xItemCta,1,3) <> "COM"

@@ -64,6 +64,8 @@ User Function MT100TOK()
 
 	Private xVldMpXml := .F. // Tratamento implementado por Marcos Alberto Soprani em 26/09/14, para não permitir a inclusão de uma nota fiscal de MP - Especie SPED/CTE sem xml.
 	
+	Private cCtrBloq := 0
+
 	//Thiago Haagensen - Ticket 28029 - DUPLICIDADE AO LANÇAR CTE NA MUNDI
 	If !fValidCHV()
 		Return .F.

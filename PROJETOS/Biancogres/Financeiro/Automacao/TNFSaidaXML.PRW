@@ -18,7 +18,7 @@ EndClass
 Method New(_cDir, _cFunOri, cPrexi) Class TNFSaidaXML
 	
 	Default _cDir		:= "\P10\CNAB\"+AllTrim(cEmpAnt)+AllTrim(cFilAnt)+"\RECEBIMENTOS\SAIDA\"
-	Default _cFunOri	:= "FIDC"
+	Default _cFunOri	:= "FIDC_RECEBER"
 	Default _cPrexi		:= ""
 	
 	::cDir			:= _cDir	
@@ -102,7 +102,7 @@ Method GerarArqPorChave(_cChave) Class TNFSaidaXML
 	
 Return(lRet)
 
-User Function FIDCXML(_cData)
+User Function FIDCXMLR(_cData)
 	
 	Local cQuery 		:= ""
 	Local cAliasTrab	:= Nil

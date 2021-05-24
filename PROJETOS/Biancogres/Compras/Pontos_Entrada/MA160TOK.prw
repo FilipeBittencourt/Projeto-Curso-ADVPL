@@ -48,8 +48,71 @@ Local aPlanilha := ParamIxb[nA_Planilha]
 		nX++
 		
 	EndDo()
-
+	
+	If (SUPERGETMV("MV_YRTPAY", .F., .F.))
+		If (lRet)
+			lRet := CheckCotPortal()
+		EndIf
+	EndIf
+	
 Return(lRet)
+
+
+
+Static Function CheckCotPortal()
+	
+	Local _lOk			:= .T.
+	Local _cCotacao		:= SC8->C8_NUM
+	Local _aAreaSC8		:= SC8->(GetArea())
+	Local _cTipo		:= ""
+	Local cAliasTemp 	:= Nil
+    Local cQuery	 	:= ""
+	
+	SC8->(DbSetOrder(1))
+	SC8->(DbSeek(xFilial('SC8')+_cCotacao))
+	
+	While (!SC8->(Eof()) .And. SC8->(C8_FILIAL+C8_NUM) == xFilial('SC8')+_cCotacao)
+		
+		_cTipo := SC8->C8_YTPPSS
+		
+		If (!Empty(_cTipo))
+			Exit
+		EndIf
+		
+		SC8->(DbSkip())
+	EndDo	
+	
+	//apenas cotações vinda do portal
+	If (_cTipo $ '1_2')	
+	
+		//If (TCSPExist("BPORTAL.dbo.Sp_BPortal_Sinc_Protheus_Cotacao_Portal"))
+			TCSQLEXEC("exec BPORTAL.dbo.Sp_BPortal_Sinc_Protheus_Cotacao_Portal")
+		//EndIf
+		
+		//If (TCSPExist("BPORTAL.dbo.Sp_BPortal_Sinc_Cotacao_Portal_Protheus"))
+			TCSQLEXEC("exec BPORTAL.dbo.Sp_BPortal_Sinc_Cotacao_Portal_Protheus")
+		//EndIf
+		
+		cAliasTemp	:= GetNextAlias()
+	    
+	    cQuery := " SELECT * 									"
+	    cQuery += " FROM dbo.BZINTEGRACAO_COTACAO_PORTAL A 		"
+	    cQuery += " WHERE A.EMPRESA  = '" + cEmpAnt +"'			"
+	    cQuery += " AND A.FILIAL     = '" + cFilAnt +"'			"
+	    //cQuery += " AND A.STATUS     = 'P' 						"
+	    cQuery += " AND A.COTACAO    = '"+_cCotacao+"'			"
+	     
+	    TcQuery cQuery New Alias (cAliasTemp)
+	    If (cAliasTemp)->(EOF())
+	    	MsgStop("Atenção, a cotação: "+ _cCotacao + " teve origem no portal. É necessário que exista dados da tabela integradora aguarda alguns até integração dos registros.", "MT160TOK")
+	    	_lOk := .F.
+	    EndIf
+		(cAliasTemp)->(DbCloseArea())
+	EndIf
+		
+	SC8->(RestArea(_aAreaSC8))
+		
+Return _lOk
 
 
 Static Function fVldDatChe(cNum, cFornece, cLoja, cItem, cNumPro)

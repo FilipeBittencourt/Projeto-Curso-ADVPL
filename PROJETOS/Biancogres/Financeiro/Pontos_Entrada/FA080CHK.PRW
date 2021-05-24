@@ -9,7 +9,22 @@
 @type function
 /*/
 
-User Function FA080CHK
+User Function FA080CHK()
+
+	local lFA080CHK as logical
+
+	begin sequence
+		lFA080CHK:=(!FIDC():isPGFIDC(.T.))
+		if (!lFA080CHK)
+			break
+		endif
+		lFA080CHK:=FA080CHK()
+	end sequence
+
+	return(lFA080CHK)
+
+static function FA080CHK()
+
 Local lRet := .T.
 Local aArea := GetArea()
 Local cAliasTmp

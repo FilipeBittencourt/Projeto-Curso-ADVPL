@@ -6,7 +6,12 @@ Class TPortalIntegracaoCC from LongClassName
 	
 	Public Method New() Constructor
 	Public Method Get()
+	Public Method List()
+	public Method GetPorContrato()
 	Public Method ConfirmReg()	
+	Public Method AtualizaContrato()
+	Public Method AtualizaPedido()
+	Public Method AtualizaVencedor()
 	
 EndClass
 
@@ -16,7 +21,7 @@ Method New() Class TPortalIntegracaoCC
 Return
 
 
-Method ConfirmReg(cID, cCotacao, cNUser) Class TPortalIntegracaoCC
+Method ConfirmReg(lNovo, cID, cCotacao, cItem, cNUser) Class TPortalIntegracaoCC
 	
 	Local cQuery 		:= ""
 	Local nStatus		:= 0
@@ -24,11 +29,14 @@ Method ConfirmReg(cID, cCotacao, cNUser) Class TPortalIntegracaoCC
 	
 	Default cNUser		:= 'JOB'
 	
-	cQuery := " UPDATE BZINTEGRACAO_COTACAO_PORTAL SET 					"
-	cQuery += " DATA_HORA_PROTHEUS 	= GETDATE(),						"
-	cQuery += " USUARIO_PROTHEUS 	= '"+cNUser+"'  					"
-	cQuery += " COTACAO			 	= '"+cCotacao+"',  					"
-	cQuery += " WHERE CODIGO 		= '"+cvaltochar(cID)+"'				"
+	cQuery := " UPDATE BZINTEGRACAO_COTACAO_PORTAL SET 							"
+	cQuery += " DATA_HORA_PROTHEUS 	= GETDATE()									"
+	cQuery += " ,STATUS 				= 'P'  									"
+	If(lNovo)
+		cQuery += " ,COTACAO			= '"+cCotacao+"' 	 					"
+		cQuery += " ,COTACAO_ITEM	 	= '"+cItem+"'	 						"
+	EndIf
+	cQuery += " WHERE ID 		= '"+AllTrim(cvaltochar(cID))+"'				"
 	
 	Conout("Portal Integração - Query: "+cQuery)
 	
@@ -40,20 +48,146 @@ Method ConfirmReg(cID, cCotacao, cNUser) Class TPortalIntegracaoCC
 	
 Return lRet
 
+Method AtualizaContrato(cCotacao, cCotacaoItem, cFornece, cLoja, cProduto, cProposta, cContrato, cItemContrato) Class TPortalIntegracaoCC
+	
+	Local cQuery 		:= ""
+	Local nStatus		:= 0
+	Local lRet			:= .T.
+	
+	Default cNUser		:= 'JOB'
+	
+	cQuery := " UPDATE BZINTEGRACAO_COTACAO_PORTAL SET 							"
+	cQuery += " CONTRATO		 	= '"+cContrato+"'  ,						"
+	cQuery += " CONTRATO_ITEM	 	= '"+cItemContrato+"'	 					"
+	cQuery += " WHERE COTACAO 		= '"+AllTrim(cCotacao)+"'					"
+	cQuery += " AND COTACAO_ITEM	= '"+AllTrim(cCotacaoItem)+"'				"
+	cQuery += " AND FORNE_COD		= '"+AllTrim(cFornece)+"'					"
+	cQuery += " AND FORNE_LOJA		= '"+AllTrim(cLoja)+"'						"
+	cQuery += " AND PRODUTO			= '"+AllTrim(cProduto)+"'					"
+	cQuery += " AND PROPOSTA		= '"+AllTrim(cProposta)+"'					"
+	
+	Conout("Portal Integração - AtualizaContrato - Query: "+cQuery)
+	
+	nStatus := TCSqlExec(cQuery)
+   
+	If (nStatus < 0)
+		lRet	:= .F.
+	EndIf
+	
+Return lRet
+
+Method AtualizaPedido(cCotacao, cCotacaoItem, cFornece, cLoja, cProduto, cProposta, cPedido, cItemPedido) Class TPortalIntegracaoCC
+	
+	Local cQuery 		:= ""
+	Local nStatus		:= 0
+	Local lRet			:= .T.
+	
+	Default cNUser		:= 'JOB'
+	
+	cQuery := " UPDATE BZINTEGRACAO_COTACAO_PORTAL SET 							"
+	cQuery += " PEDIDO			 	= '"+cPedido+"' , 							"
+	cQuery += " PEDIDO_ITEM		 	= '"+cItemPedido+"'		 					"
+	cQuery += " WHERE COTACAO 		= '"+AllTrim(cCotacao)+"'					"
+	cQuery += " AND COTACAO_ITEM	= '"+AllTrim(cCotacaoItem)+"'				"
+	cQuery += " AND FORNE_COD		= '"+AllTrim(cFornece)+"'					"
+	cQuery += " AND FORNE_LOJA		= '"+AllTrim(cLoja)+"'						"
+	cQuery += " AND PRODUTO			= '"+AllTrim(cProduto)+"'					"
+	cQuery += " AND PROPOSTA		= '"+AllTrim(cProposta)+"'					"
+	
+	Conout("Portal Integração - AtualizaPedido - Query: "+cQuery)
+	
+	nStatus := TCSqlExec(cQuery)
+   
+	If (nStatus < 0)
+		lRet	:= .F.
+	EndIf
+	
+Return lRet
+
+Method AtualizaVencedor(cCotacao, cCotacaoItem, cFornece, cLoja, cProduto, cProposta) Class TPortalIntegracaoCC
+	
+	Local cQuery 		:= ""
+	Local nStatus		:= 0
+	Local lRet			:= .T.
+	
+	Default cNUser		:= 'JOB'
+	
+	
+	cQuery := " UPDATE BZINTEGRACAO_COTACAO_PORTAL SET 							"
+	cQuery += " VENCEDOR			= '1' 			 							"
+	cQuery += " WHERE COTACAO 		= '"+AllTrim(cCotacao)+"'					"
+	cQuery += " AND COTACAO_ITEM	= '"+AllTrim(cCotacaoItem)+"'				"
+	cQuery += " AND FORNE_COD		= '"+AllTrim(cFornece)+"'					"
+	cQuery += " AND FORNE_LOJA		= '"+AllTrim(cLoja)+"'						"
+	cQuery += " AND PRODUTO			= '"+AllTrim(cProduto)+"'					"
+	cQuery += " AND PROPOSTA		= '"+AllTrim(cProposta)+"'					"
+	
+	Conout("Portal Integração - AtualizaPedido - Query: "+cQuery)
+	
+	nStatus := TCSqlExec(cQuery)
+   
+	If (nStatus < 0)
+		lRet	:= .F.
+	EndIf
+	
+Return lRet
 
 
 Method Get() Class TPortalIntegracaoCC
 	
-	Local cAliasTemp		:= GetNextAlias()
 	Local cQuery			:= ""
+	Local oList				:= ArrayList():New()
+	
+	cQuery	+= " select 								 									"
+	cQuery	+= " DT_INI_CON=CONVERT(varchar(8), DATA_INICIO_CONTRATO, 112), 				"
+	cQuery	+= " DT_FIN_CON=CONVERT(varchar(8), DATA_FINAL_CONTRATO, 112), 					"
+	cQuery	+= " DT_VALIDADE=CONVERT(varchar(8), DATA_VALIDADE, 112),	 					"
+	cQuery	+= " DT_NECESSIDADE=CONVERT(varchar(8), DATA_NECESSIDADE, 112),	 				"
+	
+	cQuery	+= " * from																		"
+	cQuery	+= " BZINTEGRACAO_COTACAO_PORTAL												"
+	cQuery	+= " where STATUS = 'A' AND DATA_HORA_PROTHEUS IS NULL	AND NUMERO_SC <> ''		"
+	cQuery	+= " AND ORIGEM != '2'															"
+	
+	cQuery	+= "  order by  FILIAL, COTACAO, FORNE_COD, FORNE_LOJA, PROPOSTA, COTACAO_ITEM												"
+	
+	oList	:= ::List(cQuery)
+	
+Return(oList)
+
+
+Method GetPorContrato(_cContra, _cContraItem) Class TPortalIntegracaoCC
+	
+	Local cQuery			:= ""
+	Local oList				:= ArrayList():New()
+	
+	cQuery	+= " select 								 									"
+	cQuery	+= " DT_INI_CON=CONVERT(varchar(8), DATA_INICIO_CONTRATO, 112), 				"
+	cQuery	+= " DT_FIN_CON=CONVERT(varchar(8), DATA_FINAL_CONTRATO, 112), 					"
+	cQuery	+= " DT_VALIDADE=CONVERT(varchar(8), DATA_VALIDADE, 112),	 					"
+	cQuery	+= " DT_NECESSIDADE=CONVERT(varchar(8), DATA_NECESSIDADE, 112),	 					"
+	
+	cQuery	+= " * from																		"
+	cQuery	+= " BZINTEGRACAO_COTACAO_PORTAL												"
+	cQuery	+= " where CONTRATO = '"+_cContra+"'											"
+	cQuery	+= " AND CONTRATO_ITEM = '"+_cContraItem+"'										"
+	
+	conout(cQuery)
+	oList	:= ::List(cQuery)
+	
+	
+Return(oList)
+
+
+Method List(cQuery) Class TPortalIntegracaoCC
+	
+	Local cAliasTemp		:= GetNextAlias()
+//	Local cQuery			:= ""
 	Local oCCStruct			:= Nil
 	Local oList				:= ArrayList():New()
 	Local lOk				:= .T.
 	Local cCodigo			:= ""
 	Local cMsgLog			:= ""
-	
-	cQuery	+= " select * from BZINTEGRACAO_COTACAO_PORTAL								"
-	cQuery	+= " where STATUS = 'A' AND DATA_HORA_PROTHEUS IS NULL						"
 	
 	TcQuery cQuery New Alias (cAliasTemp)
 	
@@ -63,14 +197,25 @@ Method Get() Class TPortalIntegracaoCC
 		cMsgLog				:= ""
 		oCCStruct			:= TCCStruct():New()
 		
-		oCCStruct:cNumero	:= ""
+		oCCStruct:cNumero	:= (cAliasTemp)->COTACAO
 		oCCStruct:cEmp      := (cAliasTemp)->EMPRESA
 		oCCStruct:cFil      := (cAliasTemp)->FILIAL
 		oCCStruct:cID 	    := (cAliasTemp)->CODIGO
 		
-		cCodigo := AllTrim((cAliasTemp)->CODIGO)
+		cChave := ""
+		bValid	:= {|| }
 		
-		While (!(cAliasTemp)->(EoF())  .And. AllTrim((cAliasTemp)->CODIGO) == AllTrim(cCodigo))
+		If (Empty((cAliasTemp)->COTACAO))
+			cChave	:= AllTrim((cAliasTemp)->CODIGO)
+			bValid	:= {|| AllTrim((cAliasTemp)->CODIGO) == cChave }
+		Else
+			cChave	:= AllTrim((cAliasTemp)->COTACAO)
+			bValid	:= {|| AllTrim((cAliasTemp)->COTACAO) == cChave }
+		EndIf
+		
+		
+		While (!(cAliasTemp)->(EoF())  .And.;
+		 Eval(bValid))
 			
 			DbSelectArea('SA2')
 			SA2->(DbSetOrder(1))
@@ -82,13 +227,14 @@ Method Get() Class TPortalIntegracaoCC
 				If (SB1->(DbSeek(xFilial('SB1')+PADR((cAliasTemp)->PRODUTO, TamSx3("B1_COD")[1]))))
 					
 					oCCItemStruct	 				:= TCCItemStruct():New()
+					oCCItemStruct:cID		 	   	:= (cAliasTemp)->ID
 					oCCItemStruct:cNomeFornece 	   	:= SA2->A2_NOME
 					oCCItemStruct:cForMail			:= SA2->A2_EMAIL
 					oCCItemStruct:cFornece 	    	:= (cAliasTemp)->FORNE_COD
 					oCCItemStruct:cLoja	    		:= (cAliasTemp)->FORNE_LOJA
-					oCCItemStruct:cCond      	  	:= SA2->A2_COND //(cAliasTemp)->COND_PAG
+					oCCItemStruct:cCond      	  	:= SA2->A2_COND 
 					oCCItemStruct:cContato   	  	:= (cAliasTemp)->CONTATO
-					oCCItemStruct:cTipoFrete	   	:= (cAliasTemp)->TIPO_FRETE
+					oCCItemStruct:cTipoFrete	   	:= IIF((cAliasTemp)->TIPO_FRETE == '1', 'C', 'F')
 					oCCItemStruct:cMoeda       		:= (cAliasTemp)->MOEDA
 					oCCItemStruct:dEmissao  	   	:= (cAliasTemp)->DATA_EMISSAO
 						
@@ -98,6 +244,11 @@ Method Get() Class TPortalIntegracaoCC
 					oCCItemStruct:cNumPro			:= (cAliasTemp)->PROPOSTA
 					oCCItemStruct:cProd            	:= (cAliasTemp)->PRODUTO
 					oCCItemStruct:cItem            	:= (cAliasTemp)->ITEM
+					
+					If (!Empty((cAliasTemp)->COTACAO_ITEM))
+						oCCItemStruct:cItem			:= (cAliasTemp)->COTACAO_ITEM
+					EndIf
+					
 					oCCItemStruct:cUM				:= SB1->B1_UM 
 					oCCItemStruct:cSegUM			:= SB1->B1_SEGUM //TODO tratar fator conversão
 					oCCItemStruct:nQuantSegUM 	    := (cAliasTemp)->QUANTIDADE
@@ -113,10 +264,16 @@ Method Get() Class TPortalIntegracaoCC
 					oCCItemStruct:cObervacao      	:= (cAliasTemp)->OBSERVACAO
 					oCCItemStruct:nPrazo          	:= (cAliasTemp)->PRAZO
 					oCCItemStruct:cOrcForn        	:= (cAliasTemp)->FORNE_ORCAMENTO
-					oCCItemStruct:cCond           	:= (cAliasTemp)->COND_PAG
-					oCCItemStruct:dValidade       	:= (cAliasTemp)->DATA_VALIDADE
+					oCCItemStruct:dValidade       	:= (cAliasTemp)->DT_VALIDADE
 					oCCItemStruct:cFlag           	:= ""
+					
 					oCCItemStruct:nValorSub      	:= (cAliasTemp)->VALOR_SUB
+					
+					oCCItemStruct:dInicioContrato  	:= (cAliasTemp)->DT_INI_CON
+					oCCItemStruct:dFinalContrato   	:= (cAliasTemp)->DT_FIN_CON
+					oCCItemStruct:dNecessidade		:= (cAliasTemp)->DT_NECESSIDADE
+					
+					oCCItemStruct:cCondCotacao		:= (cAliasTemp)->COND_PAG
 					
 					//oCCItemStruct:cEmail          := ""
 					//oCCItemStruct:dDataChe		:= ""

@@ -128,11 +128,15 @@ Local cBizagi := U_fGetBase("2")
 				cHtml	+= fRetRod()
 				
 				cAssunto := "Recebimento de Material"
-				
-				if aSolCom[_MD] = 'S'
+				/*
+				if aSolCom[_MD] == 'S'
 				  cAssunto := "Recebimento de Material - RETIRADA IMEDIATA"
 				endif
-				
+				*/
+ 				if Len(aSolCom) == _MD .And. aSolCom[_MD] == 'S'
+					cAssunto := "Recebimento de Material - RETIRADA IMEDIATA"
+				endif
+
 				fSendMail(cMailSol, cHtml, cAssunto)
 							
 				cItem := ""

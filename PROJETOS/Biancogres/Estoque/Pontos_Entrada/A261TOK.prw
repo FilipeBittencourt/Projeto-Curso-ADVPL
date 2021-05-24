@@ -14,6 +14,11 @@ User Function A261TOK()
 	Local zlRet := .T.
 	Local nLocal := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_LOCAL"})
 	Local nLocDest := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_LOCAL"},nLocal+1)
+	Local nPosPrd := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_COD"})
+	Local nPosPrdD := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_COD"},nPosPrd+1)
+	Local _oMd	:=	TBiaControleMD():New()
+
+
 	Local I
 	
 	Local _nQuant			:= 0
@@ -26,6 +31,25 @@ User Function A261TOK()
 	
 	//2060352
 	For I := 1 To Len(aCols)
+
+		If _oMd:CheckMd(aCols[I][nPosPrd],aCols[I][nLocal]) .And. _oMd:CheckMd(aCols[I][nPosPrdD],aCols[I][nLocDest])
+			If (IsBlind())
+				Conout("Impossível prosseguir, o produto "+ aCols[I][nPosPrd] +" é MD na ORIGEM e no DESTINO  => MT260TOK")
+			Else	
+				MsgSTOP("Impossível prosseguir, o produto "+ aCols[I][nPosPrd] +" é MD na ORIGEM e no DESTINO  => MT260TOK")
+			EndIf
+			Return .F.
+		EndIf
+	
+		If !_oMd:CheckMd(aCols[I][nPosPrd],aCols[I][nLocal]) .And. _oMd:CheckMd(aCols[I][nPosPrdD],aCols[I][nLocDest])
+			If (IsBlind())
+				Conout("Impossível prosseguir, o produto "+ aCols[I][nPosPrdD] +" não é MD na ORIGEM e é MD no DESTINO  => MT260TOK")
+			Else	
+				MsgSTOP("Impossível prosseguir, o produto "+aCols[I][nPosPrdD]+" não é MD na ORIGEM e é MD no DESTINO  => MT260TOK")
+			EndIf
+			Return .F.
+		EndIf
+	
 		wCod 		:= Gdfieldget('D3_COD',I)
 		cAlmVend	:= aCols[I][nLocDest]
 

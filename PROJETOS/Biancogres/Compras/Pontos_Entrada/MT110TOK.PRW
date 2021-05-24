@@ -29,6 +29,8 @@ User Function MT110TOK()
 	Private cInd	:= 0
 	Private cReg	:= 0
 
+	Private cCtrBloq := 0
+
 	cArq := Alias()
 	cInd := IndexOrd()
 	cReg := Recno()

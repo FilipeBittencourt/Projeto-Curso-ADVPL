@@ -51,7 +51,12 @@ Method GetCabecalho() Class TAutorizacaoEntrega
 	aAdd(aCabec,{"C7_COND"		, PADR(::oObj:cCond, TamSx3("C7_COND")[1])			, Nil})
 	aAdd(aCabec,{"C7_CONTATO"	, PADR(::oObj:cContato, TamSx3("C7_CONTATO")[1])		, Nil})
 	aAdd(aCabec,{"C7_CONTRA"	, PADR(::oObj:cContrato, TamSx3("C7_CONTRA")[1])		, Nil})
-	aAdd(aCabec,{"C7_TPFRETE"	, ::oObj:cTipoFrete									, Nil})
+	
+	If (!Empty(::oObj:cTipoFrete	))
+		aAdd(aCabec,{"C7_TPFRETE"	, ::oObj:cTipoFrete									, Nil})
+	Else
+		aAdd(aCabec,{"C7_TPFRETE"	, 'S'									, Nil})
+	EndIf
 	aAdd(aCabec,{"C7_MOEDA" 	, ::oObj:cMoeda										, Nil})	
 	
 		
@@ -83,6 +88,27 @@ Method GetItens() Class TAutorizacaoEntrega
 		
 		aAdd(aItem,			{"C7_NUMSC" 		, PADR(oItem:cNumSc, TamSx3("C7_NUMSC")[1])				, Nil})
 		aAdd(aItem,			{"C7_ITEMSC" 		, PADR(oItem:cItemSc, TamSx3("C7_ITEMSC")[1])			, Nil})
+		
+		aAdd(aItem,			{"C7_CC"			, PADR(oItem:cCC, TamSx3("C7_CC")[1])					, Nil})	
+		aAdd(aItem,			{"C7_CLVL"			, PADR(oItem:cClVl, TamSx3("C7_CLVL")[1])				, Nil})	
+		
+		If (!Empty(oItem:cDriver))
+			aAdd(aItem,			{"C7_YDRIVER"		, PADR(oItem:cDriver, TamSx3("C7_YDRIVER")[1])			, Nil})	
+		EndIf
+		aAdd(aItem,			{"C7_CONAPRO"			, PADR('L', TamSx3("C7_CONAPRO")[1])				, Nil})	
+		
+		aAdd(aItem,			{"C7_YAPLIC"			, PADR(oItem:cAplicacao, TamSx3("C7_YAPLIC")[1])				, Nil})	
+		aAdd(aItem,			{"C7_YTAG"				, PADR(oItem:cTag, TamSx3("C7_YTAG")[1])				, Nil})	
+		aAdd(aItem,			{"C7_YENVAUT"			, PADR('S', TamSx3("C7_YENVAUT")[1])				, Nil})	
+		
+		aAdd(aItem,			{"C7_DATPRF"			, oItem:dDataEntrega				, Nil})	
+		aAdd(aItem,			{"C7_YDATCHE"			, oItem:dDataChegada				, Nil})	
+		
+		aAdd(aItem,			{"C7_QTDSOL"			, oItem:nQuant				, Nil})	
+		
+		//C7_QTDSOL
+		
+		
 	//	aAdd(aItem,			{"C7_QTDSOL" 		, oItem:nQuantSc										, Nil})
 		
 		//If (!Empty(oItem:cCodTab))
@@ -91,7 +117,7 @@ Method GetItens() Class TAutorizacaoEntrega
 		
 		//aAdd(aItem,			{"C7_TES" 			, PADR(oItem:cTES, TamSx3("C7_TES")[1])	 				, Nil})
 		//aadd(aItem,			{"C7_YTRANSP" 		, PADR(oItem:cTransp, TamSx3("C7_YTRANSP")[1])			, Nil})
-		//aadd(aItem,			{"C7_APROV" 		, PADR('000000', TamSx3("C7_APROV")[1])					, Nil})
+		//aadd(aItem,			{"C7_USER" 		, PADR(RetCodUsr(), TamSx3("C7_USER")[1])					, Nil})
 						
 		AAdd(aItens, aItem)
 	
@@ -125,31 +151,37 @@ Method Execute(_oObj) Class TAutorizacaoEntrega
 		aCabec	:= ::GetCabecalho()
 		aItens	:= ::GetItens()
 		
-		Begin Transaction
-			
-			MSExecAuto({|k,v,w,x,y,z| MATA120(k,v,w,x,y,z)},2, aCabec, aItens,3,,)
-			
-			If (!lMsErroAuto)
-			
-				lOk			:= .T.
-				cMsgLog 	:= "[Autorização de Entrega Numero: "+::oObj:cNumero+", Fornecedor: "+::oObj:cFornece+"] => inserida com sucesso."
-			
-			Else
-				
-				DisarmTransaction()
-				
-				lOk			:= .F.
-				cMsgLog 	:= "[Autorização de Entrega Numero: "+::oObj:cNumero+", Fornecedor: "+::oObj:cFornece+"] Erro => "+ CRLF
-				
-				aErroAuto	:= GetAutoGRLog()
-				
-				For nI := 1 To Len(aErroAuto)
-					cMsgLog += StrTran(StrTran(aErroAuto[nI], "<", ""), "-", "") + " "
-				Next nI		
-				
+		MSExecAuto({|k,v,w,x,y,z| MATA120(k,v,w,x,y,z)},2, aCabec, aItens,3,,)
+		
+		If (!lMsErroAuto)
+		
+			DbSelectArea('SC7')
+			SC7->(DbSetOrder(1))
+			If (SC7->(DbSeek(xFilial('SC7')+PADR(::oObj:cNumero, TamSx3("C7_NUM")[1]))) )
+				While SC7->C7_FILIAL+SC7->C7_NUM  == xFilial('SC7')+PADR(::oObj:cNumero, TamSx3("C7_NUM")[1])	
+					RecLock("SC7",.F.)
+						SC7->C7_CONAPRO := 'L'
+					SC7->(MsUnlock())
+					
+					SC7->(DbSkip())
+				EndDo	
 			EndIf
 			
-		End Transaction 	
+			lOk			:= .T.
+			cMsgLog 	:= "[Autorização de Entrega Numero: "+::oObj:cNumero+", Fornecedor: "+::oObj:cFornece+"] => inserida com sucesso."
+		
+		Else
+			
+			lOk			:= .F.
+			cMsgLog 	:= "[Autorização de Entrega Numero: "+::oObj:cNumero+", Fornecedor: "+::oObj:cFornece+"] Erro => "+ CRLF
+			
+			aErroAuto	:= GetAutoGRLog()
+			
+			For nI := 1 To Len(aErroAuto)
+				cMsgLog += StrTran(StrTran(aErroAuto[nI], "<", ""), "-", "") + " "
+			Next nI		
+			
+		EndIf
 	
 	Else
 		
@@ -158,10 +190,7 @@ Method Execute(_oObj) Class TAutorizacaoEntrega
 		
 	EndIf
 	
-	conout("passei ==>")
-	conout(cMsgLog)
-	::oResult:Add(lOk, cMsgLog)
-	
+	::oResult:Add(lOk, cMsgLog)	
 
 Return ::oResult
 
@@ -221,6 +250,14 @@ Class TAEItemStruct From LongClassName
 	Public Data nTotal
 	Public Data cTes
 	Public Data cTransp
+	Public Data cCC
+	Public Data cClVl
+	Public Data cDriver	
+	Public Data cID
+	Public Data cAplicacao
+	Public Data cTag
+	Public Data dDataEntrega
+	Public Data dDataChegada
 		
 	Public Method New() Constructor
 
@@ -241,6 +278,14 @@ Method New() Class TAEItemStruct
 	::nTotal		:= 0
 	::cTES			:= ""
 	::cTransp		:= ""
+	::cCC			:= ""
+	::cClVl			:= ""
+	::cDriver		:= ""
+	::cID			:= ""
+	::cAplicacao	:= ""	
+	::cTag			:= ""	
+	::dDataEntrega	:= Date()
+	::dDataChegada	:= Date()
 		
 Return()
 

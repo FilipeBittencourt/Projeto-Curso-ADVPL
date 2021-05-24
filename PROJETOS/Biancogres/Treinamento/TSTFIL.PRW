@@ -5,21 +5,26 @@
 // U_TSTFIL
 User Function TSTFIL()
 
-  /*RpcClearEnv()
+  RpcClearEnv()
   If Select("SX6") <= 0
-    RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
-  EndIf*/
+    RPCSetEnv("07", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+  EndIf
+
+  //Local cEmp := "0101"
+  //cEmp := "SC6"+SUBSTR(cEmp,0,1)+"0"
 
 
 
+  //u_Env_Pedido('BJBGJO',,,'01',.T.)
+  //u_FROPRT08()
   //TSTFIL001() // biaxfunc.prw  - Teste Email SEND
   //TSTFIL002() // Teste pedidos provisionados
   //TSTFIL003()
   //TSTFIL004()
-  //TSTFIL005() //Montar classe de envio de email e enviando
-  TSTFIL006()
+  TSTFIL005() //Montar classe de envio de email e enviando
+  //TSTFIL006()
 
-  
+
 
   //DbSelectArea("SC0")
   //X31UPDTABLE('SC0')
@@ -452,5 +457,5 @@ Static Function TSTFIL006()
 
   ALERT( ASCAN(aArrX, { |x| UPPER(x) == "BD0433B3" }) )
 
-  if ASCAN(aArrX, { |x| UPPER(AllTrim(x)) == UPPER(AllTrim((cAliasTmp)->COD })))
+  //if ASCAN(aArrX, { |x| UPPER(AllTrim(x)) == UPPER(AllTrim((cAliasTmp)->COD })))
 Return

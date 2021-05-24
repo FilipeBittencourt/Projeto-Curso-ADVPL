@@ -497,7 +497,7 @@ Static Function UNOVO()
 
 	EndIf
 
-	_ItemsMarca := {"0101=BIANCOGRES","0199=PEGASUS","0501=INCESA","0599=BELLACASA","1399=MUNDIALLI"} 
+	_ItemsMarca := {"0101=BIANCOGRES","0199=PEGASUS","0501=INCESA","0599=BELLACASA","1399=MUNDIALLI", "1302=VINILICO"} 
 	IF ALLTRIM(CREPATU) <> ""
 
 		_ItemsMarca := {}
@@ -522,8 +522,10 @@ Static Function UNOVO()
 					AAdd(_ItemsMarca, "0599=BELLACASA")
 				ElseIf AllTrim(_aMarcas[I]) == "1399"
 					AAdd(_ItemsMarca, "1399=MUNDIALLI")
+				ElseIf AllTrim(_aMarcas[I]) == "1302"
+					AAdd(_ItemsMarca, "1302=VINILICO")
 				ElseIf AllTrim(_aMarcas[I]) == "XXXX"
-					_ItemsMarca := {"0101=BIANCOGRES","0199=PEGASUS","0501=INCESA","0599=BELLACASA","1399=MUNDIALLI"}
+					_ItemsMarca := {"0101=BIANCOGRES","0199=PEGASUS","0501=INCESA","0599=BELLACASA","1399=MUNDIALLI","1302=VINILICO"}
 					exit
 				EndIf
 

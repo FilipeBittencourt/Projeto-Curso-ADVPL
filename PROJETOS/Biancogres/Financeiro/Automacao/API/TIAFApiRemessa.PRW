@@ -16,6 +16,7 @@ Class TIAFApiRemessa from LongClassName
 	Data cReimpr // N=Nao (incluir novo titulo); S=Sim (reimprimir / segunda via de boleto)
 	Data GArqRem // S=Gera arquivo de remessa; N=Nao gera
 	Data CMovRem
+	Data nOperacao
 	
 	Method New() Constructor
 	Method Send() // Envia titulos
@@ -25,11 +26,12 @@ EndClass
 
 Method New() Class TIAFApiRemessa
 
-	::oRem := Nil
-	::oRet := Nil
-	::cReimpr := "N"
-	::GArqRem := "N"
-	::CMovRem := ""
+	::oRem 		:= Nil
+	::oRet 		:= Nil
+	::cReimpr	:= "N"
+	::GArqRem	:= "N"
+	::CMovRem	:= ""
+	::nOperacao	:= 0
 
 Return()
 
@@ -40,8 +42,9 @@ Local oBol := Nil
 
 	::oRem := TAFApiRemessa():New(oLst:GetItem(nCount):cEmp, oLst:GetItem(nCount):cFil)
 	::oRem:SetParametros(oLst:GetItem(nCount):cCnpj, oLst:GetItem(nCount):cBanco, oLst:GetItem(nCount):cAgencia, oLst:GetItem(nCount):cConta, oLst:GetItem(nCount):cSubCta)
-	::oRem:GArqRem := ::GArqRem
-	::oRem:CMovRem := ::CMovRem
+	::oRem:GArqRem		:= ::GArqRem
+	::oRem:CMovRem		:= ::CMovRem
+	::oRem:nOperacao	:= ::nOperacao
 		
 	While nCount <= oLst:GetCount()
 		
@@ -49,8 +52,13 @@ Local oBol := Nil
 		::oRem:cLoteNumero := oLst:GetItem(nCount):cNumBor
 
 		oBol := ::oRem:AddBoleto()
-				
-		oBol:Sacado := TAFApiSacado():NewByCliente(oLst:GetItem(nCount):cEmp, oLst:GetItem(nCount):cFil, oLst:GetItem(nCount):cCliFor, oLst:GetItem(nCount):cLoja)
+		
+		If ( ::nOperacao == 0 .or.  ::nOperacao == 1)		
+			oBol:Sacado := TAFApiSacado():NewByCliente(oLst:GetItem(nCount):cEmp, oLst:GetItem(nCount):cFil, oLst:GetItem(nCount):cCliFor, oLst:GetItem(nCount):cLoja)
+		Else
+			oBol:Sacado := TAFApiSacado():NewByFornecedor(oLst:GetItem(nCount):cEmp, oLst:GetItem(nCount):cFil, oLst:GetItem(nCount):cCliFor, oLst:GetItem(nCount):cLoja)
+		EndIf
+		
 		oBol:NumDoc := oLst:GetItem(nCount):cNumero + AllTrim(oLst:GetItem(nCount):cParcela) 
 		oBol:NumLote := oLst:GetItem(nCount):cNumBor
 		oBol:DtEmissao := oLst:GetItem(nCount):dEmissao

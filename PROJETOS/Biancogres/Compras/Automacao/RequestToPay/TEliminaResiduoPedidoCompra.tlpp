@@ -33,7 +33,7 @@ Method Execute (_cNum) Class TEliminaResiduoPedidoCompra
 		SC7->(DbSetOrder(1))
 		If (SC7->(DbSeek(xFilial('SC7')+::cNumPed)))
 			
-			MA235PC(100, 1, FirstYDate(YearSub(sToD(SC7->C7_EMISSAO), 1)), LastYDate(sToD(SC7->C7_EMISSAO)), SC7->C7_NUM, SC7->C7_NUM, Space(1), Replicate("Z", 15), SC7->C7_FORNECE, SC7->C7_FORNECE)	
+			MA235PC(100, 1, FirstYDate(YearSub(SC7->C7_EMISSAO, 1)), LastYDate(SC7->C7_EMISSAO), SC7->C7_NUM, SC7->C7_NUM, Space(1), Replicate("Z", 15), SC7->C7_FORNECE, SC7->C7_FORNECE)	
 			
 			If (::CheckResiduo(::cNumPed))
 				::Update(::cNumPed)

@@ -47,7 +47,8 @@ User Function BIA864()
 		"Acabamento",;
 		"Espessura",;
 		"Tipo Versão Contábil",;
-		"Versão Contábil";			
+		"Versão Contábil",;
+		"Classe de Valor por Linha";			
 		SIZE 150,10 OF oDlg PIXEL
 
 		DEFINE SBUTTON FROM 255,085 TYPE 1 ENABLE OF oDlg ACTION (nOpca := 1, oDlg:End())
@@ -119,6 +120,9 @@ User Function BIA864()
 
 			ElseIf nRadio == 21
 				BIA864_21()					// Versão Contábil
+
+			ElseIf nRadio == 22
+				BIA864_22()					// Cadastro de Classe de Valor por Linha de Produção
 
 			EndIf
 
@@ -273,6 +277,12 @@ Return
 Static Function BIA864_21()
 
 	AXCADASTRO("ZOY","Versão Contábil")
+
+Return
+
+Static Function BIA864_22()
+
+	AXCADASTRO("ZCS", "Cadastro de Classe de Valor por Linha de Fabricação")
 
 Return
 

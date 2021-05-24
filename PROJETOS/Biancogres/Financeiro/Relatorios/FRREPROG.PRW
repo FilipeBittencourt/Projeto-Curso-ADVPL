@@ -1,4 +1,5 @@
 #INCLUDE "TOTVS.CH"
+#INCLUDE "TOTVS.CH"
 #INCLUDE "TOPCONN.CH"
 
 User Function FRREPROG()
@@ -9,45 +10,46 @@ User Function FRREPROG()
     Local cFileName := __cUserID +"_"+ cName
 
     Private oParam
-    Private _cProcDe    := Space(TamSx3("ZK8_NUMERO")[1])
-    Private _cProcAte   := Space(TamSx3("ZK8_NUMERO")[1])
+    Private _cProcDe    := Space(GetSX3Cache("ZK8_NUMERO","X3_TAMANHO"))
+    Private _cProcAte   := Space(GetSX3Cache("ZK8_NUMERO","X3_TAMANHO"))
     Private _dDatVDe    := CTOD(" ") // Data de
     Private _dDatVAte   := CTOD(" ") // Data ate
-    Private _cCliDe     := Space(TamSx3("A1_COD")[1]) // Cli/Forn de
-    Private _cCliAte    := Space(TamSx3("A1_COD")[1]) // Cli/Forn ate
-    Private _cGrupoDe   := Space(TamSx3("ZK8_GRPVEN")[1]) // Grupo cliente de
-    Private _cGrupoAte  := Space(TamSx3("ZK8_GRPVEN")[1]) // Grupo cliente ate
+    Private _cCliDe     := Space(GetSX3Cache("A1_COD","X3_TAMANHO")) // Cli/Forn de
+    Private _cCliAte    := Space(GetSX3Cache("A1_COD","X3_TAMANHO")) // Cli/Forn ate
+    Private _cGrupoDe   := Space(GetSX3Cache("ZK8_GRPVEN","X3_TAMANHO")) // Grupo cliente de
+    Private _cGrupoAte  := Space(GetSX3Cache("ZK8_GRPVEN","X3_TAMANHO")) // Grupo cliente ate
     Private _cFiltro    := "1"
+    Private oJSon
 
-    aAdd(aParam, {1, "Proc. De", _cProcDe, "@!", ".T.", "ZK8", ".T.",50,.F.})
-    aAdd(aParam, {1, "Proc. Ate", _cProcAte, "@!", ".T.", "ZK8", ".T.",50,.F.})
+    aAdd(aParam,{1,"Proc. De",_cProcDe,"@!",".T.","ZK8",".T.",50,.F.})
+    aAdd(aParam,{1,"Proc. Ate",_cProcAte,"@!",".T.","ZK8",".T.",50,.F.})
 
-    aAdd(aParam, {1, "Vencimento De", _dDatVDe, "@D",".T.",,".T.",50,.F.})
-    aAdd(aParam, {1, "Vencimento Ate", _dDatVAte, "@D",".T.",,".T.",50,.F.})
+    aAdd(aParam,{1,"Vencimento De",_dDatVDe,"@D",".T.",nil,".T.",50,.F.})
+    aAdd(aParam,{1,"Vencimento Ate",_dDatVAte,"@D",".T.",nil,".T.",50,.F.})
     
-    aAdd(aParam, {1, "Cliente De", _cCliDe, "@!", ".T.", "SA1", ".T.",50,.F.})
-    aAdd(aParam, {1, "Cliente Ate", _cCliAte, "@!", ".T.", "SA1", ".T.",50,.F.})
+    aAdd(aParam,{1,"Cliente De",_cCliDe,"@!",".T.","SA1",".T.",50,.F.})
+    aAdd(aParam,{1,"Cliente Ate",_cCliAte,"@!",".T.","SA1",".T.",50,.F.})
 
-    aAdd(aParam, {1, "Grupo Cliente De", _cGrupoDe, "@!", ".T.", "ACY", ".T.",50,.F.})
-    aAdd(aParam, {1, "Grupo Cliente Ate", _cGrupoAte, "@!", ".T.", "ACY", ".T.",50,.F.})
-    aAdd(aParam, {2, "Status", _cFiltro, {"1=Todos", "2=Ativos", "3=Cancelados", "4=Baixados"}, 50, ".T.", .T.})	
+    aAdd(aParam,{1,"Grupo Cliente De",_cGrupoDe,"@!",".T.","ACY",".T.",50,.F.})
+    aAdd(aParam,{1,"Grupo Cliente Ate",_cGrupoAte,"@!",".T.","ACY",".T.",50,.F.})
+    aAdd(aParam,{2,"Status",_cFiltro,{"1=Todos","2=Ativos","3=Cancelados","4=Baixados","5=FIDC Ativos","6=FIDC Prorrogados"},50,".T.",.T.})
 
-    If ParamBox(aParam, "Parâmetros",,,,,,,,cName, .T., .T.)
+    If ParamBox(aParam,"Parâmetros",nil,nil,nil,nil,nil,nil,nil,cName,.T.,.T.)
 
         lRet := .T.
 
-        _cProcDe    := ParamLoad(cFileName,,1, Space(TamSx3("ZK8_NUMERO")[1]))
-        _cProcAte   := ParamLoad(cFileName,,2, Replicate("Z", TamSx3("ZK8_NUMERO")[1]))
+        _cProcDe    := ParamLoad(cFileName,nil,1,Space(GetSX3Cache("ZK8_NUMERO","X3_TAMANHO")))
+        _cProcAte   := ParamLoad(cFileName,nil,2,Replicate("Z",GetSX3Cache("ZK8_NUMERO","X3_TAMANHO")))
 
-        _dDatVDe    := ParamLoad(cFileName,,3, dDataBase)
-        _dDatVAte   := ParamLoad(cFileName,,4, dDataBase)
+        _dDatVDe    := ParamLoad(cFileName,nil,3,dDataBase)
+        _dDatVAte   := ParamLoad(cFileName,nil,4,dDataBase)
 
-        _cCliDe     := ParamLoad(cFileName,,5, Space(TamSx3("A1_COD")[1]))
-        _cCliAte    := ParamLoad(cFileName,,6, Replicate("Z", TamSx3("A1_COD")[1]))
+        _cCliDe     := ParamLoad(cFileName,nil,5,Space(GetSX3Cache("A1_COD","X3_TAMANHO")))
+        _cCliAte    := ParamLoad(cFileName,nil,6,Replicate("Z",GetSX3Cache("A1_COD","X3_TAMANHO")))
 
-        _cGrupoDe   := ParamLoad(cFileName,,7, Space(TamSx3("ZK8_GRPVEN")[1]))
-        _cGrupoAte  := ParamLoad(cFileName,,8, Replicate("Z", TamSx3("ZK8_GRPVEN")[1]))
-        _cFiltro    := ParamLoad(cFileName,,9, "1")
+        _cGrupoDe   := ParamLoad(cFileName,nil,7,Space(GetSX3Cache("ZK8_GRPVEN","X3_TAMANHO")))
+        _cGrupoAte  := ParamLoad(cFileName,nil,8,Replicate("Z",GetSX3Cache("ZK8_GRPVEN","X3_TAMANHO")))
+        _cFiltro    := ParamLoad(cFileName,nil,9,"1")
 
         oReport := ReportDef()
         oReport:PrintDialog()
@@ -65,43 +67,37 @@ Static Function ReportDef()
     Local cQry := GetNextAlias()
     Local cTitRel := "Renegociação de Contas a Receber"
 
-    oReport := TReport():New("FRREPROG", cTitRel, {|| }, {|oReport| PrintReport(oReport, cQry)}, cTitRel)
+    oReport := TReport():New("FRREPROG",cTitRel,{|| },{|oReport| PrintReport(oReport,cQry)},cTitRel)
 
-    oSecPrd := TRSection():New(oReport, "Cliente/Renegociação", cQry)
-    TRCell():New(oSecPrd, "ZKC_NUMERO", cQry)
-    TRCell():New(oSecPrd, "A1_COD", cQry)
-    TRCell():New(oSecPrd, "A1_NOME", cQry)
-    TRCell():New(oSecPrd, "A1_CGC", cQry)
-    TRCell():New(oSecPrd, "JUROS", cQry, "Juros Total",,,,{|| (cQry)->JUROS })
-    TRCell():New(oSecPrd, "VENC_JUROS", cQry, "Vencto do Juros",,,,{|| DTOC(STOD((cQry)->VENC_JUROS)) })
+    oSecPrd := TRSection():New(oReport,"Cliente/Renegociação",cQry)
+    TRCell():New(oSecPrd,"ZKC_NUMERO",cQry)
+    TRCell():New(oSecPrd,"A1_COD",cQry)
+    TRCell():New(oSecPrd,"A1_NOME",cQry)
+    TRCell():New(oSecPrd,"A1_CGC",cQry)
 
     oSecPrd:SetLineStyle(.T.)
 
-    oSecMov := TRSection():New(oSecPrd, "Títulos", cQry)
-    TRCell():New(oSecMov, "ZKC_PREFIX"  , cQry, "Serie",,5)
-    TRCell():New(oSecMov, "ZKC_NUM"     , cQry, "Numero",,11)
-    TRCell():New(oSecMov, "ZKC_PARCEL"  , cQry, "Parcela",,28)
-    TRCell():New(oSecMov, "ZKC_VALOR"   , cQry,,,30,,{|| (cQry)->ZKC_VALOR })
-    TRCell():New(oSecMov, "ZKC_VENCTO"   , cQry,,,15,,{|| DTOC(STOD((cQry)->ZKC_VENCTO)) })
-    TRCell():New(oSecMov, "DIAS"        , cQry, "Dias Prorrog.",,4,,{|| (cQry)->DIAS }, "RIGHT",,"RIGHT")
-    TRCell():New(oSecMov, "ZKC_VENCCA"   , cQry, "Novo Vencimento",,15,,{|| DTOC(STOD((cQry)->ZKC_VENCCA)) })
-
-    //oBreak := TRBreak():New(oSecPrd, oSecPrd:Cell("ZKC_NUMERO"))//, "Totais")
-
-    //oTot := TRFunction():New(oSecMov:Cell("ZKC_VALOR"),NIL,"SUM",oBreak,NIL,NIL,NIL,.F.,.F.)
-    //oTot:SetTotalInLine(.T.)
-
-    //oBreak1 := TRBreak():New(::oSection1,{|| (cQry)->ZKC_NUMERO})
-	
-	//TRFunction():New(::oSection1:Cell("E2_VALOR"),Nil,"SUM",oBreak1, Nil, Nil, Nil, .F., .F.)
+    oSecMov := TRSection():New(oSecPrd,"Títulos",cQry)
+    /*TRCell():New(<oParent>,<cName>,<cAlias>,<cTitle>,<cPicture>,<nSize>,<lPixel>,<bBlock>,<cAlign>,<lLineBreak>,<cHeaderAlign>,<lCellBreak>,<nColSpace>,<lAutoSize>,<nClrBack>,<nClrFore>,<lBold>)*/
+    TRCell():New(oSecMov,"ZKC_PREFIX",cQry,"Serie",GetSX3Cache("ZKC_PREFIX","X3_PICTURE"),CalcFieldSize("C",GetSX3Cache("ZKC_PREFIX","X3_TAMANHO"),0,"@!","Serie",/*oFont*/),.T.,nil,nil,nil,nil,nil,nil,.F.,nil,nil,nil) 
+    TRCell():New(oSecMov,"ZKC_NUM",cQry,"Numero",GetSX3Cache("ZKC_NUM","X3_PICTURE"),CalcFieldSize("C",GetSX3Cache("ZKC_NUM","X3_TAMANHO"),0,"@!","Numero",/*oFont*/),.T.,nil,nil,nil,nil,nil,nil,.F.,nil,nil,nil) 
+    TRCell():New(oSecMov,"ZKC_PARCEL",cQry,"Parcela",GetSX3Cache("ZKC_PARCEL","X3_PICTURE"),CalcFieldSize("C",GetSX3Cache("ZKC_PARCEL","X3_TAMANHO"),0,"@!","Parcela",/*oFont*/),.T.,nil,nil,nil,nil,nil,nil,.F.,nil,nil,nil) 
+    TRCell():New(oSecMov,"ZKC_VALOR",cQry,nil,nil,30,nil,{||(cQry)->ZKC_VALOR},nil,nil,nil,nil,nil,.F.,nil,nil,nil) 
+    TRCell():New(oSecMov,"ZKC_VENCTO",cQry,"Vencimento",nil,10,.F.,{||DTOC((cQry)->ZKC_VENCTO)},nil,nil,nil,nil,nil,.F.,nil,nil,nil) 
+    TRCell():New(oSecMov,"DIAS",cQry,"Dias Prorrog.",nil,13,nil,{||(cQry)->DIAS},"RIGHT",nil,"RIGHT",nil,nil,.F.,nil,nil,nil) 
+    TRCell():New(oSecMov,"ZKC_VENCCA",cQry,"Novo Vencimento",nil,15,.F.,{||DTOC((cQry)->ZKC_VENCCA)},nil,nil,nil,nil,nil,.F.,nil,nil,nil) 
+    if (_cFiltro$"5|6")
+        TRCell():New(oSecMov,"ZKC_OBSLIB",cQry,"Observacao","@!",CalcFieldSize("C",GetSX3Cache("ZKC_OBSLIB","X3_TAMANHO"),0,"@!","Observacao",/*oFont*/),.T.,{||oJSon:Get("Obs")},nil,nil,nil,nil,nil,.F.,nil,nil,nil) 
+    endif
 	
 Return(oReport)
 
-Static Function PrintReport(oReport, cQry)
+Static Function PrintReport(oReport,cQry)
 
     Local oSecPrd := oReport:Section(1)
     Local oSecMov := oReport:Section(1):Section(1)
     Local cSQL := ""
+    Local cOBS
 
     Local cBanco := ""
     Local cAgencia := ""
@@ -112,27 +108,32 @@ Static Function PrintReport(oReport, cQry)
     cSQL := ""
     cSQL += " select "+CRLF
 
-    cSQL += " A1_COD, "+CRLF
-    cSQL += " A1_CGC, "+CRLF
-    cSQL += " A1_NOME, "+CRLF
-    cSQL += " ZK8_BANCO, "+CRLF
-    cSQL += " ZK8_AGENCI, "+CRLF	
-    cSQL += " ZK8_CONTA, "+CRLF
-    cSQL += " ZKC_NUMERO, "+CRLF
-    cSQL += " ZKC_PREFIX, "+CRLF
-    cSQL += " ZKC_NUM, "+CRLF
-    cSQL += " ZKC_PARCEL, "+CRLF
-    cSQL += " ZKC_VALOR, "+CRLF
-    cSQL += " ZK8_STATUS, "+CRLF
-    cSQL += " ZKC_VENCTO, "+CRLF
-    cSQL += " ZKC_STATUS, "+CRLF
-    cSQL += " CAST(ZKC_DIAS AS VARCHAR) DIAS, "+CRLF
-    cSQL += " ZKC_VENCCA, "+CRLF
-    cSQL += " JUROS = (select sum(ZKC_VALOR) from "+RetSqlName("ZKC")+" X where X.ZKC_NUMERO = ZKC.ZKC_NUMERO and X.ZKC_TIPO = 'JP' and X.D_E_L_E_T_=''), "+CRLF
-    cSQL += " VENC_JUROS = (select max(ZKC_VENCTO) from "+RetSqlName("ZKC")+" X where X.ZKC_NUMERO = ZKC.ZKC_NUMERO and X.ZKC_TIPO = 'JP' and X.D_E_L_E_T_='') "+CRLF
-    cSQL += " from "+RetSqlName("ZKC")+" ZKC "+CRLF
-    cSQL += " join "+RetSqlName("SA1")+" SA1 on A1_FILIAL  = " + ValToSql(xFIlial("SA1")) + " AND A1_COD = ZKC_CLIFOR and A1_LOJA = ZKC_LOJA "+CRLF
-    cSQL += " join "+RetSqlName("ZK8")+" ZK8 on ZK8_FILIAL = " + ValToSql(xFIlial("ZK8")) + " AND ZK8_NUMERO = ZKC_NUMERO "+CRLF
+    cSQL += " A1_COD,"+CRLF
+    cSQL += " A1_CGC,"+CRLF
+    cSQL += " A1_NOME,"+CRLF
+    cSQL += " ZK8_BANCO,"+CRLF
+    cSQL += " ZK8_AGENCI,"+CRLF	
+    cSQL += " ZK8_CONTA,"+CRLF
+    cSQL += " ZKC_NUMERO,"+CRLF
+    cSQL += " ZKC_PREFIX,"+CRLF
+    cSQL += " ZKC_NUM,"+CRLF
+    cSQL += " ZKC_PARCEL,"+CRLF
+    cSQL += " ZKC_VALOR,"+CRLF
+    cSQL += " ZK8_STATUS,"+CRLF
+    cSQL += " ZKC_VENCTO,"+CRLF
+    cSQL += " ZKC_STATUS,"+CRLF
+    cSQL += " CAST(ZKC_DIAS AS VARCHAR) DIAS,"+CRLF
+    cSQL += " ZKC_VENCCA,"+CRLF
+    if (_cFiltro$"5|6")
+		cSQL += " ZKC_TXJUR,"
+		cSQL += " ZKC_JUROS,"
+        cSQL += " ZKC_OBSLIB,"+CRLF
+    endif
+    cSQL += " JUROS = (select sum(ZKC_VALOR) from "+RetSQLName("ZKC")+" X where X.ZKC_NUMERO = ZKC.ZKC_NUMERO and X.ZKC_TIPO = 'JP' and X.D_E_L_E_T_=''),"+CRLF
+    cSQL += " VENC_JUROS = (select max(ZKC_VENCTO) from "+RetSQLName("ZKC")+" X where X.ZKC_NUMERO = ZKC.ZKC_NUMERO and X.ZKC_TIPO = 'JP' and X.D_E_L_E_T_='') "+CRLF
+    cSQL += " from "+RetSQLName("ZKC")+" ZKC "+CRLF
+    cSQL += " join "+RetSQLName("SA1")+" SA1 on A1_FILIAL  = " + ValToSql(xFIlial("SA1")) + " AND A1_COD = ZKC_CLIFOR and A1_LOJA = ZKC_LOJA "+CRLF
+    cSQL += " join "+RetSQLName("ZK8")+" ZK8 on ZK8_FILIAL = " + ValToSql(xFIlial("ZK8")) + " AND ZK8_NUMERO = ZKC_NUMERO "+CRLF
     cSQL += " where ZKC_FILIAL = " + ValToSql(xFIlial("ZKC"))
     cSQL += " and ZKC_NUMERO    between '"+_cProcDe+"' and '"+_cProcAte+"' "+CRLF
     cSQL += " AND ZKC_TIPO <> 'JP' "+CRLF
@@ -152,6 +153,14 @@ Static Function PrintReport(oReport, cQry)
 
         cStatus := "B"
 
+    ElseIf _cFiltro == "5" // FIDC Ativos
+
+        cStatus := "F"
+
+    ElseIf _cFiltro == "6" // FIDC Prorrogados
+
+        cStatus := "P"
+
     EndIf
 
     If !Empty(cStatus)
@@ -164,15 +173,17 @@ Static Function PrintReport(oReport, cQry)
     cSQL += " and SA1.D_E_L_E_T_ = '' "+CRLF
     cSQL += " and ZK8.D_E_L_E_T_ = '' "+CRLF
 
-    cSQL += " order by ZKC_NUMERO, ZKC_VENCCA "+CRLF
+    cSQL += " order by ZKC_NUMERO,ZKC_VENCCA "+CRLF
 
     TcQuery cSQL New Alias (cQry)
 
+	TCSetField(cQry,"VENC_JUROS","D",8,0)
+	TCSetField(cQry,"ZKC_VENCTO","D",8,0)
+	TCSetField(cQry,"ZKC_VENCCA","D",8,0)
+	TCSetField(cQry,"ZKC_VENCCA","D",8,0)
+
     oSecMov:SetParentQuery()
-    oSecMov:SetParentFilter({|cParam| (cQry)->ZKC_NUMERO >= cParam .And. (cQry)->ZKC_NUMERO <= cParam}, {|| (cQry)->ZKC_NUMERO})
-
-    //oSecPrd:Print()
-
+    oSecMov:SetParentFilter({|cParam| (cQry)->ZKC_NUMERO >= cParam .And. (cQry)->ZKC_NUMERO <= cParam},{|| (cQry)->ZKC_NUMERO})
 
     (cQry)->(DbGoTop())
     _cNum := (cQry)->ZKC_NUMERO
@@ -181,40 +192,44 @@ Static Function PrintReport(oReport, cQry)
 
     oSecPrd:Init()
     
-    While !(cQry)->(Eof())
+    if (_cFiltro$"5|6")
+        oJSon:=JSONArray():New()
+    endif
+
+    While (cQry)->(!Eof())
 
         oReport:SkipLine()  
-        oReport:Say(oReport:Row() ,oReport:Col() , "" )
+        oReport:Say(oReport:Row(),oReport:Col(),"" )
         oReport:SkipLine()  
-        oReport:Say(oReport:Row() ,oReport:Col() , "Processo: "+ (cQry)->ZKC_NUMERO )
+        oReport:Say(oReport:Row(),oReport:Col(),"Processo: "+ (cQry)->ZKC_NUMERO )
         oReport:SkipLine()
-        oReport:Say(oReport:Row() ,oReport:Col() , "Cod.Cliente: "+(cQry)->A1_COD )
+        oReport:Say(oReport:Row(),oReport:Col(),"Cod.Cliente: "+(cQry)->A1_COD )
         oReport:SkipLine()
-        oReport:Say(oReport:Row() ,oReport:Col() , "Nome Cliente: " +(cQry)->A1_NOME )
+        oReport:Say(oReport:Row(),oReport:Col(),"Nome Cliente: " +(cQry)->A1_NOME )
         oReport:SkipLine()
-        oReport:Say(oReport:Row() ,oReport:Col() , "CNPJ: " +(cQry)->A1_CGC )
+        oReport:Say(oReport:Row(),oReport:Col(),"CNPJ: " +(cQry)->A1_CGC )
 
-        If (cQry)->ZK8_STATUS == "A" .Or. ( (cQry)->ZKC_STATUS == "F" .And. (cQry)->ZK8_STATUS == "A" )
+        If (cQry)->((ZK8_STATUS=="A").Or.(ZK8_STATUS=="F"))
 
             oReport:SkipLine()
             
-            oReport:Say(oReport:Row() ,oReport:Col() , "Situação: " + "Ativo" )
+            oReport:Say(oReport:Row(),oReport:Col(),"Situação: " + "Ativo" )
             oReport:SkipLine()
             oReport:SkipLine()
 
-        ElseIf (cQry)->ZK8_STATUS == "C"
-
-            oReport:SkipLine()
-            
-            oReport:Say(oReport:Row() ,oReport:Col() , "Situação: " + "Cancelado" )
-            oReport:SkipLine()
-            oReport:SkipLine()
-
-        ElseIf (cQry)->ZK8_STATUS == "B"
+        ElseIf ((cQry)->ZK8_STATUS=="C")
 
             oReport:SkipLine()
             
-            oReport:Say(oReport:Row() ,oReport:Col() , "Situação: " + "Baixado" )
+            oReport:Say(oReport:Row(),oReport:Col(),"Situação: " + "Cancelado" )
+            oReport:SkipLine()
+            oReport:SkipLine()
+
+        ElseIf (cQry)->((ZK8_STATUS=="B").Or.(ZK8_STATUS=="P"))
+
+            oReport:SkipLine()
+            
+            oReport:Say(oReport:Row(),oReport:Col(),"Situação: " + "Baixado" )
             oReport:SkipLine()
             oReport:SkipLine()      
 
@@ -242,44 +257,64 @@ Static Function PrintReport(oReport, cQry)
 
             nTot += (cQry)->ZKC_VALOR
 
-            oSecMov:Cell("ZKC_PREFIX"	):SetValue((cQry)->ZKC_PREFIX )
-            oSecMov:Cell("ZKC_NUM"   	):SetValue((cQry)->ZKC_NUM    )
-            oSecMov:Cell("ZKC_PARCEL"	):SetValue((cQry)->ZKC_PARCEL )
-            oSecMov:Cell("ZKC_VALOR" 	):SetValue((cQry)->ZKC_VALOR  )
-            oSecMov:Cell("ZKC_VENCTO"	):SetValue(DTOC(STOD((cQry)->ZKC_VENCTO )))
-            oSecMov:Cell("DIAS"  	):SetValue((cQry)->DIAS   )
-            oSecMov:Cell("ZKC_VENCCA"	):SetValue(DTOC(STOD((cQry)->ZKC_VENCCA )))
+            oSecMov:Cell("ZKC_PREFIX"):SetValue((cQry)->ZKC_PREFIX)
+            oSecMov:Cell("ZKC_NUM"):SetValue((cQry)->ZKC_NUM)
+            oSecMov:Cell("ZKC_PARCEL"):SetValue((cQry)->ZKC_PARCEL)
+            oSecMov:Cell("ZKC_VALOR"):SetValue((cQry)->ZKC_VALOR)
+            oSecMov:Cell("ZKC_VENCTO"):SetValue(DTOC((cQry)->ZKC_VENCTO))
+            oSecMov:Cell("DIAS"):SetValue((cQry)->DIAS)
+            oSecMov:Cell("ZKC_VENCCA"):SetValue(DTOC((cQry)->ZKC_VENCCA))
+            if (_cFiltro$"5|6")
+                cOBS:=(cQry)->ZKC_OBSLIB
+                if (empty(cOBS))
+                    oJSon:Set("Juros","Nao")
+                    oJSon:Set("txJuros",0)
+                    oJSon:Set("vlJuros",0)
+                    oJSon:Set("Obs","")
+                else
+                    oJSon:FromJson(cOBS)
+		            if ((cQry)->ZKC_TXJUR>0)
+                        oJSon:Set("txJuros",(cQry)->ZKC_TXJUR)
+                    endif
+                    if ((cQry)->ZKC_JUROS>0)
+                        oJSon:Set("vlJuros",(cQry)->ZKC_JUROS)
+                    endif
+                    _nJUROS+=oJSon:get("vlJuros",0)
+                endif
+                oSecMov:Cell("ZKC_OBSLIB"):SetValue(oJSon:Get("Obs"))
+            endif
             oSecMov:PrintLine()
 
             (cQry)->(DbSkip())
             
         EndDo
 
-        oSecMov:Cell("ZKC_PREFIX"	):SetValue("")
-        oSecMov:Cell("ZKC_NUM"   	):SetValue("")
-        oSecMov:Cell("ZKC_PARCEL"	):SetValue("")
-        oSecMov:Cell("ZKC_VALOR" 	):SetValue(nTot)
-        oSecMov:Cell("ZKC_VENCTO"	):SetValue("")
-        oSecMov:Cell("DIAS"  	):SetValue("")
-        oSecMov:Cell("ZKC_VENCCA"	):SetValue("")
+        oSecMov:Cell("ZKC_PREFIX"):SetValue("")
+        oSecMov:Cell("ZKC_NUM"):SetValue("")
+        oSecMov:Cell("ZKC_PARCEL"):SetValue("")
+        oSecMov:Cell("ZKC_VALOR"):SetValue(nTot)
+        oSecMov:Cell("ZKC_VENCTO"):SetValue("")
+        oSecMov:Cell("DIAS"):SetValue("")
+        oSecMov:Cell("ZKC_VENCCA"):SetValue("")
+        if (_cFiltro$"5|6")
+            oSecMov:Cell("ZKC_OBSLIB"):SetValue("")
+        endif
         oSecMov:PrintLine()
 
         oSecMov:Finish()
 
         oReport:SkipLine()
-        oReport:Say(oReport:Row() ,oReport:Col() , "Juros Total: "+ Transform(_nJUROS, "@E 999,999,999.99") )
-        oReport:SkipLine()
-        oReport:Say(oReport:Row() ,oReport:Col() , "Data Limite Pgto Juros: "+DTOC(STOD(_dVENCJUR)))
-        oReport:SkipLine()
-
-        //oReport:Say(oReport:Row() ,oReport:Col() , "Banco: "+ cBanco )
-        //oReport:SkipLine()
-
-        //oReport:Say(oReport:Row() ,oReport:Col() , "Agencia: "+ cAgencia )
-        //oReport:SkipLine()
-
-        //oReport:Say(oReport:Row() ,oReport:Col() , "Conta: "+ cConta )
-        //oReport:SkipLine()
+        if (_cFiltro$"5|6")
+            oReport:Say(oReport:Row(),oReport:Col(),"Juros (%):   "+ Transform(oJSon:Get("txJuros"),"@E 999,999,999.99") )
+            oReport:SkipLine()
+            oReport:Say(oReport:Row(),oReport:Col(),"Juros Total: "+ Transform(_nJUROS,"@E 999,999,999.99") )
+            oReport:SkipLine()
+        else    
+            oReport:Say(oReport:Row(),oReport:Col(),"Juros Total: "+ Transform(_nJUROS,"@E 999,999,999.99") )
+            oReport:SkipLine()
+            oReport:Say(oReport:Row(),oReport:Col(),"Data Limite Pgto Juros: "+DTOC(_dVENCJUR))
+            oReport:SkipLine()
+        endif
 
     EndDo
 

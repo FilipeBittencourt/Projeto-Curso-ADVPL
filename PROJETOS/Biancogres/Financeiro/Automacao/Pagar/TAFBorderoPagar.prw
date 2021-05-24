@@ -15,6 +15,7 @@ Class TAFBorderoPagar From LongClassName
 	Data oLst // Objeto com a lista titulos para criacao do bordero
 	Data cNumBor // Numero do bordero
 	Data cIDProc // Identificar do processo
+	Data lFIDC
 		
 	Method New() Constructor
 	Method Create()
@@ -27,9 +28,10 @@ EndClass
 
 Method New() Class TAFBorderoPagar
 	
-	::oLst := Nil
-	::cNumBor := ""
-	::cIDProc := ""
+	::oLst 		:= Nil
+	::cNumBor 	:= ""
+	::cIDProc 	:= ""
+	::lFIDC		:= .F.	
 	
 Return()
 
@@ -69,8 +71,10 @@ Local bKey := {|nCol| ::oLst:GetItem(nCol):cBanco + ::oLst:GetItem(nCol):cAgenci
 					EndIf
 		 	
 					::oLst:GetItem(nCount):cNumBor := ::cNumBor
-
+					
 					RecLock("SE2", .F.)
+					
+					 		
 				
 					SE2->E2_NUMBOR := ::oLst:GetItem(nCount):cNumBor
 					SE2->E2_DTBORDE := dDataBase

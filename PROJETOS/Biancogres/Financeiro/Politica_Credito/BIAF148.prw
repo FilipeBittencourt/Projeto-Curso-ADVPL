@@ -189,8 +189,17 @@ Return(lRet)
 
 
 User Function BIAF148C()
+Local _oSemaforo	:=	tBiaSemaforo():New()
+
+	_oSemaforo:cGrupo	:=	"BIAF147"
+
+	If _oSemaforo:GeraSemaforo("JOB - BIAF147")		
 	
-	U_BIAMsgRun("Atualizando status das solicitações de crédito...", "Aguarde!", {|| U_BIAF147A() })
+		U_BIAMsgRun("Atualizando status das solicitações de crédito...", "Aguarde!", {|| U_BIAF147A() })
+
+		_oSemaforo:LiberaSemaforo()
+	
+	EndIf
 
 Return()
 

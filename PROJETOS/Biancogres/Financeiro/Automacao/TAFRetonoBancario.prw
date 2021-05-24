@@ -93,7 +93,15 @@ Return()
 
 
 Method Insert(nPos) Class TAFRetornoBancario
-Local nVlOCre := 0
+
+	Local nVlOCre := 0
+	
+	Local _cCodigoCedente	:= ""
+	Local _aRetEmp	:= {}
+	Local _cEmp		:= ""
+	Local _cFil		:= ""
+	Local _cRecno	:= ""
+		
 	
 	RecLock("ZK4", .T.)
 
@@ -101,12 +109,14 @@ Local nVlOCre := 0
 	ZK4->ZK4_DATA := ::oLst:GetItem(nPos):dData
 	ZK4->ZK4_EMP := ::oLst:GetItem(nPos):cEmp
 	ZK4->ZK4_FIL := ::oLst:GetItem(nPos):cFil
+	
 
 	ZK4->ZK4_TIPO := ::oLst:GetItem(nPos):cTipo
 	ZK4->ZK4_BANCO := ::oLst:GetItem(nPos):cBanco
 	ZK4->ZK4_AGENCI := ::oLst:GetItem(nPos):cAgencia
 	ZK4->ZK4_CONTA := ::oLst:GetItem(nPos):cConta
-
+	
+	
 	ZK4->ZK4_CODSEG	:= ::oLst:GetItem(nPos):cCodSeg
 	ZK4->ZK4_NUMERO := ::oLst:GetItem(nPos):cNumero
 	ZK4->ZK4_ESPECI := ::oLst:GetItem(nPos):cEspecie
@@ -185,6 +195,31 @@ Local nVlOCre := 0
 	ZK4->ZK4_DSHIST := ::oLst:GetItem(nPos):cDsHist
 	ZK4->ZK4_DATAIN	:= dDataBase
 	ZK4->ZK4_HORAIN	:= Time()
+
+	
+	//MV_YCCANT = codigo cedente anteicipacao
+	_cCodigoCedente := SUPERGETMV("MV_YCCANT", .F., "23735111422002")
+	
+	If (AllTrim(::oLst:GetItem(nPos):cCodigoCedente) == AllTrim(_cCodigoCedente))//FIDC pagar para tratar retorno de antecipação
+		/**
+			FIDC pagar : usado para descobrir de qual empresa e o titulo enviado
+		*/
+		
+		_aRetEmp	:= U_FIDC0002(::oLst:GetItem(nPos):cCnpjFor, ::oLst:GetItem(nPos):cNumero, ::oLst:GetItem(nPos):nVlPag)
+		_cEmp		:= _aRetEmp[1]
+		_cFil		:= _aRetEmp[2]
+		_cRecno		:= _aRetEmp[3]
+		
+		If (!Empty(_cEmp) .And. !Empty(_cFil) .And. !Empty(_cRecno))
+			ZK4->ZK4_TIPO		:= 'F'	//Antecipação FIDC
+			ZK4->ZK4_EMP 		:= _cEmp //empresa no campo numero controle cliente
+			ZK4->ZK4_FIL 		:= _cFil //filial indo no campo nnumero controle cliente
+			ZK4->ZK4_IDCNAB 	:= cvaltochar(_cRecno)//recno do titulo
+		Else
+			ZK4->ZK4_TIPO		:= 'E'	//TODO Erro Antecipação FIDC - verificar o que fazer 
+		EndIf
+		 
+	EndIf
 
 	ZK4->(MsUnLock())
 

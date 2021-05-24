@@ -13,23 +13,24 @@
 #DEFINE nP_MARK		1
 #DEFINE nP_LEG		2
 #DEFINE nP_DTREF	3
-#DEFINE nP_PREF		4
-#DEFINE nP_NUM		5	
-#DEFINE nP_PARC		6
-#DEFINE nP_TIPO		7
-#DEFINE nP_CLIEN	8
-#DEFINE nP_LOJA		9
-#DEFINE nP_EMIS		11
-#DEFINE nP_VENCT	12
-#DEFINE nP_VENCR	13
-#DEFINE nP_VALOR	14
-#DEFINE nP_SALDO 	15
-#DEFINE nP_RECNO 	20
+#DEFINE nP_PREF		5
+#DEFINE nP_NUM		6	
+#DEFINE nP_PARC		7
+#DEFINE nP_TIPO		8
+#DEFINE nP_CLIEN	9
+#DEFINE nP_LOJA		10
+#DEFINE nP_EMIS		12
+#DEFINE nP_VENCT	13
+#DEFINE nP_VENCR	14
+#DEFINE nP_VALOR	15
+#DEFINE nP_SALDO 	16
+#DEFINE nP_RECNO 	21
 	
 Class TAFProrrogacaoBoletoReceber From TAFAbstractClass
 	
 	Data lCalc // Calcula e gera tidulo de juros
 	Data nPerc // Percentula de juros
+	Data dFIDC // Vencimento FIDC
 	Data dVencto // Vencimento do juros
 	Data nValor // Valor do totulo de juros
 
@@ -39,6 +40,8 @@ Class TAFProrrogacaoBoletoReceber From TAFAbstractClass
 	Data cObs
 	Data nDias
 	Data lDepAnt // Se sera gerado Deposito antecipado (Renegociacao devido COVID-19)
+	Data lFIDC //Se Titulo Corresponde a FIDC
+	Data oJSon
 
 	Data aTit // Titulos selecionados para envio
 	Data oCR // Objeto de titulos a receber
@@ -93,12 +96,14 @@ Method Load() Class TAFProrrogacaoBoletoReceber
 	::cObs := ""
 	::nDias := 0
 	::lDepAnt := .F.
+	::lFIDC := .F.
 
 Return()
 
 
 Method Process() Class TAFProrrogacaoBoletoReceber
-Local lRet := .T.
+
+	Local lRet := .T.
 
 	::oPro:Start()
 	
@@ -110,11 +115,11 @@ Local lRet := .T.
 	
 	If (lRet := ::Extend())
 
-		If (!::lDepAnt) .Or. (::lDepAnt .And. !::lCalc .And. ::nValor == 0)
-
-			::Resend()
-		
-		EndIf
+		if (!::lFIDC)
+			If (!::lDepAnt) .Or. (::lDepAnt .And. !::lCalc .And. ::nValor == 0)
+				::Resend()
+			EndIf
+		endif
 
 	EndIf
 	
@@ -130,89 +135,144 @@ Return(lRet)
 
 
 Method Extend() Class TAFProrrogacaoBoletoReceber
-Local lRet := .T.
-Local aArea := GetArea()
-Local nCount := 0
-Local cCliente := ""
-Local cLoja := ""
-Local cNumZK8 := ""
+
+	Local lRet := .T.
+	Local aArea := GetArea()
+	Local nCount := 0
+	Local cCliente := ""
+	Local cZKCFilial:=xFilial("ZKC")
+	Local cZK8Filial:=xFilial("ZK8")
+	Local cLoja := ""
+	Local cNumZK8 := ""
+	
+	Local nTxJuros
+	Local nVlJuros
+	Local nZK8Order
 
 	Begin Transaction
 
-		If ::lDepAnt
+		If ::lDepAnt .or. ::lFIDC
+
+			if ::lFIDC
+				DEFAULT ::oJSon:=JSONArray():New()
+			endif
 
 			For nCount := 1 To Len(::aTit)
 
 				DbSelectArea("SE1")
 				SE1->(DbGoTo(::aTit[nCount, nP_RECNO]))
 				
-				RecLock("SE1", .F.)
-				SE1->E1_HIST := ::cObs
-				SE1->(MsUnLock())
-
-				If !::lCalc .And. ::nValor == 0
-
-					DbSelectArea("SE1")
-					SE1->(DbGoTo(::aTit[nCount, nP_RECNO]))
-					
-					RecLock("SE1", .F.)
-					SE1->E1_VENCTO := ::aTit[nCount, nP_DTREF]
-					SE1->E1_VENCREA := DataValida(::aTit[nCount, nP_DTREF])
+				IF (SE1->(RecLock("SE1",.F.)))
+					SE1->E1_HIST:=::cObs
 					SE1->(MsUnLock())
+				ENDIF
+
+				if (!::lFIDC)
+
+					If !::lCalc .And. ::nValor == 0
+
+						DbSelectArea("SE1")
+						SE1->(DbGoTo(::aTit[nCount, nP_RECNO]))
+						
+						RecLock("SE1", .F.)
+						SE1->E1_VENCTO := ::aTit[nCount, nP_DTREF]
+						SE1->E1_VENCREA := DataValida(::aTit[nCount, nP_DTREF])
+						SE1->(MsUnLock())
+					
+					EndIf
+
+				else
+
+					if (!empty(::dFIDC))
+						::nDias:=DateDiffDay(::dFIDC,CtoD(::aTit[nCount,nP_VENCT]))
+					else
+						::nDias:=DateDiffDay(::aTit[nCount,nP_DTREF],CtoD(::aTit[nCount,nP_VENCT]))
+					endif
 				
-				EndIf
+				endif
 
 				If Empty(cNumZK8)
 
-					cNumZK8 := GetSXENum("ZK8", "ZK8_NUMERO")
+					nZK8Order:=retOrder("ZK8","ZK8_FILIAL+ZK8_NUMERO")
+					ZK8->(dbSetOrder(nZK8Order))
+
+					cNumZK8:=GetSXENum("ZK8", "ZK8_NUMERO")
+					
+					while (ZK8->(dbSeek(cZK8Filial+cNumZK8,.F.)))
+						ConfirmSx8()
+						cNumZK8:=GetSXENum("ZK8", "ZK8_NUMERO")
+					end while
 
 					cCliente := ::aTit[nCount, nP_CLIEN]
 					cLoja := ::aTit[nCount, nP_LOJA]
 					
-					RecLock("ZK8", .T.)
-					ZK8->ZK8_FILIAL := xFilial("ZK8")
-					ZK8->ZK8_NUMERO := cNumZK8
-					ZK8->ZK8_GRPVEN := ""
-					ZK8->ZK8_CODCLI := ::aTit[nCount, nP_CLIEN]
-					ZK8->ZK8_VENCDE := ::dVencto
-					ZK8->ZK8_VENCAT := ::dVencto
-					ZK8->ZK8_DATDPI := ::dVencto
-					
-					ZK8->ZK8_BANCO 	:= ::cBanco
-					ZK8->ZK8_AGENCI := ::cAgencia
-					ZK8->ZK8_CONTA 	:= ::cConta
-					
-					ZK8->ZK8_CALCJR := "N"
-					ZK8->ZK8_PERCJR := 0
-					ZK8->ZK8_DATA 	:= dDataBase
-					ZK8->ZK8_HORA 	:= Time()
-					ZK8->ZK8_USER 	:= cUserName
-					ZK8->ZK8_STATUS := "A"
-					ZK8->(MsUnLock())
+					IF (ZK8->(RecLock("ZK8", .T.)))
+						ZK8->ZK8_FILIAL := cZK8Filial
+						ZK8->ZK8_NUMERO := cNumZK8
+						ZK8->ZK8_GRPVEN := ""
+						ZK8->ZK8_CODCLI := ::aTit[nCount, nP_CLIEN]
+						ZK8->ZK8_VENCDE := ::dVencto
+						ZK8->ZK8_VENCAT := ::dVencto
+						ZK8->ZK8_DATDPI := ::dVencto
+						
+						ZK8->ZK8_BANCO 	:= ::cBanco
+						ZK8->ZK8_AGENCI := ::cAgencia
+						ZK8->ZK8_CONTA 	:= ::cConta
+						
+						ZK8->ZK8_CALCJR := "N"
+						ZK8->ZK8_PERCJR := 0
+						ZK8->ZK8_DATA 	:= dDataBase
+						ZK8->ZK8_HORA 	:= Time()
+						ZK8->ZK8_USER 	:= cUserName
+						ZK8->ZK8_STATUS := if(::lFIDC,"F","A")
+						ZK8->(MsUnLock())
+					ENDIF
 
 				EndIf
 
-				RecLock("ZKC", .T.)
-				
-				ZKC->ZKC_FILIAL := xFilial("ZKC")
-				ZKC->ZKC_NUMERO := cNumZK8
-				ZKC->ZKC_NUM    := ::aTit[nCount, nP_NUM]
-				ZKC->ZKC_PREFIX := ::aTit[nCount, nP_PREF]
-				ZKC->ZKC_PARCEL := ::aTit[nCount, nP_PARC]
-				ZKC->ZKC_TIPO   := ::aTit[nCount, nP_TIPO]
-				ZKC->ZKC_CLIFOR := ::aTit[nCount, nP_CLIEN]
-				ZKC->ZKC_LOJA   := ::aTit[nCount, nP_LOJA]
-				ZKC->ZKC_VENCCA := ::aTit[nCount, nP_DTREF]
-				ZKC->ZKC_EMISSA := CtoD(::aTit[nCount, nP_EMIS])
-				ZKC->ZKC_VENCTO := CtoD(::aTit[nCount, nP_VENCT])
-				ZKC->ZKC_VENCRE := CtoD(::aTit[nCount, nP_VENCR])
-				ZKC->ZKC_VALOR  := ::aTit[nCount, nP_VALOR]
-				ZKC->ZKC_SALDO  := ::aTit[nCount, nP_SALDO]
-				ZKC->ZKC_DIAS	:= ::nDias
-				ZKC->ZKC_OBSLIB := ::cObs
-				ZKC->ZKC_STATUS := "A" // A=Titulo Origem;J=Titulo de JUROS
-					
-				ZKC->(MsUnLock())
+				if (::lFIDC)					
+					::oJSon:FromJson(::cObs)
+					nTxJuros:=::oJSon:get("txJuros")
+					nVlJuros:=::aTit[nCount,nP_VALOR]
+					nVlJuros:=Round((((nTxJuros/30/100)*nVlJuros)*::nDias),2)
+					::oJSon:Set("vlJuros",nVlJuros)
+					::cObs:=::oJSon:toJSON()
+					SE1->(MsGoTo(::aTit[nCount, nP_RECNO]))
+					if SE1->(RecLock("SE1",.F.))
+						SE1->E1_HIST:=::oJSon:Get("Obs")
+						SE1->(MsUnLock())
+					endif
+				endif					
+
+				IF (ZKC->(RecLock("ZKC", .T.)))
+
+					ZKC->ZKC_FILIAL := cZKCFilial
+					ZKC->ZKC_NUMERO := cNumZK8
+					ZKC->ZKC_NUM    := ::aTit[nCount, nP_NUM]
+					ZKC->ZKC_PREFIX := ::aTit[nCount, nP_PREF]
+					ZKC->ZKC_PARCEL := ::aTit[nCount, nP_PARC]
+					ZKC->ZKC_TIPO   := ::aTit[nCount, nP_TIPO]
+					ZKC->ZKC_CLIFOR := ::aTit[nCount, nP_CLIEN]
+					ZKC->ZKC_LOJA   := ::aTit[nCount, nP_LOJA]
+					ZKC->ZKC_VENCCA := ::aTit[nCount, nP_DTREF]
+					ZKC->ZKC_EMISSA := CtoD(::aTit[nCount, nP_EMIS])
+					ZKC->ZKC_VENCTO := CtoD(::aTit[nCount, nP_VENCT])
+					ZKC->ZKC_VENCRE := CtoD(::aTit[nCount, nP_VENCR])
+					ZKC->ZKC_VALOR  := ::aTit[nCount, nP_VALOR]
+					ZKC->ZKC_SALDO  := ::aTit[nCount, nP_SALDO]
+					ZKC->ZKC_DIAS	:= ::nDias
+					ZKC->ZKC_OBSLIB := ::cObs
+					if (::lFIDC)
+						ZKC->ZKC_STATUS:="F"	// A=Titulo Origem;J=Titulo de JUROS;F=FIDC
+						ZKC->ZKC_TXJUR:=nTxJuros
+						ZKC->ZKC_JUROS:=nVlJuros
+					else
+						ZKC->ZKC_STATUS:="A"	// A=Titulo Origem;J=Titulo de JUROS;F=FIDC
+					endif
+						
+					ZKC->(MsUnLock())
+
+				ENDIF
 
 			Next nCount
 			
@@ -237,7 +297,7 @@ Local cNumZK8 := ""
 
 		EndIf
 
-		If ::lCalc .And. ::nValor > 0
+		If (!::lFIDC) .and. (::lCalc .And. ::nValor > 0)
 
 			::oCR:cPrefixo := "JR"
 			::oCR:cNumero	:= ::GetNextNum()
@@ -255,7 +315,7 @@ Local cNumZK8 := ""
 		
 		EndIf
 
-		If lRet .And. ::lDepAnt .And. ::lCalc .And. ::nValor > 0 // Guardar para backup pois caso o titulo original de juros (SE1) nao for pago, sera apagado
+		If (!::lFIDC) .and. (lRet .And. ::lDepAnt .And. ::lCalc .And. ::nValor > 0) // Guardar para backup pois caso o titulo original de juros (SE1) nao for pago, sera apagado
 
 			//Nesse momento o Titulo SE1 de JUROS esta posicionado
 			RecLock("SE1", .F.)
@@ -264,7 +324,7 @@ Local cNumZK8 := ""
 
 			RecLock("ZKC", .T.)
 			
-			ZKC->ZKC_FILIAL := xFilial("ZKC")
+			ZKC->ZKC_FILIAL := cZKCFilial
 			ZKC->ZKC_NUMERO := cNumZK8
 			ZKC->ZKC_NUM    := ::oCR:cNumero
 			ZKC->ZKC_PREFIX := ::oCR:cPrefixo
@@ -299,6 +359,8 @@ Local cNumZK8 := ""
 				
 	End Transaction
 
+	restArea(aArea)
+
 Return(lRet)
 
 
@@ -316,13 +378,14 @@ Return()
 
 
 Method Get() Class TAFProrrogacaoBoletoReceber
-Local aArea := GetArea()
-Local aAreaSE1 := SE1->(GetArea())
-Local aAreaSA1 := SA1->(GetArea())
-Local aAreaZK1 := ZK1->(GetArea())
-Local nCount := 0
-Local oLst := ArrayList():New()
-Local oObj := Nil
+
+	Local aArea := GetArea()
+	Local aAreaSE1 := SE1->(GetArea())
+	Local aAreaSA1 := SA1->(GetArea())
+	Local aAreaZK1 := ZK1->(GetArea())
+	Local nCount := 0
+	Local oLst := ArrayList():New()
+	Local oObj := Nil
 
 	For nCount := 1 To Len(::aTit)
 
@@ -421,9 +484,10 @@ Return(oLst)
 
 
 Method GetNextNum() Class TAFProrrogacaoBoletoReceber
-Local cRet := ""
-Local cSQL := ""
-Local cQry := GetNextAlias()
+
+	Local cRet := ""
+	Local cSQL := ""
+	Local cQry := GetNextAlias()
 
 	cSQL := " SELECT ISNULL(MAX(E1_NUM), '000000000') AS E1_NUM "
 	cSQL += " FROM " + RetSQLName("SE1")

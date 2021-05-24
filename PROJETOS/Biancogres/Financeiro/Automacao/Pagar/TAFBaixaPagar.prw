@@ -67,17 +67,18 @@ Local cQry := GetNextAlias()
 Local dDtIni := GetNewPar("MV_YULMES", FirstDate(dDatabase))
 
 	cSQL := " SELECT ZK4_DATA, ZK4_TIPO, ZK4_BANCO, ZK4_AGENCI, ZK4_CONTA, ZK4_IDCNAB, ZK4_CODBAR, ZK4_VLORI, ZK4_VLPAG, "
-	cSQL += " ZK4_DTLIQ, ZK4_OCORET, ZK4_STATUS, ZK4_FILE, ZK4_IDPROC, ZK4_CHVAUT, ZK4_IDGUIA, R_E_C_N_O_ AS RECNO "
+	cSQL += " ZK4_DTLIQ, ZK4_OCORET, ZK4_STATUS, ZK4_FILE, ZK4_IDPROC, ZK4_CHVAUT, ZK4_IDGUIA, R_E_C_N_O_ AS RECNO, ZK4_CODOCO "
 	cSQL += " FROM " + RetSQLName("ZK4")
 	cSQL += " WHERE ZK4_FILIAL = " + ValToSQL(xFilial("ZK4"))
 	cSQL += " AND ZK4_EMP = " + ValToSQL(cEmpAnt)
 	cSQL += " AND ZK4_FIL = " + ValToSQL(cFilAnt)
-	cSQL += " AND ZK4_TIPO = 'P' "
+	cSQL += " AND ZK4_TIPO IN ('P', 'F') "
 	cSQL += " AND ZK4_DTLIQ BETWEEN " + ValToSQL(dDtIni) + " AND " + ValToSQL(dDatabase)
 	cSQL += " AND ZK4_STATUS = '1' " // Integrado
 	cSQL += " AND D_E_L_E_T_ = ''	"
 	cSQL += " ORDER BY ZK4_DATA, ZK4_IDCNAB, ZK4_CODBAR, ZK4_OCORET, ZK4_FILE, ZK4_IDPROC "
 
+	conout(cSQL)
 	TcQuery cSQL New Alias (cQry)
 
 	While !(cQry)->(Eof())
@@ -100,7 +101,11 @@ Local dDtIni := GetNewPar("MV_YULMES", FirstDate(dDatabase))
 		oObj:cIDProcAPI := (cQry)->ZK4_IDPROC
 		oObj:cChvAut := (cQry)->ZK4_CHVAUT
 		oObj:cIDGuia := (cQry)->ZK4_IDGUIA
-
+		
+		If (oObj:cTipo == 'F')
+			oObj:cCodOco := AllTrim((cQry)->ZK4_CODOCO)
+		EndIf
+		
 		oObj:nID := (cQry)->RECNO
 
 		If ::Validate(oObj)
@@ -140,9 +145,16 @@ Local cCodBar := If (Empty(oObj:cCodBar), "NOCODBAR", oObj:cCodBar)
 	cSQL := " SELECT E2_SALDO, R_E_C_N_O_ AS RECNO"
 	cSQL += " FROM " + RetSQLName("SE2")
 	cSQL += " WHERE E2_FILIAL = " + ValToSQL(xFilial("SE2"))
-	cSQL += " AND (E2_IDCNAB = " + ValToSQL(cIdCnab) + If("GNRESP" $ oObj:cIdGUIA, ") " , " OR E2_CODBAR = " + ValToSQL(cCodBar) + ") " )
+	
+	If (oObj:cTipo == 'F')//FIDC Antecipação
+		cSQL += " AND R_E_C_N_O_ = " + ValToSQL(cIdCnab)+" 		"		
+	Else
+		cSQL += " AND (E2_IDCNAB = " + ValToSQL(cIdCnab) + If("GNRESP" $ oObj:cIdGUIA, ") " , " OR E2_CODBAR = " + ValToSQL(cCodBar) + ") " )
+	EndIf
+	
 	cSQL += " AND	D_E_L_E_T_ = '' "
-
+	
+	conout(cSQL)
 	TcQuery cSQL New Alias (cQry)
 
 	If (cQry)->RECNO > 0
@@ -282,6 +294,9 @@ Local lRet := .F.
 		
 			lRet := .T.
 			
+		ElseIf oObj:cCodOco == "02" .And. oObj:cTipo == 'F'  //FIDC PAGAR
+		
+			lRet := .T.
 		Else
 		
 			::oLog:cIDProc := ::oPro:cIDProc
@@ -351,7 +366,13 @@ Private lMsErroAuto := .F.
 	aAdd(aTit, {"AUTAGENCIA", oObj:cAgencia, Nil})
 	aAdd(aTit, {"AUTCONTA", oObj:cConta, Nil})
 	aAdd(aTit, {"AUTDTBAIXA", oObj:dDtLiq, Nil})
-	aAdd(aTit, {"AUTVLRPG", oObj:nVlPag, Nil})
+
+	//FIDC Antecipacao
+	If oObj:cCodOco == "02" .And. oObj:cTipo == 'F' 
+		aAdd(aTit, {"AUTVLRPG", SE2->E2_SALDO, Nil})
+	Else
+		aAdd(aTit, {"AUTVLRPG", oObj:nVlPag, Nil})
+	EndIf
 
 	MsExecAuto({|x,y| FINA080(x,y)}, aTit, 3)
 
@@ -369,6 +390,28 @@ Private lMsErroAuto := .F.
 		::oLog:Insert()
 		
 		::UpdStatus(oObj:nID, "2")
+		
+		//FIDC Antecipacao
+		If oObj:cCodOco == "02" .And. oObj:cTipo == 'F' 
+			_lOk := U_FIDC0001(SE2->(Recno()))
+			If (!_lOk)
+				
+				::oLog:cIDProc := ::oPro:cIDProc
+				::oLog:cOperac := "P"
+				::oLog:cMetodo := "CP_BAI_TIT"
+				::oLog:cRetMen := "Baixa automatica - [ERRO]"
+				::oLog:cTabela := RetSQLName("ZK4")
+				::oLog:nIDTab := oObj:nID
+				::oLog:cHrFin := Time()
+				::oLog:cEnvWF := "S"
+				
+				::oLog:Insert()
+				
+				::UpdStatus(oObj:nID, "1", 'Titulo FIDC Pagar - Erro criação titulos automatico para FIDC')
+		
+				DisarmTransaction()
+			EndIf
+		EndIf
 		
 		::SetConsoleLog()		
 

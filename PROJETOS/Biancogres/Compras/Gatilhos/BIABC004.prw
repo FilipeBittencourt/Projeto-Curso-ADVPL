@@ -9,7 +9,7 @@
 /*/
 
 User Function BIABC004()
-	If FwIsInCallStack('U_MATA131') .Or. FwIsInCallStack('U_BIPROCCT')
+	If FwIsInCallStack('U_MATA131') .Or. FwIsInCallStack('U_BIPROCCT') .Or. FwIsInCallStack('U_RETP0003') 
 	    lRet := .T.
 	Else
 		lRet := .F.

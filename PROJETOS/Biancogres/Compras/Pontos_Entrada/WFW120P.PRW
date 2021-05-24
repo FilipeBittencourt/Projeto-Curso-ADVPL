@@ -72,7 +72,7 @@ Private P               := 1
 		AcertaAprovador()
 		
 		EMAIL_APRO()
-		
+	
 		//|Pontin - Validação do projeto de Gestão do Limite de Caixa |
 		If SuperGetMV("MV_YATVLCX", .F., .T.)
 
@@ -87,13 +87,14 @@ Private P               := 1
 	
 		If ChkFile("cTrab")
 		
-			DbSelectArea("cTrab")
+			DbSelectAre("cTrab")
 		
 			cTrab->(DbCloseArea())
 		
 		EndIf
 		
 	EndIf
+	
 	
 Return()
 
@@ -227,26 +228,45 @@ IF alltrim(sTRANSP) <> ""
 	
 	IF ccFLAG = "SIM"
 		
-		CRIA_EMAIL()
+		//Alert(Alltrim(FunName()))
+		//Alert(AllTrim(SC8->C8_YTPPSS))
+		
+		If (!(Alltrim(FunName()) == 'MATA160' .And. AllTrim(SC8->C8_YTPPSS) == "1"))
+			CRIA_EMAIL()
+		EndIf
 		
 		// Tiago Rossini Coradini - 20/12/2016 - OS: 4533-16 - Claudia Carvalho
-		If !IsInCallsTack("U_BIAFG030")
+		If !IsInCallsTack("U_BIAFG030") .And. !IsInCallsTack("U_RETP0001") 
 			MsgInfo("NÚMERO DO PEDIDO DE COMPRA IMPLANTADO: " + CA120NUM)
 		EndIf		
-		// Associa o transportador ao pedido de compra
-		U_BIAF090(CA120NUM)
+		
+		
+		If (!IsInCallsTack("U_RETP0001") .And. !(Alltrim(FunName()) == 'MATA160' .And. AllTrim(SC8->C8_YTPPSS)=="1"))
+			// Associa o transportador ao pedido de compra
+			U_BIAF090(CA120NUM)
+		EndIf
+		
+		If (IsInCallsTack("U_RETP0001"))
+			// Avalia se envia e-mail automatico
+			conout('BIAF091 => '+CA120NUM)
+			U_BIAF091(CA120NUM, "A")
+		EndIf
+		
 
-		// Avalia se envia e-mail automatico
-		U_BIAF091(CA120NUM, "A")
+		If (!(Alltrim(FunName()) == 'MATA160' .And. AllTrim(SC8->C8_YTPPSS)=="1"))
+			// Avalia se envia e-mail automatico
+			U_BIAF091(CA120NUM, "A")
+			
+		EndIf
 						
 	ELSE
-		If !IsInCallsTack("U_BIAFG030")
+		If !IsInCallsTack("U_BIAFG030") .And. !IsInCallsTack("U_RETP0001") 
 			MsgBox("EMAIL NÃO ENVIADO. PEDIDO PARCIALMENTE ATENDIDO","Alerta","STOP")
 		EndIf
 	ENDIF
 	
 ELSE
-	If !IsInCallsTack("U_BIAFG030")
+	If !IsInCallsTack("U_BIAFG030") .And. !IsInCallsTack("U_RETP0001") 
 		MsgBox("EMAIL NÃO ENVIADO","Alerta","STOP")
 	EndIf
 ENDIF
@@ -635,7 +655,7 @@ cAnexos		:= "\P10\relato\PC_APROVADORES\"+cCodFor+"_pc.txt"
 
 lOk := U_BIAEnvMail(,cRecebe,cAssunto,cMensagem,,cAnexos)
 
-If !IsInCallsTack("U_BIAFG030")
+If !IsInCallsTack("U_BIAFG030") .And. !IsInCallsTack("U_RETP0001") 
 	IF lOk .AND. !lPassei
 		CSTATUS := "OK"
 		MsgBox("EMAIL ENVIADO COM SUCESSO PARA O APROVADOR","Alerta","INFO")

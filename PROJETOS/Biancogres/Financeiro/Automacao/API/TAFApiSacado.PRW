@@ -17,6 +17,7 @@ Class TAFApiSacado from LongClassName
 
 	Method New() Constructor
 	Method NewByCliente(cCodEmp, cCodFil, cCodCli, cLojCli) Constructor
+	Method NewByFornecedor(cCodEmp, cCodFil, cCodCli, cLojCli) Constructor	
 
 EndClass
 
@@ -65,6 +66,49 @@ Local cTableSA1 := "% SA1"+AllTrim(cCodEmp)+"0 %"
 		::Endereco:UF := EncodeUTF8((cAliasTmp)->A1_ESTC)
 		::Endereco:Cidade := EncodeUTF8(FwNoAccent((cAliasTmp)->A1_MUNC))
 		::Endereco:CEP := EncodeUTF8((cAliasTmp)->A1_CEPC)
+
+	EndIf
+	
+	DBCloseArea(cAliasTmp)
+
+Return()
+
+
+
+Method NewByFornecedor(cCodEmp, cCodFil, cCodCli, cLojCli) Class TAFApiSacado
+	
+	Local cAliasTmp := Nil
+	Local cTableSA2 := "% SA2"+AllTrim(cCodEmp)+"0 %"
+
+	cAliasTmp := GetNextAlias()
+
+	BeginSql Alias cAliasTmp
+	
+		%NoParser%
+
+		select * from %Exp:cTableSA2% 
+		where A2_FILIAL = %XFILIAL:SA2%
+		and A2_COD		= %Exp:cCodCli%
+		and A2_LOJA		= %Exp:cLojCli%
+		and %NotDel%
+
+	EndSql
+
+	If !(cAliasTmp)->(Eof())
+
+		::CpfCnpj	:= (cAliasTmp)->A2_CGC
+		::Nome := EncodeUTF8((cAliasTmp)->A2_NOME)
+		::Email := EncodeUTF8((cAliasTmp)->A2_YEMAFIN)
+
+		::Endereco := TAFApiEndereco():New()
+
+		::Endereco:Logradouro	:= EncodeUTF8(FwNoAccent(FisGetEnd((cAliasTmp)->A2_END,(cAliasTmp)->A2_EST)[1]))
+		::Endereco:Numero 		:= FisGetEnd((cAliasTmp)->A2_END,(cAliasTmp)->A2_EST)[2]
+		::Endereco:Complemento	:= EncodeUTF8(FwNoAccent(FisGetEnd((cAliasTmp)->A2_END,(cAliasTmp)->A2_EST)[4]))
+		::Endereco:Bairro 		:= EncodeUTF8(FwNoAccent((cAliasTmp)->A2_BAIRRO))
+		::Endereco:UF 			:= EncodeUTF8((cAliasTmp)->A2_EST)
+		::Endereco:Cidade 		:= EncodeUTF8(FwNoAccent((cAliasTmp)->A2_MUN))
+		::Endereco:CEP 			:= EncodeUTF8((cAliasTmp)->A2_CEP)
 
 	EndIf
 	

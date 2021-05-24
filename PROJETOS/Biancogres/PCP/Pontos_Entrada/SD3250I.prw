@@ -36,6 +36,7 @@ Public az_CF    := "RE1"             // Variável para o Ponto de Entrada A250ETR
 Public az_Aplic := SD3->D3_YAPLIC    // Variável para o Ponto de Entrada A250ETRAN - incluida em 21/03/13
 Public az_Tag   := SD3->D3_YTAG      // Variável para o Ponto de Entrada A250ETRAN - incluida em 21/03/13
 Public az_Matrc := SD3->D3_YMATRIC   // Variável para o Ponto de Entrada A250ETRAN - incluida em 21/03/13
+Public az_MatOri := SD3->D3_YMATORI   // Variável para o Ponto de Entrada A250ETRAN - incluida em 21/03/13
 Public az_Emprx := SD3->D3_YEMPR     // Variável para o Ponto de Entrada A250ETRAN - incluida em 21/03/13
 Public az_Driver := SD3->D3_YDRIVER    // Variável para o Ponto de Entrada A250ETRAN - incluida em 14/01/19
 

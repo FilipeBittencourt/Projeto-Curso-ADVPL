@@ -2,6 +2,7 @@
 #INCLUDE "PROTHEUS.CH"
 #INCLUDE "tbiconn.CH"
 
+
 User Function RETP0004(_cNum)
 	
 	Local nI			:= 0
@@ -20,7 +21,7 @@ User Function RETP0004(_cNum)
 		If (oPCResulStruct:lOk)
 			
 			cNumSC3					:= GETSXENUM('SC3', 'C3_NUM')
-			oCPStruct:cNumero		:= cNumero
+			oCPStruct:cNumero		:= cNumSC3
 			oCPStruct:dEmissao		:= dDataBase
 			oCPStruct:cFornece		:= oPCResulStruct:oResult:cFornece
 			oCPStruct:cLoja			:= oPCResulStruct:oResult:cLoja
@@ -38,6 +39,7 @@ User Function RETP0004(_cNum)
 				oCPItemStruct:cItem	        := oItem:cItem
 				oCPItemStruct:cCodTag       := oItem:cCodTag
 				oCPItemStruct:cCodProd      := oItem:cCodProd 
+				oCPItemStruct:cDescProd		:= oItem:cDescProd 
 				oCPItemStruct:cLocal        := oItem:cLocal	
 				oCPItemStruct:nQuant		:= oItem:nQuant 	
 				oCPItemStruct:nPreco	 	:= oItem:nPreco 
@@ -49,6 +51,16 @@ User Function RETP0004(_cNum)
 				oCPItemStruct:cQtdSegUM		:= oItem:cQtdSegUM
 				oCPItemStruct:cCC			:= oItem:cCC
 				oCPItemStruct:cClVl			:= oItem:cClVl
+				oCPItemStruct:cDriver		:= oItem:cDriver
+				oCPItemStruct:cObs			:= oItem:cObsCom
+				
+				DbSelectArea('SC1')
+				SC1->(DbSetOrder(1))
+				If (SC1->(DbSeek(xFilial('SC1')+oItem:cNumSc+oItem:cItemSc)))
+					oCPItemStruct:cObsInterna		:= SC1->C1_YOBS
+				EndIf
+				
+				
 					
 				oCPStruct:oItens:Add(oCPItemStruct)
 	
@@ -81,4 +93,4 @@ User Function RETP0004(_cNum)
 	
 	RestArea(aArea)
 	
-Return lOk
+Return {lOk, cNumSC3}

@@ -42,7 +42,7 @@ Local lRet := .F.
 
 	If (lRet := ::HttpPost())
 	
-		::nValor := Val(::oXMLReceive:_A_FEED:_A_ENTRY:_A_CONTENT:_M_PROPERTIES:_D_COTACAOCOMPRA:TEXT)
+		::nValor := Val(::oXMLReceive:_A_FEED:_A_ENTRY:_A_CONTENT:_M_PROPERTIES:_D_COTACAOVENDA:TEXT)
 				
 	EndIf
 	

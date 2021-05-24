@@ -49,9 +49,11 @@ Static Function Processa(cEmp, cFil)
 	
 	Local dDataRecebimento	:= ""
 	Local nId				:= 0	
+	Local cTipo				:= ""
+	Local nTaxa				:= 0
 	
 	cQuery	+= " select ID=convert(int, [Antecipacao].ChaveUnica), EMPRESA=[EmpresaInterface].CodEmpresaERP, 								"	
-	cQuery	+= " FILIAL=[EmpresaInterface].CodUnidadeERP,DATA=COnvert(Date, DataRecebimento)												"				
+	cQuery	+= " FILIAL=[EmpresaInterface].CodUnidadeERP,DATA=COnvert(Date, DataRecebimento), [Antecipacao].Tipo, [Antecipacao].Taxa		"				
 	cQuery	+= " from [BPORTAL_SA].[dbo].[Antecipacao]																						"
 	cQuery	+= " inner join [BPORTAL_SA].[dbo].[EmpresaInterface] ON [Antecipacao].UnidadeID = [EmpresaInterface].UnidadeID					" 
 	cQuery	+= " WHERE 																														" 
@@ -71,6 +73,8 @@ Static Function Processa(cEmp, cFil)
 		
 		nId					:= cValtoChar(cAliasAnt->ID)
 		dDataRecebimento	:= (cAliasAnt->DATA) 
+		nTaxa				:= cAliasAnt->Taxa
+		cTipo				:= IIF(cAliasAnt->Tipo == 0, 'N', 'F')
 		
 		Conout("PFAF0001 => Antecipação Fornecedor: ID => "+nId)
 		
@@ -89,6 +93,7 @@ Static Function Processa(cEmp, cFil)
 			oFatPagItemStruct 				:= TFaturaPagarItemStruct():New()
 		 	oFatPagItemStruct:nId			:= Val(cAliasItem->Num)
 		 	oFatPagItemStruct:nValorDesc	:= cAliasItem->ValorOriginal - cAliasItem->ValorAntecipado 
+		 	oFatPagItemStruct:nTaxa			:= nTaxa
 		 	
 		 	oFatPagStruct:oFatPagItens:Add(oFatPagItemStruct)
 			
@@ -102,6 +107,7 @@ Static Function Processa(cEmp, cFil)
 		oFatPagStruct:cTipo				:= "FT" 
 		oFatPagStruct:lLoadDados		:= .T.
 		oFatPagStruct:dDataRecebimento	:= dDataRecebimento
+		oFatPagStruct:cTipoAntecipacao	:= cTipo
 		
 		oFaturaPagar	:=  TFaturaPagar():New(oFatPagStruct)
 		oResult 		:= oFaturaPagar:Incluir()

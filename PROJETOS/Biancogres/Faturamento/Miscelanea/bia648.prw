@@ -219,6 +219,8 @@ Static Function fBIA648F()
 				ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) == "ZBL_DEMPRP"
 					_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := Posicione("Z35", 1, xFilial("Z35") + M007->ZBL_EMPRP, "Z35_DESCR")
 
+				ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) == "ZBL_DSCSEG"
+					_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := Posicione("Z41", 1, xFilial("Z41") + M007->ZBL_TPSEG, "Z41_DESCR")
 				Else
 					_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := &(Alltrim(_oGetDados:aHeader[_msc][2]))
 
@@ -346,18 +348,29 @@ User Function B648FOK()
 	Local _nI
 	Local _msCANALD   := ""
 	Local _msEMPRP    := ""
+	Local _msTPSEG
 
 	Do Case
 
 		Case Alltrim(cMenVar) == "M->ZBL_CANALD"
 		_msCANALD   := M->ZBL_CANALD
 		_msEMPRP    := GdFieldGet("ZBL_EMPRP",_nAt)
+		_msTPSEG	:= GdFieldGet("ZBL_TPSEG",_nAt)
 		GdFieldPut("ZBL_DCANDI"   , Posicione("ZBJ", 1, xFilial("ZBJ") + M->ZBL_CANALD, "ZBJ_DESCR") , _nAt)
 
 		Case Alltrim(cMenVar) == "M->ZBL_EMPRP"
 		_msCANALD   := GdFieldGet("ZBL_CANALD",_nAt)
 		_msEMPRP    := M->ZBL_EMPRP
+		_msTPSEG	:= GdFieldGet("ZBL_TPSEG",_nAt)
 		GdFieldPut("ZBL_DEMPRP"   , Posicione("Z35", 1, xFilial("Z35") + M->ZBL_EMPRP + "01", "Z35_DESCR") , _nAt)
+
+		Case Alltrim(cMenVar) == "M->ZBL_TPSEG"
+		_msCANALD   := GdFieldGet("ZBL_CANALD",_nAt)
+		_msEMPRP    := GdFieldGet("ZBL_EMPRP",_nAt)
+		_msTPSEG	:= M->ZBL_TPSEG
+		
+		GdFieldPut("ZBL_DSCSEG"   , Posicione("Z41", 1, xFilial("Z41") + M->ZBL_TPSEG, "Z41_DESCR") , _nAt)
+		
 
 	EndCase
 
@@ -369,8 +382,10 @@ User Function B648FOK()
 
 				If !Empty(_msEMPRP) .and. _msEMPRP == GdFieldGet("ZBL_EMPRP",_nI)
 
-					MsgInfo("Não poderá haver a mesma CHAVE informada mais de uma vez na lista. Na linha: " + Alltrim(Str(_nI)) + " já existe a CHAVE informada!!!")
-					Return .F.
+					If !Empty(_msTpSeg) .and. _msTPSEG == GdFieldGet("ZBL_TPSEG",_nI)
+						MsgInfo("Não poderá haver a mesma CHAVE informada mais de uma vez na lista. Na linha: " + Alltrim(Str(_nI)) + " já existe a CHAVE informada!!!")
+						Return .F.
+					EndIf	
 
 				EndIf
 

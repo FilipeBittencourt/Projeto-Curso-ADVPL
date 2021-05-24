@@ -1,0 +1,19 @@
+user function F090BROW()
+    local cFilterRet as character
+    if (SE2->((FieldPos("E2_YANTTX")>0).and.(FieldPos("E2_YANTDES")>0)))
+        if (Type("cFilter")=="C")
+            cFilterRet:=&("cFilter")
+            if (!empty(cFilterRet))
+                if ("(E2_YANTTX=0) AND (E2_YANTDES=0) "$cFilterRet)
+                    cFilterRet+=" "
+                    cFilterRet+="AND  (E2_YANTTX=0) AND (E2_YANTDES=0)"
+                endif
+            else
+                cFilterRet:="(E2_YANTTX=0) AND (E2_YANTDES=0)"
+            endif
+            &("cFilter"):=cFilterRet
+        else
+            cFilter:="(E2_YANTTX=0) AND (E2_YANTDES=0)"
+        endif
+    endif
+    return

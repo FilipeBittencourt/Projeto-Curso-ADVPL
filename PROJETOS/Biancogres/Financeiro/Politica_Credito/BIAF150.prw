@@ -15,7 +15,9 @@ Local cQry := ""
 
 	RpcSetType(3)
 	RpcSetEnv("01", "01")
-		
+
+	ConOut("BIAF150 => [Gestao Carteira Ativa Rocket] - INICIO do Processo - DATE: "+DTOC(Date())+" TIME: "+Time())
+
 	cQry := GetNextAlias()
 	
 	cSQL := " SELECT * "
@@ -26,14 +28,16 @@ Local cQry := ""
 
 	While !(cQry)->(Eof())
 	
-		U_BIAF146(dDataBase, (cQry)->CLIENTE, (cQry)->LOJA, (cQry)->GRUPOCLI, (cQry)->CNPJ, (cQry)->LC, If ((cQry)->TPSEG == "Ë", (cQry)->LC, 0), "4", .F.)
+		U_BIAF146(dDataBase, (cQry)->CLIENTE, (cQry)->LOJA, (cQry)->GRUPOCLI, (cQry)->CNPJ, (cQry)->LC, If ((cQry)->TPSEG == "E", (cQry)->LC, 0), "4", .F.)
 	
 		(cQry)->(DbSkip())
 								
 	EndDo()
 
 	(cQry)->(DbCloseArea())		
-		
+
+	ConOut("BIAF150 => [Gestao Carteira Ativa Rocket] - FIM do Processo - DATE: "+DTOC(Date())+" TIME: "+Time())
+
 	RpcClearEnv()
 		
 Return()

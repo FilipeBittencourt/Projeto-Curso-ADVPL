@@ -26,20 +26,39 @@ User Function MT260TOK()
 	Local _lValida			:= .T.
 	Local _nSaldo			:= 0
 	Local _nEmpenhoBizagi	:= 0
+	Local _oMd	:=	TBiaControleMD():New()
 
 	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 	//³Executa validacao referente Almoxarifado Comum ³
 	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 	//Executa funcao de validacao com retorno imediato
 	lRet := U_fValProdComum(CCODDEST,CLOCDEST,"MT260TOK","T") //Paramentros da Funcao Produto/Almoxarifado/NomeProgroma/TipoMovimento(C=Compra/T=Transferencia)
-		
+
+	If _oMd:CheckMd(CCODORIG,CLOCORIG) .And. _oMd:CheckMd(CCODDEST,CLOCDEST)
+		If (IsBlind())
+			Conout("Impossível prosseguir, o produto é MD no Almoxarifado Origem e Destino  => MT260TOK")
+		Else	
+			MsgSTOP("Impossível prosseguir, o produto é MD no Almoxarifado Origem e Destino  => MT260TOK")
+		EndIf
+		Return .F.
+	EndIf
+
+	If !_oMd:CheckMd(CCODORIG,CLOCORIG) .And. _oMd:CheckMd(CCODDEST,CLOCDEST)
+		If (IsBlind())
+			Conout("Impossível prosseguir, o produto não é MD na Origem e é MD no Destino  => MT260TOK")
+		Else	
+			MsgSTOP("Impossível prosseguir, o produto não é MD na Origem e é MD no Destino  => MT260TOK")
+		EndIf
+		Return .F.
+	EndIf
+
 		
 	DbSelectArea("SB1")
 	cArqSB1 := Alias()
 	cIndSB1 := IndexOrd()
 	cRegSB1 := Recno()
-	DbSetOrder(1)
-	DbSeek(xFilial("SB1")+CCODORIG,.F.)
+	SB1->(DbSetOrder(1))
+	SB1->(DbSeek(xFilial("SB1")+CCODORIG,.F.))
 	
 	
 	If !(SB1->B1_TIPO $ "PA#PP")

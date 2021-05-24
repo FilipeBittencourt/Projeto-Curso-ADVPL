@@ -1,4 +1,5 @@
 #include "totvs.ch"
+#include "totvs.ch"
 #include "topconn.ch"
 #include "dbstruct.ch"
 
@@ -7,7 +8,7 @@ static __aIDProc	as array
 /*/{Protheus.doc} TAFBaixaReceber
 @author Tiago Rossini Coradini
 @since 03/12/2018
-@project Automao Financeira
+@project Automação Financeira
 @version 1.0
 @description Classe para efetuar baixa automatica de recebimentos
 @type class
@@ -34,6 +35,8 @@ Class TAFBaixaReceber From TAFAbstractClass
 	Method AjusteCliSE5(oObj)
 	Method ExecBaixaCR(oObj, cMotBx)
 	Method ExecMovFin(oObj, nValor, cNat, cHist)
+
+	Method Extend(oObj,cStatus)
 
 EndClass
 
@@ -263,10 +266,11 @@ Method Analyze() Class TAFBaixaReceber
 
 					Begin Transaction
 
-						//TODO: Se Bradesco e codigo ocorrencia 06 (Muda a data de vencimento conforme ZK8)
-						//ELSE ::Confirm.
-						
-						::Confirm(oObj)
+						if ((lBCoIsFIDC).and.(oObj:cCodOco=="14"))
+							::Extend(oObj,"F:P")
+						else
+							::Confirm(oObj)
+						endif
 
 						If (::lErro)
 
@@ -287,6 +291,13 @@ Method Analyze() Class TAFBaixaReceber
 							endif
 
 						elseif ((lTmpAliasA).and.(ZK4->ZK4_STATUS=="2"))
+
+							if (lBCoIsFIDC)
+								//Habilitar abaixo para Baixar Tambem ZKC e ZK8
+								if (.F.)
+									::Extend(oObj,"P:B")
+								endif
+							endif
 
 							lExecBaixaCR:=(cacheData():get("ExecBaixaCR","nSE1RecNo",0)==nSE1RecNo)
 							if (lExecBaixaCR)
@@ -566,8 +577,8 @@ static function addWFProc(cTmpTableA as character,cZK4File as character) as logi
 
 		oSuperWFP:oLog:Insert()
 
-		oSuperWFP:oPro:oWFP:cSX2Alias:="ZK4"
-		oSuperWFP:oPro:oWFP:cFieldFil:="ZK4_FILIAL"
+		oSuperWFP:oPro:oWFP:bSX2Alias:={||"ZK4"}
+		oSuperWFP:oPro:oWFP:bFieldFil:={||"ZK4_FILIAL"}
 		oSuperWFP:oPro:oWFP:bSetField:={|cTab,cFil,cID|WFPSetField(@oSuperWFP,@aFields,@cTab,@cFil,@cID)}
 		
 		oSuperWFP:oPro:Finish()
@@ -1104,6 +1115,7 @@ static function read2Excel(aFiles as array) as logical
 	return(lRet)
 
 Method Validate(oObj) Class TAFBaixaReceber
+	
 	Local lRet := .F.
 
 	If ::Exist(oObj)
@@ -1221,6 +1233,7 @@ Return(lRet)
 
 
 Method VldBankReceipt(oObj) Class TAFBaixaReceber
+	
 	Local lRet := .F.
 
 	If oObj:cBanco == "001"
@@ -1239,9 +1252,10 @@ Method VldBankReceipt(oObj) Class TAFBaixaReceber
 	ElseIf oObj:cBanco == "237"
 
 		// 06=LIQUIDACAO NORMAL
+		// 14=VENCIMENTO ALTERADO
 		// 15=LIQUIDACAO EM CARTORIO
 
-		If oObj:cCodOco $ "06/15"
+		If oObj:cCodOco $ "06/14/15"
 
 			lRet := .T.
 
@@ -1438,8 +1452,9 @@ Return()
 
 
 Method BankReceipt(oObj) Class TAFBaixaReceber
-	Local aVar := Array(1, 14)
-	Local oRecAnt := TRecebimentoAntecipado():New()
+	
+	Local aVar
+	Local oRecAnt
 	Local lRA := .F.
 	Local cMotBx := "NOR"
 	Local nAuxTxCart := 0
@@ -1448,16 +1463,18 @@ Method BankReceipt(oObj) Class TAFBaixaReceber
 	Local nAuxTxCob := 0
 	Local lRet := .T.
 
-	// Variaveis utilizadas para lancamento contabil na classe de recebimento antecipado
-	Private nHdlPrv 	:= 0
-	Private cLote		:= "008850"
-	Private aFlagCTB	:= {}
-	Private cArquivo := ""
+	If ( (::VldBankReceipt(oObj)) .and. (oObj:cCodOco<>"14") )
 
-	If ::VldBankReceipt(oObj)
+		// Variaveis utilizadas para lancamento contabil na classe de recebimento antecipado
+		Private nHdlPrv 	:= 0
+		Private cLote		:= "008850"
+		Private aFlagCTB	:= {}
+		Private cArquivo := ""
 
+		oRecAnt:=TRecebimentoAntecipado():New()
 		oRecAnt:lJob := .T.
 
+		aVar := Array(1, 14)		
 		aVar[1] := {,,,SE1->E1_NUMBCO, oObj:nVlTar, 0,, oObj:nVlRec,,,,,oObj:dDtCred, oObj:cCodOco}
 
 		//Verificando se eh recebimento antecipado
@@ -1646,6 +1663,7 @@ Return()
 
 Method ExecMovFin(oObj, nValor, cNat, cHist) Class TAFBaixaReceber
 	
+	local aPerg := {}
 	Local aMovBan := {}
 	Local aAutoErro := {}
 	Local cLogTxt := ""
@@ -1692,6 +1710,10 @@ Method ExecMovFin(oObj, nValor, cNat, cHist) Class TAFBaixaReceber
 	aAdd(aMovBan, {"E5_FILORIG", cFilAnt, Nil})
 
 	aMovBan := FWVetByDic(aMovBan, "SE5", .F., 1)
+
+	Pergunte("AFI100", .F.,,,,, @aPerg)
+		MV_PAR02 := 2
+	__SaveParam("AFI100", aPerg)
 
 	MsExecAuto({|x,y,z| FINA100(x,y,z)}, 0, aMovBan, 3)
 
@@ -1798,14 +1820,6 @@ Method ExecBaixaCR(oObj, cMotBx) Class TAFBaixaReceber
 		cFilAnt := SE1->E1_FILIAL
 	EndIf
 
-	Pergunte("FIN070", .F.,,,,, @aPerg)
-
-	MV_PAR01 := 2
-	MV_PAR03 := 1
-	MV_PAR05 := 1
-
-	__SaveParam("FIN070", aPerg)
-
 	aAdd(aTit, {"E1_PREFIXO", SE1->E1_PREFIXO, Nil})
 	aAdd(aTit, {"E1_NUM", SE1->E1_NUM, Nil})
 	aAdd(aTit, {"E1_PARCELA", SE1->E1_PARCELA, Nil})
@@ -1821,6 +1835,12 @@ Method ExecBaixaCR(oObj, cMotBx) Class TAFBaixaReceber
 	aAdd(aTit, {"AUTMULTA", oObj:nVlMult, Nil,.T.})
 	aAdd(aTit, {"AUTACRESC", oObj:nVlOCre, Nil})
 	aAdd(aTit, {"AUTVALREC", oObj:nVlRec, Nil})
+
+	Pergunte("FIN070", .F.,,,,, @aPerg)
+		MV_PAR01 := 2
+		MV_PAR03 := 1
+		MV_PAR05 := 1
+	__SaveParam("FIN070", aPerg)
 
 	MsExecAuto({|x,y| FINA070(x,y)}, aTit, 3)
 
@@ -2006,3 +2026,200 @@ Method GetErrorLog(aError) Class TAFBaixaReceber
 	Next nX
 
 Return(cRet)
+
+Method Extend(oObj,cStatus) Class TAFBaixaReceber
+	
+	local cMsg			as character
+	
+	local cSStatus		as character
+	local cTStatus		as character
+	
+	local cZK8Order		as character
+	local cZK8KeySeek	as character
+
+	local cZKCOrder		as character
+	local cZKCKeySeek	as character
+
+	local dExtend		as date
+	
+	local lExtend		as logical
+	local lSE1Lock		as logical
+	local lZK8Lock		as logical
+	local lZKCLock		as logical
+	local lZKCFound		as logical
+	local lZKCStatus	as logical
+
+	local nZK8RecNo		as numeric
+	local nZKCRecNo		as numeric
+
+	local nZK8Order		as numeric
+	local nZKCOrder		as numeric
+
+	cSStatus:=left(cStatus,1)
+	cTStatus:=right(cStatus,1)
+
+	cZKCOrder:="ZKC_FILIAL+ZKC_NUM+ZKC_PREFIX+ZKC_PARCEL+ZKC_TIPO+ZKC_CLIFOR+ZKC_LOJA"
+	nZKCOrder:=retOrder("ZKC",cZKCOrder)
+	ZKC->(dbSetOrder(nZKCOrder))
+
+	cZKCKeySeek:=xFilial("ZKC")
+	cZKCKeySeek+=SE1->E1_NUM
+	cZKCKeySeek+=SE1->E1_PREFIXO
+	cZKCKeySeek+=SE1->E1_PARCELA
+	cZKCKeySeek+=SE1->E1_TIPO
+	cZKCKeySeek+=SE1->E1_CLIENTE
+	cZKCKeySeek+=SE1->E1_LOJA
+
+	lZKCFound:=(ZKC->(dbSeek(cZKCKeySeek,.F.)))
+	
+	lExtend:=(lZKCFound)
+
+	if (lExtend)
+
+		while ZKC->(!eof().and.(&(cZKCOrder)==cZKCKeySeek))
+			lExtend:=(ZKC->ZKC_STATUS==cSStatus)
+			if (lExtend)
+				nZKCRecNo:=ZKC->(recNo())
+				exit
+			endif
+			ZKC->(dbSkip())
+		end while
+
+	endif
+
+	if (lExtend)
+		ZKC->(MsGoTo(nZKCRecNo))
+		lZKCLock:=ZKC->(recLock("ZKC",.F.))
+		lSE1Lock:=SE1->(recLock("SE1",.F.))
+		lExtend:=((lZKCLock).and.(lSE1Lock))
+		dExtend:=ZKC->ZKC_VENCCA
+		if ((lExtend).and.(cTStatus=="P"))
+			SE1->E1_VENCTO:=dExtend
+			SE1->E1_VENCREA:=dExtend
+			SE1->E1_PORCJUR:=ZKC->(ROUND((((ZKC_TXJUR/30/100)*ZKC_DIAS)*1),2))
+			SE1->E1_JUROS:=ZKC->ZKC_JUROS
+			SE1->(MsUnLock())
+		endif
+	endif
+
+	if (!lExtend)
+	
+		if (!cTStatus=="B")
+
+			if (!lZKCFound)
+				cMsg:="PRORROGACAO NAO ENCONTRADA"
+			elseif (ZK8->ZK8_STATUS=="P")
+				cMsg:="TITULO PRORROGADO ANTERIORMENTE"
+			elseif (ZK8->ZK8_STATUS=="B")
+				cMsg:="TITULO PRORROGADO BAIXADO ANTERIORMENTE"
+			else
+				cMsg:="REGISTRO EM USO"
+			endif
+
+			::oLog:cIDProc := ::oPro:cIDProc
+			::oLog:cTabela := RetSQLName("ZK4")
+			::oLog:nIDTab := oObj:nID
+			::oLog:cHrFin := Time()
+			::oLog:cRetMen := "NAO FOI POSSIVEL ALTERAR O VENCIMENTO DO TITULO : "+cMsg
+			::oLog:cOperac := "R"
+			::oLog:cMetodo := "CR_BAI_TIT"
+			::oLog:cEnvWF := "S"
+
+			::UpdStatus(oObj:nID, "1", ::oLog:cRetMen)
+
+			::oLog:Insert()
+
+		endif
+
+	else
+
+		ZKC->(MsGoTo(nZKCRecNo))
+
+		DEFAULT lZKCLock:=ZKC->(recLock("ZKC",.F.))
+
+		if (lZKCLock)
+
+			ZKC->ZKC_STATUS:=cTStatus
+			ZKC->(MsUnLock())
+
+			cZK8Order:="ZK8_FILIAL+ZK8_NUMERO"
+			nZK8Order:=retOrder("ZK8",cZK8Order)
+			ZK8->(dbSetOrder(nZK8Order))
+			
+			cZK8KeySeek:=xFilial("ZK8",ZKC->ZKC_FILIAL)
+			cZK8KeySeek+=ZKC->ZKC_NUMERO
+
+			lZK8Found:=(ZK8->(dbSeek(cZK8KeySeek,.F.)))
+	
+			if (lZK8Found)
+				
+				while ZK8->(!eof().and.(cZK8KeySeek==ZK8_FILIAL+ZK8_NUMERO))
+					if (ZK8->ZK8_CODCLI==ZKC->ZKC_CLIFOR)
+						nZK8RecNo:=ZK8->(recNo())
+						exit
+					endif
+					ZK8->(dbSkip())
+				end while
+
+				if (!empty(nZK8RecNo))
+
+					ZK8->(MsGoTo(nZK8RecNo))
+
+					cZKCOrder:="ZKC_FILIAL+ZKC_NUMERO"
+					nZKCOrder:=retOrder("ZKC",cZKCOrder)
+					ZKC->(dbSetOrder(nZKCOrder))
+					cZKCKeySeek:=xFIlial("ZKC")
+					cZKCKeySeek+=ZK8->ZK8_NUMERO
+					lZKCFound:=ZKC->(dbSeek(cZKCKeySeek,.F.))
+
+					if (lZKCFound)
+
+						while ZKC->(!eof().and.(ZKC_FILIAL+ZKC_NUMERO)==cZKCKeySeek)
+							lZKCStatus:=(ZKC->ZKC_STATUS==cTStatus)
+							if (!lZKCStatus)
+								exit
+							endif
+							ZKC->(dbSkip())
+						end while
+
+						if (lZKCStatus)
+							lZK8Lock:=ZK8->(recLock("ZK8",.F.))
+							if (lZK8Lock)
+								ZK8->ZK8_STATUS:=cTStatus
+								ZK8->(MsUnLock())
+							endif
+						endif
+
+					endif
+
+				endif
+			
+			endif
+		
+		endif
+
+		if (cTStatus=="P")
+		
+			cMsg:="NOVO VENCIMENTO"
+			cMsg+=" : [ "
+			cMsg+=DToC(dExtend)
+			cMsg+=" ]"
+
+			::oLog:cIDProc := ::oPro:cIDProc
+			::oLog:cTabela := RetSQLName("ZK4")
+			::oLog:nIDTab := oObj:nID
+			::oLog:cHrFin := Time()
+			::oLog:cRetMen := "TITULO PRORROGADO : "+cMsg
+			::oLog:cOperac := "R"
+			::oLog:cMetodo := "CR_BAI_TIT"
+			::oLog:cEnvWF := "S"
+
+			::UpdStatus(oObj:nID, "1", ::oLog:cRetMen)
+
+			::oLog:Insert()
+
+		endif
+
+	endif
+
+	return(lExtend)

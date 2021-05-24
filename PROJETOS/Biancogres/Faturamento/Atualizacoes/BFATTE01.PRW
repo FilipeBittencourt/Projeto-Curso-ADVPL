@@ -211,12 +211,15 @@ User Function BFTE01MA(_cOpca)
 		M->Z68_CTEL		:= ZZO->ZZO_TELC1
 
 		//Ticket 31691: solicitação do Claudeir para que a data de validade seja definida na inclusão e não mais na aprovação
-		if ( Day(dDataBase) <= 28 )
-			M->Z68_DTVALI := Lastday(dDataBase,  0)
-		else
-			//se nDiaVenc é 4, a data é dia 05 do mês subsequente
-			M->Z68_DTVALI := DaySum(Firstday(MonthSum(dDataBase, 1)), nDiaVenc)
-		endif
+		//if ( Day(dDataBase) <= 28 )
+		//	M->Z68_DTVALI := Lastday(dDataBase,  0)
+		//else
+		//	//se nDiaVenc é 4, a data é dia 05 do mês subsequente
+		//	M->Z68_DTVALI := DaySum(Firstday(MonthSum(dDataBase, 1)), nDiaVenc)
+		//endif
+
+		//ticket 32249 Nova solicitação da diretoria: todas propostas devem ter data limite ultimo dia do mês
+		M->Z68_DTVALI := Lastday(dDataBase,  0)
 
 	EndIf
 
@@ -339,13 +342,15 @@ User Function BFTE01MA(_cOpca)
 		//Validade para "dentro do mês" e para as propostas feitas a partir do dia 20, validade de 15 dias.
 		//Esta regra foi alterada e a data de validade é setada ao incluir a proposta. 
 		//apenas para manter as propostas já correntes funcionando, atribuir conforme nova regra memso na aprovação.
-		if ( Day(dDataBase) <= 28 )
-			M->Z68_DTVALI := Lastday(dDataBase,  0)
-		else
-			//se nDiaVenc é 4, a data é dia 05 do mês subsequente
-			M->Z68_DTVALI := DaySum(Firstday(MonthSum(dDataBase, 1)), nDiaVenc)
-		endif
+		// if ( Day(dDataBase) <= 28 )
+		// 	M->Z68_DTVALI := Lastday(dDataBase,  0)
+		// else
+		// 	//se nDiaVenc é 4, a data é dia 05 do mês subsequente
+		// 	M->Z68_DTVALI := DaySum(Firstday(MonthSum(dDataBase, 1)), nDiaVenc)
+		// endif
 
+		//ticket 32249 Nova solicitação da diretoria: todas propostas devem ter data limite ultimo dia do mês
+		M->Z68_DTVALI := Lastday(dDataBase,  0)
 
 		aAltEnch := {"Z68_STATUS", "Z68_OBSAPR"} //campos para alterar
 
@@ -440,12 +445,15 @@ User Function BFTE01MA(_cOpca)
 				// 	Z68->Z68_DTVALI := dDataBase + nDiasVenc
 				// endif
 
-			if ( Day(dDataBase) <= 28 )
-				Z68->Z68_DTVALI := Lastday(dDataBase,  0)
-			else
-				//se nDiaVenc é 4, a data é dia 05 do mês subsequente
-				Z68->Z68_DTVALI := DaySum(Firstday(MonthSum(dDataBase, 1)), nDiaVenc)
-			endif
+			// if ( Day(dDataBase) <= 28 )
+			// 	Z68->Z68_DTVALI := Lastday(dDataBase,  0)
+			// else
+			// 	//se nDiaVenc é 4, a data é dia 05 do mês subsequente
+			// 	Z68->Z68_DTVALI := DaySum(Firstday(MonthSum(dDataBase, 1)), nDiaVenc)
+			// endif
+
+			//ticket 32249 18/05/2021
+			Z68->Z68_DTVALI := Lastday(dDataBase,  0)
 
 			Z68->(MsUnlock())
 

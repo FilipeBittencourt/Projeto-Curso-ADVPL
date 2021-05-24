@@ -365,6 +365,7 @@ STATIC Function CRIA_EMAIL()
 	C_HTML += '<tr> '
 	C_HTML += '    <td><div align="left"> CLIENTE: <b>'+Alltrim(SA1->A1_NOME)+'</b></td> '
 	C_HTML += '    <td><div align="left"> CÓDIGO: <b>'+Alltrim(SA1->A1_COD)+'</b></td> '
+	C_HTML += '    <td><div align="left"> Cliente Ped. Compra: <b>' + Alltrim(SC5->C5_YPC) + '</b></td> '
 	C_HTML += '  </tr> '
 	C_HTML += '<tr> '
 	C_HTML += '    <td><div align="left"> ENDEREÇO: <b>'+Alltrim(SA1->A1_END)+'</b></td> '

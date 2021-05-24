@@ -35,5 +35,10 @@ IF cempant $ ("01_05_06_07_12_13_14_16")
 	U_BIAF107(SC8->C8_NUM)
 	
 ENDIF
+
+	If (SUPERGETMV("MV_YRTPAY", .F., .F.))
+		//RequestToPay
+		U_RETP0006()
+	EndIf	
                          
-Retur
+Return

@@ -26,8 +26,10 @@ Class TAFParProrrogacaoBoletoReceber From LongClassName
 	Data cConta
 	Data cObs
 	Data lDepAnt // Se sera gerado Deposito antecipado (Renegociacao devido COVID-19)
+	Data lFIDC
 	//Data dDeposito
 	Data cUserJrNDepAnt
+	Data oJSon
 
 	Method New() Constructor
 	Method Add()
@@ -51,49 +53,53 @@ Method New() Class TAFParProrrogacaoBoletoReceber
 	::nPerc := 6
 	::dVencto := dDataBase
 
-	::cBanco := Space(TamSx3("A6_COD")[1])
-	::cAgencia := Space(TamSx3("A6_AGENCIA")[1])
-	::cConta := Space(TamSx3("A6_NUMCON")[1])
+	::cBanco := Space(getSX3Cache("A6_COD","X3_TAMANHO"))
+	::cAgencia := Space(getSX3Cache("A6_AGENCIA","X3_TAMANHO"))
+	::cConta := Space(getSX3Cache("A6_NUMCON","X3_TAMANHO"))
 	::cObs := ""
 	::lDepAnt := .F.
+	::lFIDC:=.F.
 	//::dDeposito := dDataBase
-	::cUserJrNDepAnt := U_GetBIAPAR("MV_YUSJDAN", "001120")
+	::cUserJrNDepAnt := U_GetBIAPAR("MV_YUSJDAN","001120")
 
 	::Add()
 	
 Return()
 
-
 Method Add() Class TAFParProrrogacaoBoletoReceber
-		
-	aAdd(::aParam, {9, "Informe os dados para o cálculo ou não de juros", 200,, .T.})	
-	aAdd(::aParam, {2, "Calc. juros", ::cCalc, {"Sim", "Nao"}, 50, ".T.", .T.})		
-	aAdd(::aParam, {1, "Percentual", ::nPerc, X3Picture("E1_PORCJUR"), ".T.",,"MV_PAR02 == 'Sim'", 50,.F.})
-	aAdd(::aParam, {1, "Dt. Vencto JR", ::dVencto, "@D", ".T.",,"MV_PAR02 == 'Sim'",,.F.})
 
-	If ::lDepAnt
+	if (::lFIDC)
+		::dVencto:=Ctod("")
+	endif
 
-		aAdd(::aParam, {9, "Informe os dados para depósito identificado", 200,, .T.})
+	aAdd(::aParam,{9,"Informe os dados para o cálculo ou não de juros",200,nil,.T.})	
+	aAdd(::aParam,{2,"Calc. juros",::cCalc,{"Sim","Nao"},50,".T.",.T.})		
+	aAdd(::aParam,{1,"Percentual",::nPerc,X3Picture("E1_PORCJUR"),".T.",nil,"(MV_PAR02=='Sim')",50,.F.})
+	aAdd(::aParam,{1,"Dt. Vencto JR",::dVencto,"@D",".T.",nil,if(::lFIDC,"AllWaysFalse().AND.","")+"(MV_PAR02=='Sim')",nil,.F.})
 
-		aAdd(::aParam, {1, "Banco"		, ::cBanco		, "@!", ".T.", "SA6", "MV_PAR02 == 'Sim'",,.F.})
-		aAdd(::aParam, {1, "Agência"	, ::cAgencia	, "@!", ".T.",, "MV_PAR02 == 'Sim'",,.F.})
-		aAdd(::aParam, {1, "Conta"		, ::cConta		, "@!", ".T.",, "MV_PAR02 == 'Sim'",,.F.})
-		//aAdd(::aParam, {1, "Dt. Depósito", ::dDeposito, "@D", ".T.",,".T.",,.T.})
+	If ((::lDepAnt).or.(::lFIDC))
 
-		aAdd(::aParam, {11,"Observação","",".T.",".T.",.F.})
+		aAdd(::aParam,{9,"Informe os dados para depósito identificado",200,nil,.T.})
+
+		aAdd(::aParam,{1,"Banco",::cBanco,"@!",".T.","SA6",if(::lFIDC,"AllWaysFalse().AND.","")+"(MV_PAR02=='Sim')",nil,.F.})
+		aAdd(::aParam,{1,"Agência",::cAgencia,"@!",".T.",nil,if(::lFIDC,"AllWaysFalse().AND.","")+"(MV_PAR02=='Sim')",nil,.F.})
+		aAdd(::aParam,{1,"Conta",::cConta,"@!",".T.",nil,if(::lFIDC,"AllWaysFalse().AND.","")+"(MV_PAR02=='Sim')",nil,.F.})
+
+		aAdd(::aParam,{11,"Observação","",".T.",".T.",.F.})
 
 	EndIf
 
 Return()
 
-
 Method Box() Class TAFParProrrogacaoBoletoReceber
-Local lRet := .F.
-Private cCadastro := "Parametros"
-	
-	If ::lDepAnt
 
-		::aParam := {}
+	Local lRet := .F.
+
+	Private cCadastro := "Parametros"
+	
+	If ((::lDepAnt).or.(::lFIDC))
+
+		aSize(::aParam,0)
 
 		::Add()
 
@@ -101,7 +107,7 @@ Private cCadastro := "Parametros"
 
 	::bConfirm := {|| ::Confirm() }
 	
-	If ParamBox(::aParam, "Operações", ::aParRet, ::bConfirm,,,,,,::cName, .F., .T.)
+	If ParamBox(::aParam,"Operações",::aParRet,::bConfirm,nil,,nil,,nil,::cName,.F.,.T.)
 		
 		lRet := .T.
 			
@@ -109,14 +115,23 @@ Private cCadastro := "Parametros"
 		::nPerc := ::aParRet[3]
 		::dVencto := ::aParRet[4]
 
-		If ::lDepAnt
+		If ((::lDepAnt).or.(::lFIDC))
 			
-			::cBanco := ::aParRet[6]
-			::cAgencia := ::aParRet[7]
-			::cConta := ::aParRet[8]
-			//::dDeposito := ::aParRet[9]
+			if (::lDepAnt)
+				::cBanco := ::aParRet[6]
+				::cAgencia := ::aParRet[7]
+				::cConta := ::aParRet[8]
+			endif
 
-			::cObs := ::aParRet[9]
+			if (::lFIDC)
+				DEFAULT ::oJSon:=JSONArray():New()
+				::oJSon:Set("Juros",if((::nPerc>0),"Sim","Nao"))
+				::oJSon:Set("txJuros",::nPerc)
+				::oJSon:Set("Obs",::aParRet[9])
+				::cObs:=::oJSon:toJSON()
+			else
+				::cObs:=::aParRet[9]
+			endif
 
 		EndIf
 
@@ -126,7 +141,8 @@ Return(lRet)
 
 
 Method Validate() Class TAFParProrrogacaoBoletoReceber
-Local lRet := .T.
+	
+	Local lRet := .T.
 
 	If Upper(MV_PAR02) == "SIM"
 	
@@ -134,15 +150,15 @@ Local lRet := .T.
 		
 			lRet := .F.
 		
-			MsgStop("Atenção, percentual de júros inválido.")
+			MsgStop("Atenção,percentual de júros inválido.")
 		
-		ElseIf MV_PAR04 <> DataValida(MV_PAR04)
+		ElseIf ((!::lFIDC).and.(MV_PAR04<>DataValida(MV_PAR04)))
 			
 			lRet := .F.
 			
-			MsgStop("Atenção, data de vencimento inválida.")
+			MsgStop("Atenção,data de vencimento inválida.")
 			
-		ElseIf MV_PAR04 < dDataBase
+		ElseIf ((!::lFIDC).and.(MV_PAR04<dDataBase))
 			
 			lRet := .F.
 			
@@ -150,36 +166,39 @@ Local lRet := .T.
 			
 		EndIf
 
-	ElseIf Upper(MV_PAR02) == "NAO"
+	ElseIf (Upper(MV_PAR02)=="NAO")
 
-		If ::lDepAnt
-		
-			If !(__cUserID $ ::cUserJrNDepAnt)
+		if (!::lFIDC)
+
+			If (::lDepAnt)
 			
-				lRet := .F.
-			
-				MsgStop("Usuario não autorizado a não geração do título de Juros!")
+				If !(__cUserID $ ::cUserJrNDepAnt)
+				
+					lRet := .F.
+				
+					MsgStop("Usuario não autorizado a não geração do título de Juros!")
+
+				EndIf
 
 			EndIf
 
-		EndIf
-	
+		endif
+
 	EndIf
 
-	If lRet .And.::lDepAnt
+	If ((lRet).And.(::lDepAnt))
 
 		If Len(AllTrim(MV_PAR09)) > TamSx3("E1_HIST")[1]
 
 			lRet := .F.
 			
-			MsgStop("O campo Observação está com " + cValTochar(Len(AllTrim(MV_PAR09))) + " digitos, o tamanho limite para o campo Observação é de " + AllTrim(cValToChar(TamSx3("E1_HIST")[1])) + " digitos !")
+			MsgStop("O campo Observação está com " + cValTochar(Len(AllTrim(MV_PAR09))) + " digitos,o tamanho limite para o campo Observação é de " + AllTrim(cValToChar(TamSx3("E1_HIST","X3_TAMANHO"))) + " digitos !")
 
 		EndIf
 
 	EndIf
 	
 Return(lRet)
-
 
 Method Confirm() Class TAFParProrrogacaoBoletoReceber
 	

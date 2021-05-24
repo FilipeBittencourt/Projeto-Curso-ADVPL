@@ -39,7 +39,7 @@ Method BuscarPorRecno(_nId) Class TContaPagarLoad
 		oCPStruct:dVencReal		:= SE2->E2_VENCREA
 		oCPStruct:dVencOri	 	:= SE2->E2_VENCORI
 		oCPStruct:nSaldo 		:= SE2->E2_SALDO
-		
+		oCPStruct:nValorOri		:= SE2->E2_VALOR
 		
 	EndIf
 

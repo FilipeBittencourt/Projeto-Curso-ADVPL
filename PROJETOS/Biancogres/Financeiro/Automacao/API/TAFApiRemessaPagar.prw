@@ -15,8 +15,10 @@ Class TAFApiRemessaPagar From TAFAbstractClass
 	Data cOpcEnv // L=Lote; T=Titulo
 	Data cReimpr // N=Nao (incluir novo titulo); S=Sim (reimprimir / segunda via de boleto)
 	Data GArqRem
+	Data CMovRem
 	Data cIDProc // Identificador do Processo		
 	Data oApi // Interface da API
+	Data cTpAgrup
 	
 	Method New() Constructor
 	Method Send() // Envia tirulos para a API
@@ -25,6 +27,7 @@ Class TAFApiRemessaPagar From TAFAbstractClass
 	Method ProcessReturn() // Processa retorno da API
 	Method SetRetSE2(oBjTitulo)
 	Method CleanBordero(cBordero, cPrefixo, cNum, cParcela, cTipo)
+	Method SendBProc(oLstBatch)
 
 EndClass
 
@@ -33,12 +36,14 @@ Method New() Class TAFApiRemessaPagar
 
 	_Super:New()
 	
-	::cOpcEnv := "L"
-	::cReimpr := "N"
-	::GArqRem := "N"	
+	::cOpcEnv 	:= "L"
+	::cReimpr 	:= "N"
+	::GArqRem 	:= "N"	
+	::CMovRem	:= ""
 	::cIDProc	:= ""
-	::oApi := TIAFApiRemessa():New()
-
+	::cTpAgrup	:= ""
+	::oApi 		:= TIAFApiRemessa():New()
+	::oApi:nOperacao := 2 //pagamento		
 Return()
 
 
@@ -58,43 +63,137 @@ Return()
 
 
 Method SendBatch() Class TAFApiRemessaPagar
-Local nCount := 1
-Local cNumero := ""
-Local oBol := ArrayList():New()
+	
+	Local nCTpCom := 1
+	Local cNumero := ""
+	Local oBol := ArrayList():New()
 
-	aSort(::oLst:ToArray(),,,{|x,y| x:cCliFor + x:cLoja + x:cPrefixo + x:cNumero + x:cParcela < y:cCliFor + y:cLoja + y:cPrefixo + y:cNumero + y:cParcela })
+	aSort(::oLst:ToArray(),,,{|x,y| x:cTpCom < y:cTpCom })
 
-	While nCount <= ::oLst:GetCount()
+	While nCTpCom <= ::oLst:GetCount()
 
-		cNumero := ::oLst:GetItem(nCount):cNumero
+		cTipoCom := ::oLst:GetItem(nCTpCom):cTpCom
 
-		While nCount <= ::oLst:GetCount() .And. cNumero == ::oLst:GetItem(nCount):cNumero
+		While nCTpCom <= ::oLst:GetCount() .And. cTipoCom == ::oLst:GetItem(nCTpCom):cTpCom
 
-			oBol:Add(::oLst:GetItem(nCount))
+			oBol:Add(::oLst:GetItem(nCTpCom))
 
-			cNumero := ::oLst:GetItem(nCount):cNumero
+			cTipoCom := ::oLst:GetItem(nCTpCom):cTpCom
 
-			nCount++
+			nCTpCom++
 
 		EndDo()
 
-		::oApi:cReimpr := ::cReimpr
-		
-		::oApi:GArqRem := ::GArqRem		
-		
-		::oApi:Send(oBol)
+		//Se e arquivo de remessa
+		If ( cTipoCom $ "2#4" ) .Or. ( !Empty(::CMovRem) )
 
-		::ProcessReturn()
+			::GArqRem := "S"
+
+		Else
+
+			::GArqRem := "N"
+
+		EndIf		
+
+		::SendBProc(oBol)
 
 		oBol:Clear()
-
-		If nCount <= ::oLst:GetCount()
-
-			cNumero := ::oLst:GetItem(nCount):cNumero
-
-		EndIf
-
+		
 	EndDo()
+
+Return()
+
+
+Method SendBProc(oLstBatch) Class TAFApiRemessaPagar
+	
+	Local nCount		:= 1
+	Local cNumero		:= ""
+	Local oBol			:= ArrayList():New()
+	Local bValid		:= {|| }
+	Local bValidCond	:= {|| __nContArq <= 50}
+	Local cChave		:= "" 
+	
+	If (::cTpAgrup == 'C')
+		bValid		:= {|| cChave := ::oLst:GetItem(nCount):cCliFor+ ::oLst:GetItem(nCount):cLoja }
+		bValidCond	:= {|| cChave == ::oLst:GetItem(nCount):cCliFor+ ::oLst:GetItem(nCount):cLoja }
+	EndIf
+	
+
+	IF (!::GArqRem == "S")
+
+		aSort(oLstBatch:ToArray(),,,{|x,y| x:cCliFor + x:cLoja + x:cPrefixo + x:cNumero + x:cParcela < y:cCliFor + y:cLoja + y:cPrefixo + y:cNumero + y:cParcela })
+
+		While nCount <= oLstBatch:GetCount()
+
+			cNumero := oLstBatch:GetItem(nCount):cNumero
+
+			While nCount <= oLstBatch:GetCount() .And. cNumero == oLstBatch:GetItem(nCount):cNumero
+
+				oBol:Add(oLstBatch:GetItem(nCount))
+
+				cNumero := oLstBatch:GetItem(nCount):cNumero
+
+				nCount++
+
+			EndDo()
+
+			::oApi:cReimpr := ::cReimpr
+
+			::oApi:GArqRem := ::GArqRem
+
+			::oApi:CMovRem := ::CMovRem
+
+			::oApi:Send(oBol)
+
+			::ProcessReturn(oBol)
+
+			oBol:Clear()
+
+			If nCount <= oLstBatch:GetCount()
+
+				cNumero := oLstBatch:GetItem(nCount):cNumero
+
+			EndIf
+
+		EndDo()
+
+	ELSE
+
+		__nContArq := 1
+
+		While nCount <= oLstBatch:GetCount()
+
+			cNumero := oLstBatch:GetItem(nCount):cNumero
+			Eval(bValid)
+			
+			While nCount <= oLstBatch:GetCount() .And. Eval(bValidCond)
+
+				oBol:Add(oLstBatch:GetItem(nCount))
+
+				CONOUT("********TAFApiRemessaPagar ==>> GERAR ARQUIVO REMESSA : LOOP ARQUIVO "+AllTrim(Str(__nContArq))+" ***********")
+
+				__nContArq++
+				nCount++
+
+			EndDo()
+
+			::oApi:cReimpr := ::cReimpr
+
+			::oApi:GArqRem := ::GArqRem
+
+			::oApi:CMovRem := ::CMovRem
+
+			::oApi:Send(oBol)
+
+			::ProcessReturn(oBol)
+
+			oBol:Clear()
+
+			__nContArq := 1
+
+		EndDo()
+
+	ENDIF
 
 Return()
 
@@ -125,68 +224,101 @@ Return()
 
 
 Method ProcessReturn() Class TAFApiRemessaPagar
-Local cMsg := ""
-Local oLog := TAFLog():New()
-Local nW	:= 0
-Local nX	:= 0
-Local lOk	:= .F.
+	
+	Local cMsg	:= ""
+	Local oLog	:= TAFLog():New()
+	Local nW	:= 0
+	Local nX	:= 0
+	Local lOk	:= .F.
 
 	::oLog:cIDProc := ::cIDProc
 	::oLog:cOperac := "P"
 	::oLog:cMetodo := "I_RET_LOT"
 
 	::oLog:Insert()
-
-	For nW := 1 To Len(::oApi:oRet:oRetorno:Titulos)
-
-		::oLog:cIDProc := ::cIDProc
-		::oLog:cStAPI := "1"
-		::oLog:cOperac := "P"
-		::oLog:cMetodo := "CP_RET_OK"
-		::oLog:cTabela := RetSQLName("SE2")
-		::oLog:nIDTab := Val(::oApi:oRet:oRetorno:Titulos[nW]:NumeroControleParticipante)
-		
-		For nX := 1 To Len(::oApi:oRet:oRetorno:Titulos[nW]:Eventos)
-		
-			::oLog:cRetOri := AllTrim(Str(::oApi:oRet:oRetorno:Titulos[nW]:Eventos[nX]:OrigemRetorno))
-
-			::oLog:cRetMen := ::oApi:oRet:oRetorno:Titulos[nW]:Eventos[nX]:DescricaoErro
+	
+	If (::oApi:oRet:Ok)
+		For nW := 1 To Len(::oApi:oRet:oRetorno:Titulos)
+	
+			::oLog:cIDProc := ::cIDProc
+			::oLog:cStAPI := "1"
+			::oLog:cOperac := "P"
+			::oLog:cMetodo := "CP_RET_OK"
+			::oLog:cTabela := RetSQLName("SE2")
+			::oLog:nIDTab := Val(::oApi:oRet:oRetorno:Titulos[nW]:NumeroControleParticipante)
 			
-			cMsg += ::oLog:cRetOri + CRLF + ::oLog:cRetMen + CRLF 
-			
-			lOk := AllTrim(::oApi:oRet:oRetorno:Titulos[nW]:Eventos[nX]:DescricaoErro) == "Registrado com Sucesso" .And. ::oApi:oRet:oRetorno:Titulos[nW]:Eventos[nX]:OrigemRetorno == 2
-		
-		NExt nX
-		
-		If ::oApi:oRet:oRetorno:Titulos[nW]:OK
-			
-			If lOk
-			
+			//SE TITULO OK
+			//SE CABECALHO OK ou REPROCESSANDO O TITULO (o cabecalho nao interessa )
+			If ::oApi:oRet:oRetorno:Titulos[nW]:OK .And. ( ::oApi:oRet:oRetorno:OK .Or. ::oApi:oRet:oRetorno:Titulos[nW]:Reprocessamento )
+	
 				::SetRetSE2(::oApi:oRet:oRetorno:Titulos[nW], "2")
-			
+	
+				::oLog:cStAPI	:= "2"
+				::oLog:cMetodo	:= "CP_RET_OK"
+				::oLog:cEnvWF	:= "N"
+	
+				::oLog:Insert()
+	
+				Conout("TAFApiRemessaPagar - SetRetSE2() " + ::oApi:oRet:oRetorno:Titulos[nW]:NumeroControleParticipante  + " [OK] " + " - DATE: " + DTOC(Date()) + " TIME: " + Time())
+	
+			ElseIf !::oApi:oRet:oRetorno:Titulos[nW]:Reprocessamento
+	
+				::SetRetSE2(::oApi:oRet:oRetorno:Titulos[nW], "3")
+				
+				::oLog:cStAPI	:= "3"
+				::oLog:cMetodo	:= "CP_RET_ER"
+				::oLog:cRetMen	:= ::oApi:oRet:oRetorno:Titulos[nW]:Eventos[1]:DescricaoErro
+				::oLog:cEnvWF	:= "S"
+	
+				::oLog:Insert()
+	
+				Conout("TAFApiRemessaPagar - SetRetSE2() " + ::oApi:oRet:oRetorno:Titulos[nW]:NumeroControleParticipante  + " [ERRO] " + " - DATE: " + DTOC(Date()) + " TIME: " + Time())
+	
 			EndIf
 			
-			::oLog:cStAPI := "2"
-			::oLog:cMetodo := "CP_RET_OK"
-			::oLog:cEnvWF := "N"
+			/*For nX := 1 To Len(::oApi:oRet:oRetorno:Titulos[nW]:Eventos)
 			
-			::oLog:Insert()
-
-		Else
-		
-			::SetRetSE2(::oApi:oRet:oRetorno:Titulos[nW], "3")
+				::oLog:cRetOri := AllTrim(Str(::oApi:oRet:oRetorno:Titulos[nW]:Eventos[nX]:OrigemRetorno))
+	
+				::oLog:cRetMen := ::oApi:oRet:oRetorno:Titulos[nW]:Eventos[nX]:DescricaoErro
+				
+				cMsg += ::oLog:cRetOri + CRLF + ::oLog:cRetMen + CRLF 
+				
+				lOk := AllTrim(::oApi:oRet:oRetorno:Titulos[nW]:Eventos[nX]:DescricaoErro) == "Registrado com Sucesso" .And. ::oApi:oRet:oRetorno:Titulos[nW]:Eventos[nX]:OrigemRetorno == 2
 			
-			::oLog:cStAPI := "3"
-			::oLog:cMetodo := "CP_RET_ER"
-			::oLog:cEnvWF := "S"
-
-			::oLog:Insert()
-
-		EndIf
-
-	Next nW	
+			NExt nX
+			
+			If ::oApi:oRet:oRetorno:Titulos[nW]:OK
+				
+				If lOk
+				
+					::SetRetSE2(::oApi:oRet:oRetorno:Titulos[nW], "2")
+				
+				EndIf
+				
+				::oLog:cStAPI := "2"
+				::oLog:cMetodo := "CP_RET_OK"
+				::oLog:cEnvWF := "N"
+				
+				::oLog:Insert()
+	
+			Else
+			
+				::SetRetSE2(::oApi:oRet:oRetorno:Titulos[nW], "3")
+				
+				::oLog:cStAPI := "3"
+				::oLog:cMetodo := "CP_RET_ER"
+				::oLog:cEnvWF := "S"
+	
+				::oLog:Insert()
+	
+			EndIf*/
+	
+		Next nW	
 		
-	If Empty(::oApi:oRet:Mensagem)
+	EndIf	
+		
+	/*If Empty(::oApi:oRet:Mensagem)
 
 		cMsg += "Remessa processada com sucesso!" + CRLF 
 	
@@ -198,7 +330,8 @@ Local lOk	:= .F.
 		cMsg += ::oApi:oRet:RequestJson + CRLF 
 
 	EndIf
-
+	*/
+	
 	::oLog:cIDProc := ::cIDProc
 	::oLog:cOperac := "P"	
 	::oLog:cMetodo := "F_RET_LOT"
@@ -206,7 +339,8 @@ Local lOk	:= .F.
 
 	::oLog:Insert()
 
-	If IsBlind()
+	Conout("TAFApiRemessaPagar - FIM")
+	/*If IsBlind()
 	
 		Conout("Mensagem - [API Facile.Net]" + cMsg)
 		
@@ -215,7 +349,7 @@ Local lOk	:= .F.
 		Conout("Mensagem - [API Facile.Net]" + cMsg)
 	
 	EndIf
-	
+	*/
 Return()
 
 

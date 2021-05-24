@@ -14,13 +14,13 @@ User Function BIPROCSC()
 
     Local oObj := Nil
 
-  // RpcSetEnv("01", "01")
+    //RpcSetEnv("01", "01")
 
     oObj := TBizagiIntegracaoSolicitCompra():New()
 
     oObj:Processa()
 
-   // RpcClearEnv()
+    //RpcClearEnv()
 
 Return()
 
@@ -166,7 +166,11 @@ Method Processa() Class TBizagiIntegracaoSolicitCompra
             aAdd(aLinha, { "C1_COTACAO", IIF(!Empty((cQry)->SC_IMPORT), IIF((cQry)->SC_IMPORT == '1' .Or. (cQry)->SC_IMPORT == 'S' .Or. UPPER((cQry)->SC_IMPORT) == 'TRUE', 'IMPORT', '' ), ''  )	 , Nil })
             aAdd(aLinha, { "C1_APROV",  "L"                             , Nil })
             aAdd(aLinha, { "C1_YMAT",   (cQry)->SC_YMAT                 , Nil })
-            aAdd(aLinha, { "C1_YMATRIC",   (cQry)->SC_YMATRIC                 , Nil })
+            
+            If (cQry)->SC_YMATRIC != Nil .And. !Empty(Alltrim((cQry)->SC_YMATRIC))
+                aAdd(aLinha, { "C1_YMATRIC",   (cQry)->SC_YMATRIC           , Nil })
+            EndIf
+
             aAdd(aLinha, { "C1_YSOLEMP", (cQry)->SC_YSOLEMP             , Nil })
 
             aAdd(aLinha, { "C1_YSTATUS", (cQry)->SC_YSTATUS             , Nil }) // N=Normal;U=Urgente;E=Emergencia;P=Parada

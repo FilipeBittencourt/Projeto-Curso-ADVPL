@@ -346,6 +346,38 @@ Static Function RptDetail()
 			Ferase(Q7Index+GetDBExtension())
 			Ferase(Q7Index+OrdBagExt())
 
+			// Completa lacunas para os itens de custo realizados
+			msQry08 := U_BIA677N8()
+
+			Q8Index := CriaTrab(Nil,.f.)
+			dbUseArea(.T.,"TOPCONN",TcGenQry(,,msQry08),'QR08',.T.,.T.)
+			dbSelectArea("QR08")
+			QR08->(dbGoTop())
+			ProcRegua(RecCount())
+			While !QR08->(Eof())
+
+				msMsg := "Completa lacunas para os itens de custo realizados"
+				IncProc("Completa lacunas para os itens de custo realizados")
+
+				Reclock("ZN8",.T.)
+				ZN8->ZN8_FILIAL := xFilial("ZN8")
+				ZN8->ZN8_DTREF  := stod(QR08->DTREF)
+				ZN8->ZN8_TPPROD := QR08->TPPROD
+				ZN8->ZN8_PRODUT := QR08->PRODUTO
+				ZN8->ZN8_ITCUS  := QR08->ITCUS
+				ZN8->ZN8_TPCUS  := QR08->TPPROD
+				ZN8->ZN8_CUS223 := QR08->QUANT
+				ZN8->ZN8_CUS224 := QR08->CUSTO1
+				ZN8->(MsUnlock())
+
+				QR08->(dbSkip())
+
+			End
+
+			QR08->(dbCloseArea())
+			Ferase(Q8Index+GetDBExtension())
+			Ferase(Q8Index+OrdBagExt())
+
 		Endif
 
 	Else
@@ -1553,6 +1585,65 @@ User Function BIA677N7()
 	KR007 += Alltrim(" GROUP BY ZN8_DTREF                                                                                           ") + msEnter
 
 Return( KR007 )
+
+User Function BIA677N8()
+
+	KR008 := Alltrim(" WITH RAC001                                                                                                     ") + msEnter
+	KR008 += Alltrim("      AS (SELECT ZN8_ITCUS ITCUS,                                                                                ") + msEnter
+	KR008 += Alltrim("                 ZN8_TPPROD TPPROD                                                                               ") + msEnter
+	KR008 += Alltrim("          FROM " + RetSqlName("ZN8") + " ZN8(NOLOCK)                                                             ") + msEnter
+	KR008 += Alltrim("          WHERE ZN8_FILIAL = '" + xFilial("ZN8") + "'                                                            ") + msEnter
+	KR008 += Alltrim("                AND ZN8_DTREF BETWEEN '" + cDatIni + "' AND '" + cDatFin + "'                                    ") + msEnter
+	KR008 += Alltrim("                AND ZN8.D_E_L_E_T_ = ' '                                                                         ") + msEnter
+	KR008 += Alltrim("          GROUP BY ZN8_ITCUS,                                                                                    ") + msEnter
+	KR008 += Alltrim("                   ZN8_TPPROD),                                                                                  ") + msEnter
+	KR008 += Alltrim("      RAC002                                                                                                     ") + msEnter
+	KR008 += Alltrim("      AS (SELECT ZN8_PRODUT PRODUTO,                                                                             ") + msEnter
+	KR008 += Alltrim("                 ZN8_TPPROD TPPROD                                                                               ") + msEnter
+	KR008 += Alltrim("          FROM " + RetSqlName("ZN8") + " ZN8(NOLOCK)                                                             ") + msEnter
+	KR008 += Alltrim("          WHERE ZN8_FILIAL = '" + xFilial("ZN8") + "'                                                            ") + msEnter
+	KR008 += Alltrim("                AND ZN8_DTREF BETWEEN '" + cDatIni + "' AND '" + cDatFin + "'                                    ") + msEnter
+	KR008 += Alltrim("                AND ZN8.D_E_L_E_T_ = ' '                                                                         ") + msEnter
+	KR008 += Alltrim("          GROUP BY ZN8_PRODUT,                                                                                   ") + msEnter
+	KR008 += Alltrim("                   ZN8_TPPROD),                                                                                  ") + msEnter
+	KR008 += Alltrim("      RAC003                                                                                                     ") + msEnter
+	KR008 += Alltrim("      AS (SELECT ZN8_PRODUT PRODUTO,                                                                             ") + msEnter
+	KR008 += Alltrim("                 ZN8_TPPROD TPPROD,                                                                              ") + msEnter
+	KR008 += Alltrim("                 ZN8_ITCUS ITCUS,                                                                                ") + msEnter
+	KR008 += Alltrim("                 SUM(ZN8_CUS223) QUANT,                                                                          ") + msEnter
+	KR008 += Alltrim("                 SUM(ZN8_CUS224) CUSTO1                                                                          ") + msEnter
+	KR008 += Alltrim("          FROM " + RetSqlName("ZN8") + " ZN8(NOLOCK)                                                             ") + msEnter
+	KR008 += Alltrim("          WHERE ZN8_FILIAL = '" + xFilial("ZN8") + "'                                                            ") + msEnter
+	KR008 += Alltrim("                AND ZN8_DTREF BETWEEN '" + cDatIni + "' AND '" + cDatFin + "'                                    ") + msEnter
+	KR008 += Alltrim("                AND ZN8.D_E_L_E_T_ = ' '                                                                         ") + msEnter
+	KR008 += Alltrim("          GROUP BY ZN8_PRODUT,                                                                                   ") + msEnter
+	KR008 += Alltrim("                   ZN8_TPPROD,                                                                                   ") + msEnter
+	KR008 += Alltrim("                   ZN8_ITCUS),                                                                                   ") + msEnter
+	KR008 += Alltrim("      RAC004                                                                                                     ") + msEnter
+	KR008 += Alltrim("      AS (SELECT R002.PRODUTO,                                                                                   ") + msEnter
+	KR008 += Alltrim("                 R002.TPPROD,                                                                                    ") + msEnter
+	KR008 += Alltrim("                 R001.ITCUS,                                                                                     ") + msEnter
+	KR008 += Alltrim("                 ISNULL(R003.QUANT, 0) QUANT,                                                                    ") + msEnter
+	KR008 += Alltrim("                 ISNULL(R003.CUSTO1, 0) CUSTO1                                                                   ") + msEnter
+	KR008 += Alltrim("          FROM RAC002 R002                                                                                       ") + msEnter
+	KR008 += Alltrim("               INNER JOIN RAC001 R001 ON R001.TPPROD = R002.TPPROD                                               ") + msEnter
+	KR008 += Alltrim("               LEFT JOIN RAC003 R003 ON R003.PRODUTO = R002.PRODUTO                                              ") + msEnter
+	KR008 += Alltrim("                                        AND R003.TPPROD = R002.TPPROD                                            ") + msEnter
+	KR008 += Alltrim("                                        AND R003.ITCUS = R001.ITCUS)                                             ") + msEnter
+	KR008 += Alltrim("      SELECT '" + cDatFin + "' DTREF,                                                                            ") + msEnter
+	KR008 += Alltrim("             R004.*,                                                                                             ") + msEnter
+	KR008 += Alltrim("             Z29_TIPO                                                                                            ") + msEnter
+	KR008 += Alltrim("      FROM RAC004 R004                                                                                           ") + msEnter
+	KR008 += Alltrim("           LEFT JOIN " + RetSqlName("Z29") + " Z29(NOLOCK) ON Z29_FILIAL = '" + xFilial("Z29") + "'              ") + msEnter
+	KR008 += Alltrim("                                           AND Z29_COD_IT = R004.ITCUS                                           ") + msEnter
+	KR008 += Alltrim("                                           AND Z29.D_E_L_E_T_ = ' '                                              ") + msEnter
+	KR008 += Alltrim("      WHERE QUANT = 0                                                                                            ") + msEnter
+	KR008 += Alltrim("            AND CUSTO1 = 0                                                                                       ") + msEnter
+	KR008 += Alltrim("      ORDER BY R004.PRODUTO,                                                                                     ") + msEnter
+	KR008 += Alltrim("               R004.TPPROD,                                                                                      ") + msEnter
+	KR008 += Alltrim("               R004.ITCUS                                                                                        ") + msEnter
+
+Return( KR008 )
 
 /*___________________________________________________________________________
 ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
