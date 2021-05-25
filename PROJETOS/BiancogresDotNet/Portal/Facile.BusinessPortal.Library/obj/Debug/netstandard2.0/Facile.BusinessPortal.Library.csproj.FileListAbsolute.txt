@@ -1,9 +1,0 @@
-D:\Trabalho\Repositories\GitHub\_MeusProjetos\Projeto-Curso-ADVPL\PROJETOS\BiancogresDotNet\Portal\Facile.BusinessPortal.Library\bin\Debug\netstandard2.0\Facile.BusinessPortal.Library.deps.json
-D:\Trabalho\Repositories\GitHub\_MeusProjetos\Projeto-Curso-ADVPL\PROJETOS\BiancogresDotNet\Portal\Facile.BusinessPortal.Library\bin\Debug\netstandard2.0\Facile.BusinessPortal.Library.dll
-D:\Trabalho\Repositories\GitHub\_MeusProjetos\Projeto-Curso-ADVPL\PROJETOS\BiancogresDotNet\Portal\Facile.BusinessPortal.Library\bin\Debug\netstandard2.0\Facile.BusinessPortal.Library.pdb
-D:\Trabalho\Repositories\GitHub\_MeusProjetos\Projeto-Curso-ADVPL\PROJETOS\BiancogresDotNet\Portal\Facile.BusinessPortal.Library\obj\Debug\netstandard2.0\Facile.BusinessPortal.Library.csprojAssemblyReference.cache
-D:\Trabalho\Repositories\GitHub\_MeusProjetos\Projeto-Curso-ADVPL\PROJETOS\BiancogresDotNet\Portal\Facile.BusinessPortal.Library\obj\Debug\netstandard2.0\Facile.BusinessPortal.Library.AssemblyInfoInputs.cache
-D:\Trabalho\Repositories\GitHub\_MeusProjetos\Projeto-Curso-ADVPL\PROJETOS\BiancogresDotNet\Portal\Facile.BusinessPortal.Library\obj\Debug\netstandard2.0\Facile.BusinessPortal.Library.AssemblyInfo.cs
-D:\Trabalho\Repositories\GitHub\_MeusProjetos\Projeto-Curso-ADVPL\PROJETOS\BiancogresDotNet\Portal\Facile.BusinessPortal.Library\obj\Debug\netstandard2.0\Facile.BusinessPortal.Library.csproj.CoreCompileInputs.cache
-D:\Trabalho\Repositories\GitHub\_MeusProjetos\Projeto-Curso-ADVPL\PROJETOS\BiancogresDotNet\Portal\Facile.BusinessPortal.Library\obj\Debug\netstandard2.0\Facile.BusinessPortal.Library.dll
-D:\Trabalho\Repositories\GitHub\_MeusProjetos\Projeto-Curso-ADVPL\PROJETOS\BiancogresDotNet\Portal\Facile.BusinessPortal.Library\obj\Debug\netstandard2.0\Facile.BusinessPortal.Library.pdb

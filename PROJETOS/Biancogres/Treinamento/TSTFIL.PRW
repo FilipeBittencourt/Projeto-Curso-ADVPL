@@ -21,8 +21,9 @@ User Function TSTFIL()
   //TSTFIL002() // Teste pedidos provisionados
   //TSTFIL003()
   //TSTFIL004()
-  TSTFIL005() //Montar classe de envio de email e enviando
+  //TSTFIL005() //Montar classe de envio de email e enviando
   //TSTFIL006()
+  TSTFIL007()
 
 
 
@@ -458,4 +459,36 @@ Static Function TSTFIL006()
   ALERT( ASCAN(aArrX, { |x| UPPER(x) == "BD0433B3" }) )
 
   //if ASCAN(aArrX, { |x| UPPER(AllTrim(x)) == UPPER(AllTrim((cAliasTmp)->COD })))
+Return
+
+
+STATIC Function TSTFIL007()
+
+  Local cCContabil := ""
+  Local cHtml      := ""
+  Local cMail :=  "filipe.bittencourt@facilesistemas.com.br"
+  oContaCont := TContaContabil():New()
+
+  aSA1Query:=array(0)
+  //cSA1Filter:="A1_COD $ '014134,024757,031612,017431,024438,026585,021585,028514,025982,031203,024765,027407,027600,026574,021659,029452,031532,022480,032048'"
+  cSA1Filter:="A1_COD $ '031107'"
+  MsAguarde({||FilBrowse("SA1",@aSA1Query,cSA1Filter)},"Empresas","Obtendo dados no SGBD...")
+
+
+  WHILE SA1->(!EOF())
+    cCContabil :=  oContaCont:SetContContab("C", SA1->A1_COD, SA1->A1_LOJA, "RA")
+    If EMPTY(cCContabil)
+      cHtml := " <html>"
+      cHtml += " <body>"
+      cHtml += " Empresa: "+AllTrim(SM0->M0_NOME)+" - "+AllTrim(SM0->M0_CODIGO)+"/"+AllTrim(SM0->M0_CODFIL)+" <br />"
+      cHtml += " Titulo: 0123456 , Tipo: RA <br />"
+      cHtml += " Cliente: "+SA1->A1_COD+" - "+SA1->A1_LOJA+" <br />"
+      cHtml += " Obs.: Conta Contábil não foi criada <br />"
+      cHtml += " </body>"
+      cHtml += " </html>"
+      U_BIAEnvMail(,cMail,'Erro Geração de Titulos de Pedidos Antecipados (FA040GRV)',cHtml)
+    EndIf
+    SA1->(DBSKIP())
+  END DO
+
 Return
