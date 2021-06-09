@@ -47,7 +47,7 @@ User Function FA330CMP()
 			EndIf
 
 
-			If EMPTY(cCContabil) //ticket - https://suporteti.biancogres.com.br/Ticket/Edit/32125
+			If EMPTY(cCContabil) .AND. AllTrim(cTipo) == "RA" //ticket - https://suporteti.biancogres.com.br/Ticket/Edit/32125
 				cHtml := " <html>"
 				cHtml += " <body>"
 				cHtml += " Empresa: "+AllTrim(SM0->M0_NOME)+" - "+AllTrim(SM0->M0_CODIGO)+"/"+AllTrim(SM0->M0_CODFIL)+" <br />"

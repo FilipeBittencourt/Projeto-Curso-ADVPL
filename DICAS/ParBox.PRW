@@ -223,10 +223,84 @@ Static Function ParBox4()
 Return
 
 
+//Parametros
+Static Function ParBox5()
+
+  Local aPergs 	:= {}
+  Local cLoad	    := 'FPAT01EXC' + cEmpAnt
+  Local cFileName := RetCodUsr() +"_"+ cLoad
+  Local cRepre    := ".T."
+  Local aRet      := {}
+  Local cVenCod   := SPACE(TamSX3("A3_COD")[01])
+  Local cVenCNPJ  := SPACE(TamSX3("A3_CGC")[01])
+
+  cArquivo		:= space(500)
+
+  if Type("CREPATU") <> "U" .And. !Empty(CREPATU)
+
+    cRepre := ".F."  // se .T. é representante, então desabilito o campo para edição
+
+    SA3->(DbSetOrder(1))//A3_FILIAL, A3_COD, R_E_C_N_O_, D_E_L_E_T_
+    If SA3->(DbSeek(XFilial("SA3")+CREPATU))
+      cVenCod  := SA3->A3_COD
+      cVenCNPJ := SA3->A3_CGC
+    EndIf
+
+  EndIf
+
+  aAdd( aPergs ,{6, "Arquivo para Importação: " 	,cArquivo  ,"","","", 90 ,.T.,"Arquivo * |*",,GETF_LOCALHARD+GETF_NETWORKDRIVE} )
+  aAdd( aPergs ,{1, "CLIENTE", SPACE(TamSX3("A1_COD")[01]), , ".T.", "SA1" ,".T.", 4, .T.})
+  aAdd( aPergs ,{1, "LOJA", SPACE(TamSX3("A1_LOJA")[01]),"","","","",0,.T.}) // Tipo caractere
+  aAdd( aPergs ,{1, "VENDEDOR", cVenCod,"", "U_ParBox5A()", "SA3BIA" ,cRepre, 4, .F.})
+  aAdd( aPergs ,{1, "CPNJ VENDEDOR",cVenCNPJ,"","","",".F.",0,.T.}) // Tipo caractere
+  aAdd( aPergs ,{1, "DATA ESTOQUE", ctod("  /  /  "), , ".T.", ,".T.", 8, .T.})
+
+  If ParamBox(aPergs ,"Importar Arquivo",@aRet,,,,,,,cLoad,.T.,.T.)
+
+    cArquivo  := ParamLoad(cFileName,,1,cArquivo)
+    cPCliente	:= ParamLoad(cFileName,,2,cPCliente)
+    cPLoja		:= ParamLoad(cFileName,,3,cPLoja)
+    cVendCod  := AllTrim(aRet[4])
+    cVendCGC	:= AllTrim(aRet[5])
+    dDatEst		:= ParamLoad(cFileName,,6,dDatEst)
+
+  Endif
+
+Return
+
+
+User Function ParBox5A()
+
+  Local lRet    := .T.
+
+  SA3->(DbSetOrder(1))//A3_FILIAL, A3_COD, R_E_C_N_O_, D_E_L_E_T_
+  If SA3->(DbSeek(XFilial("SA3")+MV_PAR04))
+    &("MV_PAR05") := SA3->A3_CGC
+  else
+    &("MV_PAR05") := ""
+  EndIf
+
+RETURN lRet
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Função exemplo utilizando a função ParamBox()
 //----------------------------------------------------------
-Static Function ParBox5()
+Static Function ParBox6()
   Local aRet := {}
   Local aParamBox := {}
   Local aCombo := {"Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"}

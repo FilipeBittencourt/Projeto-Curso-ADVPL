@@ -31,7 +31,7 @@ USER Function FA040GRV()
 
 	cCContabil := oContaCont:SetContContab("C", SE1->E1_CLIENTE, SE1->E1_LOJA, SE1->E1_TIPO)
 
-	If EMPTY(cCContabil) //ticket - https://suporteti.biancogres.com.br/Ticket/Edit/32125
+	If EMPTY(cCContabil) .AND. AllTrim(SE1->E1_TIPO) == "RA" //ticket - https://suporteti.biancogres.com.br/Ticket/Edit/32125
 		cHtml := " <html>"
 		cHtml += " <body>"
 		cHtml += " Empresa: "+AllTrim(SM0->M0_NOME)+" - "+AllTrim(SM0->M0_CODIGO)+"/"+AllTrim(SM0->M0_CODFIL)+" <br />"

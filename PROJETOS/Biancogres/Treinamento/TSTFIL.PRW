@@ -7,14 +7,12 @@ User Function TSTFIL()
 
   RpcClearEnv()
   If Select("SX6") <= 0
-    RPCSetEnv("07", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+    RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
   EndIf
-
+  //U_BIA729()
+  //U_BAF022()
   //Local cEmp := "0101"
   //cEmp := "SC6"+SUBSTR(cEmp,0,1)+"0"
-
-
-
   //u_Env_Pedido('BJBGJO',,,'01',.T.)
   //u_FROPRT08()
   //TSTFIL001() // biaxfunc.prw  - Teste Email SEND
@@ -23,12 +21,12 @@ User Function TSTFIL()
   //TSTFIL004()
   //TSTFIL005() //Montar classe de envio de email e enviando
   //TSTFIL006()
-  TSTFIL007()
+  //TSTFIL007()
 
 
 
-  //DbSelectArea("SC0")
-  //X31UPDTABLE('SC0')
+  //DbSelectArea("ZDL")
+  //X31UPDTABLE('ZDL')
 
 
 RETURN

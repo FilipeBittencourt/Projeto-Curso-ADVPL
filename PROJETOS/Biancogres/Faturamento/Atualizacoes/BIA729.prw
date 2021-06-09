@@ -7,60 +7,43 @@
 /*/{Protheus.doc} BIA729
 @description Tela para cadastro da tabela ZDL, Metas logistica
 @author  Filipe - Facile
-@since 17/03/2021
+@since 07/06/2021
 @version 1.0
 @type function
 /*/
 
+
 User Function BIA729()
 
-	Local aArea       := GetArea()
-	Local oBrowse     := Nil
-	Local cFunBkp     := FunName()
-	Local aRet        := {}
-	Local lParam      := .T.
-	Local aOpSX3      := {"Tempo Carr.","No Show","Saúde Est","Estoque","Cumpr.Prz.Disp"}
+	Local aRet      := {}
+	Local lParam    := .T.
+	Local aOpSX3    := {}
+	Local oJSTela   := JsonObject():New()
+	Local aParamBox := {}
 
+	Private cDash     := ""
 
-	Private oJSTela   := JsonObject():New()
-	Private aParamBox := {}
-	Private cTitulo   := " "
+	//MANTER A ORDEM
+	AADD(aOpSX3,"Logistica") //01 - Logistica
+	AADD(aOpSX3,"Vendas")    //02 - Vendas
 
-	aAdd(aParamBox,{3,"Tipo de cadastros",1,aOpSX3,50,"",.F.})
+	aAdd(aParamBox,{3,"TipoS de cadastro",1,aOpSX3,50,"",.F.})
 
 	while lParam == .T.
 
-		If ParamBox(aParamBox,"Escolha o tipo de Meta que deseja cadastrar",@aRet)
+		If ParamBox(aParamBox,"Escolha o tipo de Meta que deseja acessar",@aRet)
 
-			oJSTela["Indice"]    := aRet[1]
+
 			oJSTela["NomeOpcao"]  := aParamBox[1,4,aRet[1]]
 			oJSTela["CodigoSX3"]  := PadL(AllTrim(cValToChar(aRet[1])) , 2 , "0")
 
-			cTitulo := "Metas Dashboard Logística tipo: "+UPPER(oJSTela["NomeOpcao"])
-
-			SetFunName("BIA729")
-
-			//Instânciando FWMBrowse - Somente com dicionário de dados
-			oBrowse := FWMBrowse():New()
-
-			//Setando a tabela de cadastro de Autor/Interprete
-			oBrowse:SetAlias("ZDL")
-
-			//Setando a descrição da rotina
-			oBrowse:SetDescription(cTitulo)
-
-
-			If oJSTela["CodigoSX3"] == "01"
-				oBrowse:SetOnlyFields({'ZDL_TIPO','ZDL_DTINI','ZDL_DTFIM','ZDL_META','ZDL_MODVEI'})
-			ElseIf oJSTela["CodigoSX3"] == "02" .OR. oJSTela["CodigoSX3"] == "03"
-				oBrowse:SetOnlyFields({'ZDL_TIPO','ZDL_DTINI','ZDL_DTFIM','ZDL_META'})
-			ElseIf oJSTela["CodigoSX3"] == "04" .OR. oJSTela["CodigoSX3"] == "05"
-				oBrowse:SetOnlyFields({'ZDL_TIPO','ZDL_DTINI','ZDL_DTFIM','ZDL_META','ZDL_FORNO'})
-			EndIf
-
-			oBrowse:SetFilterDefault("ZDL->ZDL_TIPO == "+UPPER(oJSTela["CodigoSX3"])+"")
-			//Ativa a Browse
-			oBrowse:Activate()
+			IF aRet[1]  == 1
+				cDash := "01"
+				U_BIA729A(cDash,"LOGISTICA")
+			ELSEIF aRet[1] == 2
+				cDash := "02"
+				U_BIA729B(cDash,"VENDAS")
+			ENDIF
 
 		Else
 
@@ -70,153 +53,50 @@ User Function BIA729()
 
 	endDo
 
-
-	SetFunName(cFunBkp)
-	RestArea(aArea)
-
 Return Nil
 
+// referencia: http://www.blacktdn.com.br/2011/10/protheus-advpl-otimizacao-de-filtro-na.html
+// Fonte usado para filtro na consulta padrão ( DASH )  para as DASHBOARDAS  
+USER Function BIA72900()
 
-Static Function MenuDef()
+	Local cFilter := ""
 
-	Local aRot := {}
+	IF Type("cDash") == "C"
 
-	//Adicionando opções
-	ADD OPTION aRot TITLE 'Visualizar' ACTION 'VIEWDEF.BIA729' OPERATION MODEL_OPERATION_VIEW   ACCESS 0 //OPERATION 1
-	//ADD OPTION aRot TITLE 'Legenda'    ACTION 'u_zMod1Leg'      OPERATION 6                      ACCESS 0 //OPERATION X
-	ADD OPTION aRot TITLE 'Incluir'    ACTION 'VIEWDEF.BIA729' OPERATION MODEL_OPERATION_INSERT ACCESS 0 //OPERATION 3
-	ADD OPTION aRot TITLE 'Alterar'    ACTION 'VIEWDEF.BIA729' OPERATION MODEL_OPERATION_UPDATE ACCESS 0 //OPERATION 4
-	ADD OPTION aRot TITLE 'Excluir'    ACTION 'VIEWDEF.BIA729' OPERATION MODEL_OPERATION_DELETE ACCESS 0 //OPERATION 5
-
-Return aRot
-
-Static Function ModelDef()
-
-	//Criação do objeto do modelo de dados
-
-	Local oModel  := Nil
-
-	//Criação da estrutura de dados utilizada na interface
-	Local oStZDL := NIL
-
-	If oJSTela["CodigoSX3"] == "01"
-		oStZDL := FWFormStruct(1, "ZDL", { |x| AllTrim(x) $ 'ZDL_DTINI|ZDL_DTFIM|ZDL_TIPO|ZDL_META|ZDL_MODVEI'})
-	ElseIf oJSTela["CodigoSX3"] == "02" .OR. oJSTela["CodigoSX3"] == "03"
-		oStZDL := FWFormStruct(1, "ZDL", { |x| AllTrim(x) $ 'ZDL_DTINI|ZDL_DTFIM|ZDL_TIPO|ZDL_META'})
-	ElseIf oJSTela["CodigoSX3"] == "04" .OR. oJSTela["CodigoSX3"] == "05"
-		oStZDL := FWFormStruct(1, "ZDL", { |x| AllTrim(x) $ 'ZDL_DTINI|ZDL_DTFIM|ZDL_TIPO|ZDL_META|ZDL_FORNO'})
-	EndIf
-
-	oStZDL:SetProperty('ZDL_TIPO' , MODEL_FIELD_INIT, {|oView | oJSTela["CodigoSX3"]})
-	oStZDL:SetProperty('ZDL_TIPO' , MODEL_FIELD_WHEN,{|oView | .F. } ) // BLOQUEIA O CAMPO
-
-
-	//Instanciando o modelo, não é recomendado colocar nome da user function (por causa do u_), respeitando 10 caracteres
-
-	oModel := MPFormModel():New("BIA729M",/*bPreValid*/,{|oModel| fTdOk(oModel)},/*<bCommit >*/,/*bCancel*/)
-
-
-	//Atribuindo formulários para o modelo
-	oModel:AddFields("FORMZDL",/*cOwner*/,oStZDL)
-
-	//Setando a chave primária da rotina
-	oModel:SetPrimaryKey({'ZDL_FILIAL','ZDL_TIPO'})
-
-	//Adicionando descrição ao modelo
-	oModel:SetDescription(cTitulo)
-
-	//Setando a descrição do formulário
-	oModel:GetModel("FORMZDL"):SetDescription(cTitulo)
-Return oModel
-
-
-
-Static Function ViewDef()
-
-	Local aStruZDL	:= ZDL->(DbStruct())
-	Local oModel := FWLoadModel("BIA729")	//Criação do objeto do modelo de dados da Interface do Cadastro de Autor/Interprete
-	Local oView := Nil //Criando oView como nulo
-	Local oStZDL := NIL //Criação da estrutura de dados utilizada na interface do cadastro
-
-	If oJSTela["CodigoSX3"] == "01"
-		oStZDL := FWFormStruct(2, "ZDL", { |x| AllTrim(x) $ 'ZDL_DTINI|ZDL_DTFIM|ZDL_TIPO|ZDL_META|ZDL_MODVEI'})
-	ElseIf oJSTela["CodigoSX3"] == "02" .OR. oJSTela["CodigoSX3"] == "03"
-		oStZDL := FWFormStruct(2, "ZDL", { |x| AllTrim(x) $ 'ZDL_DTINI|ZDL_DTFIM|ZDL_TIPO|ZDL_META'})
-	ElseIf oJSTela["CodigoSX3"] == "04" .OR. oJSTela["CodigoSX3"] == "05"
-		oStZDL := FWFormStruct(2, "ZDL", { |x| AllTrim(x) $ 'ZDL_DTINI|ZDL_DTFIM|ZDL_TIPO|ZDL_META|ZDL_FORNO'})
-	EndIf
-
-
-	//Criando a view que será o retorno da função e setando o modelo da rotina
-	oView := FWFormView():New()
-	oView:SetModel(oModel)
-
-	//Atribuindo formulários para interface
-	oView:AddField("VIEW_ZDL", oStZDL, "FORMZDL")  //ESSE FORMZDL é da função  ModelDef ***PRECISA SER IGUAL***
-
-	//Criando um container com nome tela com 100%
-	oView:CreateHorizontalBox("TELA",100)
-
-	//Colocando título do formulário
-	//oView:EnableTitleView('VIEW_ZDL', 'Dados - '+cTitulo )
-
-	//Força o fechamento da janela na confirmação
-	//oView:SetCloseOnOk({||.T.})
-
-	//O formulário da interface será colocado dentro do container
-	oView:SetOwnerView("VIEW_ZDL","TELA")
-
-Return oView
-
-
-Static Function fTdOk(oModel)
-
-	Local lRet   := .T.
-	Local cQuery := ""
-	Local dDTINI := oModel:GetModel("FORMZDL"):GetValue('ZDL_DTINI')
-	Local dDTFIM := oModel:GetModel("FORMZDL"):GetValue('ZDL_DTFIM')
-	Local cQry   := GetNextAlias()
-
-	If  EMPTY(dDTINI) .OR.EMPTY(dDTINI)
-		Help(,,"Help",,"Favor informar as datas de inicio e fim.", 1, 0,,,,,,{" "})
-		RETURN .F.
-	EndIf
-
-	If oJSTela["CodigoSX3"] == "01"
-		If EMPTY(oModel:GetModel("FORMZDL"):GetValue('ZDL_MODVEI'))
-			Help(,,"Help",,"Favor informar o modelo do veículo.", 1, 0,,,,,,{" "})
-			RETURN .F.
-		EndIf
-	EndIf
-
-	If oJSTela["CodigoSX3"] $ "04#05"
-		If EMPTY(oModel:GetModel("FORMZDL"):GetValue('ZDL_FORNO'))
-			Help(,,"Help",,"Favor informar o tipo do forno.", 1, 0,,,,,,{" "})
-			RETURN .F.
-		EndIf
-	EndIf
-
-	cQuery += " select * from ZDL010 "  + CRLF
-	cQuery += " WHERE D_E_L_E_T_ = '' "  + CRLF
-	cQuery += " AND ZDL_TIPO = "+ValToSql(oJSTela["CodigoSX3"])+ " "+ CRLF
-	cQuery += " AND ZDL_DTFIM BETWEEN  "+ValToSql(dDTINI)+" AND " +ValToSql(dDTFIM)+" " + CRLF
-
-	If oJSTela["CodigoSX3"] $ '04#05'
-
-		cQuery += " AND ZDL_FORNO = "+ValToSql(oJSTela["CodigoSX3"])+ " "+ CRLF
-
-	ElseIf oJSTela["CodigoSX3"] $ '01'
-
-		cQuery += " AND ZDL_MODVEI = "+ValToSql(oJSTela["CodigoSX3"])+ " "+ CRLF
+		cFilter := "@#"
+		cFilter += "LEFT(X5_CHAVE,2) == '"+cDash+"'"
+		cFilter += "@#"
 
 	EndIf
 
-	TcQuery cQuery New Alias (cQry)
+Return cFilter
 
-	If !EMPTY((cQry)->ZDL_TIPO)
-		lRet := .F.
-		Help(NIL, NIL, "Help", NIL, "Já existe dados cadastrados com essas informações.", 1, 0,,,,,,{"Mude as datas de inicio e fim"})
-	EndIf
+/*
+
+USE [DADOSADV]
+GO
+
+INSERT INTO [dbo].[SX5010]
+           ([X5_FILIAL]
+           ,[X5_TABELA]
+           ,[X5_CHAVE]
+           ,[X5_DESCRI]
+           ,[X5_DESCSPA]
+           ,[X5_DESCENG]
+           
+           
+           )
+     VALUES
+           (''
+           ,'Z0'
+           ,'01'
+           ,'DASHBOARD LOGISTICA'
+           ,'DASHBOARD LOGISTICA'
+           ,'DASHBOARD LOGISTICA'           
+           )           
+GO
 
 
-Return (lRet)
+
+
+*/
