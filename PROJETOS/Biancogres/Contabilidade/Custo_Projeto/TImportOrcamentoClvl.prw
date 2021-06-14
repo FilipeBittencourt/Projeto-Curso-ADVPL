@@ -363,9 +363,9 @@ Local oObj := TSubitemProjeto():New()
 		
 		If lInsert
 
-			RecLock("ZMC", lInsert)			
+			cCodRef := U_NumZMC()
 			
-				cCodRef := GetSxEnum('ZMC', 'ZMC_CODIGO')
+			RecLock("ZMC", lInsert)
 	
 				ZMC->ZMC_FILIAL := xFilial("ZMC")
 				ZMC->ZMC_CODIGO := cCodRef
@@ -383,11 +383,11 @@ Local oObj := TSubitemProjeto():New()
 				 
 		EndIf
 		
-			oObj:cClvl := cClvl 
-			oObj:cItemCta := cItem
-			oObj:cSubitem := cSubitem
-			
-			cDesc := oObj:GetDesc() 
+		oObj:cClvl := cClvl 
+		oObj:cItemCta := cItem
+		oObj:cSubitem := cSubitem
+		
+		cDesc := oObj:GetDesc() 
 	
 		::UpdateSubitem(cCodRef, cSubitem, cDesc, cUnidade, nQuant, cMoeda, nValor, nTotal, cEncer)
 					

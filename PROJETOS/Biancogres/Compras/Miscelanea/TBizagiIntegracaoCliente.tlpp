@@ -96,7 +96,8 @@ Method ExecCliente(cQry) Class TBizagiIntegracaoCliente
     Private lMsHelpAuto		:= .T.
     Private lAutoErrNoFile 	:= .T.
 
-    If Empty((cQry)->CLI_COD)
+    //If Empty((cQry)->CLI_COD)
+    If Alltrim((cQry)->CLI_TPOPER) == "I" //INCLUSÃO
 
         nOperacao := 3
 
@@ -123,7 +124,13 @@ Method ExecCliente(cQry) Class TBizagiIntegracaoCliente
 
         EndIf
 
-    Else
+    ElseIf Alltrim((cQry)->CLI_TPOPER) == "A" //ALTERACAO CADASTRO 
+
+        nOperacao := 4
+
+        INCLUI := .F.
+
+    ElseIf Alltrim((cQry)->CLI_TPOPER) == "C" //SOMENTE CREDITO
 
         nOperacao := 4
 
@@ -141,7 +148,7 @@ Method ExecCliente(cQry) Class TBizagiIntegracaoCliente
         
     EndIf
 
-    If nOperacao == 3
+    If Alltrim((cQry)->CLI_TPOPER) == "I"
 
         aAdd(aVetor, {"A1_FILIAL" 		, xFilial("SA1"), Nil})
         aAdd(aVetor, {"A1_LOJA"    		, cLojaCliente, Nil})
@@ -184,21 +191,35 @@ Method ExecCliente(cQry) Class TBizagiIntegracaoCliente
         aAdd(aVetor, {"A1_RISCO"		, (cQry)->CLI_RISCO, Nil})
         aAdd(aVetor, {"A1_YTRTESP"		, IIf((cQry)->CLI_YTRTESP == "1" .Or. (cQry)->CLI_YTRTESP == "S" .Or. UPPER((cQry)->CLI_YTRTESP) == "TRUE","1","2"), Nil})
         aAdd(aVetor, {"A1_SUFRAMA"		, IIf((cQry)->CLI_SUFRAMA == Nil .OR. AllTrim((cQry)->CLI_SUFRAMA) == '-',"", (cQry)->CLI_SUFRAMA), Nil})
-        aAdd(aVetor, {"A1_CALCSUF"		, IIf((cQry)->CLI_CALCSUF == Nil,"N",(cQry)->CLI_CALCSUF), Nil})
         aAdd(aVetor, {"A1_YATUCLI"		, "S", NIL})
         aAdd(aVetor, {"A1_YCAT"			, AllTrim(IIf((cQry)->CLI_YCAT == Nil, "", (cQry)->CLI_YCAT)), Nil})
 
         If !Empty((cQry)->CLI_TPJ)
-            AADD(aVetor,{"A1_TPJ",AllTrim((cQry)->CLI_TPJ), Nil})
+            aAdd(aVetor,{"A1_TPJ",AllTrim((cQry)->CLI_TPJ), Nil})
         EndIf
 
         //Ticket 26346 - Solicitação do Wellison do Financeiro para garantir padrão 'S' nos campos A1_YGERFAT e A1_YFGNRE
-        AADD(aVetor,{"A1_YGERFAT",'S', Nil})
-        AADD(aVetor,{"A1_YTFGNRE",'S', Nil})
+        aAdd(aVetor,{"A1_YGERFAT",'S', Nil})
+        aAdd(aVetor,{"A1_YTFGNRE",'S', Nil})
 
         If !Empty((cQry)->CLI_CODMUN_ZFRANCA) .And. (cQry)->CLI_CODMUN_ZFRANCA != '00000'
-            AADD(aVetor,{"A1_CODMUN"		, IIf((cQry)->CLI_CODMUN_ZFRANCA == Nil,""	,(cQry)->CLI_CODMUN_ZFRANCA)	, Nil})
+            aAdd(aVetor,{"A1_CODMUN"		, IIf((cQry)->CLI_CODMUN_ZFRANCA == Nil,""	,(cQry)->CLI_CODMUN_ZFRANCA)	, Nil})
         EndIf
+
+        //Projeto C-17
+        aAdd(aVetor,{"A1_YREGESP"		, IIf( Alltrim((cQry)->CLI_REGESP) == "S" .Or. Alltrim((cQry)->CLI_ACORCOMST) == "S", "EXCECAO",""), Nil})
+        If !Empty(Alltrim((cQry)->CLI_VENCREGESP))
+            aAdd(aVetor,{"A1_YDTVENC"		, StoD((cQry)->CLI_VENCREGESP) , Nil})
+        EndIf 
+        If !Empty(Alltrim((cQry)->CLI_VENSUF))
+            aAdd(aVetor,{"A1_YVENSUF"		, StoD((cQry)->CLI_VENSUF) , Nil})
+        EndIf 
+        aAdd(aVetor, {"A1_CALCSUF"		, IIf((cQry)->CLI_CALCSUF == Nil,"N",(cQry)->CLI_CALCSUF), Nil})
+        aAdd(aVetor, {"A1_YTRIDIF"		, IIf((cQry)->CLI_TRIDIF == Nil,"N",(cQry)->CLI_TRIDIF), Nil})
+        If !Empty(Alltrim((cQry)->CLI_VCTDIF))
+            aAdd(aVetor,{"A1_YVCTDIF"		, StoD((cQry)->CLI_VCTDIF) , Nil})
+        EndIf 
+        //Projeto C-17
 
         If !Empty((cQry)->CLI_VEND) .And. (cQry)->CLI_VEND != '000000'
             AADD(aVetor,{"A1_VEND"			, (cQry)->CLI_VEND 	, Nil})
@@ -225,12 +246,109 @@ Method ExecCliente(cQry) Class TBizagiIntegracaoCliente
             AADD(aVetor,{"A1_YBIZAGI",(cQry)->CLI_YBIZAGI, Nil})
 
         EndIf
-
+    
         aVetor := aClone(::Ordem(aVetor))
 
     EndIf
 
-    If nOperacao == 4
+
+    If Alltrim((cQry)->CLI_TPOPER) == "A" 
+
+        DBSelectArea("SA1")
+        SA1->(DBSetOrder(1)) // A1_FILIAL, A1_COD, A1_LOJA, R_E_C_N_O_, D_E_L_E_T_
+
+        If SA1->(DBseek(xFilial("SA1") + (cQry)->CLI_COD + cLojaCliente))   
+
+            aAdd(aVetor, {"A1_FILIAL" 		, SA1->A1_FILIAL	, Nil })
+            aAdd(aVetor, {"A1_COD"          , SA1->A1_COD       , Nil })
+            aAdd(aVetor, {"A1_LOJA"    		, SA1->A1_LOJA      , Nil })
+            aAdd(aVetor, {"A1_NOME"			, AllTrim(StrTran(AllTrim(Upper((cQry)->CLI_NOME)),CHR(10),' ')), Nil})
+            aAdd(aVetor, {"A1_PESSOA"    	, (cQry)->CLI_PESSOA, Nil})
+            aAdd(aVetor, {"A1_CGC"       	, SA1->A1_CGC       , Nil })
+            aAdd(aVetor, {"A1_TIPO"      	, (cQry)->CLI_TIPO  , Nil})
+            aAdd(aVetor, {"A1_NREDUZ"    	, AllTrim(Upper((cQry)->CLI_NREDUZ)), Nil})
+            aAdd(aVetor, {"A1_END"       	, Upper(AllTrim(StrTran((cQry)->CLI_END,CHR(10), ' ')) +', ' + AllTrim(StrTran((cQry)->CLI_ENDNUM,CHR(10), ' '))), Nil})
+            aAdd(aVetor, {"A1_COMPLEM"      , Upper(alltrim(IIf((cQry)->CLI_COMPLEM == Nil, "", (cQry)->CLI_COMPLEM ))), Nil})
+            aAdd(aVetor, {"A1_EST"       	, (cQry)->CLI_EST, Nil})
+            aAdd(aVetor, {"A1_COD_MUN"      , Upper((cQry)->CLI_COD_MUN), Nil})
+            aAdd(aVetor, {"A1_MUN"       	, AllTrim(Upper((cQry)->CLI_MUN)), Nil})
+            aAdd(aVetor, {"A1_BAIRRO"    	, AllTrim(Upper((cQry)->CLI_BAIRRO)), Nil})
+            aAdd(aVetor, {"A1_CEP"       	, AllTrim((cQry)->CLI_CEP), Nil})
+            aAdd(aVetor, {"A1_TEL"			, AllTrim((cQry)->CLI_TEL), Nil})
+            aAdd(aVetor, {"A1_FAX"       	, AllTrim(IIf((cQry)->CLI_FAX == Nil, "", (cQry)->CLI_FAX)), Nil})
+            aAdd(aVetor, {"A1_CONTATO"   	, AllTrim(Upper((cQry)->CLI_CONTATO)), Nil})
+            aAdd(aVetor, {"A1_INSCR"     	, SA1->A1_INSCR     , Nil })          
+            aAdd(aVetor, {"A1_YMAILNF"   	, AllTrim(LOWER((cQry)->CLI_YMAILNF)), Nil})
+            aAdd(aVetor, {"A1_EMAIL" 		, AllTrim(LOWER((cQry)->CLI_EMAIL)), Nil})
+            aAdd(aVetor, {"A1_YEMABOL" 		, AllTrim(IIf((cQry)->CLI_YEMABOL == Nil, "", (cQry)->CLI_YEMABOL)), Nil})
+            aAdd(aVetor, {"A1_HPAGE"     	, AllTrim(IIf((cQry)->CLI_HPAGE == Nil,"", LOWER((cQry)->CLI_HPAGE))), Nil})
+            aAdd(aVetor, {"A1_NATUREZ"		, '1121', Nil})
+            aAdd(aVetor, {"A1_ENDCOB"    	, Upper(AllTrim((cQry)->CLI_ENDCOB) + ', ' + AllTrim((cQry)->CLI_COBNUM)), Nil})
+            aAdd(aVetor, {"A1_ESTC"			, (cQry)->CLI_ESTC, Nil})
+            aAdd(aVetor, {"A1_MUNC"			, AllTrim(Upper((cQry)->CLI_MUNC)), Nil})
+            aAdd(aVetor, {"A1_BAIRROC"   	, AllTrim(Upper((cQry)->CLI_BAIRROC)), Nil})
+            aAdd(aVetor, {"A1_CEPC"      	, AllTrim((cQry)->CLI_CEPC), Nil})
+            aAdd(aVetor, {"A1_YCADEXP"		, IIf((cQry)->CLI_YCADEXP == "1" .Or. (cQry)->CLI_YCADEXP == "S" .Or. UPPER((cQry)->CLI_YCADEXP) == "TRUE", "1","2"), Nil})
+            aAdd(aVetor, {"A1_CONTRIB"		, IIf((cQry)->CLI_CONTRIB == "1" .Or. (cQry)->CLI_CONTRIB == "S" .Or. UPPER((cQry)->CLI_CONTRIB) == "TRUE", "1","2"), Nil})
+            aAdd(aVetor, {"A1_FOMEZER"		, IIf((cQry)->CLI_FOMEZER == "1" .Or. (cQry)->CLI_FOMEZER == "S" .Or. UPPER((cQry)->CLI_FOMEZER) == "TRUE", "1","2"), Nil})
+            aAdd(aVetor, {"A1_CODPAIS"		, (cQry)->CLI_CODPAIS, Nil})
+            aAdd(aVetor, {"A1_SATIV1"		, (cQry)->CLI_SATIV1, Nil})
+            aAdd(aVetor, {"A1_YTPSEG"		, (cQry)->CLI_YTPSEG, Nil})
+            aAdd(aVetor, {"A1_YAVALCL"		, AllTrim(IIf((cQry)->CLI_YAVALCL_M == Nil, "",(cQry)->CLI_YAVALCL_M)), Nil})
+            aAdd(aVetor, {"A1_YOBSROM"		, AllTrim(IIf((cQry)->CLI_YOBSROM == Nil, "",(cQry)->CLI_YOBSROM)), Nil})
+            aAdd(aVetor, {"A1_YTRTESP"		, IIf((cQry)->CLI_YTRTESP == "1" .Or. (cQry)->CLI_YTRTESP == "S" .Or. UPPER((cQry)->CLI_YTRTESP) == "TRUE","1","2"), Nil})
+            aAdd(aVetor, {"A1_SUFRAMA"		, IIf((cQry)->CLI_SUFRAMA == Nil .OR. AllTrim((cQry)->CLI_SUFRAMA) == '-',"", (cQry)->CLI_SUFRAMA), Nil})
+            aAdd(aVetor, {"A1_YATUCLI"		, "S", NIL})
+            aAdd(aVetor, {"A1_YCAT"			, AllTrim(IIf((cQry)->CLI_YCAT == Nil, "", (cQry)->CLI_YCAT)), Nil})
+            If !Empty((cQry)->CLI_TPJ)
+                aAdd(aVetor,{"A1_TPJ",AllTrim((cQry)->CLI_TPJ), Nil})
+            EndIf
+            If !Empty((cQry)->CLI_CODMUN_ZFRANCA) .And. (cQry)->CLI_CODMUN_ZFRANCA != '00000'
+                aAdd(aVetor,{"A1_CODMUN"		, IIf((cQry)->CLI_CODMUN_ZFRANCA == Nil,""	,(cQry)->CLI_CODMUN_ZFRANCA)	, Nil})
+            EndIf
+
+            //Projeto C-17
+            aAdd(aVetor,{"A1_YREGESP"		, IIf( Alltrim((cQry)->CLI_REGESP) == "S" .Or. Alltrim((cQry)->CLI_ACORCOMST) == "S", "EXCECAO",""), Nil})
+            If !Empty(Alltrim((cQry)->CLI_VENCREGESP))
+                aAdd(aVetor,{"A1_YDTVENC"		, StoD((cQry)->CLI_VENCREGESP) , Nil})
+            EndIf 
+            If !Empty(Alltrim((cQry)->CLI_VENSUF))
+                aAdd(aVetor,{"A1_YVENSUF"		, StoD((cQry)->CLI_VENSUF) , Nil})
+            EndIf 
+            aAdd(aVetor, {"A1_CALCSUF"		, IIf((cQry)->CLI_CALCSUF == Nil,"N",(cQry)->CLI_CALCSUF), Nil})
+            aAdd(aVetor, {"A1_YTRIDIF"		, IIf((cQry)->CLI_TRIDIF == Nil,"N",(cQry)->CLI_TRIDIF), Nil})
+            If !Empty(Alltrim((cQry)->CLI_VCTDIF))
+                aAdd(aVetor,{"A1_YVCTDIF"		, StoD((cQry)->CLI_VCTDIF) , Nil})
+            EndIf 
+            //Projeto C-17
+
+            If !Empty((cQry)->CLI_VEND) .And. (cQry)->CLI_VEND != '000000'
+                AADD(aVetor,{"A1_VEND"			, (cQry)->CLI_VEND 	, Nil})
+            EndIf
+            If !Empty((cQry)->CLI_YVENDI) .And. (cQry)->CLI_YVENDI != '000000'
+                AADD(aVetor,{"A1_YVENDI"		, (cQry)->CLI_YVENDI 	, Nil})
+            EndIf
+            If !Empty((cQry)->CLI_YVENBE1) .And. (cQry)->CLI_YVENBE1 != '000000'
+                AADD(aVetor,{"A1_YVENBE1"		, (cQry)->CLI_YVENBE1	, Nil})
+            EndIf
+            If !Empty((cQry)->CLI_YVENVT1) .And. (cQry)->CLI_YVENVT1 != '000000'
+                AADD(aVetor,{"A1_YVENVT1"		, (cQry)->CLI_YVENVT1	, Nil})
+            EndIf
+            If !Empty((cQry)->CLI_YVENML1) .And. (cQry)->CLI_YVENML1 != '000000'
+                AADD(aVetor,{"A1_YVENML1"		, (cQry)->CLI_YVENML1	, Nil})
+            EndIf
+            If !Empty((cQry)->CLI_YBIZAGI)
+                AADD(aVetor,{"A1_YBIZAGI",(cQry)->CLI_YBIZAGI, Nil})
+            EndIf
+        
+            aVetor := aClone(::Ordem(aVetor))
+
+        EndIf
+
+    EndIf
+
+
+    If Alltrim((cQry)->CLI_TPOPER) == "C" 
 
         aVetor := {}
         

@@ -100,3 +100,26 @@ Local nTotal := 0
 	EndIf	
 			
 Return(lRet)
+
+
+User Function NumZMC()
+Local cRet := ""
+Local cCodRef := ""
+	
+	cCodRef := GetSxEnum('ZMC', 'ZMC_CODIGO')
+	
+	ConfirmSx8()
+	
+	DbSelectArea("ZMC")
+	ZMC->(dbSetOrder(1))
+	While (DbSeek(xFilial("ZMC") + cCodRef))
+		
+		cCodRef := GetSxEnum('ZMC', 'ZMC_CODIGO')
+	
+		ConfirmSx8()
+				
+	EndDo	
+			
+	cRet := cCodRef
+	
+Return(cRet)

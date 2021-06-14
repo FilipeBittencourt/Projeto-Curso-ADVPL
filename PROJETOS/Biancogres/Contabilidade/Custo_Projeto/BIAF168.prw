@@ -1174,7 +1174,7 @@ aAdd( aSX3, { ;
 	{ '06'																	, .T. }, ; //X3_ORDEM
 	{ 'ZMD_QUANT'															, .T. }, ; //X3_CAMPO
 	{ 'N'																	, .T. }, ; //X3_TIPO
-	{ 10																	, .T. }, ; //X3_TAMANHO
+	{ 16																	, .T. }, ; //X3_TAMANHO
 	{ 2																		, .T. }, ; //X3_DECIMAL
 	{ 'Quantidade'															, .T. }, ; //X3_TITULO
 	{ 'Quantidade'															, .T. }, ; //X3_TITSPA
@@ -1182,7 +1182,7 @@ aAdd( aSX3, { ;
 	{ 'Quantidade'															, .T. }, ; //X3_DESCRIC
 	{ 'Quantidade'															, .T. }, ; //X3_DESCSPA
 	{ 'Quantidade'															, .T. }, ; //X3_DESCENG
-	{ '@E 9,999,999.99'														, .T. }, ; //X3_PICTURE
+	{ '@E 9,999,999,999,999.99'									, .T. }, ; //X3_PICTURE
 	{ ''																	, .T. }, ; //X3_VALID
 	{ Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
 	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
@@ -1272,7 +1272,7 @@ aAdd( aSX3, { ;
 	{ '08'																	, .T. }, ; //X3_ORDEM
 	{ 'ZMD_VALOR'															, .T. }, ; //X3_CAMPO
 	{ 'N'																	, .T. }, ; //X3_TIPO
-	{ 10																	, .T. }, ; //X3_TAMANHO
+	{ 16																	, .T. }, ; //X3_TAMANHO
 	{ 2																		, .T. }, ; //X3_DECIMAL
 	{ 'Valor'																, .T. }, ; //X3_TITULO
 	{ 'Valor'																, .T. }, ; //X3_TITSPA
@@ -1280,7 +1280,7 @@ aAdd( aSX3, { ;
 	{ 'Valor'																, .T. }, ; //X3_DESCRIC
 	{ 'Valor'																, .T. }, ; //X3_DESCSPA
 	{ 'Valor'																, .T. }, ; //X3_DESCENG
-	{ '@E 9,999,999.99'														, .T. }, ; //X3_PICTURE
+	{ '@E 9,999,999,999,999.99'							, .T. }, ; //X3_PICTURE
 	{ ''																	, .T. }, ; //X3_VALID
 	{ Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
 	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
@@ -1321,7 +1321,7 @@ aAdd( aSX3, { ;
 	{ '09'																	, .T. }, ; //X3_ORDEM
 	{ 'ZMD_TOTAL'															, .T. }, ; //X3_CAMPO
 	{ 'N'																	, .T. }, ; //X3_TIPO
-	{ 10																	, .T. }, ; //X3_TAMANHO
+	{ 16																	, .T. }, ; //X3_TAMANHO
 	{ 2																		, .T. }, ; //X3_DECIMAL
 	{ 'Total (R$)'															, .T. }, ; //X3_TITULO
 	{ 'Total (R$)'															, .T. }, ; //X3_TITSPA
@@ -1329,7 +1329,7 @@ aAdd( aSX3, { ;
 	{ 'Total (R$)'															, .T. }, ; //X3_DESCRIC
 	{ 'Total (R$)'															, .T. }, ; //X3_DESCSPA
 	{ 'Total (R$)'															, .T. }, ; //X3_DESCENG
-	{ '@E 9,999,999.99'														, .T. }, ; //X3_PICTURE
+	{ '@E 9,999,999,999,999.99'									, .T. }, ; //X3_PICTURE
 	{ ''																	, .T. }, ; //X3_VALID
 	{ Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
 	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;

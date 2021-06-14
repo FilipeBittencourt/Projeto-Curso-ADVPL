@@ -159,42 +159,10 @@ Static Function fBIA389D()
 		_mNomeUsr := _daduser[1][4]
 	EndIf
 
-	xfMensCompl := ""
-	xfMensCompl += "Tipo Orçamento igual " + _cTpOrc + msrhEnter
-	xfMensCompl += "Status igual Aberto" + msrhEnter
-	xfMensCompl += "Data Digitação igual a branco" + msrhEnter
-	xfMensCompl += "Data Conciliação igual a branco" + msrhEnter
-	xfMensCompl += "Data Encerramento igual a branco" + msrhEnter
-
-	BeginSql Alias M001
-		SELECT COUNT(*) CONTAD
-		FROM %TABLE:ZB5% ZB5
-		WHERE ZB5_FILIAL = %xFilial:ZB5%
-		AND ZB5.ZB5_VERSAO = %Exp:_cVersao%
-		AND ZB5.ZB5_REVISA = %Exp:_cRevisa%
-		AND ZB5.ZB5_ANOREF = %Exp:_cAnoRef%
-		AND RTRIM(ZB5.ZB5_TPORCT) = %Exp:_cTpOrc%
-		AND ZB5.ZB5_STATUS = 'A'
-		AND ZB5.ZB5_DTDIGT = ''
-		AND ZB5.ZB5_DTCONS = ''
-		AND ZB5.ZB5_DTENCR = ''
-		AND ZB5.%NotDel%
-	EndSql
-	(M001)->(dbGoTop())
-	If (M001)->CONTAD <> 1
-		MsgALERT("A versão informada não está ativa para execução deste processo." + msrhEnter + msrhEnter + "Favor verificar o preenchimento dos campos no tabela de controle de versão conforme abaixo:" + msrhEnter + msrhEnter + xfMensCompl + msrhEnter + msrhEnter + "Favor verificar com o responsável pelo processo Orçamentário!!!")
-		_msCtrlAlt := .F.
-		_oGetDados:lInsert := .F.
-		_oGetDados:lUpdate := .F.
-		_oGetDados:lDelete := .F.
-	Else
-		_msCtrlAlt := .T.
-		_oGetDados:lInsert := .T.
-		_oGetDados:lUpdate := .T.
-		_oGetDados:lDelete := .T.
-	EndIf	
-	(M001)->(dbCloseArea())
-
+	_msCtrlAlt := .T.
+	_oGetDados:lInsert := .T.
+	_oGetDados:lUpdate := .T.
+	_oGetDados:lDelete := .T.
 	_oGetDados:aCols	:=	{}
 
 	BeginSql Alias _cAlias

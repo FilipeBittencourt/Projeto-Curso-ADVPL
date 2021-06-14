@@ -1082,10 +1082,14 @@ Method Save(oGrid, lAprovar, lConfirma) Class TWLiberacaoFinanceiro
 						ZL0->ZL0_CTRVER := oGrid:aCols[nW][nPosVerb]
 
 
+						/*
+						  //Filipe - Facile - 12/04/2021 | Ticket: 26221
 						CkDescFin(ZL0->ZL0_CODEMP,ZL0->ZL0_CODFIL,ZL0->ZL0_CLIFOR,ZL0->ZL0_LOJA,;
 							ZL0->ZL0_CLVLDB,ZL0->ZL0_DEBITO,;
 							ZL0->ZL0_NUM,ZL0->ZL0_PREFIX,ZL0->ZL0_TIPO,ZL0->ZL0_PARCEL,;
 							ZL0->ZL0_VALOR,ZL0->ZL0_DESCON,ZL0->ZL0_EMISSA, ZL0->(RecNo()))
+							
+							*/
 
 					EndIf
 
@@ -2010,3 +2014,5 @@ Static Function CkDescHTML(cEmail, cEUser,cCODEMP,cCODFIL,cCLIFOR,cLOJA,cCLVLDB,
 	cHtml += " </html> "
 
 Return cHtml
+
+// FIM  - Filipe - Facile - 12/04/2021 | Ticket: 26221

@@ -19,7 +19,11 @@ User Function MBRWBTN()
 	Local gbiMenu		:= Upper(AllTrim(PARAMIXB[4]))
 	Local gbiOpc		:= AllTrim(cValtoChar(PARAMIXB[3]))
 
-	If gbiFunc == "MATA018"               // Por Marcos Alberto Soprani em 23/11/16
+	If gbiFunc $ "BIAFG068"
+		U_BIAATUSBZ()
+	Endif
+
+	If gbiFunc $ "MATA018"               // Por Marcos Alberto Soprani em 23/11/16
 		//*************************************************************************
 
 		If gbiMenu $ "A018ALTERA/AXVISUAL"

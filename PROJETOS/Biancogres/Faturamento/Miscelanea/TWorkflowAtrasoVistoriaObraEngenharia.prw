@@ -37,7 +37,7 @@ Class TWorkflowAtrasoVistoriaObraEngenharia From LongClassName
 	Method GetBody(aItem)	
 	Method GetFooter()
 	Method GetMessage()
-	Method GetMail(cMail_1, cMail_2)	
+	Method GetMail(cMail_2)	
 	Method SendWorkFlow(cCodVen, cMail, cHtml)
 	
 EndClass
@@ -58,7 +58,7 @@ Local cCodVen := ""
 Local cNomVen := ""
 Local aItem := {}
 Local cMail := ""
-Local cMail_1 := ""
+//Local cMail_1 := ""
 Local cMail_2 := ""
 Local cHtml := ""
 
@@ -105,7 +105,7 @@ Local cHtml := ""
 					
 				cNomVen := AllTrim((cQry)->A3_NOME)
 				
-				cMail_1 := (cQry)->A3_YEMAIL
+			//cMail_1 := (cQry)->A3_YEMAIL
 			
 				cMail_2 := (cQry)->A3_EMAIL
 				
@@ -124,7 +124,7 @@ Local cHtml := ""
 				cHtml	+= ::GetBody(aItem)
 				cHtml	+= ::GetFooter()	
 				
-				If !Empty(cMail := ::GetMail(cMail_1, cMail_2))
+				If !Empty(cMail := ::GetMail(cMail_2))
 				
 					::SendWorkFlow(cCodVen, cMail, cHtml)
 					
@@ -168,17 +168,18 @@ Local cHtml := ""
 Return()
 
 
-Method GetMail(cMail_1, cMail_2) Class TWorkflowAtrasoVistoriaObraEngenharia
+Method GetMail(cMail_2) Class TWorkflowAtrasoVistoriaObraEngenharia
 Local cRet := ""
 
-	If !Empty(AllTrim(cMail_1))
-	
-		cRet := AllTrim(cMail_1)
-	
-	ElseIf !Empty(AllTrim(cMail_2))
-	
+	If !Empty(AllTrim(cMail_2))
+
 		cRet := AllTrim(cMail_2)
 	
+	//pzzn
+	/* ElseIf !Empty(AllTrim(cMail_1))
+	
+		cRet := AllTrim(cMail_1)
+	*/
 	EndIf
 	
 Return(cRet)

@@ -1,0 +1,23 @@
+#include "totvs.ch"
+
+/*/{Protheus.doc} FIDC
+@author Marinaldo de Jesus
+@since 21/05/2021
+@project FIDC
+@version 1.0
+@description: Ponto de Entrada Executado no progama FINA290.PRW (Selecao de titulos para Fatura)
+              Será utilizado para Filtrar os Titulos não FIDC.
+@type function
+/*/
+#ifdef __dbg__
+function u_F290BFIL() as character
+    local cFilterRet as character
+    cFilterRet:=FIDC():getPGFilterFIDC()
+    return(cFilterRet)
+#else
+    static function dummy()
+    if (.F.)
+        dummy()
+    endif
+    return
+#endif 

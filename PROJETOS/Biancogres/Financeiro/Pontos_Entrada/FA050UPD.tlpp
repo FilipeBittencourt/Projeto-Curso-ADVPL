@@ -7,7 +7,7 @@
 @version 1.0
 @description: Ponto de Entrada Executado no progama FINA050.PRX (Inclusão, Alteração e Exclusao)
               Será utilizado para Validar a Alteração de Titulos.
-@type class
+@type function
 /*/
 
 function u_FA050UPD() as logical

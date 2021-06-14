@@ -1683,6 +1683,8 @@ Method ExecMovFin(oObj, nValor, cNat, cHist) Class TAFBaixaReceber
 		cFilAnt := SE1->E1_FILIAL
 	EndIf
 
+	FIDC():resetFIDCVars()
+
 	aAdd(aMovBan, {"E5_FILIAL", xFilial("SE5"), Nil})
 	aAdd(aMovBan, {"E5_DATA", oObj:dDtLiq, Nil})
 	aAdd(aMovBan, {"E5_DTDIGIT", oObj:dDtLiq, Nil})
@@ -1732,6 +1734,7 @@ Method ExecMovFin(oObj, nValor, cNat, cHist) Class TAFBaixaReceber
 		//Atualizar Status ZK4
 		::UpdStatus(oObj:nID, "2")
 
+		FIDC():resetFIDCVars()
 		if (FIDC():isFIDCEnabled().and.FIDC():getBiaPar("FIDC_CTB_LP_MOVFIN_ONLINE",.F.))
 			cSA1IdxKey:="A1_FILIAL+A1_COD+A1_LOJA"
 			SA1->(dbSetOrder(retOrder("SA1",cSA1IdxKey)))
@@ -1757,7 +1760,7 @@ Method ExecMovFin(oObj, nValor, cNat, cHist) Class TAFBaixaReceber
 					if (FIDC():getFIDCVar("lDiario",.F.))
 						FIDC():setFIDCVar("aDiario",{"SE1",nSE1RecNo,SE1->E1_DIACTB,"E1_NODIA","E1_DIACTB"})
 					endif
-					SE1->(FIDC():ctbFIDC())
+					SE1->(FIDC():ctbFIDC(1))
 					FIDC():resetFIDCVars()
 				endif
 			endif
@@ -1820,6 +1823,8 @@ Method ExecBaixaCR(oObj, cMotBx) Class TAFBaixaReceber
 		cFilAnt := SE1->E1_FILIAL
 	EndIf
 
+	FIDC():resetFIDCVars()
+
 	aAdd(aTit, {"E1_PREFIXO", SE1->E1_PREFIXO, Nil})
 	aAdd(aTit, {"E1_NUM", SE1->E1_NUM, Nil})
 	aAdd(aTit, {"E1_PARCELA", SE1->E1_PARCELA, Nil})
@@ -1853,6 +1858,7 @@ Method ExecBaixaCR(oObj, cMotBx) Class TAFBaixaReceber
 		nSE1RecNo:=SE1->(recNo())
 		cacheData():set("ExecBaixaCR","nSE1RecNo",nSE1RecNo)
 
+		FIDC():resetFIDCVars()
 		if (FIDC():isFIDCEnabled().and.FIDC():getBiaPar("FIDC_CTB_LP_BAIXA_ONLINE",.T.))
 			cSA1IdxKey:="A1_FILIAL+A1_COD+A1_LOJA"
 			SA1->(dbSetOrder(retOrder("SA1",cSA1IdxKey)))

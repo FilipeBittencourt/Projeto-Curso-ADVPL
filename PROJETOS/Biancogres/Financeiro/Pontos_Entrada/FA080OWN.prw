@@ -18,11 +18,13 @@ User Function FA080OWN()
 	local lFA080OWN as logical
 
 		begin sequence
-			lFA080OWN:=(!FIDC():isPGFIDC(.T.))
-			if (!lFA080OWN)
-				break
-			endif
-			lFA080OWN:=FA080OWN()
+			#ifdef __dbg__
+                lFA080OWN:=(!FIDC():isPGFIDC(.T.))
+                if (!lFA080OWN)
+                    break
+                endif
+			#endif
+            lFA080OWN:=FA080OWN()
 		end sequence
 
 	return(lFA080OWN)

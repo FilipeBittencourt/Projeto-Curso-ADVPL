@@ -190,7 +190,7 @@ Static Function GeraCab()
 	C_HTML += '               <th class = "style12" width="50" scope="col"> '+SF2->F2_CLIENTE+' </span></th>
 
 	If Empty(AllTrim(SC5->C5_YCLIORI))
-	C_HTML += '				  <th class = "style12" width="100" scope="col"> '+Alltrim(POSICIONE("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_CLIENTE,"A1_NOME")) +' </span></th>
+	C_HTML += '				  <th class = "style12" width="100" scope="col"> '+Alltrim(POSICIONE("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_NOME")) +' </span></th>
 	Else
 	C_HTML += '				  <th class = "style12" width="100" scope="col"> '+Alltrim(POSICIONE("SA1",1,xFilial("SA1")+SC5->C5_YCLIORI+SC5->C5_YLOJORI,"A1_NOME")) +' </span></th>
 	EndIf
@@ -206,7 +206,7 @@ Static Function GeraCab()
 
 
 	Static Function GeraCabCls()
-
+//ADICIONADO COLUNA ORDEM COMPRA CAMPO C5_YPC - TICKET 32584
 	C_HTML += '         <table align="center" width="800" class = "headProd">
 	C_HTML += '               <tr>
 	C_HTML += '                  <div align="left">
@@ -217,6 +217,7 @@ Static Function GeraCab()
 	C_HTML += '         <table align="center" width="800" border="1" cellspacing="0" cellpadding="1">
 	C_HTML += '            <tr align=center>
 	C_HTML += '               <th class = "cabtab" width="50" scope="col"> PEDIDO </span></th>
+	C_HTML += '               <th class = "cabtab" width="50" scope="col"> ORDEM COMPRA </span></th>
 	C_HTML += '               <th class = "cabtab" width="10" scope="col"> ITEM </span></th>
 	C_HTML += '               <th class = "cabtab" width="50" scope="col"> PRODUTO </span></th>
 	C_HTML += '               <th class = "cabtab" width="100" scope="col"> DESCRICAO </span></th>
@@ -230,6 +231,7 @@ Static Function GeraCab()
 
 	C_HTML += " 			<tr align=center>
 	C_HTML += "                   <td class='style12' width='50'scope='col'>"  +ALLTRIM(SD2->D2_PEDIDO)		+"</td>
+	C_HTML += "                   <td class='style12' width='50'scope='col'>"  +ALLTRIM(SC5->C5_YPC)		+"</td>
 	C_HTML += "                   <td class='style12' width='10'scope='col'>"  +ALLTRIM(SD2->D2_ITEM)		+"</td>
 	C_HTML += "                   <td class='style12' width='50'scope='col'>"  +ALLTRIM(SD2->D2_COD)		+"</td>
 	C_HTML += "                   <td class='style12' width='100'scope='col'>" +Alltrim(Posicione("SB1",1,xFilial("SB1")+SD2->D2_COD,"B1_DESC")) +"</td>

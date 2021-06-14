@@ -15,7 +15,6 @@
 
 User Function BIAFG096()
 
-AXCADASTRO("ZCS", "Cadastro de Classe de Valor por Linha de Produção")
-
+	AXCADASTRO("ZCS", "Cadastro de Classe de Valor por Linha de Fabricação")
 
 Return

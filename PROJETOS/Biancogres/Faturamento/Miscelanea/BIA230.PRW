@@ -270,41 +270,55 @@ Return AllTrim(cDesc)
 //---------------------------------------------------------------------------
 Static Function GetSQL(cTpFiltro, cEmp)
 	Local cSql 		:= ""
+	Local Enter		:= CHR(13)+CHR(10)
 
 	If (cTpFiltro == 1)
-		cSql +=" SELECT EMP='"+cEmp+"',Z11_PESAGE, Z11_PCAVAL, Z11_MOTPAT, Z11_MOTORI, Z11_HORACH, Z11_CODTRA,SA4.A4_NOME,Z11_CLVEIC, Z58.Z58_DESC, ZZV.ZZV_CARGA,  ZZV.ZZV_DATAAG, ZZV.ZZV_HORAAG, ZZV.ZZV_GALPAO, Z11_HORAIN, Z11_HORASA, Z11_PESMAX, Z11_TARA, Z11_PESOIN, Z11_PESOSA, Z11_PESLIQ, "
-		cSql +=" (SELECT SUM(ISNULL(C9_QTDLIB,0)) FROM SC9"+cEmp+"0 SC9 WHERE C9_AGREG = ZZV.ZZV_CARGA AND SC9.D_E_L_E_T_ = '') AS QTD, Z11.Z11_OBSER, "
-		cSql +=" (SELECT COUNT(*) FROM SC9"+cEmp+"0 SC9 WHERE C9_AGREG = ZZV.ZZV_CARGA AND SC9.D_E_L_E_T_ = '' AND C9_LOTECTL IN ('AMT', '')) AS AMOSTRA "
-		cSql += ", ZZV_PLACA, ZZV_MOTOR, ZZV_TRANSP"
+		cSql +=" SELECT EMP='"+cEmp+"',Z11_PESAGE, Z11_PCAVAL, Z11_MOTPAT, Z11_MOTORI, " +CRLF 
+		cSql +="        Z11_HORACH,Z11_CODTRA,SA4.A4_NOME,Z11_CLVEIC, Z58.Z58_DESC, " +CRLF  
+		cSql +="        ZZV.ZZV_CARGA, ZZV.ZZV_DATAAG, ZZV.ZZV_HORAAG, ZZV.ZZV_GALPAO, Z11_HORAIN, " +CRLF  
+		cSql +="        Z11_HORASA, Z11_PESMAX, Z11_TARA,Z11_PESOIN, Z11_PESOSA, Z11_PESLIQ, " +CRLF 
+		
+		cSql +="        (SELECT SUM(ISNULL(C9_QTDLIB,0)) " +CRLF 
+		cSql +="           FROM SC9"+cEmp+"0 SC9 WITH (NOLOCK) " +CRLF 
+		cSql +="          WHERE C9_AGREG = ZZV.ZZV_CARGA " +CRLF 
+		cSql +="            AND SC9.D_E_L_E_T_ = '') AS QTD, Z11.Z11_OBSER, " +CRLF 
+		
+		cSql +="        (SELECT COUNT(*)" +CRLF  
+		cSql +="           FROM SC9"+cEmp+"0 SC9 WITH (NOLOCK) " +CRLF 
+		cSql +="          WHERE C9_AGREG = ZZV.ZZV_CARGA " +CRLF 
+		cSql +="            AND SC9.D_E_L_E_T_ = '' " +CRLF 
+		cSql +="            AND C9_LOTECTL IN ('AMT', '')) AS AMOSTRA, " +CRLF 
+		
+		cSql +="        ZZV_PLACA, ZZV_MOTOR, ZZV_TRANSP"  +CRLF
 	Else
-		cSql +=" SELECT ZZV.ZZV_CARGA"
+		cSql +=" SELECT ZZV.ZZV_CARGA " +CRLF
 	EndIf
 
 	If (MV_PAR13 == 1)
 
-		cSql +=" FROM Z11"+cEmp+"0 Z11 "
-		cSql +=" LEFT JOIN "+RetSqlName('Z58')+" Z58 ON Z11_CLVEIC = Z58_CODIGO "
-		cSql +=" LEFT JOIN "+RetSqlName('SA4')+" SA4 ON SA4.A4_COD = Z11.Z11_CODTRA "
-		cSql +=" LEFT JOIN ZZV"+cEmp+"0 ZZV ON Z11.Z11_PESAGE = ZZV.ZZV_TICKET "
-		cSql +=" WHERE Z11_MOTORI BETWEEN '"+MV_PAR01+"' AND '"+MV_PAR02+"' "
-		cSql +=" AND Z11_PCAVAL BETWEEN '"+MV_PAR03+"' AND '"+MV_PAR04+"'	"
-		cSql +=" AND Z11_CODTRA BETWEEN '"+MV_PAR05+"' AND '"+MV_PAR06+"'	"
-		cSql +=" AND Z11_MERCAD = 2 "
+		cSql +=" FROM Z11"+cEmp+"0 Z11 WITH (NOLOCK)" +CRLF
+		cSql +=" LEFT JOIN "+RetSqlName('Z58')+" Z58 WITH (NOLOCK) ON Z11_CLVEIC = Z58_CODIGO " +CRLF
+		cSql +=" LEFT JOIN "+RetSqlName('SA4')+" SA4 WITH (NOLOCK) ON SA4.A4_COD = Z11.Z11_CODTRA " +CRLF
+		cSql +=" LEFT JOIN ZZV"+cEmp+"0 ZZV WITH (NOLOCK) ON Z11.Z11_PESAGE = ZZV.ZZV_TICKET " +CRLF
+		cSql +=" WHERE Z11_MOTORI BETWEEN '"+MV_PAR01+"' AND '"+MV_PAR02+"' " +CRLF
+		cSql +=" AND Z11_PCAVAL BETWEEN '"+MV_PAR03+"' AND '"+MV_PAR04+"'	" +CRLF
+		cSql +=" AND Z11_CODTRA BETWEEN '"+MV_PAR05+"' AND '"+MV_PAR06+"'	" +CRLF
+		cSql +=" AND Z11_MERCAD = 2 " +CRLF
 
 	Else //layout agendamento
 
-		cSql +=" FROM ZZV"+cEmp+"0 ZZV "
-		cSql +=" LEFT JOIN Z11"+cEmp+"0 Z11 ON Z11.Z11_PESAGE = ZZV.ZZV_TICKET AND Z11.D_E_L_E_T_ = ''	"
+		cSql +=" FROM ZZV"+cEmp+"0 ZZV WITH (NOLOCK) "  +CRLF
+		cSql +=" LEFT JOIN Z11"+cEmp+"0 Z11 WITH (NOLOCK) ON Z11.Z11_PESAGE = ZZV.ZZV_TICKET AND Z11.D_E_L_E_T_ = ''	" +CRLF
 
 		If (cTpFiltro == 1)
-			cSql +=" LEFT JOIN "+RetSqlName('Z58')+" Z58 ON Z11_CLVEIC = Z58_CODIGO 		AND Z58.D_E_L_E_T_ = ''	"
-			cSql +=" LEFT JOIN "+RetSqlName('SA4')+" SA4 ON SA4.A4_COD = Z11.Z11_CODTRA 	AND SA4.D_E_L_E_T_ = ''	"
+			cSql +=" LEFT JOIN "+RetSqlName('Z58')+" Z58 WITH (NOLOCK) ON Z11_CLVEIC = Z58_CODIGO 		AND Z58.D_E_L_E_T_ = ''	" +CRLF
+			cSql +=" LEFT JOIN "+RetSqlName('SA4')+" SA4 WITH (NOLOCK) ON SA4.A4_COD = Z11.Z11_CODTRA 	AND SA4.D_E_L_E_T_ = ''	" +CRLF
 		EndIf
 
 
-		cSql +=" WHERE ISNULL(Z11_MOTORI, '') 	BETWEEN '"+MV_PAR01+"' AND '"+MV_PAR02+"' 						"
-		cSql +=" AND ISNULL(Z11_PCAVAL,'') 		BETWEEN '"+MV_PAR03+"' AND '"+MV_PAR04+"'						"
-		cSql +=" AND ISNULL(Z11_CODTRA,'') 		BETWEEN '"+MV_PAR05+"' AND '"+MV_PAR06+"'						"
+		cSql +=" WHERE ISNULL(Z11_MOTORI, '') 	BETWEEN '"+MV_PAR01+"' AND '"+MV_PAR02+"' 						" +CRLF
+		cSql +=" AND ISNULL(Z11_PCAVAL,'') 		BETWEEN '"+MV_PAR03+"' AND '"+MV_PAR04+"'						" +CRLF
+		cSql +=" AND ISNULL(Z11_CODTRA,'') 		BETWEEN '"+MV_PAR05+"' AND '"+MV_PAR06+"'						" +CRLF
 		//cSql +=" AND ISNULL(Z11_MERCAD,2) 		= 2 															"
 
 	EndIf
@@ -318,15 +332,15 @@ Else
 EndIf
 		*/
 
-cSql +=" AND ZZV.ZZV_DATAAG BETWEEN '"+dtos(MV_PAR07)+"' AND '"+dtos(MV_PAR08)+"' "
+cSql +=" AND ZZV.ZZV_DATAAG BETWEEN '"+dtos(MV_PAR07)+"' AND '"+dtos(MV_PAR08)+"' " +CRLF
 
 
 If MV_PAR14 == 2
-	cSql +=" AND ZZV.ZZV_TPAGEN = 'A' "
+	cSql +=" AND ZZV.ZZV_TPAGEN = 'A' " +CRLF
 ElseIf MV_PAR14 == 3
-	cSql +=" AND ZZV.ZZV_TPAGEN = 'E' "
+	cSql +=" AND ZZV.ZZV_TPAGEN = 'E' " +CRLF
 ElseIf MV_PAR14 == 4
-	cSql +=" AND ZZV.ZZV_TPAGEN = 'R' "
+	cSql +=" AND ZZV.ZZV_TPAGEN = 'R' " +CRLF
 EndIf
 
 		/*If MV_PAR9 == 2
@@ -341,39 +355,39 @@ EndIf
 		*/
 
 If MV_PAR10 == 2
-	cSql +=" AND Z11_SITUAC <> 'C' "
+	cSql +=" AND Z11_SITUAC <> 'C' " +CRLF
 ElseIf MV_PAR10 == 3
-	cSql +=" AND ISNULL(Z11_SITUAC, 'C') = 'C' "
+	cSql +=" AND ISNULL(Z11_SITUAC, 'C') = 'C' " +CRLF
 EndIf
 
 If MV_PAR11 == 2
-	cSql +=" AND ISNULL(Z11_MOTPAT, 'S') = 'S' "
+	cSql +=" AND ISNULL(Z11_MOTPAT, 'S') = 'S' " +CRLF
 ElseIf MV_PAR11 == 3
-	cSql +=" AND ISNULL(Z11_MOTPAT, 'N') = 'N' "
+	cSql +=" AND ISNULL(Z11_MOTPAT, 'N') = 'N' " +CRLF
 EndIf
 
 If MV_PAR12 == 2
-	cSql +=" AND ISNULL((SELECT COUNT(*) FROM ZZW"+cEmp+"0 ZZW  WHERE ZZW_CARGA = ZZV_CARGA AND  ZZW_STATUS <> '1' AND ZZW.D_E_L_E_T_ = '' ), 0) > 0 "
+	cSql +=" AND ISNULL((SELECT COUNT(*) FROM ZZW"+cEmp+"0 ZZW WITH (NOLOCK) WHERE ZZW_CARGA = ZZV_CARGA AND  ZZW_STATUS <> '1' AND ZZW.D_E_L_E_T_ = '' ), 0) > 0 " +CRLF
 ElseIf MV_PAR12 == 3
-	cSql +=" AND ISNULL((SELECT COUNT(*) FROM ZZW"+cEmp+"0 ZZW ZZW  WHERE ZZW_CARGA = ZZV_CARGA AND  ZZW_STATUS = '1' AND ZZW.D_E_L_E_T_ = '' ), 0) > 0 "
+	cSql +=" AND ISNULL((SELECT COUNT(*) FROM ZZW"+cEmp+"0 ZZW ZZW WITH (NOLOCK) WHERE ZZW_CARGA = ZZV_CARGA AND  ZZW_STATUS = '1' AND ZZW.D_E_L_E_T_ = '' ), 0) > 0 " +CRLF
 EndIf
 
 If (MV_PAR13 == 1)
 
-	cSql +=" AND Z11.D_E_L_E_T_ = '' "
-	cSql +=" AND Z58.D_E_L_E_T_ = '' "
-	cSql +=" AND SA4.D_E_L_E_T_ = '' "
+	cSql +=" AND Z11.D_E_L_E_T_ = '' " +CRLF
+	cSql +=" AND Z58.D_E_L_E_T_ = '' " +CRLF
+	cSql +=" AND SA4.D_E_L_E_T_ = '' " +CRLF
 
 EndIf
 
-cSql +=" AND ZZV.D_E_L_E_T_ = '' "
+cSql +=" AND ZZV.D_E_L_E_T_ = '' " +CRLF
 
 
 If (cTpFiltro == 1)
 	If (MV_PAR13 == 1)
-		cSql +=" ORDER BY Z11_DATAIN, Z11_HORAIN, Z11_DATASA, Z11_HORASA "
+		cSql +=" ORDER BY Z11_DATAIN, Z11_HORAIN, Z11_DATASA, Z11_HORASA " +CRLF
 	Else
-		cSql +=" ORDER BY ZZV.ZZV_DATAAG, ZZV.ZZV_HORAAG "
+		cSql +=" ORDER BY ZZV.ZZV_DATAAG, ZZV.ZZV_HORAAG " +CRLF
 	EndIf
 EndIf
 
@@ -425,10 +439,11 @@ Return()
 
 Static Function InfGalpao(cCarga, cEmp)
 
-	Local cAliasTrab 	:= GetNextAlias()
-	Local cQuery		:= ""
-	Local cBanco		:= ""
-	Local aListaG		:= {}
+	Local cAliasTrab := GetNextAlias()
+	Local cQuery	 := ""
+	Local cBanco	 := ""
+	Local aListaG	 := {}
+	Local Enter		 := CHR(13)+CHR(10)
 
 	If(AllTrim(cEmp) == '01')
 		cBanco		:= "DADOSEOS"
@@ -439,14 +454,14 @@ Static Function InfGalpao(cCarga, cEmp)
 	EndIf
 
 
-	cQuery := "SELECT DESCRICAO=T5.dsc_local, PALETE = SUM(T3.fie_qtdade_pallet) FROM 				  	"
-	cQuery +=	" ["+cBanco+"].[dbo].[fat_ordem_faturamento]				T1 (nolock)  				"
-	cQuery +=	" INNER JOIN ["+cBanco+"].[dbo].[fat_itens_ordem]			T2 (nolock)  ON T1.ford_numero	= T2.ford_numero		"
-	cQuery +=	" INNER JOIN ["+cBanco+"].[dbo].[fat_itens_etiquetas]		T3 (nolock)  ON T1.ford_numero	= T3.ford_numero AND  T2.id_itens = T3.id_itens "
-	cQuery +=	" INNER JOIN ["+cBanco+"].[dbo].[cep_etiqueta_endereco]		T4 (nolock)  ON T3.cod_endereco	= T4.cod_endereco	"
-	cQuery +=	" INNER JOIN ["+cBanco+"].[dbo].[cep_cad_local]				T5 (nolock)  ON T4.end_local	= T5.end_local AND T4.cod_deposito	= T5.cod_deposito			"
-	cQuery +=	" WHERE ford_num_carga = '"+AllTrim(cCarga)+"'							"
-	cQuery +=	" GROUP BY T5.dsc_local													"
+	cQuery := "SELECT DESCRICAO=T5.dsc_local, PALETE = SUM(T3.fie_qtdade_pallet) FROM 				  	" +CRLF
+	cQuery +=	" ["+cBanco+"].[dbo].[fat_ordem_faturamento]				T1 (nolock)  				" +CRLF
+	cQuery +=	" INNER JOIN ["+cBanco+"].[dbo].[fat_itens_ordem]			T2 (nolock)  ON T1.ford_numero	= T2.ford_numero		" +CRLF
+	cQuery +=	" INNER JOIN ["+cBanco+"].[dbo].[fat_itens_etiquetas]		T3 (nolock)  ON T1.ford_numero	= T3.ford_numero AND  T2.id_itens = T3.id_itens " +CRLF
+	cQuery +=	" INNER JOIN ["+cBanco+"].[dbo].[cep_etiqueta_endereco]		T4 (nolock)  ON T3.cod_endereco	= T4.cod_endereco	" +CRLF
+	cQuery +=	" INNER JOIN ["+cBanco+"].[dbo].[cep_cad_local]				T5 (nolock)  ON T4.end_local	= T5.end_local AND T4.cod_deposito	= T5.cod_deposito			" +CRLF
+	cQuery +=	" WHERE ford_num_carga = '"+AllTrim(cCarga)+"'							" +CRLF
+	cQuery +=	" GROUP BY T5.dsc_local													" +CRLF
 
 
 	TCQUERY cQuery NEW ALIAS cAliasTrab
@@ -705,74 +720,131 @@ Static Function TabTemp(cEmp)
 
 	Local cQuery 		:= ""
 
-	cQuery += " SELECT * INTO "+cNomeTab+" FROM ( SELECT				"+CRLF
-
-	cQuery += " FORNO		=ZZ6_FORNOP,			"+CRLF
-	cQuery += " CATEGORIA	=RTRIM(Z41.Z41_DESCR), 	"+CRLF
-	cQuery += " VENDEDOR	=SA3.A3_COD,			"+CRLF
-	cQuery += " CLIENTE		=A1_COD,		 		"+CRLF
-	cQuery += " QUANT1=ISNULL(C9_QTDLIB , 0),		"+CRLF
-	cQuery += " QUANT2=ISNULL(C9_QTDLIB2 , 0), 		"+CRLF
+	cQuery += " SELECT * INTO "+cNomeTab             		                                                +CRLF
+	cQuery += " FROM ( SELECT                       		                                               "+CRLF
+	cQuery += "               FORNO	=ZZ6_FORNOP,			                                               "+CRLF
+	cQuery += "               CATEGORIA	=RTRIM(Z41.Z41_DESCR), 			                                   "+CRLF
+	cQuery += "               VENDEDOR	=SA3.A3_COD,					                                   "+CRLF
+	cQuery += "               CLIENTE		=A1_COD,		 		                                       "+CRLF
+	cQuery += "               QUANT1=ISNULL(C9_QTDLIB , 0),		                                           "+CRLF
+	cQuery += "               QUANT2=ISNULL(C9_QTDLIB2 , 0), 		                                       "+CRLF
+	cQuery += "               QUANT3=CASE WHEN B1_TIPCONV = 'M' THEN                                       "+CRLF 
+	cQuery += "                             (C9_QTDLIB * ZZ9_PESO) + ((C9_QTDLIB * B1_CONV) * ZZ9_PESEMB)  "+CRLF					
+    cQuery += "			                  ELSE                                                             "+CRLF  
+    cQuery += "                             (C9_QTDLIB * ZZ9_PESO ) + ((C9_QTDLIB / B1_CONV) * ZZ9_PESEMB) "+CRLF
+    cQuery += "		                 END                                                                   "+CRLF	
+	/*
 	cQuery += " QUANT3=CASE WHEN B1_TIPCONV = 'M' 	"+CRLF
 	cQuery += " THEN (Z9_QTDLIB  * 					"+CRLF
-	cQuery += " ISNULL((SELECT ZZ9_PESO FROM "+RetSQLName("ZZ9")+" ZZ9 (nolock) WHERE ZZ9_PRODUT = C9_PRODUTO AND ZZ9_LOTE = C9_LOTECTL AND ZZ9.D_E_L_E_T_<>'*'),B1_PESO))									"+CRLF
+	cQuery += " ISNULL((SELECT ZZ9_PESO "+CRLF
+	cQuery += "           FROM "+RetSQLName("ZZ9")+" ZZ9 (nolock)"+CRLF 
+	cQuery += "          WHERE ZZ9_PRODUT = C9_PRODUTO "+CRLF
+	cQuery += "            AND ZZ9_LOTE = C9_LOTECTL "+CRLF
+	cQuery += "            AND ZZ9.D_E_L_E_T_<>'*'),B1_PESO))"+CRLF
 	cQuery += " + ((Z9_QTDLIB * B1_CONV) *  " +CRLF
-	cQuery += " ISNULL((SELECT ZZ9_PESEMB FROM "+RetSQLName("ZZ9")+" ZZ9 (nolock) WHERE ZZ9_PRODUT = C9_PRODUTO AND ZZ9_LOTE = C9_LOTECTL AND ZZ9.D_E_L_E_T_<>'*'),B1_YPESEMB))							"+CRLF
-	cQuery += " ELSE (Z9_QTDLIB  * ISNULL((SELECT ZZ9_PESO FROM "+RetSQLName("ZZ9")+" ZZ9 (nolock) WHERE ZZ9_PRODUT = C9_PRODUTO AND ZZ9_LOTE = C9_LOTECTL AND ZZ9.D_E_L_E_T_<>'*'),B1_PESO))				"+CRLF
-	cQuery += " + ((Z9_QTDLIB / B1_CONV) * ISNULL((SELECT ZZ9_PESEMB FROM "+RetSQLName("ZZ9")+" ZZ9 (nolock) WHERE ZZ9_PRODUT = C9_PRODUTO AND ZZ9_LOTE = C9_LOTECTL AND ZZ9.D_E_L_E_T_<>'*'),B1_YPESEMB)) 	"+CRLF
+	cQuery += " ISNULL((SELECT ZZ9_PESEMB "+CRLF
+	cQuery += "           FROM "+RetSQLName("ZZ9")+" ZZ9 (nolock) "+CRLF
+	cQuery += "          WHERE ZZ9_PRODUT = C9_PRODUTO "+CRLF
+	cQuery += "            AND ZZ9_LOTE = C9_LOTECTL "+CRLF
+	cQuery += "            AND ZZ9.D_E_L_E_T_<>'*'),B1_YPESEMB))	"+CRLF
+	cQuery += " ELSE (Z9_QTDLIB  * ISNULL((SELECT ZZ9_PESO "+CRLF
+	cQuery += "                              FROM "+RetSQLName("ZZ9")+" ZZ9 (nolock)"+CRLF 
+	cQuery += "                             WHERE ZZ9_PRODUT = C9_PRODUTO "+CRLF
+	cQuery += "                               AND ZZ9_LOTE = C9_LOTECTL"+CRLF 
+	cQuery += "                               AND ZZ9.D_E_L_E_T_<>'*'),B1_PESO))				"+CRLF
+	cQuery += " + ((Z9_QTDLIB / B1_CONV) * ISNULL((SELECT ZZ9_PESEMB "+CRLF
+	cQuery += "                                      FROM "+RetSQLName("ZZ9")+" ZZ9 (nolock)"+CRLF 
+	cQuery += "                                     WHERE ZZ9_PRODUT = C9_PRODUTO "+CRLF
+	cQuery += "                                       AND ZZ9_LOTE = C9_LOTECTL "+CRLF
+	cQuery += "                                       AND ZZ9.D_E_L_E_T_<>'*'),B1_YPESEMB)) 	"+CRLF
 	cQuery += " END  "+CRLF
+*/
+	cQuery += " FROM ZZV"+cEmp+"0 ZZV (nolock)                               		                 "+CRLF
+	cQuery += " JOIN ZZW"+cEmp+"0 ZZW (nolock)                                                       "+CRLF
+	cQuery += "   ON ZZV_FILIAL = ZZW_FILIAL	                                                     "+CRLF
+	cQuery += "  AND ZZV_CARGA = ZZW_CARGA	                                                         "+CRLF
+	//cQuery += "  AND ZZW.D_E_L_E_T_ <> '*'                                               "+CRLF
+	cQuery += "  AND ZZW.D_E_L_E_T_ = ''                                                             "+CRLF
+	
+	cQuery += " JOIN SC9"+cEmp+"0 SC9 (nolock)                              		                 "+CRLF
+	cQuery += "   ON C9_FILIAL = ZZW_FILIAL	                                                         "+CRLF
+	cQuery += "  AND C9_PEDIDO = ZZW_PEDIDO                                                          "+CRLF
+	cQuery += "  AND C9_ITEM = ZZW_ITEM		                                                         "+CRLF
+	cQuery += "  AND C9_SEQUEN = ZZW_SEQUEN	                                                         "+CRLF
+	//cQuery += " 	 SC9.D_E_L_E_T_ <> '*'                                          "+CRLF
+	cQuery += "  AND SC9.D_E_L_E_T_ = ''                                                             "+CRLF
 
+	cQuery += " JOIN SC5"+cEmp+"0 SC5 (nolock)                              		                 "+CRLF
+	cQuery += "   ON C9_FILIAL = C5_FILIAL	                                                         "+CRLF
+	cQuery += "  AND C9_PEDIDO = C5_NUM		                                                         "+CRLF
+	//cQuery += " 	SC5.D_E_L_E_T_ <> '*'                                           "+CRLF
+	cQuery += "  AND SC5.D_E_L_E_T_ = ''                                                             "+CRLF
 
-	cQuery += " FROM ZZV"+cEmp+"0 ZZV (nolock)                               	"+CRLF
-	cQuery += " JOIN ZZW"+cEmp+"0 ZZW (nolock) ON                             "+CRLF
-	cQuery += " 	ZZV_FILIAL = ZZW_FILIAL	AND                                         "+CRLF
-	cQuery += " 	ZZV_CARGA = ZZW_CARGA	AND                                         "+CRLF
-	cQuery += " 	ZZW.D_E_L_E_T_ <> '*'                                               "+CRLF
-	cQuery += " JOIN SC9"+cEmp+"0 SC9 (nolock) ON                             "+CRLF
-	cQuery += " 	C9_FILIAL = ZZW_FILIAL	AND                                         "+CRLF
-	cQuery += " 	C9_PEDIDO = ZZW_PEDIDO	AND                                         "+CRLF
-	cQuery += " 	C9_ITEM = ZZW_ITEM		AND                                         "+CRLF
-	cQuery += " 	C9_SEQUEN = ZZW_SEQUEN	AND                                         "+CRLF
-	cQuery += " 	SC9.D_E_L_E_T_ <> '*'                                               "+CRLF
-
-	cQuery += " JOIN SC5"+cEmp+"0 SC5 (nolock) ON                             "+CRLF
-	cQuery += " 	C9_FILIAL = C5_FILIAL	AND                                         "+CRLF
-	cQuery += " 	C9_PEDIDO = C5_NUM		AND                                         "+CRLF
-	cQuery += " 	SC5.D_E_L_E_T_ <> '*'                                               "+CRLF
-
-	cQuery += " JOIN SZ9"+cEmp+"0  SZ9 (nolock) ON                             "+CRLF
+	/*cQuery += " JOIN SZ9"+cEmp+"0  SZ9 (nolock) ON                             			"+CRLF
 	cQuery += " 	C9_PEDIDO = Z9_PEDIDO	AND                                         "+CRLF
 	cQuery += " 	C9_PRODUTO = Z9_PRODUTO	AND                                         "+CRLF
 	cQuery += " 	C9_ITEM	 = Z9_ITEM		AND                                         "+CRLF
 	cQuery += " 	C9_SEQUEN = Z9_SEQUEN	AND                                         "+CRLF
-	cQuery += " 	SZ9.D_E_L_E_T_ <> '*'                                               "+CRLF
-	cQuery += " JOIN "+RetSQLName("SB1")+" SB1 (nolock) ON                             "+CRLF
-	cQuery += " 	B1_FILIAL		= '  '			AND                                 "+CRLF
-	cQuery += " 	B1_COD			= Z9_PRODUTO	AND                                 "+CRLF
-	cQuery += " 	SB1.D_E_L_E_T_ <> '*'                                               "+CRLF
-	cQuery += " JOIN "+RetSQLName("ZZ6")+" ZZ6 (nolock) ON                             "+CRLF
-	cQuery += " 	ZZ6_FILIAL = '  '		AND                                         "+CRLF
-	cQuery += " 	ZZ6_COD = B1_YFORMAT	AND                                         "+CRLF
-	cQuery += " 	ZZ6.D_E_L_E_T_ <> '*'                                               "+CRLF
+	cQuery += " 	SZ9.D_E_L_E_T_ <> '*'                                               "+CRLF*/
+	
+	cQuery += " JOIN "+RetSQLName("SB1")+" SB1 (nolock)                              	                "+CRLF
+	cQuery += "   ON B1_FILIAL		= '  '			                                                    "+CRLF
+	//cQuery += "  AND B1_COD			= Z9_PRODUTO	                                                    "+CRLF
+	cQuery += "  AND B1_COD			= C9_PRODUTO	                                                    "+CRLF
+	//cQuery += " 	SB1.D_E_L_E_T_ <> '*'                                               "+CRLF
+	cQuery += "  AND SB1.D_E_L_E_T_ = ''                                                                "+CRLF
+	
+	cQuery += " JOIN "+RetSQLName("ZZ6")+" ZZ6 (nolock)                              	                "+CRLF
+	cQuery += "   ON ZZ6_FILIAL = '  '		                                                            "+CRLF
+	cQuery += "  AND ZZ6_COD = B1_YFORMAT	                                                            "+CRLF
+	//cQuery += " 	ZZ6.D_E_L_E_T_ <> '*'                                               "+CRLF
+	cQuery += "  AND ZZ6.D_E_L_E_T_ = ''                                                                "+CRLF
+	
+	cQuery += " JOIN "+RetSQLName("ZZ9")+"  ZZ9 (nolock)                                                "+CRLF                          
+ 	cQuery += "   ON ZZ9_FILIAL = ''                                                                    "+CRLF
+	cQuery += "  AND ZZ9_PRODUT = C9_PRODUTO                                                            "+CRLF
+	cQuery += "  AND ZZ9_LOTE   = C9_LOTECTL                                                            "+CRLF                           
+ 	cQuery += "  AND ZZ9.D_E_L_E_T_ = ''                                                                "+CRLF 	
+ 	
+    cQuery += " LEFT JOIN SC5070 SC5L WITH (NOLOCK)                                                     "+CRLF
+	cQuery += "   ON SC5L.C5_FILIAL 	= '01'                                                          "+CRLF
+	cQuery += "  AND SC5L.C5_FILIAL	 = SC5.C5_FILIAL                                                    "+CRLF
+	cQuery += "  AND SC5L.C5_YPEDORI = SC5.C5_NUM	                                                    "+CRLF
+	cQuery += "  AND SC5L.C5_CLIENTE = SC5.C5_YCLIORI                                                   "+CRLF
+	cQuery += "  AND SC5L.C5_LOJACLI = SC5.C5_YLOJORI                                                   "+CRLF
+	cQuery += "  AND SC5L.C5_YEMPPED = "+cEmp                                                            +CRLF
+	cQuery += "  AND SC5L.D_E_L_E_T_ = ''                                                               "+CRLF
 
-	cQuery += " INNER JOIN SA1"+cEmp+"0 SA1  (nolock) ON A1_COD+A1_LOJA = 					"+CRLF
-	cQuery += " ISNULL((select C5_YCLIORI+C5_YLOJORI from "+RetSQLName("SC5")+" SC5 (nolock) 			"+CRLF
-	cQuery += " WHERE C5_NUM = ZZW_PEDIDO AND SC5.C5_YCLIORI<>'' AND SC5.D_E_L_E_T_<>'*'),ZZW_CCLI+ZZW_LCLI) AND SA1.D_E_L_E_T_ = ''	"+CRLF
+	/*ccQuery += " INNER JOIN SA1"+cEmp+"0 SA1  (nolock) ON A1_COD+A1_LOJA = 				"+CRLF
+	Query += " ISNULL((select C5_YCLIORI+C5_YLOJORI 
+	cQuery += "           from "+RetSQLName("SC5")+" SC5 (nolock) "+CRLF
+	cQuery += "          WHERE C5_NUM = ZZW_PEDIDO 
+	cQuery += "            AND SC5.C5_YCLIORI<>'' 
+	cQuery += "            AND SC5.D_E_L_E_T_<>'*'),ZZW_CCLI+ZZW_LCLI) AND SA1.D_E_L_E_T_ = ''	"+CRLF*/
+	
+	cQuery += " INNER JOIN SA1"+cEmp+"0 SA1  (nolock)                                                   "+CRLF
+	cQuery += "    ON A1_COD = ISNULL(SC5L.C5_CLIENTE,SC5.C5_CLIENTE)                                   "+CRLF
+	cQuery += "   AND A1_LOJA = ISNULL(SC5L.C5_LOJACLI,SC5.C5_LOJACLI)                                  "+CRLF
+	cQuery += "   AND SA1.D_E_L_E_T_ = ''                                                               "+CRLF
 
-	cQuery += " LEFT JOIN SA3"+cEmp+"0 SA3  (nolock) ON A3_COD =			 									"+CRLF
+	/*cQuery += " LEFT JOIN SA3"+cEmp+"0 SA3  (nolock) ON A3_COD =			 											"+CRLF
 	cQuery += " ISNULL((select SC5_07.C5_VEND1 from SC5070 SC5_07 (nolock) 												"+CRLF
-	cQuery += " WHERE SC5_07.C5_YPEDORI = ZZW_PEDIDO AND SC5_07.D_E_L_E_T_ =''), SC5.C5_VEND1) AND SA3.D_E_L_E_T_ = ''		"+CRLF
+	cQuery += " WHERE SC5_07.C5_YPEDORI = ZZW_PEDIDO AND SC5_07.D_E_L_E_T_ =''), SC5.C5_VEND1) AND SA3.D_E_L_E_T_ = ''	"+CRLF*/
+	
+	cQuery += " LEFT JOIN SA3"+cEmp+"0 SA3  (nolock)                                                    "+CRLF
+	cQuery += "   ON A3_COD = ISNULL(SC5L.C5_VEND1,SC5.C5_VEND1)                                        "+CRLF
+	cQuery += "  AND SA3.D_E_L_E_T_ = ''                                                                "+CRLF     	  
 
-	cQuery += " LEFT JOIN "+RetSQLName("Z41")+" Z41  (nolock) ON Z41.Z41_TPSEG = SA1.A1_YTPSEG AND Z41.D_E_L_E_T_ = '' 	    	  "+CRLF
+	cQuery += " LEFT JOIN "+RetSQLName("Z41")+" Z41  (nolock)                                           "+CRLF
+	cQuery += "   ON Z41.Z41_TPSEG  = SA1.A1_YTPSEG                                                     "+CRLF
+	cQuery += "  AND Z41.D_E_L_E_T_ = '' 	                                                            "+CRLF
 
-	cQuery += " WHERE                                                                  "+CRLF
-	cQuery += " ZZV.D_E_L_E_T_			= ''                                            "+CRLF
-	cQuery += " AND ZZV.ZZV_FILIAL		= '01'                                          "+CRLF
-	cQuery += " AND ZZV.ZZV_CARGA 		IN ("+GetSQL(2, cEmp)+")								"+CRLF
+	cQuery += " WHERE ZZV.D_E_L_E_T_ = ''                                                               "+CRLF
+	cQuery += " AND ZZV.ZZV_FILIAL	 = '01'                                                             "+CRLF
+	cQuery += " AND ZZV.ZZV_CARGA 	 IN ("+GetSQL(2, cEmp)+")						                    "+CRLF
 
-	cQuery += ") TAB"
-
-
+	cQuery += ") TAB"	
+	
 	TCSqlExec(cQuery)
 
 Return
@@ -783,29 +855,49 @@ Static Function MontaQuery(cFiltro, cTipo, cEmp)
 
 	//forno
 	If (cTipo == 1)
-		cQuery += " SELECT DESCRICAO=FORNO, QUANT1=SUM(QUANT1), QUANT2=SUM(QUANT2), QUANT3=SUM(QUANT3)  FROM "+cNomeTab+"  "+CRLF
-		cQuery += " WHERE FORNO IN "+FormatIn(cFiltro,"/")+ " GROUP BY FORNO  "+CRLF
+		cQuery += " SELECT DESCRICAO=FORNO,               "+CRLF 
+		cQuery += "        QUANT1=SUM(QUANT1),            "+CRLF 
+		cQuery += "        QUANT2=SUM(QUANT2),            "+CRLF 
+		cQuery += "        QUANT3=SUM(QUANT3)             "+CRLF  
+		cQuery += "   FROM "+cNomeTab+"  WITH (NOLOCK)    "+CRLF
+		cQuery += "  WHERE FORNO IN "+FormatIn(cFiltro,"/")+CRLF
+		cQuery += "  GROUP BY FORNO                       "+CRLF
 	EndIf
 
 	//forno
 	If (cTipo == 2)
-		cQuery += " SELECT DESCRICAO=CATEGORIA, QUANT1=SUM(QUANT1), QUANT2=SUM(QUANT2), QUANT3=SUM(QUANT3)  FROM "+cNomeTab+"	"+CRLF
-		cQuery += " GROUP BY CATEGORIA	"+CRLF
+		cQuery += " SELECT DESCRICAO=CATEGORIA,       "+CRLF
+		cQuery += "        QUANT1=SUM(QUANT1),        "+CRLF
+		cQuery += "        QUANT2=SUM(QUANT2),        "+CRLF
+		cQuery += "        QUANT3=SUM(QUANT3)         "+CRLF  
+		cQuery += "   FROM "+cNomeTab+"	WITH (NOLOCK) "+CRLF
+		cQuery += "  GROUP BY CATEGORIA	              "+CRLF
 	EndIf
 
 	//vendedor
 	If (cTipo == 3)
 		cQuery += " SELECT COD=VENDEDOR, "+CRLF
-		cQuery += " DESCRICAO=VENDEDOR+' - '+(SELECT TOP 1 A3_NREDUZ FROM SA3"+cEmp+"0 SA3 WHERE SA3.A3_COD = VENDEDOR AND SA3.D_E_L_E_T_= ''), "+CRLF
-		cQuery += " QUANT1=SUM(QUANT1), QUANT2=SUM(QUANT2), QUANT3=SUM(QUANT3)		FROM "+cNomeTab+"   "+CRLF
-		cQuery += " GROUP BY VENDEDOR  						"+CRLF
+		cQuery += "        DESCRICAO=VENDEDOR+' - '+(SELECT TOP 1 A3_NREDUZ                "+CRLF
+		cQuery += "                                    FROM SA3"+cEmp+"0 SA3 WITH (NOLOCK) "+CRLF
+		cQuery += "                                   WHERE SA3.A3_COD = VENDEDOR          "+CRLF
+		cQuery += "                                     AND SA3.D_E_L_E_T_= ''),           "+CRLF
+		cQuery += "        QUANT1=SUM(QUANT1), QUANT2=SUM(QUANT2), QUANT3=SUM(QUANT3)	   "+CRLF	
+		cQuery += "   FROM "+cNomeTab+" WITH (NOLOCK)                                      "+CRLF
+		cQuery += "  GROUP BY VENDEDOR  						                           "+CRLF
 	EndIf
 
 	//cliente
 	If (cTipo == 4)
-		cQuery += " SELECT DESCRICAO=(SELECT TOP 1 A1_NREDUZ FROM SA1"+cEmp+"0 SA1 WHERE SA1.A1_COD = CLIENTE AND SA1.D_E_L_E_T_= ''),"+CRLF
-		cQuery += " QUANT1=SUM(QUANT1), QUANT2=SUM(QUANT2), QUANT3=SUM(QUANT3)		FROM "+cNomeTab+"   "+CRLF
-		cQuery += " WHERE VENDEDOR IN "+FormatIn(cFiltro,"/")+ " GROUP BY CLIENTE  "+CRLF
+		cQuery += " SELECT DESCRICAO=(SELECT TOP 1 A1_NREDUZ                "+CRLF
+		cQuery += "                     FROM SA1"+cEmp+"0 SA1 WITH (NOLOCK) "+CRLF
+		cQuery += "                    WHERE SA1.A1_COD = CLIENTE           "+CRLF
+		cQuery += "                      AND SA1.D_E_L_E_T_= ''),           "+CRLF
+		cQuery += "        QUANT1=SUM(QUANT1),                              "+CRLF
+		cQuery += "        QUANT2=SUM(QUANT2),                              "+CRLF 
+		cQuery += "        QUANT3=SUM(QUANT3)	                            "+CRLF	
+		cQuery += "   FROM "+cNomeTab+"   WITH (NOLOCK)                     "+CRLF
+		cQuery += "  WHERE VENDEDOR IN "+FormatIn(cFiltro,"/")               +CRLF
+		cQuery += "  GROUP BY CLIENTE                                       "+CRLF
 	EndIf
 
 Return cQuery

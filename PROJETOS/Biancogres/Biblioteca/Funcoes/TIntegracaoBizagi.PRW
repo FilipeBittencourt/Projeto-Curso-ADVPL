@@ -119,7 +119,7 @@ Method Get() Class TIntegracaoBizagi
 	While !(cAliasTmp)->(Eof())
 
 		_oItem := TIntegracaoBizagiItem():New()
-		_oItem:Set((cAliasTmp)->EMPRESA, (cAliasTmp)->FILIAL, (cAliasTmp)->PROCESSO, (cAliasTmp)->STATUS, (cAliasTmp)->ID, (cAliasTmp)->DADOS, (cAliasTmp)->PROCESSO_BIZAGI)
+		_oItem:Set(Alltrim((cAliasTmp)->EMPRESA), (cAliasTmp)->FILIAL, (cAliasTmp)->PROCESSO, (cAliasTmp)->STATUS, (cAliasTmp)->ID, (cAliasTmp)->DADOS, (cAliasTmp)->PROCESSO_BIZAGI)
 
 		::oItens:Add(_oItem)
 

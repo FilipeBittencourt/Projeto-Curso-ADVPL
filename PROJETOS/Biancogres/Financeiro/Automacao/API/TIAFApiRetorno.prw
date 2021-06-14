@@ -52,7 +52,7 @@ Method Receive() Class TIAFApiRetorno
 	Local nY := 1
 	Local oLst := ArrayList():New()
 	Local lNoCed := .F.
-	Local oMail	:= TAFMail():New()
+*	Local oMail	:= TAFMail():New()
 	Local lErro := .F.
 	Local cMsg := ""
 
@@ -213,7 +213,7 @@ Method Receive() Class TIAFApiRetorno
 		lErro := .F.
 
 		cMsg := If(Empty(::oRet:Mensagem), "", ::oRet:Mensagem)
-		cMsg += If(Type("Self:oRet:oRetorno:Arquivos") == "A" .And. Len(::oRet:oRetorno:Arquivos) == 0, " ::oRet:oRetorno:Arquivos esta vazio!", "")
+		cMsg += If(ValType(Self:oRet:oRetorno:Arquivos) == "A" .And. Len(::oRet:oRetorno:Arquivos) == 0, " ::oRet:oRetorno:Arquivos esta vazio!", "")
 
 	EndIf
 

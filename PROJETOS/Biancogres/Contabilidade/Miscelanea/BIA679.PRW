@@ -62,6 +62,10 @@ User Function BIA679()
 
 			hhTmpINI  := TIME()
 
+			RpcSetType(3)
+			RpcSetEnv( cEmpAnt, cFilAnt )
+			RpcClearEnv()
+
 			//Begin Transaction
 
 			For nW := 1 To Len(oEmp:aEmpSel)
@@ -191,56 +195,68 @@ Static Function ExistThenD(oPrcZera)
 	Local lPerg := .T.
 	Local lRet  := .T.
 
-	cQry := GetNextAlias()
+	If fExistTabl(RetSqlName("ZN6"))
 
-	cSql := " SELECT R_E_C_N_O_ RECNO "
-	cSql += " FROM " + RetSqlName("ZN6") + " ZN6 (NOLOCK) "
-	cSql += " WHERE ZN6_FILIAL = '" + xFilial("ZN6") + "' "
-	cSql += "       AND ZN6_DATREF = '" + dtos(dDataFin) + "' "
-	cSql += "       AND ZN6.D_E_L_E_T_    = ' ' "
+		cQry := GetNextAlias()
 
-	TcQuery cSQL New Alias (cQry)
+		cSql := " SELECT R_E_C_N_O_ RECNO "
+		cSql += " FROM " + RetSqlName("ZN6") + " ZN6 (NOLOCK) "
+		cSql += " WHERE ZN6_FILIAL = '" + xFilial("ZN6") + "' "
+		cSql += "       AND ZN6_TIPO1 <> 'M' "
+		cSql += "       AND ZN6_DATREF = '" + dtos(dDataFin) + "' "
+		cSql += "       AND ZN6.D_E_L_E_T_    = ' ' "
 
-	oPrcZera:SetRegua1(1)
-	oPrcZera:SetRegua2(1000)
+		TcQuery cSQL New Alias (cQry)
 
-	oPrcZera:IncRegua1(smMsnPrc)
-	While !(cQry)->(Eof())
+		oPrcZera:SetRegua1(1)
+		oPrcZera:SetRegua2(1000)
 
-		oPrcZera:IncRegua2("Apagando Registros encontrados na base...")
+		oPrcZera:IncRegua1(smMsnPrc)
+		While !(cQry)->(Eof())
 
-		If lPerg .AND. 1 == 2
+			oPrcZera:IncRegua2("Apagando Registros encontrados na base...")
 
-			If MsgYesNo("Já existem dados para o período selecionado. Deseja continuar?" + CRLF + CRLF + "Caso clique em sim esses dados serão apagados e gerados novos!", "ATENÇÃO")
+			If lPerg .AND. 1 == 2
 
-				lRet := .T.
+				If MsgYesNo("Já existem dados para o período selecionado. Deseja continuar?" + CRLF + CRLF + "Caso clique em sim esses dados serão apagados e gerados novos!", "ATENÇÃO")
 
-			Else
+					lRet := .T.
 
-				lRet := .F.
+				Else
 
-				Exit
+					lRet := .F.
+
+					Exit
+
+				EndIf
+
+				lPerg := .F.
 
 			EndIf
 
-			lPerg := .F.
+			ZN6->(DbGoTo((cQry)->RECNO))
+			If !ZN6->(EOF())
 
-		EndIf
+				Reclock("ZN6", .F.)
+				ZN6->(DBDelete())
+				ZN6->(MsUnlock())
 
-		ZN6->(DbGoTo((cQry)->RECNO))
-		If !ZN6->(EOF())
+			EndIf
 
-			Reclock("ZN6", .F.)
-			ZN6->(DBDelete())
-			ZN6->(MsUnlock())
+			(cQry)->(DbSkip())
 
-		EndIf
+		End
 
-		(cQry)->(DbSkip())
+		(cQry)->(DbCloseArea())
 
-	End
+	Else
 
-	(cQry)->(DbCloseArea())
+		msErroQuery := "Empresa: " + cEmpAnt + msEnter + msEnter
+		msErroQuery += "Filial: " + cFilAnt + msEnter + msEnter
+		msErroQuery += "A tabela ZN6 não está configurada para este empresa. Favor Verificar."
+		lRet := .F.
+
+	EndIf
 
 	xVerRet := lRet 
 
@@ -408,3 +424,27 @@ Static Function Prc679EX(oProcess)
 	xVerRet := lRet
 
 Return( lRet )
+
+Static Function fExistTabl(cTabl)
+
+	Local cSQL  := ""
+	Local cQry  := ""
+	Local lRet  := .F.
+
+	cQry := GetNextAlias()
+
+	cSql := " SELECT COUNT(*) CONTAD
+	cSql += " FROM INFORMATION_SCHEMA.TABLES
+	cSql += " WHERE TABLE_NAME = '" + cTabl + "';
+
+	TcQuery cSQL New Alias (cQry)
+
+	If (cQry)->CONTAD > 0
+		lRet := .T.
+	EndIf
+
+	(cQry)->(DbCloseArea())
+
+	xVerRet := lRet 
+
+Return ( lRet )

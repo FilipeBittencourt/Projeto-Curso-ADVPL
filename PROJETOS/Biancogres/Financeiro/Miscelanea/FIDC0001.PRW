@@ -4,9 +4,10 @@ User Function FIDC0001(_nID)
 
 	Local aArea		:= GetArea()
 	Local _lOk		:= .T.
+
+	Local cJSONFIDC
 	
 	Local oJSONFIDC
-	Local oJSONOrigem
 
 	Default _nID	:= 0
 	
@@ -23,10 +24,6 @@ User Function FIDC0001(_nID)
 			oCPStruct		:= oCPLoad:BuscarPorRecno(_nID)
 
 			If (oCPStruct != Nil)
-
-				oJSONOrigem:=JSONArray():New()
-				oJSONOrigem:fromJSON(oJSONOrigem:toJSON(oCPStruct))
-				cacheData():Set("FIDC0001","ORIGEM",oJSONOrigem)
 
 				_cPreAnt			:= oCPStruct:cPrefixo
 				_cNumAnt			:= oCPStruct:cNumero
@@ -53,7 +50,9 @@ User Function FIDC0001(_nID)
 				oCPStruct:dVencto		:= oCPStruct:dVencOri
 
 				oJSONFIDC:=JSONArray():New()
-				oJSONFIDC:fromJSON(oJSONFIDC:toJSON(oCPStruct))
+				cJSONFIDC:=oJSONFIDC:toJSON(oCPStruct)
+				oJSONFIDC:fromJSON(cJSONFIDC)
+				
 				cacheData():Set("FIDC0001","FIDC",oJSONFIDC)
 
 				oResult:=oContaPagar:Incluir(oCPStruct)
@@ -86,7 +85,6 @@ User Function FIDC0001(_nID)
 					oCPRStruct:dData            := dDataBase
 					oCPRStruct:cStatus          := '0' //0=Ativo
 					
-				
 					oContaPagarRast:=TContaPagarRastreabilidade():New()
 					
 					oResult:=oContaPagarRast:Incluir(oCPRStruct)

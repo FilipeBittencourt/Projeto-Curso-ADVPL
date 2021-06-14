@@ -345,23 +345,46 @@ Return()
 
 
 Method BankReceipt(oObj) Class TAFBaixaPagar
-Local aArea := GetArea()
-Local aTit := {}
-Local cLogTxt := ""
-Private lMsErroAuto := .F.
+	
+	Local aArea := GetArea()
+	Local aTit := {}
+	Local cLogTxt := ""
+	Local cJSONOrigem
+	
+	local nSA2RecNo
+	local nSE2RecNo
+
+	local oCPLoad
+	local oCPStruct
+	local oJSONOrigem
+
+	Private lMsErroAuto := .F.
+
+	nSE2RecNo:=SE2->(Recno())
 
 	// Posiciona no banco da baixa para o identificacao no lancamento contabil
 	DbSelectArea("SA6")
 	SA6->(DbSetOrder(1))
-	SA6->(DbSeek(xFilial("SA6") + oObj:cBanco + oObj:cAgencia + oObj:cConta))	
+	SA6->(MsSeek(xFilial("SA6") + oObj:cBanco + oObj:cAgencia + oObj:cConta))	
 	
+	SA2->(dbSetOrder(1))
+	SA6->(MsSeek(xFilial("SA2")+SE2->E2_FORNECE+SE2->E2_LOJA,.F.))
+	nSA2RecNo:=SA2->(RecNo())
+
 	aAdd(aTit, {"E2_PREFIXO", SE2->E2_PREFIXO, Nil})
 	aAdd(aTit, {"E2_NUM", SE2->E2_NUM, Nil})
 	aAdd(aTit, {"E2_PARCELA", SE2->E2_PARCELA, Nil})
 	aAdd(aTit, {"E2_TIPO", SE2->E2_TIPO, Nil})
 	aAdd(aTit, {"E2_FORNECE", SE2->E2_FORNECE, NIL})
 	aAdd(aTit, {"E2_LOJA", SE2->E2_LOJA, NIL})
-	aAdd(aTit, {"AUTMOTBX", "DEBITO CC", Nil})
+
+	//FIDC Antecipacao
+	If oObj:cCodOco == "02" .And. oObj:cTipo == 'F' 
+		aAdd(aTit, {"AUTMOTBX", "FDC", Nil})
+	Else
+		aAdd(aTit, {"AUTMOTBX", "DEBITO CC", Nil})	
+	EndIf
+
 	aAdd(aTit, {"AUTBANCO", oObj:cBanco, Nil})
 	aAdd(aTit, {"AUTAGENCIA", oObj:cAgencia, Nil})
 	aAdd(aTit, {"AUTCONTA", oObj:cConta, Nil})
@@ -374,9 +397,12 @@ Private lMsErroAuto := .F.
 		aAdd(aTit, {"AUTVLRPG", oObj:nVlPag, Nil})
 	EndIf
 
-	MsExecAuto({|x,y| FINA080(x,y)}, aTit, 3)
+	//Efetua a Baixa do titulo Original ((nOpc==3).or.(nOpc==4))
+	MsExecAuto({|x,y|FINA080(x,y)},aTit,3)
 
-	If !lMsErroAuto
+	SE2->(MsGoTo(nSE2RecNo))
+
+	If (!lMsErroAuto)
 
 		::oLog:cIDProc := ::oPro:cIDProc
 		::oLog:cOperac := "P"
@@ -393,7 +419,34 @@ Private lMsErroAuto := .F.
 		
 		//FIDC Antecipacao
 		If oObj:cCodOco == "02" .And. oObj:cTipo == 'F' 
-			_lOk := U_FIDC0001(SE2->(Recno()))
+			
+			oCPLoad:=TContaPagarLoad():New()
+			oCPStruct:=oCPLoad:BuscarPorRecno(nSE2RecNo)
+
+			SE2->(MsGoTo(nSE2RecNo))
+
+            oCPStruct:cPrefixo:=SE2->E2_PREFIXO
+            oCPStruct:cNumero:=SE2->E2_NUM
+            oCPStruct:cParcela:=SE2->E2_PARCELA
+            oCPStruct:cTipo:=SE2->E2_TIPO
+            oCPStruct:cNatureza:=SE2->E2_NATUREZ
+            oCPStruct:cFornecedor:=SE2->E2_FORNECE
+            oCPStruct:cLoja:=SE2->E2_LOJA
+            oCPStruct:dEmissao:=SE2->E2_EMISSAO
+            oCPStruct:dVencto:=SE2->E2_VENCTO
+
+            oJSONOrigem:=JSONArray():New()
+			cJSONOrigem:=oJSONOrigem:toJSON(oCPStruct)			
+			oJSONOrigem:fromJSON(cJSONOrigem)
+            
+			cacheData():Set("FIDC0001","ORIGEM",oJSONOrigem)
+			cacheData():Set("FIDC0001","nSA2RecNoOrigem",nSA2RecNo)
+			cacheData():Set("FIDC0001","nSE2RecNoOrigem",nSE2RecNo)
+
+			_lOk:=U_FIDC0001(nSE2RecNo)
+			
+			cacheData():delSection("FIDC0001")
+
 			If (!_lOk)
 				
 				::oLog:cIDProc := ::oPro:cIDProc

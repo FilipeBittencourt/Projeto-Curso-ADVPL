@@ -12,8 +12,12 @@ class RPCTools
 end class
 
 static method RpcSetEnv(cRpcEmp,cRpcFil,cEnvUser,cEnvPass,cEnvMod,cFunName,aTables,lShowFinal,lAbend,lOpenSX,lConnect) class RPCTools
+	local cUserID 	as character
 	local lRet		as logical
 	local lIsBlind	as logical
+	if (type("__cUserID")=="C")
+		cUserID:=&("__cUserID")
+	endif
 	lIsBlind:=IsBlind()
 	if (!type("cEmpAnt")=="C")
         private cEmpAnt:="__cEmpAnt__"
@@ -26,7 +30,17 @@ static method RpcSetEnv(cRpcEmp,cRpcFil,cEnvUser,cEnvPass,cEnvMod,cFunName,aTabl
 		DEFAULT cRpcFil:=&("cFilAnt")
 		DEFAULT cEnvMod:=if((type("cModulo")=="C"),&("cModulo"),cEnvMod)
 		DEFAULT cFunName:=FunName()
+        RpcClearEnv()
         lRet:=RpcSetEnv(@cRpcEmp,@cRpcFil,@cEnvUser,@cEnvPass,@cEnvMod,@cFunName,@aTables,@lShowFinal,@lAbend,@lOpenSX,@lConnect)
+        DEFAULT lRet:=((Select("SX6")>0).and.(&("cEmpAnt")==cRpcEmp))
+		if (lRet)
+            if !(&("cEmpAnt")==cRpcEmp)
+                &("cEmpAnt"):=cRpcEmp
+		    endif
+            if !(&("cFilAnt")==cRpcFil)
+                &("cFilAnt"):=cRpcFil
+            endif
+        endif
 		if (!lIsBlind)
 			SetsDefault()
 			if (type("__cInternet")=="C")
@@ -35,5 +49,7 @@ static method RpcSetEnv(cRpcEmp,cRpcFil,cEnvUser,cEnvPass,cEnvMod,cFunName,aTabl
 		endif
 		__SetCentury("ON")
 	endif
-    DEFAULT lRet:=.T.
+	if (!empty(cUserID))
+		&("__cUserID"):=cUserID
+	endif
 	return(lRet)

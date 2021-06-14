@@ -1,19 +1,39 @@
+#include "totvs.ch"
+
+/*/{Protheus.doc} FIDC
+@author Marinaldo de Jesus
+@since 21/05/2021
+@project FIDC
+@version 1.0
+@description: Ponto de Entrada Executado no progama FINA090.PRX (Baixa Automatica de Titulos a Pagar)
+              Será utilizado parFiltraras os Titulos não FIDC.
+@type class
+/*/
+#ifdef __dbg__
 user function F090BROW()
     local cFilterRet as character
     if (SE2->((FieldPos("E2_YANTTX")>0).and.(FieldPos("E2_YANTDES")>0)))
         if (Type("cFilter")=="C")
             cFilterRet:=&("cFilter")
             if (!empty(cFilterRet))
-                if ("(E2_YANTTX=0) AND (E2_YANTDES=0) "$cFilterRet)
+                if (!FIDC():getPGFilterFIDC()$cFilterRet)
                     cFilterRet+=" "
-                    cFilterRet+="AND  (E2_YANTTX=0) AND (E2_YANTDES=0)"
+                    cFilterRet+="AND  "
+                    cFilterRet+=FIDC():getPGFilterFIDC()
                 endif
             else
-                cFilterRet:="(E2_YANTTX=0) AND (E2_YANTDES=0)"
+                cFilterRet:=FIDC():getPGFilterFIDC()
             endif
             &("cFilter"):=cFilterRet
         else
-            cFilter:="(E2_YANTTX=0) AND (E2_YANTDES=0)"
+            cFilter:=FIDC():getPGFilterFIDC()
         endif
     endif
     return
+#else
+    static function dummy()
+    if (.F.)
+        dummy()
+    endif
+    return
+#endif 

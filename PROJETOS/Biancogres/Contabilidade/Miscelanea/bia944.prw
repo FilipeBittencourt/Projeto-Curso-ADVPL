@@ -1,4 +1,8 @@
+#include "rwmake.ch"
 #INCLUDE "PROTHEUS.CH"
+#include "topconn.ch"
+#INCLUDE "FWMBROWSE.CH"
+#INCLUDE "FWMVCDEF.CH"
 
 /*/{Protheus.doc} BIA944
 @author Marcos Alberto Soprani
@@ -14,9 +18,17 @@ User Function BIA944()
 	Local M001        := GetNextAlias()
 	Local M002        := GetNextAlias()
 	Local _ms
-
+	Local oEmp 	:= Nil
+	Local nW	:= 0
+	Local oProcess
+	Local oPrcZera
+		
+	Private msEmpAtu  := cEmpAnt
+	Private msFilAtu  := cFilAnt
 	Private msrhEnter := CHR(13) + CHR(10)
 	Private xfMensCompl := ""
+	Private _cTlbAfetad := ""
+	
 
 	fPerg := "BIA944"
 	fTamX1 := IIF(Alltrim(oApp:cVersion) == "MP8.11", 6, 10)
@@ -56,6 +68,66 @@ User Function BIA944()
 		Return .F.
 	EndIf	
 	(M001)->(dbCloseArea())
+
+	oEmp := TLoadEmpresa():New()
+
+	oEmp:GSEmpFil()
+
+	If Len(oEmp:aEmpSel) > 0
+
+		//Begin Transaction
+
+		For nW := 1 To Len(oEmp:aEmpSel)
+
+			RpcSetEnv( oEmp:aEmpSel[nW][1], Substr(oEmp:aEmpSel[nW][2], 1, 2) )
+		
+			smMsnPrc := oEmp:aEmpSel[nW][1] + "/" + Substr(oEmp:aEmpSel[nW][2], 1, 2) + " - " + Alltrim(oEmp:aEmpSel[nW][4])
+
+			oProcess := MsNewProcess():New({|lEnd| fProcessa(@oProcess,oEmp:aEmpSel[nW][1], Substr(oEmp:aEmpSel[nW][2], 1, 2)) }, "Gravando...", smMsnPrc, .T.)
+			oProcess:Activate()
+
+			RpcClearEnv()
+
+		Next nW
+
+		Aviso("Réplica de Versão - BIA944", "Fim do processamento..." + msrhEnter + msrhEnter + _cTlbAfetad + msrhEnter + msrhEnter + " Necessário abrir a versão correspondente!!!", {'Ok'}, 3)
+
+		RpcSetEnv( msEmpAtu, msFilAtu )
+	
+		If Type("__cInternet") == "C"
+			__cInternet := Nil
+		EndIf
+
+
+	Else
+		Aviso("Réplica de Versão - BIA944", "Não foram selecionadas empresas! Processamento não realizado" , {'Ok'}, 3)
+	EndIf
+
+	RestArea( _cAreaAtu )
+
+Return
+
+Static Function fProcessa(oProcess,_cEmp,_cFil)	
+
+	oProcess:SetRegua1(1)
+	oProcess:SetRegua2(1000)             
+
+	oProcess:IncRegua1(smMsnPrc)
+	oProcess:IncRegua2("Verificando Tabelas...")
+
+//	StartJob("U_BIA944P",GetEnvServer(),.T.,_cEmp,_cFil,_cVersao,_cRevisa,_cAnoRef,_cNewRev)
+	U_BIA944P(_cEmp,_cFil,_cVersao,_cRevisa,_cAnoRef,_cNewRev,oProcess)
+
+Return
+
+
+User Function BIA944P(_cEmp,_cFil,_cVersao,_cRevisa,_cAnoRef,_cNewRev,oProcess)
+
+
+	Local M002        
+	Private msrhEnter := CHR(13) + CHR(10)
+	
+	M002 := GetNextAlias()
 
 	// ,'Z96'
 	// ,'ZOY' eu criei a tabela na familia errada e com o nome do campo _VERSAO errado.
@@ -172,7 +244,9 @@ User Function BIA944()
 						XK001 += "    AND " + SX2->X2_CHAVE + "_REVISA = '" + _cRevisa + "' "
 						XK001 += "    AND " + SX2->X2_CHAVE + "_ANOREF = '" + _cAnoRef + "' "
 						XK001 += "    AND D_E_L_E_T_ = ' ' "
-						U_BIAMsgRun("Aguarde... Replicando tabela: " + SX2->X2_CHAVE ,,{|| TcSQLExec(XK001) })
+						//U_BIAMsgRun("Aguarde... Replicando tabela: " + SX2->X2_CHAVE ,,{|| TcSQLExec(XK001) })
+						oProcess:IncRegua2("Replicando tabela: " + SX2->X2_CHAVE)
+						TcSQLExec(XK001)
 
 						If SX2->X2_CHAVE == "ZBM"
 
@@ -183,8 +257,9 @@ User Function BIA944()
 							cQuery += "    AND ZBM_REVISA = '" + _cRevisa + "' "
 							cQuery += "    AND ZBM_ANOREF = '" + _cAnoRef + "' "
 							cQuery += "    AND D_E_L_E_T_ = ' ' "
-							U_BIAMsgRun("Aguarde... Encerrando Sequencia GMR anterior: " + SX2->X2_CHAVE ,,{|| TcSQLExec(cQuery) })
-
+//							U_BIAMsgRun("Aguarde... Encerrando Sequencia GMR anterior: " + SX2->X2_CHAVE ,,{|| TcSQLExec(cQuery) })
+							oProcess:IncRegua2("Encerrando Sequencia GMR anterior: " + SX2->X2_CHAVE)
+							TcSQLExec(cQuery)
 						EndIf						
 
 					EndIf
@@ -197,11 +272,9 @@ User Function BIA944()
 
 	Next _ms
 
-	Aviso("Réplica de Versão - BIA944", "Fim do processamento..." + msrhEnter + msrhEnter + _cTlbAfetad + msrhEnter + msrhEnter + " Necessário abrir a versão correspondente!!!", {'Ok'}, 3)
+//	Aviso("Réplica de Versão - BIA944", "Fim do processamento..." + msrhEnter + msrhEnter + _cTlbAfetad + msrhEnter + msrhEnter + " Necessário abrir a versão correspondente!!!", {'Ok'}, 3)
 
-	RestArea( _cAreaAtu )
-
-Return
+Return 
 
 /*___________________________________________________________________________
 ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦

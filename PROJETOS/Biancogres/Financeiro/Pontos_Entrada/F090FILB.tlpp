@@ -5,11 +5,11 @@
 @since 21/05/2021
 @project FIDC
 @version 1.0
-@description: Ponto de Entrada Executado no progama FINA090.PRX 
-              Será utilizado para Filtras os Titulos não FIDC.
-@type class
+@description: Ponto de Entrada Executado no progama FINA090.PRX (Baixa Automatica de Titulos a Pagar)
+              Será utilizado para Filtrar os Titulos não FIDC.
+@type function
 /*/
-
+#ifdef __dbg__
 function u_F090FILB() as character
     local cFilterRet as character
     if ((type("ParamIXB")=="A").and.(Len(&("ParamIXB")>=1)))
@@ -20,10 +20,18 @@ function u_F090FILB() as character
     if (!empty(cFilterRet))
         if (SE2->((FieldPos("E2_YANTTX")>0).and.(FieldPos("E2_YANTDES")>0)))
             cFilterRet+=" "
-            cFilterRet+="AND  (E2_YANTTX=0) AND (E2_YANTDES=0)"
+            cFilterRet+="AND  "
+            cFilterRet+=FIDC():getPGFilterFIDC()
         endif
     else
-        cFilterRet+="(E2_YANTTX=0) AND (E2_YANTDES=0)"
+        cFilterRet+=FIDC():getPGFilterFIDC()
     endif
     DEFAULT cFilterRet:=""
     return(cFilterRet)
+#else
+    static function dummy()
+    if (.F.)
+        dummy()
+    endif
+    return
+#endif

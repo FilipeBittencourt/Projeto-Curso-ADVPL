@@ -10,9 +10,25 @@
 /*/
 
 USER FUNCTION F240TIT()
+	local aArea:=getArea()
+	local aAreaSE2:=getArea()
+	local lRet:=.T.
+	MsAguarde({||lRet:=F240TIT()})
+	restArea(aAreaSE2)
+	restArea(aArea)
+Return(lRet)
+
+static function F240TIT()
+
+	local aF240TIT:=array(0)
+	
+	Local cMens:=""
 	LOCAL cQUERY	:= ""
 	LOCAL lRetorno	:= .T.
-	
+	Local lFA240MARK := stackTools():IsInCallStack("FA240MARK")
+
+	aF240TIT:=cacheData():get("F240TIT","aF240TIT",aF240TIT)
+
 	Enter := chr(13) + Chr(10)
 
 	IF ALLTRIM(SE2->E2_TIPO) <> 'PA'  .AND. SE2->E2_TIPO <> 'NDF' .AND. SE2->E2_YBLQ <> 'XX'
@@ -33,21 +49,27 @@ USER FUNCTION F240TIT()
 
 		IF _QUANT->cCONT <> 0  .AND. CEMPANT <> "02"
 
-			cMens := "O TITULO/FORNECEDOR DESCRITO ABAIXO POSSUI PA/NDF EM ABERTO!" +chr(13)
-			cMens += chr(13)
-			cMens += "Número do Titulo:	" + SE2->E2_NUM + chr(13)
-			cMens += "Cod Fornecedor:	" + SE2->E2_FORNECE + chr(13)
-			cMens += "Nome Fornecedor:	" + SE2->E2_NOMFOR + chr(13)
-			cMens += chr(13)
+			cMens := "O TITULO/FORNECEDOR DESCRITO ABAIXO POSSUI PA/NDF EM ABERTO!" +ENTER
+			cMens += ENTER
+			cMens += "Número do Titulo:	" + SE2->E2_NUM + ENTER
+			cMens += "Cod Fornecedor:	" + SE2->E2_FORNECE + ENTER
+			cMens += "Nome Fornecedor:	" + SE2->E2_NOMFOR + ENTER
+			cMens += ENTER
 			cMens += 	"ESTE TÍTULO TEM QUE SER COMPENSADO COM O PA/NDF."
 
 			If IsBlind()
 
+				ConOut(cMens)
 				lRetorno := .F.
 
 			Else
 
-				MsgAlert(cMens,OemToAnsi('ATENCAO'))
+				if (lFA240MARK)
+					Help(nil,nil,"__F240TIT__","__F240TIT__","O TITULO/FORNECEDOR DESCRITO ABAIXO POSSUI PA/NDF EM ABERTO!",1,0,nil,nil,nil,nil,nil,{cMens})
+				else
+					aAdd(aF240TIT,cMens)
+				endif
+
 				lRetorno := .F.
 
 			EndIf
@@ -93,11 +115,33 @@ USER FUNCTION F240TIT()
 
 		DbSelectArea("_QTD")
 
-		While !Eof()
-			MsgBox("Este título - "+ALLTRIM(EA_PREFIXO)+"/"+ALLTRIM(EA_NUM)+"/"+ALLTRIM(EA_PARCELA)+"/"+ALLTRIM(EA_TIPO)+"/"+ALLTRIM(EA_FORNECE)+"/"+ALLTRIM(EA_LOJA)+" que está neste borderô, já foi relacionado em borderô anterior já cancelado! Verifique se este título já foi enviado para o banco e pago!","Atencao","ALERT")
-			DbSelectArea("_QTD")
-			DbSkip()
+		cMens:=""
+
+		While _QTD->(!Eof())
+			cMens+="Este título: "
+			cMens+=ALLTRIM(EA_PREFIXO)
+			cMens+="/"
+			cMens+=ALLTRIM(EA_NUM)
+			cMens+="/"
+			cMens+=ALLTRIM(EA_PARCELA)
+			cMens+="/"+ALLTRIM(EA_TIPO)
+			cMens+="/"+ALLTRIM(EA_FORNECE)
+			cMens+="/"+ALLTRIM(EA_LOJA)
+			cMens+=" que está neste borderô, já foi relacionado em borderô anterior já cancelado! Verifique se este título já foi enviado para o banco e pago!"
+			aAdd(aF240TIT,cMens)
+			_QTD->(DbSkip())
 		END
+
+		if (lFA240MARK)
+			Help(nil,nil,"__F240TIT__","__F240TIT__","TITULOS JA VINCULADOS A BORDERÔ!",1,0,nil,nil,nil,nil,nil,{cMens})
+		else
+			If IsBlind()
+				ConOut(cMens)
+			else
+				aAdd(aF240TIT,cMens)
+			endif
+		endif
+
 
 	ENDIF
 
@@ -106,6 +150,25 @@ USER FUNCTION F240TIT()
 		lRetorno := .F.
 
 	EndIf	
+
+	if (FIDC():isPGFIDC(.F.))
+		cMens:="Titulos FIDC não podem ser utilizados para geração de Borderô"
+		cMens+=ENTER
+		cMens+=ENTER
+		cMens+="Número do Titulo: "+SE2->E2_NUM
+		cMens+=ENTER
+		cMens+="Cod Fornecedor:	"+SE2->E2_FORNECE
+		cMens+=ENTER
+		cMens+="Nome Fornecedor: "+SE2->E2_NOMFOR
+		lRetorno := .F.
+		if (lFA240MARK)
+			Help(nil,nil,"__FIDC__","__FIDC__","Título(s) FIDC",1,0,nil,nil,nil,nil,nil,{cMens})
+		else
+			aAdd(aF240TIT,cMens)
+		endif
+	endif
+
+	cacheData():set("F240TIT","aF240TIT",aF240TIT)
 
 Return(lRetorno)        
 

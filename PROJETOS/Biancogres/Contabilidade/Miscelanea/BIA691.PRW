@@ -147,7 +147,8 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMesRef, cMsg)
 			msMsgCtrl := "Já existem registros gravados para a Versão Orçamentária informada." + msEnter + msEnter
 			msMsgCtrl += "Deseja prosseguir?" + msEnter + msEnter
 			msMsgCtrl += "Se confirmar, o sistema efetuará de deleção de todos os registros desta Versão, inclusive os ajustes/expurgos manuais" + msEnter + msEnter
-			msMsgCtrl += "Sabendo desta prerrogativa, ainda assim deseja prosseguir?" + msEnter + msEnter
+			msMsgCtrl += "Sabendo desta prerrogativa, ainda assim deseja prosseguir?" + msEnter + msEnter + msEnter + msEnter
+			msMsgCtrl += "Empresa  ===>>>  " + cEmp + msEnter + msEnter
 
 			If MsgYESNO(msMsgCtrl, "BIA691")
 
@@ -340,7 +341,7 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMesRef, cMsg)
 				UP003 += "                 SUM(CT2_VALOR) CT2_VALOR "
 				UP003 += "          FROM " + RetFullName("CT2", cEmp) + " CT2(NOLOCK) "
 				UP003 += "          WHERE CT2.CT2_DATA BETWEEN '" + xDtInRea + "' AND '" + xDtFiRea + "' "
-				UP003 += "                AND CT2_DEBITO <> '' "
+				UP003 += "                AND CT2_CREDIT <> '' "
 				UP003 += "                AND CT2.D_E_L_E_T_ = ' ' "
 				UP003 += "          GROUP BY CT2_FILIAL,  "
 				UP003 += "                   SUBSTRING(CT2_DATA, 1, 6),  "
@@ -384,7 +385,7 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMesRef, cMsg)
 				UP003 += "             CT2_DATA CT2_MESREF,  "
 				UP003 += "             'E" + cMesRef + "' CT2_VERCON "
 				UP003 += "      FROM REATOPROJ "
-				U_BIAMsgRun("Aguarde... Gravando registros ZOZ... ",,{|| msStaExcQy := TcSQLExec(UP002) })
+				U_BIAMsgRun("Aguarde... Gravando registros ZOZ... ",,{|| msStaExcQy := TcSQLExec(UP003) })
 				If msStaExcQy < 0
 					lOk := .F.
 				EndIf

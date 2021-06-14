@@ -1,0 +1,25 @@
+#include "totvs.ch"
+
+/*/{Protheus.doc} FIDC
+@author Marinaldo de Jesus
+@since 21/05/2021
+@project FIDC
+@version 1.0
+@description: Ponto de Entrada Executado no progama FINA340.PRW (Compensação entre títulos e adiantamentos)
+              Será utilizado para validar os Titulos não FIDC.
+@type function
+/*/
+#ifdef __dbg__
+function u_F340ACAN() as character
+    local cMsg      as character    
+    local lF340ACAN as logical
+    cMsg:="Compensão de Titulos FIDC não podem ser cancelados por esta rotina."
+    lF340ACAN:=(!FIDC():isPGFIDC(.T.,cMsg))
+    return(lF340ACAN)
+#else
+    static function dummy()
+    if (.F.)
+        dummy()
+    endif
+    return
+#endif

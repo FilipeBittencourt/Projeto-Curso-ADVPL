@@ -360,6 +360,11 @@ User Function M410AGRV()
 			M->C5_MENNOTA := "Dispensado destaque do ICMS ST - destinatário com Regime Especial (MG) E-PTA-RE N.° 45.000021147-12 Prazo de Validade Indeterminado"
 		EndIf
 
+        //Ticket 32708 - Gabriel Pinheiro 01/06/21
+        If M->C5_CLIENTE == "032134" .And. !(M->C5_TIPO $ "D_B")
+			M->C5_MENNOTA := "DISPENSADO DESTAQUE DO ICMS - DESTINATÁRIO COM REGIME ESPECIAL CONF. Regime Especial E-PTA-RE N° 45.000025896-99 – Prazo indeterminado"
+		EndIf
+
 		//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 		//Grava Mensagem Padrao p/ REVIX - BIANCOGRES/LM OS 1079-14
 		//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±

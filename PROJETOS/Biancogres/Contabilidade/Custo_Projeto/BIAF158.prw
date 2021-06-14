@@ -819,7 +819,7 @@ aAdd( aSX3, { ;
 	{ Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
 	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
 	Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
-	{ "GETSXENUM('ZMA', 'ZMA_CODIGO')"										, .T. }, ; //X3_RELACAO
+	{ "U_NumZMA()"										, .T. }, ; //X3_RELACAO
 	{ ''																	, .T. }, ; //X3_F3
 	{ 0																		, .T. }, ; //X3_NIVEL
 	{ Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV

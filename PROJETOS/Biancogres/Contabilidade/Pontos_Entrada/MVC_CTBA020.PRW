@@ -17,7 +17,7 @@ User Function CTBA020()
 	Local oObj := ""
 	Local cIdPonto := ""
 	Local cIdModel := ""
-	Local cMsg := ""	
+	Local iQtdProd:= 0	
 
 	if oModel <> NIL
 		nOperation 	:= oModel:GetOperation() //1 - View //3 - Insert //4 - Update //5 - Delete //6 - only Update
@@ -46,8 +46,18 @@ User Function CTBA020()
 					Help( NIL, NIL, "CTBA020", NIL, "Contas de Custo de despesas necessitam do [Cto Agr BO], [Pct GMCD 2.0], [Sub Pct BO] informado!!!", 1, 0, NIL, NIL, NIL, NIL, NIL, {"Informar o pacote GMCD"})
 					xRet := .F.					
 				EndIf				
-			EndIf			
-		EndIf		
+			EndIf	
+		Endif		
+		
+		/*If cIdPonto $ ("MODELPRE")// FORMCOMMITTTSPRE  FORMPRE
+			If M->CT1_BLOQ == "1"
+			   iQtdProd:= U_BIABC028(M->CT1_CONTA)  
+			   if iQtdProd > 0   
+			     xRet	:=	.F.          
+                 MsgInfo("Impossível bloquear esta Conta Contábil pois existem " + ltrim( rtrim(str(iQtdProd))) + " produtos a utilizando." , "CTBA020")
+               endif
+			Endif
+		EndIf*/		
 	EndIf
 
 Return(xRet)

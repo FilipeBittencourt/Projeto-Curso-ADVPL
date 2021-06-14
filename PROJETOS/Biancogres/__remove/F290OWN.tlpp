@@ -1,0 +1,5 @@
+static function __dummyF290OWN()
+    if(.F.)
+        __dummyF290OWN()
+    endif
+    return(nil)

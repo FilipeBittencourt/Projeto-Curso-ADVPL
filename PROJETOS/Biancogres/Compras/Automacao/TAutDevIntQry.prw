@@ -367,11 +367,13 @@ static method FaturarPedido() class TAutDevIntQry
 
     return(cSQL)
 
-static method GetEndereco(cCodCli,cLojaCli,cDoc,cSerie,cItem) class TAutDevIntQry
+static method GetEndereco(cCodCli,cLojaCli,cDoc,cSerie,cItem,nZL9RecNo) class TAutDevIntQry
 
     static oGetEndereco as object
 
     local cSQL as character
+    local cEmp as character
+    local cFil as character
 
     paramtype nZL9RecNo as numeric optional DEFAULT ZL9->(RecNo())
 
@@ -445,11 +447,16 @@ static method GetEndereco(cCodCli,cLojaCli,cDoc,cSerie,cItem) class TAutDevIntQr
 
     endif
 
-    oGetEndereco:setString(1,retSQLName("Z25"))
-    oGetEndereco:setString(2,retSQLName("Z26"))
-    oGetEndereco:setString(3,retSQLName("SD1"))
-    oGetEndereco:setString(4,retSQLName("SF1"))
-    oGetEndereco:setString(5,retSQLName("ZL9"))
+    ZL9->(MsGoTo(nZL9RecNo))
+
+    cEmp:=ZL9->ZL9_CODEMP
+    cFil:=ZL9->ZL9_CODFIL
+
+    oGetEndereco:setString(1,RetFullName("Z25",cEmp))
+    oGetEndereco:setString(2,RetFullName("Z26",cEmp))
+    oGetEndereco:setString(3,RetFullName("SD1",cEmp))
+    oGetEndereco:setString(4,RetFullName("SF1",cEmp))
+    oGetEndereco:setString(5,RetFullName("ZL9",cEmp))
 
     oGetEndereco:setString(6,cCodCli)
     oGetEndereco:setString(7,cLojaCli)
@@ -457,13 +464,13 @@ static method GetEndereco(cCodCli,cLojaCli,cDoc,cSerie,cItem) class TAutDevIntQr
     oGetEndereco:setString(9,cSerie)
     oGetEndereco:setString(10,cItem)
 
-    oGetEndereco:setString(11,&("cEmpAnt"))
-    oGetEndereco:setString(12,&("cFilAnt"))
+    oGetEndereco:setString(11,cEmp)
+    oGetEndereco:setString(12,cFil)
 
-    oGetEndereco:setString(13,retSQLName("ZL9"))
+    oGetEndereco:setString(13,RetFullName("ZL9",cEmp))
     
-    oGetEndereco:setString(14,&("cEmpAnt"))
-    oGetEndereco:setString(15,&("cFilAnt"))
+    oGetEndereco:setString(14,cEmp)
+    oGetEndereco:setString(15,cFil)
 
     cSQL:=oGetEndereco:GetFixQuery()
     
@@ -477,6 +484,8 @@ static method GetProcDev(nZL9RecNo) class TAutDevIntQry
     static oGetProcDev as object
 
     local cSQL as character
+    local cEmp as character
+    local cFil as character
 
     paramtype nZL9RecNo as numeric optional DEFAULT ZL9->(RecNo())
 
@@ -485,7 +494,9 @@ static method GetProcDev(nZL9RecNo) class TAutDevIntQry
         beginContent var cSQL
 
               SELECT 
-            DISTINCT Z25.R_E_C_N_O_ Z25RECNO
+            DISTINCT Z25.Z25_NUM
+                    ,Z25.Z25_RETMRC
+                    ,Z25.R_E_C_N_O_ Z25RECNO
                     ,Z26.R_E_C_N_O_ Z26RECNO
                 FROM [?] Z25
                 JOIN [?] Z26 ON(
@@ -543,21 +554,24 @@ static method GetProcDev(nZL9RecNo) class TAutDevIntQry
 
     ZL9->(MsGoTo(nZL9RecNo))
 
-    oGetProcDev:setString(1,retSQLName("Z25"))
-    oGetProcDev:setString(2,retSQLName("Z26"))
-    oGetProcDev:setString(3,retSQLName("SD1"))
-    oGetProcDev:setString(4,retSQLName("SF1"))
-    oGetProcDev:setString(5,retSQLName("ZL9"))
+    cEmp:=ZL9->ZL9_CODEMP
+    cFil:=ZL9->ZL9_CODFIL
+
+    oGetProcDev:setString(1,RetFullName("Z25",cEmp))
+    oGetProcDev:setString(2,RetFullName("Z26",cEmp))
+    oGetProcDev:setString(3,RetFullName("SD1",cEmp))
+    oGetProcDev:setString(4,RetFullName("SF1",cEmp))
+    oGetProcDev:setString(5,RetFullName("ZL9",cEmp))
     
     oGetProcDev:setNumeric(6,nZL9RecNo)
 
-    oGetProcDev:setString(7,&("cEmpAnt"))
-    oGetProcDev:setString(8,&("cFilAnt"))
+    oGetProcDev:setString(7,cEmp)
+    oGetProcDev:setString(8,cFil)
 
-    oGetProcDev:setString(9,retSQLName("ZL9"))
+    oGetProcDev:setString(9,RetFullName("ZL9",cEmp))
     
-    oGetProcDev:setString(10,&("cEmpAnt"))
-    oGetProcDev:setString(11,&("cFilAnt"))
+    oGetProcDev:setString(10,cEmp)
+    oGetProcDev:setString(11,cFil)
 
     cSQL:=oGetProcDev:GetFixQuery()
     
