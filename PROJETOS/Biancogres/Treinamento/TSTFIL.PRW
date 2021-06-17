@@ -2,12 +2,17 @@
 #Include "RWMAKE.CH"
 #INCLUDE "TOPCONN.CH"
 
+//U_TSTFIL
 User Function TSTFIL()
 
   RpcClearEnv()
   If Select("SX6") <= 0
     RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
   EndIf
+
+  // DbSelectArea("PZ5")
+  //X31UPDTABLE('PZ5')
+
   //U_BIA729()
   //U_BAF022()
   //Local cEmp := "0101"
@@ -18,14 +23,12 @@ User Function TSTFIL()
   //TSTFIL002() // Teste pedidos provisionados
   //TSTFIL003()
   //TSTFIL004()
-  //TSTFIL005() //Montar classe de envio de email e enviando
+  TSTFIL005() //Montar classe de envio de email e enviando
   //TSTFIL006()
   //TSTFIL007()
 
 
 
-  //DbSelectArea("ZDL")
-  //X31UPDTABLE('ZDL')
 
 
 RETURN
