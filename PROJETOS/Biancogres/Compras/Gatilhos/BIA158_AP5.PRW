@@ -79,7 +79,7 @@ User Function bia158()
 		Else
 			cMsg := ""
 			cMsg += "AVISO!!"+chr(13)+Chr(10)
-			cMsg += "Este produto exige a Conta de Resultado Administrativa que esta "+chr(13)+Chr(10)
+			cMsg += "BIA158 - Este produto exige a Conta de Resultado Administrativa que esta "+chr(13)+Chr(10)
 			cMsg += "vazia no cadastro do produto! Favor verificar antes de prosseguir."
 			alert(cMsg)
 			cCLVL := Space(10)
@@ -93,7 +93,7 @@ User Function bia158()
 			Else
 				cMsg := ""
 				cMsg += "AVISO!!"+chr(13)+Chr(10)
-				cMsg += "Este produto exige a Conta de Resultado Industrial que esta "+chr(13)+Chr(10)
+				cMsg += "BIA158 - Este produto exige a Conta de Resultado Industrial que esta "+chr(13)+Chr(10)
 				cMsg += "vazia no cadastro do produto! Favor verificar antes de prosseguir."
 				alert(cMsg)
 				cCLVL := Space(10)
@@ -119,7 +119,7 @@ User Function bia158()
 		Else
 			cMsg := ""
 			cMsg += "AVISO!!"+chr(13)+Chr(10)
-			cMsg += "Este produto exige a Conta de Resultado Administrativa que esta "+chr(13)+Chr(10)
+			cMsg += "BIA158 - Este produto exige a Conta de Resultado Administrativa que esta "+chr(13)+Chr(10)
 			cMsg += "vazia no cadastro do produto! Favor verificar antes de prosseguir."
 			alert(cMsg)
 			cCLVL := Space(10)
@@ -133,7 +133,7 @@ User Function bia158()
 			Else
 				cMsg := ""
 				cMsg += "AVISO!!"+chr(13)+Chr(10)
-				cMsg += "Este produto exige a Conta de Resultado Industrial que esta "+chr(13)+Chr(10)
+				cMsg += "BIA158 - Este produto exige a Conta de Resultado Industrial que esta "+chr(13)+Chr(10)
 				cMsg += "vazia no cadastro do produto! Favor verificar antes de prosseguir."
 				alert(cMsg)
 				cCLVL := Space(10)

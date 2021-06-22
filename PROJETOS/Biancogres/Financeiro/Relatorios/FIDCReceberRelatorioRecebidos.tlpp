@@ -63,7 +63,7 @@ static procedure FIDCRelatorioRecebidosQuery(otMultProcess as object,aParamRet a
     local aBCOIsFIDC    as array
     local aFWTTables    as array
 
-    local bTTimer       as block
+    local bProcess      as block
     local bMsAguarde    as block
 
     local cTmpAlias     as character
@@ -89,8 +89,6 @@ static procedure FIDCRelatorioRecebidosQuery(otMultProcess as object,aParamRet a
     local nSA6RecNo     as numeric
     
     local nIncRegua     as numeric
-
-    local oTTimer       as object
 
     aBCOIsFIDC:=FIDC():retbcoFIDC()
 
@@ -120,16 +118,12 @@ static procedure FIDCRelatorioRecebidosQuery(otMultProcess as object,aParamRet a
         otMultProcess:SetRegua(1,0)
         otMultProcess:SetRegua(2,0)
 
-        bTTimer:={||otMultProcess:IncRegua(1,"Obtendo dados no SGBD. Aguarde..."),otMultProcess:IncRegua(2,"Processando...")}
-        oTTimer:=TTimer():New(1,bTTimer,getWndDefault()) 
-
-        bMsAguarde:={||oTTimer:Activate(),cTmpAlias:=QueryView(@aParamRet,@aBCOIsFIDC[nBCO],@aFWTTables),oTTimer:DeActivate()}
-
+        bMsAguarde:={||cTmpAlias:=QueryView(@aParamRet,@aBCOIsFIDC[nBCO],@aFWTTables)}
         MsAguarde(bMsAguarde,"Obtendo dados no SGBD. Aguarde...")
         
         nIncRegua:=(cTmpAlias)->(RecCount())
 
-        otMultProcess:SetRegua(1,nIncRegua)
+        otMultProcess:SetRegua(1,0)
         otMultProcess:SetRegua(2,nIncRegua)
 
         (cTmpAlias)->(dbGoTop())
@@ -177,14 +171,14 @@ static procedure FIDCRelatorioRecebidosQuery(otMultProcess as object,aParamRet a
             ltxtEditMemo:=.F.
 
             otMultProcess:SetRegua(1,0)
-            otMultProcess:SetRegua(2,0)
+            otMultProcess:SetRegua(2,nIncRegua)
 
-            bTTimer:={||otMultProcess:IncRegua(1,"Gerando Planilha Excel. Aguarde..."),otMultProcess:IncRegua(2,"Processando...")}
-            Eval(bTTimer)
+            bProcess:={||otMultProcess:IncRegua(1,"Gerando Planilha Excel. Aguarde..."),otMultProcess:IncRegua(2,"Processando...")}
             
-            oTTimer:=TTimer():New(1,bTTimer,getWndDefault()) 
+            uToXML():setXMLVar("PROCESS","bEval",bProcess)
+            uToXML():setXMLVar("PROCESS","pEval",otMultProcess)
 
-            bMsAguarde:={||oTTimer:Activate(),uToXML():QryToXML(cTmpAlias,@cXMLFile,@cExcelTitle,@lPicture,@lX3Titulo,@ltxtEditMemo),oTTimer:Deactivate()}
+            bMsAguarde:={||uToXML():QryToXML(cTmpAlias,@cXMLFile,@cExcelTitle,@lPicture,@lX3Titulo,@ltxtEditMemo)}
             MsAguarde(bMsAguarde,"Gerando Planilha Excel. Aguarde...")
 
             uToXML():clearXMLVar()
@@ -208,10 +202,10 @@ static procedure FIDCRelatorioRecebidosQuery(otMultProcess as object,aParamRet a
 
 static function FIDCRecebidosParameters(aParamRet as array) as logical
     local lParamBox     as logical
-    lParamBox:=FIDC():getParamRec(@aParamRet)
+    lParamBox:=FIDC():getRecParamRec(@aParamRet)
     return(lParamBox)
 
 static function QueryView(aParamRet as character,aBCOIsFIDC as array,aFWTTables as array) as character
     local cTmpAlias as character
-    cTmpAlias:=FIDC():getQueryRec(@aParamRet,@aBCOIsFIDC,@aFWTTables)
+    cTmpAlias:=FIDC():getRecQueryRec(@aParamRet,@aBCOIsFIDC,@aFWTTables)
     return(cTmpAlias)

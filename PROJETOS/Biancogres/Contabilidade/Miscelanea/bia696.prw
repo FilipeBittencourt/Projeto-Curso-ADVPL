@@ -318,3 +318,194 @@ User Function B696LOK()
 	Next
 
 Return _lRet
+
+/*___________________________________________________________________________
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦Funçao    ¦ B696IEXC ¦ Autor ¦ Marcos Alberto S      ¦ Data ¦ 21/06/17 ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦Descriçào ¦ Importação planilha Excel para Orçamento - Custo Variável  ¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
+User Function B696IEXC()
+
+	Local aSays	   		:= {} 
+	Local aButtons 		:= {}  
+	Local lConfirm 		:= .F. 
+	Private cArquivo	:= space(100)
+
+	fPergunte()
+
+	AADD(aSays, OemToAnsi("Rotina para importação dos ajustes orçamentário direto para a tabela ZOI."))   
+	AADD(aSays, OemToAnsi("Antes de continuar, verifique os parâmetros!"))   
+	AADD(aSays, OemToAnsi(""))   
+	AADD(aSays, OemToAnsi("IMPORTANTE: >>>> não é permitido importar arquivos que esteja com proteção"))   
+	AADD(aSays, OemToAnsi("                 de planilha ativada!!!"))   
+	AADD(aSays, OemToAnsi("               * O nome do arquivo não pode ter espaço ou caracter especial"))   
+	AADD(aSays, OemToAnsi("Deseja Continuar?"))   
+
+	AADD(aButtons, { 5,.T.,{|| fPergunte() } } )
+	AADD(aButtons, { 1,.T.,{|o| lConfirm := .T. , o:oWnd:End()}} )
+	AADD(aButtons, { 2,.T.,{|o| o:oWnd:End() }} )
+
+	FormBatch( OemToAnsi('Importação de Índices...'), aSays, aButtons ,,,500)
+
+	If lConfirm
+
+		If !empty(cArquivo) .and. File(cArquivo)
+			Processa({ || fProcImport() },"Aguarde...","Carregando Arquivo...",.F.)
+		Else
+			MsgStop('Informe o arquivo valido para importação!')
+		EndIf
+
+	EndIf	
+
+Return
+
+//Parametros
+Static Function fPergunte()
+
+	Local aPergs 	:= {}
+	Local cLoad	    := 'B696IEXC' + cEmpAnt
+	Local cFileName := RetCodUsr() +"_"+ cLoad
+	cArquivo		:= space(100) 
+
+	aAdd( aPergs ,{6,"Arquivo para Importação: " 	,cArquivo  ,"","","", 75 ,.T.,"Arquivo * |*",,GETF_LOCALHARD+GETF_NETWORKDRIVE} )		
+
+	If ParamBox(aPergs ,"Importar Arquivo",,,,,,,,cLoad,.T.,.T.)      
+		cArquivo  := ParamLoad(cFileName,,1,cArquivo) 
+	Endif
+
+Return 
+
+//Processa importação
+Static Function fProcImport()
+
+	Local aArea 			:= GetArea()
+	Local oArquivo 			:= nil
+	Local aArquivo 			:= {}
+	Local aWorksheet 		:= {}
+	Local aCampos			:= {}
+	Local cTemp 			:= ''
+	Local cTabImp			:= 'ZOI'
+	Local aItem 			:= {}
+	Local aLinha			:= {}
+	Local nImport			:= 0
+	Local cConteudo			:= ''
+	Local nTotLin			:= 0
+	Local vnb
+	Local ny
+	Local _msc
+	Local nx
+
+	Local nPosRec  := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZOI_REC_WT"})
+	Local vtRecGrd := {}
+
+	_ImpaColsBkp  := aClone(_oGetDados:aCols)
+
+	For vnb := 1 to Len(_ImpaColsBkp)
+		AADD(vtRecGrd, _ImpaColsBkp[vnb][nPosRec])	
+	Next vnb
+
+	If Len(vtRecGrd) == 1
+		nPrimeralin := _ImpaColsBkp[Len(_ImpaColsBkp)][nPosRec]
+		If nPrimeralin == 0
+			_oGetDados:aCols := {}
+		EndIf
+	EndIf
+
+	ProcRegua(0) 
+
+	msTmpINI := Time()
+	oArquivo := TBiaArquivo():New()
+	aArquivo := oArquivo:GetArquivo(cArquivo)
+
+	msDtProc  := Date()
+	msHrProc  := Time()
+	msTmpRead := Alltrim(ElapTime(msTmpINI, msHrProc))
+
+	If Len(aArquivo) > 0 
+
+		msTpLin   := Alltrim( Str( ( ( Val( Substr(msTmpRead,1,2)) * 3600 ) + ( Val(Substr(msTmpRead,4,2)) * 360 ) + ( Val(Substr(msTmpRead,7,2)) ) ) / Len(aArquivo[1]) ) )
+
+		aWorksheet 	:= aArquivo[1]	
+		nTotLin		:= len(aWorksheet)
+
+		ProcRegua(nTotLin)
+
+		For nx := 1 to len(aWorksheet) 
+
+			IncProc("Tmp Leit:(" + msTmpRead + ") Proc: " + StrZero(nx,6) + "/" + StrZero(nTotLin,6) )	
+
+			If nx == 1
+
+				aCampos := aWorksheet[nx]
+				For ny := 1 to len(aCampos)
+					cTemp := SubStr(UPPER(aCampos[ny]),AT(cTabImp+'_',UPPER(aCampos[ny])),10)
+					aCampos[ny] := cTemp
+				Next ny
+
+			Else
+
+				aLinha    := aWorksheet[nx]
+				aItem     := {}
+				cConteudo := ''
+
+				nLinReg   := 0
+				nPosRec   := aScan(aCampos,{|x| AllTrim(x) == "ZOI_REC_WT"})
+
+				If nPosRec <> 0
+
+					nLinReg := aScan(vtRecGrd,{|x| x == Val(Alltrim(aLinha[nPosRec]))})
+					If nLinReg == 0 .or. Val(Alltrim(aLinha[nPosRec])) == 0
+
+						AADD(_oGetDados:aCols, Array(Len(_oGetDados:aHeader)+1) )
+						nLinReg := Len(_oGetDados:aCols)
+
+					EndIf				
+
+					For _msc := 1 to Len(aCampos)
+
+						xkPosCampo := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == aCampos[_msc]})
+						If xkPosCampo <> 0
+							If _oGetDados:aHeader[xkPosCampo][8] == "N"
+								_oGetDados:aCols[nLinReg, xkPosCampo] := Val(Alltrim(aLinha[_msc]))
+							Else
+								_oGetDados:aCols[nLinReg, xkPosCampo] := aLinha[_msc]
+							EndIf
+						EndIf
+
+					Next _msc
+
+					_oGetDados:aCols[nLinReg, Len(_oGetDados:aHeader)+1] := .F.	
+					nImport ++
+
+				Else
+
+					MsgALERT("Erro no Layout do Arquivo de Importação!!!")
+					nImport := 0
+					Exit
+
+				EndIf
+
+			EndIf
+
+		Next nx
+
+	EndIf
+
+	If nImport > 0 
+
+		MsgInfo("Registros importados com sucesso")
+
+	Else
+
+		MsgStop("Falha na importação dos registros")
+		_oGetDados:aCols	:=	aClone(_aColsBkp)
+
+	EndIf
+
+	RestArea(aArea)
+
+Return

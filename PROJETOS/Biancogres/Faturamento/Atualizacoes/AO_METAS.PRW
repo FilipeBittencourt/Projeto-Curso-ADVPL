@@ -13,7 +13,7 @@ User Function AO_METAS()
 	Private cCadastro 	:= "Metas AO"
 	Private _nTotBasRea := 0
 	Private _nTotBasAju := 0
-	Private aTempSI		:= {}
+	Private aTempSI	  	:= {}
 
 	Private aRotina   := {  {"Pesquisar"    	,'AxPesqui'                      			,0, 1},;
 		{"Visualizar"   	,'Execblock("AOMETAMNT" ,.F.,.F.,"V")'    	,0, 2},;

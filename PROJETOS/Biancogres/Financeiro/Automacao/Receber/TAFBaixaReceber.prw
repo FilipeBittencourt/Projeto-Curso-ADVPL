@@ -1406,15 +1406,15 @@ Return(lRet)
 
 Method Confirm(oObj) Class TAFBaixaReceber
 
-	dAuxAux := dDataBase
+	local dAuxAux := &("dDataBase")
 
-	dDataBase := oObj:dDtLiq
+	&("dDataBase"):=if(empty(oObj:dDtCred),oObj:dDtLiq,oObj:dDtCred)
 
 	::AddBankRate(oObj)
 
 	::BankReceipt(oObj)
 
-	dDataBase := dAuxAux
+	&("dDataBase"):=dAuxAux
 
 Return()
 
@@ -1462,6 +1462,8 @@ Method BankReceipt(oObj) Class TAFBaixaReceber
 	Local nAuxTarGnr := 0
 	Local nAuxTxCob := 0
 	Local lRet := .T.
+
+	Local dsvDataBase:=&("dDataBase")
 
 	If ( (::VldBankReceipt(oObj)) .and. (oObj:cCodOco<>"14") )
 
@@ -1658,6 +1660,8 @@ Method BankReceipt(oObj) Class TAFBaixaReceber
 
 	EndIf
 
+	&("dDataBase"):=dsvDataBase
+
 Return()
 
 
@@ -1814,10 +1818,15 @@ Method ExecBaixaCR(oObj, cMotBx) Class TAFBaixaReceber
 	Local cPadrao
 	Local cSA1IdxKey
 	Local nSE1RecNo
+	Local dsvDataBase
 
 	Private lMsErroAuto := .F.
 	Private lMsHelpAuto := .T.
 	Private lAutoErrNoFile := .T.
+
+	dsvDataBase:=&("dDataBase")
+
+	&("dDataBase"):=if(empty(oObj:dDtCred),oObj:dDtLiq,oObj:dDtCred)
 
 	If ( cFilAnt <> SE1->E1_FILIAL )
 		cFilAnt := SE1->E1_FILIAL
@@ -1918,6 +1927,8 @@ Method ExecBaixaCR(oObj, cMotBx) Class TAFBaixaReceber
 	If ( cFilAnt <> _cFilBkp )
 		cFilAnt := _cFilBkp
 	EndIf
+
+	&("dDataBase"):=dsvDataBase
 
 Return(!lMsErroAuto)
 

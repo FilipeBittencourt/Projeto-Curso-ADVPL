@@ -35,7 +35,7 @@ User Function BIA675()
 	oBrowse:SetDescription(cCadastro)
 
 	//Adiciona um filtro ao browse
-	oBrowse:SetFilterDefault( "1 == 1" )
+	//oBrowse:SetFilterDefault( "1 == 1" )
 
 	//Ativamos a classe
 	oBrowse:Activate()

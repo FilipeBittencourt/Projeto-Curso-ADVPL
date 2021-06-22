@@ -54,45 +54,32 @@ Static Function fProcessa(_cEmp,_cFil)
 
 	Local _cAlias	:=	GetNextAlias()
 
-	Local _cFornece		
-	Local _cEntid
 	Local _cZZV		:=	""
 	Local _cZZW		:=	""
-	Local _cSE4		:=	""
-	Local _cSF4		:=	""
-	Local _cSB1		:=	""
 	Local _cSC9		:=  ""
 	Local _cSD2		:=  ""
-
+	Local _cSql		:=	""
+	
 	Do Case
 	
 		Case (_cEmp == '01')
 		
-		_cZZV		:=	"%ZZV010%"
-		_cZZW		:=	"%ZZW010%"
-		_cSE4		:=	"%SE4010%"
-		_cSF4		:=	"%SF4010%"
-		_cSB1		:=	"%SB1010%"
+		_cZZV		:=	"ZZV010"
+		_cZZW		:=	"ZZW010"
 		_cSC9		:=  "%SC9010%"
 		_cSD2		:=  "%SD2010%"
 
 		Case (_cEmp == '05')
 		
-		_cZZV		:=	"%ZZV050%"
-		_cZZW		:=	"%ZZW050%"
-		_cSE4		:=	"%SE4010%"
-		_cSF4		:=	"%SF4050%"
-		_cSB1		:=	"%SB1010%"
+		_cZZV		:=	"ZZV050"
+		_cZZW		:=	"ZZW050"
 		_cSC9		:=  "%SC9050%"
 		_cSD2		:=  "%SD2050%"
 
 		Case (_cEmp == '13')
 		
-		_cZZV		:=	"%ZZV130%"
-		_cZZW		:=	"%ZZW130%"
-		_cSE4		:=	"%SE4010%"
-		_cSF4		:=	"%SF4130%"
-		_cSB1		:=	"%SB1010%"
+		_cZZV		:=	"ZZV130"
+		_cZZW		:=	"ZZW130"
 		_cSC9		:=  "%SC9130%"
 		_cSD2		:=  "%SD2130%"
 
@@ -104,23 +91,35 @@ Static Function fProcessa(_cEmp,_cFil)
 		
 	EndCase
 
+	//Limpa temp
+	_cSql := ""
+	_cSql += "DROP TABLE IF EXISTS ##TMPZZW"
+	TcSQLExec(_cSql)
+
+	//Carrega temp ZZV e ZZW
+	_cSql := ""
+	_cSql += "SELECT ZZW.ZZW_FILIAL, ZZW.ZZW_PEDIDO, ZZW.ZZW_ITEM, ZZW.ZZW_SEQUEN, ZZW.ZZW_CARGA "
+	_cSql += "INTO ##TMPZZW " 
+	_cSql += "FROM "+_cZZV+" ZZV WITH (NOLOCK) "
+	_cSql += "JOIN "+_cZZW+" ZZW WITH (NOLOCK) ON ( "
+	_cSql += "		ZZV.ZZV_FILIAL		= ZZW.ZZW_FILIAL "
+	_cSql += "		AND ZZV.ZZV_CARGA	= ZZW.ZZW_CARGA "
+ 	_cSql += "		AND ZZW_CCLI 		= '010064'	"
+	_cSql += "		AND ZZW.D_E_L_E_T_	= ''		"
+	_cSql += "									)	"
+	_cSql += "WHERE ZZV.ZZV_FILIAL 		= '01' 	"
+ 	_cSql += "		AND ZZV.ZZV_FIMP	<> '' 	"
+	_cSql += "		AND ZZV.D_E_L_E_T_	= ''	"
+	TcSQLExec(_cSql)
+
+
 	BeginSql Alias _cAlias
 	
 		%NoParser%
 
-		SELECT 
-		
-			ZZW_CARGA, NC9BIA = COUNT(SC9B.R_E_C_N_O_), NC9LM = COUNT(SC9.R_E_C_N_O_)
+		SELECT ZZW_CARGA, NC9BIA = COUNT(SC9B.R_E_C_N_O_), NC9LM = COUNT(SC9.R_E_C_N_O_)
 
-		FROM %Exp:_cZZV% ZZV (NOLOCK)
-
-		JOIN %Exp:_cZZW% ZZW (NOLOCK) ON 
-		(
-			ZZV.ZZV_FILIAL 		= ZZW.ZZW_FILIAL
-			AND ZZV.ZZV_CARGA 	= ZZW.ZZW_CARGA
-			AND ZZW_CCLI 		= '010064'
-			AND ZZW.D_E_L_E_T_	= ''
-		)
+		FROM ##TMPZZW ZZW (NOLOCK)
 
 		JOIN %Exp:_cSC9% SC9B (NOLOCK) ON 
 		(
@@ -167,46 +166,8 @@ Static Function fProcessa(_cEmp,_cFil)
 			AND SC9.D_E_L_E_T_	= ''
 		)
 		
-		JOIN SC6070 SC6 (NOLOCK) ON 
-		(
-			SC9.C9_FILIAL 		= SC6.C6_FILIAL
-			AND SC9.C9_PEDIDO 	= SC6.C6_NUM
-			AND SC6.C6_ITEM 	= SC9.C9_ITEM
-			AND SC6.D_E_L_E_T_	= ''
-		)
-		
-		JOIN %Exp:_cSE4% SE4 (NOLOCK) ON
-		(
-			SC5.C5_CONDPAG 		= SE4.E4_CODIGO
-			AND SE4.D_E_L_E_T_	= ''
-		)
-		
-		JOIN SF4070 SF4 (NOLOCK) ON 
-		(
-			SF4.F4_FILIAL 		= SC6.C6_FILIAL
-			AND SF4.F4_CODIGO 	= SC6.C6_TES
-			AND SF4.D_E_L_E_T_	= ''
-		)
-		
-		JOIN SB2070 SB2 (NOLOCK) ON
-		(
-			SB2.B2_FILIAL 		= SC6.C6_FILIAL
-			AND SB2.B2_COD 		= SC6.C6_PRODUTO
-			AND SB2.B2_LOCAL 	= SC6.C6_LOCAL
-			AND SB2.D_E_L_E_T_	= ''
-		)
-		
-		JOIN %Exp:_cSB1% SB1 (NOLOCK) ON 
-		(
-			SB2.B2_COD 			= SB1.B1_COD
-			AND SB1.D_E_L_E_T_	= ''
-		)
-		
-		WHERE ZZV.ZZV_FILIAL 	= '01'
-		AND ZZV.ZZV_FIMP 		<> ''
-		AND ZZV.D_E_L_E_T_		= ''
-		
-		AND NOT EXISTS 
+		WHERE 
+			NOT EXISTS 
 		(
 			SELECT 1
 			FROM SD2070 SD2 (NOLOCK)

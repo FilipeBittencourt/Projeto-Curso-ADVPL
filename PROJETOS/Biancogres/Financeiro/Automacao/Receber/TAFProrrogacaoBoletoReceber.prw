@@ -558,7 +558,7 @@ Method BaixaDepAntJR(lWorkFLow) Class TAFProrrogacaoBoletoReceber
 
 										If !Empty(SE1->E1_NUMBCO)
 
-											aAdd(::aTit, {,,,,,,,,,,,,,,,,,,,SE1->(Recno())})
+											aAdd(::aTit, {,,,,,,,,,,,,,,,,,,,,SE1->(Recno())})
 
 											::Resend()
 

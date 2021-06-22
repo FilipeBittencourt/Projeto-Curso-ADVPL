@@ -1,12 +1,5 @@
 #include "rwmake.ch"        // incluido pelo assistente de conversao do AP5 IDE em 29/01/01
 
-User Function bia135A()        // incluido pelo assistente de conversao do AP5 IDE em 29/01/01
-
-	Local xxn
-
-	SetPrvt("WSCONTADIG,WALIAS,XXN,XCCAMPO,WSCONTA,WSCOD")
-	SetPrvt("WSCLVL,CMSG,")
-
 	/*/
 	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 	±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
@@ -23,6 +16,13 @@ User Function bia135A()        // incluido pelo assistente de conversao do AP5 I
 	ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 	/*/
 
+User Function bia135A()        // incluido pelo assistente de conversao do AP5 IDE em 29/01/01
+
+	Local xxn
+
+	SetPrvt("WSCONTADIG,WALIAS,XXN,XCCAMPO,WSCONTA,WSCOD")
+	SetPrvt("WSCLVL,CMSG,")
+	
 	wsConta := SPACE(20)
 	wAlias   := Alias()
 
@@ -54,7 +54,7 @@ User Function bia135A()        // incluido pelo assistente de conversao do AP5 I
 				Else
 					cMsg := ""
 					cMsg += "AVISO!!"+chr(13)
-					cMsg += "Este produto exige a Conta de Resultado Administrativa que esta "+chr(13)
+					cMsg += "BIA135A - Este produto exige a Conta de Resultado Administrativa que esta "+chr(13)
 					cMsg += "vazia no cadastro do produto! Favor verificar antes de prosseguir."
 					alert(cMsg)
 					AutoGrLog(cMsg)
@@ -67,7 +67,7 @@ User Function bia135A()        // incluido pelo assistente de conversao do AP5 I
 					Else
 						cMsg := ""
 						cMsg += "AVISO!!"+chr(13)
-						cMsg += "Este produto exige a Conta de Resultado Industrial que esta "+chr(13)
+						cMsg += "BIA135A - Este produto exige a Conta de Resultado Industrial que esta "+chr(13)
 						cMsg += "vazia no cadastro do produto! Favor verificar antes de prosseguir."
 						alert(cMsg)
 						AutoGrLog(cMsg)
@@ -96,8 +96,8 @@ User Function bia135A()        // incluido pelo assistente de conversao do AP5 I
 
 		CT1->(DbSetOrder(1))
 		If !CT1->(DbSeek(xFilial("CT1")+wsConta))		
-			MsgAlert("Conta Contabil nao cadastrada ["+wsConta+"] ou Classe Valor Digitada nao pode ser aplicada a este PRODUTO", "ATENCAO")
-			AutoGrLog("Conta Contabil nao cadastrada ["+wsConta+"] ou Classe Valor Digitada nao pode ser aplicada a este PRODUTO")
+			MsgAlert("BIA135A - Conta Contabil nao cadastrada ["+wsConta+"] ou Classe Valor Digitada nao pode ser aplicada a este PRODUTO", "ATENCAO")
+			AutoGrLog("BIA135A - Conta Contabil nao cadastrada ["+wsConta+"] ou Classe Valor Digitada nao pode ser aplicada a este PRODUTO")
 			wsConta := SPACE(20)
 		EndIf
 

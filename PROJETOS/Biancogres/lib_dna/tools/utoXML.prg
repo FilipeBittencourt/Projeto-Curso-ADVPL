@@ -245,6 +245,8 @@ static function dbToXML(cAlias as character,cFile as character,cExcelTitle as ch
     local aHeader       as array
     local aX3CBox       as array
 
+    local bEval         as block
+
     local cType         as character
     local cField        as character
     local cWBreak       as character
@@ -266,6 +268,7 @@ static function dbToXML(cAlias as character,cFile as character,cExcelTitle as ch
     local oFWMSExcel    as object
 
     local uCell
+    local pEval
 
     aHeader:=(cAlias)->(dbStruct())
 
@@ -319,7 +322,12 @@ static function dbToXML(cAlias as character,cFile as character,cExcelTitle as ch
         oFWMSExcel:AddColumn(@cWBreak,@cTBreak,@cColumn,@nAlign,@nFormat,@lTotal)
     next nField
 
+    pEval:=uToXML():getXMLVar("PROCESS","pEval",nil)
+    bEval:=uToXML():getXMLVar("PROCESS","bEval",{|pEval|pEval})
+
     while (cAlias)->(!(eof()))
+
+        eval(bEval,pEval)
 
         aSize(aCells,0)
 

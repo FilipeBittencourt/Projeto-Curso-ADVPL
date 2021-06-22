@@ -26,6 +26,7 @@ static function F240TIT()
 	LOCAL cQUERY	:= ""
 	LOCAL lRetorno	:= .T.
 	Local lFA240MARK := stackTools():IsInCallStack("FA240MARK")
+	local lBAF001FD:=stackTools():IsInCallStack("U_BAF001FD")
 
 	aF240TIT:=cacheData():get("F240TIT","aF240TIT",aF240TIT)
 
@@ -142,7 +143,6 @@ static function F240TIT()
 			endif
 		endif
 
-
 	ENDIF
 
 	If Empty(SE2->E2_NUMBOR) .And. SE2->E2_YBLQ <> 'XX' .And. Alltrim(SE2->E2_TIPO) <> 'PA' .And. SE2->E2_TIPO <> 'NDF' .And. U_BIAF076()	
@@ -151,7 +151,7 @@ static function F240TIT()
 
 	EndIf	
 
-	if (FIDC():isPGFIDC(.F.))
+	if ((!lBAF001FD).and.(FIDC():isPGFIDC(.F.)))
 		cMens:="Titulos FIDC não podem ser utilizados para geração de Borderô"
 		cMens+=ENTER
 		cMens+=ENTER
@@ -165,6 +165,20 @@ static function F240TIT()
 			Help(nil,nil,"__FIDC__","__FIDC__","Título(s) FIDC",1,0,nil,nil,nil,nil,nil,{cMens})
 		else
 			aAdd(aF240TIT,cMens)
+		endif
+	endif
+
+	if (!lRetorno)
+		if (IsBlind())
+			if (!empty(aF240TIT))
+				aEval(aF240TIT,{|e|ConOut(e)})
+			endif
+		endif
+	endif
+
+	if ((lBAF001FD).and.(!lRetorno))
+		if (!empty(cMens))
+			cacheData():set("F240TIT","cMens",cMens)
 		endif
 	endif
 

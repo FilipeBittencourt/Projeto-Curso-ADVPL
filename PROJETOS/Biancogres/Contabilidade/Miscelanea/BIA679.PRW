@@ -273,6 +273,47 @@ Static Function Prc679EX(oProcess)
 	oProcess:SetRegua1(1)
 	oProcess:SetRegua2(1000)             
 
+	QX005 := Alltrim(" SELECT VERCON = ZOY_VERSAO,                                                                                           ") + msEnter
+	QX005 += Alltrim("        CODPLA = CVF_CODIGO,                                                                                           ") + msEnter
+	QX005 += Alltrim("        RUBVIS = CVF_CONTAG,                                                                                           ") + msEnter
+	QX005 += Alltrim("        OPERAC = OPERACAO                                                                                              ") + msEnter
+	QX005 += Alltrim(" FROM " + RetSqlName("CVF") + " CVF(NOLOCK)                                                                            ") + msEnter
+	QX005 += Alltrim("      INNER JOIN " + RetSqlName("ZOY") + " ZOY(NOLOCK) ON ZOY_FILIAL = '" + xFilial("ZOY") + "'                        ") + msEnter
+	QX005 += Alltrim("                                       AND ZOY_VERSAO IN('A01', 'B01', 'F01')                                          ") + msEnter
+	QX005 += Alltrim("                                       AND ZOY.D_E_L_E_T_ = ' '                                                        ") + msEnter
+	QX005 += Alltrim("      INNER JOIN VW_BI_D_OPERACAO OPR ON 1 = 1                                                                         ") + msEnter
+	QX005 += Alltrim(" WHERE CVF_FILIAL = '" + xFilial("CVF") + "'                                                                           ") + msEnter
+	QX005 += Alltrim("       AND CVF_CODIGO = '" + xCodPla + "'                                                                              ") + msEnter
+	QX005 += Alltrim("       AND CVF_CTASUP = ''                                                                                             ") + msEnter
+	QX005 += Alltrim("       AND CVF.D_E_L_E_T_ = ' '                                                                                        ") + msEnter
+	QX005 += Alltrim(" ORDER BY CVF_ORDEM                                                                                                    ") + msEnter
+	QXIndex := CriaTrab(Nil,.f.)
+
+	dbUseArea(.T.,"TOPCONN",TcGenQry(,,QX005),'QX05',.T.,.T.)
+	dbSelectArea("QX05")
+	dbGoTop()
+
+	While !QX05->(Eof())
+
+		Reclock("ZN6",.T.)
+		ZN6->ZN6_FILIAL := xFilial("ZN6")
+		ZN6->ZN6_DATREF := dDataFin
+		ZN6->ZN6_VERCON := QX05->VERCON
+		ZN6->ZN6_CODPLA := QX05->CODPLA
+		ZN6->ZN6_RUBVIS := QX05->RUBVIS
+		ZN6->ZN6_TIPO1  := "A"
+		ZN6->ZN6_OPERAC := QX05->OPERAC
+		ZN6->ZN6_HIST   := "REGISTROS ZERO PARA FRONT-END"
+		ZN6->(MsUnLock())
+
+		QX05->(dbSkip())
+
+	End
+
+	QX05->(dbCloseArea())
+	Ferase(QXIndex+GetDBExtension())
+	Ferase(QXIndex+OrdBagExt())
+
 	oProcess:IncRegua1(smMsnPrc)
 	For pk := 1 to 3
 

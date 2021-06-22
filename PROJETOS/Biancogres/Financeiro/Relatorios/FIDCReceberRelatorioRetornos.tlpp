@@ -6,22 +6,21 @@
 @since 08/03/2021
 @project FIDC
 @version 1.0
-@description Function para Impressao do Relatorio (Excel) Consolidado FIDC
+@description Function para Impressao do Relatorio (Excel) Retorno FIDC
 @type function
 /*/
-
-function u_FIDCConRel()
-    return(u_FIDCRelatorioConsolidado())
+function u_FIDCRetRel()
+    return(u_FIDCRelatorioRetorno())
 
 /*/{Protheus.doc} FIDC
 @author Marinaldo de Jesus
 @since 08/03/2021
 @project FIDC
 @version 1.0
-@description Procedure para Impressao do Relatorio (Excel) Consolidado FIDC
+@description Procedure para Impressao do Relatorio (Excel) Retorno FIDC
 @type procedure
 /*/
-procedure u_FIDCRelatorioConsolidado()
+procedure u_FIDCRelatorioRetorno()
 
 	local aArea				as array
 	local aParamRet			as array
@@ -33,18 +32,18 @@ procedure u_FIDCRelatorioConsolidado()
 	local otMultProcess		as object
 
     private cCadastro as character
-    cCadastro:=OemToAnsi("Relatorio Consolidado FIDC")
+    cCadastro:=OemToAnsi("Relatorio Retorno FIDC")
 
     aArea:=getArea()
 
 	begin sequence
 
-        lParamBox:=FIDCConsolidadoParameters(@aParamRet)
+        lParamBox:=FIDCRetornoParameters(@aParamRet)
         if (!lParamBox)
             break
         endif
 
-		bAction:={||FIDCRelatorioConsolidado(otMultProcess,aParamRet)}
+		bAction:={||FIDCRelatorioRetorno(otMultProcess,aParamRet)}
 		otMultProcess:=tMultProcess():New(bAction,&("cCadastro"),OemToAnsi("Aguarde. Gerando Relatorio..."),nil,2)
 		otMultProcess:Activate()
 
@@ -54,16 +53,16 @@ procedure u_FIDCRelatorioConsolidado()
 
     return
 
-static procedure FIDCRelatorioConsolidado(otMultProcess as object,aParamRet as array)
-    EvalBlock():EvalBlock({||FIDCRelatorioConsolidadoQuery(otMultProcess,aParamRet)},nil,.T.)
+static procedure FIDCRelatorioRetorno(otMultProcess as object,aParamRet as array)
+    EvalBlock():EvalBlock({||FIDCRelatorioRetornoQuery(otMultProcess,aParamRet)},nil,.T.)
     return
 
-static procedure FIDCRelatorioConsolidadoQuery(otMultProcess as object,aParamRet as array)
+static procedure FIDCRelatorioRetornoQuery(otMultProcess as object,aParamRet as array)
 
     local aBCOIsFIDC    as array
     local aFWTTables    as array
 
-    local bTTimer       as block
+    local bProcess      as block
     local bMsAguarde    as block
 
     local cTmpAlias     as character
@@ -84,12 +83,11 @@ static procedure FIDCRelatorioConsolidadoQuery(otMultProcess as object,aParamRet
     local nBCOs         as numeric
 
     local nTable        as numeric
-    local nTables       as numeric    
-	local nTTimer		as numeric
+    local nTables       as numeric
 
     local nSA6RecNo     as numeric
-
-    local oTTimer       as object
+    
+    local nIncRegua     as numeric
 
     aBCOIsFIDC:=FIDC():retbcoFIDC()
 
@@ -118,23 +116,35 @@ static procedure FIDCRelatorioConsolidadoQuery(otMultProcess as object,aParamRet
 
         otMultProcess:SetRegua(1,0)
         otMultProcess:SetRegua(2,0)
-
-		nTTimer:=0
-
-        bTTimer:={||if(++nTTimer>4,(nTTimer:=0,otMultProcess:SetRegua(1,0),otMultProcess:SetRegua(2,0)),nil),otMultProcess:IncRegua(1,"Obtendo dados no SGBD. Aguarde..."),otMultProcess:IncRegua(2,"Processando...")}
-        Eval(bTTimer)
-
-        oTTimer:=TTimer():New(1,bTTimer,getWndDefault()) 
-
-        bMsAguarde:={||oTTimer:Activate(),cTmpAlias:=QueryView(@aParamRet,@aBCOIsFIDC[nBCO],@aFWTTables),oTTimer:DeActivate()}
+        
+        bMsAguarde:={||cTmpAlias:=QueryView(@aParamRet,@aBCOIsFIDC[nBCO],@aFWTTables)}
         MsAguarde(bMsAguarde,"Obtendo dados no SGBD. Aguarde...")
+        
+        nIncRegua:=(cTmpAlias)->(RecCount())
+
+        otMultProcess:SetRegua(1,0)
+        otMultProcess:SetRegua(2,nIncRegua)
+
+        (cTmpAlias)->(dbGoTop())
+        
+        while ((cTmpAlias)->(!eof()))
+            otMultProcess:IncRegua(1,"Atualizando Dados do SGBD. Aguarde...")
+            otMultProcess:IncRegua(2,"Calculando Dados. Aguarde...")
+            if (cTmpAlias)->(recLock(cTmpAlias,.F.))
+                (cTmpAlias)->(FIDC():calculaDesconto(E1_VALOR,E1_VENCTO,E1_DATABOR))
+                (cTmpAlias)->(DIAS_ANTEC:=FIDC():getFIDCVar("nDiasCalculo",0))
+                (cTmpAlias)->(E1_VENCREA:=FIDC():getFIDCVar("dDataValida",E1_DATABOR))
+                (cTmpAlias)->(MsUnLock())
+            endif
+            (cTmpAlias)->(dbSkip())
+        end while
 
         (cTmpAlias)->(dbGoTop())
 
         cXMLPath:="\FIDC\XML\"
         if (dirtools():MakeDir(cXMLPath))
 
-            cXMLFile:=A35():getXMLFile(&("cEmpAnt"),&("cFilAnt"),cXMLPath,"FIDCRelatorioConsolidado","","")
+            cXMLFile:=A35():getXMLFile(&("cEmpAnt"),&("cFilAnt"),cXMLPath,"FIDCRelatorioRetorno","","")
             
             if (type("cCadastro")=="C")
                 cExcelTitle:=&("cCadastro")
@@ -160,18 +170,16 @@ static procedure FIDCRelatorioConsolidadoQuery(otMultProcess as object,aParamRet
             ltxtEditMemo:=.F.
 
             otMultProcess:SetRegua(1,0)
-            otMultProcess:SetRegua(2,0)
-            
-			nTTimer:=0
+            otMultProcess:SetRegua(2,nIncRegua)
 
-            bTTimer:={||if(++nTTimer>4,(nTTimer:=0,otMultProcess:SetRegua(1,0),otMultProcess:SetRegua(2,0)),nil),otMultProcess:IncRegua(1,"Gerando Planilha Excel. Aguarde..."),otMultProcess:IncRegua(2,"Processando...")}
-            Eval(bTTimer)
+            bProcess:={||otMultProcess:IncRegua(1,"Gerando Planilha Excel. Aguarde..."),otMultProcess:IncRegua(2,"Processando...")}
 
-            oTTimer:=TTimer():New(1,bTTimer,getWndDefault()) 
-			
-            uToXML():setXMLVar("GENERAL","lExcelXlsx",.F.)
-			bMsAguarde:={||oTTimer:Activate(),uToXML():QryToXML(cTmpAlias,@cXMLFile,@cExcelTitle,@lPicture,@lX3Titulo,@ltxtEditMemo),oTTimer:DeActivate()}
+            uToXML():setXMLVar("PROCESS","bEval",bProcess)
+            uToXML():setXMLVar("PROCESS","pEval",otMultProcess)
+
+            bMsAguarde:={||uToXML():QryToXML(cTmpAlias,@cXMLFile,@cExcelTitle,@lPicture,@lX3Titulo,@ltxtEditMemo)}
             MsAguarde(bMsAguarde,"Gerando Planilha Excel. Aguarde...")
+            
             uToXML():clearXMLVar()
 
         endif
@@ -191,12 +199,12 @@ static procedure FIDCRelatorioConsolidadoQuery(otMultProcess as object,aParamRet
 
     return
 
-static function FIDCConsolidadoParameters(aParamRet as array) as logical
-	local lParamBox as logical
-	lParamBox:=FIDC():getParamCon(@aParamRet)
-	return(lParamBox)
+static function FIDCRetornoParameters(aParamRet as array) as logical
+    local lParamBox as logical
+    lParamBox:=FIDC():getRecParamRet(@aParamRet)
+    return(lParamBox)
 
 static function QueryView(aParamRet as character,aBCOIsFIDC as array,aFWTTables as array) as character
     local cTmpAlias as character
-    cTmpAlias:=FIDC():getQueryCon(@aParamRet,@aBCOIsFIDC,@aFWTTables)
+    cTmpAlias:=FIDC():getRecQueryRet(@aParamRet,@aBCOIsFIDC,@aFWTTables)
     return(cTmpAlias)

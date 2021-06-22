@@ -64,7 +64,7 @@ User Function Bia134A()
 			Else
 				cMsg := ""
 				cMsg += "AVISO!!"+chr(13)
-				cMsg += "Este produto exige a Conta de Resultado Administrativa que esta "+chr(13)
+				cMsg += "BIA134A - Este produto exige a Conta de Resultado Administrativa que esta "+chr(13)
 				cMsg += "vazia no cadastro do produto! Favor verificar antes de prosseguir."
 				alert(cMsg)
 				AutoGrLog(cMsg)
@@ -79,7 +79,7 @@ User Function Bia134A()
 				Else
 					cMsg := ""
 					cMsg += "AVISO!!"+chr(13)
-					cMsg += "Este produto exige a Conta de Resultado Industrial que esta "+chr(13)
+					cMsg += "BIA134A - Este produto exige a Conta de Resultado Industrial que esta "+chr(13)
 					cMsg += "vazia no cadastro do produto! Favor verificar antes de prosseguir."
 					alert(cMsg)
 					AutoGrLog(cMsg)
@@ -119,8 +119,8 @@ User Function Bia134A()
 			DbSelectArea("CT1")
 			DbSetOrder(1)
 			If !DbSeek(xFilial("CT1")+wsConta,.F.)
-				MsgAlert("Classe de Valor Digitada nao pode ser aplicado a este PRODUTO", "ATENCAO")
-				AutoGrLog("Classe de Valor Digitada nao pode ser aplicado a este PRODUTO")
+				MsgAlert("BIA134A - Classe de Valor Digitada nao pode ser aplicado a este PRODUTO", "ATENCAO")
+				AutoGrLog("BIA134A - Classe de Valor Digitada nao pode ser aplicado a este PRODUTO")
 				wsConta := SPACE(20)
 			EndIf
 		EndIf

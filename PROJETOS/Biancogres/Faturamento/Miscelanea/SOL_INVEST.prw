@@ -398,6 +398,8 @@ STATIC FUNCTION ATUALIZA_TELA(lRefresh)
 			(cAliasTrab)->MARCA		:= 'Incesa'
 			Case C_CONS->ZO_EMP == '0599'
 			(cAliasTrab)->MARCA		:= 'Bellacasa'
+			Case C_CONS->ZO_EMP == '1302'
+			(cAliasTrab)->MARCA		:= 'Vinilico'
 			OtherWise								
 			(cAliasTrab)->MARCA		:= ''
 		EndCase
@@ -936,6 +938,20 @@ Static Function uSALVAR()
 
 		auxEmpre := "0599"
 		auxSerie := 'S3'
+
+		CASE SubString(cNMarca,1,4) == "1302"
+		If Empty(Alltrim(SA1->A1_YVENVI1))	 
+			MSGBOX("Favor preencher o campo Vendedor no Cadastro de Cliente antes de continuar!","Solicitação de Investimento (AI)","ALERT")		
+			RETURN
+		Else			
+			IF CCODUSUARIO > '999999'
+				cCodigo := SA1->A1_YVENVI1
+			EndIf
+		EndIf
+
+		auxEmpre := "1302"
+		auxSerie := 'S3'
+
 		OTHERWISE
 		MSGBOX("Favor preencher a marca!","Solicitação de Investimento (AI)","ALERT")
 		RETURN
@@ -1492,6 +1508,8 @@ Static Function SQL_FILTRO()
 			CSQL += "		AND ZO_EMP = '0501'  " + ENTER
 		ELSEIF CMARCA == "BELLACASA"
 			CSQL += "		AND ZO_EMP = '0599'  " + ENTER
+		ELSEIF CMARCA == "VINILICO"
+			CSQL += "		AND ZO_EMP = '1302'  " + ENTER
 		ENDIF
 	ENDIF
 
@@ -1588,6 +1606,8 @@ Static Function SQL_FILTRO()
 			C_cSql += "		AND ZO_EMP = '0501'  " + ENTER
 		ELSEIF CMARCA == "BELLACASA"
 			C_cSql += "		AND ZO_EMP = '0599'  " + ENTER
+		ELSEIF CMARCA == "VINILICO"
+			C_cSql += "		AND ZO_EMP = '1302'  " + ENTER
 		ENDIF
 	ENDIF
 

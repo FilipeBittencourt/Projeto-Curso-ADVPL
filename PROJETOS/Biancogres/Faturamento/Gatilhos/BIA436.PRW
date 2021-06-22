@@ -33,7 +33,7 @@ User Function BIA436()
 	Private cEmpNPOL := AllTrim(GetNewPar("FA_EMPNPOL","14#"))
 
 	//Fernando/Facile em 10/08/15 - nova politica passa a so calcular preco/desconto nestes campos
-	If ( /*!(AllTrim(cEmpAnt) $ cEmpNPOL) .And. */ !(ALLTRIM(__READVAR) $ 'M->C6_QTDVEN#M->C6_YDTNECE#M->C6_YDESP#M->C6_YDNV#M->C6_YDVER#M->C6_YDACO#M->C6_YDAI#M->C6_YPREAJU#M->C6_YDFRA')) .And. !(AllTrim(M->C5_YSUBTP) ==  "O")
+	If (!(AllTrim(cEmpAnt) $ cEmpNPOL) .And. !(ALLTRIM(__READVAR) $ 'M->C6_QTDVEN#M->C6_YDTNECE#M->C6_YDESP#M->C6_YDNV#M->C6_YDVER#M->C6_YDACO#M->C6_YDAI#M->C6_YPREAJU#M->C6_YDFRA')) .And. !(AllTrim(M->C5_YSUBTP) ==  "O")
 		If !(AllTrim(M->C5_YSUBTP) $ "A#M#F")
 			If !(isincallstack("U_ConsEst") .And. Type("__FCESTALTLTPOL") <> "U")
 				Return(GdFieldGet("C6_PRCVEN",n))
@@ -231,7 +231,14 @@ User Function BIA436()
 								BeginSql Alias __cAliasTmp
 								%NoParser%
 
-								select Z69_PRCVEN from %Exp:__nTabZ68% where Z69_FILIAL = %XFilial:Z68% and Z69_NUM+Z69_REV = %Exp:AllTRim(M->C5_YNPRENG)% and Z69_CODPRO = %Exp:wProduto% and D_E_L_E_T_=''
+								select Z69_PRCVEN 
+								from %Exp:__nTabZ68% 
+								where Z69_FILIAL = %XFilial:Z68% 
+								and Z69_NUM+Z69_REV = %Exp:AllTRim(M->C5_YNPRENG)% 
+								and Z69_CODPRO = %Exp:wProduto% 
+								and Z69_ITEM = %Exp:wItem%
+								and D_E_L_E_T_=''   
+								ORDER BY Z69_CODPRO, Z69_ITEM
 
 								EndSql
 
@@ -246,6 +253,7 @@ User Function BIA436()
 									aCols[n,nPosDOut] := __nDESP
 									aCols[n,nPosDesc] := __nDTOT
 									wC6YDESC	:= aCols[n,nPosDesc]
+									__nDESP := 0
 
 									wNPrcVen := aCols[n,nPosVlTab] - (aCols[n,nPosVlTab] * (wC6YDESC / 100))
 
