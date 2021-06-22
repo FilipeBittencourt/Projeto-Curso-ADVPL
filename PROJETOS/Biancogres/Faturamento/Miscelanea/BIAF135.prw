@@ -40,7 +40,8 @@ Local oObj := Nil
 
 Return()
 
-/* TESTE para forçar geração de termo de vistoria que não foi gerado na pasta
+/*
+// TESTE para forçar geração de termo de vistoria que não foi gerado na pasta
 User Function BIAPNT()
 Local aEmp := {}
 Local cFil := "01"
@@ -52,7 +53,28 @@ Local oObj := Nil
 	
 		oObj := TTermoVistoriaObraEngenharia():New()
 		
+		oObj:docto := "000267276101"
 		oObj:Process()
+		
+		FreeObj(oObj)
+			
+	RpcClearEnv()
+
+Return()
+
+// TESTE para forçar envio de workflow
+User Function BIAPNTW()
+Local aEmp := {}
+Local cFil := "01"
+Local nCount := 0
+Local oObj := Nil
+
+	RpcSetType(3)
+	RpcSetEnv("07", cFil)
+	
+		oObj := TWorkflowVistoriaObraEngenharia():New()
+		
+		oObj:SendWorkFlow(DTOS(Date()), "009216", "Cliente teste", "", "000267276101", "cDescObr", "pablo.nascimento@biancogres.com.br")
 		
 		FreeObj(oObj)
 			

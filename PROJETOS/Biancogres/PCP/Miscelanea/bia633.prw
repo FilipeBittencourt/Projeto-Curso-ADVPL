@@ -42,11 +42,17 @@ User Function B633IMDD()
 	Local aSays	   		:= {} 
 	Local aButtons 		:= {}  
 	Local lConfirm 		:= .F. 
+	Local oEmp 			:= TLoadEmpresa():New()
+
 	Private idVersao    := space(010)
 	Private idRevisa    := space(003) 
 	Private idAnoRef    := space(004) 
 	Private msrhEnter   := CHR(13) + CHR(10)
 	Private xkContinua  := .T.
+	Private msEmpAtu  := cEmpAnt
+	Private msFilAtu  := cFilAnt
+
+
 
 	AADD(aSays, OemToAnsi("Rotina para Geração de Integração dos registros OBZ com Modelo de OrcaFinal!"))   
 	AADD(aSays, OemToAnsi(""))   
@@ -116,7 +122,39 @@ User Function B633IMDD()
 
 		If xkContinua
 
-			Processa({ || cMsg := fProcIntMD() },"Aguarde...","Carregando Arquivo...",.F.)
+			oEmp:GSEmpFil()
+		
+			If Len(oEmp:aEmpSel) > 0
+		
+				For nW := 1 To Len(oEmp:aEmpSel)
+		
+					RpcSetEnv( oEmp:aEmpSel[nW][1], Substr(oEmp:aEmpSel[nW][2], 1, 2) )
+				
+					smMsnPrc := oEmp:aEmpSel[nW][1] + "/" + Substr(oEmp:aEmpSel[nW][2], 1, 2) + " - " + Alltrim(oEmp:aEmpSel[nW][4])
+		
+					oProcess := MsNewProcess():New({|lEnd| fProcIntMD(@oProcess) }, "Gravando...", smMsnPrc, .T.)
+					oProcess:Activate()
+		
+					RpcClearEnv()
+		
+				Next nW
+		
+				Aviso("OBZ Integration - BIA633", "Fim do processamento...", {'Ok'}, 3)
+		
+				RpcSetEnv( msEmpAtu, msFilAtu )
+			
+				If Type("__cInternet") == "C"
+					__cInternet := Nil
+				EndIf
+	
+//				fVerEmp()	
+		
+			Else
+				Aviso("OBZ Integration - BIA633", "Não foram selecionadas empresas! Processamento não realizado" , {'Ok'}, 3)
+			EndIf
+			
+			
+			//Processa({ || cMsg := fProcIntMD() },"Aguarde...","Carregando Arquivo...",.F.)
 
 		EndIf
 
@@ -163,11 +201,17 @@ Return
 ¦¦+-----------------------------------------------------------------------¦¦¦
 ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
-Static Function fProcIntMD()
+Static Function fProcIntMD(oProcess)
 
 	Local lvxt
 	Local ny
 	Local trrhEnter := CHR(13) + CHR(10)
+
+	oProcess:SetRegua1(1)
+	oProcess:SetRegua2(1000)             
+
+	oProcess:IncRegua1(smMsnPrc)
+	oProcess:IncRegua2("Verificando Tabelas...")
 
 	KS001 := " DELETE " + RetSqlName("ZBZ") + " "
 	KS001 += "   FROM " + RetSqlName("ZBZ") + " ZBZ "
@@ -176,9 +220,10 @@ Static Function fProcIntMD()
 	KS001 += "    AND ZBZ.ZBZ_ANOREF = '" + idAnoRef + "' "
 	KS001 += "    AND ZBZ.ZBZ_ORIPRC = 'OBZ' "
 	KS001 += "    AND ZBZ.D_E_L_E_T_ = ' ' "
-	U_BIAMsgRun("Aguarde... Apagando registros ZBZ... ",,{|| TcSQLExec(KS001) })
+	//U_BIAMsgRun("Aguarde... Apagando registros ZBZ... ",,{|| TcSQLExec(KS001) })
+	oProcess:IncRegua2("Aguarde... Apagando registros ZBZ... ")
+	TcSQLExec(KS001)
 
-	ProcRegua(0)
 	For lvxt := 1 to 12
 
 		IncProc("Processando mês " + AllTrim(Str(lvxt)) )
@@ -331,7 +376,10 @@ Static Function fProcIntMD()
 		LV007 += "  WHERE NOT ( CT1_NORMAL = 'E' OR EMPR = 'ER' ) "
 		LV007 += "    AND EMPR = '" + cEmpAnt + "' "
 		LV007 += "    AND MESREF <> 0 "
-		U_BIAMsgRun("Aguarde... Convertendo OBZ em DEPESAS... ",,{|| TcSQLExec(LV007) })
+//		U_BIAMsgRun("Aguarde... Convertendo OBZ em DEPESAS... ",,{|| TcSQLExec(LV007) })
+		oProcess:IncRegua2("Aguarde... Convertendo OBZ em DEPESAS...")
+		TcSQLExec(LV007)
+
 
 	Next lvxt
 
@@ -343,9 +391,15 @@ Static Function fProcIntMD()
 	ZP001 += "    AND ZB5.ZB5_ANOREF = '" + idAnoRef + "' "
 	ZP001 += "    AND RTRIM(ZB5.ZB5_TPORCT) = 'OBZ' "
 	ZP001 += "    AND ZB5.D_E_L_E_T_ = ' ' "
-	U_BIAMsgRun("Aguarde... Fechando Versão Orçamentária ... ",,{|| TcSQLExec(ZP001) })
+//	U_BIAMsgRun("Aguarde... Fechando Versão Orçamentária ... ",,{|| TcSQLExec(ZP001) })
+	oProcess:IncRegua2("Aguarde... Fechando Versão Orçamentária ...")
+	TcSQLExec(ZP001)
 
-	MsgINFO("Conversão OBZ em OrcaFinal realizada com sucesso para esta empresa!!!")
+//	MsgINFO("Conversão OBZ em OrcaFinal realizada com sucesso para esta empresa!!!")
+
+Return
+
+Static Function fVerEmp()
 
 	trEmprToO := {}
 	RQ002 := " WITH OBZINTEG AS (SELECT ISNULL(SUBSTRING(CTH_YEFORC,1,2), 'ER') EMPR "

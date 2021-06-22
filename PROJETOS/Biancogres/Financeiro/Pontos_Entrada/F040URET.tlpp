@@ -1,0 +1,34 @@
+#include "totvs.ch"
+
+/*/{Protheus.doc} FIDC
+@author Marinaldo de Jesus
+@since 21/05/2021
+@project FIDC
+@version 1.0
+@description: Ponto de Entrada Executado no progama FINXFUN.PRX (Funções genéricas do módulo financeiro)
+              Será utilizado para adicionar novas opcoes a Legenda do Financeiro.
+@type function
+/*/
+function u_F040URET() as array
+    local aRetSYS  as array
+    local aLegSys  as array
+    local aRetorno as array
+    if ((type("ParamIXB")=="A").and.(len(&("ParamIXB"))>=2))
+        if (valtype(&("ParamIXB")[1])=="A")
+            aRetSYS:=&("ParamIXB")[1]
+        endif
+        aLegSys:=&("ParamIXB")[2]
+        aRetorno:=array(0)
+        if (valtype(aRetSYS)=="A")
+            if (aScan(aRetSYS,{|x|("E2_"$x[1])})>0)
+                if (SE2->(FieldPos("E2_YANTTX")>0).and.SE2->(FieldPos("E2_YANTDES")>0))
+                    aAdd(aRetorno,{"(E2_YANTTX>0).AND.(E2_YANTDES>0)",u_F040ADLE()[1][1]})
+                endif
+            elseif (aScan(aRetSYS,{|x|("E1_"$x[1])})>0)
+                if (SE1->(FieldPos("E1_YFDCPER")>0))
+                    aAdd(aRetorno,{"(E1_YFDCPER>0)",u_F040ADLE()[1][1]})
+                endif
+            endif
+        endif
+     endif
+     return(aRetorno)

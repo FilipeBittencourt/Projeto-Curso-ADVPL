@@ -39,6 +39,7 @@ Return()
 Method Create() Class TAFBorderoPagar
 Local nCount := 1
 Local cKey := ""
+local cF240TIT
 Local oLog := TAFLog():New()
 Local bKey := {|nCol| ::oLst:GetItem(nCol):cBanco + ::oLst:GetItem(nCol):cAgencia + ::oLst:GetItem(nCol):cConta + ::oLst:GetItem(nCol):cSubCta + ::oLst:GetItem(nCol):cArqcfg + ::oLst:GetItem(nCol):cArqUser + ::oLst:GetItem(nCol):cAmbiente + ::oLst:GetItem(nCol):cLayout + ::oLst:GetItem(nCol):cModelo + ::oLst:GetItem(nCol):cTpPag + ::oLst:GetItem(nCol):cTpCom}
 	
@@ -59,6 +60,8 @@ Local bKey := {|nCol| ::oLst:GetItem(nCol):cBanco + ::oLst:GetItem(nCol):cAgenci
 			If Empty(::oLst:GetItem(nCount):cNumBor)
 			
 				SE2->(DbGoTo(::oLst:GetItem(nCount):nRecNo))
+				
+				cacheData():set("F240TIT","cMens","")
 				
 				If U_F240TIT() // Bloqueia o titulo caso tenha PA em aberto (Envia WorkFlow)
 						
@@ -120,7 +123,9 @@ Local bKey := {|nCol| ::oLst:GetItem(nCol):cBanco + ::oLst:GetItem(nCol):cAgenci
 					U_F240TBOR() // PROVISORIO
 			
 				Else
-			
+
+					cF240TIT:=cacheData():get("F240TIT","cMens","")
+
 					::oLst:GetItem(nCount):lValid := .F.
 					
 					oLog:cIDProc := ::cIDProc
@@ -130,6 +135,10 @@ Local bKey := {|nCol| ::oLst:GetItem(nCol):cBanco + ::oLst:GetItem(nCol):cAgenci
 					oLog:nIDTab := ::oLst:GetItem(nCount):nRecNo
 					oLog:cHrFin := Time()
 					oLog:cRetMen := "Bloqueio Titulo com PA (U_F240TIT))"
+					if (!empty(cF240TIT))
+						oLog:cRetMen += " "
+						oLog:cRetMen += cF240TIT
+					endif
 					oLog:cEnvWF := "S"
 					
 					oLog:Insert()

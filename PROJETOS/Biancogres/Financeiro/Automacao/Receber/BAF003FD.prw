@@ -10,6 +10,8 @@ User Function BAF003FD()
 
     local lDateVld  as logical
 
+   // RpcSetEnv('01', '01')
+   
     dDate:=Date()
     dDateVld:=DataValida(dDate,.T.)
     lDateVld:=(dDate==dDateVld)
@@ -39,8 +41,10 @@ static Function BAF003FD()
 	ConOut("TAF => BAF003FD - [REGISTRO ON-LINE NORMAL FIDC] - INICIO do Processo - DATE: "+DTOC(Date())+" TIME: "+Time())
 			
 	// Envio Normal
-	oObj 				:= TAFRemessaReceber():New()
-	oObj:oMrr:lFIDC		:= .T.
+	oObj 					:= TAFRemessaReceber():New()
+	oObj:oMrr:lFIDC			:= .T.
+	oObj:oMrr:cCliFiltro	:= "" //FILTRO PARA ENVIO LM TBLSE1
+	//::cCliFiltro
 	oObj:Send()
 
 	ConOut("TAF => BAF003 - [REGISTRO ON-LINE NORMAL FIDC] - FIM do Processo - DATE: "+DTOC(Date())+" TIME: "+Time())
@@ -51,6 +55,7 @@ static Function BAF003FD()
 	oObj 					:= TAFRemessaReceber():New()
 	oObj:oMrr:lReproc		:= .T.
 	oObj:oMrr:lFIDC			:= .T.
+	oObj:oMrr:cCliFiltro	:= "" //FILTRO PARA ENVIO LM TBLSE1
 	oObj:oMrr:dEmissaoAte	:= dDataBase
 	oObj:Send()
 	

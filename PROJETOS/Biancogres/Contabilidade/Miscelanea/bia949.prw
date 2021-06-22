@@ -14,7 +14,15 @@ User Function BIA949()
 	Local M001        := GetNextAlias()
 	Local _ms
 
+	Local nW	:= 0
+	Local oProcess
+	Local oPrcZera
+
+
 	Private msrhEnter := CHR(13) + CHR(10)
+	Private msEmpAtu  := cEmpAnt
+	Private msFilAtu  := cFilAnt
+
 
 	fPerg := "BIA949"
 	fTamX1 := IIF(Alltrim(oApp:cVersion) == "MP8.11", 6, 10)
@@ -49,6 +57,68 @@ User Function BIA949()
 		Return .F.
 	EndIf	
 	(M001)->(dbCloseArea())
+
+	oEmp := TLoadEmpresa():New()
+
+	oEmp:GSEmpFil()
+
+	If Len(oEmp:aEmpSel) > 0
+
+		//Begin Transaction
+
+		For nW := 1 To Len(oEmp:aEmpSel)
+
+			RpcSetEnv( oEmp:aEmpSel[nW][1], Substr(oEmp:aEmpSel[nW][2], 1, 2) )
+
+			smMsnPrc := oEmp:aEmpSel[nW][1] + "/" + Substr(oEmp:aEmpSel[nW][2], 1, 2) + " - " + Alltrim(oEmp:aEmpSel[nW][4])
+
+			oProcess := MsNewProcess():New({|lEnd| fProcessa(@oProcess,oEmp:aEmpSel[nW][1], Substr(oEmp:aEmpSel[nW][2], 1, 2)) }, "Gravando...", smMsnPrc, .T.)
+			oProcess:Activate()
+
+			RpcClearEnv()
+
+			RpcSetEnv( msEmpAtu, msFilAtu )
+		
+			If Type("__cInternet") == "C"
+				__cInternet := Nil
+			EndIf
+
+			
+		Next nW
+
+		Aviso("Desmontagem de Versão - BIA949", "Fim do processamento..." + msrhEnter + msrhEnter + " Necessário abrir a versão correspondente!!!", {'Ok'}, 3)
+
+	Else
+		Aviso("Desmontagem de Versão - BIA949", "Não foram selecionadas empresas! Processamento não realizado" , {'Ok'}, 3)
+	EndIf
+
+
+
+	RestArea( _cAreaAtu )
+
+Return
+
+Static Function fProcessa(oProcess,_cEmp,_cFil)	
+
+	oProcess:SetRegua1(1)
+	oProcess:SetRegua2(1000)             
+
+	oProcess:IncRegua1(smMsnPrc)
+	oProcess:IncRegua2("Verificando Tabelas...")
+
+//	StartJob("U_BIA949P",GetEnvServer(),.T.,_cEmp,_cFil,_cVersao,_cRevisa,_cAnoRef,_cNewRev,oProcess)
+
+	U_BIA949P(_cEmp,_cFil,_cVersao,_cRevisa,_cAnoRef,_cNewRev,oProcess)
+	
+
+
+Return
+
+
+User Function BIA949P(_cEmp,_cFil,_cVersao,_cRevisa,_cAnoRef,_cNewRev,oProcess)
+
+	Private msrhEnter := CHR(13) + CHR(10)
+
 
 	// ,'Z96'
 	// ,'ZOY' eu criei a tabela na familia errada e com o nome do campo _VERSAO errado.
@@ -101,18 +171,15 @@ User Function BIA949()
 				XK001 += "    AND " + SX2->X2_CHAVE + "_REVISA = '" + _cRevisa + "' "
 				XK001 += "    AND " + SX2->X2_CHAVE + "_ANOREF = '" + _cAnoRef + "' "
 				XK001 += "    AND D_E_L_E_T_ = ' ' "
-				U_BIAMsgRun("Aguarde... Replicando tabela: " + SX2->X2_CHAVE ,,{|| TcSQLExec(XK001) })
-
+				//U_BIAMsgRun("Aguarde... Replicando tabela: " + SX2->X2_CHAVE ,,{|| TcSQLExec(XK001) })
+				oProcess:IncRegua2("Aguarde... Excluindo dados da tabela: " + SX2->X2_CHAVE)
+				TcSQLExec(XK001)
 			EndIf
 
 		EndIf
 
 	Next _ms
-
-	MsgINFO("Fim do processamento..." + msrhEnter + msrhEnter + " Necessário abrir a versão correspondente!!!" )
-
-	RestArea( _cAreaAtu )
-
+	
 Return
 
 /*___________________________________________________________________________

@@ -33,6 +33,7 @@ Data oFat // Fatura a receber
 Data oRcb // Objeto de regras de comunicacao bancaria
 Data oBor // Objeto de regras de bordero de recebimento
 Data lFIDC // FIDC	
+Data cCliFiltro
 
 Method New() Constructor
 Method Get()
@@ -66,6 +67,7 @@ Method New() Class TAFMovimentoRemessaReceber
 	::oRcb 			:= TAFRegraComunicacaoBancaria():New()
 	::oBor 			:= TAFBorderoReceber():New()
 	::lFIDC			:= .F.
+	::cCliFiltro	:= ""
 
 Return()
 
@@ -172,58 +174,68 @@ Method Get() Class TAFMovimentoRemessaReceber
 	cSQL += " WHERE E1_FILIAL = "+ ValToSQL(xFilial("SE1"))
 	cSQL += " AND E1_TIPO IN ('NF', 'FT', 'BOL', 'ST') "
 
-	// Tratmento para enviar titulos Provisorios (PR/CT) no mesmo dia, quando os mesmos tem erro de regra
-	cSQL += " AND ( ( E1_EMISSAO BETWEEN " + ValToSQL(::dEmissaoDe) + " AND " + ValToSQL(dDataBase) + " AND E1_TIPO = 'BOL' AND SUBSTRING(E1_PREFIXO, 1, 2) IN ('PR', 'CT') AND E1_PEDIDO <> '' )
-	cSQL += " OR "
-	cSQL += " 	   ( E1_EMISSAO BETWEEN " + ValToSQL(::dEmissaoDe) + " AND " + ValToSQL(::dEmissaoAte) + " ) "
-	cSQL += " OR "
-	cSQL += " 	   ( E1_TIPO = 'FT' AND E1_EMISSAO BETWEEN " + ValToSQL(::dEmissaoDe) + " AND " + ValToSQL(dDataBase) + " ) ) "
-
-	cSQL += " AND E1_YFORMA NOT IN ('3', '4') " // Não processa esses titulos
-
-	If ::lReproc
-
-		cSQL += " AND E1_NUMBOR <> '' "
-		cSQL += " AND E1_YSITAPI NOT IN ('2', '') "
-		cSQL += " AND E1_VENCREA >= " + ValToSQL(::dEmissaoAte)
-
-	Else
-
-		If !Empty(::cCliExc)
-
-			cSQL += " AND E1_CLIENTE NOT IN " + FormatIn(::cCliExc, "|")
-
-		EndIf
-
-		If !Empty(::cCliente) .And. !Empty(::cLoja)
-
-			cSQL += " AND E1_CLIENTE = " + ValToSQL(::cCliente) + " AND E1_LOJA = " + ValToSQL(::cLoja)
-
-		EndIf
-
-		If ::lReenvBord
-
-			cSQL += " AND E1_NUMBOR BETWEEN " + ValToSQL(::cBorDe) + " AND " + ValToSQL(::cBorAte)
-
+	
+	If (Empty(::cCliFiltro))
+	
+		// Tratmento para enviar titulos Provisorios (PR/CT) no mesmo dia, quando os mesmos tem erro de regra
+		cSQL += " AND ( ( E1_EMISSAO BETWEEN " + ValToSQL(::dEmissaoDe) + " AND " + ValToSQL(dDataBase) + " AND E1_TIPO = 'BOL' AND SUBSTRING(E1_PREFIXO, 1, 2) IN ('PR', 'CT') AND E1_PEDIDO <> '' )
+		cSQL += " OR "
+		cSQL += " 	   ( E1_EMISSAO BETWEEN " + ValToSQL(::dEmissaoDe) + " AND " + ValToSQL(::dEmissaoAte) + " ) "
+		cSQL += " OR "
+		cSQL += " 	   ( E1_TIPO = 'FT' AND E1_EMISSAO BETWEEN " + ValToSQL(::dEmissaoDe) + " AND " + ValToSQL(dDataBase) + " ) ) "
+	
+		cSQL += " AND E1_YFORMA NOT IN ('3', '4') " // Não processa esses titulos
+	
+		If ::lReproc
+	
+			cSQL += " AND E1_NUMBOR <> '' "
+			cSQL += " AND E1_YSITAPI NOT IN ('2', '') "
+			cSQL += " AND E1_VENCREA >= " + ValToSQL(::dEmissaoAte)
+	
 		Else
-
-			cSQL += " AND E1_NUMBOR = '' "
-
+	
+			If !Empty(::cCliExc)
+	
+				cSQL += " AND E1_CLIENTE NOT IN " + FormatIn(::cCliExc, "|")
+	
+			EndIf
+	
+			If !Empty(::cCliente) .And. !Empty(::cLoja)
+	
+				cSQL += " AND E1_CLIENTE = " + ValToSQL(::cCliente) + " AND E1_LOJA = " + ValToSQL(::cLoja)
+	
+			EndIf
+	
+			If ::lReenvBord
+	
+				cSQL += " AND E1_NUMBOR BETWEEN " + ValToSQL(::cBorDe) + " AND " + ValToSQL(::cBorAte)
+	
+			Else
+	
+				cSQL += " AND E1_NUMBOR = '' "
+	
+			EndIf
+	
+			If !Empty(::cPedido)
+	
+				cSQL += " AND E1_PEDIDO = " + ValToSQL(::cPedido)
+	
+			EndIf
+	
 		EndIf
-
-		If !Empty(::cPedido)
-
-			cSQL += " AND E1_PEDIDO = " + ValToSQL(::cPedido)
-
-		EndIf
-
-	EndIf
-
-
-	cSQL += " AND SE1.E1_YSITAPI <> '4' "
-	cSQL += " AND SE1.E1_SALDO > 0 "
-	cSQL += " AND SE1.D_E_L_E_T_ = '' "
-	cSQL += " AND SA1.D_E_L_E_T_ = '' "
+		
+		cSQL += " AND SE1.E1_YSITAPI <> '4' "
+		cSQL += " AND SE1.E1_SALDO > 0 "
+		cSQL += " AND SE1.D_E_L_E_T_ = '' "
+		cSQL += " AND SA1.D_E_L_E_T_ = '' "
+	
+	Else
+		cSQL += " AND exists (select 1 from TBLSE1 T where T.R_E_C_N_O_ = SE1.R_E_C_N_O_ )  "
+		cSQL += " AND E1_YSITAPI NOT IN ('2', '') 											"
+		cSQL += " AND SE1.E1_SALDO > 0 														"
+		cSQL += " AND SE1.D_E_L_E_T_ = '' 													"
+		cSQL += " AND SA1.D_E_L_E_T_ = '' 													"
+	Endif
 	
 	
 	cSQL += " AND											"

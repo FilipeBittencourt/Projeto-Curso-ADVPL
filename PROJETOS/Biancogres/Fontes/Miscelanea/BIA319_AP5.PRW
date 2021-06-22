@@ -1,5 +1,8 @@
-#include "rwmake.ch"
-#INCLUDE "TOPCONN.CH"
+#Include "rwmake.ch"
+#Include "TOPCONN.CH"
+#Include "PROTHEUS.CH"
+#Include "TBICONN.CH"
+#Include "TBICODE.CH"
 
 User Function BIA319()
 
@@ -27,12 +30,16 @@ User Function BIA319()
 	Local nLinhaEmp		:= Nil
 	Local cRetEmp		:= Nil
 	Local _NomeAprov	:= Upper(cUserName)
-
+	Local cMsg			:= ""
+	Local lOk			:= .F.
+	Local oTMultiget1	:= Nil
+	Local oTButton1 	:= Nil
+	Local oDlg			:= Nil
 
 	Do Case
-		Case wOpcao == "L"
+	Case wOpcao == "L"
 		lLiberar  := .T.
-		Case wOpcao == "B"
+	Case wOpcao == "B"
 		lBloquear := .T.
 	EndCase
 
@@ -55,21 +62,33 @@ User Function BIA319()
 
 	//Seleciona ordem 
 	If lLiberar
-		
-		oLibBloq 			:= TLiberacaoBloqueioPedidoVenda():New()
 	
-		oLibBloq:cEmp 		:= cEmpAnt
-		oLibBloq:cFil 		:= cFilAnt
-		oLibBloq:cNumPed	:= wPedido
-		oLibBloq:cCodAprov	:= __cUserID
-		oLibBloq:lAprovTemp	:= (AllTrim(UZ7->UZ7_AAPROV) <> AllTrim(__cUserID) .Or. AllTrim(UZ7->UZ7_AAPROV) <> AllTrim(_NomeAprov))
-		oLibBloq:cOrigem	:= 'T'
-		oLibBloq:lJob		:= .F.
-		oLibBloq:cObs		:= ''
+		DEFINE DIALOG oDlg TITLE "Justificativa para Liberação" FROM 180,180 TO 280, 600 PIXEL
+				
+			oTMultiget1	:= TMultiGet():new( 01, 01, {| u | if( pCount() > 0, cMsg := u, cMsg ) }, oDlg, 210, 30, , , , , , .T. )
+			oTButton1 	:= TButton():New(35, 170, "Liberar", oDlg,{|| lOk :=.T. , oDlg:End()}, 40,10,,,.F.,.T.,.F.,,.F.,,,.F. )   
 		
-		oLibBloq:Liberar()
-		
-		
+		ACTIVATE DIALOG oDlg CENTERED
+	
+		If (lOk)
+			//If (!Empty(cMsg)) <- NÃO DEVE SER OBRIGATÓRIO.
+				oLibBloq 			:= TLiberacaoBloqueioPedidoVenda():New()
+	
+				oLibBloq:cEmp 		:= cEmpAnt
+				oLibBloq:cFil 		:= cFilAnt
+				oLibBloq:cNumPed	:= wPedido
+				oLibBloq:cCodAprov	:= __cUserID
+				oLibBloq:lAprovTemp	:= (AllTrim(UZ7->UZ7_AAPROV) <> AllTrim(__cUserID) .Or. AllTrim(UZ7->UZ7_AAPROV) <> AllTrim(_NomeAprov))
+				oLibBloq:cOrigem	:= 'T'
+				oLibBloq:lJob		:= .F.
+				oLibBloq:cObs		:= cMsg
+				
+				oLibBloq:Liberar()
+			//Else
+			//	Alert("Por favor, informe uma justificativa de liberação do pedido.")
+			//EndIf
+		EndIf
+
 		/*//Libera Cabeçalho Pedido
 		dbSelectArea("SC5")
 		dbSetOrder(1)	
@@ -87,10 +106,10 @@ User Function BIA319()
 		dbSelectArea("SC6")
 		dbSetOrder(1)
 		If dbSeek(xFilial("SC6")+SC5->C5_NUM,.F.)
-			While ! Eof() .And. SC6->C6_NUM == SC5->C5_NUM       	
+			While ! Eof() .And. SC6->C6_NUM == SC5->C5_NUM
 
 				//Se o pedido estiver eliminado por residuo, não faz nada
-				If Alltrim(SC6->C6_BLQ) == "R"		
+				If Alltrim(SC6->C6_BLQ) == "R"
 					SC6->(DbSkip())
 					Loop
 				EndIf
@@ -121,7 +140,7 @@ User Function BIA319()
 		//*****************************************************************************************************************************
 		//Fernando/Facile em 02/10/2014 - Projeto Reserva de OP/Lote - Só enviaar o email de pedido apos liberacao das rejeicoes de lote
 		//*****************************************************************************************************************************
-		If U_FROPVLPV(SC5->C5_NUM, .F., .F.) .And. U_fVlLbDes(SC5->C5_NUM,SC5->C5_YCLIORI)   
+		If U_FROPVLPV(SC5->C5_NUM, .F., .F.) .And. U_fVlLbDes(SC5->C5_NUM,SC5->C5_YCLIORI)
 
 			//(Thiago - 17/04/15) -> Envitar o envio do pedido errado.
 			cEmpPed := cEmpAnt
@@ -141,17 +160,17 @@ User Function BIA319()
 
 				//Fernando/Facile em 02/09 - atualizar data das reservas de acordo com vencimento dodo boleto antecipado
 				U_FR2VLRES(SC5->C5_NUM)	
-			Else          
-				IF (SC5->C5_YENVIO <> "S") 
+			Else
+				IF (SC5->C5_YENVIO <> "S")
 					//cTexto := DTOC(dDataBase)+"-"+SUBSTR(Time(),1,5)+" -  Ped.: "+SC5->C5_NUM+" - Tipo: "+SC5->C5_TIPO+" - Aprov: "+Alltrim(SC5->C5_YAPROV)+" - SEMAIL: "+SEMAIL
 					//MemoWrite("\PNE\PNE_"+cempant+AllTrim(SC5->C5_NUM)+".TXT", cTexto)
 				ENDIF
-			EndIf  
+			EndIf
 
 		EndIf //Fernando
 
 		*/
-		
+
 		/*
 		//Ticket - 9533
 		If (AllTrim(CEMPANT) == "07" .And. !Empty(SC5->C5_YPEDORI))
@@ -165,7 +184,7 @@ User Function BIA319()
 					cRetEmp		:= U_FROPCPRO(SubStr(nLinhaEmp, 1, 2),SubStr(nLinhaEmp, 3, 2),"U_XEMPAUPO", SC5->C5_YPEDORI, SC5->C5_YAPROV)
 					CONOUT("TLIBERACAOCOMERCIALPEDIDOVENDA (BIA319) - EMPENHO AUTOMATICO - Pedido: "+SC5->C5_YPEDORI+",  "+cRetEmp)
 				EndIf
-			EndIf		
+			EndIf
 		Else
 
 			//Ticket 12575 - Pedido de Amostra nao gera empenho automatico
@@ -178,20 +197,20 @@ User Function BIA319()
 
 				If (!Empty(_aRetEmp[2]))
 					CONOUT("TLIBERACAOCOMERCIALPEDIDOVENDA - EMPENHO AUTOMATICO - Alerta empenho automático do pedido: "+_aRetEmp[2])
-				EndIf	
+				EndIf
 
 			EndIf
 			
 		EndIf
 		*/
-		
+
 		/*
 		_oEmpAut := TBiaEmpenhoPedido():New()
 		_aRetEmp := _oEmpAut:LibPedido(wPedido)
 
 		If (!Empty(_aRetEmp[2]))
 		CONOUT("BIA319 - EMPENHO AUTOMATICO TELA GERENTE - Alerta empenho automático do pedido: "+_aRetEmp[2])
-		EndIf	
+		EndIf
 		//Fim
 		*/
 
@@ -207,7 +226,7 @@ User Function BIA319()
 			SC5->(MsUnlock())  
 		ENDIF
 		*/
-		
+
 	EndIf
 
 	If lBloquear
@@ -217,7 +236,7 @@ User Function BIA319()
 		If DbSeek(xFilial("SC5")+wPedido,.T.)
 			Reclock("SC5",.F.)
 			SC5->C5_YAPROV := Space(15)
-			SC5->(MsUnlock())  
+			SC5->(MsUnlock())
 		EndIf
 
 		dbSelectArea("SC6")
@@ -226,7 +245,7 @@ User Function BIA319()
 			While ! Eof() .And. SC6->C6_NUM == SC5->C5_NUM
 
 				//Se o pedido estiver eliminado por residuo, não faz nada
-				If Alltrim(SC6->C6_BLQ) == "R"		
+				If Alltrim(SC6->C6_BLQ) == "R"
 					SC6->(DbSkip())
 					Loop
 				EndIf
@@ -237,7 +256,7 @@ User Function BIA319()
 				SC6->(DbSkip())
 
 			EndDo
-			SC6->(MsUnlock())  
+			SC6->(MsUnlock())
 		EndIf
 	EndIf
 

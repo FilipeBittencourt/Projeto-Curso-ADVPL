@@ -1033,11 +1033,8 @@ method GetEndereco(cDoc,cSerie,cItem,cCodCli,cLojaCli,nZL9RecNo) class TAutomaca
     local aArea     as array
     
     local cSQL      as character
-    local cTmpAlias as character
     local cEnderec  as character
-
-    local nZ25RecNo as numeric
-    local nZ26RecNo as numeric
+    local cTmpAlias as character
 
     aArea:=getArea()
     cTmpAlias:=GetNextAlias()
@@ -1054,13 +1051,7 @@ method GetEndereco(cDoc,cSerie,cItem,cCodCli,cLojaCli,nZL9RecNo) class TAutomaca
 
     if ((cTmpAlias)->(!eof()))
 
-        nZ25RecNo:=(cTmpAlias)->Z25RECNO
-        nZ26RecNo:=(cTmpAlias)->Z26RECNO
-        
-        Z25->(MsGoTo(nZ25RecNo))
-        Z26->(MsGoTo(nZ26RecNo))
-
-        if (Z25->Z25_RETMRC=="S")
+        if ((cTmpAlias)->Z25_RETMRC=="S")
 
             cEnderec:="DEVOLUCAO"
 
@@ -1894,6 +1885,7 @@ method DocOriCmpAut(nZL9RecNo) class TAutomacaoDevolucaoIntercompany
     local cLog          as character
     local cSQL          as character
     local cTblTmp       as character
+    local cPrgCmp       as character
 
     local dDataBase     as date
 
@@ -1933,19 +1925,23 @@ method DocOriCmpAut(nZL9RecNo) class TAutomacaoDevolucaoIntercompany
 
     self:AddLog("Inicio Compensação Titulos: "+cLog )
 
-    lFinMovCmp:=cacheData():get("SE5FI340","lRet",.F.)
+    cPrgCmp:="SE5FI340"
+    lFinMovCmp:=cacheData():get(cPrgCmp,"lRet",.F.)
     
-    cacheData():delSection("SE5FI340")
+    cacheData():delSection(cPrgCmp)
 
     if (!lFinMovCmp)
-        lFinMovCmp:=cacheData():get("SE5FI341","lRet",.F.)
+        cPrgCmp:="SE5FI341"
+        lFinMovCmp:=cacheData():get(cPrgCmp,"lRet",.F.)
     endif
 
-    cacheData():delSection("SE5FI341")
+    cacheData():delSection(cPrgCmp)
 
     lCompTit:=lFinMovCmp
 
     if (!lCompTit)
+
+        cPrgCmp:=ProcName()
 
         cSQL:=TAutDevIntQry():DocOriCmpAut(nZL9RecNo)
         
@@ -1990,9 +1986,12 @@ method DocOriCmpAut(nZL9RecNo) class TAutomacaoDevolucaoIntercompany
     cMsg:=cLog
 
     if (lCompTit)
-        cMsg+="self: Compensação Automática realizada com sucesso"
+        cMsg+="Compensação Automática realizada com sucesso :: "
+        cMsg+="("
+        cMsg+=cPrgCmp
+        cMsg+=")"
     else
-        cMsg+="self: Titulo Não Compensado. Efetuar compensação Manual."
+        cMsg+="Titulo Não Compensado. Efetuar compensação Manual."
         varInfo("aNF",aNF)
         varInfo("aPA_NDF",aPA_NDF)
     endif
@@ -2897,6 +2896,8 @@ method GetProcDev(nZL9RecNo) class TAutomacaoDevolucaoIntercompany
 
     local cProcDev  as character
 
+    local lEmpEqual as logical
+
     local nZ25RecNo as numeric
     local nZ26RecNo as numeric
 
@@ -2910,6 +2911,8 @@ method GetProcDev(nZL9RecNo) class TAutomacaoDevolucaoIntercompany
     self:nZL9RecNo:=nZL9RecNo
     ZL9->(MsGoto(nZL9RecNo))
 
+    lEmpEqual:=(&("cEmpAnt")==ZL9->ZL9_CODEMP)
+
     if (empty(ZL9->ZL9_PRCDEV))
 
         cSQL:=TAutDevIntQry():GetProcDev(nZL9RecNo)
@@ -2919,36 +2922,42 @@ method GetProcDev(nZL9RecNo) class TAutomacaoDevolucaoIntercompany
         TCQUERY (cSQL) ALIAS (cTmpAlias) NEW
 
         if ((cTmpAlias)->(!eof()))
-            nZ25RecNo:=(cTmpAlias)->Z25RECNO
-            nZ26RecNo:=(cTmpAlias)->Z26RECNO
+            cProcDev:=(cTmpAlias)->Z25_NUM
+            if (lEmpEqual)
+                nZ25RecNo:=(cTmpAlias)->Z25RECNO
+                nZ26RecNo:=(cTmpAlias)->Z26RECNO
+            endif
         endif
+
         (cTmpAlias)->(dbCloseArea())
 
-        if (nZ25RecNo>0)
-            Z25->(MsGoTo(nZ25RecNo))
+        if (!empty(cProcDev))
             if (ZL9->(RecLock("ZL9",.F.)))
-                ZL9->ZL9_PRCDEV:=Z25->Z25_NUM
+                ZL9->ZL9_PRCDEV:=cProcDev
                 ZL9->(MSUnLock())
             endif
-            cProcDev:=ZL9->ZL9_PRCDEV
         endif
 
     else
 
         cProcDev:=ZL9->ZL9_PRCDEV
 
-        nZ25Order:=retOrder("Z25","Z25_FILIAL+Z25_NUM")
-        Z25->(dbSetOrder(nZ25Order))
-        if (Z25->(dbSeek(xFilial("Z25")+cProcDev,.F.)))
-            nZ25RecNo:=Z25->(RecNo())
+        if (lEmpEqual)
+            nZ25Order:=retOrder("Z25","Z25_FILIAL+Z25_NUM")
+            Z25->(dbSetOrder(nZ25Order))
+            if (Z25->(dbSeek(xFilial("Z25")+cProcDev,.F.)))
+                nZ25RecNo:=Z25->(RecNo())
+            endif
         endif
 
     endif
 
-    if (!empty(nZ25RecNo))
-        Z25->(MsGoTo(nZ25RecNo))
-        if (!empty(nZ26RecNo))
-            Z26->(MsGoTo(nZ26RecNo))
+    if (lEmpEqual)
+        if (!empty(nZ25RecNo))
+            Z25->(MsGoTo(nZ25RecNo))
+            if (!empty(nZ26RecNo))
+                Z26->(MsGoTo(nZ26RecNo))
+            endif
         endif
     endif
 

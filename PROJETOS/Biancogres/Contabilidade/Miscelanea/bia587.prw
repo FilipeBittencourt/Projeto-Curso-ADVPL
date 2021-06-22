@@ -140,6 +140,10 @@ Static Function fBIA587H()
 		MsgInfo("O preenchimento do campo VersãoContábil é Obrigatório!!!")
 		Return .F.
 	EndIf
+	If Substr(_cVersCont, 1, 1) <> "D"
+		MsgSTOP("Esta rotina aceita somente Versões Contábeis do Tipo FORECAST!!!")
+		Return .F.
+	EndIf	
 	If !MsgYesNo("Deseja filtrar por data antes de prosseguir?", "Atenção")
 		If !Empty(_cVersao) .and. !Empty(_cRevisa) .and. !Empty(_cAnoRef) .and. !Empty(_cVersCont)
 			_oGetDados:oBrowse:SetFocus()
@@ -660,24 +664,32 @@ User Function B587LOK()
 	xxITEMC    := GdFieldGet("ZOZ_ITEMC", n)
 
 	If xxDC == "1"
-		If Empty(xxDEBITO) .or. Empty(xxCLVLDB) .or. !Empty(xxCREDIT) .or. !Empty(xxCLVLCR) .or. !Empty(xxITEMC)
-			If Alltrim(xxDEBITO) <> "41301001"
-				MsgINFO("Favor verificar o tipo de lançamento vs conta e classe de valor preenchidos, pois são conflitantes!!!")
-				Return .F.
+		If Substr(xxDEBITO,1,5) <> "41399" 
+			If !Substr(xxDEBITO, 1, 3) $ "411/412" 
+				If Empty(xxDEBITO) .or. Empty(xxCLVLDB) .or. !Empty(xxCREDIT) .or. !Empty(xxCLVLCR) .or. !Empty(xxITEMC)
+					If Alltrim(xxDEBITO) <> "41301001"
+						MsgINFO("Favor verificar o tipo de lançamento vs conta e classe de valor preenchidos, pois são conflitantes!!!")
+						Return .F.
+					EndIf
+				EndIf
 			EndIf
 		EndIf
 	EndIf
 
 	If xxDC == "2"
-		If Empty(xxCREDIT) .or. Empty(xxCLVLCR) .or. !Empty(xxDEBITO) .or. !Empty(xxCLVLDB) .or. !Empty(xxITEMD)
-			If Alltrim(xxCREDIT) == "41301001"
-				If !Empty(xxCLVLCR) .or. !Empty(xxCLVLDB)
-					MsgINFO("Favor verificar, pois a conta 41301001 quanto receita não pode ter classe de valor associada!!!")
-					Return .F.
+		If Substr(xxCREDIT,1,5) <> "41399"
+			If !Substr(xxCREDIT, 1, 3) $ "411/412" 
+				If Empty(xxCREDIT) .or. Empty(xxCLVLCR) .or. !Empty(xxDEBITO) .or. !Empty(xxCLVLDB) .or. !Empty(xxITEMD)
+					If Alltrim(xxCREDIT) == "41301001"
+						If !Empty(xxCLVLCR) .or. !Empty(xxCLVLDB)
+							MsgINFO("Favor verificar, pois a conta 41301001 quanto receita não pode ter classe de valor associada!!!")
+							Return .F.
+						EndIf
+					Else
+						MsgINFO("Favor verificar o tipo de lançamento vs conta e classe de valor preenchidos, pois são conflitantes!!!")
+						Return .F.
+					EndIf
 				EndIf
-			Else
-				MsgINFO("Favor verificar o tipo de lançamento vs conta e classe de valor preenchidos, pois são conflitantes!!!")
-				Return .F.
 			EndIf
 		EndIf
 	EndIf

@@ -108,14 +108,15 @@ Return(lRet)
 
 Method Validate() Class TParComprovanteVistoriaObraEngenharia
 Local lRet := .T.
-	
+	//Ticket 32725 - Removido o DataValida permitindo os representantes realizarem vistoria de obras em dias não úteis.
+	/*
 	If MV_PAR03 <> DataValida(MV_PAR03)
 			
 		lRet := .F.
 		
 		MsgStop("Atenção, data de realização da vistoria inválida.")
-			
-	ElseIf !File(MV_PAR05)
+	*/	
+	If !File(MV_PAR05)
 		
 		lRet := .F.
 		

@@ -464,7 +464,7 @@ User Function BIA677N1()
 	RK001 += Alltrim("                AND ZBZ_VERSAO = '" + cVersao + "'                                                                                                     ") + msEnter
 	RK001 += Alltrim("                AND ZBZ_REVISA = '" + cRevisa + "'                                                                                                     ") + msEnter
 	RK001 += Alltrim("                AND ZBZ_ANOREF = '" + cAnoRef + "'                                                                                                     ") + msEnter
-	RK001 += Alltrim("                AND ZBZ_DATA BETWEEN '" + cDatIni + "' AND '" + cDatFin + "'                                                                       ") + msEnter
+	RK001 += Alltrim("                AND ZBZ_DATA BETWEEN '" + cDatIni + "' AND '" + cDatFin + "'                                                                           ") + msEnter
 	RK001 += Alltrim("                AND ZBZ_LOTE = '008840'                                                                                                                ") + msEnter
 	RK001 += Alltrim("                AND SUBSTRING(ZBZ_DEBITO, 1, 1) = '6'                                                                                                  ") + msEnter
 	RK001 += Alltrim("                AND SUBSTRING(ZBZ_DEBITO, 1, 2) <> '62'                                                                                                ") + msEnter
@@ -484,7 +484,7 @@ User Function BIA677N1()
 	RK001 += Alltrim("                AND ZBZ_VERSAO = '" + cVersao + "'                                                                                                     ") + msEnter
 	RK001 += Alltrim("                AND ZBZ_REVISA = '" + cRevisa + "'                                                                                                     ") + msEnter
 	RK001 += Alltrim("                AND ZBZ_ANOREF = '" + cAnoRef + "'                                                                                                     ") + msEnter
-	RK001 += Alltrim("                AND ZBZ_DATA BETWEEN '" + cDatIni + "' AND '" + cDatFin + "'                                                                       ") + msEnter
+	RK001 += Alltrim("                AND ZBZ_DATA BETWEEN '" + cDatIni + "' AND '" + cDatFin + "'                                                                           ") + msEnter
 	RK001 += Alltrim("                AND ZBZ_LOTE = '008840'                                                                                                                ") + msEnter
 	RK001 += Alltrim("                AND SUBSTRING(ZBZ_CREDIT, 1, 1) = '6'                                                                                                  ") + msEnter
 	RK001 += Alltrim("                AND SUBSTRING(ZBZ_CREDIT, 1, 2) <> '62'                                                                                                ") + msEnter
@@ -504,7 +504,7 @@ User Function BIA677N1()
 	RK001 += Alltrim("                AND ZBZ_VERSAO = '" + cVersao + "'                                                                                                     ") + msEnter
 	RK001 += Alltrim("                AND ZBZ_REVISA = '" + cRevisa + "'                                                                                                     ") + msEnter
 	RK001 += Alltrim("                AND ZBZ_ANOREF = '" + cAnoRef + "'                                                                                                     ") + msEnter
-	RK001 += Alltrim("                AND ZBZ_DATA BETWEEN '" + cDatIni + "' AND '" + cDatFin + "'                                                                       ") + msEnter
+	RK001 += Alltrim("                AND ZBZ_DATA BETWEEN '" + cDatIni + "' AND '" + cDatFin + "'                                                                           ") + msEnter
 	RK001 += Alltrim("                AND ZBZ_LOTE <> '008840'                                                                                                               ") + msEnter
 	RK001 += Alltrim("                AND SUBSTRING(ZBZ_DEBITO, 1, 1) = '6'                                                                                                  ") + msEnter
 	RK001 += Alltrim("                AND SUBSTRING(ZBZ_DEBITO, 1, 2) <> '62'                                                                                                ") + msEnter
@@ -524,7 +524,7 @@ User Function BIA677N1()
 	RK001 += Alltrim("                AND ZBZ_VERSAO = '" + cVersao + "'                                                                                                     ") + msEnter
 	RK001 += Alltrim("                AND ZBZ_REVISA = '" + cRevisa + "'                                                                                                     ") + msEnter
 	RK001 += Alltrim("                AND ZBZ_ANOREF = '" + cAnoRef + "'                                                                                                     ") + msEnter
-	RK001 += Alltrim("                AND ZBZ_DATA BETWEEN '" + cDatIni + "' AND '" + cDatFin + "'                                                                       ") + msEnter
+	RK001 += Alltrim("                AND ZBZ_DATA BETWEEN '" + cDatIni + "' AND '" + cDatFin + "'                                                                           ") + msEnter
 	RK001 += Alltrim("                AND ZBZ_LOTE <> '008840'                                                                                                               ") + msEnter
 	RK001 += Alltrim("                AND SUBSTRING(ZBZ_CREDIT, 1, 1) = '6'                                                                                                  ") + msEnter
 	RK001 += Alltrim("                AND SUBSTRING(ZBZ_CREDIT, 1, 2) <> '62'                                                                                                ") + msEnter
@@ -569,7 +569,7 @@ User Function BIA677N1()
 	RK001 += Alltrim("                                       AND RTRIM(CTA) NOT IN('61601022')                                                                               ") + msEnter
 	RK001 += Alltrim("                                       AND SUBSTRING(CTH_YCRIT, 1, 1) <> 'L'))                                                                         ") + msEnter
 	RK001 += Alltrim("                              THEN CASE                                                                                                                ") + msEnter
-	RK001 += Alltrim("                                       WHEN CLVL = 3141                                                                                                ") + msEnter
+	RK001 += Alltrim("                                       WHEN CLVL = '3141'                                                                                              ") + msEnter
 	RK001 += Alltrim("                                       THEN 'AC00'                                                                                                     ") + msEnter
 	RK001 += Alltrim("                                       WHEN SUBSTRING(CLVL, 2, 1) = '1'                                                                                ") + msEnter
 	RK001 += Alltrim("                                       THEN 'AC01'                                                                                                     ") + msEnter
@@ -577,7 +577,7 @@ User Function BIA677N1()
 	RK001 += Alltrim("                                       THEN 'AC05'                                                                                                     ") + msEnter
 	RK001 += Alltrim("                                       ELSE 'AC00'                                                                                                     ") + msEnter
 	RK001 += Alltrim("                                   END                                                                                                                 ") + msEnter
-	RK001 += Alltrim("                              ELSE SUBSTRING(CTH_DESC04, 1, 4)                                                                                         ") + msEnter
+	RK001 += Alltrim("                              ELSE SUBSTRING(ZF2_AGGRAT, 1, 4)                                                                                         ") + msEnter
 	RK001 += Alltrim("                          END,                                                                                                                         ") + msEnter
 	RK001 += Alltrim("                 CRIT = SUBSTRING(CTH_YCRIT, 1, 3),                                                                                                    ") + msEnter
 	RK001 += Alltrim("                 VALOR = SUM(VALOR)                                                                                                                    ") + msEnter
@@ -589,6 +589,9 @@ User Function BIA677N1()
 	RK001 += Alltrim("                                                AND CTH_CLVL = CLVL                                                                                    ") + msEnter
 	RK001 += Alltrim("                                                AND CTH_YAPLCT = 'S'                                                                                   ") + msEnter
 	RK001 += Alltrim("                                                AND CTH.D_E_L_E_T_ = ' '                                                                               ") + msEnter
+	RK001 += Alltrim("               LEFT JOIN " + RetSqlName("ZF2") + " ZF2(NOLOCK) ON ZF2_FILIAL = '" + xFilial("ZF2") + "'                                                ") + msEnter
+	RK001 += Alltrim("                                               AND ZF2_CODIGO = CTH_YAGRAT                                                                             ") + msEnter
+	RK001 += Alltrim("                                               AND ZF2.D_E_L_E_T_ = ' '                                                                                ") + msEnter
 	RK001 += Alltrim("          GROUP BY PERIODO,                                                                                                                            ") + msEnter
 	RK001 += Alltrim("                   APL,                                                                                                                                ") + msEnter
 	RK001 += Alltrim("                   CTA,                                                                                                                                ") + msEnter
@@ -596,7 +599,7 @@ User Function BIA677N1()
 	RK001 += Alltrim("                   CT1_YITCUS,                                                                                                                         ") + msEnter
 	RK001 += Alltrim("                   SUBSTRING(CT1_YAGRUP, 1, 10),                                                                                                       ") + msEnter
 	RK001 += Alltrim("                   CLVL,                                                                                                                               ") + msEnter
-	RK001 += Alltrim("                   SUBSTRING(CTH_DESC04, 1, 4),                                                                                                        ") + msEnter
+	RK001 += Alltrim("                   SUBSTRING(ZF2_AGGRAT, 1, 4),                                                                                                        ") + msEnter
 	RK001 += Alltrim("                   CTH_YITCUS,                                                                                                                         ") + msEnter
 	RK001 += Alltrim("                   SUBSTRING(CTH_YCRIT, 1, 3),                                                                                                         ") + msEnter
 	RK001 += Alltrim("                   SUBSTRING(CTH_YCRIT, 1, 1)),                                                                                                        ") + msEnter
@@ -762,7 +765,7 @@ User Function BIA677N1()
 	RK001 += Alltrim("             REGRAC,                                                                                                                                   ") + msEnter
 	RK001 += Alltrim("             RATEIO                                                                                                                                    ") + msEnter
 	RK001 += Alltrim("      INTO " + ms1TbTemp + "                                                                                                                           ") + msEnter
-	RK001 += Alltrim("      FROM TABFINAL;                                                                                                                                   ") + msEnter
+	RK001 += Alltrim("      FROM TABFINAL                                                                                                                                    ") + msEnter
 
 Return( RK001 )
 

@@ -166,7 +166,7 @@ Method LoadBrowser() Class TWOrcamentoClvl
 Local cVldDef := "AllwaysTrue"
 Local nMaxLine := 1000
 
-	RegToMemory(::cFDTable, ::nFDOpc == 3)
+	//RegToMemory(::cFDTable, ::nFDOpc == 3)
 	
 	::oGD := MsNewGetDados():New(0, 0, 0, 0, GD_INSERT + GD_UPDATE + GD_DELETE, cVldDef, cVldDef, "", ::GDEditableField(),, nMaxLine, cVldDef,, cVldDef, ::oContainer:GetPanel(::cItemBox), ::GDFieldProperty(), ::GDFieldData())
 	::oGD:bFieldOk := {|| ::ValidField() }
@@ -501,7 +501,11 @@ Method Cancel(lClose) Class TWOrcamentoClvl
 
 	Default lClose := .F.
 
-	RollBackSx8()
+	//If ::nFDOpc == 3
+
+		//RollBackSx8()
+		
+	//EndIf
 
 	If lClose
 		
@@ -509,4 +513,5 @@ Method Cancel(lClose) Class TWOrcamentoClvl
 		
 	EndIf
 
+Return()
 Return()

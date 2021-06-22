@@ -29,6 +29,8 @@
 #DEFINE nP_CLIENTE 5
 #DEFINE nP_NUMOBR 8
 #DEFINE nP_DOC 13
+#DEFINE nP_SERIE 14
+#DEFINE nP_ITEM 15
 #DEFINE nP_ARQCP3 20
 #DEFINE nP_ARQCP2 21
 #DEFINE nP_ARQCP3 22
@@ -439,6 +441,7 @@ Local cSourceFile := ""
 Local cDtVis := ""
 Local cCliente := "" 
 Local cNumObr := ""
+Local cNumDoc := ""
 Local cFile := ""
 Local cParam := ""
 Local cDrive := ""
@@ -458,7 +461,11 @@ Local cTargetPath := "\p10\vistoria_obra\termo\"
 		cCliente := AllTrim(::oBrw:aCols[::oBrw:oBrowse:nAt, nP_CLIENTE])
 		cNumObr := AllTrim(::oBrw:aCols[::oBrw:oBrowse:nAt, nP_NUMOBR])
 	
-		cSourceFile := Lower("termo_" + cEmpAnt + "_" + cDtVis + "_" + cCliente + If (!Empty(cNumObr), "_" + cNumObr, "") + ".pdf")
+		If(Empty(cNumObr))
+			cNumDoc := AllTrim(::oBrw:aCols[::oBrw:oBrowse:nAt, nP_DOC]) + AllTrim(::oBrw:aCols[::oBrw:oBrowse:nAt, nP_SERIE]) + AllTrim(::oBrw:aCols[::oBrw:oBrowse:nAt, nP_ITEM])
+		Endif
+
+		cSourceFile := Lower("termo_" + cEmpAnt + "_" + cDtVis + "_" + cCliente + If (!Empty(cNumObr), "_" + cNumObr, If (!Empty(cNumDoc), "_" + cNumDoc, "")) + ".pdf")
 		
 		cFile := GetTempPath() + cSourceFile
 			
@@ -475,9 +482,9 @@ Local cTargetPath := "\p10\vistoria_obra\termo\"
 					oObjTerm := TTermoVistoriaObraEngenharia():New()
 				
 					if(!Empty(AllTrim(::oBrw:aCols[::oBrw:oBrowse:nAt, nP_NUMOBR])))
-						oObjTerm:nobra := AllTrim(::oBrw:aCols[::oBrw:oBrowse:nAt, nP_NUMOBR])
+						oObjTerm:nobra := cNumObr //AllTrim(::oBrw:aCols[::oBrw:oBrowse:nAt, nP_NUMOBR])
 					else 
-						oObjTerm:docto := AllTrim(::oBrw:aCols[::oBrw:oBrowse:nAt, nP_DOC])
+						oObjTerm:docto := cNumDoc
 					endif
 					
 					oObjTerm:Process()

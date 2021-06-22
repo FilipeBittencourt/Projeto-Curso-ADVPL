@@ -132,7 +132,7 @@ User Function BIA154()
 			else
 				cMsg := ""
 				cMsg += "AVISO!!"+chr(13)
-				cMsg += "Este produto exige a Conta de Resultado Administrativo que esta "+chr(13)
+				cMsg += "BIA154 - Este produto exige a Conta de Resultado Administrativo que esta "+chr(13)
 				cMsg += "vazia no cadastro do produto! Favor verificar antes de prosseguir."
 				alert(cMsg)
 				AutoGrLog(cMsg)
@@ -149,7 +149,7 @@ User Function BIA154()
 				else
 					cMsg := ""
 					cMsg += "AVISO!!"+chr(13)
-					cMsg += "Este produto exige a Conta de Resultado Industrial que esta "+chr(13)
+					cMsg += "BIA154 - Este produto exige a Conta de Resultado Industrial que esta "+chr(13)
 					cMsg += "vazia no cadastro do produto! Favor verificar antes de prosseguir."
 					alert(cMsg)
 					AutoGrLog(cMsg)

@@ -919,6 +919,42 @@ User Function M410STTS()
 
 	EndIf
 
+    
+    // Gabriel Pinheiro Leite da Silva(G3) - 26/05/2021 - OS:32367 - Configurar para que ao alterar os campos de data do pedido na empresa origem, eles repliquem para o pedido da LM.
+    If (Altera) .And. cEmpAnt != '07' //barba
+
+        begincontent var cSql
+
+            UPDATE SC67 
+            SET  SC67.C6_ENTREG=SC61.C6_ENTREG
+                ,SC67.C6_YDTNERE=SC61.C6_YDTNERE
+                ,SC67.C6_YDTNECE=SC61.C6_YDTNECE
+            FROM SC6070 SC67
+            JOIN SC5070 SC57 ON (SC57.C5_FILIAL=SC67.C6_FILIAL AND SC57.C5_NUM=SC67.C6_NUM)
+            JOIN SC5010 SC51 ON (SC57.C5_YPEDORI=SC51.C5_NUM)
+            JOIN SC6010 SC61 ON (SC51.C5_FILIAL=SC61.C6_FILIAL AND SC51.C5_NUM=SC61.C6_NUM)
+            WHERE   SC57.D_E_L_E_T_=''
+                AND SC67.D_E_L_E_T_=''
+                AND SC51.D_E_L_E_T_=''
+                AND SC61.D_E_L_E_T_=''
+                AND SC51.C5_NUM='@C5_NUM'
+                AND SC57.C5_YEMP='@C5_YEMP'
+                AND SC67.C6_PRODUTO=SC61.C6_PRODUTO
+                AND SC67.C6_ITEM=SC61.C6_ITEM
+                AND SC51.C5_FILIAL='@C5_FILIAL'
+
+        endcontent
+
+        cSql:=strTran(cSql,"SC5010",retSQLName("SC5"))
+        cSql:=strTran(cSql,"SC6010",retSQLName("SC6"))
+        cSql:=strTran(cSql,"@C5_NUM",M->C5_NUM)
+        cSql:=strTran(cSql,"@C5_YEMP",M->C5_YEMP)
+        cSql:=strTran(cSql,"@C5_FILIAL",xFilial("SC5"))
+
+        TCSQLExec(cSql)
+
+    EndIf
+
 	// Tiago Rossini Coradini - 26/09/2016 - OS: 3229-16 - Ranisses Corona - Desativa controle de semaforo ao final da rotina
 	Leave1Code("SC5" + cEmpAnt + cFilAnt + SC5->C5_NUM)
 
@@ -1411,17 +1447,9 @@ Return
 
 
 Static Function fRetCatBia(cCodCli, cLojCli, cMarca)
-	Local cRet := ""
-	Local cSQL := ""
-	Local cQry := GetNextAlias()
-
-	/*cSQL := " SELECT A1_YCAT "
-	cSQL += " FROM SA1010 "	
-	cSQL += " WHERE A1_FILIAL = "+ ValToSQL(xFilial("SA1"))
-	cSQL += " AND A1_COD = "+ ValToSQL(cCodCli)
-	cSQL += " AND A1_LOJA = "+ ValToSQL(cLojCli)
-	cSQL += " AND D_E_L_E_T_ = '' "
-	*/
+Local cRet := ""
+Local cSQL := ""
+Local cQry := GetNextAlias()
 
 	cSQL := "SELECT CAT=[dbo].[GET_CATEGORIA_CLIENTE] ('"+cMarca+"','"+cCodCli+"','"+cLojCli+"')"
 

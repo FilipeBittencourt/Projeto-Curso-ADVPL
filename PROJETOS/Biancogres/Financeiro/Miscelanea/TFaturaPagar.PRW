@@ -334,7 +334,7 @@ Method _UpdateVenc() Class TFaturaPagar
 
 Return
 
-Method _BaixaDesc(nId, nValor) Class TFaturaPagar
+Method _BaixaDesc(nId, nValor, cMotBx, dDataBX) Class TFaturaPagar
 	
 	Local aArea				:= GetArea()
 	Local aParcBaixa 		:= {}
@@ -359,12 +359,11 @@ Method _BaixaDesc(nId, nValor) Class TFaturaPagar
 		AADD(aParcBaixa, {"E2_TIPO"     , SE2->E2_TIPO      					, Nil})
 		AADD(aParcBaixa, {"E2_FORNECE"  , SE2->E2_FORNECE   					, Nil})
 		AADD(aParcBaixa, {"E2_LOJA"     , SE2->E2_LOJA      					, Nil})
-		AADD(aParcBaixa, {"AUTMOTBX"    , "DES"									, Nil})
+		AADD(aParcBaixa, {"AUTMOTBX"    , cMotBx								, Nil})
 		AADD(aParcBaixa, {"AUTBANCO"    , ""	      							, Nil})
-		AADD(aParcBaixa, {"AUTDTBAIXA"  , dDataBase      						, Nil})
-		//AADD(aParcBaixa, {"AUTHIST"     , cHist			    					, Nil})
-
-		AADD(aParcBaixa,{"AUTVLRPG"  	, nValor	,Nil})
+		AADD(aParcBaixa, {"AUTDTBAIXA"  , dDataBX      							, Nil})
+		AADD(aParcBaixa, {"AUTDTCREDITO", dDataBX      							, Nil})
+		AADD(aParcBaixa, {"AUTVLRPG"  	, nValor								, Nil})
 
 		MsExecAuto ({|x,y| FINA080(x,y)}, aParcBaixa, 3)
 
@@ -412,7 +411,7 @@ Method _ExecBaixaDesc() Class TFaturaPagar
 	If !(cAliasTrab->(Eof()))
 
 		nId := cAliasTrab->R_E_C_N_O_
-		::_BaixaDesc(nId, ::_oFatPagStruct:nValorDesconto)
+		::_BaixaDesc(nId, ::_oFatPagStruct:nValorDesconto, "DES", dDataBase)
 		
 	EndIf
 
@@ -513,7 +512,7 @@ Method Incluir(lDesc, lVenc, dDataDe, dDataAte, cForne, cLojaForne, cNatureza) C
 		
 					If (!SE2->(Eof()))
 						
-						::_BaixaDesc(_nId, _nDesc) //executa a baixa
+						::_BaixaDesc(_nId, _nDesc, "FDC", DataValida(::_oFatPagStruct:dDataRecebimento, .T.) ) //executa a baixa
 						
 						Conout(::_oResult:Ok)
 						

@@ -1,0 +1,28 @@
+#include "totvs.ch"
+
+/*/{Protheus.doc} FIDC
+@author Marinaldo de Jesus
+@since 21/05/2021
+@project FIDC
+@version 1.0
+@description: Ponto de Entrada Executado no progama FINA340.PRW (Compensação entre títulos e adiantamentos)
+              Será utilizado para Filtrar os Titulos não FIDC.
+@type function
+/*/
+
+#ifdef __dbg__
+function u_F340BROW() as character
+    local aSE2Query as array
+    local cSE2Filter as character
+    aSE2Query:=array(0)
+    cSE2Filter:=FIDC():getPGFilterFIDC(.T.)
+    MsAguarde({||FilBrowse("SE2",@aSE2Query,@cSE2Filter)},"Aguarde","Selecionado dados do SGBD...")
+    return
+#else
+    static function dummy()
+    if (.F.)
+        dummy()
+    endif
+    return
+#endif
+    

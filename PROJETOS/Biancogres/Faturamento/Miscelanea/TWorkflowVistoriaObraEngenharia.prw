@@ -18,7 +18,7 @@ Class TWorkflowVistoriaObraEngenharia From LongClassName
 	Method New() Constructor
 	Method Process()
 	Method GetMessage(cDtVis, cNomCli, cDescObr)
-	Method GetMail(cMail_1, cMail_2)	
+	Method GetMail(cMail_2)	
 	Method SendWorkFlow(cDtVis, cCliente, cNomCli, cNumObr, cDescObr, cMail)
 	
 EndClass
@@ -41,7 +41,7 @@ Local cNomCli := ""
 Local cNumObr := ""
 Local cDescObr := ""
 Local cMail := ""
-Local cMail_1 := ""
+//Local cMail_1 := ""
 Local cMail_2 := ""
 
 	cSQL := " SELECT ZKS_DATPRE, ZKS_CLIENT, ZKS_LOJA, A1_NOME, ZKS_NUMOBR, 
@@ -84,7 +84,7 @@ Local cMail_2 := ""
 
 		cNomCli	:= (cQry)->A1_NOME
 		
-		cMail_1 := (cQry)->A3_YEMAIL
+		//cMail_1 := (cQry)->A3_YEMAIL
 		
 		cMail_2 := (cQry)->A3_EMAIL		
 
@@ -94,7 +94,7 @@ Local cMail_2 := ""
 			
 		EndDo()
 		
-		If !Empty(cMail := ::GetMail(cMail_1, cMail_2))
+		If !Empty(cMail := ::GetMail(cMail_2))
 		
 			::SendWorkFlow(cDtVis, cCliente, cNomCli, cNumObr, cDescObr, cMail)
 			
@@ -107,17 +107,17 @@ Local cMail_2 := ""
 Return()
 
 
-Method GetMail(cMail_1, cMail_2) Class TWorkflowVistoriaObraEngenharia
+Method GetMail(cMail_2) Class TWorkflowVistoriaObraEngenharia
 Local cRet := ""
 
-	If !Empty(AllTrim(cMail_1))
+	If !Empty(AllTrim(cMail_2))
+		cRet := AllTrim(cMail_2)
+
+/* pzzn
+	ElseIf !Empty(AllTrim(cMail_1))
 	
 		cRet := AllTrim(cMail_1)
-	
-	ElseIf !Empty(AllTrim(cMail_2))
-	
-		cRet := AllTrim(cMail_2)
-	
+*/	
 	EndIf
 	
 Return(cRet)

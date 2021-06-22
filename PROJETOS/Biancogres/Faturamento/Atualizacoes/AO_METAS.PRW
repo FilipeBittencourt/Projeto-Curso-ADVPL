@@ -10,29 +10,29 @@
 /*/
 User Function AO_METAS()
 
-	Private cCadastro 	:= "Metas AO" 
+	Private cCadastro 	:= "Metas AO"
 	Private _nTotBasRea := 0
 	Private _nTotBasAju := 0
-	Private aTempSI		:= {}
+	Private aTempSI	  	:= {}
 
 	Private aRotina   := {  {"Pesquisar"    	,'AxPesqui'                      			,0, 1},;
-	{"Visualizar"   	,'Execblock("AOMETAMNT" ,.F.,.F.,"V")'    	,0, 2},;
-	{"Incluir"      	,'Execblock("AOMETAMNT" ,.F.,.F.,"I")'    	,0, 3},;
-	{"Alterar Acordo"   ,'Execblock("AOMETAMNT" ,.F.,.F.,"A")'    	,0, 4},;
-	{"Atualizar"      	,'Execblock("AOMETAMNT" ,.F.,.F.,"T")'    	,0, 4},;
-	{"Excluir"      	,'Execblock("AOMETAMNT" ,.F.,.F.,"E")'    	,0, 5},;
-	{"Aprovar"      	,'Execblock("AOMETAMNT" ,.F.,.F.,"P")'    	,0, 2},;
-	{"Imprimir"     	,'U_AO_IMPWR'    							,0, 2},;
-	{"Workflow"     	,'U_AO_WF()'								,0, 4},;
-	{"Legenda"      	,'U_AOMETALE'    						  	,0, 4},;
-	{"WF AI x Lanc"		,'U_AOWFLANC'    						  	,0, 2},;
-	{"WF AO sem Bonus"	,'U_AOWFAOAI'    						  	,0, 2},;
-	{"Proc. Realizado" 	,'U_AO_UPDREA'    						  	,0, 2}}
+		{"Visualizar"   	,'Execblock("AOMETAMNT" ,.F.,.F.,"V")'    	,0, 2},;
+		{"Incluir"      	,'Execblock("AOMETAMNT" ,.F.,.F.,"I")'    	,0, 3},;
+		{"Alterar Acordo"   ,'Execblock("AOMETAMNT" ,.F.,.F.,"A")'    	,0, 4},;
+		{"Atualizar"      	,'Execblock("AOMETAMNT" ,.F.,.F.,"T")'    	,0, 4},;
+		{"Excluir"      	,'Execblock("AOMETAMNT" ,.F.,.F.,"E")'    	,0, 5},;
+		{"Aprovar"      	,'Execblock("AOMETAMNT" ,.F.,.F.,"P")'    	,0, 2},;
+		{"Imprimir"     	,'U_AO_IMPWR'    							,0, 2},;
+		{"Workflow"     	,'U_AO_WF()'								,0, 4},;
+		{"Legenda"      	,'U_AOMETALE'    						  	,0, 4},;
+		{"WF AI x Lanc"		,'U_AOWFLANC'    						  	,0, 2},;
+		{"WF AO sem Bonus"	,'U_AOWFAOAI'    						  	,0, 2},;
+		{"Proc. Realizado" 	,'U_AO_UPDREA'    						  	,0, 2}}
 
 	//Legenda
 	Private aCores    := {	{  'PZ5_STATUS=="N"'	, 'BR_BRANCO' 	},;
-	{  'PZ5_STATUS=="A"'	, 'BR_AMARELO' 	},;
-	{  'PZ5_STATUS=="S"'	, 'BR_VERDE' 	} }
+		{  'PZ5_STATUS=="A"'	, 'BR_AMARELO' 	},;
+		{  'PZ5_STATUS=="S"'	, 'BR_VERDE' 	} }
 
 	dbSelectArea("PZ5")
 	dbGoTop()
@@ -42,8 +42,8 @@ Return
 
 User Function AOMETALE()
 	Local aLegenda := { 	{ 'BR_BRANCO'	,	"Novo Acordo" 		},;
-	{ 'BR_AMARELO'	,   "Acordo Alterado"  	},;
-	{ 'BR_VERDE'	,   "Acordo Aprovado"  	} }
+		{ 'BR_AMARELO'	,   "Acordo Alterado"  	},;
+		{ 'BR_VERDE'	,   "Acordo Aprovado"  	} }
 
 	BRWLEGENDA( cCadastro, "Legenda", aLegenda )
 Return
@@ -61,15 +61,15 @@ User Function AOMETAMNT()
 	lAlterar    := .F.
 	lExcluir    := .F.
 
-	Private lAprova := .F. 
+	Private lAprova := .F.
 
 	//variaveis para Rodape Customizado
 	Private oDlg
-	Private oGetTotBR 
+	Private oGetTotBR
 	Private nGetTotBR := 0
 	Private oGetTotBA
 	Private nGetTotBA := 0
-
+/*//DEscomentar
 	If (wOpcao $ "A_I_E")
 		If !U_VALOPER("AO2")
 			Return
@@ -86,11 +86,13 @@ User Function AOMETAMNT()
 		wOpcao := "V"
 	EndIf
 
+*/ //fim DEscomentar
+
 	Do Case
-		Case wOpcao == "V" .Or. wOpcao == "T"; lVisualizar := .T. ; nOpcE := 2 ; nOpcG := 2 ; cOpcao := "VISUALIZAR"
-		Case wOpcao == "I" ; lIncluir    := .T. ; nOpcE := 3 ; nOpcG := 3 ; cOpcao := "INCLUIR"
-		Case wOpcao == "A" ; lAlterar    := .T. ; nOpcE := 4 ; nOpcG := 4 ; cOpcao := "ALTERAR"
-		Case wOpcao == "E" ; lExcluir    := .T. ; nOpcE := 2 ; nOpcG := 2 ; cOpcao := "EXCLUIR"
+	Case wOpcao == "V" .Or. wOpcao == "T"; lVisualizar := .T. ; nOpcE := 2 ; nOpcG := 2 ; cOpcao := "VISUALIZAR"
+	Case wOpcao == "I" ; lIncluir    := .T. ; nOpcE := 3 ; nOpcG := 3 ; cOpcao := "INCLUIR"
+	Case wOpcao == "A" ; lAlterar    := .T. ; nOpcE := 4 ; nOpcG := 4 ; cOpcao := "ALTERAR"
+	Case wOpcao == "E" ; lExcluir    := .T. ; nOpcE := 2 ; nOpcG := 2 ; cOpcao := "EXCLUIR"
 	EndCase
 
 	//Cria variaveis
@@ -106,20 +108,20 @@ User Function AOMETAMNT()
 		If  X3USO(SX3->X3_USADO) .and. SX3->X3_NIVEL <= cNivel .And. !(Alltrim(SX3->X3_CAMPO) $ "PZ6_CODIGO")
 
 			If lIncluir .Or.;
-			!(SubStr(SX3->X3_CAMPO,1,8) $ "PZ6_PERC#PZ6_META#PZ6_PBON") .Or.;
-			(	(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF1#PZ6_METAF1#PZ6_PBONF1") .Or.;
-			(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF2#PZ6_METAF2#PZ6_PBONF2" .And. M->PZ5_NFAIXA >= '2') .Or.;
-			(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF3#PZ6_METAF3#PZ6_PBONF3" .And. M->PZ5_NFAIXA >= '3') .Or.;
-			(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF4#PZ6_METAF4#PZ6_PBONF4" .And. M->PZ5_NFAIXA >= '4') .Or.;
-			(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF5#PZ6_METAF5#PZ6_PBONF5" .And. M->PZ5_NFAIXA >= '5') )
+					!(SubStr(SX3->X3_CAMPO,1,8) $ "PZ6_PERC#PZ6_META#PZ6_PBON") .Or.;
+					(	(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF1#PZ6_METAF1#PZ6_PBONF1") .Or.;
+					(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF2#PZ6_METAF2#PZ6_PBONF2" .And. M->PZ5_NFAIXA >= '2') .Or.;
+					(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF3#PZ6_METAF3#PZ6_PBONF3" .And. M->PZ5_NFAIXA >= '3') .Or.;
+					(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF4#PZ6_METAF4#PZ6_PBONF4" .And. M->PZ5_NFAIXA >= '4') .Or.;
+					(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF5#PZ6_METAF5#PZ6_PBONF5" .And. M->PZ5_NFAIXA >= '5') )
 
 				nUsado := nUsado + 1
 
 				aadd(aHeader,{ trim(SX3->X3_TITULO),SX3->X3_CAMPO   , ;
-				SX3->X3_PICTURE     ,SX3->X3_TAMANHO , ;
-				SX3->X3_DECIMAL     ,SX3->X3_VALID , ;
-				SX3->X3_USADO       ,SX3->X3_TIPO    , ;
-				SX3->X3_ARQUIVO     ,SX3->X3_CONTEXT } )
+					SX3->X3_PICTURE     ,SX3->X3_TAMANHO , ;
+					SX3->X3_DECIMAL     ,SX3->X3_VALID , ;
+					SX3->X3_USADO       ,SX3->X3_TIPO    , ;
+					SX3->X3_ARQUIVO     ,SX3->X3_CONTEXT } )
 			EndIf
 		End
 		dbSkip()
@@ -143,7 +145,7 @@ User Function AOMETAMNT()
 			For i := 1 to nUsado
 				aCols[len(aCols),i]    := FieldGet(FieldPos(aHeader[i,2]))
 			Next
-			aCols[len(aCols),nUsado+1] := .F.      
+			aCols[len(aCols),nUsado+1] := .F.
 
 			//Totais no Rodape customizado
 			nGetTotBR += PZ6->PZ6_BASREA
@@ -191,15 +193,15 @@ User Function AOMETAMNT()
 
 		aAdd(aButtons , {'',{|| ProcBases() },'Atualiza Bases'} )
 		aAdd(aButtons , {'',{|| ProcMetas() },'Atualiza Metas'} )
-		aAdd(aButtons , {'',{|| ProcReal() 	},'Processar'} ) 
+		aAdd(aButtons , {'',{|| ProcReal() 	},'Processar'} )
 
 	ElseIf wOpcao == "T"
 
-		aAdd(aButtons , {'',{|| ProcReal() 	},'Processar'} ) 
+		aAdd(aButtons , {'',{|| ProcReal() 	},'Processar'} )
 
 		//Fernando/Facile em 05/04/2016 - OS 1193-16 - salvar o email do cliente se houve alteracao no modo atualizacao de realizado
 		nOpcE := 4
-		aAltEnchoice := {"PZ5_EMAILC","PZ5_PROVER","PZ5_FREDVB","PZ5_PACOTE","PZ5_PCTVER","PZ5_PPGSUG","PZ5_PPGMAX","PZ5_CLFABR","PZ5_CLDIST"}
+		aAltEnchoice := {"PZ5_EMAILC","PZ5_PROVER","PZ5_FREDVB","PZ5_PACOTE","PZ5_PCTVER","PZ5_PPGSUG","PZ5_PPGMAX","PZ5_CLFABR","PZ5_CLDIST","PZ5_TPACORD","PZ5_PRODFO"}
 
 	EndIf
 
@@ -218,15 +220,17 @@ User Function AOMETAMNT()
 			EndIf
 
 			RecLock("PZ5",.F.)
-			PZ5->PZ5_EMAILC := M->PZ5_EMAILC
-			PZ5->PZ5_PROVER := M->PZ5_PROVER
-			PZ5->PZ5_FREDVB := M->PZ5_FREDVB
-			PZ5->PZ5_PACOTE := M->PZ5_PACOTE
-			PZ5->PZ5_PCTVER := M->PZ5_PCTVER
-			PZ5->PZ5_PPGSUG := M->PZ5_PPGSUG
-			PZ5->PZ5_PPGMAX := M->PZ5_PPGMAX
-			PZ5->PZ5_CLFABR := M->PZ5_CLFABR
-			PZ5->PZ5_CLDIST := M->PZ5_CLDIST
+			PZ5->PZ5_EMAILC  := M->PZ5_EMAILC
+			PZ5->PZ5_PROVER  := M->PZ5_PROVER
+			PZ5->PZ5_FREDVB  := M->PZ5_FREDVB
+			PZ5->PZ5_PACOTE  := M->PZ5_PACOTE
+			PZ5->PZ5_PCTVER  := M->PZ5_PCTVER
+			PZ5->PZ5_PPGSUG  := M->PZ5_PPGSUG
+			PZ5->PZ5_PPGMAX  := M->PZ5_PPGMAX
+			PZ5->PZ5_CLFABR  := M->PZ5_CLFABR
+			PZ5->PZ5_CLDIST  := M->PZ5_CLDIST
+			PZ5->PZ5_TPACORD := M->PZ5_TPACORD
+			PZ5->PZ5_PRODFO  := M->PZ5_PRODFO
 
 			PZ5->(MsUnlock())
 
@@ -262,11 +266,11 @@ User Function AOMETAMNT()
 		RollBackSX8()
 	End
 
-Return               
+Return
 
 //Valida Tudo Ok da Tela
 User Function AOMET_OK
-	Local lRet := .T.   
+	Local lRet := .T.
 
 	If lRet .And. M->PZ5_PROVER == "S" .And. ( M->PZ5_FREDVB <= 0 .Or. Empty(M->PZ5_CLFABR) .Or. Empty(M->PZ5_CLDIST) )
 
@@ -278,9 +282,9 @@ User Function AOMET_OK
 	AtuTotais()
 
 	//Total das Bases Ajustadas nao pode ser menor que a Real
-	If lRet                 
+	If lRet
 
-		If (_nTotBasAju < _nTotBasRea)  
+		If (_nTotBasAju < _nTotBasRea)
 			//MsgInfo("Total de Bases Ajustadas não pode ser menor que o total de Bases Reais.","ATENÇÃO!")
 			MsgAlert("Total de Bases Ajustadas está menor que o total de Bases Reais.","ATENÇÃO!")
 			lRet := .T.  //Solcitado Claudeir - OS 1103-16 - para permitir incluir assim mesmo
@@ -288,7 +292,7 @@ User Function AOMET_OK
 
 	EndIf
 
-Return(lRet)    
+Return(lRet)
 
 User Function AOMETLOK()
 	Local lRet := .T.
@@ -298,7 +302,7 @@ User Function AOMETLOK()
 Return(lRet)
 
 Static Function AtuTotais(_lRefresh)
-	Local I                   
+	Local I
 	Default _lRefresh := .T.
 
 	_nTotBasRea := 0
@@ -317,12 +321,12 @@ Static Function AtuTotais(_lRefresh)
 
 	NEXT I
 
-	If (_lRefresh)    
+	If (_lRefresh)
 		nGetTotBR := _nTotBasRea
 		oGetTotBR:Refresh()
 		nGetTotBA := _nTotBasAju
-		oGetTotBA:Refresh()  
-		oDlg:Refresh() 
+		oGetTotBA:Refresh()
+		oDlg:Refresh()
 	EndIf
 
 Return
@@ -368,7 +372,7 @@ Static Function fProcessa(_lReal)
 
 		PZ5->(dbSetOrder(1))
 		While PZ5->(DbSeek(xFilial("SC5")+__cPZ5Num))
-			__cPZ5Num := Soma1(__cPZ5Num,Len(__cPZ5Num))		
+			__cPZ5Num := Soma1(__cPZ5Num,Len(__cPZ5Num))
 		EndDo
 
 		RecLock("PZ5",.T.)
@@ -392,7 +396,7 @@ Static Function fProcessa(_lReal)
 
 		EndIf
 
-		RecLock("PZ5",.F.)  
+		RecLock("PZ5",.F.)
 
 		If !_lReal
 			PZ5->PZ5_STATUS := "A"
@@ -434,7 +438,7 @@ Static Function fProcessa(_lReal)
 	PZ5->PZ5_TIPFIL := M->PZ5_TIPFIL
 	PZ5->PZ5_USER	:= cUserName
 	PZ5->PZ5_DATA	:= dDataBase
-	PZ5->PZ5_HORA	:= SubStr(Time(),1,5) 
+	PZ5->PZ5_HORA	:= SubStr(Time(),1,5)
 	PZ5->PZ5_MARCA  := M->PZ5_MARCA
 	PZ5->PZ5_PROVER	:= M->PZ5_PROVER
 	PZ5->PZ5_FREDVB	:= M->PZ5_FREDVB
@@ -445,6 +449,8 @@ Static Function fProcessa(_lReal)
 	PZ5->PZ5_PPGMAX := M->PZ5_PPGMAX
 	PZ5->PZ5_CLFABR := M->PZ5_CLFABR
 	PZ5->PZ5_CLDIST := M->PZ5_CLDIST
+	PZ5->PZ5_TPACORD := M->PZ5_TPACORD
+	PZ5->PZ5_PRODFO := M->PZ5_PRODFO
 
 	PZ5->(MsUnlock())
 
@@ -761,7 +767,7 @@ Static Function ProcM3()
 				TRB->(DbGoTop())
 
 				If !TRB->(Eof())
-					aCols[I][nPBasVer] := &(TRB->(Field(1)))				
+					aCols[I][nPBasVer] := &(TRB->(Field(1)))
 				Else
 					aCols[I][nPBasVer] := 0
 				EndIf
@@ -789,7 +795,7 @@ Static Function ProcM3()
 			TRB->(DbGoTop())
 
 			If !TRB->(Eof())
-				aCols[I][nPBVLRea] := &(TRB->(Field(1)))				
+				aCols[I][nPBVLRea] := &(TRB->(Field(1)))
 			Else
 				aCols[I][nPBVLRea] := 0
 			EndIf
@@ -857,12 +863,12 @@ Static Function ProcM4()
 
 			//OS 1337-16 : Filtro dos pacotes para calculo da base da verba com pacotes diferenciados - solicitacao Incesa
 			If PZ5->(FieldPos("PZ5_PCTVER")) > 0 .And. !Empty(M->PZ5_PCTVER)
-				_nVBasVer := aCols[I][nPBasVer]		
+				_nVBasVer := aCols[I][nPBasVer]
 			EndIf
 
 			//OS 3527-16 : Se calculou a base em R$ usar ela
 			If ( aCols[I][nPBVLRea] > 0 )
-				_nVBasVer := aCols[I][nPBVLRea] 
+				_nVBasVer := aCols[I][nPBVLRea]
 			EndIf
 
 			If nPMetaF1 > 0
@@ -994,11 +1000,11 @@ Static Function GerarSI(_nValor,_dIni,_dFim,_cIdPer,_lAuto)
 
 		If Select("TRB") > 0
 			TRB->(DbCloseArea())
-		EndIf 
+		EndIf
 
 		If PZ5->(FieldPos("PZ5_REDE")) > 0
 			cSQL := "select dbo.FNC_AO_TOP_CLI('"+PZ5->PZ5_MARCA+"','"+IIF(PZ5->PZ5_TIPCLI=="2", PZ5->PZ5_CODGRP, PZ5->PZ5_REDE)+"','"+DTOS(_dIni)+"','"+DTOS(_dFim)+"','"+PZ5->PZ5_TIPCLI+"')"
-		Else		
+		Else
 			cSQL := "select dbo.FNC_AO_TOP_CLI('"+PZ5->PZ5_MARCA+"','"+PZ5->PZ5_CODGRP+"','"+DTOS(_dIni)+"','"+DTOS(_dFim)+"')"
 		EndIf
 
@@ -1006,15 +1012,15 @@ Static Function GerarSI(_nValor,_dIni,_dFim,_cIdPer,_lAuto)
 
 		TCQuery cSQL Alias "TRB" New
 
-		TRB->(DbGoTop())		
+		TRB->(DbGoTop())
 		If !TRB->(Eof())
 			cCodCli := SubStr(&("TRB->"+TRB->(Field(1))),1,6)
 			cLojCli := SubStr(&("TRB->"+TRB->(Field(1))),7,2)
-		EndIf 
+		EndIf
 
 		TRB->(DbCloseArea())
 
-	ELSE 
+	ELSE
 
 		cCodCli := PZ5->PZ5_CODCLI
 		cLojCli := PZ5->PZ5_LOJCLI
@@ -1046,19 +1052,19 @@ Static Function GerarSI(_nValor,_dIni,_dFim,_cIdPer,_lAuto)
 	SZO->ZO_EMP	:= PZ5->PZ5_MARCA
 
 	DO CASE
-		CASE SubString(PZ5->PZ5_MARCA,1,4) == "0101"
+	CASE SubString(PZ5->PZ5_MARCA,1,4) == "0101"
 		SZO->ZO_EMP			:= "0101"
 		SZO->ZO_SERIE   	:= 'S1'
-		CASE SubString(PZ5->PZ5_MARCA,1,4) == "0199"
+	CASE SubString(PZ5->PZ5_MARCA,1,4) == "0199"
 		SZO->ZO_EMP			:= "0199"
 		SZO->ZO_SERIE   	:= 'S1'
-		CASE SubString(PZ5->PZ5_MARCA,1,4) == "0501"
+	CASE SubString(PZ5->PZ5_MARCA,1,4) == "0501"
 		SZO->ZO_EMP			:= "0501"
 		SZO->ZO_SERIE   	:= 'S2'
-		CASE SubString(PZ5->PZ5_MARCA,1,4) == "0599"
+	CASE SubString(PZ5->PZ5_MARCA,1,4) == "0599"
 		SZO->ZO_EMP			:= "0599"
 		SZO->ZO_SERIE   	:= 'S2'
-		OTHERWISE
+	OTHERWISE
 		SZO->ZO_EMP			:= "0101"
 		SZO->ZO_SERIE   	:= 'S1'
 	ENDCASE
@@ -1088,7 +1094,7 @@ User Function AO_EXTRATO(_cCodigo,_cAlias)
 	//Representante
 	If !Empty(CREPATU)
 		_cExpRep := "% PZ5_CODVEN = '"+CREPATU+"' %"
-	Else                                            
+	Else
 		_cExpRep := "% 1 = 1 %"
 	EndIf
 
@@ -1102,10 +1108,10 @@ User Function AO_EXTRATO(_cCodigo,_cAlias)
 			PERIODO = PZ6_IDPER,
 			STATUS = CASE WHEN PZ6_PERFIM < (convert(varchar(8),GetDate(),112)) THEN 'ENCERRADO'
 			WHEN PZ6_PERINI <= (convert(varchar(8),GetDate(),112)) AND PZ6_PERFIM >= (convert(varchar(8),GetDate(),112)) THEN 'EM ANDAMENTO'
-			ELSE 'NAO INICIADO'	END,
+		ELSE 'NAO INICIADO'	END,
 			NOME_CLI = 	CASE WHEN PZ5_TIPCLI = '1' THEN (SELECT TOP 1 A1_NOME FROM SA1010 WHERE A1_COD+A1_LOJA = PZ5_CODCLI+PZ5_LOJCLI AND D_E_L_E_T_='')
 			WHEN PZ5_TIPCLI = '2' THEN (SELECT TOP 1 ACY_DESCRI FROM ACY010 WHERE ACY_GRPVEN = PZ5_CODGRP AND D_E_L_E_T_='')
-			ELSE (SELECT TOP 1 Z79_DESCR FROM Z79010 WHERE Z79_REDE = PZ5_REDE AND D_E_L_E_T_='') END,
+		ELSE (SELECT TOP 1 Z79_DESCR FROM Z79010 WHERE Z79_REDE = PZ5_REDE AND D_E_L_E_T_='') END,
 			REALIZADO = PZ6_VALREA,
 			METAF1 = PZ6_METAF1,
 			FALTAF1 = CASE WHEN PZ6_METAF1 <= 0 OR (PZ6_METAF1 - PZ6_VALREA) < 0 THEN 0 ELSE (PZ6_METAF1 - PZ6_VALREA) END,
@@ -1130,7 +1136,7 @@ User Function AO_EXTRATO(_cCodigo,_cAlias)
 
 		EndSql
 
-	ELSE	
+	ELSE
 
 		BeginSql Alias _cAlias
 			%NOPARSER%
@@ -1139,9 +1145,9 @@ User Function AO_EXTRATO(_cCodigo,_cAlias)
 			PERIODO = PZ6_IDPER,
 			STATUS = CASE WHEN PZ6_PERFIM < (convert(varchar(8),GetDate(),112)) THEN 'ENCERRADO'
 			WHEN PZ6_PERINI <= (convert(varchar(8),GetDate(),112)) AND PZ6_PERFIM >= (convert(varchar(8),GetDate(),112)) THEN 'EM ANDAMENTO'
-			ELSE 'NAO INICIADO'	END,
+		ELSE 'NAO INICIADO'	END,
 			NOME_CLI = CASE WHEN PZ5_TIPCLI = '1' THEN (SELECT TOP 1 A1_NOME FROM SA1010 WHERE A1_COD+A1_LOJA = PZ5_CODCLI+PZ5_LOJCLI AND D_E_L_E_T_='')
-			ELSE (SELECT TOP 1 ACY_DESCRI FROM ACY010 WHERE ACY_GRPVEN = PZ5_CODGRP AND D_E_L_E_T_='') END,
+		ELSE (SELECT TOP 1 ACY_DESCRI FROM ACY010 WHERE ACY_GRPVEN = PZ5_CODGRP AND D_E_L_E_T_='') END,
 			REALIZADO = PZ6_VALREA,
 			METAF1 = PZ6_METAF1,
 			FALTAF1 = CASE WHEN PZ6_METAF1 <= 0 OR (PZ6_METAF1 - PZ6_VALREA) < 0 THEN 0 ELSE (PZ6_METAF1 - PZ6_VALREA) END,
@@ -1168,7 +1174,7 @@ User Function AO_EXTRATO(_cCodigo,_cAlias)
 
 	ENDIF
 
-Return     
+Return
 
 User Function AO_UPREA(_cCodigo)
 	Local cCodCli
@@ -1188,7 +1194,7 @@ User Function AO_UPREA(_cCodigo)
 
 			If Select("TRB") > 0
 				TRB->(DbCloseArea())
-			EndIf     
+			EndIf
 
 			If PZ5->PZ5_TIPCLI == "1"
 				cCodCli := PZ5->PZ5_CODCLI
@@ -1213,7 +1219,7 @@ User Function AO_UPREA(_cCodigo)
 				PZ6->PZ6_DTULRE := dDataBase
 				PZ6->(MsUnlock())
 
-			EndIf 
+			EndIf
 
 			TRB->(DbCloseArea())
 
@@ -1235,7 +1241,7 @@ User Function AO_EXCEL(_cCodigo)
 	Local cWorkSheet := ""
 	Local cTable := ""
 	Local cDirTmp := AllTrim(GetTempPath())
-	Local cAliasTab  
+	Local cAliasTab
 
 	Default _cCodigo := ""
 
@@ -1253,19 +1259,19 @@ User Function AO_EXCEL(_cCodigo)
 	If PZ5->(DbSeek(XFilial("PZ5")+_cCodigo)) .And. PZ5->PZ5_STATUS <> "S"
 		MsgAlert("Acordo não está aprovado. Não é possível fazer o acompanhamento.","ACORDO DE OBJETIVOS")
 		Return
-	EndIf          
+	EndIf
 
 	//Buscando nome do cliente ou grupo
 	__Nome := ""
-	If PZ5->PZ5_TIPCLI == "2"     
+	If PZ5->PZ5_TIPCLI == "2"
 		ACY->(DbSetOrder(1))
-		ACY->(DbSeek(XFilial("ACY")+PZ5->PZ5_CODGRP))  
+		ACY->(DbSeek(XFilial("ACY")+PZ5->PZ5_CODGRP))
 		__Nome := ACY->ACY_DESCRI
 	Else
 		SA1->(DbSetOrder(1))
 		SA1->(DbSeek(XFilial("SA1")+PZ5->PZ5_CODCLI+PZ5->PZ5_LOJCLI))
 		__Nome :=  SA1->A1_NOME
-	EndIf  
+	EndIf
 
 	If PZ5->PZ5_TIPCLI == "1"
 		SA1->(DbSetOrder(1))
@@ -1273,11 +1279,11 @@ User Function AO_EXCEL(_cCodigo)
 		__Nome :=  SA1->A1_NOME
 	ElseIf PZ5->PZ5_TIPCLI == "2"
 		ACY->(DbSetOrder(1))
-		ACY->(DbSeek(XFilial("ACY")+PZ5->PZ5_CODGRP))  
+		ACY->(DbSeek(XFilial("ACY")+PZ5->PZ5_CODGRP))
 		__Nome := ACY->ACY_DESCRI
 	Else
 		ACY->(DbSetOrder(1))
-		ACY->(DbSeek(XFilial("ACY")+PZ5->PZ5_CODGRP))  
+		ACY->(DbSeek(XFilial("ACY")+PZ5->PZ5_CODGRP))
 		__Nome := ACY->ACY_DESCRI
 	EndIf
 
@@ -1308,7 +1314,7 @@ User Function AO_EXCEL(_cCodigo)
 		oFWExcel:AddColumn(cWorkSheet, cTable, "Falta p/ 5a. Faixa", 1, 3)
 	EndIf
 
-	oFWExcel:AddColumn(cWorkSheet, cTable, "Bonus (R$)", 1, 3)   
+	oFWExcel:AddColumn(cWorkSheet, cTable, "Bonus (R$)", 1, 3)
 	oFWExcel:AddColumn(cWorkSheet, cTable, "Numero SI", 1, 1)
 
 
@@ -1336,7 +1342,7 @@ User Function AO_EXCEL(_cCodigo)
 
 		If PZ5->PZ5_NFAIXA >= '5'
 			AAdd(aAux, (cAliasTab)->METAF5)
-			AAdd(aAux, (cAliasTab)->FALTAF5)	
+			AAdd(aAux, (cAliasTab)->FALTAF5)
 		EndIf
 
 		AAdd(aAux, (cAliasTab)->BONUS)
@@ -1374,10 +1380,10 @@ User Function AO_EXCEL(_cCodigo)
 
 	RestArea(aArea)
 
-Return() 
+Return()
 
 /*/
-FUNCAO PARA RETORNAR O EXTRATO ATUALIZADO DO ACORDO - USAR NO RELATORIO E WORKFLOW
+	FUNCAO PARA RETORNAR O EXTRATO ATUALIZADO DO ACORDO - USAR NO RELATORIO E WORKFLOW
 /*/
 User Function AO_TREP(_cCodigo)
 	Local cReport := "AO_TREP"
@@ -1386,10 +1392,10 @@ User Function AO_TREP(_cCodigo)
 	Local bReport := { |oReport|	oReport:SetTitle( oReport:Title()+" No.: "+_cCodigo ),	ReportPrint( oReport, _cCodigo ) }
 	Local nFaixa
 
-	Private oReport    
+	Private oReport
 	Private cPerg := "AO_CODIGO"
 	Private cAliasTab := GetNextAlias()
-	Private oSection1 
+	Private oSection1
 
 	If Empty(_cCodigo)
 		ValPergAco()
@@ -1404,12 +1410,12 @@ User Function AO_TREP(_cCodigo)
 	If PZ5->(DbSeek(XFilial("PZ5")+_cCodigo)) .And. PZ5->PZ5_STATUS <> "S"
 		MsgAlert("Acordo não está aprovado. Não é possível fazer o acompanhamento.","ACORDO DE OBJETIVOS")
 		Return
-	EndIf  
+	EndIf
 
-	nFaixa := Val(PZ5->PZ5_NFAIXA)        
+	nFaixa := Val(PZ5->PZ5_NFAIXA)
 
 	oReport  := TReport():New( cReport, cTitulo, cPerg , bReport, cDescri )
-	oReport:SetLandScape() 
+	oReport:SetLandScape()
 
 	oSection1 := TRSection():New( oReport  ,"01",cAliasTab, {} )
 	TRCell():New(oSection1	,"PERIODO"	  		,,"Período"	  		   		,"@!", 20,/*lPixel*/, {|| (cAliasTab)->PERIODO } )
@@ -1437,7 +1443,7 @@ User Function AO_TREP(_cCodigo)
 		TRCell():New(oSection1	,"FALTAF5"	,,"Falta Faixa 5"	,"@E 999,999,999.99", 15,/*lPixel*/, {|| (cAliasTab)->FALTAF5  } )
 	EndIf
 
-	TRCell():New(oSection1	,"BONUS"	  		,,"Bonus (R$)"			,"@E 999,999,999.99", 15,/*lPixel*/, {|| (cAliasTab)->BONUS  } ) 
+	TRCell():New(oSection1	,"BONUS"	  		,,"Bonus (R$)"			,"@E 999,999,999.99", 15,/*lPixel*/, {|| (cAliasTab)->BONUS  } )
 	TRCell():New(oSection1	,"NUMSI"			,,"No. SI"		   		,"@!", 10,/*lPixel*/, {|| (cAliasTab)->NUMSI } )
 
 	oReport:lParamPage := .F.
@@ -1484,7 +1490,7 @@ Static Function ValPergAco()
 	aRegs := {}
 	For I := 1 To Len(aTRegs)
 		aAdd(aRegs,{cPerg,StrZero(I,2),aTRegs[I][1],aTRegs[I][1],aTRegs[I][1]	,"mv_ch"+Alltrim(Str(I)),aTRegs[I][2],aTRegs[I][3],aTRegs[I][4],aTRegs[I][5],aTRegs[I][6],aTRegs[I][7],;
-		"mv_par"+StrZero(I,2),aTRegs[I][8],"","","","",aTRegs[I][9],"","","","",aTRegs[I][10],"","","","",aTRegs[I][11],"","","","",aTRegs[I][12],"","","",aTRegs[I][13],""})
+			"mv_par"+StrZero(I,2),aTRegs[I][8],"","","","",aTRegs[I][9],"","","","",aTRegs[I][10],"","","","",aTRegs[I][11],"","","","",aTRegs[I][12],"","","",aTRegs[I][13],""})
 	Next I
 
 	//Grava no SX1 se ja nao existir
@@ -1547,20 +1553,21 @@ Return
 Static Function RMod3(cTitulo,cAlias1,cAlias2,aMyEncho,cLinOk,cTudoOk,nOpcE,nOpcG,cFieldOk,lVirtual,nLinhas,aAltEnchoice,nFreeze,aButtons,aCordW,nSizeHeader)
 	Local lRet, nOpca := 0,cSaveMenuh,nReg:=(cAlias1)->(Recno())
 	Local oEnchoice
-	Local nDlgHeight   
+	Local nDlgHeight
 	Local nDlgWidth
-	Local nDiffWidth := 0          
-	Local nDiffHeight := 0 
-	Local lMDI := .F.      
+	Local nDiffWidth := 0
+	Local nDiffHeight := 0
+	Local lMDI := .F.
 	Local lPlugin := .F.
-	Local nTop := 32
+	Local nTop := 40 //32
 	Local aSize := {}
+	Local nTopEnch := 30
 
 	Private Altera:=.t.,Inclui:=.t.,lRefresh:=.t.,aTELA:=Array(0,0),aGets:=Array(0),;
-	bCampo:={|nCPO|Field(nCPO)},nPosAnt:=9999,nColAnt:=9999
+		bCampo:={|nCPO|Field(nCPO)},nPosAnt:=9999,nColAnt:=9999
 	Private cSavScrVT,cSavScrVP,cSavScrHT,cSavScrHP,CurLen,nPosAtu:=0
 
-	If IsPlugin() 
+	If IsPlugin()
 		lPlugin := .T.
 	EndIf
 
@@ -1578,13 +1585,13 @@ Static Function RMod3(cTitulo,cAlias1,cAlias2,aMyEncho,cLinOk,cTudoOk,nOpcE,nOpc
 		If lPlugin
 			nDiffHeight := 25
 		EndIf
-	Else           
+	Else
 		If lPlugin
 			nDlgHeight := oMainWnd:nHeight-55
 			nDlgWidth	:= oMainWnd:nWidth-12
 			nDiffHeight := 80
 			nTop := 10
-		Else		
+		Else
 			nDlgHeight := oMainWnd:nHeight-50
 			nDlgWidth	:= oMainWnd:nWidth-27
 		Endif
@@ -1592,16 +1599,17 @@ Static Function RMod3(cTitulo,cAlias1,cAlias2,aMyEncho,cLinOk,cTudoOk,nOpcE,nOpc
 	EndIf
 
 	Default aCordW := {nTop,000,nDlgHeight,nDlgWidth}
-	Default nSizeHeader := 110
+	// nSizeHeader := 300
+	nSizeHeader := 300
 
-	Aadd(aSize,nSizeHeader)   
+	Aadd(aSize,nSizeHeader)
 
 	DEFINE MSDIALOG oDlg TITLE cTitulo From aCordW[1],aCordW[2] to aCordW[3],aCordW[4] Pixel of oMainWnd
 	If lMdi
 		oDlg:lMaximized := .T.
 	EndIf
 
-	oEnchoice := Msmget():New(cAlias1,nReg,nOpcE,,,,aMyEncho,{13,1,(nSizeHeader/2)+13,If(lMdi, (oMainWnd:nWidth/2)-2,__DlgWidth(oDlg)-nDiffWidth)},aAltEnchoice,3,,,,oDlg,,lVirtual,,,,,,,,.F.)       
+	oEnchoice := Msmget():New(cAlias1,nReg,nOpcE,,,,aMyEncho,{nTopEnch,1,(nSizeHeader/2)+13,If(lMdi, (oMainWnd:nWidth/2)-2,__DlgWidth(oDlg)-nDiffWidth)},aAltEnchoice,3,,,,oDlg,,lVirtual,,,,,,,,.F.)
 
 	_nPosRoda := (oMainWnd:nHeight/2)-nDiffHeight
 	_nTamRoda := 50
@@ -1613,7 +1621,7 @@ Static Function RMod3(cTitulo,cAlias1,cAlias2,aMyEncho,cLinOk,cTudoOk,nOpcE,nOpc
 	@ _nPosRoda-_nTamRoda, _nLRoda+7 	SAY 	oSayTotBR PROMPT "Total Base Real:" SIZE 100, 010 OF oDlg PIXEL
 	@ _nPosRoda-_nTamRoda, _nLRoda+57 	MSGET 	oGetTotBR VAR nGetTotBR SIZE 070, 010 OF oDlg PICTURE "@E 999,999,999.99" COLORS 0, 16777215 PIXEL WHEN .F.
 	@ _nPosRoda-_nTamRoda, _nLRoda+137 	SAY 	oSayTotBA PROMPT "Total Base Ajustada:" SIZE 100, 010 OF oDlg PIXEL
-	@ _nPosRoda-_nTamRoda, _nLRoda+187 	MSGET 	oGetTotBA VAR nGetTotBA SIZE 070, 010 OF oDlg PICTURE "@E 999,999,999.99" COLORS 0, 16777215 PIXEL WHEN .F.  
+	@ _nPosRoda-_nTamRoda, _nLRoda+187 	MSGET 	oGetTotBA VAR nGetTotBA SIZE 070, 010 OF oDlg PICTURE "@E 999,999,999.99" COLORS 0, 16777215 PIXEL WHEN .F.
 
 	ACTIVATE MSDIALOG oDlg ON INIT (EnchoiceBar(oDlg,{||nOpca:=1,If(oGetDados:TudoOk(),If(!obrigatorio(aGets,aTela),nOpca := 0,oDlg:End()),nOpca := 0)},{||oDlg:End()},,aButtons),)
 
@@ -1633,6 +1641,7 @@ Return
 User Function AOWFAOAI()
 	Processa( {|| fProcWfAoAi() },"WF AO sem Bonus x Lançamentos - Aguarde...","Carregando e-mail...",.F.)
 return
+
 static function fProcWfAoAi(cDtFimDe,cDtFimAte,lObs)
 	Local aPergs 	:= {}
 	Local aRet	 	:= {STOD("")}
@@ -1643,11 +1652,11 @@ static function fProcWfAoAi(cDtFimDe,cDtFimAte,lObs)
 
 	ProcRegua(nTotReg)
 	nContReg++
-	IncProc("Carregando e-mail - Status: " + IIF((nContReg/nTotReg)*100 <= 99, StrZero((nContReg/nTotReg)*100,2), STRZERO(100,3)) + "%")	
+	IncProc("Carregando e-mail - Status: " + IIF((nContReg/nTotReg)*100 <= 99, StrZero((nContReg/nTotReg)*100,2), STRZERO(100,3)) + "%")
 
 	If MsgYesNo("Deseja enviar o Workflow de acompanhamento de AO com metas não alcançadas x Lançamentos de provisão?"+CRLF;
-	+iif(lObs,'Obs: Antes de prosseguir, verifique se o REALIZADO FOI PROCESSADO.','');
-	,"Workflow - AO sem Bonus x Lançamentos")
+			+iif(lObs,'Obs: Antes de prosseguir, verifique se o REALIZADO FOI PROCESSADO.','');
+			,"Workflow - AO sem Bonus x Lançamentos")
 
 		if empty(cDtFimAte)
 			aAdd( aPergs ,{1,"DT Final do Realizado" ,STOD(" "),"",'',"",'.T.',10,.T.})
@@ -1658,7 +1667,7 @@ static function fProcWfAoAi(cDtFimDe,cDtFimAte,lObs)
 			U_FACOWF03(cDtFim,cDtFim)
 		else
 			U_FACOWF03(cDtFimDe,cDtFimAte)
-		endif	
+		endif
 	endif
 return
 
@@ -1667,23 +1676,24 @@ return
 User Function AOWFLANC()
 	Processa( {|| fProcWFSI() },"WF AI x Lançamentos - Aguarde...","Carregando e-mail...",.F.)
 return
+
 static function fProcWFSI(cDtFimDe,cDtFimAte,cContrato,cSI,cMod,lObs)
 	Local aPergs 	:= {}
 	Local aRet	 	:= {STOD("")}
 	Local cDtFim 	:= ''
 	local nContReg 	:= 0
 	local nTotReg	:= 100
-	default cMod	:= '1'	
+	default cMod	:= '1'
 	default lObs	:= .T.
 
 	ProcRegua(nTotReg)
 	nContReg++
-	IncProc("Carregando e-mail - Status: " + IIF((nContReg/nTotReg)*100 <= 99, StrZero((nContReg/nTotReg)*100,2), STRZERO(100,3)) + "%")	
+	IncProc("Carregando e-mail - Status: " + IIF((nContReg/nTotReg)*100 <= 99, StrZero((nContReg/nTotReg)*100,2), STRZERO(100,3)) + "%")
 
-	if cMod	== '1'	
+	if cMod	== '1'
 		If MsgYesNo("Deseja enviar o Workflow de acompanhamento de AI x Lançamentos de provisão?"+CRLF;
-		+iif(lObs,'Obs: Antes de prosseguir, verifique se o REALIZADO FOI PROCESSADO.','');
-		,"Workflow - AI x Lançamentos")
+				+iif(lObs,'Obs: Antes de prosseguir, verifique se o REALIZADO FOI PROCESSADO.','');
+				,"Workflow - AI x Lançamentos")
 			if empty(cDtFimAte)
 				aAdd( aPergs ,{1,"DT Final do Realizado" ,STOD(" "),"",'',"",'.T.',10,.T.})
 				If !ParamBox(aPergs ,"e-Mail",aRet,,,,,,,,.F.,.F.)
@@ -1693,11 +1703,11 @@ static function fProcWFSI(cDtFimDe,cDtFimAte,cContrato,cSI,cMod,lObs)
 				U_FACOWF02(cDtFim,cDtFim)
 			else
 				U_FACOWF02(cDtFimDe,cDtFimAte,cContrato,cSI)
-			endif	
+			endif
 		endif
 	else
 		U_FACOWF02(cDtFimDe,cDtFimAte,cContrato,cSI)
-	endif	
+	endif
 return
 
 //Atualizar Realizado de Todos os Acrordos de uma so vez
@@ -1723,7 +1733,7 @@ User Function AO_UPDREA
 	cDtFimAte := DTOS(aRet[2])
 
 	cAliasCount := GetNextAlias()
-	BeginSql Alias cAliasCount  
+	BeginSql Alias cAliasCount
 
 		select CONT = count(distinct PZ5_CODIGO) from %Table:PZ5% PZ5
 		join %Table:PZ6% PZ6 on PZ6_FILIAL = PZ5_FILIAL and PZ6_CODIGO = PZ5_CODIGO
@@ -1739,7 +1749,7 @@ User Function AO_UPDREA
 	(cAliasCount)->(DbCloseArea())
 
 	cAliasTmp := GetNextAlias()
-	BeginSql Alias cAliasTmp  
+	BeginSql Alias cAliasTmp
 
 		select distinct PZ5_CODIGO from %Table:PZ5% PZ5
 		join %Table:PZ6% PZ6 on PZ6_FILIAL = PZ5_FILIAL and PZ6_CODIGO = PZ5_CODIGO
@@ -1808,7 +1818,7 @@ Static Function UpdReaAco(cCodAC)
 		Return
 	EndIf
 
-	While !PZ6->(Eof()) .And. PZ6->(PZ6_FILIAL+PZ6_CODIGO) == (XFilial("PZ6")+cCodAC) 
+	While !PZ6->(Eof()) .And. PZ6->(PZ6_FILIAL+PZ6_CODIGO) == (XFilial("PZ6")+cCodAC)
 
 		//Periodo definido - e sem SI gerada
 		If (!Empty(PZ6->PZ6_PERFIM) .And. !Empty(PZ6->PZ6_PERINI)) .And. (Empty(PZ6->PZ6_SI))
@@ -1877,7 +1887,7 @@ Static Function UpdReaAco(cCodAC)
 				RecLock("PZ6",.F.)
 
 				If !TRB->(Eof())
-					PZ6->PZ6_BASVER := TRB->VALOR				
+					PZ6->PZ6_BASVER := TRB->VALOR
 				Else
 					PZ6->PZ6_BASVER := 0
 				EndIf
@@ -1890,7 +1900,7 @@ Static Function UpdReaAco(cCodAC)
 
 		EndIf
 
-		PZ6->(DbSkip())	
+		PZ6->(DbSkip())
 	EndDo
 
 Return
@@ -1937,7 +1947,7 @@ Static Function UpdBonusAI(cCodAC, lGeraSI)
 		Return
 	EndIf
 
-	While !PZ6->(Eof()) .And. PZ6->(PZ6_FILIAL+PZ6_CODIGO) == (XFilial("PZ6")+cCodAC) 
+	While !PZ6->(Eof()) .And. PZ6->(PZ6_FILIAL+PZ6_CODIGO) == (XFilial("PZ6")+cCodAC)
 
 		//Periodo definido - e sem SI gerada
 		If (!Empty(PZ6->PZ6_PERFIM) .And. !Empty(PZ6->PZ6_PERINI)) .And. (Empty(PZ6->PZ6_SI)) .And. (PZ6->PZ6_PERFIM < dDataBase)
@@ -1946,7 +1956,7 @@ Static Function UpdBonusAI(cCodAC, lGeraSI)
 
 			//OS 1337-16 : Filtro dos pacotes para calculo da base da verba com pacotes diferenciados - solicitacao Incesa
 			If PZ5->(FieldPos("PZ5_PCTVER")) > 0 .And. !Empty(PZ5->PZ5_PCTVER)
-				_nVBasVer := PZ6->PZ6_BASVER		
+				_nVBasVer := PZ6->PZ6_BASVER
 			EndIf
 
 			_nMeta1		:= PZ6->PZ6_METAF1
@@ -2010,12 +2020,12 @@ Static Function UpdBonusAI(cCodAC, lGeraSI)
 
 				cNumSI := GerarSI(PZ6->PZ6_BONUS,PZ6->PZ6_PERINI,PZ6->PZ6_PERFIM,PZ6->PZ6_IDPER, .T.)
 				RecLock("PZ6",.F.)
-				PZ6->PZ6_SI := cNumSI 
+				PZ6->PZ6_SI := cNumSI
 				PZ6->(MsUnlock())
 
-				cLogSI += cNumSI + CRLF 
+				cLogSI += cNumSI + CRLF
 
-			EndIf	
+			EndIf
 
 		EndIf
 

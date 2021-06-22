@@ -302,6 +302,7 @@ Method CleanBorSE1(nSE1RecNo,cStatus,cCodBar) Class TAFBorderoReceber
 				SE1->(MSUnlock())
 			endif
 
+			FIDC():resetFIDCVars()
 			if (FIDC():isFIDCEnabled().and.FIDC():getBiaPar("FIDC_CTB_LP_BORDERO_ONLINE",.T.))
 				cSA1IdxKey:="A1_FILIAL+A1_COD+A1_LOJA"
 				SA1->(dbSetOrder(retOrder("SA1",cSA1IdxKey)))
@@ -325,7 +326,7 @@ Method CleanBorSE1(nSE1RecNo,cStatus,cCodBar) Class TAFBorderoReceber
 						if (FIDC():getFIDCVar("lDiario",.F.))
 							FIDC():setFIDCVar("aDiario",{"SE1",nSE1RecNo,SE1->E1_DIACTB,"E1_NODIA","E1_DIACTB"})
 						endif
-						SE1->(FIDC():ctbFIDC())
+						SE1->(FIDC():ctbFIDC(1))
 						FIDC():resetFIDCVars()
 					endif
 				endif

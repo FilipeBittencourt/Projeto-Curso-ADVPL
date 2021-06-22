@@ -16,7 +16,7 @@ User Function BAF004()
 
 	U_GravaPZ2(0,"SE1","BAF004","INICIO","EMP:"+CEMPANT,"MNT",CUSERNAME)
 
-	_oSemaforo:cGrupo	:=	"FIN_BAIXAS"
+	_oSemaforo:cGrupo	:=	"FIN_BAIXAS_CR"
 
 	If _oSemaforo:GeraSemaforo("JOB - BAF004")
 

@@ -5351,22 +5351,22 @@ User Function BIAATUSBZ()
 	Public xBZEstUsr := .F. // Estoque/Suprimentos
 	Public xBZLabUsr := .F. //Laboratório
 
-	If U_VALOPER("033") // Almoxarifado
+	If U_VALOPER("033", .F.) // Almoxarifado
 		xBZAlmUsr := .T.
 	EndIf
-	If U_VALOPER("034") // Fiscal
+	If U_VALOPER("034", .F.) // Fiscal
 		xBZFisUsr := .T.
 	EndIf
-	If U_VALOPER("035") // Custos
+	If U_VALOPER("035", .F.) // Custos
 		xBZCusUsr := .T.
 	EndIf
-	If U_VALOPER("036") // Industrial
+	If U_VALOPER("036", .F.) // Industrial
 		xBZIndUsr := .T.
 	EndIf
-	If U_VALOPER("037") // Estoque/Suprimentos
+	If U_VALOPER("037", .F.) // Estoque/Suprimentos
 		xBZEstUsr := .T.
 	EndIf
-	If U_VALOPER("Z52") // Laboratório
+	If U_VALOPER("Z52", .F.) // Laboratório
 		xBZLabUsr := .T.
 	EndIf
 

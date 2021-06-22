@@ -25,25 +25,35 @@ User Function TIPOPG
 
 Private cMod:= "", cModBco:=""
 
-cMod    := SEA->EA_MODELO
-DO CASE
-   CASE cMod == "01"
-   		cModBco	:= "CC"
-   CASE cMod == "05"
-   		cModBco	:= "CP"
-   CASE cMod == "13"
-   		cModBco	:= "CCS"
-   CASE cMod == "30"
-   		cModBco	:= "COB"
-   CASE cMod == "31"
-   		cModBco	:= "COB"
-   CASE cMod == "03"
-   		cModBco	:= "DOC"
-   CASE cMod == "99"
-   		cModBco	:= "DUD"
-   CASE cMod == "41"
-   		cModBco	:= "TED"   		
-   CASE cMod == "42"
-   		cModBco	:= "TED"   		   		
-ENDCASE   		
+cMod := SEA->EA_MODELO
+
+	DO CASE
+	   CASE cMod == "01"
+	   		
+	   		If SA2->A2_TIPCTA == "2"
+	   			cModBco	:= "CP"
+	   		Else
+	   			cModBco	:= "CC"
+	   		EndIf
+	   		
+	   CASE cMod == "05"
+	   		cModBco	:= "CP"
+	   CASE cMod == "11"
+	   		cModBco	:= "CCS"
+	   CASE cMod == "13"
+	   		cModBco	:= "CCS"
+	   CASE cMod == "30"
+	   		cModBco	:= "COB"
+	   CASE cMod == "31"
+	   		cModBco	:= "COB"
+	   CASE cMod == "03"
+	   		cModBco	:= "DOC"
+	   CASE cMod == "99"
+	   		cModBco	:= "DUD"
+	   CASE cMod == "41"
+	   		cModBco	:= "TED"   		
+	   CASE cMod == "42"
+	   		cModBco	:= "TED"   		   		
+	ENDCASE   		
+
 Return(cModBco)

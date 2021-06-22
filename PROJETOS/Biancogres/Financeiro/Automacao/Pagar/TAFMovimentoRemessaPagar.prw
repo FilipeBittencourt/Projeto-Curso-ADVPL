@@ -151,9 +151,9 @@ Local nI := 0
 	Else
 		
 		If ::nDia > 0
-		
+			
 			cSQL += " AND SE2.E2_VENCREA BETWEEN "
-			cSQL += " CONVERT(VARCHAR(10), DATEADD(DAY, 1, " + ValToSQL(dDataBase) + "), 112) "
+			cSQL += " CONVERT(VARCHAR(10), DATEADD(DAY, "+cValToChar(IIF(::lFIDC, 0, 1))+", " + ValToSQL(dDataBase) + "), 112) "
 			cSQL += " AND "
 			cSQL += " CONVERT(VARCHAR(10), DATEADD(DAY, " + cValToChar(::nDia) + ", " + ValToSQL(dDataBase) + "), 112) "
 			cSQL += " AND E2_NUMBOR = '' "

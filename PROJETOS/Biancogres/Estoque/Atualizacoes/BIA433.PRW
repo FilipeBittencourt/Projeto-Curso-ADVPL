@@ -79,6 +79,7 @@ User Function BIA433()
 	Ferase(cIndex+OrdBagExt())          //indice gerado
 
 	If xExistB9
+
 		A001 := " SELECT B9_COD, B9_LOCAL, B9_DATA, B9_QINI, B9_VINI1, B1_DESC, B1_TIPO, B1_GRUPO "
 		A001 += "   FROM "+RetSqlName("SB9")+" SB9, "+RetSqlName("SB1")+" SB1 "
 		A001 += "  WHERE B9_FILIAL = '"+xFilial("SB9")+"' "
@@ -93,6 +94,7 @@ User Function BIA433()
 		A001 += "    AND SB9.D_E_L_E_T_ = ' ' "
 		A001 += "    AND SB1.D_E_L_E_T_ = ' ' "
 		A001 += " ORDER BY B9_COD "
+
 	Else                           // Retirado por Marcos Alberto Soprani em 08/04/13 para atender a nova forma de fechamento de custo
 		******************************************************************************************************************************
 		A001 := " SELECT B2_COD B9_COD, "
@@ -117,7 +119,9 @@ User Function BIA433()
 		A001 += "    AND SB2.D_E_L_E_T_ = ' ' "
 		A001 += "    AND SB1.D_E_L_E_T_ = ' ' "
 		A001 += " ORDER BY B2_COD "
+
 	EndIf
+
 	If chkfile("A001")
 		DbSelectArea("A001")
 		DbCloseArea()
@@ -131,6 +135,7 @@ User Function BIA433()
 	kp_Valor1 := 0
 
 	While !Eof()
+
 		cTempo := Alltrim(ElapTime(cHInicio, Time()))
 		IncProc("Atualizando....    Tempo: "+cTempo)
 
@@ -160,6 +165,7 @@ User Function BIA433()
 
 		DbSelectArea("A001")
 		DbSkip()
+
 	End
 
 	If nRow1 > 2250
@@ -178,17 +184,6 @@ User Function BIA433()
 	nRow1 += 050
 
 	A001->(dbCloseArea())
-
-	//Ajusta fechamento de estoque na tabela SBJ para registros com quantidade diferente de zero e sem numlote.
-	cSql := ""
-	cSql += "UPDATE "+RetSqlName("SBJ")+" "
-	cSql += "   SET BJ_QINI = 0,  BJ_QISEGUM = 0 "
-	cSql += " WHERE BJ_FILIAL = '"+xFilial("SBJ")+"' "
-	cSql += "  AND BJ_DATA = '"+dtos(MV_PAR01)+"'"
-	cSql += "  AND BJ_QINI <> 0 "
-	cSql += "  AND BJ_NUMLOTE = ' ' "
-	cSql += "  AND D_E_L_E_T_ = ' ' "
-	TCSQLExec(cSql)
 
 	fImpRoda()
 

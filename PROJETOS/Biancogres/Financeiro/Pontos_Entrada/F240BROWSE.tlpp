@@ -1,0 +1,16 @@
+#include "totvs.ch"
+
+/*/{Protheus.doc} FIDC
+@author Marinaldo de Jesus
+@since 21/05/2021
+@project FIDC
+@version 1.0
+@description: Ponto de Entrada Executado no progama FINA240.PRX (Envia titulo para bordero de Pagamento)
+              Será utilizado para Filtrar os Titulos não FIDC.
+@type function
+/*/
+function u_F240BROWSE() as character
+    local cFilterRet as character
+    cFilterRet:=FIDC():getPGFilterFIDC()
+    cacheData():set("F240TIT","aF240TIT",array(0))
+    return(cFilterRet)

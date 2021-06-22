@@ -303,6 +303,7 @@ Return lRet
 
 static function FSAtuSX6()
 
+	local aParam
 	local aSX6Query
 	local cSX6Filter
 
@@ -325,6 +326,28 @@ static function FSAtuSX6()
 		endif
 		SX6->(dbSkip())
 	end while
+
+	dbSelectArea("SX6")
+	SET FILTER TO
+	SX6->(dbSetOrder(1))
+
+	aParam:=Array(0)
+	
+	aAdd(aParam,"2") //MV_AMBNFCE
+	aAdd(aParam,"1") //MV_MODNFCE
+	aAdd(aParam,"3.00") //MV_VERNFCE
+
+	evalBlock():EvalBlock({||StaticCall(SPEDNFE,TSSAtuSX6,aParam)},nil,.F.)
+
+	__cUserID:="000000"
+	cUsuario:="Administrador"
+	PswOrder(2)
+	PswSeek(AllTrim(cUsuario)) 
+
+	evalBlock():EvalBlock({||SpedNFePar()},nil,.F.) //Nfe
+	evalBlock():EvalBlock({||SpedNFePar('65')},nil,.F.) //NFCe
+	evalBlock():EvalBlock({||SpedNFePar('67')},nil,.F.) //CteOs
+	evalBlock():EvalBlock({||/*SpedCCePar(nil,.f.)*/},nil,.F.) //Eventos
 
 	AutoGrLog( CRLF + "Final da Atualização" + " SX6" + CRLF + Replicate( "-", 128 ) + CRLF )
 

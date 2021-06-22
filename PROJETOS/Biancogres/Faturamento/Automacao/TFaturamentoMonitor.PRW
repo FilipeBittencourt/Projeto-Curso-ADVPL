@@ -1615,7 +1615,7 @@ Method AtuLegDoc(lGrid) Class TFaturamentoMonitor
 			SA1->(DBSetOrder(1))
 
 			SA1->(DBSeek(xFilial("SA1") + ::aDocumentos[nW][D_CLIENTE] + ::aDocumentos[nW][D_LOJA]))
-			
+
 			If oObjMDFe:IsValidMDFe(SubStr(::aDocumentos[nW][D_EMPFIL], 1, 2), SubStr(::aDocumentos[nW][D_EMPFIL], 3, 2), ::aDocumentos[nW][D_EST], ::aDocumentos[nW][D_CNPJ], ::aDocumentos[nW][D_UFTRANSP], ::aDocumentos[nW][D_CNPJTRANSP], SA1->A1_COD_MUN)
 
 				If oObjMDFe:IsFaltaRota(SubStr(::aDocumentos[nW][D_EMPFIL], 1, 2), SubStr(::aDocumentos[nW][D_EMPFIL], 3, 2), ::aDocumentos[nW][D_EST])
@@ -1633,7 +1633,7 @@ Method AtuLegDoc(lGrid) Class TFaturamentoMonitor
 					If DA3->(MsSeek(xFilial("DA3") + ::aDocumentos[nW][D_VEIC]))
 
 						If DUT->( msSeek( xFilial( "DUT" ) + DA3->DA3_TIPVEI ) )
-							
+
 							If Empty(::aDocumentos[nW][D_STATUS_MDFE])
 
 								::aDocumentos[nW][D_STATUS_MDFE] := "Aguardando envio"
@@ -1830,51 +1830,53 @@ Method Faturar() Class TFaturamentoMonitor
 	//__oSemaforo:lShowMsg	:= .T. //Nao Exibir mensagem de LOCK
 	//If __oSemaforo:GeraSemaforo("FAT:Faturamento Automatico")
 
-		::cCarga := ::GetCarga()
+	::cCarga := ::GetCarga()
 
-		ZZV->(DbSetOrder(1))
+	ZZV->(DbSetOrder(1))
 
-		If ZZV->(DbSeek(xFilial("ZZV")+::cCarga))
+	If ZZV->(DbSeek(xFilial("ZZV")+::cCarga))
 
-			::SetKeys(.T.)
+		::SetKeys(.T.)
 
-			If Empty(ZZV->ZZV_PL_UF) .And. !Empty(ZZV->ZZV_PLACA)
+		If Empty(ZZV->ZZV_PL_UF) .And. !Empty(ZZV->ZZV_PLACA)
 
-				Alert("UF do veículo não preenchida!")
+			Alert("UF do veículo não preenchida!")
 
-				_XCRGATFAT := .F.
+			_XCRGATFAT := .F.
 
-				Return(.F.)
-
-			EndIf
-
-			__nVld := oObjFat:VldCarga(ZZV->ZZV_CARGA)
-
-			If ( __nVld == 0 .Or. __nVld == 2 )
-
-				If MsgNoYes("Tem certeza que deseja iniciar o faturamento da CARGA: "+ZZV->ZZV_CARGA,"TFaturamentoMonitor")
-
-					U_GravaPZ2(ZZV->(RecNo()),"ZZV",ZZV->ZZV_CARGA,"FATAUT",AllTrim(FunName()),"FAT", CUSERNAME)
-
-					U_BACP0010(ZZV->ZZV_CARGA, cEmpAnt)
-
-					::cCarga := ""
-
-					::Get()
-
-				EndIf
-
-			EndIf
-
-			::SetKeys()
+			Return(.F.)
 
 		EndIf
 
-		_XCRGATFAT := .F. 	// Estava acontecendo de o usuario abrir o monitor, faturava, essa variavel ficar true,
-		// e abrir a tela de documento de saida para faturar e como continuava true, entendia que estava em job
+		__nVld := oObjFat:VldCarga(ZZV->ZZV_CARGA)
 
-		//Liberar semaforo Faturamento
-		//__oSemaforo:LiberaSemaforo()
+		If ( __nVld == 0 .Or. __nVld == 2 )
+
+			If MsgNoYes("Tem certeza que deseja iniciar o faturamento da CARGA: "+ZZV->ZZV_CARGA,"TFaturamentoMonitor")
+
+				U_GravaPZ2(ZZV->(RecNo()),"ZZV",ZZV->ZZV_CARGA,"FATAUT",AllTrim(FunName()),"FAT", CUSERNAME)
+
+				U_BACP0010(ZZV->ZZV_CARGA, cEmpAnt)
+
+				::cCarga := ""
+
+				::Get()
+
+			EndIf
+
+		EndIf
+
+		::SetKeys()
+
+	EndIf
+
+	_XCRGATFAT := .F. 	// Estava acontecendo de o usuario abrir o monitor, faturava, essa variavel ficar true,
+	// e abrir a tela de documento de saida para faturar e como continuava true, entendia que estava em job
+	// Limpeza de variáveis.
+	::oObjFat := Nil
+	::oObjFat := TFaturamentoAutomatico():New()
+	//Liberar semaforo Faturamento
+	//__oSemaforo:LiberaSemaforo()
 
 	//EndIf
 

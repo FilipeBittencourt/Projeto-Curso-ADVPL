@@ -2993,7 +2993,7 @@ Return(cRet)
 User Function RetNumCC(cOpe)
 	Local cRet := ""
 	Local nTam := If (cOpe $ "41/43", 13, 12)
-	cRet := If(cOpe $ "01/03/05/07/08/41/43", StrZero(Val(StrTran(SA2->A2_NUMCON,".","")),nTam), Space(nTam))
+	cRet := If(cOpe $ "01/03/05/07/08/41/43", StrZero(Val(StrTran(AllTrim(SA2->A2_NUMCON) + SA2->A2_YDVCTA,".","")),nTam), Space(nTam))
 Return(cRet)
 
 /*
@@ -7502,7 +7502,12 @@ Local cQry		:= GetNextAlias()
 Local cCodReg	:= ''
 Local aRet		:= {}
 
-cSQL :="SELECT LEN(REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf)) CPF FROM VETORH.dbo.r034fun WITH (NOLOCK) WHERE REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf) = '"+xCPF+"' "
+If U_fValDEV()
+	cSQL :="SELECT LEN(REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf)) CPF FROM VETORH_DEV.dbo.r034fun WITH (NOLOCK) WHERE REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf) = '"+xCPF+"' "
+Else
+	cSQL :="SELECT LEN(REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf)) CPF FROM VETORH.dbo.r034fun WITH (NOLOCK) WHERE REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf) = '"+xCPF+"' "
+EndIF 
+
 TcQuery cSQL New Alias (cQry)
 
 DO CASE

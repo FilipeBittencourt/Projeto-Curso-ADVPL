@@ -228,6 +228,8 @@ Method ProcessReturn(oLstBol) Class TAFApiRemessaReceber
 
 	For nW := 1 To Len(::oApi:oRet:oRetorno:Titulos)
 
+		FIDC():resetFIDCVars()
+
 		::oLog:cIDProc := ::cIDProc
 		::oLog:cStAPI := "1"
 		::oLog:cOperac := "R"

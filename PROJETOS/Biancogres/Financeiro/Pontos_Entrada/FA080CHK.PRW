@@ -14,11 +14,13 @@ User Function FA080CHK()
 	local lFA080CHK as logical
 
 	begin sequence
-		lFA080CHK:=(!FIDC():isPGFIDC(.T.))
-		if (!lFA080CHK)
-			break
-		endif
-		lFA080CHK:=FA080CHK()
+		#ifdef __dbg__
+            lFA080CHK:=(!FIDC():isPGFIDC(.T.))
+            if (!lFA080CHK)
+                break
+            endif
+		#endif
+        lFA080CHK:=FA080CHK()
 	end sequence
 
 	return(lFA080CHK)

@@ -116,7 +116,7 @@ User Function MA030TOK()
 		*/
 
 		If !Empty(Alltrim(M->A1_YREGESP))
-			MsgAlert("Este Cliente possui Regime Especial e não serão as geradas as Guias de GNRE!","MA030TOK")
+			Aviso("MA030TOK","Este Cliente possui Regime Especial e não serão as geradas as Guias de GNRE!",{'Ok'})
 			AutoGrLog("Este Cliente possui Regime Especial e não serão as geradas as Guias de GNRE!")
 		EndIf
 
@@ -220,7 +220,7 @@ User Function MA030TOK()
 
 		ELSEIF lVendCPF
 
-			MsgAlert("Existem Representantes informados que são Funcionários - Vai permitir Comissão ZERO", "MA030TOK - ATENÇÃO")
+			Aviso("MA030TOK","Existem Representantes informados que são Funcionários - Vai permitir Comissão ZERO", {"OK"})
 			AutoGrLog("Existem Representantes informados que são Funcionários - Vai permitir Comissão ZERO")
 
 		ENDIF
@@ -560,14 +560,14 @@ User Function MA030TOK()
 	// Validação necessária para não permitir contas contabeis erradas
 	If cEmpAnt <> "02" .And. Substr(Alltrim(M->A1_CONTA),9,6) <> Alltrim(M->A1_COD)
 		M->A1_CONTA := Substr(M->A1_CONTA,1,8)+ALLTRIM(M->A1_COD)
-		MsgAlert("Atenção, Conta contabil incorretamente, favor verificar!","MA030TOK")
+		Aviso("MA030TOK","Atenção, Conta contabil incorretamente, favor verificar!",{"OK"})		
 		AutoGrLog("Atenção, Conta contabil incorretamente, favor verificar!")
 		Return(.F.)
 	Endif
 
 	// Verifica se já existe o CGC do cliente em alguma empresa do grupo
 	If M->A1_TIPO <> "X" .And. U_BIAF009(M->A1_CGC, @cEmpresa, @cCliente, @cLoja)
-		MsgAlert("Atenção, O CGC/CPF: "+ AllTrim(M->A1_CGC) +" já esta associado ao cliente: "+ cCliente +" - Loja: "+ cLoja +" da empresa: "+ cEmpresa,"MA030TOK")
+		Aviso("MA030TOK","Atenção, O CGC/CPF: "+ AllTrim(M->A1_CGC) +" já esta associado ao cliente: "+ cCliente +" - Loja: "+ cLoja +" da empresa: "+ cEmpresa,,{"OK"})
 		AutoGrLog("Atenção, O CGC/CPF: "+ AllTrim(M->A1_CGC) +" já esta associado ao cliente: "+ cCliente +" - Loja: "+ cLoja +" da empresa: "+ cEmpresa)
 		Return(.F.)
 	EndIf

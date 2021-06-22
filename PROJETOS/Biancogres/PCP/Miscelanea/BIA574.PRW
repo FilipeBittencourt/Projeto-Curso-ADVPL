@@ -91,6 +91,8 @@ User Function BIA574A()
 		TY001 += Alltrim("                 SELECT *                                                                            ") + msEnter
 		TY001 += Alltrim("                 FROM " + RetSqlName("ZDD") + " XXX(NOLOCK)                                          ") + msEnter
 		TY001 += Alltrim("                 WHERE XXX.ZDD_DTREF = TEMP1.ZDD_DTREF                                               ") + msEnter
+		TY001 += Alltrim("                 AND XXX.ZDD_LINHA = TEMP1.LINHA 		                                               ") + msEnter
+		TY001 += Alltrim("                 AND XXX.D_E_L_E_T_ = ''		 		                                               ") + msEnter
 		TY001 += Alltrim("             )                                                                                       ") + msEnter
 		U_BIAMsgRun("Aguarde... Criando arquivo de Trabalho... ",,{|| msStaExcQy := TcSQLExec(TY001) })
 		If msStaExcQy < 0

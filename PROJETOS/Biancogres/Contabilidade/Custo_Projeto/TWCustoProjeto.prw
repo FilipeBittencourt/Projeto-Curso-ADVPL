@@ -40,7 +40,7 @@ Class TWCustoProjeto From LongClassName
 	Method GetData02()
 	Method GetData03()
 	Method GetData04()
-	Method GetDataCtr(cNumero, cItemCta, cSubItem)
+	Method GetDataCtr(cNumero, cClvl, cItemCta, cSubItem)
 	Method GetCurrency(cTipo, cFornec, cLoja, cDoc, nValor)			
 	Method ParamBox()
 	Method Refresh()
@@ -261,8 +261,8 @@ Local aLine04 := {}
 	  
 	oFWExcel:AddWorkSheet(cWork01) 
 	oFWExcel:AddTable(cWork01, cTable01)
-	oFWExcel:AddColumn(cWork01, cTable01, "Contrato", 1, 1)
 	oFWExcel:AddColumn(cWork01, cTable01, "Clvl", 1, 1)
+	oFWExcel:AddColumn(cWork01, cTable01, "Contrato", 1, 1)
 	oFWExcel:AddColumn(cWork01, cTable01, "Item", 1, 1)		
 	oFWExcel:AddColumn(cWork01, cTable01, "Subitem", 1, 1)
 	oFWExcel:AddColumn(cWork01, cTable01, "Fornecedor", 1, 1)
@@ -271,10 +271,10 @@ Local aLine04 := {}
 	oFWExcel:AddColumn(cWork01, cTable01, "Documento", 1, 1)
 	oFWExcel:AddColumn(cWork01, cTable01, "Descrição", 1, 1)			
 	oFWExcel:AddColumn(cWork01, cTable01, "Data", 1, 1)	
-	oFWExcel:AddColumn(cWork01, cTable01, "Valor", 3, 2, .T.)
-	oFWExcel:AddColumn(cWork01, cTable01, "Moeda", 3, 2, .F.)
+	oFWExcel:AddColumn(cWork01, cTable01, "Moeda", 1, 1, .F.)
+	oFWExcel:AddColumn(cWork01, cTable01, "Investimento", 3, 2, .T.)
 	oFWExcel:AddColumn(cWork01, cTable01, "Cotação", 3, 2, .F.)
-	oFWExcel:AddColumn(cWork01, cTable01, "Valor", 3, 2, .T.)		
+	oFWExcel:AddColumn(cWork01, cTable01, "Valor em R$", 3, 2, .T.)		
 	  		
 	aLine01 := ::GetData01()
 	
@@ -286,8 +286,8 @@ Local aLine04 := {}
 	
 	oFWExcel:AddWorkSheet(cWork02) 
 	oFWExcel:AddTable(cWork02, cTable02)
-	oFWExcel:AddColumn(cWork02, cTable02, "Contrato", 1, 1)
 	oFWExcel:AddColumn(cWork02, cTable02, "Clvl", 1, 1)
+	oFWExcel:AddColumn(cWork02, cTable02, "Contrato", 1, 1)
 	oFWExcel:AddColumn(cWork02, cTable02, "Fornecedor", 1, 1)
 	oFWExcel:AddColumn(cWork02, cTable02, "Documento", 1, 1)
 	oFWExcel:AddColumn(cWork02, cTable02, "Descrição", 1, 1)			
@@ -304,6 +304,7 @@ Local aLine04 := {}
 	
 	oFWExcel:AddWorkSheet(cWork03) 
 	oFWExcel:AddTable(cWork03, cTable03)
+	oFWExcel:AddColumn(cWork03, cTable03, "Clvl", 1, 1)
 	oFWExcel:AddColumn(cWork03, cTable03, "Contrato", 1, 1)
 	oFWExcel:AddColumn(cWork03, cTable03, "Item", 1, 1)		
 	oFWExcel:AddColumn(cWork03, cTable03, "Subitem", 1, 1)
@@ -393,8 +394,8 @@ Local aCurrency := {}
 	
 		aCurrency := ::GetCurrency((cQry)->TIPO, (cQry)->FORNECEDOR, (cQry)->LOJA, (cQry)->DOC, (cQry)->VALOR)
 
-		aAdd(aRet, {(cQry)->CONTRATO, (cQry)->CLVL, (cQry)->ITEMCT, (cQry)->SUBITEM, (cQry)->NOME_FOR, (cQry)->TIPO, (cQry)->STATUS,;
-								(cQry)->DOC, (cQry)->DESCRICAO, dToC(sToD((cQry)->DATA)), (cQry)->VALOR, aCurrency[1, 1], aCurrency[1, 2], aCurrency[1, 3]})
+		aAdd(aRet, {(cQry)->CLVL, (cQry)->CONTRATO, (cQry)->ITEMCT, (cQry)->SUBITEM, (cQry)->NOME_FOR, (cQry)->TIPO, (cQry)->STATUS,;
+								(cQry)->DOC, (cQry)->DESCRICAO, dToC(sToD((cQry)->DATA)), aCurrency[1, 1], (cQry)->VALOR, aCurrency[1, 2], aCurrency[1, 3]})
 	  
 	  (cQry)->(DbSkip())
 
@@ -423,7 +424,7 @@ Local cQry := GetNextAlias()
 
 	While !(cQry)->(Eof())
 
-		aAdd(aRet, {(cQry)->CONTRATO, (cQry)->CLVL, (cQry)->NOME_FOR, (cQry)->DOC, (cQry)->DESCRICAO, dToC(sToD((cQry)->DATA)), (cQry)->VALOR})
+		aAdd(aRet, {(cQry)->CLVL, (cQry)->CONTRATO, (cQry)->NOME_FOR, (cQry)->DOC, (cQry)->DESCRICAO, dToC(sToD((cQry)->DATA)), (cQry)->VALOR})
 
 		(cQry)->(DbSkip())
 
@@ -439,23 +440,42 @@ Local aRet := {}
 Local cSQL := ""
 Local cQry := GetNextAlias()
 
-	cSQL := " SELECT CONTRATO, ITEMCT, SUBITEM, ISNULL(ROUND(SUM(VALOR), 2), 0) AS VLRPAG, "
+	cSQL := " SELECT CONTRATO, CLVL, ITEMCT, SUBITEM, ISNULL(ROUND(SUM(VALOR), 2), 0) AS VLRPAG, "
 
 	cSQL += " (
 	cSQL += " 	SELECT ISNULL(ROUND(SUM(VALOR), 2) , 0)
-	cSQL += " 	FROM FNC_CTR_MOV_BAN_" + cEmpAnt + "(CONTRATO, CONTRATO, " + ValToSQL(::oParam:cClvlDe) + ", " + ValToSQL(::oParam:cClvlAte) + ", ITEMCT, ITEMCT, SUBITEM, SUBITEM) "
-	cSQL += " ) AS PAGBRU,
+	cSQL += " 	FROM FNC_CTR_MOV_BAN_" + cEmpAnt + "(CONTRATO, CONTRATO, CLVL, CLVL, " 
+	cSQL += " 	ITEMCT, CASE WHEN SUBSTRING(CONTRATO, 3, 1) = '9' THEN 'ZZZZZZZZZ' ELSE ITEMCT END, " 
+	cSQL += " 	SUBITEM, CASE WHEN SUBSTRING(CONTRATO, 3, 1) = '9' THEN 'ZZ' ELSE SUBITEM END) "
+	cSQL += " ) AS PAGBRU, "
 
 	cSQL += " (
 	cSQL += " 	SELECT ISNULL(ROUND(SUM(SALDO), 2) , 0)
-	cSQL += " 	FROM FNC_CTR_PA_" + cEmpAnt + "(CONTRATO, CONTRATO, " + ValToSQL(::oParam:cClvlDe) + ", " + ValToSQL(::oParam:cClvlAte) + ", ITEMCT, ITEMCT, SUBITEM, SUBITEM) "
-	cSQL += " 	WHERE SALDO > 0
-	cSQL += " ) AS PAGANT	
+	cSQL += " 	FROM FNC_CTR_PA_" + cEmpAnt + "(CONTRATO, CONTRATO, CLVL, CLVL, "
+	cSQL += " 	ITEMCT, CASE WHEN SUBSTRING(CONTRATO, 3, 1) = '9' THEN 'ZZZZZZZZZ' ELSE ITEMCT END, "
+	cSQL += " 	SUBITEM, CASE WHEN SUBSTRING(CONTRATO, 3, 1) = '9' THEN 'ZZ' ELSE SUBITEM END) "
+	cSQL += " 	WHERE SALDO > 0 "
+	cSQL += " ) AS PAGANT,	"
+	
+	cSQL += " (
+	cSQL += " 	SELECT ISNULL(ROUND(SUM(VALOR), 2) , 0)
+	cSQL += " 	FROM FNC_CTR_REQ_" + cEmpAnt + "(CONTRATO, CONTRATO, CLVL, CLVL, " 
+	cSQL += " 	ITEMCT, CASE WHEN SUBSTRING(CONTRATO, 3, 1) = '9' THEN 'ZZZZZZZZZ' ELSE ITEMCT END, " 
+	cSQL += " 	SUBITEM, CASE WHEN SUBSTRING(CONTRATO, 3, 1) = '9' THEN 'ZZ' ELSE SUBITEM END) "
+	cSQL += " ) AS PAGREQ, "
+	
+	cSQL += " (
+	cSQL += " 	SELECT ISNULL(ROUND(SUM(VALOR * (-1)), 2), 0)
+	cSQL += " 	FROM FNC_CTR_DEV_" + cEmpAnt + "(CONTRATO, CONTRATO, CLVL, CLVL, " 
+	cSQL += " 	ITEMCT, CASE WHEN SUBSTRING(CONTRATO, 3, 1) = '9' THEN 'ZZZZZZZZZ' ELSE ITEMCT END, " 
+	cSQL += " 	SUBITEM, CASE WHEN SUBSTRING(CONTRATO, 3, 1) = '9' THEN 'ZZ' ELSE SUBITEM END) "
+	cSQL += " ) AS PAGDEV "
+	
 	
 	cSQL += " FROM "
 	cSQL += " ( "
 	
-	cSQL += " SELECT CONTRATO, ITEMCT, SUBITEM, ROUND(SUM(VALOR), 2) AS VALOR " 
+	cSQL += " SELECT CONTRATO, CLVL, ITEMCT, SUBITEM, ROUND(SUM(VALOR), 2) AS VALOR " 
 	cSQL += " FROM FNC_CTR_CUSTO_" + cEmpAnt + "(" +; 
 						ValToSQL(::oParam:cContratoDe) + ", " + ValToSQL(::oParam:cContratoAte) +;
 						", " + ValToSQL(::oParam:cClvlDe) + ", " + ValToSQL(::oParam:cClvlAte) +;
@@ -464,11 +484,11 @@ Local cQry := GetNextAlias()
 						", " + ValToSQL(::oParam:cCodForDe) + ", " + ValToSQL(::oParam:cCodForAte) +;
 						", " + ValToSQL(::oParam:dDataDe) + ", " + ValToSQL(::oParam:dDataAte) + ")"
 	cSQL += " WHERE SUBSTRING(CONTRATO, 3, 1) <> '9' " 
-	cSQL += " GROUP BY CONTRATO, ITEMCT, SUBITEM "
+	cSQL += " GROUP BY CONTRATO, CLVL, ITEMCT, SUBITEM "
 	
 	cSQL += " UNION ALL "	
 	
-	cSQL += " SELECT CONTRATO, '' AS ITEMCT, '' AS SUBITEM, ROUND(SUM(VALOR), 2) AS VALOR " 
+	cSQL += " SELECT CONTRATO, CLVL, '' AS ITEMCT, '' AS SUBITEM, ROUND(SUM(VALOR), 2) AS VALOR " 
 	cSQL += " FROM FNC_CTR_CUSTO_" + cEmpAnt + "(" +; 
 						ValToSQL(::oParam:cContratoDe) + ", " + ValToSQL(::oParam:cContratoAte) +;
 						", " + ValToSQL(::oParam:cClvlDe) + ", " + ValToSQL(::oParam:cClvlAte) +;
@@ -477,22 +497,22 @@ Local cQry := GetNextAlias()
 						", " + ValToSQL(::oParam:cCodForDe) + ", " + ValToSQL(::oParam:cCodForAte) +;
 						", " + ValToSQL(::oParam:dDataDe) + ", " + ValToSQL(::oParam:dDataAte) + ")"
 	cSQL += " WHERE SUBSTRING(CONTRATO, 3, 1) = '9' "						
-	cSQL += " GROUP BY CONTRATO "
+	cSQL += " GROUP BY CONTRATO, CLVL "
 	
 	cSQL += " UNION ALL "
 	
-	cSQL += " SELECT CONTRATO, ITEMCT, SUBITEM, 0 AS VALOR " 
+	cSQL += " SELECT CONTRATO, CLVL, ITEMCT, SUBITEM, 0 AS VALOR " 
 	cSQL += " FROM FNC_CTR_" + cEmpAnt + "(" +; 
 						ValToSQL(::oParam:cContratoDe) + ", " + ValToSQL(::oParam:cContratoAte) +;
 						", " + ValToSQL(::oParam:cClvlDe) + ", " + ValToSQL(::oParam:cClvlAte) +;
 						", " + ValToSQL(::oParam:cItemDe) + ", " + ValToSQL(::oParam:cItemAte) +;
 						", " + ValToSQL(::oParam:cSubitemDe) + ", " + ValToSQL(::oParam:cSubitemAte) + ")"
 	cSQL += " WHERE SUBSTRING(CONTRATO, 3, 1) <> '9' " 
-	cSQL += " GROUP BY CONTRATO, ITEMCT, SUBITEM "
+	cSQL += " GROUP BY CONTRATO, CLVL, ITEMCT, SUBITEM "
 	
 	cSQL += " ) AS CTR "
-	cSQL += " GROUP BY CONTRATO, ITEMCT, SUBITEM "
-	cSQL += " ORDER BY CONTRATO, ITEMCT, SUBITEM "
+	cSQL += " GROUP BY CONTRATO, CLVL, ITEMCT, SUBITEM "
+	cSQL += " ORDER BY CONTRATO, CLVL, ITEMCT, SUBITEM "
 					
 	TcQuery cSQL New Alias (cQry)
 
@@ -500,7 +520,7 @@ Local cQry := GetNextAlias()
 
 		aContrato := {}
 		
-		aContrato := ::GetDataCtr((cQry)->CONTRATO, (cQry)->ITEMCT, (cQry)->SUBITEM)
+		aContrato := ::GetDataCtr((cQry)->CONTRATO, (cQry)->CLVL, (cQry)->ITEMCT, (cQry)->SUBITEM)
 		
 		cNomCtr := aContrato[1, 1]
 		cFornece := aContrato[1, 2]
@@ -513,12 +533,12 @@ Local cQry := GetNextAlias()
 		
 		nPagBru := 0 
 		
-		nPagBru := (cQry)->PAGBRU
+		nPagBru := (cQry)->PAGBRU + (cQry)->PAGANT + (cQry)->PAGREQ + (cQry)->PAGDEV
 		
 		nPagAnt := 0
 		
 		nPagAnt := (cQry)->PAGANT
-		
+				
 		nTotCom := 0
 		
 		If nVlrPag > 0
@@ -529,13 +549,9 @@ Local cQry := GetNextAlias()
 		
 		nSaldo := 0
 		
-		If nVlrTot > 0
-		
-			nSaldo := nVlrTot - nTotCom
-			
-		EndIf
+		nSaldo := nVlrTot - nTotCom
 	
-		aAdd(aRet, {(cQry)->CONTRATO, (cQry)->ITEMCT, (cQry)->SUBITEM, cNomCtr, cFornece, dToC(sToD(dVencto)), nVlrTot, nPagBru, nPagAnt, nTotCom, nSaldo})
+		aAdd(aRet, {(cQry)->CLVL, (cQry)->CONTRATO, (cQry)->ITEMCT, (cQry)->SUBITEM, cNomCtr, cFornece, dToC(sToD(dVencto)), nVlrTot, nPagBru, nPagAnt, nTotCom, nSaldo})
 	  
 	  (cQry)->(DbSkip())
 
@@ -575,7 +591,7 @@ Local cQry := GetNextAlias()
 Return(aRet)
 
 
-Method GetDataCtr(cNumero, cItemCta, cSubItem) Class TWCustoProjeto
+Method GetDataCtr(cNumero, cClvl, cItemCta, cSubItem) Class TWCustoProjeto
 Local aRet := {}
 Local cSQL := ""
 Local cQry := GetNextAlias()
@@ -603,7 +619,7 @@ Local lCtrGen := SubStr(cNumero, 3, 1) == "9"
 	cSQL += " FROM " + RetSQLName("SC3")
 	cSQL += " WHERE C3_FILIAL = " + ValToSQL(xFilial("SC3"))
 	cSQL += " AND C3_NUM = " + ValToSQL(cNumero)
-	//cSQL += " AND C3_YCLVL = " + ValToSQL(cClvl)
+	cSQL += " AND C3_YCLVL = " + ValToSQL(cClvl)
 
 	If !lCtrGen
 	
@@ -659,7 +675,6 @@ Local nCotacao := 0
 Local nVlrCot := 0
 Local cSerie := ""
 Local cNumero := ""
-Local cParcela := ""
 
 	If AllTrim(cTipo) $ "PC/NF/MB"
 
@@ -690,12 +705,12 @@ Local cParcela := ""
 		EndIf
 
 		cSQL += " AND D_E_L_E_T_ = ''	
-	
+			
 		TcQuery cSQL New Alias (cQry)
 	
 		If (cQry)->C7_MOEDA > 1
 				
-			nMoeda := (cQry)->C7_MOEDA
+			nMoeda := If ((cQry)->C7_MOEDA == 2, "US$", "EUR")
 			nCotacao := (cQry)->C7_TXMOEDA
 			nVlrCot := nValor * nCotacao
 					  
@@ -703,7 +718,50 @@ Local cParcela := ""
 		  		
 		Else
 		
-			aAdd(aRet, {0, 0, 0})
+			aAdd(aRet, {"R$", 1, nValor})
+			  
+		EndIf
+		
+		(cQry)->(DbCloseArea())
+	
+	ElseIf AllTrim(cTipo) == "PA"
+				
+		cSQL := " SELECT TOP 1 E2_YMOEDA, E2_YVLMOED, E2_YTXMOED " 
+		cSQL += " FROM " + RetSQLName("SE2") + " WITH (NOLOCK) "
+		cSQL += " WHERE E2_FILIAL = " + ValToSQL(xFilial("SC7"))
+		cSQL += " AND E2_PREFIXO = " + ValToSQL(SubStr(cDoc, 1, AT("-", cDoc) - 1))
+		cSQL += " AND E2_NUM = " + ValToSQL(SubStr(cDoc, AT("-", cDoc) + 1, 9))
+		cSQL += " AND E2_FORNECE = " + ValToSQL(cFornec)
+		cSQL += " AND E2_LOJA = " + ValToSQL(cLoja)
+		cSQL += " AND E2_TIPO = 'PA'
+		cSQL += " AND D_E_L_E_T_ = ''
+
+		TcQuery cSQL New Alias (cQry)
+	
+		If (cQry)->E2_YMOEDA $ "2/3/4"
+		
+			If (cQry)->C7_MOEDA == "2"
+
+				nMoeda := "US$"
+			
+			ElseIf (cQry)->C7_MOEDA == "3"
+			
+				nMoeda := "EUR"
+			
+			ElseIf (cQry)->C7_MOEDA == "4"
+			
+				nMoeda := "£"
+			
+			EndIf
+					
+			nCotacao := (cQry)->E2_YTXMOED
+			nVlrCot := nValor * nCotacao
+					  
+		  aAdd(aRet, {nMoeda, nCotacao, nVlrCot})
+		  		
+		Else
+		
+			aAdd(aRet, {"R$", 1, nValor})
 			  
 		EndIf
 		
@@ -711,7 +769,7 @@ Local cParcela := ""
 	
 	Else
 	
-		aAdd(aRet, {0, 0, 0})
+		aAdd(aRet, {"R$", 1, nValor})
 	
 	EndIf	
 

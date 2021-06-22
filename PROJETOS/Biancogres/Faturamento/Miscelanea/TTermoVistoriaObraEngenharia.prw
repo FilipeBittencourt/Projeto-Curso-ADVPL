@@ -8,6 +8,8 @@
 @description Classe para controle do Termo de Aceite de Mercadorias de Vistorias em Obras de Engenharia 
 @obs Ticket: 19122
 @type class
+
+Ticket 32630 - Layout de impressão do termo alterado conforme solicitação da diretoria em 02/06/2021.
 /*/
 
 Class TTermoVistoriaObraEngenharia From LongClassName	
@@ -73,7 +75,7 @@ Local cBody := ""
 		if(!Empty(::nobra))
 			cSQL += " AND ZKS.ZKS_NUMOBR = '" + ::nobra + "' "
 		else
-			cSQL += " AND ZKS.ZKS_DOC = '" + ::docto + "' "
+			cSQL += " AND RTRIM(ZKS.ZKS_DOC) + RTRIM(ZKS_SERIE) + RTRIM(ZKS_ITEM) = '" + ::docto + "' "
 		endif	
 	endif
 	
@@ -210,7 +212,7 @@ Local cRet := ""
 	cRet += '            <th>PRODUTO </th>
 	cRet += '            <th>LOTE </th>
 	cRet += '            <th align="center" style="white-space: nowrap;">QTD. M2 </th>
-	cRet += '            <th align="center">AMBIENTE VISTORIADO </th>
+	cRet += '            <th align="center">AMBIENTE INSPECIONADO</th>
 	cRet += '            <th width="30%">OBS: </th>
 	cRet += '        </tr>
 	
@@ -243,60 +245,48 @@ Local cRet := ""
 		
 	cRet += '    <br/>
 
-	cRet += '       <table style="border: 1px solid; font-family: Arial, Helvetica, sans-serif; font-size:12px;" width="100%" border="0" cellspacing="0" cellpadding="4">
+	cRet += '       <table style="border: 1px solid; font-family: Arial, Helvetica, sans-serif; font-size:12px;" width="100%" border="0" cellspacing="2" cellpadding="4">
 	cRet += '          <tr >
-	cRet += '             <th colspan="4" align="left" >PARECER:</th>
-	cRet += '          </tr>
-	cRet += '          <tr>
-	cRet += '             <td colspan= "4">
-	cRet += '                Confirmo a visita do representante comercial da Biancogres que fez a inspeção neste local com o objetivo de atestar a qualidade do(s) produto(s) após o assentamento e rejuntamento, conforme relação acima.<br><br>	
-	cRet += '             </td>
+	cRet += '             <th colspan="4" align="left" style="padding-top:15px">Data da inspeção: ___/___/_______</th>
 	cRet += '          </tr>
 	cRet += '          <tr >
-	cRet += '             <td style="border-right:1px solid">
+	cRet += '             <th colspan="4" align="left" >Parecer</th>
+	cRet += '          </tr>
+	cRet += '          <tr >
+	cRet += '             <td >
 	cRet += '                <input style="zoom: 1.5; vertical-align: middle;" type="checkbox" id="responsavel" name="responsavel" value="Bike">
 	cRet += '                <label for="responsavel">Aprovador, dar continuidade ao assentamento do(s) produto(s)</label>
 	cRet += '             </td>
+	cRet += '          </tr>
+	cRet += '          <tr >
 	cRet += '             <td >
 	cRet += '                <input style="zoom: 1.5; vertical-align: middle;" type="checkbox" id="responsavel" name="responsavel" value="Bike">
 	cRet += '                <label for="responsavel">Suspender o assentamento, entrar em contato com o SAC</label>
 	cRet += '             </td>
 	cRet += '          </tr>
+	cRet += '              <tr>
+	cRet += '                  <td>
+	cRet += '                  </td>
+	cRet += '              </tr>
+	cRet += '              <tr >
+	cRet += '              		<td style="padding-left:70px !important;padding-top:30px">Representante da Biancogres: _______________________________________________________</td>
+	cRet += '				</tr>
 	cRet += '       </table>
-	
+	cRet += '    <br/>
+	cRet += '    <span style="font-family: Arial, Helvetica, sans-serif;">
+	cRet += '          Confirmo a visita do representante comercial da Biancogres que fez a inspeção neste local com o objetivo de atestar a qualidade do(s) produto(s) após o assentamento e rejuntamento, conforme relação acima.<br><br>	
+	cRet += '    </span>
 	
 	cRet += '    <br/>
 	cRet += '    <br/>
 	
-	cRet += '    <table style="font-family: Arial, Helvetica, sans-serif;" width="100%" border="0" cellspacing="0" cellpadding="4">
+	cRet += '    <table style="padding-left:20px;font-family: Arial, Helvetica, sans-serif;" width="100%" border="0" cellspacing="0" cellpadding="2">
 	cRet += '        <tr>
-	cRet += '            <td align="">
-	cRet += '                <div class="responsavel"></div>
-	cRet += '            </td>
-	cRet += '            <td align="center">
-	cRet += '                <div class="responsavel"></div>
-	cRet += '            </td>
-	cRet += '        </tr>
-	cRet += '        <tr>
-	cRet += '            <td align="">Responsável pela Obra</td>
-	cRet += '            <td align="center">Representante Comercial</td>
-	cRet += '        </tr>
-	cRet += '        <tr>
-	cRet += '            <td>
-	cRet += '            </td>
-	cRet += '        </tr>
-	cRet += '        <tr>
-	cRet += '            <td> Nome: </td>
-	cRet += '            <td> Nome: </td>
+	cRet += '        	<td >Responsável pela Obra: ________________________________________</td>
 	cRet += '        </tr>
 	cRet += '        <tr>
 	cRet += '            <td> CPF: </td>
-	cRet += '            <td> CPF: </td>
 	cRet += '        </tr>
-	cRet += '        <tr>
-	cRet += '            <td> Data: </td>
-	cRet += '            <td> Data: </td>
-	cRet += '        </tr>	
 	cRet += '    </table>
 	
 	cRet += '</body>
@@ -309,7 +299,17 @@ Return(cRet)
 Method SaveHtmlFile(cDtVis, cCliente, cNumObr, cHtml) Class TTermoVistoriaObraEngenharia
 Local cFile := ""
 
-	cFile := Lower("\p10\vistoria_obra\termo\termo_" + cEmpAnt + "_" + cDtVis + "_" + cCliente + If (!Empty(cNumObr), "_" + cNumObr, "") + ".html")
+	cIdName := ""
+
+	If(!Empty(cNumObr))
+		cIdName := "_" + cNumObr
+	elseif !Empty(::docto)
+		//esse caso só ocorre quando a geração do termo está ocorrendo via tela. 
+		//Via schedule ele agrupa por numero de obra que, se for vazio, agrupa num só documento todos daquele cliente
+		cIdName := "_" + ::docto
+	Endif
+
+	cFile := Lower("\p10\vistoria_obra\termo\termo_" + cEmpAnt + "_" + cDtVis + "_" + cCliente + cIdName + ".html")
 
 	If File(cFile)
 

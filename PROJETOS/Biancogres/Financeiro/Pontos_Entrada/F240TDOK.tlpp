@@ -1,0 +1,94 @@
+#include "totvs.ch"
+
+/*/{Protheus.doc} FIDC
+@author Marinaldo de Jesus
+@since 21/05/2021
+@project FIDC
+@version 1.0
+@description: Ponto de Entrada Executado no progama FINA240.PRX (Envia titulo para bordero de Pagamento)
+              Será utilizado para validar os Titulos não FIDC.
+@type function
+/*/
+function u_F240TDOK() as numeric
+    local nOpcA as numeric
+    MsAguarde({||nOpcA:=F240TDOK()},"Verificando Títulos Selecionados","Aguarde...")
+    return(nOpcA)
+
+static function F240TDOK() as numeric
+    
+    local aArea     as array 
+    local aAreaSE2  as array
+
+    local aF240TIT  as array
+
+    local cMsg      as character
+    local cCRLF     as character
+    local cMarca    as character
+    local cSE2Alias as character
+
+    local nOpcA as numeric
+    local nSE2RecNo as numeric
+
+    aArea:=getArea()
+    aAreaSE2:=SE2->(getArea())
+
+    begin sequence
+
+        if (!((type("ParamIXB")=="A").and.(len(&("ParamIXB"))>=2)))
+            break
+        endif
+
+        cSE2Alias:=&("ParamIXB")[2]
+
+        if ((cSE2Alias)->(FieldPos("NUM_REG"))==0)
+            break
+        endif
+
+        if ((cSE2Alias)->(FieldPos("E2_OK"))==0)
+            break
+        endif
+
+        cMarca:=&("ParamIXB")[1]
+
+        (cSE2Alias)->(dbGoTop())
+
+        while (cSE2Alias)->(!eof())
+
+            nSE2RecNo:=(cSE2Alias)->NUM_REG
+
+            SE2->(dbGoTo(nSE2RecNo))
+
+            if ((cAliasSE2)->E2_OK==cMarca)
+                cMsg:="Existem Titulos FIDC selecionados para o Borderô. ["+SE2->E2_NUM+"] A Geração será cancelada."
+                if (FIDC():isPGFIDC(.T.,cMsg))
+                    nOpcA:=2
+                    exit
+                endif
+            endif
+
+            (cSE2Alias)->(dbSkip())
+
+        end while 
+        
+        (cSE2Alias)->(dbGoTop())
+        
+    end sequence
+
+    restArea(aAreaSE2)
+    restArea(aArea)
+
+    DEFAULT nOpcA:=1
+
+    aF240TIT:=cacheData():get("F240TIT","aF240TIT",array(0))
+    if (!empty(aF240TIT))
+        cCRLF:=CRLF
+        cF240TIT:=""
+        aEval(aF240TIT,{|e|cF240TIT+=(e+cCRLF)})    
+        if (!empty(cF240TIT))
+            txtEditMemo():txtFileEdit(cF240TIT,"F240TIT :: Log")
+        endif
+    endif
+    
+    cacheData():set("F240TIT","aF240TIT",array(0))
+
+    return(nOpcA)

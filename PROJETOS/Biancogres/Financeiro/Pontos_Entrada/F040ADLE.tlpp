@@ -1,0 +1,20 @@
+#include "totvs.ch"
+
+/*/{Protheus.doc} FIDC
+@author Marinaldo de Jesus
+@since 21/05/2021
+@project FIDC
+@version 1.0
+@description: Ponto de Entrada Executado no progama FINXFUN.PRX (Funções genéricas do módulo financeiro)
+              Será utilizado para adicionar novas opcoes a Legenda do Financeiro.
+@type function
+/*/
+function u_F040ADLE() as array
+    local aLegSys as array
+    local aLegenda as array
+    if (type("ParamIXB")=="A")
+        aLegSys:=&("ParamIXB")
+    endif
+    aLegenda:=array(0)
+    aAdd(aLegenda,{"BR_VIOLETA","FIDC"})
+    return(aLegenda)
