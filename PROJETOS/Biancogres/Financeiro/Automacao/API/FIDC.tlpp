@@ -2948,7 +2948,11 @@ static method getRecQueryCon(aParamRet,abcoIsFIDC,aFWTTables) class FIDC
     cE2VENCTODe:=DToS(aParamRet[7])
     cE2VENCTOAte:=DToS(aParamRet[8])
   
-    cTXSelic:=cValToChar(aParamRet[9])
+    if (stackTools():IsInCallStack("getPagQueryCon"))
+        cTXSelic:=cValToChar(0)
+    else
+        cTXSelic:=cValToChar(aParamRet[9])
+    endif
 
     cTmpAlias:=getNextAlias()
 
@@ -2963,8 +2967,8 @@ static method getRecQueryCon(aParamRet,abcoIsFIDC,aFWTTables) class FIDC
     cSQLPath+="FIDC\SQL\"
     
     cSQLFields:=""
-    cSQLFields+="   SA2.A2_COD  AS 'CODIGO'"
-	cSQLFields+="  ,SA2.A2_NOME AS 'FORNECEDOR'"
+    cSQLFields+="   SA2.A2_COD"
+	cSQLFields+="  ,SA2.A2_NOME"
     cSQLFields+="  ,SE2.E2_DTBORDE"
 	cSQLFields+="  ,(CASE SE2.E2_PREFIXO WHEN '' THEN '"+Replicate("-",GetSX3Cache("E2_PREFIXO","X3_TAMANHO"))+"' ELSE SE2.E2_PREFIXO END)+SE2.E2_NUM+SE2.E2_PARCELA AS P_NUM_PARC"
 	cSQLFields+="  ,SE2.E2_EMISSAO"
@@ -3059,16 +3063,16 @@ static method getRecQueryCon(aParamRet,abcoIsFIDC,aFWTTables) class FIDC
 
     utoXML():setSX3Fields((cTmpAlias)->(dbStruct()))
 
-    uToXML():setXMLVar("A2_COD","X3_TITULO","CODIGO")
+    uToXML():setXMLVar("A2_COD","X3_TITULO","CÓDIGO")
     uToXML():setXMLVar("A2_NOME","X3_TITULO","FORNECEDOR")
     uToXML():setXMLVar("E2_DTBORDE","X3_TITULO","REMESSA")
     uToXML():setXMLVar("P_NUM_PARC","X3_TITULO","TITULO")
-    uToXML():setXMLVar("E2_EMISSAO","X3_TITULO","EMISSAO")
+    uToXML():setXMLVar("E2_EMISSAO","X3_TITULO","EMISSÃO")
     uToXML():setXMLVar("E2_VENCORI","X3_TITULO","VCTO REAL")
     uToXML():setXMLVar("DIAS_ANTEC","X3_TITULO","DIAS ANTECIPADOS")
     uToXML():setXMLVar("E2_VENCREA","X3_TITULO","NOVO VCTO")
     uToXML():setXMLVar("E2_VALOR","X3_TITULO","VALOR REAL")
-    uToXML():setXMLVar("E2_YANTDES","X3_TITULO","DESAGIO/DESCONTO")
+    uToXML():setXMLVar("E2_YANTDES","X3_TITULO","DESÁGIO/DESCONTO")
     uToXML():setXMLVar("VLR_ANTEC","X3_TITULO","VALOR ANTECIPADO")
     uToXML():setXMLVar("TAR_TED","X3_TITULO","TARIFA TED")
     uToXML():setXMLVar("E2_VALLIQ","X3_TITULO","VALOR LIQUIDO")
@@ -3149,9 +3153,9 @@ static method getPagQueryRet(aParamRet,aFWTTables) class FIDC
     cZK4DataAte:=DToS(aParamRet[10])
 
     cSQLFields:=""
-    cSQLFields+=" SA2.A2_COD  AS 'CODIGO'"
-	cSQLFields+=",SA2.A2_NOME AS 'FORNECEDOR'"
-    cSQLFields+=",SE2.E2_DTBORDE AS 'REMESSA'"
+    cSQLFields+=" SA2.A2_COD"
+	cSQLFields+=",SA2.A2_NOME"
+    cSQLFields+=",SE2.E2_DTBORDE"
 	cSQLFields+=",(CASE SE2.E2_PREFIXO WHEN '' THEN '"+Replicate("-",GetSX3Cache("E2_PREFIXO","X3_TAMANHO"))+"' ELSE SE2.E2_PREFIXO END)+SE2.E2_NUM+SE2.E2_PARCELA AS P_NUM_PARC"
 	cSQLFields+=",SE2.E2_EMISSAO"
 	cSQLFields+=",SE2.E2_VENCREA"
@@ -3273,7 +3277,7 @@ static method getPagQueryRet(aParamRet,aFWTTables) class FIDC
 
     utoXML():setSX3Fields((cTmpAlias)->(dbStruct()))
 
-    uToXML():setXMLVar("A2_COD","X3_TITULO","CODIGO")
+    uToXML():setXMLVar("A2_COD","X3_TITULO","CÓDIGO")
     uToXML():setXMLVar("A2_NOME","X3_TITULO","FORNECEDOR")
     uToXML():setXMLVar("E2_DTBORDE","X3_TITULO","REMESSA")
     uToXML():setXMLVar("P_NUM_PARC","X3_TITULO","PREFIXO+NUMERO+PARCELA")
@@ -3365,7 +3369,7 @@ static method getPagQueryTit(aParamRet,aFWTTables) class FIDC
     cSQLFields+=",(CASE FI8.FI8_PRFORI WHEN '' THEN '"+Replicate("-",GetSX3Cache("FI8_PRFORI","X3_TAMANHO"))+"' ELSE FI8.FI8_PRFORI END)+FI8.FI8_NUMORI+FI8.FI8_PARORI  AS TITFORORIG"
 
     if (stackTools():IsInCallStack("getPagQueryCon"))
-        cSQLFields+=",SE2.R_E_C_N_O_ AS SE2RECNO"
+        cSQLFields+=",x.SE2RECNO"
     endif
 
     cSQLFields:="%"+cSQLFields+"%"
@@ -3400,6 +3404,7 @@ static method getPagQueryTit(aParamRet,aFWTTables) class FIDC
                       ,SE2_O.E2_FORNECE
                       ,SE2_O.E2_NOMFOR
                       ,ZK4_O.ZK4_NOSNUM
+                      ,SE2_O.R_E_C_N_O_ SE2RECNO
                   FROM %table:SE2% SE2_O (NOLOCK)
                   JOIN %table:ZK4% ZK4_O (NOLOCK) ON (
                         ZK4_O.ZK4_TIPO='F' 
@@ -3595,7 +3600,7 @@ static method getPagQueryLiq(aParamRet,aFWTTables) class FIDC
 	cSQLFields+=",(CASE FI8.FI8_PRFORI WHEN '' THEN '"+Replicate("-",GetSX3Cache("FI8_PRFORI","X3_TAMANHO"))+"' ELSE FI8.FI8_PRFORI END)+FI8.FI8_NUMORI+FI8.FI8_PARORI  AS TITFORORIG"
 
     if (stackTools():IsInCallStack("getPagQueryCon"))
-        cSQLFields+=",SE2.R_E_C_N_O_ AS SE2RECNO"
+        cSQLFields+=",x.SE2RECNO"
     endif
 
     cSQLFields:="%"+cSQLFields+"%"
@@ -3625,10 +3630,11 @@ static method getPagQueryLiq(aParamRet,aFWTTables) class FIDC
                 AND FI8.FI8_LOJDES=SE2.E2_LOJA
           )
           JOIN (   
-                SELECT FI8_O.R_E_C_N_O_ FI8RECNO 
+                SELECT FI8_O.R_E_C_N_O_ AS FI8RECNO 
                       ,SE2_O.E2_FORNECE
                       ,SE2_O.E2_NOMFOR
                       ,ZK4_O.ZK4_NOSNUM
+                      ,SE2_O.R_E_C_N_O_ AS SE2RECNO
                   FROM %table:SE2% SE2_O (NOLOCK)
                   JOIN %table:ZK4% ZK4_O (NOLOCK) ON (
                             ZK4_O.ZK4_TIPO='F' 
@@ -3758,13 +3764,9 @@ static method getPagQueryLiq(aParamRet,aFWTTables) class FIDC
 
     return(cTmpAlias)
 
-static method getPagQueryCon(aParamRet,abcoIsFIDC,aFWTTables) class FIDC
+static method getPagQueryCon(aParamRet,aFWTTables) class FIDC
 
     local aFields       as array
-
-    local cA6COD        as character
-    local cA6AGENCIA    as character
-    local cA6NUMCON     as character
 
     local cSQLPath      as character
     local cSQLFile      as character
@@ -3774,56 +3776,50 @@ static method getPagQueryCon(aParamRet,abcoIsFIDC,aFWTTables) class FIDC
     local cTmpAlias     as character
     local cTmpTable     as character
 
-    local cA1CODDe      as character
-    local cA1CODAte     as character
+    local cA2CODDe      as character
+    local cA2CODAte     as character
 
-    local cE1DATABORDe  as character
-    local cE1DATABORAte as character
+    local cE2DATABORDe  as character
+    local cE2DATABORAte as character
 
-    local cE1EMISSAODe  as character
-    local cE1EMISSAOAte as character
+    local cE2EMISSAODe  as character
+    local cE2EMISSAOAte as character
 
-    local cE1VENCTODe   as character
-    local cE1VENCTOAte  as character
+    local cE2VENCTODe   as character
+    local cE2VENCTOAte  as character
 
-    local cZK4DataDe    as character
-    local cZK4DataAte   as character
+    local cE2BaixaDe    as character
+    local cE2BaixaAte   as character
 
     local cField        as character
 
     local cTableRem     as character
     local cTableRet     as character
-    local cTableRec     as character
     local cTableTit     as character
+    local cTableLiq     as character
 
     local nField        as numeric
     local nFields       as numeric
 
     local oFWTTable     as object
 
-    paramtype aParamRet as array
-    paramtype abcoIsFIDC as array
-
+    paramtype aParamRet  as array
     paramtype aFWTTables as array optional DEFAULT array(0)
 
-    cA6COD:=abcoIsFIDC[3]
-    cA6AGENCIA:=abcoIsFIDC[4]
-    cA6NUMCON:=abcoIsFIDC[5]
+    cA2CODDe:=aParamRet[1]
+    cA2CODAte:=aParamRet[2]
 
-    cA1CODDe:=aParamRet[1]
-    cA1CODAte:=aParamRet[2]
+    cE2DATABORDe:=DToS(aParamRet[3])
+    cE2DATABORAte:=DToS(aParamRet[4])
 
-    cE1DATABORDe:=DToS(aParamRet[3])
-    cE1DATABORAte:=DToS(aParamRet[4])
+    cE2EMISSAODe:=DToS(aParamRet[5])
+    cE2EMISSAOAte:=DToS(aParamRet[6])
 
-    cE1EMISSAODe:=DToS(aParamRet[5])
-    cE1EMISSAOAte:=DToS(aParamRet[6])
+    cE2VENCTODe:=DToS(aParamRet[7])
+    cE2VENCTOAte:=DToS(aParamRet[8])
 
-    cE1VENCTODe:=DToS(aParamRet[7])
-    cE1VENCTOAte:=DToS(aParamRet[8])
-
-    cZK4DataDe:=DToS(aParamRet[9])
-    cZK4DataAte:=DToS(aParamRet[10])
+    cE2BaixaDe:=DToS(aParamRet[9])
+    cE2BaixaAte:=DToS(aParamRet[10])
 
     cTmpAlias:=FIDC():getPagQueryRem(@aParamRet,@aFWTTables)
     if (select(cTmpAlias)>0)
@@ -3842,14 +3838,14 @@ static method getPagQueryCon(aParamRet,abcoIsFIDC,aFWTTables) class FIDC
     cTmpAlias:=FIDC():getPagQueryTit(@aParamRet,@aFWTTables)
     if (select(cTmpAlias)>0)
         cTableTit:=aFWTTables[len(aFWTTables)]:getRealName()
-        cTableTit:="%"+cTableRet+"%"
+        cTableTit:="%"+cTableTit+"%"
         (cTmpAlias)->(dbCloseArea())
     endif
 
     cTmpAlias:=FIDC():getPagQueryLiq(@aParamRet,@aFWTTables)
     if (select(cTmpAlias)>0)
-        cTableRec:=aFWTTables[len(aFWTTables)]:getRealName()
-        cTableRec:="%"+cTableRec+"%"
+        cTableLiq:=aFWTTables[len(aFWTTables)]:getRealName()
+        cTableLiq:="%"+cTableLiq+"%"
         (cTmpAlias)->(dbCloseArea())
     endif
 
@@ -3858,38 +3854,41 @@ static method getPagQueryCon(aParamRet,abcoIsFIDC,aFWTTables) class FIDC
 
         %noparser%
 
-        COLUMN E1_DATABOR  AS DATE
-        COLUMN E1_EMISSAO  AS DATE
-        COLUMN E1_VENCTO   AS DATE
-        COLUMN E1_BAIXA    AS DATE
+        COLUMN E2_DTBORDE  AS DATE
+        COLUMN E2_EMISSAO  AS DATE
+        COLUMN E2_VENCORI  AS DATE
+        COLUMN E2_VENCREA  AS DATE
+        COLUMN E2_BAIXA    AS DATE
 
-        SELECT REM.A1_COD
-              ,REM.A1_NOME
-              ,REM.E1_DATABOR
+        SELECT REM.A2_COD
+              ,REM.A2_NOME
+              ,REM.E2_DTBORDE
               ,REM.P_NUM_PARC
-              ,REM.E1_EMISSAO
-              ,REM.E1_VENCTO
-              ,ISNULL(REC.E1_BAIXA,'')  AS E1_BAIXA
-              ,ISNULL(REM.E1_VALOR,0)   AS ENVIADO
-              ,ISNULL(RET.E1_VALOR,0)   AS REGISTRADO
-              ,ISNULL(REC.ZK4_VLREC,0)  AS BAIXADO
-              ,ISNULL(REC.ZK4_VLJURO,0) AS ZK4_VLJURO
-              ,ISNULL(REC.ZK4_VLDESC,0) AS ZK4_VLDESC
-              ,(CASE WHEN ISNULL(REC.ZK4_VLJURO,0)>0 THEN (ISNULL(REM.E1_VALOR,0)/ISNULL(REM.E1_VALOR,0)) ELSE 0 END) AS JUROS
-              ,(CASE WHEN ISNULL(REM.E1_VALOR,0)=ISNULL(RET.E1_VALOR,0)    THEN 'CONCILIADO' ELSE 'PENDENTE' END) AS REGISTRO
-              ,(CASE WHEN ISNULL(REC.ZK4_VLREC,0)>=ISNULL(REM.E1_VALOR,0)  THEN 'CONCILIADO' ELSE 'PENDENTE' END) AS BAIXA
-              ,(CASE WHEN ((ISNULL(REC.E1_BAIXA,'')<>'') AND (ISNULL(REC.E1_BAIXA,'')<ISNULL(REM.E1_VENCTO,''))) THEN 'ANTECIPADO' ELSE (CASE WHEN ISNULL(REC.E1_BAIXA,'')=ISNULL(REM.E1_VENCTO,'') THEN 'CONCILIADO' ELSE 'VENCIDO' END) END) AS DTBAIXA
+              ,REM.E2_EMISSAO
+              ,REM.E2_VENCORI
+              ,REM.DIAS_ANTEC
+              ,REM.E2_VENCREA
+              ,ISNULL(REM.E2_VALOR,0)   AS ENVIADO
+              ,ISNULL(REM.E2_YANTDES,0) AS DESAGIO
+              ,ISNULL(RET.E2_VALOR,0)   AS REGISTRADO
+              ,ISNULL(LIQ.E2_VALLIQ,0)  AS BAIXADO
+              ,(CASE WHEN ISNULL(REM.E2_VALOR,0)=ISNULL(RET.E2_VALOR,0)     THEN 'CONCILIADO' ELSE 'PENDENTE' END) AS REGISTRO
+              ,(CASE WHEN ISNULL(LIQ.E2_VALLIQ,0)>=ISNULL(REM.E2_VALLIQ,0)  THEN 'CONCILIADO' ELSE 'PENDENTE' END) AS BAIXA
+              ,(CASE WHEN ISNULL(LIQ.E2_VALLIQ,0)<ISNULL(REM.E2_VALLIQ,0)   THEN 'PENDENTE'   ELSE (CASE WHEN ((ISNULL(LIQ.E2_BAIXA,'')<>'') AND (ISNULL(LIQ.E2_BAIXA,'')<ISNULL(LIQ.E2_VENCREA,''))) THEN 'ANTECIPADO' ELSE (CASE WHEN ISNULL(LIQ.E2_BAIXA,'')=ISNULL(LIQ.E2_VENCREA,'') THEN 'CONCILIADO' ELSE 'VENCIDO' END) END) END) AS DTBAIXA
         FROM %exp:cTableRem% REM (NOLOCK)
         FULL OUTER JOIN %exp:cTableRet% RET (NOLOCK)
             ON (
-                    REM.SE1RECNO=RET.SE1RECNO
+                    REM.SE2RECNO=RET.SE2RECNO
          )
-        FULL OUTER JOIN %exp:cTableRec% REC (NOLOCK) ON (
-                REM.SE1RECNO=REC.SE1RECNO
+        FULL OUTER JOIN %exp:cTableTit% TIT (NOLOCK) ON (
+                REM.SE2RECNO=TIT.SE2RECNO
+         )
+        FULL OUTER JOIN %exp:cTableLiq% LIQ (NOLOCK) ON (
+                REM.SE2RECNO=LIQ.SE2RECNO
          )
         WHERE (1=2)
-        ORDER BY REM.E1_DATABOR
-                ,REM.A1_COD
+        ORDER BY REM.E2_DTBORDE
+                ,REM.A2_COD
                 ,REM.P_NUM_PARC
 
     endSQL
@@ -3948,36 +3947,37 @@ static method getPagQueryCon(aParamRet,abcoIsFIDC,aFWTTables) class FIDC
 
     utoXML():setSX3Fields((cTmpAlias)->(dbStruct()))
 
-    uToXML():setXMLVar("A1_COD","X3_TITULO","CODIGO")
-    uToXML():setXMLVar("A1_NOME","X3_TITULO","RAZAO SOCIAL")
-    uToXML():setXMLVar("E1_DATABOR","X3_TITULO","DATA REMESSA")
-    uToXML():setXMLVar("P_NUM_PARC","X3_TITULO","PREFIXO+NUMERO+PARCELA")
-    uToXML():setXMLVar("E1_EMISSAO","X3_TITULO","EMISSAO")
-    uToXML():setXMLVar("E1_VENCTO","X3_TITULO","VENCIMENTO")
+    uToXML():setXMLVar("A2_COD","X3_TITULO","CÓDIGO")
+    uToXML():setXMLVar("A2_NOME","X3_TITULO","FORNECEDOR")
+    uToXML():setXMLVar("E2_DTBORDE","X3_TITULO","REMESSA")
+    uToXML():setXMLVar("P_NUM_PARC","X3_TITULO","Nº TÍTULO")
+    uToXML():setXMLVar("E2_EMISSAO","X3_TITULO","EMISSAO")
+    uToXML():setXMLVar("E2_VENCORI","X3_TITULO","VENCIMENTO REAL")
+    uToXML():setXMLVar("DIAS_ANTEC","X3_TITULO","DIAS ANTECIPADOS")
+    uToXML():setXMLVar("E2_VENCREA","X3_TITULO","NOVO VENCIMENTO")
     uToXML():setXMLVar("ENVIADO","X3_TITULO","ENVIADO")
+    uToXML():setXMLVar("DESAGIO","X3_TITULO","DESAGIO")
     uToXML():setXMLVar("REGISTRADO","X3_TITULO","REGISTRADO")
     uToXML():setXMLVar("BAIXADO","X3_TITULO","BAIXADO")
     uToXML():setXMLVar("DTBAIXA","X3_TITULO","DT. BAIXA")
-    uToXML():setXMLVar("ZK4_VLDESC","X3_TITULO","VALOR DESCONTO")
 
-    uToXML():setXMLVar("A1_COD","X3_PICTURE","@!")
-    uToXML():setXMLVar("A1_NOME","X3_PICTURE","@!")
-    uToXML():setXMLVar("E1_DATABOR","X3_PICTURE","__NOTRANSFORM__")
-    uToXML():setXMLVar("E1_EMISSAO","X3_PICTURE","__NOTRANSFORM__")
-    uToXML():setXMLVar("E1_VENCTO","X3_PICTURE","__NOTRANSFORM__")
+    uToXML():setXMLVar("A2_COD","X3_PICTURE","@!")
+    uToXML():setXMLVar("A2_NOME","X3_PICTURE","@!")
+    uToXML():setXMLVar("E2_DTBORDE","X3_PICTURE","__NOTRANSFORM__")
+    uToXML():setXMLVar("E2_EMISSAO","X3_PICTURE","__NOTRANSFORM__")
+    uToXML():setXMLVar("E2_VENCORI","X3_PICTURE","__NOTRANSFORM__")
+    uToXML():setXMLVar("DIAS_ANTEC","X3_PICTURE","@R 9999")    
+    uToXML():setXMLVar("E2_VENCREA","X3_PICTURE","__NOTRANSFORM__")
     uToXML():setXMLVar("ENVIADO","X3_PICTURE","__NOTRANSFORM__")
+    uToXML():setXMLVar("DESAGIO","X3_PICTURE","__NOTRANSFORM__")
     uToXML():setXMLVar("REGISTRADO","X3_PICTURE","__NOTRANSFORM__")
     uToXML():setXMLVar("BAIXADO","X3_PICTURE","__NOTRANSFORM__")
     uToXML():setXMLVar("DTBAIXA","X3_PICTURE","__NOTRANSFORM__")
-    uToXML():setXMLVar("ZK4_VLJURO","X3_PICTURE","__NOTRANSFORM__")
-    uToXML():setXMLVar("JUROS","X3_PICTURE","__NOTRANSFORM__")
-    uToXML():setXMLVar("ZK4_VLDESC","X3_PICTURE","__NOTRANSFORM__")
 
+    uToXML():setXMLVar("DESAGIO","TOTAL",.T.)
     uToXML():setXMLVar("ENVIADO","TOTAL",.T.)
     uToXML():setXMLVar("REGISTRADO","TOTAL",.T.)
     uToXML():setXMLVar("BAIXADO","TOTAL",.T.)
-    uToXML():setXMLVar("ZK4_VLJURO","TOTAL",.T.)
-    uToXML():setXMLVar("ZK4_VLDESC","TOTAL",.T.)
 
     return(cTmpAlias)
 
@@ -4702,7 +4702,7 @@ static method getRecParamCon(aParamRet) class FIDC
         endif
 
         cFunName:=FunName()
-        setFunName("FIDCRelConsolidado")
+        setFunName("FIDCPagarRelConsolidado")
         lParamBox:=ParamBox(@aParamBox,&("cCadastro"),@aParamRet,/*bOk*/,/*aButtons*/,.T./*lCentered*/,/*nPosx*/,/*nPosy*/,/*oDlgWizard*/,/*cLoad*/,.T./*lCanSave*/,.T./*lUserSave*/)
         setFunName(cFunName)
 
@@ -5391,26 +5391,26 @@ static method getPagParamCon(aParamRet) class FIDC
         aAdd(aParamBox,array(9))
         nPBoxAT:=Len(aParamBox)
         aParamBox[nPBoxAT][1]:=1//[1]:1 - MsGet
-        aParamBox[nPBoxAT][2]:=OemToAnsi("Cliente De")//[2]:Descricao
-        aParamBox[nPBoxAT][3]:=Space(GetSx3Cache("A1_COD","X3_TAMANHO"))//[3]:String contendo o inicializador do campo
+        aParamBox[nPBoxAT][2]:=OemToAnsi("Fornecedor De")//[2]:Descricao
+        aParamBox[nPBoxAT][3]:=Space(GetSx3Cache("A2_COD","X3_TAMANHO"))//[3]:String contendo o inicializador do campo
         aParamBox[nPBoxAT][4]:=""//[4]:String contendo a Picture do campo
         aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
-        aParamBox[nPBoxAT][6]:="SA1"//[6]:Consulta F3
+        aParamBox[nPBoxAT][6]:="SA2"//[6]:Consulta F3
         aParamBox[nPBoxAT][7]:="AllWaysTrue()"//[7]:String contendo a validacao When
-        aParamBox[nPBoxAT][8]:=GetSx3Cache("A1_COD","X3_TAMANHO")//[8]:Tamanho do MsGet
+        aParamBox[nPBoxAT][8]:=GetSx3Cache("A2_COD","X3_TAMANHO")//[8]:Tamanho do MsGet
         aParamBox[nPBoxAT][9]:=.F.//[9]:Flag .T./.F. Parametro Obrigatorio ?
 
         //02----------------------------------------------------------------------------------------------
         aAdd(aParamBox,array(9))
         nPBoxAT:=Len(aParamBox)
         aParamBox[nPBoxAT][1]:=1//[1]:1 - MsGet
-        aParamBox[nPBoxAT][2]:=OemToAnsi("Cliente Ate")//[2]:Descricao
-        aParamBox[nPBoxAT][3]:=Space(GetSx3Cache("A1_COD","X3_TAMANHO"))//[3]:String contendo o inicializador do campo
+        aParamBox[nPBoxAT][2]:=OemToAnsi("Fornecedor Ate")//[2]:Descricao
+        aParamBox[nPBoxAT][3]:=Space(GetSx3Cache("A2_COD","X3_TAMANHO"))//[3]:String contendo o inicializador do campo
         aParamBox[nPBoxAT][4]:=""//[4]:String contendo a Picture do campo
         aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
-        aParamBox[nPBoxAT][6]:="SA1"//[6]:Consulta F3
+        aParamBox[nPBoxAT][6]:="SA2"//[6]:Consulta F3
         aParamBox[nPBoxAT][7]:="AllWaysTrue()"//[7]:String contendo a validacao When
-        aParamBox[nPBoxAT][8]:=GetSx3Cache("A1_COD","X3_TAMANHO")//[8]:Tamanho do MsGet
+        aParamBox[nPBoxAT][8]:=GetSx3Cache("A2_COD","X3_TAMANHO")//[8]:Tamanho do MsGet
         aParamBox[nPBoxAT][9]:=.T.//[9]:Flag .T./.F. Parametro Obrigatorio ?
 
         //03----------------------------------------------------------------------------------------------
@@ -5423,7 +5423,7 @@ static method getPagParamCon(aParamRet) class FIDC
         aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
         aParamBox[nPBoxAT][6]:=""//[6]:Consulta F3
         aParamBox[nPBoxAT][7]:="AllWaysTrue()"//[7]:String contendo a validacao When
-        aParamBox[nPBoxAT][8]:=GetSx3Cache("E1_DATABOR","X3_TAMANHO")//[8]:Tamanho do MsGet
+        aParamBox[nPBoxAT][8]:=GetSx3Cache("E2_DTBORDE","X3_TAMANHO")//[8]:Tamanho do MsGet
         aParamBox[nPBoxAT][9]:=.F.//[9]:Flag .T./.F. Parametro Obrigatorio ?
 
         //04----------------------------------------------------------------------------------------------
@@ -5436,7 +5436,7 @@ static method getPagParamCon(aParamRet) class FIDC
         aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
         aParamBox[nPBoxAT][6]:=""//[6]:Consulta F3
         aParamBox[nPBoxAT][7]:="AllWaysTrue()"//[7]:String contendo a validacao When
-        aParamBox[nPBoxAT][8]:=GetSx3Cache("E1_DATABOR","X3_TAMANHO")//[8]:Tamanho do MsGet
+        aParamBox[nPBoxAT][8]:=GetSx3Cache("E2_DTBORDE","X3_TAMANHO")//[8]:Tamanho do MsGet
         aParamBox[nPBoxAT][9]:=.T.//[9]:Flag .T./.F. Parametro Obrigatorio ?
 
         //05----------------------------------------------------------------------------------------------
@@ -5449,7 +5449,7 @@ static method getPagParamCon(aParamRet) class FIDC
         aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
         aParamBox[nPBoxAT][6]:=""//[6]:Consulta F3
         aParamBox[nPBoxAT][7]:="AllWaysTrue()"//[7]:String contendo a validacao When
-        aParamBox[nPBoxAT][8]:=GetSx3Cache("E1_EMISSAO","X3_TAMANHO")//[8]:Tamanho do MsGet
+        aParamBox[nPBoxAT][8]:=GetSx3Cache("E2_EMISSAO","X3_TAMANHO")//[8]:Tamanho do MsGet
         aParamBox[nPBoxAT][9]:=.F.//[9]:Flag .T./.F. Parametro Obrigatorio ?
 
         //06----------------------------------------------------------------------------------------------
@@ -5462,7 +5462,7 @@ static method getPagParamCon(aParamRet) class FIDC
         aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
         aParamBox[nPBoxAT][6]:=""//[6]:Consulta F3
         aParamBox[nPBoxAT][7]:="AllWaysTrue()"//[7]:String contendo a validacao When
-        aParamBox[nPBoxAT][8]:=GetSx3Cache("E1_EMISSAO","X3_TAMANHO")//[8]:Tamanho do MsGet
+        aParamBox[nPBoxAT][8]:=GetSx3Cache("E2_EMISSAO","X3_TAMANHO")//[8]:Tamanho do MsGet
         aParamBox[nPBoxAT][9]:=.T.//[9]:Flag .T./.F. Parametro Obrigatorio ?
 
         //07----------------------------------------------------------------------------------------------
@@ -5475,7 +5475,7 @@ static method getPagParamCon(aParamRet) class FIDC
         aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
         aParamBox[nPBoxAT][6]:=""//[6]:Consulta F3
         aParamBox[nPBoxAT][7]:="AllWaysTrue()"//[7]:String contendo a validacao When
-        aParamBox[nPBoxAT][8]:=GetSx3Cache("E1_VENCTO","X3_TAMANHO")//[8]:Tamanho do MsGet
+        aParamBox[nPBoxAT][8]:=GetSx3Cache("E2_VENCREA","X3_TAMANHO")//[8]:Tamanho do MsGet
         aParamBox[nPBoxAT][9]:=.F.//[9]:Flag .T./.F. Parametro Obrigatorio ?
 
         //08----------------------------------------------------------------------------------------------
@@ -5488,33 +5488,33 @@ static method getPagParamCon(aParamRet) class FIDC
         aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
         aParamBox[nPBoxAT][6]:=""//[6]:Consulta F3
         aParamBox[nPBoxAT][7]:="AllWaysTrue()"//[7]:String contendo a validacao When
-        aParamBox[nPBoxAT][8]:=GetSx3Cache("E1_VENCTO","X3_TAMANHO")//[8]:Tamanho do MsGet
+        aParamBox[nPBoxAT][8]:=GetSx3Cache("E2_VENCREA","X3_TAMANHO")//[8]:Tamanho do MsGet
         aParamBox[nPBoxAT][9]:=.T.//[9]:Flag .T./.F. Parametro Obrigatorio ?
 
         //09----------------------------------------------------------------------------------------------
         aAdd(aParamBox,array(9))
         nPBoxAT:=Len(aParamBox)
         aParamBox[nPBoxAT][1]:=1//[1]:1 - MsGet
-        aParamBox[nPBoxAT][2]:=OemToAnsi("Data Consolidado De")//[2]:Descricao
+        aParamBox[nPBoxAT][2]:=OemToAnsi("Data Baixa De")//[2]:Descricao
         aParamBox[nPBoxAT][3]:=CtoD("")//[3]:String contendo o inicializador do campo
         aParamBox[nPBoxAT][4]:="@D"//[4]:String contendo a Picture do campo
         aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
         aParamBox[nPBoxAT][6]:=""//[6]:Consulta F3
         aParamBox[nPBoxAT][7]:="AllWaysTrue()"//[7]:String contendo a validacao When
-        aParamBox[nPBoxAT][8]:=GetSx3Cache("ZK4_DATA","X3_TAMANHO")//[8]:Tamanho do MsGet
+        aParamBox[nPBoxAT][8]:=GetSx3Cache("E2_BAIXA","X3_TAMANHO")//[8]:Tamanho do MsGet
         aParamBox[nPBoxAT][9]:=.F.//[9]:Flag .T./.F. Parametro Obrigatorio ?
 
         //10----------------------------------------------------------------------------------------------
         aAdd(aParamBox,array(9))
         nPBoxAT:=Len(aParamBox)
         aParamBox[nPBoxAT][1]:=1//[1]:1 - MsGet
-        aParamBox[nPBoxAT][2]:=OemToAnsi("Data Consolidado Ate")//[2]:Descricao
+        aParamBox[nPBoxAT][2]:=OemToAnsi("Data Baixa Ate")//[2]:Descricao
         aParamBox[nPBoxAT][3]:=date()//[3]:String contendo o inicializador do campo
         aParamBox[nPBoxAT][4]:="@D"//[4]:String contendo a Picture do campo
         aParamBox[nPBoxAT][5]:="AllWaysTrue()" //[5]:String contendo a validacao
         aParamBox[nPBoxAT][6]:=""//[6]:Consulta F3
         aParamBox[nPBoxAT][7]:="AllWaysTrue()"//[7]:String contendo a validacao When
-        aParamBox[nPBoxAT][8]:=GetSx3Cache("ZK4_DATA","X3_TAMANHO")//[8]:Tamanho do MsGet
+        aParamBox[nPBoxAT][8]:=GetSx3Cache("E2_BAIXA","X3_TAMANHO")//[8]:Tamanho do MsGet
         aParamBox[nPBoxAT][9]:=.T.//[9]:Flag .T./.F. Parametro Obrigatorio ?
 
         if (type("cCadastro")=="C")
@@ -5524,7 +5524,7 @@ static method getPagParamCon(aParamRet) class FIDC
         endif
 
         cFunName:=FunName()
-        setFunName("FIDCRelConsolidado")
+        setFunName("FIDCPagarRelConsolidado")
         lParamBox:=ParamBox(@aParamBox,&("cCadastro"),@aParamRet,/*bOk*/,/*aButtons*/,.T./*lCentered*/,/*nPosx*/,/*nPosy*/,/*oDlgWizard*/,/*cLoad*/,.T./*lCanSave*/,.T./*lUserSave*/)
         setFunName(cFunName)
 

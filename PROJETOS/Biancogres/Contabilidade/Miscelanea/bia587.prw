@@ -140,6 +140,10 @@ Static Function fBIA587H()
 		MsgInfo("O preenchimento do campo VersãoContábil é Obrigatório!!!")
 		Return .F.
 	EndIf
+	If Substr(_cVersCont, 1, 1) <> "D"
+		MsgSTOP("Esta rotina aceita somente Versões Contábeis do Tipo FORECAST!!!")
+		Return .F.
+	EndIf	
 	If !MsgYesNo("Deseja filtrar por data antes de prosseguir?", "Atenção")
 		If !Empty(_cVersao) .and. !Empty(_cRevisa) .and. !Empty(_cAnoRef) .and. !Empty(_cVersCont)
 			_oGetDados:oBrowse:SetFocus()
