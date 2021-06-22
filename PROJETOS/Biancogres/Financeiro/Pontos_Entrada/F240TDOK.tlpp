@@ -12,11 +12,11 @@
 function u_F240TDOK() as numeric
     local nOpcA as numeric
     MsAguarde({||nOpcA:=F240TDOK()},"Verificando Títulos Selecionados","Aguarde...")
-    return(nOpcA)
+return(nOpcA)
 
 static function F240TDOK() as numeric
-    
-    local aArea     as array 
+
+    local aArea     as array
     local aAreaSE2  as array
 
     local aF240TIT  as array
@@ -68,10 +68,10 @@ static function F240TDOK() as numeric
 
             (cSE2Alias)->(dbSkip())
 
-        end while 
-        
+        end while
+
         (cSE2Alias)->(dbGoTop())
-        
+
     end sequence
 
     restArea(aAreaSE2)
@@ -83,12 +83,12 @@ static function F240TDOK() as numeric
     if (!empty(aF240TIT))
         cCRLF:=CRLF
         cF240TIT:=""
-        aEval(aF240TIT,{|e|cF240TIT+=(e+cCRLF)})    
+        aEval(aF240TIT,{|e|cF240TIT+=(e+cCRLF)})
         if (!empty(cF240TIT))
             txtEditMemo():txtFileEdit(cF240TIT,"F240TIT :: Log")
         endif
     endif
-    
+
     cacheData():set("F240TIT","aF240TIT",array(0))
 
-    return(nOpcA)
+return(nOpcA)
