@@ -4,4 +4,4 @@ static function __DummyFA240TOK()
     if (.F.)
         __DummyFA240TOK()
     endif
-return
+    return

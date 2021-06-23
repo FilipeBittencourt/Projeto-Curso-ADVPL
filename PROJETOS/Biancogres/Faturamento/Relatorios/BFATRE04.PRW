@@ -140,7 +140,6 @@ Static Function Painel()
   cQuery	+= "  AND SF1.D_E_L_E_T_ = ' '	) "  + CRLF
   cQuery	+= "  ORDER BY ZAA_FILIAL,ZAA_DTEMIS,ZAA_CGCEMI "  + CRLF
 
-
   If Select("__TRB") > 0
     __TRB->(dbCloseArea())
   EndIf

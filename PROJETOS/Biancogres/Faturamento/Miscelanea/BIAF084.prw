@@ -11,18 +11,17 @@
 /*/
 
 User Function BIAF084()
+Local aArea := GetArea()
+Local oAprPed	:= Nil
 	
-	Local aArea 	:= GetArea()
-	Local oAprPed	:= Nil
-	
-	RpcSetType(3)
-	RpcSetEnv("01", "01")
+	//RpcSetType(3)
+	//RpcSetEnv("01", "01")
 		
 		oAprPed := TAprovaPedidoVendaEMail():New()
 		oAprPed:Recebe()
 		
 	RestArea(aArea)
 	
-	RpcClearEnv()
+	//RpcClearEnv()
 	
 Return()
