@@ -180,12 +180,12 @@ static function txtFileEdit(cFile as character,cMemoEdit as character,cTitle as 
     local aObjCoords    as array
     local aInfoAdvSize  as array
 
-    local bSet15        as block
-    local bSet24        as block
-    local bExcel        as block
-    local bShell        as block
-    local bRestore      as block
-    local bNotepad      as block
+    local bSet15        as codeblock
+    local bSet24        as codeblock
+    local bExcel        as codeblock
+    local bShell        as codeblock
+    local bRestore      as codeblock
+    local bNotepad      as codeblock
 
     local cSVMemoEdit   as character
 

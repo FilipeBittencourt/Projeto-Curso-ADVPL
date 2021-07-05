@@ -26,7 +26,7 @@ procedure u_FIDCPagarRelatorioLiquidados()
 	local aArea				as array
 	local aParamRet			as array
 
-	local bAction			as block
+	local bAction			as codeblock
 
 	local lParamBox			as logical
 
@@ -62,8 +62,8 @@ static procedure FIDCPagarRelatorioLiquidadosQuery(otMultProcess as object,aPara
 
     local aFWTTables    as array
 
-    local bProcess      as block
-    local bMsAguarde    as block
+    local bProcess      as codeblock
+    local bMsAguarde    as codeblock
 
     local cTmpAlias     as character
 
@@ -158,7 +158,7 @@ static function FIDCLiquidadosParameters(aParamRet as array) as logical
     lParamBox:=FIDC():getPagParamLiq(@aParamRet)
     return(lParamBox)
 
-static function QueryView(aParamRet as character,aFWTTables as array) as character
+static function QueryView(aParamRet as array,aFWTTables as array) as character
     local cTmpAlias as character
     cTmpAlias:=FIDC():getPagQueryLiq(@aParamRet,@aFWTTables)
     return(cTmpAlias)

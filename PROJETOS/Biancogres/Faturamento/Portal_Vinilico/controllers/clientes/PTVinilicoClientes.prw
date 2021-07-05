@@ -414,13 +414,11 @@ Method GetDiscount( cCodCli, cLojaCli ) Class PTVinilicoClientes
   cQuery += " SELECT ZA0_PDESC "
   cQuery += " FROM " + RetSqlName("ZA0") + " ZA0 "
   cQuery += " WHERE ZA0.ZA0_FILIAL = " + ValToSql( xFilial("ZA0") )
-  cQuery += "     AND ZA0.ZA0_TIPO = 'DGER' "
+  cQuery += "     AND ZA0.ZA0_TIPO = 'DCAT' "
   cQuery += "     AND ZA0.ZA0_MARCA = '1302' "
-  cQuery += "     AND ZA0.ZA0_CODCLI = '' "
-  // cQuery += "     AND ZA0.ZA0_CODCLI = " + ValToSql( cCodCli )
-  // cQuery += "     AND ZA0.ZA0_LOJCLI = " + ValToSql( cLojaCli )
+  cQuery += "     AND ZA0.ZA0_CAT = 'GOLD' "
   cQuery += "     AND ZA0.ZA0_STATUS = 'A' "
-  cQuery += "     AND ZA0.ZA0_VIGINI <= " + ValToSql( dDataBase ) + " and ZA0.ZA0_VIGFIM >= " + ValToSql( dDataBase )
+  cQuery += "     AND ZA0.ZA0_VIGFIM >= " + ValToSql( dDataBase )
   cQuery += "     AND ZA0.D_E_L_E_T_ = '' "
 
   If Select("__ZA0") > 0

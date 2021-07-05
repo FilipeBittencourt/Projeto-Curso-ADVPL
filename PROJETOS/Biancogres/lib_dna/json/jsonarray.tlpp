@@ -81,7 +81,7 @@ static CHR_PTeV     as character
 function u_JSONArray(lSection as logical,lHashAsFile as logical) as object
     return(JSONArray():New(lSection,lHashAsFile))
 
-class JSONArray from JSONhash
+    class JSONArray from JSONhash
 
     data cClassName         as character
 
@@ -122,7 +122,7 @@ class JSONArray from JSONhash
     public method ReadXMLFile(cFileName,cAttrSuffix,cURL,cEncoding,nOptions,lNameSpaces) as character
     public method ReadJSONFile(cFileName,lStripComments) as object
 
-end class
+    end class
 
 method New(lSection,lHashAsFile) class JSONArray
 
@@ -400,7 +400,7 @@ static function FromXML(aChildArray as array,oXMLNode as object,cAttrSuffix as c
                 aAdd(&("apNameSpaces"),{aNameSpaces,cXMLPath})
             else
                 aSize(aNameSpaces,0)
-            endif    
+            endif
         endif
         nChildCount:=if(oXMLNode:DOMHasChildNode(),oXMLNode:XPathChildCount(cXMLPath),0)
         if (nChildCount>0)
@@ -453,7 +453,7 @@ static function FromXML(aChildArray as array,oXMLNode as object,cAttrSuffix as c
         endif
     next nChild
 
-    return(oJSONNode)
+return(oJSONNode)
 
 /*
 static function: FromJSON(cJSONstr)
@@ -501,7 +501,7 @@ method FromJSON(cJSONstr) class JSONArray
         cData+=aSelf[nD][1]
         &(cData):=aSelf[nD][2]
     next nD
-    return(self)
+return(self)
 
 static function FromJSON(oJSONArray as object,cJSONstr as character) as object
 
@@ -530,12 +530,12 @@ static function FromJSON(oJSONArray as object,cJSONstr as character) as object
         oJSONArray:SetErrorMsg(oJSONArray[#"error"])
     endif
 
-    return(oJSONArray)
+return(oJSONArray)
 
 method FromHashMap(oJSONHashMap) class JSONArray
     paramtype oJSONHashMap as object
     self:SetFromHashMap(oJSONHashMap)
-    return(self)
+return(self)
 
 method JSONParser(cJSONstr,lSetFromObject) class JSONArray
 
@@ -574,7 +574,7 @@ method JSONParser(cJSONstr,lSetFromObject) class JSONArray
         endif
     endif
 
-    return(self)
+return(self)
 
 method JSONParserFile(cFileName,lSetFromObject) class JSONArray
 
@@ -596,9 +596,9 @@ method JSONParserFile(cFileName,lSetFromObject) class JSONArray
 
         self:JSONParser(cJSON,lSetFromObject)
 
-    end sequence        
-    
-    return(self)
+    end sequence
+
+return(self)
 
 /*
 static function: ToJSON(uAnyVar)
@@ -657,7 +657,7 @@ method ToJSON(uAnyVar) class JSONArray
         cJSON:=cTools():StrPrettify(cJSON,3,self:nPrettify)
     endif
 
-    return(cJSON)
+return(cJSON)
 
 static function __ToJSON(uAnyVar,oJSONArray as object) as character
 
@@ -834,15 +834,15 @@ static function __ToJSON(uAnyVar,oJSONArray as object) as character
 
     DEFAULT cJSON:="Unknown Data Type ("+cType+")"
 
-    return(cJSON)
+return(cJSON)
 
 method ToJSONFile(uAnyVar,cJSONFile) class JSONArray
-    
+
     local cJSON       as character
     local cJSONTmp    as character
-    
+
     local lJSONFile   as logical
-    
+
     local nJSONTmp    as numeric
 
     local uSelf
@@ -921,7 +921,7 @@ method ToJSONFile(uAnyVar,cJSONFile) class JSONArray
         fClose(nJSONTmp)
 
         lJSONFile:=__CopyFile(cJSONTmp,cJSONFile)
-        
+
         fErase(cJSONTmp)
 
         self:lHasError:=(!lJSONFile)
@@ -937,9 +937,9 @@ method ToJSONFile(uAnyVar,cJSONFile) class JSONArray
 
     end sequence
 
-    return(lJSONFile)
+return(lJSONFile)
 
-static procedure __ToJSONFile(nJSONTmp as numeric,uAnyVar,oJSONArray as object)
+    static procedure __ToJSONFile(nJSONTmp as numeric,uAnyVar,oJSONArray as object)
 
     local aData                 as array
 
@@ -1145,7 +1145,7 @@ static procedure __ToJSONFile(nJSONTmp as numeric,uAnyVar,oJSONArray as object)
         oSetHashMap:=oSetHashMap:FreeObj()
     endif
 
-    return
+return
 
 method ToXML(cXMLRoot,cAttrSuffix,lArrayToList) class JSONArray
 
@@ -1211,7 +1211,7 @@ method ToXML(cXMLRoot,cAttrSuffix,lArrayToList) class JSONArray
         endif
     endif
 
-    return(cXML)
+return(cXML)
 
 static function __ToXML(uAnyVar,oJSONArray,lArrayToList as logical,cAttrSuffix as character) as character
 
@@ -1242,7 +1242,7 @@ static function __ToXML(uAnyVar,oJSONArray,lArrayToList as logical,cAttrSuffix a
     local nXMLAttr              as numeric
     local nStackAttr            as numeric
     local nTimeStamp            as numeric
-    
+
     local oSetHashMap           as object
 
     local uKey
@@ -1367,7 +1367,7 @@ static function __ToXML(uAnyVar,oJSONArray,lArrayToList as logical,cAttrSuffix a
                             cXMLFull+=">"
                             cXMLFull+=__ToXML(uValue,@oJSONArray,@lArrayToList,@cAttrSuffix)
                             if (nXMLAttr>0)
-                                cXMLFull:=stuff(cXMLFull,(nXMLAttr+1),len(XML_NLS_ATTRIBUTE_ND),"")    
+                                cXMLFull:=stuff(cXMLFull,(nXMLAttr+1),len(XML_NLS_ATTRIBUTE_ND),"")
                             endif
                             cXMLFull+="</"
                             cXMLFull+=cAttribute
@@ -1437,7 +1437,7 @@ static function __ToXML(uAnyVar,oJSONArray,lArrayToList as logical,cAttrSuffix a
                         cXMLFull+=">"
                         cXMLFull+=__ToXML(uValue,@oJSONArray,@lArrayToList,@cAttrSuffix)
                         if (nXMLAttr>0)
-                            cXMLFull:=stuff(cXMLFull,(nXMLAttr+1),len(XML_NLS_ATTRIBUTE_ND),"")    
+                            cXMLFull:=stuff(cXMLFull,(nXMLAttr+1),len(XML_NLS_ATTRIBUTE_ND),"")
                         endif
                         cXMLFull+="</"
                         cXMLFull+=cAttribute
@@ -1476,7 +1476,7 @@ static function __ToXML(uAnyVar,oJSONArray,lArrayToList as logical,cAttrSuffix a
                     endif
                 next nD
             endif
-        otherwise 
+        otherwise
             cXML:="Unknown Data Type ("+cType+")"
         endcase
     end sequence
@@ -1487,7 +1487,7 @@ static function __ToXML(uAnyVar,oJSONArray,lArrayToList as logical,cAttrSuffix a
 
     DEFAULT cXML:=""
 
-    return(cXML)
+return(cXML)
 
 method ToHTML(lXML,cAttrSuffix) class JSONArray
 
@@ -1523,14 +1523,14 @@ method ToHTML(lXML,cAttrSuffix) class JSONArray
         cHTML:=cTools():StrPrettify(cHTML,2,self:nPrettify)
     endif
 
-    return(cHTML)
+return(cHTML)
 
 method ToXHTML(cAttrSuffix) class JSONArray
     local cHTML as character
     DEFAULT cAttrSuffix:="@"
     paramtype cAttrSuffix as character optional
     cHTML:=self:ToHTML(.T.,self:lGetObjSuperClass,cAttrSuffix)
-    return(cHTML)
+return(cHTML)
 
 /*
 static function: EscpJSONStr(cJSONStr)
@@ -1555,7 +1555,7 @@ method EscpJSONStr(cJSONStr) class JSONArray
     local cJSON as character
     paramtype cJSONStr as character
     cJSON:=EscpJSONStr(cJSONStr,@self:lUTF8,@self:lNoAccent,@self:lTrimSpace)
-    return(cJSON)
+return(cJSON)
 
 static function EscpJSONStr(cJSONStr as character,lUTF8 as logical,lNoAccent as logical,lTrimSpace as logical) as character
     local cEscpJSON as character
@@ -1570,7 +1570,7 @@ static function EscpJSONStr(cJSONStr as character,lUTF8 as logical,lNoAccent as 
         cEscpJSON:=cTools():UTF8(cEscpJSON,@lUTF8,@lNoAccent,@lTrimSpace)
     endif
 
-    return(cEscpJSON)
+return(cEscpJSON)
 
 /*
 static function: JSONPrettify(cJSONstr [,nPrettify])
@@ -1604,11 +1604,11 @@ Result:
 */
 method JSONPrettify(cJSONstr,nPrettify) class JSONArray
     local cJSON as character
-    paramtype cJSONstr  as character 
+    paramtype cJSONstr  as character
     DEFAULT nPrettify:=self:nPrettify
     paramtype nPrettify as numeric optional
     cJSON:=JSONPrettify(cJSONstr,nPrettify)
-    return(cJSON)
+return(cJSON)
 
 static function JSONPrettify(cJSONstr,nPrettify) as character
 
@@ -1655,7 +1655,7 @@ static function JSONPrettify(cJSONstr,nPrettify) as character
                 cJSONNew+=cLetter
             endif
         elseif (cLetter==",")
-               if (!lInString)
+            if (!lInString)
                 cJSONNew+=(cLetter+CHR_CRLF+replicate(cTab,nIdentLev))
             else
                 cJSONNew+=cLetter
@@ -1680,7 +1680,7 @@ static function JSONPrettify(cJSONstr,nPrettify) as character
         endif
     next nLetter
 
-    return(cJSONNew)
+return(cJSONNew)
 
 /*
 static function: JSONMinify(cJSONstr)
@@ -1691,7 +1691,7 @@ Comments are not allowed in the JSON specification,but we can remove them with t
 Allowed comments:
 
 */
- // Single line comment
+    // Single line comment
 
  /*  Multiple Lines
      Multiple Lines
@@ -1721,7 +1721,7 @@ method JSONMinify(cJSONstr) class JSONArray
     local cJSON as character
     paramtype cJSONstr as character
     cJSON:=JSONMinify(cJSONstr)
-    return(cJSON)
+return(cJSON)
 
 static function JSONMinify(cJSONstr as character) as character
 
@@ -1759,7 +1759,7 @@ static function JSONMinify(cJSONstr as character) as character
             lInLineCommt:=.T.
         elseif ((!lInString).and.(cLetter=="/").and.(subStr(cJSONstr,nLetter+1,1)=="*"))
             lMultLineCommt:=.T.
-        // real JSON
+            // real JSON
         elseif ((cLetter=="{").or.(cLetter=="["))
             cJSONNew+=cLetter
         elseif ((cLetter=="}").or.(cLetter=="]"))
@@ -1782,7 +1782,7 @@ static function JSONMinify(cJSONstr as character) as character
         endif
     next nLetter
 
-    return(cJSONNew)
+return(cJSONNew)
 
 static function IsComment(cJSONstr as character,nLetter as numeric,nLetters as numeric) as logical
     local cLetter       as character
@@ -1806,10 +1806,10 @@ static function IsComment(cJSONstr as character,nLetter as numeric,nLetters as n
             endif
         endif
     next nLetter
-    return(lIsComment)    
+return(lIsComment)
 
 method ReadINIFile(cIniFile,cIgnoreToken) class JSONArray
-    
+
     local cJSON     as character
     local cEncode   as character
 
@@ -1821,10 +1821,10 @@ method ReadINIFile(cIniFile,cIgnoreToken) class JSONArray
     oTFINI:=TFINI():New(cIniFile,cIgnoreToken)
     cEncode:=if(self:lUTF8,"UTF-8","")
     cJSON:=oTFINI:ToJSON(cEncode,self:lPrettify,self:nPrettify)
-    
+
     self:FromJSON(cJSON)
 
-    return(cJSON)
+return(cJSON)
 
 method ReadXMLFile(cFileName,cAttrSuffix,cURL,cEncoding,nOptions,lNameSpaces) class JSONArray
     local cJSON as character
@@ -1837,7 +1837,7 @@ method ReadXMLFile(cFileName,cAttrSuffix,cURL,cEncoding,nOptions,lNameSpaces) cl
     DEFAULT lNameSpaces:=.T.
     paramtype lNameSpaces as logical optional
     cJSON:=self:FromXML(cFileName,cAttrSuffix,cURL,cEncoding,nOptions,lNameSpaces)
-    return(cJSON)
+return(cJSON)
 
 /*
 static function: ReadJSONFile(cFileName [,lStripComments])
@@ -1859,7 +1859,7 @@ method ReadJSONFile(cFileName,lStripComments) class JSONArray
     DEFAULT lStripComments:=.F.
     paramtype lStripComments as logical optional
     ReadJSONFile(@self,cFileName,lStripComments)
-    return(self)
+return(self)
 
 static function ReadJSONFile(oJSONArray as object,cFileName as character,lStripComments) as object
 
@@ -1885,7 +1885,7 @@ static function ReadJSONFile(oJSONArray as object,cFileName as character,lStripC
 
     end sequence
 
-    return(oJSONArray)
+return(oJSONArray)
 
 /// End of User functions
 
@@ -1942,7 +1942,7 @@ static function GetJSONVal(cJSONstr as character) as array
 
     if (len(aTmp)>0)
         if (aTmp[2]<0)
-             aRet:={nil,-1} // Error Code
+            aRet:={nil,-1} // Error Code
         else
             aRet:={aTmp[1],nLetter+aTmp[2]-1}
         endif
@@ -1950,7 +1950,7 @@ static function GetJSONVal(cJSONstr as character) as array
 
     DEFAULT aRet:={nil,-1}
 
-    return(aRet)
+return(aRet)
 
 /*
 Internal function: JSONArr(cJSONstr)
@@ -2006,7 +2006,7 @@ static function JSONArr(cJSONstr as character) as array
 
     DEFAULT aJSONArr:={nil,-1}
 
-    return(aJSONArr)
+return(aJSONArr)
 
 /*
 Internal function: JSONObj(cJSONstr)
@@ -2045,7 +2045,7 @@ static function JSONObj(cJSONstr as character) as array
         for nLetter:=2 to nJSONstr
             cLetter:=subStr(cJSONstr,nLetter,1)
             if ((nStep==1).and.(cLetter=='"'))
-                 aTmp:=JSONStr(subStr(cJSONstr,nLetter))
+                aTmp:=JSONStr(subStr(cJSONstr,nLetter))
                 if (aTmp[2]<0)
                     aRet:={nil,-1} // Error Code
                     break
@@ -2078,7 +2078,7 @@ static function JSONObj(cJSONstr as character) as array
 
     DEFAULT aRet:={nil,-1}
 
-    return(aRet)
+return(aRet)
 
 /*
 Internal function: JSONStr(cJSONstr)
@@ -2146,7 +2146,7 @@ static function JSONStr(cJSONstr as character) as array
 
     DEFAULT aRet:={nil,-1}
 
-    return(aRet)
+return(aRet)
 
 /*
 Internal function: JSONNum(cJSONstr)
@@ -2180,7 +2180,7 @@ static function JSONNum(cJSONstr) as array
         cTmpStr:=""
 
         nJSONstr:=Len(cJSONstr)
-        
+
         for nLetter:=1 to nJSONstr
             cLetter:=subStr(cJSONstr,nLetter,1)
             if (AT(cLetter,'0123456789.-')>0)
@@ -2221,7 +2221,7 @@ static function JSONNum(cJSONstr) as array
 
     DEFAULT aRet:={nil,-1}
 
-    return(aRet)
+return(aRet)
 
 /*
 Internal function: JSONTFN(cJSONstr)
@@ -2265,4 +2265,4 @@ static function JSONTFN(cJSONstr as character) as array
 
     DEFAULT aRet:={nil,-1}
 
-    return(aRet)
+return(aRet)

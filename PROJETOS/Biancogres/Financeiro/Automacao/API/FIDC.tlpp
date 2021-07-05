@@ -40,8 +40,8 @@ class FIDC
     static method getFIDCVar(uVar,uDefault)
     static method resetFIDCVars()
 
-    static method percentualDesconto() as valor
-    static method calculaDesconto(nValor as numeric,dVencimento as date,dReferencia as date) as valor
+    static method percentualDesconto() as numeric
+    static method calculaDesconto(nValor as numeric,dVencimento as date,dReferencia as date) as numeric
 
     static method getBiaPar(cParam as character,xDefault,cEmp as character,cFil as character)
     static method putBiaPar(cParam as character,cConteudo as character,cEmp as character,cFil as character)
@@ -80,7 +80,8 @@ class FIDC
     static method movBcoFIDC(dDataRef as date) as logical
 
     static method getVlrCTBPagar() as numeric
-    static method getHisCTBPagar() as character
+    static method getHisCTBPagar(cTypeHist) as character
+    static method getCTACTBPagar(cTypeCTA) as character
 
     static method isPGFIDC(lHelp as logical,cMsg as character)  as logical
     static method isRecFIDC(lHelp as logical,cMsg as character)  as logical
@@ -115,7 +116,7 @@ static method bcoIsFIDC() class FIDC
 
     local aArea         as array
 
-    local bbcoIsFIDC    as block
+    local bbcoIsFIDC    as codeblock
 
     local cEmp          as character
     local cFil          as character
@@ -255,8 +256,8 @@ static method regrabcoIsFIDC(nType) class FIDC
 
     local aArea         as array
 
-    local bbcoIsFIDC    as block
-    local bRGRIsFIDC    as block
+    local bbcoIsFIDC    as codeblock
+    local bRGRIsFIDC    as codeblock
 
     local cEmp          as character
     local cFil          as character
@@ -768,7 +769,7 @@ static method ctbFIDCOffLine(nType) class FIDC
 
     local aCT5Query         as array
 
-    local bAction           as block
+    local bAction           as codeblock
 
     local cPadrao           as character
     local cLPFIDC           as character
@@ -1315,7 +1316,7 @@ static function ctbFIDCPagar(otMultProcess as object,aParamRet as array)
                   AND SA2.%notDel%
                   AND SE2.E2_FILIAL=%xFilial:SE2%
                   AND SA2.A2_FILIAL=%xFilial:SA2%
-                  /*AND SE2.E2_LA<>'S'*/
+                  AND SE2.E2_LA = ''
                   AND SE2.E2_BAIXA   BETWEEN %exp:cE2BAIXADe% AND %exp:cE2BAIXAAte%
                   AND SE2.E2_YSITAPI='2'
                   AND (%exp:cFIDCExpFilter%)
@@ -1494,7 +1495,7 @@ static method txFIDCOffLine() class FIDC
     local aParamBox         as array
     local aParamRet         as array
 
-    local bAction           as block
+    local bAction           as codeblock
 
     local cParamTit         as character
 
@@ -1896,8 +1897,8 @@ static method getRecQueryRem(aParamRet,abcoIsFIDC,aFWTTables) class FIDC
 
     local aFields           as array
 
-    local bError            as block
-    local bErrorBlock       as block
+    local bError            as codeblock
+    local bErrorBlock       as codeblock
 
     local cTmpAlias         as character
     local cTmpTable         as character
@@ -5905,7 +5906,6 @@ static method getHisCTBPagar(cTypeHist) class FIDC
     local cHistCTB      as character
 
     local nSA2RecNo     as numeric
-    local nSE2RecNo     as numeric
 
     local oJSONFIDC     as object
     local oJSONOrigem   as object
@@ -5929,7 +5929,6 @@ static method getHisCTBPagar(cTypeHist) class FIDC
 
         if (cTypeHist=="ORIGEM")
             nSA2RecNo:=cacheData():Get("FIDC0001","nSA2RecNoOrigem",0)
-            nSE2RecNo:=cacheData():Get("FIDC0001","nSE2RecNoOrigem",0)
             SA2->(MsGoTo(nSA2RecNo))
             cHistCTB+="VLR ANTEC FIDC NF"
             cHistCTB+=" "
@@ -5955,6 +5954,52 @@ static method getHisCTBPagar(cTypeHist) class FIDC
     FWRestArea(aArea)
 
     return(cHistCTB)
+
+ static method getCTACTBPagar(cTypeCTA) class FIDC
+    
+    local aArea         as array
+    local aAreaSA2      as array
+    local aAreaSE2      as array
+    
+    local cCTACTB       as character
+
+    local nSA2RecNo     as numeric
+
+    local oJSONFIDC     as object
+    local oJSONOrigem   as object
+
+    paramtype cTypeCTA as character
+
+    aArea:=FWGetArea()
+    aAreaSA2:=SA2->(getArea())
+    aAreaSE2:=SE2->(getArea())
+ 
+    begin sequence
+
+        cCTACTB:=""
+
+        if (!FIDC():isctbFIDC(2))
+            break
+        endif
+
+        oJSONFIDC:=cacheData():Get("FIDC0001","FIDC",JSONArray():New())
+        oJSONOrigem:=cacheData():Get("FIDC0001","ORIGEM",JSONArray():New())
+
+        if (cTypeCTA=="ORIGEM")
+            nSA2RecNo:=cacheData():Get("FIDC0001","nSA2RecNoOrigem",0)
+            SA2->(MsGoTo(nSA2RecNo))
+            cCTACTB+="21102001"+SA2->A2_COD
+        elseif (cTypeCTA=="FIDC")
+            cCTACTB+="21102001015050"
+        endif
+
+    end sequence
+
+    restArea(aAreaSA2)
+    restArea(aAreaSE2)
+    FWRestArea(aArea)
+
+    return(cCTACTB)
 
 static method isPGFIDC(lHelp,cMsg) class FIDC
     local aArea     as array

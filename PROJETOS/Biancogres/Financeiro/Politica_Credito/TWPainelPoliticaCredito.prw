@@ -255,6 +255,7 @@ Local cQry := GetNextAlias()
 	cSQL += " WHERE ZM1_FILIAL = "+ ValToSQL(xFilial("ZM1"))
 	cSQL += " AND ZM1_CODPRO = "+ ValToSQL(::cCodPro)
 	cSQL += " AND D_E_L_E_T_ = '' "		
+	cSQL += " ORDER BY R_E_C_N_O_ "		
 		
 	TcQuery cSQL New Alias (cQry)
 	
@@ -307,6 +308,7 @@ Local cQry := GetNextAlias()
 	cSQL += " WHERE ZM3_FILIAL = "+ ValToSQL(xFilial("ZM3"))
 	cSQL += " AND ZM3_CODPRO = "+ ValToSQL(::cCodPro)
 	cSQL += " AND D_E_L_E_T_ = '' "		
+	cSQL += " ORDER BY R_E_C_N_O_ "		
 		
 	TcQuery cSQL New Alias (cQry)
 	
@@ -360,6 +362,7 @@ Local cQry := GetNextAlias()
 	cSQL += " WHERE ZM4_FILIAL = "+ ValToSQL(xFilial("ZM4"))
 	cSQL += " AND ZM4_CODPRO = "+ ValToSQL(::cCodPro)
 	cSQL += " AND D_E_L_E_T_ = '' "		
+	cSQL += " ORDER BY R_E_C_N_O_ "		
 		
 	TcQuery cSQL New Alias (cQry)
 	

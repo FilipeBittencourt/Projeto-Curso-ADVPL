@@ -1,7 +1,7 @@
 #include "protheus.ch"
 #include "TbiConn.ch"
 #include "TbiCode.ch"
-#include "apwebsrv.ch" 
+#include "apwebsrv.ch"
 #INCLUDE "TOPCONN.CH"
 #INCLUDE "XMLXFUN.CH"
 #include "rwmake.ch"
@@ -31,6 +31,7 @@ USER FUNCTION MT131WF
 	Private cFornece  	:= ''
 	Private cLoja	  	:= ''
 	Private cIdProces	:= ''
+	Private cErroBiz 	:= ''
 
 	IF LEN(ParamIxb) == 3
 		cFornece  	:= ParamIxb[2]
@@ -67,19 +68,20 @@ USER FUNCTION MT131WF
 			MsUnlock()
 		ENDIF
 		IF !EMPTY(cFornMail)
-			
+
 			lBizagi := .T.
-			
+
 			_cTipo := POSICIONE("SC1", 5, XFILIAL("SC1")+cCotacao, "C1_YTIPO")
 			If (AllTrim(_cTipo) $ '1_2')//quando vem do portal esse campo e preenchido
 				lBizagi := .F.
 			EndIf
-			
+
 
 			If lBizagi
 				//(04/05/15 - Thiago Dantas) -> Gera Processo de Cotação no BIZAGI.
 				IncProc('Gerando a cotação no Bizagi...')
-				cIdProces := U_BIAB002((cSC8)->C8_FORNECE, (cSC8)->C8_LOJA)			
+				cIdProces := U_BIAB002((cSC8)->C8_FORNECE, (cSC8)->C8_LOJA)
+				//STOP AQUI
 			Else
 				cAssunto := RTRIM(SM0->M0_NOMECOM)+" - Cotação Num. "+cCotacao
 				cBody    := MemoRead("\workflow\cotacao\modelo_email.html")
@@ -90,14 +92,14 @@ USER FUNCTION MT131WF
 			cSQL := "UPDATE "+TabSC8+CRLF
 			cSQL += "   SET  C8_YEMAIL = "+ValToSql(cUserMail)+","+CRLF
 
-			If Alltrim(GetSrvProfString("RpoVersion","")) == "120"		
+			If Alltrim(GetSrvProfString("RpoVersion","")) == "120"
 				cSQL += "        C8_OBS = CONVERT(VARBINARY(MAX),' '),"+CRLF
 			Else
 				cSQL += "        C8_OBS = ' ',"+CRLF
 			EndIf
 
 			cSQL += "        C8_YTPPSS   = "+ValToSql(_cTipo)+","+CRLF
-			
+
 			cSQL += "        C8_YFLAG   = ' ',"+CRLF
 			cSQL += "        C8_YMARCA  = ' ',"+CRLF
 			cSQL += "        C8_YDATCHE = ' ',"+CRLF
@@ -120,11 +122,11 @@ USER FUNCTION MT131WF
 				If (SUPERGETMV("MV_YRTPAY", .F., .F.))
 					//força sincronização com portal
 					//If (TCSPExist("BPORTAL.dbo.Sp_BPortal_Sinc_Cotacao_Protheus_Solicitacao_Servico"))
-						TCSQLEXEC("exec BPORTAL.dbo.Sp_BPortal_Sinc_Cotacao_Protheus_Solicitacao_Servico")
+					TCSQLEXEC("exec BPORTAL.dbo.Sp_BPortal_Sinc_Cotacao_Protheus_Solicitacao_Servico")
 					//EndIf
 				EndIf
 			EndIf
-			
+
 			TCREFRESH(TabSC8)
 		ENDIF
 
@@ -276,7 +278,7 @@ USER FUNCTION REENVIAEML
 	LOCAL cNum     := SC8->C8_NUM
 	LOCAL cFornece := SC8->C8_FORNECE
 	LOCAL cLoja    := SC8->C8_LOJA
-	Local i 
+	Local i
 
 	IF EXISTBLOCK("MT131WF") .And. MsgYesNo("Confirma envio de email para Fornecedor?")
 		U_BIAMsgRun(,,{|| EXECBLOCK("MT131WF",.F.,.F.,{cNum, cFornece, cLoja})})
@@ -316,7 +318,9 @@ User Function BIAB002(pFornece,pLoja)
 	Private cLojaCot := pLoja
 
 	// Testa Envio de Xml para o bizagi.
-	cRet := GeraProcBZ()
+	If AllTrim(UPPER(GetEnvServer())) == "PRODUCAO"
+		cRet := GeraProcBZ()
+	EndIf
 
 Return cRet
 
@@ -328,11 +332,11 @@ Static Function GeraProcBZ()
 	Local cXmlCot := ''
 	Local cXmlRet := ''
 	Local aXmlRet := {}
-	Local oXmlRetCot 
+	Local oXmlRetCot
 
 	Local cErro := ''
 	Local cAviso := ''
-	Local Enter := CHR(13) + CHR(10)	 
+	Local Enter := CHR(13) + CHR(10)
 
 	oWS := WSWorkflowEngineSOA():New()
 
@@ -357,7 +361,7 @@ Static Function GeraProcBZ()
 			//Caso não tenha enviado.
 			If !lEnviou
 				IncProc('Não foi possível comunicar com o Bizagi! Nova tentativa em 10 seg...')
-				Sleep(10*1000)// espera 10 segundos para a proxima tentativa...	
+				Sleep(10*1000)// espera 10 segundos para a proxima tentativa...
 			EndIf
 		End
 
@@ -384,17 +388,17 @@ Static Function GeraProcBZ()
 
 					If oErroCode != NIL
 						If !Empty(oErroCode:_ERRORCODE:TEXT)
-							lErro := .T. 						
+							lErro := .T.
 							CONOUT("Erro ao Gerar Processo no BIZAGI: "+oErroCode:_ERRORMESSAGE:TEXT)
 							CONOUT("COTAÇÃO BIZAGI-------------------------------")
 							MsgBox('Erro ao Gerar Processo no BIZAGI: '+oErroCode:_ERRORMESSAGE:TEXT,'ERRO', 'STOP'  )
-						EndIf 
+						EndIf
 					EndIf
 
 					oProcNum := NIL
 
 					If !lErro
-						oProcNum  := oXmlRetCot:_Processes:_PROCESS:_PROCESSRADNUMBER 
+						oProcNum  := oXmlRetCot:_Processes:_PROCESS:_PROCESSRADNUMBER
 					EndIf
 
 					If oProcNum != NIL .And. !lErro
@@ -407,7 +411,7 @@ Static Function GeraProcBZ()
 					EndIf
 				EndIf
 			EndIf
-		EndIf 
+		EndIf
 	EndIf
 
 
@@ -446,15 +450,15 @@ Static Function cGetXmlCot()
 	TCQUERY CSQL ALIAS "TSC8" NEW
 	dbSelectArea("TSC8")
 
-	If !TSC8->(Eof())   
+	If !TSC8->(Eof())
 
 		cXml := ""
-		cXml += "<BizAgiWSParam>" 
+		cXml += "<BizAgiWSParam>"
 
 		//PARAMETROS PARA AMBIENTE DE PRODUCAO
-		cXml += "<domain>DOMAIN</domain>" 
-		cXml += "<userName>admon</userName>" 
-		cXml += "<Cases>" 
+		cXml += "<domain>DOMAIN</domain>"
+		cXml += "<userName>admon</userName>"
+		cXml += "<Cases>"
 
 		While(!TSC8->(Eof()))
 
@@ -465,48 +469,53 @@ Static Function cGetXmlCot()
 			//dbSeek(xFilial("SA2")+cFornCod+cFornLoja)
 
 
-			cXml += "<Case>" 
-			cXml += "<Process>SolicitarCotacao</Process>" 
-			cXml += "<Entities>" 
-			cXml += "<SolicitarCotacao>" 
-			cXml += "<DataEnvio>"+cEmiss+"</DataEnvio>" 
-			cXml += "<TelefoneComprador>"+ALLTRIM(SM0->M0_TEL)+"</TelefoneComprador>" 
-			cXml += "<NomeComprador>"+cNomeComp+"</NomeComprador>" 
-			cXml += '<EmpresaCompradora entityName="VW_BZ_DADOS_EMPRESA">' 
-			cXml += "<Codigo>"+cEmpAnt+"</Codigo>" 
-			cXml += "</EmpresaCompradora>" 
-			cXml += "<EmailComprador>"+cEmailComp+"</EmailComprador>" 
-			cXml += "<PrazoFinal>"+cPrazo+"</PrazoFinal>" 
-			cXml += "<NumeroCotacao>"+cCotNum+"</NumeroCotacao>" 
-			cXml += "<RamalComprador>"+cRamalComp+"</RamalComprador>" 
-			cXml += '<Fornecedor entityName= "VW_BZ_FORNECEDOR">' 
-			cXml += "<Codigo>"+cFornCod+"</Codigo>" 
+			cXml += "<Case>"
+			cXml += "<Process>SolicitarCotacao</Process>"
+			cXml += "<Entities>"
+			cXml += "<SolicitarCotacao>"
+			cXml += "<DataEnvio>"+cEmiss+"</DataEnvio>"
+			cXml += "<TelefoneComprador>"+ALLTRIM(SM0->M0_TEL)+"</TelefoneComprador>"
+			cXml += "<NomeComprador>"+cNomeComp+"</NomeComprador>"
+			cXml += '<EmpresaCompradora entityName="VW_BZ_DADOS_EMPRESA">'
+			cXml += "<Codigo>"+cEmpAnt+"</Codigo>"
+			cXml += "</EmpresaCompradora>"
+			cXml += "<EmailComprador>"+cEmailComp+"</EmailComprador>"
+			cXml += "<PrazoFinal>"+cPrazo+"</PrazoFinal>"
+			cXml += "<NumeroCotacao>"+cCotNum+"</NumeroCotacao>"
+			cXml += "<RamalComprador>"+cRamalComp+"</RamalComprador>"
+			cXml += '<Fornecedor entityName= "VW_BZ_FORNECEDOR">'
+			cXml += "<Codigo>"+cFornCod+"</Codigo>"
 			cXml += "<Loja>"+cFornLoja+"</Loja>"
-			cXml += "</Fornecedor>" 
+			cXml += "</Fornecedor>"
 			/* */
 			cXml += "<CotacaoEmbalagem>false</CotacaoEmbalagem>"
 			cXml += "<CotacaoTabelaPreco>false</CotacaoTabelaPreco>"
 			cXml += "<CotacaoSolCotacao>true</CotacaoSolCotacao>"
 			/* */ 
-			cXml += "<NumSC>"+AllTrim(TSC8->C8_NUMSC)+"</NumSC>" 
-			cXml += '<PrioridadeCotacao>' 
+			cXml += "<NumSC>"+AllTrim(TSC8->C8_NUMSC)+"</NumSC>"
+			cXml += '<PrioridadeCotacao>'
 			cXml += cPrior
-			cXml += "</PrioridadeCotacao>" 		
-			cXml += "<ItensCotacao>" 
+			cXml += "</PrioridadeCotacao>"
+			cXml += "<ItensCotacao>"
 
 			While cFornCod == TSC8->C8_FORNECE .And. (!TSC8->(Eof()))
 
-				cXml += "<ItemCotacao>" 
+				cXml += "<ItemCotacao>"
 
 				//cXml += '<ProdutoCotacao entityName="VW_BZ_PRODUTO_COTACAO">'
-				//cXml += "<EMPRESA>"+cEmpAnt+cFilAnt+"</EMPRESA>"                                                                       
-				//cXml += "<CODIGO>"+TSC8->C8_PRODUTO+"</CODIGO>" 
+				//cXml += "<EMPRESA>"+cEmpAnt+cFilAnt+"</EMPRESA>"
+				//cXml += "<CODIGO>"+TSC8->C8_PRODUTO+"</CODIGO>"
 				//cXml += "</ProdutoCotacao>"
-				
+
+				/*
 				cXml += '<ProdCotacaoVirtualizado entityName="VW_BZ_VIRT_PROD_COT">'
 				cXml += "<EMPRESA>"+cEmpAnt+cFilAnt+"</EMPRESA>"                                                                       
 				cXml += "<CODIGO>"+TSC8->C8_PRODUTO+"</CODIGO>" 
 				cXml += "</ProdCotacaoVirtualizado>"
+				*/
+
+				cXml += '<ProdCotacaoVirtualizado entityName="VW_BZ_VIRT_PROD_COT" businesskey="EMPRESA='
+				cXml +=  "'"+cEmpAnt+cFilAnt+"' AND CODIGO= '"+TSC8->C8_PRODUTO+"'"+'" />'
 
 				dEntrega := SToD(TSC8->C8_DATPRF)
 				cEntrega := cValToChar(YEAR(dEntrega))+'-'+cValToChar(MONTH(dEntrega))+'-'+cValToChar(DAY(dEntrega))+'T'+Time()
@@ -514,24 +523,24 @@ Static Function cGetXmlCot()
 				cXml += "<NumItem>" + TSC8->C8_ITEM + "</NumItem>"
 				cXml += "<NumProposta>" + TSC8->C8_NUMPRO + "</NumProposta>"
 
-				cXml += "<DatadeEntrega>" + cEntrega + "</DatadeEntrega>" 
-				cXml += "<DescricaoSC>" + TSC8->C1_DESCRI + "</DescricaoSC>" 
+				cXml += "<DatadeEntrega>" + cEntrega + "</DatadeEntrega>"
+				cXml += "<DescricaoSC>" + TSC8->C1_DESCRI + "</DescricaoSC>"
 				cXml += "<Quantidade>" + cValToChar(TSC8->C8_QUANT) + "</Quantidade>"
-				cXml += "<ObservacaoComprador>" + TSC8->C8_OBS + "</ObservacaoComprador>"  
+				cXml += "<ObservacaoComprador>" + TSC8->C8_OBS + "</ObservacaoComprador>"
 				cXml += "</ItemCotacao>"
 
-				TSC8->(DbSkip()) 
-			End 
+				TSC8->(DbSkip())
+			End
 
-			cXml += "</ItensCotacao>" 
-			cXml += "</SolicitarCotacao>" 
-			cXml += "</Entities>" 
-			cXml += "</Case>" 
+			cXml += "</ItensCotacao>"
+			cXml += "</SolicitarCotacao>"
+			cXml += "</Entities>"
+			cXml += "</Case>"
 
 			//	TSC8->(DbSkip())
 		End
 
-		cXml += "</Cases>" 
+		cXml += "</Cases>"
 		cXml += "</BizAgiWSParam>"
 
 		TSC8->(dbCloseArea())

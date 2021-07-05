@@ -173,11 +173,16 @@ Static Function Prc697EX(oProcess)
 	Local tyTblPrc    := {}
 	Local msTabela
 
+	oProcess:SetRegua1(4)
+	oProcess:SetRegua2(8)             
+
 	aAdd(tyTblPrc, { 1,	"ZOW", "_NEGOCI" })
 	aAdd(tyTblPrc, { 2,	"Z48", "_NEGOCI" })
 	aAdd(tyTblPrc, { 3,	"ZBZ", "_NEGOCI" })
 	aAdd(tyTblPrc, { 4,	"CT2", "_YNEGOC" })
 	aAdd(tyTblPrc, { 5,	"ZOZ", "_NEGOCI" })
+
+	oProcess:IncRegua1(smMsnPrc)
 
 	For fk := 1 to Len(tyTblPrc)
 
@@ -186,11 +191,7 @@ Static Function Prc697EX(oProcess)
 
 		If fExistTabl(RetSqlName(msTabela))
 
-			oProcess:SetRegua1(1)
-			oProcess:SetRegua2(1000)             
-
-			oProcess:IncRegua1(smMsnPrc)
-			oProcess:IncRegua2("Tabela: " + msTabela)
+			oProcess:IncRegua2("Tabela: " + msTabela + " tempo: " + Alltrim(ElapTime(hhTmpINI, TIME())) )
 
 			UP001 := Alltrim(" WITH UPDTNEGOCIO                                                                                                                                                                 ") + msEnter
 			UP001 += Alltrim("      AS (SELECT DISTINCT                                                                                                                                                         ") + msEnter
@@ -215,14 +216,57 @@ Static Function Prc697EX(oProcess)
 			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' = '90'                                                                                                                   ") + msEnter
 			UP001 += Alltrim("                                       AND @TBL.@TBL_FILIAL IN('13', '14')                                                                                                        ") + msEnter
 			UP001 += Alltrim("                                       AND @TBL.@TBL_DEBITO IN('41501010', '31701004', '31701005'))                                                                               ") + msEnter
-			UP001 += Alltrim("                                   OR (CTH.CTH_YENTID = '0013')                                                                                                                   ") + msEnter
+			UP001 += Alltrim("                                   OR (CTH.CTH_YENTID = '0013'                                                                                                                    ") + msEnter
+			UP001 += Alltrim("                                       AND SUBSTRING(@TBL.@TBL_DEBITO,1,1) IN('3','6'))                                                                                           ") + msEnter
 			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' IN('13', '14')                                                                                                           ") + msEnter
-			UP001 += Alltrim("                                       AND CTH.CTH_YENTID = '0015')                                                                                                               ") + msEnter
+			UP001 += Alltrim("                                       AND CTH.CTH_YENTID = '0015'                                                                                                                ") + msEnter
+			UP001 += Alltrim("                                       AND SUBSTRING(@TBL.@TBL_DEBITO,1,1) IN('3','6'))                                                                                           ") + msEnter
 			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' = '90'                                                                                                                   ") + msEnter
 			UP001 += Alltrim("                                       AND @TBL.@TBL_FILIAL IN('13', '14')                                                                                                        ") + msEnter
-			UP001 += Alltrim("                                       AND CTH.CTH_YENTID = '0015')                                                                                                               ") + msEnter
+			UP001 += Alltrim("                                       AND CTH.CTH_YENTID = '0015'                                                                                                                ") + msEnter
+			UP001 += Alltrim("                                       AND SUBSTRING(@TBL.@TBL_DEBITO,1,1) IN('3','6'))                                                                                           ") + msEnter
 			UP001 += Alltrim("                               THEN '2'                                                                                                                                           ") + msEnter
-			UP001 += Alltrim("                               ELSE ' '                                                                                                                                           ") + msEnter
+			UP001 += Alltrim("                               WHEN('" + cEmpAnt + "' = '06'                                                                                                                      ") + msEnter
+			UP001 += Alltrim("                                    AND @TBL.@TBL_DEBITO = '41101010000011')                                                                                                      ") + msEnter
+			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' = '90'                                                                                                                   ") + msEnter
+			UP001 += Alltrim("                                       AND @TBL.@TBL_FILIAL = '06'                                                                                                                ") + msEnter
+			UP001 += Alltrim("                                       AND @TBL.@TBL_DEBITO = '41101010000011')                                                                                                   ") + msEnter			
+			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' = '06'                                                                                                                   ") + msEnter
+			UP001 += Alltrim("                                       AND SUBSTRING(@TBL.@TBL_DEBITO, 1, 3) = '412')                                                                                             ") + msEnter
+			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' = '90'                                                                                                                   ") + msEnter
+			UP001 += Alltrim("                                       AND @TBL.@TBL_FILIAL = '06'                                                                                                                ") + msEnter
+			UP001 += Alltrim("                                       AND SUBSTRING(@TBL.@TBL_DEBITO, 1, 3) = '412')                                                                                             ") + msEnter
+			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' = '06'                                                                                                                   ") + msEnter
+			UP001 += Alltrim("                                       AND SUBSTRING(@TBL.@TBL_DEBITO, 1, 2) = '61')                                                                                              ") + msEnter
+			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' = '90'                                                                                                                   ") + msEnter
+			UP001 += Alltrim("                                       AND @TBL.@TBL_FILIAL = '06'                                                                                                                ") + msEnter
+			UP001 += Alltrim("                                       AND SUBSTRING(@TBL.@TBL_DEBITO, 1, 2) = '61')                                                                                              ") + msEnter
+			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' IN('06')                                                                                                                 ") + msEnter
+			UP001 += Alltrim("                                       AND CTH.CTH_YENTID = '0015'                                                                                                                ") + msEnter
+			UP001 += Alltrim("                                       AND SUBSTRING(@TBL.@TBL_DEBITO,1,1) IN('3','6'))                                                                                           ") + msEnter
+			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' = '90'                                                                                                                   ") + msEnter
+			UP001 += Alltrim("                                       AND @TBL.@TBL_FILIAL IN('06')                                                                                                              ") + msEnter
+			UP001 += Alltrim("                                       AND CTH.CTH_YENTID = '0015'                                                                                                                ") + msEnter
+			UP001 += Alltrim("                                       AND SUBSTRING(@TBL.@TBL_DEBITO,1,1) IN('3','6'))                                                                                           ") + msEnter
+			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' IN('06')                                                                                                                 ") + msEnter
+			UP001 += Alltrim("                                       AND CTH.CTH_YENTID = '0055'                                                                                                                ") + msEnter
+			UP001 += Alltrim("                                       AND SUBSTRING(@TBL.@TBL_DEBITO,1,1) IN('3','6'))                                                                                           ") + msEnter
+			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' = '90'                                                                                                                   ") + msEnter
+			UP001 += Alltrim("                                       AND @TBL.@TBL_FILIAL IN('06')                                                                                                              ") + msEnter
+			UP001 += Alltrim("                                       AND CTH.CTH_YENTID = '0055'                                                                                                                ") + msEnter
+			UP001 += Alltrim("                                       AND SUBSTRING(@TBL.@TBL_DEBITO,1,1) IN('3','6'))                                                                                           ") + msEnter
+			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' = '06'                                                                                                                   ") + msEnter
+			UP001 += Alltrim("                                       AND SUBSTRING(@TBL.@TBL_DEBITO, 1, 3) = '414')                                                                                             ") + msEnter
+			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' = '90'                                                                                                                   ") + msEnter
+			UP001 += Alltrim("                                       AND @TBL.@TBL_FILIAL = '06'                                                                                                                ") + msEnter
+			UP001 += Alltrim("                                       AND SUBSTRING(@TBL.@TBL_DEBITO, 1, 3) = '414')                                                                                             ") + msEnter
+			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' = '06'                                                                                                                   ") + msEnter
+			UP001 += Alltrim("                                       AND SUBSTRING(@TBL.@TBL_DEBITO, 1, 3) = '318')                                                                                             ") + msEnter
+			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' = '90'                                                                                                                   ") + msEnter
+			UP001 += Alltrim("                                       AND @TBL.@TBL_FILIAL = '06'                                                                                                                ") + msEnter
+			UP001 += Alltrim("                                       AND SUBSTRING(@TBL.@TBL_DEBITO, 1, 3) = '318')                                                                                             ") + msEnter
+			UP001 += Alltrim("                               THEN '3'                                                                                                                                           ") + msEnter
+			UP001 += Alltrim("                               ELSE '1'                                                                                                                                           ") + msEnter
 			UP001 += Alltrim("                           END                                                                                                                                                    ") + msEnter
 			UP001 += Alltrim("          FROM " + RetSqlName(msTabela) + " @TBL(NOLOCK)                                                                                                                          ") + msEnter
 			UP001 += Alltrim("               INNER JOIN " + RetSqlName("CVE") + " CVE(NOLOCK) ON CVE.CVE_FILIAL = '" + xFilial("CVE") + "'                                                                      ") + msEnter
@@ -231,7 +275,7 @@ Static Function Prc697EX(oProcess)
 			UP001 += Alltrim("               INNER JOIN " + RetSqlName("CTS") + " CTS(NOLOCK) ON CTS.CTS_FILIAL = '" + xFilial("CTS") + "'                                                                      ") + msEnter
 			UP001 += Alltrim("                                                AND CTS.CTS_CODPLA = CVE.CVE_CODIGO                                                                                               ") + msEnter
 			UP001 += Alltrim("                                                AND CTS.D_E_L_E_T_ = ' '                                                                                                          ") + msEnter
-			UP001 += Alltrim("               LEFT JOIN " + RetSqlName("CTH") + " CTH(NOLOCK) ON CTH.CTH_FILIAL = '" + xFilial("CTH") + "'                                                                       ") + msEnter
+			UP001 += Alltrim("               LEFT JOIN CTH010 CTH(NOLOCK) ON CTH.CTH_FILIAL = '" + xFilial("CTH") + "'                                                                                          ") + msEnter
 			UP001 += Alltrim("                                               AND CTH.CTH_CLVL = @TBL_CLVLDB                                                                                                     ") + msEnter
 			UP001 += Alltrim("                                               AND CTH.D_E_L_E_T_ = ' '                                                                                                           ") + msEnter
 			UP001 += Alltrim("          WHERE @TBL.@TBL_FILIAL = '" + xFilial(msTabela) + "'                                                                                                                    ") + msEnter

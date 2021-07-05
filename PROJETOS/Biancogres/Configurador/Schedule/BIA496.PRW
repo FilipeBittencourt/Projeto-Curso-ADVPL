@@ -71,56 +71,59 @@ User Function BIA496(AA_EMP, lEstAmo)
 	cLoad				:= "BIA496" + cEmpAnt
 	cFileName			:= RetCodUsr() +"_"+ cLoad
 	// Validar utilização do relatório para representantes.
-	If !Empty(cRepAtu) .And. U_GETBIAPAR("REP_BLQRDSPR",.F.)	// BLoQeuio Relatório DiSPonibilidade Representantes.
+	/*If !Empty(cRepAtu) .And. U_GETBIAPAR("REP_BLQRDSPR",.F.)	// BLoQeuio Relatório DiSPonibilidade Representantes.
 		MsgInfo("Consulta temporariamente indisponível","BIA496")
 		Return
-	EndIf
+EndIf*/
 	// Utilização do relatório para usuários internos.
-	If Empty(cRepAtu)
-		If !lWFlow	// Executar via REMOTE (MANUAL).
+If Empty(cRepAtu)
+	If !lWFlow	// Executar via REMOTE (MANUAL).
 			lManual	 := .T.
 			aPergs 	 := {}
 			MV_PAR01 := SPACE(1)
 			aMarca	 := {'1=Biancogres', '2=Incesa', '3=Vinílico', '4=Todas'}
 
 			aAdd(aPergs ,{2, "Marca", MV_PAR01, aMarca, 65, ".T.", .F.})
-			If !ParamBox(aPergs, "Filtro",,,,,,,, cLoad, .T., .T.)
+		If !ParamBox(aPergs, "Filtro",,,,,,,, cLoad, .T., .T.)
 				Return()
-			EndIf
+		EndIf
 
 			MV_PAR01 := Val(ParamLoad(cFileName,, 1, MV_PAR01))
-			Do Case
-			Case (MV_PAR01 == 1)	// BIANCOGRES
+		Do Case
+		Case (MV_PAR01 == 1)	// BIANCOGRES
 				cInMarca  := "('0101','0199')" 	//cEmpresa := '01'
-			Case (MV_PAR01 == 2)	// INCESA
+		Case (MV_PAR01 == 2)	// INCESA
 				cInMarca  := "('0501','0599')"	//cEmpresa := '05'
-			Case (MV_PAR01 == 3)	// VINILICO
+		Case (MV_PAR01 == 3)	// VINILICO
 				cInMarca  := "('1302')"			//cEmpresa := '07'
 				lShowFil  := .T.
-			OtherWise
+		OtherWise
 				cInMarca  := "('0101','0199','0501','0599','1302')"	//cEmpresa := '01'
 				lShowFil  := .T.
-			EndCase
+		EndCase
 			cEmpresa := '01' // A emissão MANUAL SEMPRE é via empresa 01.
-		Else
-			If (cEmpresa == '01')
-				cInMarca  := "('0101','0199')"
-			ElseIf (cEmpresa == '05')
-				cInMarca  := "('0501','0599')"
-			ElseIf (cEmpresa == '13')
-				cInMarca  := "('1302')"
-				lShowFil  := .T.
-			ElseIf (cEmpresa == '07')
-				cInMarca  := "('1302')"
-				lShowFil  := .T.
-			EndIf
-		EndIf
 	Else
-		cInMarca := "('" + AllTrim(SA3->A3_YEMP) + "')"
-		If ( '1302' $ cInMarca )
-			lShowFil  := .T.
+		If (cEmpresa == '01')
+				cInMarca  := "('0101','0199')"
+		ElseIf (cEmpresa == '05')
+				cInMarca  := "('0501','0599')"
+		ElseIf (cEmpresa == '13')
+				cInMarca  := "('1302')"
+				lShowFil  := .T.
+		ElseIf (cEmpresa == '07')
+				cInMarca  := "('1302')"
+				lShowFil  := .T.
 		EndIf
 	EndIf
+Else
+
+		cInMarca := "('" + AllTrim(SA3->A3_YEMP) + "')"
+		cInMarca :=	 StrTran(  cInMarca, "/", "','")
+
+	If ( '1302' $ cInMarca )
+			lShowFil  := .T.
+	EndIf
+EndIf
 
 	//conout('bia496-INICIADO')
 	ConOut(dtoc(dDatabase) + " - " + Time() + " - BIA496 INICIADO")
@@ -191,6 +194,13 @@ Static Function Calcula_EST()
 		cArqHtml := cPath + "Estoque"+ cTime +".html"
 		cArqCSV	 := cPath + "Estoque"+ cTime +".csv"
 	EndIf
+
+
+	If IsBlind() //Se nao estiver sendo executado via SCHEDULE
+		cArqHtml := "\P10\workflow\Estoque"+ cTime +".html"
+		cArqCSV	 := "\P10\workflow\Estoque"+ cTime +".csv"
+	EndIf
+
 	//Verifica se o arquivo existe
 	If File(cArqHtml)
 		FErase(cArqHtml)
@@ -338,15 +348,17 @@ Static Function Enviar(cImpModel)
 	DO CASE
 	CASE cEmpresa == "01"
 		cSQL += "AND A3_YEMP LIKE '%0101%' "  + Enter
+
 	CASE cEmpresa == "05"
 		cSQL += "AND (A3_YEMP LIKE '%0501%' OR  A3_YEMP LIKE '%0599%') "  + Enter
-		cSQL += "AND A3_COD NOT IN ('A00013')"
+		//cSQL += "AND A3_COD NOT IN ('A00013')"
 	CASE cEmpAnt == "07" .And. cFilAnt == '05'
 		cSQL += "AND A3_YEMP = '1302' AND A3_EST = 'SP' "  + Enter
 	CASE cEmpresa == "13"
 		cSQL += "AND A3_YEMP LIKE '%13__%' "  + Enter
 	OTHERWISE
 	ENDCASE
+	cSQL += "AND SA3.A3_COD =  '"+CREPATU+"' "  + Enter
 	cSQL += "AND SA3.D_E_L_E_T_ = '' "  + Enter
 	cSQL += "ORDER BY A3_COD 	  "  + Enter
 
@@ -445,10 +457,11 @@ Static Function Envioemail(cEmail, cImpModel)
 		cArqAnexo := cArqCSV
 	EndIf
 
-	//cRecebe := "gabriel@facilesistemas.com.br"
+	cRecebe := "filipe.bittencourt@facilesistemas.com.br"
 	//cRecebeCC := ""
 
 	U_BIAEnvMail(,cRecebe,cAssunto,cMensag,'',cArqAnexo,,cRecebeCC)
+
 
 Return
 
@@ -1062,6 +1075,7 @@ Static Function fItmGeral(cImpModel)
 
 		// Verificar a necessidade de criação de uma nova folder.
 		If lShowFil
+
 			If lUsaGesEmp
 				xNomeFil := FWFilialName(QRY->EMP, QRY->REFLOCAL, 1)
 			Else
@@ -1071,6 +1085,12 @@ Static Function fItmGeral(cImpModel)
 					xNomeFil := AllTrim(SM0->M0_FILIAL)
 				EndIf
 			EndIf
+
+			//Quando for selecionado 4=todas. E for 0101 e 0501 não devem aparece o nome da da empresa
+			if ALLTRIM(QRY->MARCA) $ "0101#0501"
+				xNomeFil := ""
+			EndIf
+
 		EndIf
 		// Formato, anexo, em HTML.
 		C_HTML += "            <tr align=center> "
@@ -1117,13 +1137,13 @@ Static Function fItmGeral(cImpModel)
 			C_HTML += "               <td class='style12' width='50'scope='col'>"+ DTOC(STOD(aRetOP[nX][2])) +"</td> "
 			C_HTML += "               <td class='style12' width='80'scope='col'>"+ TRANSFORM(aRetOP[nX][3],"@E 9,999,999.99") +"</td> "
 			If lShowFil
-				C_HTML += "               <td class='style12' width='80'scope='col'>"+ '-' +"</td> "
+				C_HTML += "               <td class='style12' width='80'scope='col'>"+ ALLTRIM(xNomeFil) +"</td> "
 			EndIf
 			C_HTML += "            </tr> "
 
 			// Formato, anexo, em EXCEL.
 			If lShowFil
-				FWrite(fCSV, +ALLTRIM(QRY->FORNO)+";"+ALLTRIM(Posicione("Z37", 1, xFilial("Z37") + ALLTRIM(QRY->MARCA), "Z37_DESCR"))+";"+ALLTRIM(QRY->EMP)+";"+ ALLTRIM(QRY->FORMATO)+";"+ALLTRIM(QRY->PRODUTO)+";"+ALLTRIM(QRY->DESCRICAO)+";"+ALLTRIM(QRY->DESC_CLASSE)+";"+"-"+";"+TRANSFORM(0,"@E 9,999,999.99")+";"+ALLTRIM(aRetOP[nX][1])+";"+DTOC(STOD(aRetOP[nX][2]))+";"+TRANSFORM(aRetOP[nX][3],"@E 9,999,999.99")+";"+'-'+";")
+				FWrite(fCSV, +ALLTRIM(QRY->FORNO)+";"+ALLTRIM(Posicione("Z37", 1, xFilial("Z37") + ALLTRIM(QRY->MARCA), "Z37_DESCR"))+";"+ALLTRIM(QRY->EMP)+";"+ ALLTRIM(QRY->FORMATO)+";"+ALLTRIM(QRY->PRODUTO)+";"+ALLTRIM(QRY->DESCRICAO)+";"+ALLTRIM(QRY->DESC_CLASSE)+";"+"-"+";"+TRANSFORM(0,"@E 9,999,999.99")+";"+ALLTRIM(aRetOP[nX][1])+";"+DTOC(STOD(aRetOP[nX][2]))+";"+TRANSFORM(aRetOP[nX][3],"@E 9,999,999.99")+";"+' '+";")
 			Else
 				FWrite(fCSV, +ALLTRIM(QRY->FORNO)+";"+ALLTRIM(Posicione("Z37", 1, xFilial("Z37") + ALLTRIM(QRY->MARCA), "Z37_DESCR"))+";"+ALLTRIM(QRY->EMP)+";"+ ALLTRIM(QRY->FORMATO)+";"+ALLTRIM(QRY->PRODUTO)+";"+ALLTRIM(QRY->DESCRICAO)+";"+ALLTRIM(QRY->DESC_CLASSE)+";"+"-"+";"+TRANSFORM(0,"@E 9,999,999.99")+";"+ALLTRIM(aRetOP[nX][1])+";"+DTOC(STOD(aRetOP[nX][2]))+";"+TRANSFORM(aRetOP[nX][3],"@E 9,999,999.99")+";")
 			EndIf

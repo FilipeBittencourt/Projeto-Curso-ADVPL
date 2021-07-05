@@ -7497,21 +7497,10 @@ Return(cBase)
 @type function
 /*/
 User Function fRegCobr(xUF,xCPF,xGRPCLI,xCODCLI)
-Local cSQL		:= ''
-Local cQry		:= GetNextAlias()
 Local cCodReg	:= ''
-Local aRet		:= {}
-
-If U_fValDEV()
-	cSQL :="SELECT LEN(REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf)) CPF FROM VETORH_DEV.dbo.r034fun WITH (NOLOCK) WHERE REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf) = '"+xCPF+"' "
-Else
-	cSQL :="SELECT LEN(REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf)) CPF FROM VETORH.dbo.r034fun WITH (NOLOCK) WHERE REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf) = '"+xCPF+"' "
-EndIF 
-
-TcQuery cSQL New Alias (cQry)
 
 DO CASE
-	CASE (cQry)->CPF == 11 //Funcionario
+	CASE U_fValFunc(xCPF) //Funcionario
 		cCodReg := '000023'	
 	CASE xGRPCLI $ ('001500_000252_001486_000010_000938_000380_000026_000036_001435') //Clientes Especiais
 		cCodReg := '000023'
@@ -7533,9 +7522,33 @@ DO CASE
 		cCodReg := '000001'
 ENDCASE
 
-aadd(aRet,(cQry)->CPF)	//Funcinario ou nao
-aadd(aRet,cCodReg)		//Codigo Regra
+Return(cCodReg)
 
-(cQry)->(DbCloseArea())    
 
-Return(aRet)
+/*/{Protheus.doc} fValFunc
+@description Funcao para validar se o CPF pertence a um Funcionario
+@author Ranisses A. Corona
+@since 23/06/2021
+@version undefined
+@history 18/02/2021, Ranisses A. Corona, Criacao da funcao de validaçao
+@type function
+/*/
+User Function fValFunc(xCPF)
+Local cSQL		:= ''
+Local cQry		:= GetNextAlias()
+Local lRet		:= .F.
+
+If U_fValDEV()
+	cSQL :="SELECT LEN(REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf)) CPF FROM VETORH_DEV.dbo.r034fun WITH (NOLOCK) WHERE REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf) = '"+xCPF+"' "
+Else
+	cSQL :="SELECT LEN(REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf)) CPF FROM VETORH.dbo.r034fun WITH (NOLOCK) WHERE REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf) = '"+xCPF+"' "
+EndIF 
+TcQuery cSQL New Alias (cQry)
+
+If (cQry)->CPF == 11 
+	lRet := .T.
+EndIf
+
+(cQry)->(DbCloseArea())  
+
+Return(lRet)

@@ -51,10 +51,13 @@ Return
 User Function AOMETAMNT()
 
 	Local i
+	Local cOpcao
+	Local nOpcE
+	Local nOpcG
 	Private nprox := 0
 	Private _aSize := MSADVSIZE()
 
-	//Determina funcao selecionada                                             ³
+	//Determina funcao selecionada
 	wOpcao      := paramixb
 	lVisualizar := .F.
 	lIncluir    := .F.
@@ -69,24 +72,35 @@ User Function AOMETAMNT()
 	Private nGetTotBR := 0
 	Private oGetTotBA
 	Private nGetTotBA := 0
-/*//DEscomentar
+
+	//DEscomentar
+
+	/*
+
 	If (wOpcao $ "A_I_E")
+
 		If !U_VALOPER("AO2")
-			Return
+
+				Return
+				
 		EndIf
+
 	EndIf
 
 	If (wOpcao == "P")
 
 		If !U_VALOPER("AO1")
-			Return
+				Return
 		EndIf
 
-		lAprova := .T.
-		wOpcao := "V"
+			lAprova := .T.
+			wOpcao  := "V"
+
 	EndIf
 
-*/ //fim DEscomentar
+	*/ 
+
+	//fim DEscomentar
 
 	Do Case
 	Case wOpcao == "V" .Or. wOpcao == "T"; lVisualizar := .T. ; nOpcE := 2 ; nOpcG := 2 ; cOpcao := "VISUALIZAR"
@@ -1053,21 +1067,23 @@ Static Function GerarSI(_nValor,_dIni,_dFim,_cIdPer,_lAuto)
 
 	DO CASE
 	CASE SubString(PZ5->PZ5_MARCA,1,4) == "0101"
-		SZO->ZO_EMP			:= "0101"
+		//SZO->ZO_EMP			:= "0101"
 		SZO->ZO_SERIE   	:= 'S1'
 	CASE SubString(PZ5->PZ5_MARCA,1,4) == "0199"
-		SZO->ZO_EMP			:= "0199"
+		//SZO->ZO_EMP			:= "0199"
 		SZO->ZO_SERIE   	:= 'S1'
 	CASE SubString(PZ5->PZ5_MARCA,1,4) == "0501"
-		SZO->ZO_EMP			:= "0501"
+		//SZO->ZO_EMP			:= "0501"
 		SZO->ZO_SERIE   	:= 'S2'
 	CASE SubString(PZ5->PZ5_MARCA,1,4) == "0599"
-		SZO->ZO_EMP			:= "0599"
+		//SZO->ZO_EMP			:= "0599"
 		SZO->ZO_SERIE   	:= 'S2'
 	OTHERWISE
-		SZO->ZO_EMP			:= "0101"
+		//SZO->ZO_EMP			:= "0101"
 		SZO->ZO_SERIE   	:= 'S1'
 	ENDCASE
+
+	SZO->ZO_YTPACOR   	:= PZ5->PZ5_TPACOR
 
 	SZO->(MsUnLock())
 
@@ -2016,6 +2032,7 @@ Static Function UpdBonusAI(cCodAC, lGeraSI)
 			EndIf
 
 			//Geracao da SI
+			lGeraSI := .T.
 			If (lGeraSI .And. PZ6->PZ6_BONUS > 0)
 
 				cNumSI := GerarSI(PZ6->PZ6_BONUS,PZ6->PZ6_PERINI,PZ6->PZ6_PERFIM,PZ6->PZ6_IDPER, .T.)

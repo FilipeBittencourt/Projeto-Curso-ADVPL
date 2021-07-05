@@ -1,6 +1,8 @@
-#include "protheus.ch"
+#Include "Protheus.ch"
+#include "topconn.ch"
 #include "rwmake.ch"
-#INCLUDE "TOPCONN.CH"
+#include "tbiconn.ch"
+#Include "font.ch"
 
 /*/{Protheus.doc} BIA433
 @author Wanisay William
@@ -13,6 +15,7 @@
 User Function BIA433()
 
 	Private xExistB9 := .F.
+	Private aFds     := {}
 
 	cHInicio := Time()
 	fPerg    := "BIA433"
@@ -32,7 +35,20 @@ User Function BIA433()
 		Return
 	EndIf
 
-	aBitmap  := "LOGOPRI"+cEmpAnt+".BMP"
+	cMarca := GetMark()
+	Aadd( aFds , {"OK"       ,"C",002,000} )
+	Aadd( aFds , {"PRODUTO"  ,"C",015,000} )
+	Aadd( aFds , {"DESCRIC"  ,"C",075,000} )
+	Aadd( aFds , {"ALMOXAR"  ,"C",002,000} )
+	Aadd( aFds , {"QUANTID"  ,"N",018,008} )
+	Aadd( aFds , {"CUSTOTT"  ,"N",018,008} )
+	Aadd( aFds , {"TIPOPRD"  ,"C",002,000} )
+	Aadd( aFds , {"GRUPOPR"  ,"C",004,000} )
+
+	cTmp := CriaTrab( aFds, .T. )
+	Use (cTmp) Alias MARK New Exclusive
+
+	aBitmap  := "LOGOPRI" + cEmpAnt + ".BMP"
 
 	fCabec   := "Produtos com quantidade zero e valor diferente de zero. "
 	fCabec2  := ""
@@ -59,8 +75,8 @@ User Function BIA433()
 	// Incluido em 02/04/13 para tratamento da geração da planilha mesmo nao estando fechado o mes em questão. Por Marcos Alberto Soprani
 	G7B01 := " SELECT COUNT(*) CONTAD
 	G7B01 += "   FROM " + RetSqlName("SB9")
-	G7B01 += "  WHERE B9_FILIAL = '"+xFilial("SB9")+"'
-	G7B01 += "    AND B9_DATA = '"+dtos(MV_PAR01)+"'
+	G7B01 += "  WHERE B9_FILIAL = '" + xFilial("SB9") + "'
+	G7B01 += "    AND B9_DATA = '" + dtos(MV_PAR01) + "'
 	G7B01 += "    AND D_E_L_E_T_ = ' '
 	G7B01 := ChangeQuery(G7B01)
 	cIndex := CriaTrab(Nil,.f.)
@@ -81,9 +97,9 @@ User Function BIA433()
 	If xExistB9
 
 		A001 := " SELECT B9_COD, B9_LOCAL, B9_DATA, B9_QINI, B9_VINI1, B1_DESC, B1_TIPO, B1_GRUPO "
-		A001 += "   FROM "+RetSqlName("SB9")+" SB9, "+RetSqlName("SB1")+" SB1 "
-		A001 += "  WHERE B9_FILIAL = '"+xFilial("SB9")+"' "
-		A001 += "    AND B9_DATA = '"+dtos(MV_PAR01)+"'"
+		A001 += "   FROM " + RetSqlName("SB9") + " SB9, " + RetSqlName("SB1") + " SB1 "
+		A001 += "  WHERE B9_FILIAL = '" + xFilial("SB9") + "' "
+		A001 += "    AND B9_DATA = '" + dtos(MV_PAR01) + "'"
 		// Em 04/01/13 durante o fechamento de estoque e dezembro de 2012 foi necessário implementar o tratamento "B9_VINI1 <> 0"  antes era assim "B9_VINI1 > 0". Por Marcos Alberto Soprani
 		A001 += "    AND B9_QINI = 0 "
 		A001 += "    AND B9_VINI1 <> 0 "
@@ -105,7 +121,7 @@ User Function BIA433()
 		A001 += "        B1_DESC, "
 		A001 += "        B1_TIPO, "
 		A001 += "        B1_GRUPO "
-		A001 += "   FROM "+RetSqlName("SB2")+" SB2, "+RetSqlName("SB1")+" SB1 "
+		A001 += "   FROM " + RetSqlName("SB2") + " SB2, " + RetSqlName("SB1") + " SB1 "
 		A001 += "  WHERE B2_FILIAL = '"+xFilial("SB2")+"' "
 		// Em 04/11/15 foi necessário efetuar o tratamento de custo menor que zero restante em estoque. Por Marcos Alberto Soprani
 		A001 += "    AND ( ( B2_QFIM = 0 AND B2_VFIM1 <> 0 ) OR (B2_VFIM1 < 0) )
@@ -156,12 +172,22 @@ User Function BIA433()
 
 		kp_Valor1 += A001->B9_VINI1
 
-		fGravaSD3()
-
 		If nRow1 > 2250
 			fImpRoda()
 			fImpCabec()
 		EndIf
+
+		dbSelectArea("MARK")
+		RecLock("MARK",.T.)
+		MARK->OK      := cMarca
+		MARK->PRODUTO := A001->B9_COD
+		MARK->DESCRIC := A001->B1_DESC
+		MARK->ALMOXAR := A001->B9_LOCAL
+		MARK->QUANTID := A001->B9_QINI
+		MARK->CUSTOTT := A001->B9_VINI1
+		MARK->TIPOPRD := A001->B1_TIPO
+		MARK->GRUPOPR := A001->B1_GRUPO
+		MsUnLock()
 
 		DbSelectArea("A001")
 		DbSkip()
@@ -190,74 +216,7 @@ User Function BIA433()
 	oPrint:EndPage()
 	oPrint:Preview()
 
-Return
-
-/*___________________________________________________________________________
-¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
-¦¦+-----------------------------------------------------------------------+¦¦
-¦¦¦Funçào    ¦ fGravaSD3¦ Autor ¦ Wanisay WilliamS      ¦ Data ¦ 13.02.08 ¦¦¦
-¦¦+-----------------------------------------------------------------------+¦¦
-¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
-¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
-Static Function fGravaSD3()
-
-	DbSelectArea("SB1")
-	DbSetOrder(1)
-	DbSeek(xFilial("SB1")+A001->B9_COD)
-
-	DbSelectArea("SD3")
-	RecLock("SD3",.T.)
-	SD3->D3_FILIAL  := xFilial("SD3")
-	SD3->D3_TM      := "514"
-	SD3->D3_COD     := SB1->B1_COD
-	SD3->D3_UM      := SB1->B1_UM
-	SD3->D3_QUANT   := 0
-	SD3->D3_QTSEGUM := 0
-	SD3->D3_CF      := "RE6"
-	SD3->D3_LOCAL   := A001->B9_LOCAL
-	SD3->D3_DOC     := "INVENT"
-	SD3->D3_NUMSEQ  := ProxNum()
-	SD3->D3_EMISSAO := MV_PAR01
-	SD3->D3_GRUPO   := SB1->B1_GRUPO
-	SD3->D3_TIPO    := SB1->B1_TIPO
-	SD3->D3_CHAVE   := "E0"
-	SD3->D3_USUARIO := cUserName
-	SD3->D3_SEGUM   := SB1->B1_SEGUM
-	SD3->D3_CUSTO1  := A001->B9_VINI1
-	SD3->D3_YROM    := "N"
-	SD3->D3_YCHAVE  := ''
-	SD3->D3_CONTA   := SB1->B1_YCTRIND                        // SB1->B1_YCTRADM - Substituido em 12/06/12 por Marcos Alberto em atendimento a OS Effettivo 1247-12
-	SD3->D3_CC      := "3000"                                 // "1000"
-	SD3->D3_CLVL    := IIF(cEmpAnt <> "05", "3110", "3200")   // "1000"
-	MsUnLock()
-	DbCommitAll()
-
-	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-	//³ Aualiza saldo no SB2 e SB9  								   ³
-	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-	DbSelectArea("SB2")
-	DbSetOrder(1)
-	If DbSeek(xFilial("SB2")+SD3->D3_COD+SD3->D3_LOCAL,.F.)
-		RecLock("SB2",.F.)
-		SB2->B2_VFIM1  := 0
-		SB2->B2_VFIM2  := 0
-		SB2->B2_VFIM3  := 0
-		SB2->B2_VFIM4  := 0
-		SB2->B2_VFIM5  := 0
-		MsUnlock()
-	End
-
-	DbSelectArea("SB9")
-	DbSetOrder(1)
-	If DbSeek(xFilial("SB9")+A001->B9_COD+A001->B9_LOCAL+DTOS(MV_PAR01),.F.)
-		RecLock("SB9",.F.)
-		SB9->B9_VINI1  := 0
-		SB9->B9_VINI2  := 0
-		SB9->B9_VINI3  := 0
-		SB9->B9_VINI4  := 0
-		SB9->B9_VINI5  := 0
-		MsUnlock()
-	End
+	Processa({|| BIA433D()})
 
 Return
 
@@ -347,5 +306,150 @@ Static Function ValidPerg()
 	Next
 
 	dbSelectArea(_sAlias)
+
+Return
+
+/*___________________________________________________________________________
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦Funçao    ¦ BIA433D  ¦ Autor ¦ Marcos Alberto S      ¦ Data ¦ 17.05.12 ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦Descriçào ¦ Tela que apresenta o saldo, numa determinada data, em esto-¦¦¦
+¦¦¦          ¦que versus o controle fisico de estoque (CalcEst vs Z15)    ¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
+Static Function BIA433D()
+
+	Local zpArea     := GetArea()
+	Private cfValid  := .T.
+	Private fh_Esc   := .F.
+	Private cObs1    := ""
+	Private oObs1
+	Private zoNwDad1
+	Private zoNwRec2
+	Private cf_C2OP
+	Private oDlg1
+	Private xfDatRef := MV_PAR01
+
+	Private xLocReq := "  "
+
+	nCol := oMainWnd:nClientWidth
+	nLin := oMainWnd:nClientHeight
+
+	oFont1     := TFont():New( "Arial Black",0,-19,,.T.,0,,700,.F.,.F.,,,,,, )
+	oFont2     := TFont():New( "Courier New",0,-10,,.T.,0,,700,.F.,.F.,,,,,, )
+	oDlg1      := MSDialog():New( nLin*.001, nCol*.001, nLin*.88, nCol*.825, "Acerto dos saldos finais",,,.F.,,,,,,.T.,,,.T. )
+
+	vt_TotVlr := "Data de Referência: " + dtoc(xfDatRef)
+
+	dbSelectArea("MARK")
+	dbGotop()
+
+	ky_Vet := {{"OK"      ,"" ,"Ajustar"      ,"@!"}                      ,;
+	{           "PRODUTO" ,"" ,"Produto"      ,"@!"}                      ,;
+	{           "DESCRIC" ,"" ,"Descrição"    ,"@!"}                      ,;
+	{           "ALMOXAR" ,"" ,"Almoxarifado" ,"@!"}                      ,;
+	{           "QUANTID" ,"" ,"Quantidade"   ,"@E 999,999,999.99999999"} ,;
+	{           "CUSTOTT" ,"" ,"Custo"        ,"@E 999,999,999.99999999"} ,;
+	{           "TIPOPRD" ,"" ,"Tipo"         ,"@!"}                      ,;
+	{           "GRUPOPR" ,"" ,"Grupo"        ,"@!"}                       }
+
+	oBrw1      := MsSelect():New( "MARK","OK","",ky_Vet,.F.,@cMarca,{nLin*.008,nCol*.005,nLin*.380,nCol*.410},,,oDlg1,, )
+
+	oBtn1      := TButton()  :New( nLin*.390,nCol*.385,"Fechar"       ,oDlg1,{|| fh_Esc := .T., oDlg1:End()                      },nLin*.040,nCol*.020,,,,.T.,,"",,,,.F. )
+	oBtn2      := TButton()  :New( nLin*.390,nCol*.350,"Ajustar"      ,oDlg1,{|| fh_Esc := .T., ExecBlock("fGravSD3",.F.,.F.)    },nLin*.040,nCol*.020,,,,.T.,,"",,,,.F. )
+
+	oSay1      := TSay()     :New( nLin*.395,nCol*.005,{|| vt_TotVlr },oDlg1,,oFont1,.F.,.F.,.F.,.T.,CLR_BLUE,CLR_WHITE,150,050)
+
+	ACTIVATE MSDIALOG oDlg1 CENTERED VALID fh_Esc
+
+	MARK->(dbCloseArea())
+
+	RestArea( zpArea )
+
+Return
+
+/*___________________________________________________________________________
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦Funçào    ¦ fGravaSD3¦ Autor ¦ Wanisay WilliamS      ¦ Data ¦ 13.02.08 ¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
+User Function fGravSD3()
+
+	dbSelectArea("MARK")
+	dbGotop()
+	While !Eof()
+
+		If MARK->OK == cMarca
+
+			dbSelectArea("SB1")
+			dbSetOrder(1)
+			dbSeek(xFilial("SB1") + MARK->PRODUTO)
+
+			DbSelectArea("SD3")
+			RecLock("SD3",.T.)
+			SD3->D3_FILIAL  := xFilial("SD3")
+			SD3->D3_TM      := "514"
+			SD3->D3_COD     := MARK->PRODUTO
+			SD3->D3_UM      := SB1->B1_UM
+			SD3->D3_QUANT   := 0
+			SD3->D3_QTSEGUM := 0
+			SD3->D3_CF      := "RE6"
+			SD3->D3_LOCAL   := MARK->ALMOXAR
+			SD3->D3_DOC     := "INVENT"
+			SD3->D3_NUMSEQ  := ProxNum()
+			SD3->D3_EMISSAO := MV_PAR01
+			SD3->D3_GRUPO   := SB1->B1_GRUPO
+			SD3->D3_TIPO    := SB1->B1_TIPO
+			SD3->D3_CHAVE   := "E0"
+			SD3->D3_USUARIO := cUserName
+			SD3->D3_SEGUM   := SB1->B1_SEGUM
+			SD3->D3_CUSTO1  := MARK->CUSTOTT
+			SD3->D3_YROM    := "N"
+			SD3->D3_YCHAVE  := ''
+			SD3->D3_CONTA   := SB1->B1_YCTRIND                        // SB1->B1_YCTRADM - Substituido em 12/06/12 por Marcos Alberto em atendimento a OS Effettivo 1247-12
+			SD3->D3_CC      := "3000"                                 // "1000"
+			SD3->D3_CLVL    := IIF(cEmpAnt <> "05", "3110", "3200")   // "1000"
+			MsUnLock()
+			DbCommitAll()
+
+			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+			//³ Aualiza saldo no SB2 e SB9  								   ³
+			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+			dbSelectArea("SB2")
+			dbSetOrder(1)
+			If dbSeek(xFilial("SB2") + MARK->PRODUTO + MARK->ALMOXAR,.F.)
+				RecLock("SB2",.F.)
+				SB2->B2_VFIM1  := 0
+				SB2->B2_VFIM2  := 0
+				SB2->B2_VFIM3  := 0
+				SB2->B2_VFIM4  := 0
+				SB2->B2_VFIM5  := 0
+				MsUnlock()
+			EndIf
+
+			dbSelectArea("SB9")
+			dbSetOrder(1)
+			If dbSeek(xFilial("SB9") + MARK->PRODUTO + MARK->ALMOXAR + dtos(MV_PAR01),.F.)
+				RecLock("SB9",.F.)
+				SB9->B9_VINI1  := 0
+				SB9->B9_VINI2  := 0
+				SB9->B9_VINI3  := 0
+				SB9->B9_VINI4  := 0
+				SB9->B9_VINI5  := 0
+				MsUnlock()
+			EndIf
+
+		EndIf
+
+		dbSelectArea("MARK")
+		dbSkip()
+
+	End
+
+	oDlg1:End()
 
 Return

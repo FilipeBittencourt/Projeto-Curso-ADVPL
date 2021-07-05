@@ -12,7 +12,7 @@
 /*/
 
 User Function M030INC()    
-Local aCodReg := {}
+Local cCodReg := ""
 
 CONOUT('Iniciando o M030INC...')
 
@@ -35,9 +35,9 @@ If !Type("M->A1_COD") == "U"
 EndIf
 
 If PARAMIXB <> 3
-	aCodReg			:= U_fRegCobr(Alltrim(M->A1_EST),Alltrim(M->A1_CGC),Alltrim(M->A1_GRPVEN),Alltrim(M->A1_COD))			
-	SA1->A1_YCDGREG	:= aCodReg[2]
-	SA1->A1_YFORMA	:= U_valYFORMA(cEmpAnt, aCodReg[2])
+	cCodReg			:= U_fRegCobr(Alltrim(M->A1_EST),Alltrim(M->A1_CGC),Alltrim(M->A1_GRPVEN),Alltrim(M->A1_COD))			
+	SA1->A1_YCDGREG	:= cCodReg
+	SA1->A1_YFORMA	:= U_valYFORMA(cEmpAnt, cCodReg)
 EndIf
 
 Return

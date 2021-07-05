@@ -1,0 +1,300 @@
+#include "totvs.ch"
+#include "parmtype.ch"
+
+/*/{Protheus.doc} BiaParamBox
+@author Marinaldo de Jesus
+@since 02/07/2021
+@project LIB
+@version 1.0
+@description Classe para Encapsular ParamBox e permitir redefinir as coordenadas da Janela
+@type class
+/*/
+
+class BiaParamBox
+
+    static method ParamBox(aParameters,cTitle,aParamRet,bOk,aButtons,lCentered,nPosX,nPosY,oDlgWizard,cLoad,lCanSave,lUserSave) as logical
+    
+    static method SetVar(cVarName,uValue)
+    static method GetVar(cVarName,uDefault)
+    
+    static method ClearVars()
+    static method GetVariables() as array
+
+    static method DialogCoords(nRow,nCol,nRight,nBottom)
+
+end class
+
+static method ParamBox(aParameters,cTitle,aParamRet,bOk,aButtons,lCentered,nPosX,nPosY,oDlgWizard,cLoad,lCanSave,lUserSave) class BiaParamBox
+   
+    local aCoords             as array
+    local aAdvSize            as array
+    
+    local aAPWizardCoords     as array
+    
+    local bAPWizardAction     as codeblock  
+    local bAPWizardVldNext    as codeblock
+    local bAPWizardVldFinish  as codeblock 
+    
+    local bNewPanelBlock      as codeblock
+    local bNewPanelVldBack    as codeblock
+    local bNewPanelVldNext    as codeblock
+    local bNewPanelVldFinish  as codeblock  
+    
+    local bActivateValid      as codeblock
+    local bActivateInit       as codeblock
+    local bActivateWhen       as codeblock
+    
+    local cMVPar              as character
+    local cMVFil              as character
+    local cMvRan              as character
+    local cParameter          as character
+    local cPBoxTitle          as character
+    
+    local cAPWizardHeaderTit  as character
+    local cAPWizardHeaderMsg  as character
+    local cAPWizardHeaderPre  as character
+    local cAPWizardPanelText  as character  
+    local cAPWizardHeaderRes  as character    
+
+    local cNewPanelTitle      as character
+    local cNewPanelMessage    as character  
+   
+    local lOK                 as logical
+    local loDlgWizard         as logical
+    local lActivateCenter     as logical
+    
+    local lAPWizardlPanel     as logical
+    local lAPWizardlShowPanel as logical
+
+    local lNewPanellPanel     as logical   
+    
+    local nRow                as numeric
+    local nCol                as numeric
+    local nRight              as numeric
+    local nBottom             as numeric
+    local nParameter	      as numeric
+    local nParameters         as numeric    
+        
+    paramtype aParameters as array
+    paramtype cTitle      as character
+    paramtype aParamRet   as array        optional default array(0)
+    paramtype bOk         as block        optional default {||(.T.)}
+    paramtype aButtons    as array        optional default array(0)
+    paramtype lCentered   as logical      optional default .T.
+    paramtype nPosX       as numeric      optional default 0
+    paramtype nPosY       as numeric      optional default 0
+    paramtype oDlgWizard  as object       optional 
+    paramtype cLoad       as character    optional default ProcName(1)
+    paramtype lCanSave    as logical      optional default .T.
+    paramtype lUserSave   as logical      optional default .F.
+    
+    lOK:=.F.
+
+    nParameters:=len(aParameters)
+
+    if (empty(aParamRet))
+        if (valType(aParamRet)=="A")
+            aSize(aParamRet,nParameters)
+        else
+            aParamRet:=array(nParameters)
+        endif
+    endif
+
+    loDlgWizard:=(valtype(oDlgWizard)=="O")
+
+    bNewPanelBlock:={||lOk:=ParamBox(@aParameters,@cTitle,@aParamRet,@bOk,@aButtons,@lCentered,@nPosX,@nPosY,@oDlgWizard:oMPanel[oDlgWizard:nPanel],@cLoad,@lCanSave,@lUserSave)}
+
+    if (!loDlgWizard)
+
+        for nParameter:=1 to nParameters
+            cParameter:=AllTrim(StrZero(nParameter,2,0))
+            cMVPar:=("MV_PAR"+cParameter)
+            SetPrvt(cMVPar)
+            do case
+            case (aParameters[nParameter][1]==1) // SAY + GET
+                &(cMVPar):=ParamLoad(cLoad,aParameters,nParameter,aParameters[nParameter][3],if(Len(aParameters[nParameter])>9,aParameters[nParameter][10],.F.))
+            case (aParameters[nParameter][1]==2) // SAY + COMBO
+				&(cMVPar):=ParamLoad(cLoad,aParameters,nParameter,aParameters[nParameter][3])
+            case (aParameters[nParameter][1]==3) // SAY + RADIO
+                &(cMVPar):=ParamLoad(cLoad,aParameters,nParameter,aParameters[nParameter][3])
+            case (aParameters[nParameter][1]==4) // SAY + CheckBox
+                &(cMVPar):=ParamLoad(cLoad,aParameters,nParameter,aParameters[nParameter][3])
+            case (aParameters[nParameter][1]==5) // CheckBox Linha Inteira
+                &(cMVPar):=ParamLoad(cLoad,aParameters,nParameter,aParameters[nParameter][3])
+            case (aParameters[nParameter][1]==6) // File + Procura de Arquivo
+                &(cMVPar):=ParamLoad(cLoad,aParameters,nParameter,aParameters[nParameter][3])
+            case (aParameters[nParameter][1]==7) // Filtro de Arquivos
+				cMVFil:=&("MV_FIL"+cParameter)
+                SetPrvt(cMVFil)
+                &(cMVPar):=ParamLoad(cLoad,aParameters,nParameter,aParameters[nParameter][4])
+				&(cMVFil):=MontDescr(aParameters[nParameter][3],&(cMVPar))
+            case (aParameters[nParameter][1]==8) // SAY + GET PASSWORD
+                &(cMVPar):=ParamLoad(cLoad,aParameters,nParameter,aParameters[nParameter][3])
+            case (aParameters[nParameter][1]==9) // SAY
+                //...
+            case (aParameters[nParameter]==10) // Range (fase experimental)
+				cMvRan:=&("MV_RAN"+cParameter)
+                SetPrvt(cMvRan)
+                &(cMVPar):=ParamLoad(cLoad,aParameters,nParameter,aParameters[nParameter][3])
+                &(cMvRan):=PMSRangeDesc(&(cMVPar),aParameters[nParameter][7])
+            case (aParameters[nParameter][1]==11) // MULTIGET - campo memo
+                &(cMVPar):=ParamLoad(cLoad,aParameters,nParameter,aParameters[nParameter][3])
+            case (aParameters[nParameter][1]==12) // FILTROS DE USUARIO POR ROTINA)
+                cMVFil:=&("MV_FIL"+cParameter)
+                SetPrvt(cMVFil)
+                if (len(aParameters[nParameter])>3)
+			    	&(cMVFil):=ParamLoad(cLoad,aParameters,nParameter,aParameters[nParameter][4])
+			    else
+				    &(cMVFil):=""
+			    endif
+                &(cMVPar):=""
+            endcase
+            aParamRet[nParameter]:=&(cMVPar)
+        next nParameter
+
+        if (type("cCadastro")=="C")
+            cPBoxTitle:=BiaParamBox():GetVar("cPBoxTitle",(cCadastro+" :: "+cTitle))
+        else
+            cPBoxTitle:=BiaParamBox():GetVar("cPBoxTitle",cTitle)
+        endif
+
+        aAdvSize:=MsAdvSize(.T.)
+
+        nRow:=BiaParamBox():GetVar("nRow",aAdvSize[7])
+        nCol:=BiaParamBox():GetVar("nCol",0)
+        nRight:=BiaParamBox():GetVar("nRight",(aAdvSize[5]-15))
+        nBottom:=BiaParamBox():GetVar("nBottom",aAdvSize[6]-50)
+
+        aCoords:={nRow,nCol,nBottom,nRight}
+
+        cAPWizardHeaderTit:=BiaParamBox():GetVar("cAPWizardHeaderTit","WIZARD")
+        cAPWizardHeaderMsg:=BiaParamBox():GetVar("cAPWizardHeaderMsg",cPBoxTitle)
+        cAPWizardHeaderPre:=BiaParamBox():GetVar("cAPWizardHeaderPre","BiaParamBox")
+        cAPWizardPanelText:=BiaParamBox():GetVar("cAPWizardPanelText","")
+        cAPWizardHeaderRes:=BiaParamBox():GetVar("cAPWizardHeaderRes","")
+        
+        bAPWizardAction:=BiaParamBox():GetVar("bAPWizardAction",{||.T.})
+        bAPWizardVldNext:=BiaParamBox():GetVar("bAPWizardVldNext",{||.T.})
+        bAPWizardVldFinish:=BiaParamBox():GetVar("bAPWizardVldFinish",{||.T.})
+        
+        lAPWizardlPanel:=BiaParamBox():GetVar("lAPWizardlPanel",.T.)
+        lAPWizardlShowPanel:=BiaParamBox():GetVar("lAPWizardlShowPanel",.F.)
+
+        aAPWizardCoords:=BiaParamBox():GetVar("aAPWizardCoords",aCoords)
+
+        oDlgWizard:=APWizard():New(; 
+            cAPWizardHeaderTit,; //Titulo do cabeçalho
+            cPBoxTitle,; //Mensagem do cabeçalho
+            cAPWizardHeaderPre,; //Título do painel de apresentação
+            cAPWizardPanelText,; //Texto do painel de apresentação
+            bAPWizardVldNext,; //Bloco de código a ser executado para validar o botão "Avançar"
+            bAPWizardVldFinish,; //Bloco de código a ser executado para validar o botão "Finalizar"
+            lAPWizardlPanel,; //lPanel
+            cAPWizardHeaderRes,; //Nome da imagem usada no cabeçalho, essa tem que fazer parte do repositório  
+            bAPWizardAction,; //Bloco de código contendo a ação a ser executada no clique dos botÃµes "Avançar" e "Voltar"
+            lAPWizardlShowPanel,; //Se .T. não exibe o painel de apresentação
+            aAPWizardCoords; //Array contendo as coordenadas da tela
+        )
+
+        cNewPanelTitle:=BiaParamBox():GetVar("cNewPanelTitle",cPBoxTitle)
+        cNewPanelMessage:=BiaParamBox():GetVar("cNewPanelMessage","")
+        bNewPanelVldBack:=BiaParamBox():GetVar("bNewPanelVldBack",{||(.T.)})
+        bNewPanelVldNext:=BiaParamBox():GetVar("bNewPanelVldNext",{||(.T.)})
+        bNewPanelVldFinish:=BiaParamBox():GetVar("bNewPanelVldFinish",{||(lOk:=.T.)})
+        lNewPanellPanel:=BiaParamBox():GetVar("lNewPanellPanel",.T.)
+
+        oDlgWizard:NewPanel(;
+            cNewPanelTitle,; //Título do painel 
+            cNewPanelMessage,; //Mensagem posicionada no cabeçalho do painel
+            bNewPanelVldBack,; //Bloco de código utilizado para validar o botão "Voltar"
+            bNewPanelVldNext,; //Bloco de código utilizado para validar o botão "Avançar"
+            bNewPanelVldFinish,; //Bloco de código utilizado para validar o botão "Finalizar"
+            lNewPanellPanel,; //Se .T. será criado um painel, se .F. será criado um scrollbox
+            bNewPanelBlock; //Bloco de código a ser executado quando o painel for selecionado
+        )
+
+        lActivateCenter:=BiaParamBox():GetVar("lActivateCenter",.T.)
+        bActivateValid:=BiaParamBox():GetVar("bActivateValid",{||(.T.)})
+        bActivateInit:=BiaParamBox():GetVar("bActivateInit",{||(.T.)})
+        bActivateWhen:=BiaParamBox():GetVar("bActivateWhen",{||(.T.)})
+        
+        oDlgWizard:Activate(lActivateCenter,bActivateValid,bActivateInit,bActivateWhen)
+        
+        if ((lOk).and.(lUserSave))
+            ParamSave(@cLoad,@aParameters,"1")
+        endif
+
+        if (!BiaParamBox():GetVar("KeepVariables",.F.))
+            BiaParamBox():ClearVars()
+        endif
+
+    else
+
+        eval(bNewPanelBlock)
+
+    endif
+
+    return(lOk)
+
+static method SetVar(cVarName,uValue) class BiaParamBox
+    return(cacheData():Set("BiaParamBox",cVarName,uValue))
+
+static method GetVar(cVarName,uDefault) class BiaParamBox
+    return(cacheData():Get("BiaParamBox",cVarName,uDefault))
+
+static method ClearVars() class BiaParamBox
+    return(cacheData():delSection("BiaParamBox"))    
+
+static method GetVariables() class BiaParamBox
+
+    local aVariables as array
+
+    aVariables:=array(0)
+
+    aAdd(aVariables,"cPBoxTitle")
+    aAdd(aVariables,"nRow")
+    aAdd(aVariables,"nCol")
+    aAdd(aVariables,"nRight")
+    aAdd(aVariables,"nBottom")
+    aAdd(aVariables,"cAPWizardHeaderTit")
+    aAdd(aVariables,"cAPWizardHeaderMsg")
+    aAdd(aVariables,"cAPWizardHeaderPre")
+    aAdd(aVariables,"cAPWizardPanelText")
+    aAdd(aVariables,"cAPWizardHeaderRes")
+    aAdd(aVariables,"bAPWizardAction")
+    aAdd(aVariables,"bAPWizardVldNext")
+    aAdd(aVariables,"bAPWizardVldFinish")
+    aAdd(aVariables,"lAPWizardlPanel")
+    aAdd(aVariables,"lAPWizardlShowPanel")
+    aAdd(aVariables,"aAPWizardCoords")
+    aAdd(aVariables,"lActivateCenter")
+    aAdd(aVariables,"bActivateValid")
+    aAdd(aVariables,"bActivateInit")
+    aAdd(aVariables,"bActivateWhen")
+    aAdd(aVariables,"KeepVariables")
+    aAdd(aVariables,"cNewPanelTitle")
+    aAdd(aVariables,"cNewPanelMessage")
+    aAdd(aVariables,"bNewPanelVldBack")
+    aAdd(aVariables,"bNewPanelVldNext")
+    aAdd(aVariables,"bNewPanelVldFinish")
+    aAdd(aVariables,"lNewPanellPanel")
+
+    return(aVariables)
+
+static method DialogCoords(nRow,nCol,nRight,nBottom) class BiaParamBox
+    
+    local aAdvSize  as array
+
+    aAdvSize:=MsAdvSize(.T.)
+
+    paramtype nRow    as numeric optional default aAdvSize[7]
+    paramtype nCol    as numeric optional default 0
+    paramtype nRight  as numeric optional default (aAdvSize[5]-15)
+    paramtype nBottom as numeric optional default (aAdvSize[6]-50)
+    
+    cacheData():Set("BiaParamBox","nRow",nRow)
+    cacheData():Set("BiaParamBox","nCol",nCol)
+    cacheData():Set("BiaParamBox","nRight",nRight)
+    cacheData():Set("BiaParamBox","nBottom",nBottom)
+    
+    return(nil)

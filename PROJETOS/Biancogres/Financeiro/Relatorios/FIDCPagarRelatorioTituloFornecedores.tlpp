@@ -25,7 +25,7 @@ procedure u_FIDCPagarRelatorioTituloFornecedor()
 	local aArea				as array
 	local aParamRet			as array
 
-	local bAction			as block
+	local bAction			as codeblock
 
 	local lParamBox			as logical
 
@@ -61,8 +61,8 @@ static procedure FIDCPagarRelatorioTituloFornecedorQuery(otMultProcess as object
 
     local aFWTTables    as array
 
-    local bProcess      as block
-    local bMsAguarde    as block
+    local bProcess      as codeblock
+    local bMsAguarde    as codeblock
 
     local cTmpAlias     as character
 
@@ -154,7 +154,7 @@ static function FIDCPagarTituloFornecedorParameters(aParamRet as array) as logic
     lParamBox:=FIDC():getPagParamTit(@aParamRet)
     return(lParamBox)
 
-static function QueryView(aParamRet as character,aFWTTables as array) as character
+static function QueryView(aParamRet as array,aFWTTables as array) as character
     local cTmpAlias as character
     cTmpAlias:=FIDC():getPagQueryTit(@aParamRet,@aFWTTables)
     return(cTmpAlias)

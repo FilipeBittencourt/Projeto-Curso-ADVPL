@@ -5,6 +5,10 @@
 //U_TSTFIL
 User Function TSTFIL()
 
+  local cText := "0501/0113"
+  cText :=	 StrTran(  cText, "/", "','")
+
+
   RpcClearEnv()
   If Select("SX6") <= 0
     RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
@@ -19,11 +23,11 @@ User Function TSTFIL()
   //cEmp := "SC6"+SUBSTR(cEmp,0,1)+"0"
   //u_Env_Pedido('BJBGJO',,,'01',.T.)
   //u_FROPRT08()
-  //TSTFIL001() // biaxfunc.prw  - Teste Email SEND
+  TSTFIL001() // biaxfunc.prw  - Teste Email SEND
   //TSTFIL002() // Teste pedidos provisionados
   //TSTFIL003()
   //TSTFIL004()
-  TSTFIL005() //Montar classe de envio de email e enviando
+  //TSTFIL005() //Montar classe de envio de email e enviando
   //TSTFIL006()
   //TSTFIL007()
 

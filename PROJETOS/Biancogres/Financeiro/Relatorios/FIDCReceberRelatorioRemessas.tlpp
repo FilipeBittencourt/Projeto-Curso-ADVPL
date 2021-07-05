@@ -25,7 +25,7 @@ procedure u_FIDCRelatorioRemessa()
 	local aArea				as array
 	local aParamRet			as array
 
-	local bAction			as block
+	local bAction			as codeblock
 
 	local lParamBox			as logical
 
@@ -62,8 +62,8 @@ static procedure FIDCRelatorioRemessaQuery(otMultProcess as object,aParamRet as 
     local aBCOIsFIDC    as array
     local aFWTTables    as array
 
-    local bProcess      as block
-    local bMsAguarde    as block
+    local bProcess      as codeblock
+    local bMsAguarde    as codeblock
 
     local cTmpAlias     as character
 

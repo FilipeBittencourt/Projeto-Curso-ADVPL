@@ -87,9 +87,9 @@ Static Function fGetQuery()
   Local cQuery     := ""
   Local cEmp       := ""
   Local cFil       := ""
-  Local cTabES     := SuperGetMV( "ZZ_VNTABES", .F., "141" )
-  Local cTabSP     := SuperGetMV( "ZZ_VNTABSP", .F., "131" )
-  Local cTab00     := SuperGetMV( "ZZ_VNTAB00", .F., "142" )
+  Local cTabES     := SuperGetMV( "ZZ_VNTABES", .F., "145" )
+  Local cTabSP     := SuperGetMV( "ZZ_VNTABSP", .F., "145" )
+  Local cTab00     := SuperGetMV( "ZZ_VNTAB00", .F., "145" )
   Local cUltUpdate := U_PTVSTAMP( "GET", "DA1" )
   Local dEmissao   := dDataBase
 
@@ -115,7 +115,7 @@ Static Function fGetQuery()
   cQuery += "       AND DA1.DA1_CODTAB = " + ValToSql( cTabES )
   cQuery += "       AND " + ValToSql( dEmissao ) + " >= DA0.DA0_DATDE "
   cQuery += "       AND " + ValToSql( dEmissao ) + " <= DA0.DA0_DATATE "
-  cQuery += "       AND ( DA1.DA1_YDELTB = '' OR CONVERT(VARCHAR(23), DA1.DA1_YDELTB, 21) >= " + ValToSql(cUltUpdate) + " ) "
+  //cQuery += "       AND ( DA1.DA1_YDELTB = '' OR CONVERT(VARCHAR(23), DA1.DA1_YDELTB, 21) >= " + ValToSql(cUltUpdate) + " ) "
   cQuery += "       AND DA1.D_E_L_E_T_ = '' "
 
   cQuery += "     UNION ALL
@@ -142,7 +142,7 @@ Static Function fGetQuery()
   cQuery += "       AND DA1.DA1_CODTAB = " + ValToSql( cTabSP )
   cQuery += "       AND " + ValToSql( dEmissao ) + " >= DA0.DA0_DATDE "
   cQuery += "       AND " + ValToSql( dEmissao ) + " <= DA0.DA0_DATATE "
-  cQuery += "       AND ( DA1.DA1_YDELTB = '' OR CONVERT(VARCHAR(23), DA1.DA1_YDELTB, 21) >= " + ValToSql(cUltUpdate) + " ) "
+  //cQuery += "       AND ( DA1.DA1_YDELTB = '' OR CONVERT(VARCHAR(23), DA1.DA1_YDELTB, 21) >= " + ValToSql(cUltUpdate) + " ) "
   cQuery += "       AND DA1.D_E_L_E_T_ = '' "
 
   cQuery += "       UNION ALL
@@ -169,7 +169,7 @@ Static Function fGetQuery()
   cQuery += "       AND DA1.DA1_CODTAB = " + ValToSql( cTab00 )
   cQuery += "       AND " + ValToSql( dEmissao ) + " >= DA0.DA0_DATDE "
   cQuery += "       AND " + ValToSql( dEmissao ) + " <= DA0.DA0_DATATE "
-  cQuery += "       AND ( DA1.DA1_YDELTB = '' OR CONVERT(VARCHAR(23), DA1.DA1_YDELTB, 21) >= " + ValToSql(cUltUpdate) + " ) "
+  //cQuery += "       AND ( DA1.DA1_YDELTB = '' OR CONVERT(VARCHAR(23), DA1.DA1_YDELTB, 21) >= " + ValToSql(cUltUpdate) + " ) "
   cQuery += "       AND DA1.D_E_L_E_T_ = '' "
 
 Return cQuery

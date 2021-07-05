@@ -30,33 +30,33 @@ USER FUNCTION SOL_INVEST()
 	PRIVATE oGetPesq, cGetPesq 	:= SPACE(20)
 	Private aSize      			:= MsAdvSize(,.F. )
 	Private auxCont
-	Private cGetCli 	:= Space(6) 
+	Private cGetCli 	:= Space(6)
 	Private cGetGrpCli 	:= Space(6)
 	Private cAuxItem 	:= ''
 	Private CMARCA   	:= 'TODAS'
 	Private lDiretor	:= .F.
 	Private cTipoAprov	:= ""
-	
+
 	Private oTableMain	:= Nil
 	Private cAliasTrab	:= GetNextAlias()
 
 	If !cEmpAnt $ "01_05"
 		MsgBox("Esta rotina só pode ser utilizada nas empresas Biancogres e Incesa.","Solicitação de Investimento (AI)","STOP")
 		Return
-	EndIf                   
+	EndIf
 
 	If ;
-	 	(AllTrim(cEmpAnt) == "01" .And. U_VALOPER("SI2", .F.) ) .Or.	;
-	 	(AllTrim(cEmpAnt) == "05" .And. U_VALOPER("SI3", .F.) ) .Or.	;  //Fernando/Facile OS 4525-15 - acesso de diretor
-	 	(AllTrim(cEmpAnt) == "01" .And. TempValOper("SI2")) 	.Or.	;
-	 	(AllTrim(cEmpAnt) == "05" .And. TempValOper("SI3"))				;  
-	 	
+			(AllTrim(cEmpAnt) == "01" .And. U_VALOPER("SI2", .F.) ) .Or.	;
+			(AllTrim(cEmpAnt) == "05" .And. U_VALOPER("SI3", .F.) ) .Or.	;  //Fernando/Facile OS 4525-15 - acesso de diretor
+		(AllTrim(cEmpAnt) == "01" .And. TempValOper("SI2")) 	.Or.	;
+			(AllTrim(cEmpAnt) == "05" .And. TempValOper("SI3"))				;
+
 		NRADIO := 1
 		cTipoAprov := "1"
 	ElseIf U_VALOPER("SI1",.F.,.T.) .Or. TempValOper("SI1")
 		NRADIO := 2
 		cTipoAprov := "2"
-				
+
 	ElseIf (UserGeren())
 		NRADIO := 3
 		cTipoAprov := "3"
@@ -128,7 +128,7 @@ USER FUNCTION SOL_INVEST()
 	CITEM_CONT := "TODOS"
 
 	CSQL := " SELECT * FROM "+RETSQLNAME("CTD")
-	CSQL += " WHERE SUBSTRING(CTD_ITEM,1,1) = 'I' AND CTD_BLOQ = '2' AND D_E_L_E_T_ = '' 
+	CSQL += " WHERE SUBSTRING(CTD_ITEM,1,1) = 'I' AND CTD_BLOQ = '2' AND D_E_L_E_T_ = ''
 	CSQL += " AND (CTD_ITEM LIKE 'I01%' OR CTD_ITEM LIKE 'I02%') " // OS 0516-15
 	CSQL += " ORDER BY CTD_ITEM "
 
@@ -178,7 +178,7 @@ USER FUNCTION SOL_INVEST()
 
 	aMarcas :={"TODAS","BIANCOGRES", "PEGASUS", "INCESA","BELLACASA"}
 	CMARCA := "TODAS"
-	@ nLinha,01 COMBOBOX OGET03 VAR CMARCA ITEMS aMarcas FONT OBOLD_12 PIXEL OF OSCR SIZE 70,54 
+	@ nLinha,01 COMBOBOX OGET03 VAR CMARCA ITEMS aMarcas FONT OBOLD_12 PIXEL OF OSCR SIZE 70,54
 
 	nLinha += 15
 	//FILTRO DE GRUPO DE CLIENTES
@@ -200,12 +200,12 @@ USER FUNCTION SOL_INVEST()
 
 	nLinha += 10
 	@ nLinha,05 BUTTON "INCLUIR" SIZE 70,14 OF OSCR PIXEL ACTION UNOVO()
-	nLinha += 15	
+	nLinha += 15
 
 
 	@ nLinha,05 BUTTON "EXCLUIR" SIZE 70,14 OF OSCR PIXEL ACTION EXCLUI_INVES()
-	
-	
+
+
 	// CRIANDO O BROWSE PRINCIPAL
 	SQL_TODOS()
 	U_BIAMsgRun("Aguarde... Consultando Dados...",, {|| ATUALIZA_TELA() })
@@ -246,7 +246,7 @@ Static Function fCriaArquivo(lRefresh)
 		oTableMain:Delete()
 
 	EndIf
-	
+
 	AADD(_ACAMPOS, {"CCODIGO"		, "C", 06, 0})
 	AADD(_ACAMPOS, {"SI"			, "C", 06, 0})
 	AADD(_ACAMPOS, {"CSTATUS"		, "C", 25, 0})
@@ -268,6 +268,7 @@ Static Function fCriaArquivo(lRefresh)
 	AADD(_ACAMPOS, {"VALOR"			, "C", 16, 0})
 	AADD(_ACAMPOS, {"MARCA"			, "C", 16, 0})
 	AADD(_ACAMPOS, {"GRUPO"			, "C", 40, 0})
+	AADD(_ACAMPOS, {"AUT_DE_INVEST"			, "C", 10, 0})
 
 	ACAMPOS0 := {}
 
@@ -281,10 +282,11 @@ Static Function fCriaArquivo(lRefresh)
 	AADD(ACAMPOS0, {"FOR_PAG"		, "FORMA PAGAMENTO"			, 20})
 	AADD(ACAMPOS0, {"VALOR"			, "VALOR" 				  	, 18})
 	AADD(ACAMPOS0, {"MARCA"			, "MARCA" 				  	, 18})
-	AADD(ACAMPOS0, {"GRUPO"			, "GRUPO CLIENTE" 			, 40})
+	AADD(ACAMPOS0, {"GRUPO"		      	, "GRUPO CLIENTE" 			, 40})
+	AADD(ACAMPOS0, {"AUT_DE_INVEST"			, "AUT DE INVEST" 			, 40})
 
 	oTableMain := FWTemporaryTable():New(cAliasTrab, /*aFields*/)
-	
+
 	oTableMain:SetFields(_ACAMPOS)
 
 	For nW := 1 To Len(ACAMPOS0)
@@ -355,7 +357,7 @@ Return
 STATIC FUNCTION ATUALIZA_TELA(lRefresh)
 
 	Default lRefresh := .F.
-	
+
 	fCriaArquivo(lRefresh)
 
 	//SELECIONANDO TODOS OS PRODUTOS E SUAS QUANTIDADES EM ESTOQUE
@@ -386,21 +388,21 @@ STATIC FUNCTION ATUALIZA_TELA(lRefresh)
 		(cAliasTrab)->ARECNO		:= ALLTRIM(STR(C_CONS->ARECNO))
 		(cAliasTrab)->AAOBS		:= C_CONS->AAOBS
 		(cAliasTrab)->AAOBS_APR	:= C_CONS->AAOBS_APR
-		(cAliasTrab)->COMPRO		:= C_CONS->ZO_YCOMPRO 
-		(cAliasTrab)->GRUPO		:= C_CONS->ACY_DESCRI  
+		(cAliasTrab)->COMPRO		:= C_CONS->ZO_YCOMPRO
+		(cAliasTrab)->GRUPO		:= C_CONS->ACY_DESCRI
 
 		Do Case
-			Case C_CONS->ZO_EMP == '0101'
+		Case C_CONS->ZO_EMP == '0101'
 			(cAliasTrab)->MARCA		:= 'Biancogres'
-			Case C_CONS->ZO_EMP == '0199'
+		Case C_CONS->ZO_EMP == '0199'
 			(cAliasTrab)->MARCA		:= 'Pegasus'
-			Case C_CONS->ZO_EMP == '0501'
+		Case C_CONS->ZO_EMP == '0501'
 			(cAliasTrab)->MARCA		:= 'Incesa'
-			Case C_CONS->ZO_EMP == '0599'
+		Case C_CONS->ZO_EMP == '0599'
 			(cAliasTrab)->MARCA		:= 'Bellacasa'
-			Case C_CONS->ZO_EMP == '1302'
+		Case C_CONS->ZO_EMP == '1302'
 			(cAliasTrab)->MARCA		:= 'Vinilico'
-			OtherWise								
+		OtherWise
 			(cAliasTrab)->MARCA		:= ''
 		EndCase
 
@@ -421,7 +423,7 @@ Return
 //MONTANDO A TELA PARA A INCLUSAO DA NOVA SOLICITACAO 
 Static Function UNOVO()
 
-	LOCAL _ItemsMarca	
+	LOCAL _ItemsMarca
 	Local I
 
 	PRIVATE NOVO_NRADIO		:= 7
@@ -478,9 +480,9 @@ Static Function UNOVO()
 	PRIVATE S_GR_CO_PER	:= 0
 	PRIVATE S_GR_PR_INV	:= 0
 	PRIVATE S_GR_PR_FAT	:= 0
-	PRIVATE S_GR_PR_PER	:= 0                                                     
+	PRIVATE S_GR_PR_PER	:= 0
 
-	// Tiago Rossini Coradini - 02/09/2015 - OS - 2383-15 
+	// Tiago Rossini Coradini - 02/09/2015 - OS - 2383-15
 	If cEmpAnt == "05"
 
 		If Pergunte("INVEST")
@@ -494,12 +496,12 @@ Static Function UNOVO()
 			EndIf
 
 		Else
-			Return()			
+			Return()
 		EndIf
 
 	EndIf
 
-	_ItemsMarca := {"0101=BIANCOGRES","0199=PEGASUS","0501=INCESA","0599=BELLACASA","1399=MUNDIALLI", "1302=VINILICO"} 
+	_ItemsMarca := {"0101=BIANCOGRES","0199=PEGASUS","0501=INCESA","0599=BELLACASA","1399=MUNDIALLI", "1302=VINILICO"}
 	IF ALLTRIM(CREPATU) <> ""
 
 		_ItemsMarca := {}
@@ -514,7 +516,7 @@ Static Function UNOVO()
 
 			For I := 1 To Len(_aMarcas)
 
-				If AllTrim(_aMarcas[I]) == "0101"				
+				If AllTrim(_aMarcas[I]) == "0101"
 					AAdd(_ItemsMarca, "0101=BIANCOGRES")
 				ElseIf AllTrim(_aMarcas[I]) == "0199"
 					AAdd(_ItemsMarca, "0199=PEGASUS")
@@ -559,7 +561,7 @@ Static Function UNOVO()
 	@ 035,010	SAY "MARCA: "
 	@ 035,100 COMBOBOX OGETMARCA VAR cNMarca ITEMS _ItemsMarca PIXEL OF oDlg1 SIZE 100,10
 
-	@ 050,010	SAY "CÓDIGO DO CLIENTE:  "            
+	@ 050,010	SAY "CÓDIGO DO CLIENTE:  "
 	@ 050,100	GET cNClient  VALID U_BIAMsgRun("Aguarde... Atualizando Totais",,{|| .T.}) SIZE 35,10 F3 "SA1BIA" PICT "@!R"
 	@ 050,145	SAY "LOJA:"
 	@ 050,180	GET cNLjCli  VALID U_BIAMsgRun("Aguarde... Atualizando Totais",,{|| .T.}) SIZE 15,10 PICT "@!R"
@@ -574,7 +576,7 @@ Static Function UNOVO()
 	AADD(ITEM_CONT,CITEM_CONT)
 
 	CSQL := " SELECT * FROM "+RETSQLNAME("CTD")
-	CSQL += " WHERE SUBSTRING(CTD_ITEM,1,1) = 'I' AND CTD_BLOQ = '2' AND D_E_L_E_T_ = '' 
+	CSQL += " WHERE SUBSTRING(CTD_ITEM,1,1) = 'I' AND CTD_BLOQ = '2' AND D_E_L_E_T_ = ''
 	CSQL += " AND (CTD_ITEM LIKE 'I01%' OR CTD_ITEM LIKE 'I02%') "
 	CSQL += " ORDER BY CTD_ITEM "
 
@@ -749,7 +751,7 @@ STATIC FUNCTION DETALHES()
 	@ 055, 230  GET cNOBSAPR    SIZE 150,38 MEMO WHEN .F.///!( AllTrim((cAliasTrab)->CSTATUS) == 'Aguard. Aprov. Dir.' ) //OS 4525-15
 	@ 95, 230	SAY "Sup.: "+AllTrim(SZO->ZO_USUASUP)+" em "+DTOC(SZO->ZO_DATASUP)+" as "+AllTrim(SZO->ZO_HORASUP)+""
 	@ 102, 230	GET (SZO->ZO_OBSSUP+ENTER)    SIZE 150, 38 MEMO WHEN .F.
-	
+
 	IF EMPTY(CREPATU) .And. !( AllTrim((cAliasTrab)->CSTATUS) == 'Aguard. Aprov. Dir.' )  //OS 4525-15
 
 		oGrCmp	:= TGroup():New( 038,385,86,485,"COMPROVAÇÃO:",oDlg1,CLR_BLACK,CLR_WHITE,.T.,.F. )
@@ -757,12 +759,12 @@ STATIC FUNCTION DETALHES()
 		@ 047,463	Button "OK"	Size 20,15 Action GRA_COMPRO() PIXEL OF oGrCmp
 
 	END IF
-	
+
 	cNOBS := cNOBS+ENTER
 	oGrSup	:= TGroup():New(135,010, 186,225,"Descrição da solicitação:",oDlg1,CLR_BLACK,CLR_WHITE,.T.,.F. )
 	@ 144,016   GET cNOBS   SIZE 200,38 MEMO WHEN !( AllTrim((cAliasTrab)->CSTATUS) == 'Aguard. Aprov. Dir.' ) //OS 4525-15
-	
-	
+
+
 	//GRUPO DE BOTOES DE ACAO - ALTERADO POR FERNANDO ROCHA - 30/07/2010
 	If EMPTY(CREPATU)
 
@@ -771,12 +773,12 @@ STATIC FUNCTION DETALHES()
 		If ( AllTrim((cAliasTrab)->CSTATUS) == 'Aguard. Aprov. Dir.' )
 
 			If ;
-				(AllTrim(cEmpAnt) == "01" .And. U_VALOPER("SI2",.F.) ) .Or. ;
-				(AllTrim(cEmpAnt) == "05" .And. U_VALOPER("SI3",.F.) ) .Or.; //Fernando/Facile OS 4525-15 - acesso de diretor
+					(AllTrim(cEmpAnt) == "01" .And. U_VALOPER("SI2",.F.) ) .Or. ;
+					(AllTrim(cEmpAnt) == "05" .And. U_VALOPER("SI3",.F.) ) .Or.; //Fernando/Facile OS 4525-15 - acesso de diretor
 				(AllTrim(cEmpAnt) == "01" .And. TempValOper("SI2")) .Or. ;
-				(AllTrim(cEmpAnt) == "05" .And. TempValOper("SI3"));  
-	 	
-			
+					(AllTrim(cEmpAnt) == "05" .And. TempValOper("SI3"));
+
+
 				@ 092, 410	BUTTON "APROVAR"  SIZE 70,10 ACTION AprovDir("Aprovado")//ALT_DIR('Aprovado')
 				@ 104, 410	BUTTON "REPROVAR" SIZE 70,10 ACTION AprovDir("Reprovado")//ALT_DIR('Reprovado')
 
@@ -786,54 +788,54 @@ STATIC FUNCTION DETALHES()
 
 		Else
 
-			If U_VALOPER("ADMIN")     
+			If U_VALOPER("ADMIN")
 
 				If ( AllTrim((cAliasTrab)->CSTATUS) == 'Aprovado' )
 					@ 092, 410	BUTTON "LANÇAR BAIXAS" 	SIZE 70,10 ACTION ( U_LAN_BAIXAS() , cNSALDO := TRANS(SalInvest(),"@E 999,999,999.99") , oDlg1:Refresh() )
-				EndIf   
+				EndIf
 
 				//@ 104, 410	BUTTON "ALTERAR STATUS" SIZE 70,10 ACTION ALT_STATUS()
 
 			ElseIf ( AllTrim((cAliasTrab)->CSTATUS) == 'Aprovado' )
 				@ 092, 410	BUTTON "LANÇAR BAIXAS" 	SIZE 70,10 ACTION ( U_LAN_BAIXAS() , cNSALDO := TRANS(SalInvest(),"@E 999,999,999.99") , oDlg1:Refresh() )
-			
+
 			/*ELSEIF  U_VALOPER("SI1",.F.,.T.)
 				@ 104, 410	BUTTON "ALTERAR STATUS" SIZE 70,10 ACTION ALT_STATUS()
 			*/	
 			EndIf
-			
-			
+
+
 			//Aprovações Nivel 1 e 2
 			If (AllTrim((cAliasTrab)->CSTATUS) == 'Aguard. Aprovação' .Or. AllTrim((cAliasTrab)->CSTATUS) == 'Aguard. Aprov. Ger.')
-				
+
 				//@ 104, 410	BUTTON "ALTERAR STATUS" SIZE 70,10 ACTION ALT_STATUS()
-			
+
 				_aRetAprov := UserAprov()
 				If ( AllTrim(_aRetAprov[1]) == RetCodUsr() .Or. AllTrim(_aRetAprov[1]) $ AprovTemp())
 					@ 104, 410	BUTTON "ALTERAR STATUS" SIZE 70,10 ACTION ALT_STATUS()
 				Else
 					MsgAlert("Usuário sem acesso a esta operação, Aprovador responsável: "+AllTrim(_aRetAprov[2])+".", "Aprovador Nivel 3 - Tabela: ZKP")
 				EndIf
-				
+
 			ElseIf (AllTrim((cAliasTrab)->CSTATUS) == 'Aguard. Aprov. Sup.')
-				
+
 				If U_VALOPER("SI1",.F.,.T.) .Or. TempValOper("SI1")
 					@ 092, 410	BUTTON "APROVAR"  SIZE 70, 10 ACTION AprovSuper()
 				Else
 					MsgAlert("Usuário sem acesso a esta operação.","Aprovador Nivel 2 - CadOper: SI1")
-				EndIf	
-			
-			EndIf				
-			
+				EndIf
+
+			EndIf
+
 		EndIf
-		
+
 	EndIf
-	
+
 	@ 116, 410	Button "HIST. APROV." 	Size 70,10 Action HistAprov()
-	
+
 	@ 128, 410	Button "SAIR"  			Size 70,10 Action CLOSE(ODLG1)
-	
-	
+
+
 	ACTIVATE DIALOG oDlg1 Centered
 
 RETURN
@@ -887,7 +889,7 @@ Static Function uSALVAR()
 	DbSeek(xFilial("SA1")+ALLTRIM(cNClient)+ALLTRIM(cNLjCli),.F.)
 
 	DO CASE
-		CASE SubString(cNMarca,1,4) == "0101"
+	CASE SubString(cNMarca,1,4) == "0101"
 		If Empty(Alltrim(SA1->A1_VEND))
 			MSGBOX("Favor preencher o campo Vendedor no Cadastro de Cliente antes de continuar!","Solicitação de Investimento (AI)","ALERT")
 			RETURN
@@ -899,7 +901,7 @@ Static Function uSALVAR()
 
 		auxEmpre := "0101"
 		auxSerie := 'S1'
-		CASE SubString(cNMarca,1,4) == "0199"
+	CASE SubString(cNMarca,1,4) == "0199"
 		If Empty(Alltrim(SA1->A1_YVENPEG))
 			MSGBOX("Favor preencher o campo Vendedor no Cadastro de Cliente antes de continuar!","Solicitação de Investimento (AI)","ALERT")
 			RETURN
@@ -913,11 +915,11 @@ Static Function uSALVAR()
 		auxSerie := 'S1'
 
 
-		CASE SubString(cNMarca,1,4) == "0501"
+	CASE SubString(cNMarca,1,4) == "0501"
 		If Empty(Alltrim(SA1->A1_YVENDI))
 			MSGBOX("Favor preencher o campo Vendedor no Cadastro de Cliente antes de continuar!","Solicitação de Investimento (AI)","ALERT")
 			RETURN
-		Else			
+		Else
 			IF CCODUSUARIO > '999999'
 				cCodigo := SA1->A1_YVENDI
 			EndIf
@@ -926,11 +928,11 @@ Static Function uSALVAR()
 		auxEmpre := "0501"
 		auxSerie := 'S2'
 
-		CASE SubString(cNMarca,1,4) == "0599"
-		If Empty(Alltrim(SA1->A1_YVENBE1))	 
-			MSGBOX("Favor preencher o campo Vendedor no Cadastro de Cliente antes de continuar!","Solicitação de Investimento (AI)","ALERT")		
+	CASE SubString(cNMarca,1,4) == "0599"
+		If Empty(Alltrim(SA1->A1_YVENBE1))
+			MSGBOX("Favor preencher o campo Vendedor no Cadastro de Cliente antes de continuar!","Solicitação de Investimento (AI)","ALERT")
 			RETURN
-		Else			
+		Else
 			IF CCODUSUARIO > '999999'
 				cCodigo := SA1->A1_YVENBE1
 			EndIf
@@ -939,11 +941,11 @@ Static Function uSALVAR()
 		auxEmpre := "0599"
 		auxSerie := 'S3'
 
-		CASE SubString(cNMarca,1,4) == "1302"
-		If Empty(Alltrim(SA1->A1_YVENVI1))	 
-			MSGBOX("Favor preencher o campo Vendedor no Cadastro de Cliente antes de continuar!","Solicitação de Investimento (AI)","ALERT")		
+	CASE SubString(cNMarca,1,4) == "1302"
+		If Empty(Alltrim(SA1->A1_YVENVI1))
+			MSGBOX("Favor preencher o campo Vendedor no Cadastro de Cliente antes de continuar!","Solicitação de Investimento (AI)","ALERT")
 			RETURN
-		Else			
+		Else
 			IF CCODUSUARIO > '999999'
 				cCodigo := SA1->A1_YVENVI1
 			EndIf
@@ -952,7 +954,7 @@ Static Function uSALVAR()
 		auxEmpre := "1302"
 		auxSerie := 'S3'
 
-		OTHERWISE
+	OTHERWISE
 		MSGBOX("Favor preencher a marca!","Solicitação de Investimento (AI)","ALERT")
 		RETURN
 	ENDCASE
@@ -983,20 +985,20 @@ Static Function uSALVAR()
 	//TODO tratar mensagem
 	/*If ( cNVALOR > _nLimVDir )
 		MSGBOX("Esta AI será submetida a 2 níveis de aprovação: Gerente + Diretor","VALOR LIMITE ULTRAPASSADO","INFO")
-	EndIf
+EndIf
 	*/
-	
-	_TipoAprov  := TipoAprov()
-	If (_TipoAprov == "3")
-		MSGBOX("Esta AI será submetida a 1 nível de aprovação: Gerente Comercial","VALOR LIMITE ULTRAPASSADO","INFO")
-	ElseIf(_TipoAprov == "2")
-		MSGBOX("Esta AI será submetida a 2 níveis de aprovação: Gerente Comercial + Gerente","VALOR LIMITE ULTRAPASSADO","INFO")
-	Else
-		MSGBOX("Esta AI será submetida a 3 níveis de aprovação: Gerente Comercial + Gerente + Diretor","VALOR LIMITE ULTRAPASSADO","INFO")
-	EndIf
-	
-	
-	MSGBOX("A AI de Número: "+ALLTRIM(MACODIGO)+" foi incluída com sucesso!","Solicitação de Investimento (AI)","INFO")
+
+_TipoAprov  := TipoAprov()
+If (_TipoAprov == "3")
+	MSGBOX("Esta AI será submetida a 1 nível de aprovação: Gerente Comercial","VALOR LIMITE ULTRAPASSADO","INFO")
+ElseIf(_TipoAprov == "2")
+	MSGBOX("Esta AI será submetida a 2 níveis de aprovação: Gerente Comercial + Gerente","VALOR LIMITE ULTRAPASSADO","INFO")
+Else
+	MSGBOX("Esta AI será submetida a 3 níveis de aprovação: Gerente Comercial + Gerente + Diretor","VALOR LIMITE ULTRAPASSADO","INFO")
+EndIf
+
+
+MSGBOX("A AI de Número: "+ALLTRIM(MACODIGO)+" foi incluída com sucesso!","Solicitação de Investimento (AI)","INFO")
 
 RETURN
 
@@ -1023,7 +1025,7 @@ STATIC FUNCTION ALT_STATUS()
 	PRIVATE N22RADIO	:= 1
 	PRIVATE C22NOBS 	:= ALLTRIM((cAliasTrab)->AAOBS_APR)
 	PRIVATE CcNVALOR 	:= 0.00
-	
+
 	If AllTrim((cAliasTrab)->CSTATUS) == 'Aguard. Aprovação' .Or. AllTrim((cAliasTrab)->CSTATUS) = 'Aguard. Aprov. Ger.'
 		N22RADIO := 1
 	ElseIf (cAliasTrab)->CSTATUS = 'Aprovado'
@@ -1049,7 +1051,7 @@ STATIC FUNCTION ALT_STATUS()
 	ITEM_CONT	:={}
 
 	CSQL := " SELECT * FROM "+RETSQLNAME("CTD")
-	CSQL += " WHERE SUBSTRING(CTD_ITEM,1,1) = 'I' AND CTD_BLOQ = '2' AND D_E_L_E_T_ = '' 
+	CSQL += " WHERE SUBSTRING(CTD_ITEM,1,1) = 'I' AND CTD_BLOQ = '2' AND D_E_L_E_T_ = ''
 	CSQL += " AND (CTD_ITEM LIKE 'I01%' OR CTD_ITEM LIKE 'I02%') " // OS 0516-15
 	CSQL += " ORDER BY CTD_ITEM "
 
@@ -1057,7 +1059,7 @@ STATIC FUNCTION ALT_STATUS()
 		DBSELECTAREA("_ITEM")
 		DBCLOSEAREA()
 	EndIf
-	
+
 	TCQUERY CSQL ALIAS "_ITEM" NEW
 	DO WHILE ! _ITEM->(EOF())
 		cNovoItm := ALLTRIM(_ITEM->CTD_ITEM) +'-'+ ALLTRIM(_ITEM->CTD_DESC01)
@@ -1071,7 +1073,7 @@ STATIC FUNCTION ALT_STATUS()
 	If AllTrim((cAliasTrab)->CSTATUS) == 'Aguard. Aprovação' .Or. AllTrim((cAliasTrab)->CSTATUS) == 'Aguard. Aprov. Ger.'
 		@ 017,006 RADIO N22RADIO 3D PROMPT "Aguard. Aprovação", "Aprovado", "Reprovado" SIZE  77,9 OF oDlg24 PIXEL
 	EndIf
-	
+
 	@ 085,006	SAY "TIPO PAGAMENTO:  "
 
 	PAGAMENTO :={}
@@ -1091,7 +1093,7 @@ STATIC FUNCTION ALT_STATUS()
 	@ 095,006 COMBOBOX OGET05 VAR CCPAGAMENTO ITEMS PAGAMENTO FONT OBOLD_12 PIXEL OF oDlg24 SIZE 70,54
 
 	CcNVALOR	:= STRTRAN((cAliasTrab)->VALOR, ",", "*")
-	CcNVALOR	:= STRTRAN(CcNVALOR, ".", ",") 
+	CcNVALOR	:= STRTRAN(CcNVALOR, ".", ",")
 	CcNVALOR	:= STRTRAN(CcNVALOR, "*", ".")
 
 	@ 10,090	SAY "VALOR DO INVESTIMENTO:  "
@@ -1114,12 +1116,12 @@ STATIC FUNCTION ALT_STATUS()
 RETURN
 
 //GRAVA O STATUS NA TABELA  
-STATIC FUNCTION USAL_STATUS() 
+STATIC FUNCTION USAL_STATUS()
 
 	Local _nLimVDir := GetNewPar("MV_YSILDIR",5000)
 	Local _nValSI
 	Local _cProxStatus	:= ""
-	Local _cStatusAnt	:= ""	
+	Local _cStatusAnt	:= ""
 
 	IF !(cAliasTrab)->(EOF())
 
@@ -1128,7 +1130,7 @@ STATIC FUNCTION USAL_STATUS()
 			Return
 		ELSEIF N22RADIO = 7
 			ALERT("NÃO EXISTE O STATUS TODOS")
-		ELSE        
+		ELSE
 
 			IF N22RADIO = 1
 				XSSTATUS = 'Aguard. Aprov. Ger.'
@@ -1167,9 +1169,9 @@ STATIC FUNCTION USAL_STATUS()
 					XSSTATUS := 'Aguard. Aprov. Dir.'
 				EndIf
 				*/
-				
-				
-				If (Alltrim(SZO->ZO_STATUS) <> XSSTATUS ) 
+
+
+				If (Alltrim(SZO->ZO_STATUS) <> XSSTATUS )
 					If (AllTrim(XSSTATUS) == 'Aprovado')
 						_cProxStatus := ProxSequeAprov(SZO->ZO_STATUS)
 						If (!Empty(_cProxStatus)) //existe proximo nivel de aprovação
@@ -1177,9 +1179,9 @@ STATIC FUNCTION USAL_STATUS()
 						EndIf
 					EndIf
 				EndIf
-					
+
 				_cStatusAnt := SZO->ZO_STATUS
-								
+
 				RecLock("SZO",.F.)
 				SZO->ZO_STATUS	:= XSSTATUS
 				SZO->ZO_YOBSAPR	:= c22NOBS
@@ -1191,13 +1193,13 @@ STATIC FUNCTION USAL_STATUS()
 				//ITEM CONTABIL
 				aItem 			:= StrTokArr(CIITEM_CONT,"-")
 				SZO->ZO_ITEMCTA	:= aItem[1] //CIITEM_CONT
-				SZO->ZO_VALOR 	:= _nValSI			
+				SZO->ZO_VALOR 	:= _nValSI
 
 				MsUnLock()
-				
+
 				AtuHistAprov('G', XSSTATUS, _cStatusAnt)
-				
-			EndIf                  
+
+			EndIf
 
 			If XSSTATUS = 'Aprovado'
 				EMAIL_APROVADO()
@@ -1224,7 +1226,7 @@ STATIC FUNCTION ALT_DIR(_XSSTATUS)
 
 	DBSELECTAREA("SZO")
 	DBSETORDER(4)
-	If DBSEEK(XFILIAL("SZO")+(cAliasTrab)->CCODIGO,.T.) 	
+	If DBSEEK(XFILIAL("SZO")+(cAliasTrab)->CCODIGO,.T.)
 
 		RecLock("SZO",.F.)
 		SZO->ZO_STATUS	:= _XSSTATUS
@@ -1232,14 +1234,14 @@ STATIC FUNCTION ALT_DIR(_XSSTATUS)
 		SZO->ZO_DATADIR	:= dDataBase
 		SZO->ZO_HORADIR	:= SubStr(Time(),1,5)
 
-		SZO->(MsUnLock()) 
+		SZO->(MsUnLock())
 
 		If _XSSTATUS = 'Aprovado'
 			EMAIL_APROVADO()
 		EndIf
 
 	EndIf
-	
+
 	CLOSE(oDlg1)
 	SQL_FILTRO()
 RETURN
@@ -1247,41 +1249,41 @@ RETURN
 
 //EXCLUI A SOLICITACAO DE INVESTIMENTO  
 Static Function EXCLUI_INVES()
-	
+
 	Local _aRetAprov := UserAprov()
-				
-	If AllTrim(_aRetAprov[1]) == AllTrim(RetCodUsr()) 
-	
+
+	If AllTrim(_aRetAprov[1]) == AllTrim(RetCodUsr())
+
 		If	AllTrim((cAliasTrab)->CSTATUS) == "Aguard. Aprovação" 	.Or. ;
-			AllTrim((cAliasTrab)->CSTATUS) == "Aguard. Aprov. Ger."	.Or. ;
-			AllTrim((cAliasTrab)->CSTATUS) == "Aguard. Aprov. Sup." .Or. ;
-			AllTrim((cAliasTrab)->CSTATUS) == "Aguard. Aprov. Dir." .Or. ;
-			AllTrim((cAliasTrab)->CSTATUS) == "Reprovado"
-			
+				AllTrim((cAliasTrab)->CSTATUS) == "Aguard. Aprov. Ger."	.Or. ;
+				AllTrim((cAliasTrab)->CSTATUS) == "Aguard. Aprov. Sup." .Or. ;
+				AllTrim((cAliasTrab)->CSTATUS) == "Aguard. Aprov. Dir." .Or. ;
+				AllTrim((cAliasTrab)->CSTATUS) == "Reprovado"
+
 			If !(cAliasTrab)->(EOF())
-	
+
 				SZO->(DbSetOrder(4))
 				If SZO->(DbSeek(XFILIAL("SZO")+(cAliasTrab)->CCODIGO,.T.))
 					RecLock("SZO",.F.)
-						SZO->(DBDELETE())
+					SZO->(DBDELETE())
 					SZO->(MSUNLOCK())
 					SQL_FILTRO()
 				EndIf
-	
+
 			EndIf
-			
+
 		Else
-		
+
 			MsgAlert("SI: "+(cAliasTrab)->CCODIGO+" - Status não permite exclusão")
-		
+
 		EndIf
-		
+
 	Else
-	
+
 		MsgAlert("Usuário não tem permissão para essa ação.")
-	
+
 	EndIf
-	
+
 Return
 
 
@@ -1301,10 +1303,10 @@ RETURN
 
 
 //SELECIONANDO TODOS OS REGISTROS 
-Static Function SQL_TODOS(_lDir)  
-	
+Static Function SQL_TODOS(_lDir)
+
 	Local cAprovTemp := ""
-	
+
 	Default _lDir := .F.
 
 	cSql := "SELECT	CONVERT(VARCHAR(500),CONVERT(BINARY(500),ZO_YOBSAPR)) AS AAOBS_APR, CONVERT(VARCHAR(500),CONVERT(BINARY(500),ZO_YOBS)) AS AAOBS, SZO.R_E_C_N_O_ AS ARECNO "+ENTER
@@ -1316,7 +1318,7 @@ Static Function SQL_TODOS(_lDir)
 	cSql += "							WHEN ZO_FPAGTO = '5' THEN 'Outros' " + ENTER
 	cSql += "							WHEN ZO_FPAGTO = '6' THEN 'Desc.Incondicional' " + ENTER
 	cSql += "							ELSE '' END " + ENTER
-	
+
 	cSql+= " FROM "+RETSQLNAME("SZO")+ " SZO "+ ENTER
 	cSql+= " INNER JOIN "+RETSQLNAME("SA1")+" SA1 ON SZO.ZO_FILIAL	= '01'	AND SA1.A1_COD = SZO.ZO_CLIENTE AND SA1.A1_LOJA = SZO.ZO_LOJA AND SA1.D_E_L_E_T_ = '' "+ ENTER
 	cSql+= " INNER JOIN "+RETSQLNAME("SA3")+" SA3 ON SA3.A3_COD	= SZO.ZO_REPRE	AND SA3.D_E_L_E_T_	= '' "+ ENTER
@@ -1330,13 +1332,13 @@ Static Function SQL_TODOS(_lDir)
 
 	/*If ( _lDir )
 		cSql += "		AND SZO.ZO_STATUS = 'Aguard. Aprov. Dir.' " + ENTER
-	EndIf*/
+EndIf*/
 	
-	If (cTipoAprov == '1')
+If (cTipoAprov == '1')
 		cSql += " AND SZO.ZO_STATUS = 'Aguard. Aprov. Dir.'  " + ENTER
-	ElseIf (cTipoAprov == '2')
+ElseIf (cTipoAprov == '2')
 		cSql += " AND SZO.ZO_STATUS = 'Aguard. Aprov. Sup.'  " + ENTER
-	ElseIf (cTipoAprov == '3')
+ElseIf (cTipoAprov == '3')
 		cSql += " AND (SZO.ZO_STATUS = 'Aguard. Aprovação' OR SZO.ZO_STATUS = 'Aguard. Aprov. Ger.') " + ENTER
 	
 		
@@ -1345,17 +1347,17 @@ Static Function SQL_TODOS(_lDir)
 		cSql += " '"+RetCodUsr()+"' 																		" + ENTER
 		
 		cAprovTemp := AprovTemp()
-		If !(Empty(cAprovTemp))
+	If !(Empty(cAprovTemp))
 			cSql += " ,"+cAprovTemp+" 																	" + ENTER
-		EndIf
+	EndIf
 		cSql += "  )						                                                        		" + ENTER
 		
 		
-	EndIf
+EndIf
 	
-	IF DTOC(CDATADE) <> "  /  /  " .AND. DTOC(CDATAATE) <> "  /  /  "
+IF DTOC(CDATADE) <> "  /  /  " .AND. DTOC(CDATAATE) <> "  /  /  "
 		cSql += "		AND ZO_DATA BETWEEN '"+DTOS(CDATADE)+"' AND '"+DTOS(CDATAATE)+"'  " + ENTER
-	END IF
+END IF
 
 	cSql +=  "		AND SZO.D_E_L_E_T_ = ''   "	+ ENTER
 
@@ -1368,56 +1370,56 @@ Static Function SQL_TODOS(_lDir)
 	C_cSql += "		SA3.A3_COD  = SZO.ZO_REPRE AND " + ENTER
 	C_cSql += "		SZO.ZO_YCOD <> '' AND " + ENTER
 	C_cSql += "		SZO.ZO_SI  <> '' AND " + ENTER
-	IF ! EMPTY(CREPATU)
+IF ! EMPTY(CREPATU)
 		C_cSql += "		SZO.ZO_REPRE =  '"+ALLTRIM(CCODUSUARIO)+"' AND " + ENTER
-	END IF                   
+END IF
 
 	/*If ( _lDir )
 		C_cSql += "		SZO.ZO_STATUS = 'Aguard. Aprov. Dir.' AND " + ENTER
-	EndIf	
+EndIf
 	*/
-	
-	If (cTipoAprov == '1')
-		C_cSql += "		SZO.ZO_STATUS = 'Aguard. Aprov. Dir.' AND " + ENTER
-	ElseIf (cTipoAprov == '2')
-		C_cSql += "		SZO.ZO_STATUS = 'Aguard. Aprov. Sup.' AND " + ENTER
-	ElseIf (cTipoAprov == '3')
-		C_cSql += "		(SZO.ZO_STATUS = 'Aguard. Aprovação' OR SZO.ZO_STATUS = 'Aguard. Aprov. Ger.') AND " + ENTER
-		
-		C_cSql += "  (SELECT UGERENT from [dbo].[GET_ZKP] (A1_YTPSEG, ZO_EMP, A1_EST, ZO_REPRE, '', '')) IN  	" + ENTER
-		C_cSql += " (																						" + ENTER
-		C_cSql += " '"+RetCodUsr()+"' 																		" + ENTER
-		
-		cAprovTemp := AprovTemp()
-		If !(Empty(cAprovTemp))
-			C_cSql += " ,"+cAprovTemp+" 																	" + ENTER
-		EndIf
-		C_cSql += "  )	AND					                                                        		" + ENTER
-		
-		
-		
-	EndIf
-	
-	C_cSql += "	 	SZO.D_E_L_E_T_ = '' AND " + ENTER
-	C_cSql += "		SA1.D_E_L_E_T_ = '' AND " + ENTER
-	C_cSql += "		SA3.D_E_L_E_T_ = ''  " + ENTER
-	IF DTOC(CDATADE) <> "  /  /  " .AND. DTOC(CDATAATE) <> "  /  /  "
-		C_cSql += "		AND ZO_DATA BETWEEN '"+DTOS(CDATADE)+"' AND '"+DTOS(CDATAATE)+"'  " + ENTER
-	END IF
 
-	IF CHKFILE("_TOT_FILTRO")
-		DBSELECTAREA("_TOT_FILTRO")
-		DBCLOSEAREA()
-	ENDIF
-	TCQUERY C_cSql ALIAS "_TOT_FILTRO" NEW
-	S_TOT_FILTRO := _TOT_FILTRO->TOT_FILTRO
+If (cTipoAprov == '1')
+	C_cSql += "		SZO.ZO_STATUS = 'Aguard. Aprov. Dir.' AND " + ENTER
+ElseIf (cTipoAprov == '2')
+	C_cSql += "		SZO.ZO_STATUS = 'Aguard. Aprov. Sup.' AND " + ENTER
+ElseIf (cTipoAprov == '3')
+	C_cSql += "		(SZO.ZO_STATUS = 'Aguard. Aprovação' OR SZO.ZO_STATUS = 'Aguard. Aprov. Ger.') AND " + ENTER
+
+	C_cSql += "  (SELECT UGERENT from [dbo].[GET_ZKP] (A1_YTPSEG, ZO_EMP, A1_EST, ZO_REPRE, '', '')) IN  	" + ENTER
+	C_cSql += " (																						" + ENTER
+	C_cSql += " '"+RetCodUsr()+"' 																		" + ENTER
+
+	cAprovTemp := AprovTemp()
+	If !(Empty(cAprovTemp))
+		C_cSql += " ,"+cAprovTemp+" 																	" + ENTER
+	EndIf
+	C_cSql += "  )	AND					                                                        		" + ENTER
+
+
+
+EndIf
+
+C_cSql += "	 	SZO.D_E_L_E_T_ = '' AND " + ENTER
+C_cSql += "		SA1.D_E_L_E_T_ = '' AND " + ENTER
+C_cSql += "		SA3.D_E_L_E_T_ = ''  " + ENTER
+IF DTOC(CDATADE) <> "  /  /  " .AND. DTOC(CDATAATE) <> "  /  /  "
+	C_cSql += "		AND ZO_DATA BETWEEN '"+DTOS(CDATADE)+"' AND '"+DTOS(CDATAATE)+"'  " + ENTER
+END IF
+
+IF CHKFILE("_TOT_FILTRO")
+	DBSELECTAREA("_TOT_FILTRO")
+	DBCLOSEAREA()
+ENDIF
+TCQUERY C_cSql ALIAS "_TOT_FILTRO" NEW
+S_TOT_FILTRO := _TOT_FILTRO->TOT_FILTRO
 
 Return
 
 
 //FILTRANDO DE ACORDO COM OS FILTROS
 Static Function SQL_FILTRO()
-	
+
 	Local cAprovTemp := ""
 
 	cSql := "SELECT	CONVERT(VARCHAR(500),CONVERT(BINARY(500),ZO_YOBSAPR)) AS AAOBS_APR, CONVERT(VARCHAR(500),CONVERT(BINARY(500),ZO_YOBS)) AS AAOBS, SZO.R_E_C_N_O_ AS ARECNO "+ENTER
@@ -1425,7 +1427,7 @@ Static Function SQL_FILTRO()
 
 	cSql += "		PAGAMENTO = CASE	WHEN ZO_FPAGTO = '1' THEN 'Bonificacao' " + ENTER
 	cSql += "							WHEN ZO_FPAGTO = '2' THEN 'Desconto Pedido' " + ENTER
-	cSql += "							WHEN ZO_FPAGTO = '3' THEN 'Pagamento R$' " + ENTER      
+	cSql += "							WHEN ZO_FPAGTO = '3' THEN 'Pagamento R$' " + ENTER
 	cSql += "							WHEN ZO_FPAGTO = '5' THEN 'Outros' " + ENTER
 	cSql += "							WHEN ZO_FPAGTO = '6' THEN 'Desc.Incondicional' " + ENTER
 	cSql += "							ELSE '' END " + ENTER
@@ -1458,7 +1460,7 @@ Static Function SQL_FILTRO()
 		END IF
 	END IF
 
-	IF NRADIO <> 8 
+	IF NRADIO <> 8
 		IF NRADIO = 1
 			cSql += "		AND ZO_STATUS = 'Aguard. Aprov. Dir.' " + ENTER
 		ELSEIF NRADIO = 2
@@ -1477,20 +1479,20 @@ Static Function SQL_FILTRO()
 	END IF
 
 	If (cTipoAprov == '3')
-		
+
 		cSql += " AND (SELECT UGERENT from [dbo].[GET_ZKP] (A1_YTPSEG, ZO_EMP, A1_EST, ZO_REPRE, '', '')) IN  	" + ENTER
 		cSql += " (																							" + ENTER
 		cSql += " '"+RetCodUsr()+"' 																		" + ENTER
-		
+
 		cAprovTemp := AprovTemp()
 		If !(Empty(cAprovTemp))
 			cSql += " ,"+cAprovTemp+" 																	" + ENTER
 		EndIf
 		cSql += "  )						                                                        		" + ENTER
-		
-				
+
+
 	EndIf
-	
+
 	If !Empty(cGetCli)
 		CSQL += "		AND ZO_CLIENTE = '"+cGetCli+"'  " + ENTER
 	EndIf
@@ -1553,7 +1555,7 @@ Static Function SQL_FILTRO()
 		ELSE
 			C_CSQL += "		AND ZO_FPAGTO = '5'  " + ENTER
 		END IF
-	END IF    
+	END IF
 
 	IF NRADIO <> 8
 		IF NRADIO = 1
@@ -1569,29 +1571,29 @@ Static Function SQL_FILTRO()
 		ELSEIF NRADIO = 6
 			C_cSql += "		AND ZO_STATUS = 'Baixa Total'	 " + ENTER
 		ELSEIF NRADIO = 7
-			C_cSql += "		AND ZO_STATUS = 'Baixa Parcial' " + ENTER	
+			C_cSql += "		AND ZO_STATUS = 'Baixa Parcial' " + ENTER
 		END IF
 	ENDIF
 
 	If (cTipoAprov == '3')
-		
+
 		C_cSql += " AND (SELECT UGERENT from [dbo].[GET_ZKP](A1_YTPSEG, ZO_EMP, A1_EST, ZO_REPRE, '', '')) IN  	" + ENTER
 		C_cSql += " (																						" + ENTER
 		C_cSql += " '"+RetCodUsr()+"' 																		" + ENTER
-		
+
 		cAprovTemp := AprovTemp()
 		If !(Empty(cAprovTemp))
 			C_cSql += " ,"+cAprovTemp+" 																	" + ENTER
 		EndIf
 		C_cSql += "  )						                                                        		" + ENTER
-		
-		
+
+
 	EndIf
-	
-	
+
+
 	IF !Empty(cGetCli)
 		C_cSql += "		AND ZO_CLIENTE = '"+cGetCli+"'  " + ENTER
-	ENDIF 
+	ENDIF
 
 	IF !Empty(cGetGrpCli)
 		CSQL += "		AND A1_GRPVEN = '"+cGetGrpCli+"'  " + ENTER
@@ -1615,10 +1617,10 @@ Static Function SQL_FILTRO()
 		DBSELECTAREA("_TOT_FILTRO")
 		DBCLOSEAREA()
 	ENDIF
-	
+
 	conout(cSql)
 	conout(C_cSql)
-	
+
 	TCQUERY C_cSql ALIAS "_TOT_FILTRO" NEW
 	S_TOT_FILTRO := _TOT_FILTRO->TOT_FILTRO
 
@@ -1632,7 +1634,7 @@ STATIC FUNCTION EMAIL_APROVADO()
 	PRIVATE CHTML := ""
 	PRIVATE TOT_PEDCOMPRA := 0
 
-	
+
 	cNClient 	:= (cAliasTrab)->COD_CLI
 	cNLjCli		:= (cAliasTrab)->LOJ_CLI
 	cNClient1	:= POSICIONE("SA1",1,XFILIAL("SA1")+cNClient+cNLjCli,"A1_NOME")
@@ -1723,7 +1725,7 @@ STATIC FUNCTION EMAIL_APROVADO()
 	CHTML += ' </table> '
 	CHTML += ' Esta é uma mensagem automática, favor não responde-la. '
 	CHTML += ' </body> '
-	CHTML += ' </html> '     
+	CHTML += ' </html> '
 
 	DbSelectArea("SA3")
 	DbSetOrder(1)
@@ -1735,9 +1737,9 @@ STATIC FUNCTION EMAIL_APROVADO()
 	cRecebeCC	:= ""
 
 
-	cAssunto	:= "INVESTIMENTO LIBERADO"     
+	cAssunto	:= "INVESTIMENTO LIBERADO"
 
-	U_BIAEnvMail(,cRecebe,cAssunto,CHTML) 
+	U_BIAEnvMail(,cRecebe,cAssunto,CHTML)
 
 return
 
@@ -1812,7 +1814,7 @@ Static Function fGDBaixas()
 		EndIf
 		If SX3->(DbSeek(aFieldsB[nX]))
 			Aadd(aHeaderExB, {AllTrim(X3Titulo()),SX3->X3_CAMPO,SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,SX3->X3_VALID,;
-			SX3->X3_USADO,SX3->X3_TIPO,SX3->X3_F3,SX3->X3_CONTEXT,SX3->X3_CBOX,SX3->X3_RELACAO})
+				SX3->X3_USADO,SX3->X3_TIPO,SX3->X3_F3,SX3->X3_CONTEXT,SX3->X3_CBOX,SX3->X3_RELACAO})
 		Endif
 	Next nX
 
@@ -1998,18 +2000,18 @@ Static Function INF_CALC(sCliente, sLoja)
 	EndIf
 
 	CSQL := "SELECT (CASE WHEN A1_YREDCOM <> '' THEN 'R-'+A1_YREDCOM WHEN A1_YREDCOM = '' AND A1_GRPVEN <> '' THEN 'G-'+A1_GRPVEN ELSE 'C-'+A1_COD END) AS GRUPO "
-	CSQL += "FROM " + RETSQLNAME("SA1") + " WITH(NOLOCK) WHERE A1_FILIAL = '' AND A1_MSBLQL <> 1 AND A1_COD = '" + sCliente + "' AND A1_LOJA = '" + sLoja + "' AND D_E_L_E_T_ = ''"	
+	CSQL += "FROM " + RETSQLNAME("SA1") + " WITH(NOLOCK) WHERE A1_FILIAL = '' AND A1_MSBLQL <> 1 AND A1_COD = '" + sCliente + "' AND A1_LOJA = '" + sLoja + "' AND D_E_L_E_T_ = ''"
 
 	IF CHKFILE("_GRUPO")
 		DBSELECTAREA("_GRUPO")
 		DBCLOSEAREA()
 	ENDIF
 
-	TCQUERY CSQL ALIAS "_GRUPO" NEW 
+	TCQUERY CSQL ALIAS "_GRUPO" NEW
 
 	sGrupo := _GRUPO->GRUPO
 
-	CSQL2 := "SELECT MARCA, GRUPO, RECEITA, INVESTIMENTO AS INVEST, [% INVESTIDO] AS PERC_INV, AINVESTIR FROM VW_BZ_RECEITA_INVEST WHERE GRUPO = '" + sGrupo + "'"	
+	CSQL2 := "SELECT MARCA, GRUPO, RECEITA, INVESTIMENTO AS INVEST, [% INVESTIDO] AS PERC_INV, AINVESTIR FROM VW_BZ_RECEITA_INVEST WHERE GRUPO = '" + sGrupo + "'"
 
 	IF CHKFILE("_INV")
 		DBSELECTAREA("_INV")
@@ -2029,20 +2031,20 @@ Static Function INF_CALC(sCliente, sLoja)
 	sTexto += "(valores referentes aos ultimos 12 meses em Exibitecnica)" + Enter
 
 	cNOBS += sTexto
-Return 
+Return
 
 
 Static Function HistAprov()
-	
+
 	Local cHistAprov := ""
-	
+
 	DbSelectArea("SZO")
 	SZO->(DbSetOrder(4))
-	
-	If SZO->(DbSeek(xFilial("SZO")+(cAliasTrab)->CCODIGO, .T.)) 		
+
+	If SZO->(DbSeek(xFilial("SZO")+(cAliasTrab)->CCODIGO, .T.))
 		cHistAprov := SZO->ZO_HISTAPR
 	EndIf
-	
+
 	DEFINE MSDIALOG oDlgHist FROM 0,0 TO 200, 400 TITLE ":::::: HISTORICO DOS APROVADORES ::::::" PIXEL
 
 	@ 010,06 SAY "Aprovadores "
@@ -2056,71 +2058,71 @@ Return
 
 
 Static Function AtuHistAprov(_cTipo, _cStatus, _cStatusAnt, _cObs)
-	
+
 	Local cMsg		:= ""
 	Default  _cObs 	:= ""
-	
+
 	RecLock("SZO",.F.)
-		cMsg := "[Tipo: "+_cTipo+", Aprovador: "+CUSERNAME+", Data: "+dToc(dDataBase)+", Hora: "+SubStr(Time(), 1, 5)+", Status Anterior: "+_cStatusAnt+", Status Atual: "+_cStatus+", Observação: "+_cObs+"]"+ENTER
-		SZO->ZO_HISTAPR	:= SZO->ZO_HISTAPR+cMsg
-	SZO->(MsUnLock()) 
+	cMsg := "[Tipo: "+_cTipo+", Aprovador: "+CUSERNAME+", Data: "+dToc(dDataBase)+", Hora: "+SubStr(Time(), 1, 5)+", Status Anterior: "+_cStatusAnt+", Status Atual: "+_cStatus+", Observação: "+_cObs+"]"+ENTER
+	SZO->ZO_HISTAPR	:= SZO->ZO_HISTAPR+cMsg
+	SZO->(MsUnLock())
 
 Return
 
 Static Function AprovSuper()
-	
+
 	Local cObsAprov 	:= ""
 	Local _cProxStatus	:= ""
 	Local _cStatusAnt	:= ""
 	Local _cStatus		:= ""
 	Local _cAcao		:= ""
-	
+
 	DEFINE MSDIALOG oDlgASup FROM 0,0 TO 200, 400 TITLE ":::::: APROVAÇÃO DO SUPERINTENDENTE ::::::" PIXEL
 
 	@ 010,06 SAY "Observação "
 	@ 018,06 GET cObsAprov    SIZE 190,60 MEMO WHEN .T.
 
-	@ 082, 006 BUTTON "REPROVAR" SIZE 70,14 OF oDlgASup PIXEL ACTION {|| _cStatus := 'Reprovado', CLOSE(oDlgASup)} 
-	@ 082, 125 BUTTON "APROVAR" SIZE 70,14 OF oDlgASup PIXEL ACTION {|| _cStatus := 'Aprovado', CLOSE(oDlgASup)} 
-	
+	@ 082, 006 BUTTON "REPROVAR" SIZE 70,14 OF oDlgASup PIXEL ACTION {|| _cStatus := 'Reprovado', CLOSE(oDlgASup)}
+	@ 082, 125 BUTTON "APROVAR" SIZE 70,14 OF oDlgASup PIXEL ACTION {|| _cStatus := 'Aprovado', CLOSE(oDlgASup)}
+
 	ACTIVATE MSDIALOG oDlgASup CENTERED ON INIT Eval( {|| } )
-	
+
 	If (_cStatus == 'Reprovado' .Or. _cStatus == 'Aprovado')
-	
+
 		DbSelectArea("SZO")
 		SZO->(DbSetOrder(4))
-		
-		If SZO->(DbSeek(xFilial("SZO")+(cAliasTrab)->CCODIGO)) 		
-			
+
+		If SZO->(DbSeek(xFilial("SZO")+(cAliasTrab)->CCODIGO))
+
 			If (AllTrim(_cStatus) <> 'Reprovado')
 				_cProxStatus := ProxSequeAprov(SZO->ZO_STATUS)
 				If (!Empty(_cProxStatus))
 					_cStatus := _cProxStatus
 				EndIf
 			EndIf
-			
+
 			_cStatusAnt := SZO->ZO_STATUS
-			
+
 			RecLock("SZO",.F.)
-				SZO->ZO_STATUS	:= _cStatus
-				SZO->ZO_USUASUP	:= ALLTRIM(cNomeUsuario)
-				SZO->ZO_DATASUP	:= dDataBase
-				SZO->ZO_HORASUP	:= TIME()
-				SZO->ZO_OBSSUP	:= cObsAprov
-			SZO->(MsUnLock()) 
-			
+			SZO->ZO_STATUS	:= _cStatus
+			SZO->ZO_USUASUP	:= ALLTRIM(cNomeUsuario)
+			SZO->ZO_DATASUP	:= dDataBase
+			SZO->ZO_HORASUP	:= TIME()
+			SZO->ZO_OBSSUP	:= cObsAprov
+			SZO->(MsUnLock())
+
 			AtuHistAprov('S',_cStatus, _cStatusAnt, cObsAprov)
-			
+
 			If AllTrim(_cStatus) == 'Aprovado'
 				EMAIL_APROVADO()
 			EndIf
-			
+
 		EndIf
-		
+
 		CLOSE(oDlg1)
 		SQL_FILTRO()
 	EndIf
-	
+
 Return
 
 
@@ -2128,48 +2130,48 @@ Static Function AprovDir(_cStatus)
 
 	Local _cProxStatus	:= ""
 	Local _cStatusAnt	:= ""
-	
+
 	DbSelectArea("SZO")
 	SZO->(DbSetOrder(4))
-	If SZO->(DbSeek(xFilial("SZO")+(cAliasTrab)->CCODIGO, .T.)) 	
-		
+	If SZO->(DbSeek(xFilial("SZO")+(cAliasTrab)->CCODIGO, .T.))
+
 		If (AllTrim(_cStatus) <> 'Reprovado')
 			_cProxStatus := ProxSequeAprov(SZO->ZO_STATUS)
 			If (!Empty(_cProxStatus))
 				_cStatus := _cProxStatus
 			EndIf
 		EndIf
-		
+
 		_cStatusAnt := SZO->ZO_STATUS
-		
+
 		RecLock("SZO",.F.)
-			SZO->ZO_STATUS	:= _cStatus
-			SZO->ZO_USUDIR	:= CUSERNAME
-			SZO->ZO_DATADIR	:= dDataBase
-			SZO->ZO_HORADIR	:= SubStr(Time(), 1, 5)
-		SZO->(MsUnLock()) 
-		
+		SZO->ZO_STATUS	:= _cStatus
+		SZO->ZO_USUDIR	:= CUSERNAME
+		SZO->ZO_DATADIR	:= dDataBase
+		SZO->ZO_HORADIR	:= SubStr(Time(), 1, 5)
+		SZO->(MsUnLock())
+
 		AtuHistAprov('D', _cStatus, _cStatusAnt)
-		
+
 		If (AllTrim(_cStatus) == 'Aprovado')
 			EMAIL_APROVADO()
 		EndIf
 
 	EndIf
-	
+
 	CLOSE(oDlg1)
 	SQL_FILTRO()
-	
+
 Return
 
 
 Static Function TipoAprov()
-	
+
 	Local nValorSI	:= cNVALOR
 	Local nLimite1	:= GetNewPar("MV_YSIFAP1", 6999.99)
 	Local nLimite2	:= GetNewPar("MV_YSIFAP2", 14999.99)
 	Local cTipo		:= ""
-	
+
 	If (nValorSI <= nLimite1)
 		cTipo := "3"
 	ElseIf ((nValorSI > nLimite1 .And. nValorSI <= nLimite2))
@@ -2177,168 +2179,168 @@ Static Function TipoAprov()
 	Else
 		cTipo := "1"
 	EndIf
-	
+
 Return cTipo
 
 
 Static Function ProxSequeAprov(_cAprovAtual)
-	
+
 	Local _nValorSI	:= 0
 	Local _nLimite1	:= GetNewPar("MV_YSIFAP1", 6999.99)
 	Local _nLimite2	:= GetNewPar("MV_YSIFAP2", 14999.99)
 	Local _cStatus	:= ""
-	
+
 	_nValorSI	:= STRTRAN((cAliasTrab)->VALOR, ",", "*")
 	_nValorSI	:= STRTRAN(_nValorSI, ".", "")
 	_nValorSI	:= STRTRAN(_nValorSI, "*", ".")
 	_nValorSI 	:= VAL(_nValorSI)
-	
+
 	If (_nValorSI <= _nLimite1 .And. AllTrim(_cAprovAtual) == 'Aguard. Aprov. Ger.')
 		_cStatus := ""
 	ElseIf ((_nValorSI > _nLimite1 .And. _nValorSI <= _nLimite2))
 		_cStatus := ""
 		If (AllTrim(_cAprovAtual) == 'Aguard. Aprov. Ger.')
 			_cStatus := 'Aguard. Aprov. Sup.'
-		EndIf	
+		EndIf
 	ElseIf (_nValorSI > _nLimite2)
 		_cStatus := ""
 		If (AllTrim(_cAprovAtual) == 'Aguard. Aprov. Ger.')
 			_cStatus := 'Aguard. Aprov. Sup.'
 		ElseIf (AllTrim(_cAprovAtual) == 'Aguard. Aprov. Sup.')
 			_cStatus := 'Aguard. Aprov. Dir.'
-		EndIf	
+		EndIf
 	EndIf
-		
+
 Return _cStatus
 
 
 Static Function UserAprov()
-	
+
 	Local cQuery	:= ""
 	Local aArea		:= GetArea()
 	Local cAliasTmp	:= GetNextAlias()
 	Local cCodUser	:= ""
-	Local cNomeUser	:= ""	
-		
+	Local cNomeUser	:= ""
+
 	DbSelectArea("SZO")
 	SZO->(DbSetOrder(4))
 
 	If (SZO->(DbSeek(xFilial('SZO')+(cAliasTrab)->CCODIGO)))
-		
+
 		oGerenteAtendente	:= TGerenteAtendente():New()
 		oResult 			:= oGerenteAtendente:GetCliente(SZO->ZO_EMP, SZO->ZO_CLIENTE, SZO->ZO_LOJA, SZO->ZO_REPRE)
-		
+
 		cQuery += "SELECT TOP 1 A3_CODUSR, A3_NREDUZ													"
 		cQuery += "	FROM "+ RetSqlName("SA3")+" SA3		                                            	"
 		cQuery += "	WHERE	SA3.A3_COD   = '"+oResult:cGerente+"'	                                	"
 		cQuery += "	AND SA3.D_E_L_E_T_ = ''                                                         	"
-		
+
 		TcQuery cQuery New Alias (cAliasTmp)
-		
-		If !(cAliasTmp)->(Eof()) 
+
+		If !(cAliasTmp)->(Eof())
 			cCodUser	:= (cAliasTmp)->A3_CODUSR
 			cNomeUser	:= (cAliasTmp)->A3_NREDUZ
 		EndIf
-		
+
 		(cAliasTmp)->(DbCloseArea())
-		
+
 	EndIf
-	
+
 	RestArea(aArea)
-				
+
 Return {cCodUser, cNomeUser}
 
 Static Function UserGeren()
-	
+
 	Local cQuery	:= ""
 	Local aArea		:= GetArea()
 	Local cAliasTmp	:= GetNextAlias()
-	Local lRet		:= .F.	
-	
+	Local lRet		:= .F.
+
 	cQuery += "SELECT TOP 1 A3_CODUSR																"
 	cQuery += "	FROM ZKP010 ZKP		     			                                            	"
 	cQuery += "	INNER JOIN "+ RetSqlName("SA3")+" SA3 ON ZKP.ZKP_GERENT = SA3.A3_COD	        	"
 	cQuery += "	WHERE A3_CODUSR   = '"+RetCodUsr()+"'	                	                		"
 	cQuery += "	AND ZKP.D_E_L_E_T_ = ''								                            	"
 	cQuery += "	AND SA3.D_E_L_E_T_ = ''                                                         	"
-	
+
 	TcQuery cQuery New Alias (cAliasTmp)
-	
-	If !(cAliasTmp)->(Eof()) 
+
+	If !(cAliasTmp)->(Eof())
 		lRet	:= .T.
 	EndIf
-	
+
 	(cAliasTmp)->(DbCloseArea())
-	
-	If (!lRet)		
+
+	If (!lRet)
 		If !(Empty(AprovTemp()))
 			lRet	:= .T.
 		EndIf
 	EndIf
-			
+
 	RestArea(aArea)
-				
+
 Return lRet
 
 Static Function AprovTemp()
-	
+
 	Local cQuery	:= ""
 	Local cAliasTmp	:= GetNextAlias()
-	Local cUserTmp	:= ""	
-	
+	Local cUserTmp	:= ""
+
 	cQuery += "SELECT  ZKQ_APROV FROM "+ RetSqlName("ZKQ")+"															"
 	cQuery += "			WHERE                                                                                           	"
 	cQuery += "			ZKQ_STATUS		= 1		AND                                                                     	"
 	cQuery += "			D_E_L_E_T_		= ''	AND                                                                     	"
 	cQuery += "			CONVERT(date, GETDATE()) BETWEEN CONVERT(date, ZKQ_DTINI) AND CONVERT(date, ZKQ_DTFIM)          	"
 	cQuery += "			AND ZKQ_APROVT = '"+RetCodUsr()+"'	                                                           		"
-	
+
 	TcQuery cQuery New Alias (cAliasTmp)
-	
-	While !(cAliasTmp)->(Eof()) 
-		
+
+	While !(cAliasTmp)->(Eof())
+
 		If !(Empty((cAliasTmp)->ZKQ_APROV))
-			
+
 			If (!Empty(cUserTmp))
 				cUserTmp += ","
 			EndIf
-			
+
 			cUserTmp += "'"+(cAliasTmp)->ZKQ_APROV+"'"
-			
+
 		EndIf
-		
+
 		(cAliasTmp)->(dbSkip())
-		
+
 	EndDo
-	
+
 	(cAliasTmp)->(DbCloseArea())
-				
+
 Return cUserTmp
 
 Static Function TempValOper(_cFuncao)
-	
+
 	Local aArea			:= GetArea()
 	Local cAcesso		:= ""
 	Local lRet			:= .F.
 	Local cAprovTemp	:= AprovTemp()
-	Local nI			:= 0	
+	Local nI			:= 0
 	Local aUsuario		:= StrTokArr(cAprovTemp , ",")
-	
+
 	DbSelectArea('ZZ0')
 	ZZ0->(DbSetOrder(1))
-	
+
 	If (ZZ0->(DbSeek(XFilial('ZZ0')+_cFuncao)))
 		cAcesso := Alltrim(ZZ0->ZZ0_ACESSO)
-		
+
 		For nI:=1 To Len(aUsuario)
 			If AllTrim(StrTran( aUsuario[nI], "'", "" )) $ &(cAcesso)[2]
 				lRet := .T.
 				Exit
 			EndIf
 		Next nI
-			
+
 	EndIf
-	
+
 	RestArea(aArea)
-	
+
 Return lRet

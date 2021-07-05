@@ -372,8 +372,16 @@ User Function AO_VAL_E(_NUM_SI)
 		EndIf
 
 		If (!Empty(M->C5_YEMPPED))
-			_cEmp		:= AllTrim(M->C5_YEMPPED)
-			_cTabSZO 	:= "SZO"+_cEmp+"0"		
+
+			//habilitando empresa 13 para utilizar AIs criadas na Bianco. Ticket 33082
+			If(Alltrim(M->C5_YEMPPED) == "13")
+				_cEmp		:= "01"
+				_cTabSZO 	:= "SZO010"	
+
+			Else
+				_cEmp		:= AllTrim(M->C5_YEMPPED)
+				_cTabSZO 	:= "SZO"+_cEmp+"0"		
+			EndIf
 		EndIf			
 	EndIf
 
@@ -748,6 +756,11 @@ User Function AIEXCBX(_cPedido, _cLinha, _CNUMSI, _cCliente, _cEmpPed)
 
 	Local _cEmpOri := AllTrim(cEmpAnt)+AllTrim(cFilAnt)
 	Local _cQTmp
+
+	//Ticket 33082
+	If(Alltrim(_cEmpPed) == '13')
+		_cEmpPed := '01'
+	EndIF
 
 	//Verificar se existe baixa de AI do pedido e excluir a baixa
 	__cDoc  := 'PED'+_cPedido

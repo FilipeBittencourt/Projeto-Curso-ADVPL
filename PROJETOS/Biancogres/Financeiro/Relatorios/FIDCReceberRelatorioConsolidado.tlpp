@@ -26,7 +26,7 @@ procedure u_FIDCRelatorioConsolidado()
 	local aArea				as array
 	local aParamRet			as array
 
-	local bAction			as block
+	local bAction			as codeblock
 
 	local lParamBox			as logical
 
@@ -63,8 +63,8 @@ static procedure FIDCRelatorioConsolidadoQuery(otMultProcess as object,aParamRet
     local aBCOIsFIDC    as array
     local aFWTTables    as array
 
-    local bProcess      as block
-    local bMsAguarde    as block
+    local bProcess      as codeblock
+    local bMsAguarde    as codeblock
 
     local cTmpAlias     as character
 
@@ -190,7 +190,7 @@ static function FIDCConsolidadoParameters(aParamRet as array) as logical
 	lParamBox:=FIDC():getRecParamCon(@aParamRet)
 	return(lParamBox)
 
-static function QueryView(aParamRet as character,aBCOIsFIDC as array,aFWTTables as array) as character
+static function QueryView(aParamRet as array,aBCOIsFIDC as array,aFWTTables as array) as character
     local cTmpAlias as character
     cTmpAlias:=FIDC():getRecQueryCon(@aParamRet,@aBCOIsFIDC,@aFWTTables)
     return(cTmpAlias)

@@ -255,13 +255,13 @@ Local cRet := ""
 	cRet += '          <tr >
 	cRet += '             <td >
 	cRet += '                <input style="zoom: 1.5; vertical-align: middle;" type="checkbox" id="responsavel" name="responsavel" value="Bike">
-	cRet += '                <label for="responsavel">Aprovador, dar continuidade ao assentamento do(s) produto(s)</label>
+	cRet += '                <label for="responsavel">Aprovado dar continuidade ao assentamento do(s) produto(s)</label>
 	cRet += '             </td>
 	cRet += '          </tr>
 	cRet += '          <tr >
 	cRet += '             <td >
 	cRet += '                <input style="zoom: 1.5; vertical-align: middle;" type="checkbox" id="responsavel" name="responsavel" value="Bike">
-	cRet += '                <label for="responsavel">Suspender o assentamento, entrar em contato com o SAC</label>
+	cRet += '                <label for="responsavel">Suspender o assentamento e entrar em contato com o SAC</label>
 	cRet += '             </td>
 	cRet += '          </tr>
 	cRet += '              <tr>
@@ -274,7 +274,7 @@ Local cRet := ""
 	cRet += '       </table>
 	cRet += '    <br/>
 	cRet += '    <span style="font-family: Arial, Helvetica, sans-serif;">
-	cRet += '          Confirmo a visita do representante comercial da Biancogres que fez a inspeção neste local com o objetivo de atestar a qualidade do(s) produto(s) após o assentamento e rejuntamento, conforme relação acima.<br><br>	
+	cRet += '          Confirmo a visita do representante comercial da Biancogres, que fez a inspeção dos materiais relacionados acima.<br><br>	
 	cRet += '    </span>
 	
 	cRet += '    <br/>

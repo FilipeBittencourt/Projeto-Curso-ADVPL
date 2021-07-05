@@ -367,8 +367,10 @@ Method BankReceipt(oObj) Class TAFBaixaPagar
 	SA6->(DbSetOrder(1))
 	SA6->(MsSeek(xFilial("SA6") + oObj:cBanco + oObj:cAgencia + oObj:cConta))	
 	
+	// Posiciona no cliente da baixa para o identificacao no lancamento contabil
 	SA2->(dbSetOrder(1))
-	SA6->(MsSeek(xFilial("SA2")+SE2->E2_FORNECE+SE2->E2_LOJA,.F.))
+	SA2->(MsSeek(xFilial("SA2")+SE2->E2_FORNECE+SE2->E2_LOJA,.F.))
+	
 	nSA2RecNo:=SA2->(RecNo())
 
 	aAdd(aTit, {"E2_PREFIXO", SE2->E2_PREFIXO, Nil})

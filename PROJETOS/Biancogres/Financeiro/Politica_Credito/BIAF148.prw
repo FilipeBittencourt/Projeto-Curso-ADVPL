@@ -184,6 +184,14 @@ Local lRet := .T.
 		MsgStop("Atenção, já existe uma solcititação de crédito em processamento para esse cliente ou grupo de clientes.")
 	
 	EndIf
+
+	If U_fValFunc(Alltrim(M->ZM0_CNPJ))
+
+		lRet := .F.
+	
+		MsgStop("Atenção, não é permitido incluir consultas para CPFs de Funcionários.")
+
+	EndIf
 	
 Return(lRet)
 

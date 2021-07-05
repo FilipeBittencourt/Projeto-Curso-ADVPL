@@ -15,16 +15,15 @@
 
 User Function BIA861()
 Local nSeq := "000000"
-Local aCodReg := U_fRegCobr(Alltrim(M->A1_EST), Alltrim(M->A1_CGC), Alltrim(M->A1_GRPVEN), Alltrim(M->A1_COD))
 
 If !Empty(Alltrim(M->A1_CGC)) .Or. M->A1_TIPO == "X"
     
-    M->A1_YCDGREG := aCodReg[2]
+    M->A1_YCDGREG := U_fRegCobr(Alltrim(M->A1_EST), Alltrim(M->A1_CGC), Alltrim(M->A1_GRPVEN), Alltrim(M->A1_COD))
     
     If cEmpAnt == "02"
     	nSeq := M->A1_COD
     Else 
-	    If aCodReg[1] == 11 //é funcionário?
+	    If U_fValFunc(Alltrim(M->A1_CGC)) //é funcionário?
 			nSeq := GetSxENum("SA1","A1_COD","SA1_FUN")
 		Else
 			nSeq := GetSxENum("SA1","A1_COD","SA1_CLI")

@@ -268,7 +268,9 @@ Static Function Prc679EX(oProcess)
 	Local msVerCon
 	Local msQryPrc
 	Local msCampoQ
-	Local lRet	:= .T.
+	Local lRet	   := .T.
+
+	Local xSubTrib := SuperGetMv( "MV_SUBTRIB", , "", ) 
 
 	oProcess:SetRegua1(1)
 	oProcess:SetRegua2(1000)             
@@ -409,6 +411,7 @@ Static Function Prc679EX(oProcess)
 				msQryPrc = Replace(msQryPrc, "@FILANT"  , cFilAnt)
 				msQryPrc = Replace(msQryPrc, "@PERIODO" , Substr(dtos(dDataFin), 5, 2))
 				msQryPrc = Replace(msQryPrc, "@YRFDRE"  , xYRFDre)
+				msQryPrc = Replace(msQryPrc, "@SUBTRIB" , xSubTrib)
 
 				QPIndex := CriaTrab(Nil,.f.)
 

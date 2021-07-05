@@ -30,23 +30,27 @@ Local oObj := Nil
 		
 	EndIf
 
-	oObj := TPoliticaCredito():New()
-	
-	oObj:dData := dData
-	oObj:cCliente := cCliente
-	oObj:cLoja := cLoja
-	oObj:cGrpVen := cGrpVen
-	oObj:cCnpj := cCnpj
-	oObj:nLimCreSol := nLimCreSol
-	oObj:nVlrObr := nVlrObr
-	oObj:cOrigem := cOrigem
-		
-	oObj:Process()
-	
-	cRet := oObj:cCodPro
+	If !U_fValFunc(Alltrim(cCnpj))
 
-	FreeObj(oObj)
+		oObj := TPoliticaCredito():New()
+		
+		oObj:dData := dData
+		oObj:cCliente := cCliente
+		oObj:cLoja := cLoja
+		oObj:cGrpVen := cGrpVen
+		oObj:cCnpj := cCnpj
+		oObj:nLimCreSol := nLimCreSol
+		oObj:nVlrObr := nVlrObr
+		oObj:cOrigem := cOrigem
 			
+		oObj:Process()
+		
+		cRet := oObj:cCodPro
+
+		FreeObj(oObj)
+	
+	EndIf 
+
 	If lSchedule	
 		
 		RpcClearEnv()

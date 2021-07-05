@@ -25,6 +25,7 @@ User Function BHC01PRC()
 	Local _cTipo	
 	Local _cMatRes	    := ""	
 	Local msCtlRot      := IsInCallStack("U_BHC0002")    
+	Local msBfg129      := IsInCallStack("U_BIAFG129")
 	Local msMatDe       := "        "    
 	Local msMatAte      := "ZZZZZZZZ"    
 
@@ -39,11 +40,23 @@ User Function BHC01PRC()
 
 		Case msCtlRot
 		_dDataRef	:=	mscGet1
-		msMatDe       := _cMatricula    
-		msMatAte      := _cMatricula   
+		msMatDe     := _cMatricula    
+		msMatAte    := _cMatricula   
+
+		Case msBfg129		
+		If msTpProces == "E"
+			_dDataRef	:= msDatRef
+			msMatDe     := msMatricG    
+			msMatAte    := msMatricG
+		ElseIf msTpProces == "G"
+			_dDataRef	:=	cGet1
+			msMatDe     := "        "    
+			msMatAte    := "ZZZZZZZZ"
+
+		EndIf   
 
 		Case _cTipo == "1"
-		_dDataRef	:=	LastDate(Date())
+		_dDataRef	:= LastDate(Date())
 		If LastDate(Date()) - Date() > 10 
 			Return
 		EndIf
@@ -181,7 +194,7 @@ Static Function fGetCod()
 		FROM %TABLE:ZLC% ZLC
 		WHERE %NotDel%
 	EndSql
-	
+
 	_cCod	:=	SOMA1((_cAlias)->COD) 
 
 	RestArea(_aArea)

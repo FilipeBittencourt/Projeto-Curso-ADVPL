@@ -672,7 +672,9 @@ Local oWFEng := Nil
 	EndIf
 	
 	cAssunto := cTitulo   
-	cAnexos	:= "\P10\relato\PV\pv_"+nPed_Imp+".TXT"
+	
+	//Ticket 33119 - olicitação do Cludeir para remover o anexo do email.
+	cAnexos	:= "" //"\P10\relato\PV\pv_"+nPed_Imp+".TXT"
 	
 	oRecAnt := TRecebimentoAntecipado():New()
 	

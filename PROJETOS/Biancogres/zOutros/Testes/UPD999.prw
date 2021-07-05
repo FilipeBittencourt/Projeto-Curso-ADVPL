@@ -17,16 +17,17 @@
 	"    border-bottom-width: 3px }"
 
 //--------------------------------------------------------------------
-/*/{Protheus.doc} 000009
+/*/{Protheus.doc} 
+
 Função de update de dicionários para compatibilização
 
 @author TOTVS Protheus
-@since  07/06/21
+@since  05/07/21
 @obs    Gerado por EXPORDIC - V.6.3.0.1 EFS / Upd. V.5.0.0 EFS
 @version 1.0
 /*/
 //--------------------------------------------------------------------
-User Function UPD999( cEmpAmb, cFilAmb )
+User Function upd999( cEmpAmb, cFilAmb )
 
 	Local   aSay      := {}
 	Local   aButton   := {}
@@ -115,9 +116,9 @@ User Function UPD999( cEmpAmb, cFilAmb )
 
 				If lAuto
 					If lOk
-						MsgStop( "Atualização Realizada.", "000009" )
+						MsgStop( "Atualização Realizada.", "upd999" )
 					Else
-						MsgStop( "Atualização não Realizada.", "000009" )
+						MsgStop( "Atualização não Realizada.", "upd999" )
 					EndIf
 					dbCloseAll()
 				Else
@@ -148,7 +149,7 @@ Return NIL
 Função de processamento da gravação dos arquivos
 
 @author TOTVS Protheus
-@since  07/06/21
+@since  05/07/21
 @obs    Gerado por EXPORDIC - V.6.3.0.1 EFS / Upd. V.5.0.0 EFS
 @version 1.0
 /*/
@@ -254,6 +255,12 @@ Static Function FSTProc( lEnd, aMarcadas, lAuto )
 				//------------------------------------
 				FSAtuSX3()
 
+				//------------------------------------
+				// Atualiza o dicionário SIX
+				//------------------------------------
+				oProcess:IncRegua1( "Dicionário de índices" + " - " + SM0->M0_CODIGO + " " + SM0->M0_NOME + " ..." )
+				FSAtuSIX()
+
 				oProcess:IncRegua1( "Dicionário de dados" + " - " + SM0->M0_CODIGO + " " + SM0->M0_NOME + " ..." )
 				oProcess:IncRegua2( "Atualizando campos/índices" )
 
@@ -291,6 +298,18 @@ Static Function FSTProc( lEnd, aMarcadas, lAuto )
 					EndIf
 
 				Next nX
+
+				//------------------------------------
+				// Atualiza o dicionário SXB
+				//------------------------------------
+				oProcess:IncRegua1( "Dicionário de consultas padrão" + " - " + SM0->M0_CODIGO + " " + SM0->M0_NOME + " ..." )
+				FSAtuSXB()
+
+				//------------------------------------
+				// Atualiza o dicionário SX5
+				//------------------------------------
+				oProcess:IncRegua1( "Dicionário de tabelas sistema" + " - " + SM0->M0_CODIGO + " " + SM0->M0_NOME + " ..." )
+				FSAtuSX5()
 
 				//------------------------------------
 				// Atualiza os helps
@@ -342,7 +361,7 @@ Return lRet
 Função de processamento da gravação do SX3 - Campos
 
 @author TOTVS Protheus
-@since  07/06/21
+@since  05/07/21
 @obs    Gerado por EXPORDIC - V.6.3.0.1 EFS / Upd. V.5.0.0 EFS
 @version 1.0
 /*/
@@ -385,21 +404,21 @@ Static Function FSAtuSX3()
 //
 
 //
-// Campos Tabela ZDL
+// Campos Tabela SZO
 //
 	aAdd( aSX3, { ;
-		{ 'ZDL'																	, .T. }, ; //X3_ARQUIVO
-	{ '08'																	, .T. }, ; //X3_ORDEM
-	{ 'ZDL_TPDASH'															, .T. }, ; //X3_CAMPO
+		{ 'SZO'																	, .T. }, ; //X3_ARQUIVO
+	{ '34'																	, .T. }, ; //X3_ORDEM
+	{ 'ZO_YTPACOR'															, .T. }, ; //X3_CAMPO
 	{ 'C'																	, .T. }, ; //X3_TIPO
 	{ 2																		, .T. }, ; //X3_TAMANHO
 	{ 0																		, .T. }, ; //X3_DECIMAL
-	{ 'Tipo de Dash'														, .T. }, ; //X3_TITULO
-	{ 'Tipo de Dash'														, .T. }, ; //X3_TITSPA
-	{ 'Tipo de Dash'														, .T. }, ; //X3_TITENG
-	{ 'Tipo de Dash'														, .T. }, ; //X3_DESCRIC
-	{ 'Tipo de Dash'														, .T. }, ; //X3_DESCSPA
-	{ 'Tipo de Dash'														, .T. }, ; //X3_DESCENG
+	{ 'Tipo Acordo'															, .T. }, ; //X3_TITULO
+	{ 'Tipo Acordo'															, .T. }, ; //X3_TITSPA
+	{ 'Tipo Acordo'															, .T. }, ; //X3_TITENG
+	{ 'Tipo Acordo'															, .T. }, ; //X3_DESCRIC
+	{ 'Tipo Acordo'															, .T. }, ; //X3_DESCSPA
+	{ 'Tipo Acordo'															, .T. }, ; //X3_DESCENG
 	{ '@!'																	, .T. }, ; //X3_PICTURE
 	{ ''																	, .T. }, ; //X3_VALID
 	{ Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
@@ -417,9 +436,9 @@ Static Function FSAtuSX3()
 	{ 'R'																	, .T. }, ; //X3_CONTEXT
 	{ ''																	, .T. }, ; //X3_OBRIGAT
 	{ ''																	, .T. }, ; //X3_VLDUSER
-	{ '01=Logistica;02=Vendas'												, .T. }, ; //X3_CBOX
-	{ '01=Logistica;02=Vendas'												, .T. }, ; //X3_CBOXSPA
-	{ '01=Logistica;02=Vendas'												, .T. }, ; //X3_CBOXENG
+	{ ''																	, .T. }, ; //X3_CBOX
+	{ ''																	, .T. }, ; //X3_CBOXSPA
+	{ ''																	, .T. }, ; //X3_CBOXENG
 	{ ''																	, .T. }, ; //X3_PICTVAR
 	{ ''																	, .T. }, ; //X3_WHEN
 	{ ''																	, .T. }, ; //X3_INIBRW
@@ -572,11 +591,401 @@ Return NIL
 
 
 //--------------------------------------------------------------------
+/*/{Protheus.doc} FSAtuSIX
+Função de processamento da gravação do SIX - Indices
+
+@author TOTVS Protheus
+@since  05/07/21
+@obs    Gerado por EXPORDIC - V.6.3.0.1 EFS / Upd. V.5.0.0 EFS
+@version 1.0
+/*/
+//--------------------------------------------------------------------
+Static Function FSAtuSIX()
+	Local aEstrut   := {}
+	Local aSIX      := {}
+	Local lAlt      := .F.
+	Local lDelInd   := .F.
+	Local nI        := 0
+	Local nJ        := 0
+
+	AutoGrLog( "Ínicio da Atualização" + " SIX" + CRLF )
+
+	aEstrut := { "INDICE" , "ORDEM" , "CHAVE", "DESCRICAO", "DESCSPA"  , ;
+		"DESCENG", "PROPRI", "F3"   , "NICKNAME" , "SHOWPESQ" }
+
+//
+// Tabela SZO
+//
+	aAdd( aSIX, { ;
+		'SZO'																	, ; //INDICE
+	'1'																		, ; //ORDEM
+	'ZO_FILIAL+ZO_CLIENTE+ZO_REPRE'											, ; //CHAVE
+	'Cod.Cliente+Cod. Repres.'												, ; //DESCRICAO
+	'Cod.Cliente+Cod. Repres.'												, ; //DESCSPA
+	'Cod.Cliente+Cod. Repres.'												, ; //DESCENG
+	'U'																		, ; //PROPRI
+	''																		, ; //F3
+	''																		, ; //NICKNAME
+	''																		} ) //SHOWPESQ
+
+	aAdd( aSIX, { ;
+		'SZO'																	, ; //INDICE
+	'2'																		, ; //ORDEM
+	'ZO_FILIAL+ZO_REPRE+ZO_CLIENTE'											, ; //CHAVE
+	'Cod. Repres.+Cod.Cliente'												, ; //DESCRICAO
+	'Cod. Repres.+Cod.Cliente'												, ; //DESCSPA
+	'Cod. Repres.+Cod.Cliente'												, ; //DESCENG
+	'U'																		, ; //PROPRI
+	''																		, ; //F3
+	''																		, ; //NICKNAME
+	''																		} ) //SHOWPESQ
+
+	aAdd( aSIX, { ;
+		'SZO'																	, ; //INDICE
+	'3'																		, ; //ORDEM
+	'ZO_FILIAL+ZO_SERIE+DTOS(ZO_DATA)+ZO_CLIENTE'							, ; //CHAVE
+	'Serie+Data+Cod.Cliente'												, ; //DESCRICAO
+	'Serie+Data+Cod.Cliente'												, ; //DESCSPA
+	'Serie+Data+Cod.Cliente'												, ; //DESCENG
+	'U'																		, ; //PROPRI
+	''																		, ; //F3
+	''																		, ; //NICKNAME
+	'S'																		} ) //SHOWPESQ
+
+	aAdd( aSIX, { ;
+		'SZO'																	, ; //INDICE
+	'4'																		, ; //ORDEM
+	'ZO_FILIAL+ZO_YCOD'														, ; //CHAVE
+	'Codigo'																, ; //DESCRICAO
+	'Codigo'																, ; //DESCSPA
+	'Codigo'																, ; //DESCENG
+	'U'																		, ; //PROPRI
+	''																		, ; //F3
+	''																		, ; //NICKNAME
+	'S'																		} ) //SHOWPESQ
+
+	aAdd( aSIX, { ;
+		'SZO'																	, ; //INDICE
+	'5'																		, ; //ORDEM
+	'ZO_FILIAL+ZO_SI'														, ; //CHAVE
+	'Sol. Invest'															, ; //DESCRICAO
+	'Sol. Invest'															, ; //DESCSPA
+	'Sol. Invest'															, ; //DESCENG
+	'U'																		, ; //PROPRI
+	''																		, ; //F3
+	''																		, ; //NICKNAME
+	'S'																		} ) //SHOWPESQ
+
+//
+// Atualizando dicionário
+//
+	oProcess:SetRegua2( Len( aSIX ) )
+
+	dbSelectArea( "SIX" )
+	SIX->( dbSetOrder( 1 ) )
+
+	For nI := 1 To Len( aSIX )
+
+		lAlt    := .F.
+		lDelInd := .F.
+
+		If !SIX->( dbSeek( aSIX[nI][1] + aSIX[nI][2] ) )
+			AutoGrLog( "Índice criado " + aSIX[nI][1] + "/" + aSIX[nI][2] + " - " + aSIX[nI][3] )
+		Else
+			lAlt := .T.
+			aAdd( aArqUpd, aSIX[nI][1] )
+			If !StrTran( Upper( AllTrim( CHAVE )       ), " ", "" ) == ;
+					StrTran( Upper( AllTrim( aSIX[nI][3] ) ), " ", "" )
+				AutoGrLog( "Chave do índice alterado " + aSIX[nI][1] + "/" + aSIX[nI][2] + " - " + aSIX[nI][3] )
+				lDelInd := .T. // Se for alteração precisa apagar o indice do banco
+			EndIf
+		EndIf
+
+		RecLock( "SIX", !lAlt )
+		For nJ := 1 To Len( aSIX[nI] )
+			If FieldPos( aEstrut[nJ] ) > 0
+				FieldPut( FieldPos( aEstrut[nJ] ), aSIX[nI][nJ] )
+			EndIf
+		Next nJ
+		MsUnLock()
+
+		dbCommit()
+
+		If lDelInd
+			TcInternal( 60, RetSqlName( aSIX[nI][1] ) + "|" + RetSqlName( aSIX[nI][1] ) + aSIX[nI][2] )
+		EndIf
+
+		oProcess:IncRegua2( "Atualizando índices..." )
+
+	Next nI
+
+	AutoGrLog( CRLF + "Final da Atualização" + " SIX" + CRLF + Replicate( "-", 128 ) + CRLF )
+
+Return NIL
+
+
+//--------------------------------------------------------------------
+/*/{Protheus.doc} FSAtuSXB
+Função de processamento da gravação do SXB - Consultas Padrao
+
+@author TOTVS Protheus
+@since  05/07/21
+@obs    Gerado por EXPORDIC - V.6.3.0.1 EFS / Upd. V.5.0.0 EFS
+@version 1.0
+/*/
+//--------------------------------------------------------------------
+Static Function FSAtuSXB()
+	Local aEstrut   := {}
+	Local aSXB      := {}
+	Local cAlias    := ""
+	Local nI        := 0
+	Local nJ        := 0
+
+	AutoGrLog( "Ínicio da Atualização" + " SXB" + CRLF )
+
+	aEstrut := { "XB_ALIAS"  , "XB_TIPO"   , "XB_SEQ"    , "XB_COLUNA" , "XB_DESCRI" , "XB_DESCSPA", "XB_DESCENG", ;
+		"XB_WCONTEM", "XB_CONTEM" }
+
+
+//
+// Consulta SZOSC5
+//
+	aAdd( aSXB, { ;
+		'SZOSC5'																, ; //XB_ALIAS
+	'1'																		, ; //XB_TIPO
+	'01'																	, ; //XB_SEQ
+	'RE'																	, ; //XB_COLUNA
+	'SOLICITAÇÕES DE INVE'													, ; //XB_DESCRI
+	'SOLICITAÇÕES DE INVE'													, ; //XB_DESCSPA
+	'SOLICITAÇÕES DE INVE'													, ; //XB_DESCENG
+	''																		, ; //XB_WCONTEM
+	'SZO'																	} ) //XB_CONTEM
+
+	aAdd( aSXB, { ;
+		'SZOSC5'																, ; //XB_ALIAS
+	'2'																		, ; //XB_TIPO
+	'01'																	, ; //XB_SEQ
+	'01'																	, ; //XB_COLUNA
+	''																		, ; //XB_DESCRI
+	''																		, ; //XB_DESCSPA
+	''																		, ; //XB_DESCENG
+	''																		, ; //XB_WCONTEM
+	'U_F3_C5_YNUMSI()'														} ) //XB_CONTEM
+
+	aAdd( aSXB, { ;
+		'SZOSC5'																, ; //XB_ALIAS
+	'5'																		, ; //XB_TIPO
+	'01'																	, ; //XB_SEQ
+	''																		, ; //XB_COLUNA
+	''																		, ; //XB_DESCRI
+	''																		, ; //XB_DESCSPA
+	''																		, ; //XB_DESCENG
+	''																		, ; //XB_WCONTEM
+	'hk_Retur1'																} ) //XB_CONTEM
+
+//
+// Atualizando dicionário
+//
+	oProcess:SetRegua2( Len( aSXB ) )
+
+	dbSelectArea( "SXB" )
+	dbSetOrder( 1 )
+
+	For nI := 1 To Len( aSXB )
+
+		If !Empty( aSXB[nI][1] )
+
+			If !SXB->( dbSeek( PadR( aSXB[nI][1], Len( SXB->XB_ALIAS ) ) + aSXB[nI][2] + aSXB[nI][3] + aSXB[nI][4] ) )
+
+				If !( aSXB[nI][1] $ cAlias )
+					cAlias += aSXB[nI][1] + "/"
+					AutoGrLog( "Foi incluída a consulta padrão " + aSXB[nI][1] )
+				EndIf
+
+				RecLock( "SXB", .T. )
+
+				For nJ := 1 To Len( aSXB[nI] )
+					If FieldPos( aEstrut[nJ] ) > 0
+						FieldPut( FieldPos( aEstrut[nJ] ), aSXB[nI][nJ] )
+					EndIf
+				Next nJ
+
+				dbCommit()
+				MsUnLock()
+
+			Else
+
+				//
+				// Verifica todos os campos
+				//
+				For nJ := 1 To Len( aSXB[nI] )
+
+					//
+					// Se o campo estiver diferente da estrutura
+					//
+					If aEstrut[nJ] == SXB->( FieldName( nJ ) ) .AND. ;
+							!StrTran( AllToChar( SXB->( FieldGet( nJ ) ) ), " ", "" ) == ;
+							StrTran( AllToChar( aSXB[nI][nJ]            ), " ", "" )
+
+						RecLock( "SXB", .F. )
+						FieldPut( FieldPos( aEstrut[nJ] ), aSXB[nI][nJ] )
+						dbCommit()
+						MsUnLock()
+
+						If !( aSXB[nI][1] $ cAlias )
+							cAlias += aSXB[nI][1] + "/"
+							AutoGrLog( "Foi alterada a consulta padrão " + aSXB[nI][1] )
+						EndIf
+
+					EndIf
+
+				Next
+
+			EndIf
+
+		EndIf
+
+		oProcess:IncRegua2( "Atualizando Consultas Padrões (SXB)..." )
+
+	Next nI
+
+	AutoGrLog( CRLF + "Final da Atualização" + " SXB" + CRLF + Replicate( "-", 128 ) + CRLF )
+
+Return NIL
+
+
+//--------------------------------------------------------------------
+/*/{Protheus.doc} FSAtuSX5
+Função de processamento da gravação do SX5 - Indices
+
+@author TOTVS Protheus
+@since  05/07/21
+@obs    Gerado por EXPORDIC - V.6.3.0.1 EFS / Upd. V.5.0.0 EFS
+@version 1.0
+/*/
+//--------------------------------------------------------------------
+Static Function FSAtuSX5()
+	Local aEstrut   := {}
+	Local aSX5      := {}
+	Local cAlias    := ""
+	Local cFilSX5   := xFilial( "SX5" )
+	Local nI        := 0
+	Local nJ        := 0
+	Local nTamFil   := Len( SX5->X5_FILIAL )
+
+	AutoGrLog( "Ínicio da Atualização SX5" + CRLF )
+
+	aEstrut := { "X5_FILIAL", "X5_TABELA", "X5_CHAVE", "X5_DESCRI", "X5_DESCSPA", "X5_DESCENG" }
+
+//
+// Tabela 00
+//
+	aAdd( aSX5, { ;
+		cFilSX5																	, ; //X5_FILIAL
+	'00'																	, ; //X5_TABELA
+	'X7'																	, ; //X5_CHAVE
+	'DASHBOARD - KPI'														, ; //X5_DESCRI
+	'DASHBOARD - KPI'														, ; //X5_DESCSPA
+	'DASHBOARD - KPI'														} ) //X5_DESCENG
+
+//
+// Tabela X7
+//
+	aAdd( aSX5, { ;
+		cFilSX5																	, ; //X5_FILIAL
+	'X7'																	, ; //X5_TABELA
+	'0101'																	, ; //X5_CHAVE
+	'TEMPO CARR.'															, ; //X5_DESCRI
+	'LOGISTICA'																, ; //X5_DESCSPA
+	'TEMPO CARR.'															} ) //X5_DESCENG
+
+	aAdd( aSX5, { ;
+		cFilSX5																	, ; //X5_FILIAL
+	'X7'																	, ; //X5_TABELA
+	'0102'																	, ; //X5_CHAVE
+	'NO SHOW'																, ; //X5_DESCRI
+	'LOGISTICA'																, ; //X5_DESCSPA
+	'NO SHOW'																} ) //X5_DESCENG
+
+	aAdd( aSX5, { ;
+		cFilSX5																	, ; //X5_FILIAL
+	'X7'																	, ; //X5_TABELA
+	'0103'																	, ; //X5_CHAVE
+	'SAUDE EST.'															, ; //X5_DESCRI
+	'LOGISTICA'																, ; //X5_DESCSPA
+	'SAUDE EST.'															} ) //X5_DESCENG
+
+	aAdd( aSX5, { ;
+		cFilSX5																	, ; //X5_FILIAL
+	'X7'																	, ; //X5_TABELA
+	'0104'																	, ; //X5_CHAVE
+	'ESTOQUE'																, ; //X5_DESCRI
+	'LOGISTICA'																, ; //X5_DESCSPA
+	'ESTOQUE'																} ) //X5_DESCENG
+
+	aAdd( aSX5, { ;
+		cFilSX5																	, ; //X5_FILIAL
+	'X7'																	, ; //X5_TABELA
+	'0105'																	, ; //X5_CHAVE
+	'CUMPR.PRZ.DISP'														, ; //X5_DESCRI
+	'LOGISTICA'																, ; //X5_DESCSPA
+	'CUMPR.PRZ.DISP'														} ) //X5_DESCENG
+
+	aAdd( aSX5, { ;
+		cFilSX5																	, ; //X5_FILIAL
+	'X7'																	, ; //X5_TABELA
+	'0201'																	, ; //X5_CHAVE
+	'% SHARE ENG.'															, ; //X5_DESCRI
+	'VENDA'																	, ; //X5_DESCSPA
+	'% SHARE ENG.'															} ) //X5_DESCENG
+
+//
+// Atualizando dicionário
+//
+	oProcess:SetRegua2( Len( aSX5 ) )
+
+	dbSelectArea( "SX5" )
+	SX5->( dbSetOrder( 1 ) )
+
+	For nI := 1 To Len( aSX5 )
+
+		oProcess:IncRegua2( "Atualizando tabelas..." )
+
+		If !SX5->( dbSeek( PadR( aSX5[nI][1], nTamFil ) + aSX5[nI][2] + aSX5[nI][3] ) )
+			AutoGrLog( "Item da tabela criado. Tabela " + AllTrim( aSX5[nI][1] ) + aSX5[nI][2] + "/" + aSX5[nI][3] )
+			RecLock( "SX5", .T. )
+		Else
+			AutoGrLog( "Item da tabela alterado. Tabela " + AllTrim( aSX5[nI][1] ) + aSX5[nI][2] + "/" + aSX5[nI][3] )
+			RecLock( "SX5", .F. )
+		EndIf
+
+		For nJ := 1 To Len( aSX5[nI] )
+			If FieldPos( aEstrut[nJ] ) > 0
+				FieldPut( FieldPos( aEstrut[nJ] ), aSX5[nI][nJ] )
+			EndIf
+		Next nJ
+
+		MsUnLock()
+
+		aAdd( aArqUpd, aSX5[nI][1] )
+
+		If !( aSX5[nI][1] $ cAlias )
+			cAlias += aSX5[nI][1] + "/"
+		EndIf
+
+	Next nI
+
+	AutoGrLog( CRLF + "Final da Atualização" + " SX5" + CRLF + Replicate( "-", 128 ) + CRLF )
+
+Return NIL
+
+
+//--------------------------------------------------------------------
 /*/{Protheus.doc} FSAtuHlp
 Função de processamento da gravação dos Helps de Campos
 
 @author TOTVS Protheus
-@since  07/06/21
+@since  05/07/21
 @obs    Gerado por EXPORDIC - V.6.3.0.1 EFS / Upd. V.5.0.0 EFS
 @version 1.0
 /*/
@@ -592,16 +1001,8 @@ Static Function FSAtuHlp()
 	oProcess:IncRegua2( "Atualizando Helps de Campos ..." )
 
 //
-// Helps Tabela ZDL
+// Helps Tabela SZO
 //
-	aHlpPor := {}
-	aAdd( aHlpPor, 'Tipo de Dashboard' )
-	aHlpEng := {}
-	aHlpSpa := {}
-
-	PutHelp( "PZDL_TPDASH", aHlpPor, aHlpEng, aHlpSpa, .T. )
-	AutoGrLog( "Atualizado o Help do campo " + "ZDL_TPDASH" )
-
 	AutoGrLog( CRLF + "Final da Atualização" + " " + "Helps de Campos" + CRLF + Replicate( "-", 128 ) + CRLF )
 
 Return {}
@@ -704,7 +1105,7 @@ Static Function EscEmpresa()
 	@ 128, 80 Button oButDMar   Prompt "&Desmarcar" Size 32, 12 Pixel Action ( MarcaMas( oLbx, aVetor, cMascEmp, .F. ), VerTodos( aVetor, @lChk, oChkMar ) ) ;
 		Message "Desmarcar usando" + CRLF + "máscara ( ?? )" Of oDlg
 	oButDMar:SetCss( CSSBOTAO )
-	@ 112, 157  Button oButOk   Prompt "Processar"  Size 32, 12 Pixel Action (  RetSelecao( @aRet, aVetor ), IIf( Len( aRet ) > 0, oDlg:End(), MsgStop( "Ao menos um grupo deve ser selecionado", "000009" ) ) ) ;
+	@ 112, 157  Button oButOk   Prompt "Processar"  Size 32, 12 Pixel Action (  RetSelecao( @aRet, aVetor ), IIf( Len( aRet ) > 0, oDlg:End(), MsgStop( "Ao menos um grupo deve ser selecionado", "upd999" ) ) ) ;
 		Message "Confirma a seleção e efetua" + CRLF + "o processamento" Of oDlg
 	oButOk:SetCss( CSSBOTAO )
 	@ 128, 157  Button oButCanc Prompt "Cancelar"   Size 32, 12 Pixel Action ( IIf( lTeveMarc, aRet :=  aMarcadas, .T. ), oDlg:End() ) ;
@@ -860,7 +1261,7 @@ Return NIL
 Função de processamento abertura do SM0 modo exclusivo
 
 @author TOTVS Protheus
-@since  07/06/21
+@since  05/07/21
 @obs    Gerado por EXPORDIC - V.6.3.0.1 EFS / Upd. V.5.0.0 EFS
 @version 1.0
 /*/
@@ -868,7 +1269,6 @@ Função de processamento abertura do SM0 modo exclusivo
 Static Function MyOpenSM0(lShared)
 	Local lOpen := .F.
 	Local nLoop := 0
-
 	lShared := .T.
 
 	If FindFunction( "_OpenSM0Excl" )
@@ -905,7 +1305,7 @@ Return lOpen
 Função de leitura do LOG gerado com limitacao de string
 
 @author TOTVS Protheus
-@since  07/06/21
+@since  05/07/21
 @obs    Gerado por EXPORDIC - V.6.3.0.1 EFS / Upd. V.5.0.0 EFS
 @version 1.0
 /*/

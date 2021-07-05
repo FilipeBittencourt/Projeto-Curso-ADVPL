@@ -11,12 +11,12 @@
 User Function BIAFG134()
 
 	Private _aBfg134	:=	{;
-		{"REP_BLQPED"	    ,"MV_PAR01"	,	'Pedidos'},;
-		{"REP_BLQF6"	    ,"MV_PAR02"	,	'Consulta Estoque'},;
-		{"REP_BLQRDISP"	  ,"MV_PAR03"	,	'Relatório de Disp.'},;
-		{"REP_BLQREST"	  ,"MV_PAR04"	,	'Workflow Estoque PA'},;
-		{"REP_BLQRDSPR" 	,"MV_PAR05"	,	'Relatório de Disp. Estoque'},;
-		{"REP_BLQPROPENG" ,"MV_PAR06"	,	'Proposta de Engenharia'};
+		{"REP_BLQPED"		,"MV_PAR01"	,	'Pedidos'},;
+		{"REP_BLQF6"		,"MV_PAR02"	,	'Consulta Estoque'},;
+		{"REP_BLQRDISP"		,"MV_PAR03"	,	'Relatório de Disp. (Rep - BIA999)'},;
+		{"REP_BLQREST"		,"MV_PAR04"	,	'Workflow Estoque PA'},;
+		{"REP_BLQRDSPR"		,"MV_PAR05"	,	'Relatório Estoque PA(Rep - BIA496)'},;
+		{"REP_BLQPROPENG"	,"MV_PAR06"	,	'Proposta de Engenharia'};
 		}
 
 
