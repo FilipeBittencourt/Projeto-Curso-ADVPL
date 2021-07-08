@@ -23,15 +23,13 @@ User Function TSTFIL()
   //cEmp := "SC6"+SUBSTR(cEmp,0,1)+"0"
   //u_Env_Pedido('BJBGJO',,,'01',.T.)
   //u_FROPRT08()
-  TSTFIL001() // biaxfunc.prw  - Teste Email SEND
+  //TSTFIL001() // biaxfunc.prw  - Teste Email SEND
   //TSTFIL002() // Teste pedidos provisionados
   //TSTFIL003()
   //TSTFIL004()
   //TSTFIL005() //Montar classe de envio de email e enviando
   //TSTFIL006()
   //TSTFIL007()
-
-
 
 
 
@@ -496,3 +494,25 @@ STATIC Function TSTFIL007()
   END DO
 
 Return
+
+
+
+User Function TST999X()
+
+
+  Local dNewDT  := CToD('//')
+
+  Local dDtNCli := CToD("07/07/21")
+
+
+
+  RpcClearEnv()
+  If Select("SX6") <= 0
+    //RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SX5","SF1", "SF2"})
+    RpcSetEnv("01",'0'+"01"+'0001',"schedule.rh","Mudar@@123",,GetEnvServer(),{"SB1","SF1", "SF2"})
+  EndIf
+
+  dNewDT := DataValida(DaySum(dDtNCli, 7))
+
+
+return dNewDT

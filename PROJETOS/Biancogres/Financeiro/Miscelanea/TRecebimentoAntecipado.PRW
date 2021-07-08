@@ -11,40 +11,40 @@ User Function FCLA0024; Return()
 @type class
 /*/
 
-Class TRecebimentoAntecipado From LongClassName	
-	
-	Data cNumPed
-	Data lJob
-	Data cNossoNum
-	Data nVlJuros
+	Class TRecebimentoAntecipado From LongClassName
 
-	Data oConRecBx 
-	Data oConRecRa
-	Data cErro
+		Data cNumPed
+		Data lJob
+		Data cNossoNum
+		Data nVlJuros
 
-	Method New() Constructor
-	Method IncluirPr() // Inclui titulo provisorio para geração do boleto bancario
-	Method BaixarPr() // Baixa titulo provisorio com motivo "CONTRATO" no retorno do cnab, sem movimento bancario
-	Method TituloPr(cNumBco) // Verifica se é um titulo provisoriso
-	Method TituloRecBan(aParam) // Verifica se o titulo foi recebido pelo banco
-	Method ExistePr(cPrefixo) // Verifica se já existe titulo provisorio para o pedido de venda
-	Method BoletoPr(dEmissao, cCliente, cLoja, cNumPed, lReenv, cNumBor) // Gera boleto com titulo provisorio
-	Method RetNumBol(cPrefixo) // Retorna numero do boleto
-	Method ValidaBor(nTipo, cBanBor, cAgeBor, cConBor) // Valida geração de bordero, somente serao aceitos borderos para os bancos/agencias/contas pre-definidos
-	Method RetNumTit(cPrefixo) // Retorna numero do titulo por cliente
-	Method RetDtVenBol() // Retorna data de vencimento do boleto, leva em consideração o prazo de 3 dias uteis - REVENDA (C6_ENTREG), ENGENHARIA (C6_YDTNECE)
-	Method RetDtEntPed() // Retorna maior data de entrega do pedido
-	Method DadosPed() //informacoes do pedido
-	Method RetAgeCon() // Retorna agencia e conta correta por banco
-	Method TarifaBco(nTarifa,cBanTit,cAgeTit,cConTit,cPreTit,cNmTit,cParTit,cTpTit,cCliTit,cLjTit,dDtCred) // Gera tarifa bancaria referente ao envio de cobranca, utilizada somente para liquidacao sem registro (Ocorrencia 05)
-	Method RetDtVenTit(cNumPed, cEmpTit) // Retorna data de vencimento do tituto
-	Method CalcJuros(cPrefixo, dDtVen, dDtRec, nValor, nPerJur) // Calcula juros simples a partir percentual de juros por dias de atraso - Somente para Contratos
-	Method LancContJur() // Inclui lancamento contabil de juros sobre titulo
-	Method PedidoRodape() // Verifica se o pedido é de rodape
-	Method RetDtPedRod() // Retorna data de emissao do pedido de rodape	
-	Method RetDesconto(cPrefixo, cNumero, cParcela, cTipo, cCliente) // Retorna valor de desconto sobre o título 		
+		Data oConRecBx
+		Data oConRecRa
+		Data cErro
 
-EndClass
+		Method New() Constructor
+		Method IncluirPr() // Inclui titulo provisorio para geração do boleto bancario
+		Method BaixarPr() // Baixa titulo provisorio com motivo "CONTRATO" no retorno do cnab, sem movimento bancario
+		Method TituloPr(cNumBco) // Verifica se é um titulo provisoriso
+		Method TituloRecBan(aParam) // Verifica se o titulo foi recebido pelo banco
+		Method ExistePr(cPrefixo) // Verifica se já existe titulo provisorio para o pedido de venda
+		Method BoletoPr(dEmissao, cCliente, cLoja, cNumPed, lReenv, cNumBor) // Gera boleto com titulo provisorio
+		Method RetNumBol(cPrefixo) // Retorna numero do boleto
+		Method ValidaBor(nTipo, cBanBor, cAgeBor, cConBor) // Valida geração de bordero, somente serao aceitos borderos para os bancos/agencias/contas pre-definidos
+		Method RetNumTit(cPrefixo) // Retorna numero do titulo por cliente
+		Method RetDtVenBol() // Retorna data de vencimento do boleto, leva em consideração o prazo de 3 dias uteis - REVENDA (C6_ENTREG), ENGENHARIA (C6_YDTNECE)
+		Method RetDtEntPed() // Retorna maior data de entrega do pedido
+		Method DadosPed() //informacoes do pedido
+		Method RetAgeCon() // Retorna agencia e conta correta por banco
+		Method TarifaBco(nTarifa,cBanTit,cAgeTit,cConTit,cPreTit,cNmTit,cParTit,cTpTit,cCliTit,cLjTit,dDtCred) // Gera tarifa bancaria referente ao envio de cobranca, utilizada somente para liquidacao sem registro (Ocorrencia 05)
+		Method RetDtVenTit(cNumPed, cEmpTit) // Retorna data de vencimento do tituto
+		Method CalcJuros(cPrefixo, dDtVen, dDtRec, nValor, nPerJur) // Calcula juros simples a partir percentual de juros por dias de atraso - Somente para Contratos
+		Method LancContJur() // Inclui lancamento contabil de juros sobre titulo
+		Method PedidoRodape() // Verifica se o pedido é de rodape
+		Method RetDtPedRod() // Retorna data de emissao do pedido de rodape
+		Method RetDesconto(cPrefixo, cNumero, cParcela, cTipo, cCliente) // Retorna valor de desconto sobre o título
+
+	EndClass
 
 
 Method New() Class TRecebimentoAntecipado
@@ -63,16 +63,16 @@ Return()
 
 
 Method IncluirPr() Class TRecebimentoAntecipado
-Local lRet := .F.
-Local aArea := GetArea()
-Local oConRec := TContaReceber():New()
-Local cParCon := "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0"
-Local nMaxPar	:= GetMv("MV_NUMPARC", .F., 12)
-Local cParFin := "A"
-Local cNumTitCT := ""
-Local nCount := 0
-Local cCpoVal := ""
-Local cCpoDat := ""
+	Local lRet := .F.
+	Local aArea := GetArea()
+	Local oConRec := TContaReceber():New()
+	Local cParCon := "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0"
+	Local nMaxPar	:= GetMv("MV_NUMPARC", .F., 12)
+	Local cParFin := "A"
+	Local cNumTitCT := ""
+	Local nCount := 0
+	Local cCpoVal := ""
+	Local cCpoDat := ""
 
 	DbSelectArea("SC5")
 	DbSetOrder(1)
@@ -94,12 +94,12 @@ Local cCpoDat := ""
 			oConRec:cClasse := "6"
 			oConRec:cNumPed := SC5->C5_NUM
 			oConRec:cVend1 := SC5->C5_VEND1
-			
+
 			oConRec:Incluir()
-			
+
 			::BoletoPr(oConRec:dEmissao, oConRec:cCliente, oConRec:cLoja, oConRec:cNumPed)
 
-		// Pedido de Contrato
+			// Pedido de Contrato
 		ElseIf SC5->C5_YFORMA == "4" .And. !::ExistePr("CT")
 
 			DbSelectArea("Z60")
@@ -137,7 +137,7 @@ Local cCpoDat := ""
 					EndIf
 
 				Next
-				
+
 				::BoletoPr(oConRec:dEmissao, oConRec:cCliente, oConRec:cLoja, oConRec:cNumPed)
 
 			EndIf
@@ -152,14 +152,14 @@ Return(lRet)
 
 
 Method TituloRecBan(aParam) Class TRecebimentoAntecipado
-Local lRet := .F.
-Local cNumBco	:= aParam[1][4] // Numero do Banco (Nosso Numero)
-Local nTarifa	:= aParam[1][5]	// Tarifa Bancária
-Local nVlrDes := aParam[1][6]	// Valor de desconto
-Local nVlrRec := aParam[1][8]	// Valor recebido
-Local dCredito := aParam[1][13]	// Data do credito
-Local cOcor := AllTrim(aParam[1][14]) // Ocorrencia
-Local cSE1 := RetSQLName("SE1")
+	Local lRet := .F.
+	Local cNumBco	:= aParam[1][4] // Numero do Banco (Nosso Numero)
+	Local nTarifa	:= aParam[1][5]	// Tarifa Bancária
+	Local nVlrDes := aParam[1][6]	// Valor de desconto
+	Local nVlrRec := aParam[1][8]	// Valor recebido
+	Local dCredito := aParam[1][13]	// Data do credito
+	Local cOcor := AllTrim(aParam[1][14]) // Ocorrencia
+	Local cSE1 := RetSQLName("SE1")
 
 	If ::TituloPr(cNumBco)
 
@@ -196,11 +196,11 @@ Return(lRet)
 
 
 Method TituloPr(cNumBco) Class TRecebimentoAntecipado
-Local lRet := .F.
-Local cSQL := ""
-Local cQry := GetNextAlias()
-Local cSE1 := RetSQLName("SE1")
-Default cNumBco := ""
+	Local lRet := .F.
+	Local cSQL := ""
+	Local cQry := GetNextAlias()
+	Local cSE1 := RetSQLName("SE1")
+	Default cNumBco := ""
 
 	If !Empty(cNumBco)
 
@@ -215,11 +215,11 @@ Default cNumBco := ""
 
 		If (cQry)->E1_TIPO == "BOL" .And. SubStr((cQry)->E1_PREFIXO, 1, 2) $ "PR/CT" .And. !Empty((cQry)->E1_PEDIDO)
 			lRet := .T.
-		EndIf		
+		EndIf
 
 		(cQry)->(DbCloseArea())
 
-	Else	
+	Else
 
 		If SE1->E1_TIPO == "BOL" .And. SubStr(SE1->E1_PREFIXO, 1, 2) $ "PR/CT" .And. !Empty(SE1->E1_PEDIDO)
 			lRet := .T.
@@ -231,18 +231,18 @@ Return(lRet)
 
 
 Method BaixarPr() Class TRecebimentoAntecipado
-Local lRet := .T.
-Local cSQL := ""
-Local cQry := GetNextAlias()
-Local cSE1 := RetSQLName("SE1")
-Local cSEA := RetSQLName("SEA")
-Local nDesconto := 0
+	Local lRet := .T.
+	Local cSQL := ""
+	Local cQry := GetNextAlias()
+	Local cSE1 := RetSQLName("SE1")
+	Local cSEA := RetSQLName("SEA")
+	Local nDesconto := 0
 
-Private xfDtCtba
+	Private xfDtCtba
 
 	::oConRecBx := TContaReceber():New()
 	::oConRecRa := TContaReceber():New()
-	
+
 	::cErro := ""
 
 	cSQL := " SELECT E1_PREFIXO, E1_NUM, E1_PARCELA, E1_TIPO, (E1_VALOR + E1_ACRESC - E1_DECRESC) AS E1_VALOR, E1_PORTADO, E1_AGEDEP, E1_CONTA, E1_NUMBOR, E1_NUMBCO, E1_YDTCRED, E1_NATUREZ, E1_CLIENTE, E1_LOJA, "
@@ -252,20 +252,20 @@ Private xfDtCtba
 	cSQL += " AND SUBSTRING(E1_PREFIXO, 1, 2) IN ('PR', 'CT')	"
 	cSQL += " AND SUBSTRING(E1_PREFIXO, 3, 1) IN ('1', '2', '3', '4', '5', '6', '7', '8', '9') "
 	cSQL += " AND E1_TIPO = 'BOL' "
-	cSQL += " AND E1_SALDO > 0 "	
+	cSQL += " AND E1_SALDO > 0 "
 	cSQL += " AND E1_PEDIDO <> '' "
 	cSQL += " AND E1_NUMBCO <> '' "
 	cSQL += " AND E1_YRECANT = 'S' "
 
 	If !Empty(::cNossoNum)
 
-	 	cSQL += " AND ((E1_NUMBCO = " + ValToSQL(::cNossoNum) + ")"
+		cSQL += " AND ((E1_NUMBCO = " + ValToSQL(::cNossoNum) + ")"
 		cSQL += " OR (E1_NUMBCO = LEFT(" + ValToSQL(::cNossoNum) + ", Len(" + ValToSQL(::cNossoNum) + ")-1)))
-	
+
 	EndIf
 
-	cSQL += " AND D_E_L_E_T_ = '' "		
-	
+	cSQL += " AND D_E_L_E_T_ = '' "
+
 	TcQuery cSQL New Alias (cQry)
 
 	While !(cQry)->(Eof())
@@ -274,7 +274,7 @@ Private xfDtCtba
 
 			// Somente altera o titulo provisorio quando o mesmo foi registrado no banco
 			If !Empty((cQry)->E1_NUMBOR)
-	
+
 				// Remove referencia do bordero
 				cSQL :=	" UPDATE "+ cSEA
 				cSQL += " SET D_E_L_E_T_ = '*', R_E_C_D_E_L_ = R_E_C_N_O_ "
@@ -285,9 +285,9 @@ Private xfDtCtba
 				cSQL += " AND EA_PARCELA = "+ ValToSQL((cQry)->E1_PARCELA)
 				cSQL += " AND EA_TIPO = "+ ValToSQL((cQry)->E1_TIPO)
 				cSQL += " AND D_E_L_E_T_ = '' "
-	
+
 				TcSQLExec(cSQL)
-	
+
 				// Limpa os campos refentes a carteira e ao banco quando o titulo esta em bordero
 				cSQL :=	" UPDATE "+ cSE1
 				cSQL += " SET E1_SITUACA = '0' "
@@ -304,11 +304,11 @@ Private xfDtCtba
 				cSQL += " WHERE E1_FILIAL = " + ValToSQL(xFilial("SE1"))
 				cSQL += " AND E1_NUMBCO = "+ ValToSQL((cQry)->E1_NUMBCO)
 				cSQL += " AND D_E_L_E_T_ = '' "
-	
+
 				TcSQLExec(cSQL)
-	
+
 			EndIf
-	
+
 			// Baixa titulo provisorio na carteira de contrato
 			::oConRecBx:cPrefixo := (cQry)->E1_PREFIXO
 			::oConRecBx:cNumero := (cQry)->E1_NUM
@@ -320,31 +320,31 @@ Private xfDtCtba
 			::oConRecBx:cConta := ""
 			::oConRecBx:dBaixa := dDataBase
 			::oConRecBx:dCredito := sToD((cQry)->E1_YDTCRED)
-	
+
 			// Se tiver baixando um titulo especifico via baixa automatica API, considerar o Juros enviado pelo Banco - Projeto TAF - Fernando em 08/02/2019
 			If !Empty(::cNossoNum)
-			
+
 				::oConRecBx:nJuros := ::nVlJuros
-	
+
 			Else
-	
+
 				::oConRecBx:nJuros := ::CalcJuros((cQry)->E1_PREFIXO, sToD((cQry)->E1_VENCTO), dDataBase, (cQry)->E1_VALOR, (cQry)->E1_PORCJUR)
-	
+
 			EndIf
-	
+
 			// Retorna valor de desconto sobre o título
 			nDesconto := 0
 			nDesconto := ::RetDesconto((cQry)->E1_PREFIXO, (cQry)->E1_NUM, (cQry)->E1_PARCELA, (cQry)->E1_TIPO, (cQry)->E1_CLIENTE)
-			
+
 			::oConRecBx:nValor := (cQry)->E1_VALOR - nDesconto
-	
+
 			// Baixa o titulo provisorio
 			If ::oConRecBx:Baixar()
-	
+
 				// Tiago Rossini Coradini - 23/02/2016 - OS: 0361-16 - Clebes Jose
 				// 1.1 - Verifica se o título possui juros, caso possua, baixa o juros e adiciona lançamento contábil - Somente para Contratos (CT)
 				If ::oConRecBx:nJuros > 0 .And. SubStr(::oConRecBx:cPrefixo, 1, 2) == "CT"
-	
+
 					// Associa o banco de recebimento e efetua a baixa do juro sobre o titulo de contrato (CT)
 					::oConRecBx:cMotBx := "NOR" // Normal, associado ao Banco de origem, pois necessita ser conciliado
 					::oConRecBx:cBanco := (cQry)->E1_PORTADO
@@ -352,19 +352,19 @@ Private xfDtCtba
 					::oConRecBx:cConta := (cQry)->E1_CONTA
 					::oConRecBx:nValor := ::oConRecBx:nJuros
 					::oConRecBx:nJuros := 0
-	
+
 					// Baixa juros sobre o titulo
 					If !::oConRecBx:Baixar()
-					
-						::cErro += ::oConRecBx:cErro + CRLF + CRLF 
-						
+
+						::cErro += ::oConRecBx:cErro + CRLF + CRLF
+
 						lRet := .F.
-						
+
 					EndIf
-	
+
 					// Inclui lancamento contabil de juros sobre titulo
 					::LancContJur()
-	
+
 				EndIf
 
 				// Inclui titulo de RA referente ao titulo provisorio
@@ -381,39 +381,39 @@ Private xfDtCtba
 				::oConRecRa:cLoja := (cQry)->E1_LOJA
 				::oConRecRa:dEmissao := sToD((cQry)->E1_YDTCRED)
 				::oConRecRa:dVencto := sToD((cQry)->E1_YDTCRED)
-				
+
 				// Se o prefixo for PR e o recebimento possui juros, soma o valor do titulo mais o juros
 				::oConRecRa:nValor := ((cQry)->E1_VALOR - nDesconto) + If (SubStr(::oConRecBx:cPrefixo, 1, 2) == "PR", ::oConRecBx:nJuros, 0)
-				
+
 				::oConRecRa:cNumPed := (cQry)->E1_PEDIDO
 				::oConRecRa:cVend1 := (cQry)->E1_VEND1
-	
+
 				If !::oConRecRa:Incluir(.T.)
-					
-					::cErro += ::oConRecRa:cErro + CRLF + CRLF 
-					
+
+					::cErro += ::oConRecRa:cErro + CRLF + CRLF
+
 					lRet := .F.
-								
+
 				EndIf
-	
+
 				// Atualiza campo de processameno de RA, para não baixar novamente
 				cSQL :=	" UPDATE "+ cSE1
 				cSQL += " SET E1_YRECANT = 'N' "
 				cSQL += " WHERE E1_FILIAL = " + ValToSQL(xFilial("SE1"))
 				cSQL += " AND R_E_C_N_O_ = "+ ValToSQL((cQry)->RecNo)
 				cSQL += " AND D_E_L_E_T_ = '' "
-	
+
 				TcSQLExec(cSQL)
 
 			Else
-			
-				::cErro += ::oConRecBx:cErro + CRLF + CRLF 
-				
+
+				::cErro += ::oConRecBx:cErro + CRLF + CRLF
+
 				lRet := .F.
 
 			EndIf
 
-		End Transaction			
+		End Transaction
 
 		(cQry)->(DbSkip())
 
@@ -422,16 +422,16 @@ Private xfDtCtba
 		// Altera database para contabilizar na data de credito
 		dDataBase := SE1->E1_EMIS1
 		xfDtCtba := SE1->E1_EMIS1
-		
+
 		// Adiciona linha ao lancamento contabil
 		nTotal := DetProva(nHdlPrv, "520", "FINA200", cLote, /*nLinha*/, /*lExecuta*/, /*cCriterio*/, /*lRateio*/, /*cChaveBusca*/, /*aCT5*/, /*lPosiciona*/, @aFlagCTB, /*aTabRecOri*/, /*aDadosProva*/)
-		
+
 		// Calcula rodape do lancamento contabil
 		RodaProva(nHdlPrv, nTotal)
-		
+
 		// Grava lancamento contabil
 		cA100Incl(cArquivo, nHdlPrv, 3, cLote, .F., .F.)
-		
+
 		// Restaura database
 		dDataBase := d1AuxData
 
@@ -449,10 +449,10 @@ Return(lRet)
 
 
 Method RetNumTit(cPrefixo) Class TRecebimentoAntecipado
-Local cSQL := ""
-Local cQry := GetNextAlias()
-Local cSE1 := RetSQLName("SE1")
-Local cNumTit := ""
+	Local cSQL := ""
+	Local cQry := GetNextAlias()
+	Local cSE1 := RetSQLName("SE1")
+	Local cNumTit := ""
 
 	cSQL := " SELECT ISNULL(MAX(E1_NUM), '000000000') AS E1_NUM "
 	cSQL += " FROM " + cSE1
@@ -471,57 +471,61 @@ Return(cNumTit)
 
 
 Method RetDtVenBol() Class TRecebimentoAntecipado
-Local dRet := dDataBase
+	Local dRet := dDataBase
 
-	If ::PedidoRodape()
-	
+	If  SC5->C5_YCONF == 'S' .AND. SC5->C5_CONDPAG == '000' .AND.  SC5->C5_YFORMA == '3' .AND.  SC5->C5_YTPCRED == '5'
+
+		dRet := DataValida(DaySum(dDataBase, 8), .T.)
+
+	ElseIf ::PedidoRodape()
+
 		dRet := ::RetDtPedRod()
-	
+
 	Else
-		
+
 		dRet := ::RetDtEntPed()
-						
+
 	EndIf
 
 Return(dRet)
 
 
 Method DadosPed() Class TRecebimentoAntecipado
-Local aArea	:= GetArea()	
-Local cRet := {"", "", ""}
-Local cSQL := ""
-Local cQry := GetNextAlias()
+	Local aArea	:= GetArea()
+	Local cRet := {"", "", ""}
+	Local cSQL := ""
+	Local cQry := GetNextAlias()
 
 	cSQL := " SELECT CONDPAG=C5_CONDPAG, EMISSAO=C5_EMISSAO, TPSEG=A1_YTPSEG "
 	cSQL += " FROM " + RetSQLName("SC5") +" SC5"
-	cSQL += " INNER JOIN " +  RetSQLName("SA1") +" SA1 ON SC5.C5_CLIENTE = SA1.A1_COD AND  SC5.C5_LOJACLI = SA1.A1_LOJA AND SA1.D_E_L_E_T_ = ''"	
+	cSQL += " INNER JOIN " +  RetSQLName("SA1") +" SA1 ON SC5.C5_CLIENTE = SA1.A1_COD AND  SC5.C5_LOJACLI = SA1.A1_LOJA AND SA1.D_E_L_E_T_ = ''"
 	cSQL += " WHERE C5_FILIAL = " + ValToSQL(xFilial("SC5"))+""
 	cSQL += " AND C5_NUM = " + ValToSQL(::cNumPed)+""
 	cSQL += " AND SC5.D_E_L_E_T_ = '' "
 
 	TcQuery cSQL New Alias (cQry)
-	
+
 	If !(cQry)->(Eof())
-		
-		cRet := { (cQry)->CONDPAG, (cQry)->TPSEG, (cQry)->EMISSAO  }	
-		
+
+		cRet := { (cQry)->CONDPAG, (cQry)->TPSEG, (cQry)->EMISSAO  }
+
 	EndIf
-	
+
 	RestArea(aArea)
-	
+
 Return(cRet)
 
 
 Method RetDtEntPed() Class TRecebimentoAntecipado
-Local dRet := dDataBase
-Local cSQL := ""
-Local cQry := GetNextAlias()
-Local cSC6 := RetSQLName("SC6")
-Local nCount := 0
-Local dDtAux := Nil	
-Local aDadosPed := {}
-Local dDtAux := Nil	
-Local aDadosPed := {}
+	Local dRet := dDataBase
+	Local cSQL := ""
+	Local cQry := GetNextAlias()
+	Local cSC6 := RetSQLName("SC6")
+	Local nCount := 0
+	Local dDtAux := Nil
+	Local aDadosPed := {}
+	Local dDtAux := Nil
+	Local aDadosPed := {}
 
 	cSQL := " SELECT MAX(C6_ENTREG) AS C6_ENTREG, MAX(C6_YDTNECE) AS C6_YDTNECE "
 	cSQL += " FROM " + cSC6
@@ -530,75 +534,75 @@ Local aDadosPed := {}
 	cSQL += " AND D_E_L_E_T_ = '' "
 
 	TcQuery cSQL New Alias (cQry)
-	
+
 	If !Empty((cQry)->C6_YDTNECE)
 
 		dRet := SToD((cQry)->C6_YDTNECE)
-		
+
 	Else
-		
+
 		dRet := SToD((cQry)->C6_ENTREG)
-		
+
 	EndIf
-	
+
 	(cQry)->(DbCloseArea())
-	
+
 	If dRet < dDataBase
-		
+
 		dRet := dDataBase
-		
-	EndIf		
-	
+
+	EndIf
+
 	aDadosPed := ::DadosPed()
 
 	//aDadosPed[1] CondPag
 	//aDadosPed[2] TpSeg
 	//aDadosPed[3] Emissao
 	If (aDadosPed[1] $ '000_208' .And. aDadosPed[2] $ 'E_R')
-		
+
 		dDtAux := sToD(aDadosPed[3])
 		dDtAux := DaySum(dDtAux, 15)
-		
+
 		If dDtAux <> DataValida(dDtAux, .T.)
 
 			dDtAux := DataValida(dDtAux, .T.)
-			
+
 		EndIf
-			
+
 		If(Dtos(dRet) > Dtos(dDtAux))
 			dRet := DaySub(dRet, 5)
-			
+
 			If dRet <> DataValida(dRet, .T.)
-			
+
 				dRet := DataValida(dRet, .T.)
-				
+
 			EndIf
-			
+
 			Return(dRet)
-			
+
 		EndIf
-		
-	EndIf	
-	
+
+	EndIf
+
 	For nCount := 1 To 3
 
 		dRet := DaySum(dRet, 1)
 
 		If dRet <> DataValida(dRet, .T.)
-			
+
 			dRet := DataValida(dRet, .T.)
-			
+
 		EndIf
 
 	Next
-	
+
 Return(dRet)
 
 
 Method PedidoRodape() Class TRecebimentoAntecipado
-Local lRet := .F.
-Local cSQL := ""
-Local cQry := GetNextAlias() 
+	Local lRet := .F.
+	Local cSQL := ""
+	Local cQry := GetNextAlias()
 
 	cSQL := " SELECT ISNULL(C5_NUM, '') AS C5_NUM "
 	cSQL += " FROM " + RetSQLName("SC5") + " SC5 "
@@ -609,7 +613,7 @@ Local cQry := GetNextAlias()
 	cSQL += " ON C6_PRODUTO = B1_COD "
 	cSQL += " WHERE C5_FILIAL = " + ValToSQL(xFilial("SC5"))
 	cSQL += " AND C5_NUM = " + ValToSQL(::cNumPed)
-	cSQL += " AND C5_CONDPAG = '000' " 
+	cSQL += " AND C5_CONDPAG = '000' "
 	cSQL += " AND B1_FILIAL = " + ValToSQL(xFilial("SB1"))
 	cSQL += " AND B1_YPCGMR3 = 'E' "
 	cSQL += " AND SC5.D_E_L_E_T_ = '' "
@@ -619,32 +623,32 @@ Local cQry := GetNextAlias()
 	TcQuery cSQL New Alias (cQry)
 
 	If !Empty((cQry)->C5_NUM)
-		
+
 		lRet := .T.
-		
+
 	EndIf
-	
+
 	(cQry)->(DbCloseArea())
 
 Return(lRet)
 
 
 Method RetDtPedRod() Class TRecebimentoAntecipado
-Local dRet := SC5->C5_EMISSAO
-Local nCount := 0
+	Local dRet := SC5->C5_EMISSAO
+	Local nCount := 0
 
 	If dRet < dDataBase
 		dRet := dDataBase
 	EndIf
-	
+
 	For nCount := 1 To 7
 
 		dRet := DaySum(dRet, 1)
 
 		If dRet <> DataValida(dRet, .T.)
-			
+
 			dRet := DataValida(dRet, .T.)
-			
+
 		EndIf
 
 	Next
@@ -653,10 +657,10 @@ Return(dRet)
 
 
 Method ExistePr(cPrefixo) Class TRecebimentoAntecipado
-Local lRet := .F.
-Local cSQL := ""
-Local cQry := GetNextAlias()
-Local cSE1 := RetSQLName("SE1")
+	Local lRet := .F.
+	Local cSQL := ""
+	Local cQry := GetNextAlias()
+	Local cSE1 := RetSQLName("SE1")
 
 	cSQL := " SELECT COUNT(E1_PEDIDO) AS COUNT, E1_NUMBOR "
 	cSQL += " FROM " + cSE1
@@ -668,13 +672,13 @@ Local cSE1 := RetSQLName("SE1")
 	cSQL += " AND E1_PEDIDO = " + ValToSQL(SC5->C5_NUM)
 	cSQL += " AND D_E_L_E_T_ = '' "
 	cSQL += " GROUP BY E1_NUMBOR "
-	
+
 	TcQuery cSQL New Alias (cQry)
-		
+
 	If (lRet := (cQry)->COUNT > 0)
 
 		::BoletoPr(SC5->C5_EMISSAO, SC5->C5_CLIENTE, SC5->C5_LOJACLI, SC5->C5_NUM, !Empty((cQry)->E1_NUMBOR), (cQry)->E1_NUMBOR)
-		
+
 	EndIf
 
 	(cQry)->(DbCloseArea())
@@ -683,38 +687,38 @@ Return(lRet)
 
 
 Method BoletoPr(dEmissao, cCliente, cLoja, cNumPed, lReenv, cNumBor) Class TRecebimentoAntecipado
-Local oObj := Nil
+	Local oObj := Nil
 
-	Default lReenv := .F. 
+	Default lReenv := .F.
 	Default cNumBor := ""
-	
+
 	oObj := TAFRemessaReceber():New()
-	
+
 	oObj:oMrr:dEmissaoDe := dEmissao
 	oObj:oMrr:dEmissaoAte := dEmissao
 	oObj:oMrr:nDia := 0
 	oObj:oMrr:cCliente := cCliente
 	oObj:oMrr:cLoja := cLoja
 	oObj:oMrr:cPedido := cNumPed
-	
+
 	If lReenv
-		
+
 		oObj:oMrr:lReenvBord := .T.
 		oObj:oMrr:cBorDe := cNumBor
 		oObj:oMrr:cBorAte := cNumBor
-		
+
 	EndIf
 
 	oObj:Send()
-		
+
 Return()
 
 
 Method ValidaBor(nTipo, cBanBor, cAgeBor, cConBor) Class TRecebimentoAntecipado
-Local lRet := .T.
-Local cBanco := ""
-Local cAgencia := ""
-Local cConta := ""
+	Local lRet := .T.
+	Local cBanco := ""
+	Local cAgencia := ""
+	Local cConta := ""
 
 	// 4=BOL, 5=RA
 	If nTipo == 4 .Or. nTipo == 5
@@ -759,10 +763,10 @@ Return(lRet)
 
 
 Method RetNumBol() Class TRecebimentoAntecipado
-Local aNumBol := {}
-Local cSQL := ""
-Local cQry := GetNextAlias()
-Local cSE1 := RetSQLName("SE1")
+	Local aNumBol := {}
+	Local cSQL := ""
+	Local cQry := GetNextAlias()
+	Local cSE1 := RetSQLName("SE1")
 
 	cSQL := " SELECT E1_NUMBCO "
 	cSQL += " FROM " + cSE1
@@ -788,7 +792,7 @@ Return(aNumBol)
 
 
 Method TarifaBco(nTarifa,cBanTit,cAgeTit,cConTit,cPreTit,cNmTit,cParTit,cTpTit,cCliTit,cLjTit,dDtCred) Class TRecebimentoAntecipado
-Local dAuxData := dDataBase
+	Local dAuxData := dDataBase
 
 	//Posiciona o banco para que o lancamento contabil identifique a conta de credito
 	SA6->(DbSetOrder(1))
@@ -816,7 +820,7 @@ Local dAuxData := dDataBase
 	SE5->E5_TIPO := cTpTit
 	SE5->E5_CLIFOR := cCliTit
 	SE5->E5_LOJA := cLjTit
-	SE5->E5_CLVLDB := U_BIA478G("ZJ0_CLVLDB", SE5->E5_NATUREZ, "P")	
+	SE5->E5_CLVLDB := U_BIA478G("ZJ0_CLVLDB", SE5->E5_NATUREZ, "P")
 	SE5->E5_CCD	:= '1000'
 	SE5->E5_FILORIG	:= cFilAnt
 	SE5->(MsUnlock())
@@ -848,10 +852,10 @@ Return()
 
 
 Method RetDtVenTit(cNumPed, cEmpTit) Class TRecebimentoAntecipado
-Local cDtVenRea := ""
-Local cSQL := ""
-Local cQry := GetNextAlias()
-Local cSE1 := RetSQLName("SE1")
+	Local cDtVenRea := ""
+	Local cSQL := ""
+	Local cQry := GetNextAlias()
+	Local cSE1 := RetSQLName("SE1")
 
 	If !Empty(cEmpTit)
 		cSE1 := "SE1"+AllTrim(cEmpTit)+"0"
@@ -871,13 +875,13 @@ Local cSE1 := RetSQLName("SE1")
 		TcQuery cSQL New Alias (cQry)
 
 		If !(cQry)->(Eof())
-			
+
 			cDtVenRea := (cQry)->E1_VENCREA
-			
+
 		Else
-			
+
 			cDtVenRea := ""
-			
+
 		EndIf
 
 		(cQry)->(DbCloseArea())
@@ -888,8 +892,8 @@ Return(cDtVenRea)
 
 
 Method CalcJuros(cPrefixo, dDtVen, dDtRec, nValor, nPerJur) Class TRecebimentoAntecipado
-Local nRet := 0
-Local nDia := 0
+	Local nRet := 0
+	Local nDia := 0
 
 	Default nPerJur := 0.2
 
@@ -907,7 +911,7 @@ Return(nRet)
 
 
 Method LancContJur() Class TRecebimentoAntecipado
-Local dAuxData := dDataBase
+	Local dAuxData := dDataBase
 
 	// Altera database para contabilizar na data de credito
 	dDataBase := SE1->E1_YDTCRED
@@ -928,15 +932,15 @@ Return()
 
 
 Static Function fViewCTB()
-Private oDlgCT2
-Private oButtonCT2
-Private oSay1
-Private xftVlrLnt := 0
+	Private oDlgCT2
+	Private oButtonCT2
+	Private oSay1
+	Private xftVlrLnt := 0
 
 	DEFINE MSDIALOG oDlgCT2 TITLE "Confirmação da Contabilização do RA" FROM 000, 000  TO 450, 960 COLORS 0, 16777215 PIXEL
 
 	fGetDataCTB()
-	
+
 	@ 202, 007 SAY oSay1 PROMPT "Valor Total do Lançamento: " + Transform(xftVlrLnt, "@E 999,999,999.99") SIZE 159, 007 OF oDlgCT2 COLORS 0, 16777215 PIXEL
 	@ 201, 435 BUTTON oButtonCT2 PROMPT "Fechar" SIZE 037, 012 OF oDlgCT2 ACTION oDlgCT2:End() PIXEL
 
@@ -946,26 +950,26 @@ Return
 
 
 Static Function fGetDataCTB()
-Local nX
-Local aHeaderEx := {}
-Local aColsEx := {}
-Local aFieldFill := {}
-Local aFields := {"CT2_DATA","CT2_LOTE","CT2_SBLOTE","CT2_DOC","CT2_LINHA","CT2_VALOR","CT2_YHIST"}
-Local aAlterFields := {"CT2_DATA","CT2_LOTE","CT2_SBLOTE","CT2_DOC","CT2_LINHA","CT2_VALOR","CT2_YHIST"}
-Private oGetCTB
+	Local nX
+	Local aHeaderEx := {}
+	Local aColsEx := {}
+	Local aFieldFill := {}
+	Local aFields := {"CT2_DATA","CT2_LOTE","CT2_SBLOTE","CT2_DOC","CT2_LINHA","CT2_VALOR","CT2_YHIST"}
+	Local aAlterFields := {"CT2_DATA","CT2_LOTE","CT2_SBLOTE","CT2_DOC","CT2_LINHA","CT2_VALOR","CT2_YHIST"}
+	Private oGetCTB
 
 	// Define field properties
 	dbSelectArea("SX3")
 	SX3->(dbSetOrder(2))
 	For nX := 1 to Len(aFields)
-	
+
 		If SX3->(dbSeek(aFields[nX]))
-		
+
 			Aadd(aHeaderEx, {AllTrim(X3Titulo()),SX3->X3_CAMPO,SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,SX3->X3_VALID,;
-											 SX3->X3_USADO,SX3->X3_TIPO,SX3->X3_F3,SX3->X3_CONTEXT,SX3->X3_CBOX,SX3->X3_RELACAO})
-		
+				SX3->X3_USADO,SX3->X3_TIPO,SX3->X3_F3,SX3->X3_CONTEXT,SX3->X3_CBOX,SX3->X3_RELACAO})
+
 		Endif
-		
+
 	Next nX
 
 	RT002 := " SELECT CT2_DATA, "
@@ -984,16 +988,16 @@ Private oGetCTB
 	RT002 += "    AND CT2_YHIST LIKE '%RA%' "
 	RT002 += "    AND CT2_DC <> '4' "
 	RT002 += "    AND D_E_L_E_T_ = ' ' "
-	RT002 += "  ORDER BY R_E_C_N_O_ "	
+	RT002 += "  ORDER BY R_E_C_N_O_ "
 
 	RTIndex := CriaTrab(Nil,.f.)
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,RT002),'RT02',.T.,.T.)
 
 	dbSelectArea("RT02")
 	dbGoTop()
-	
+
 	ct2Regs := .F.
-	
+
 	While !Eof()
 
 		ct2Regs := .T.
@@ -1011,7 +1015,7 @@ Private oGetCTB
 		xftVlrLnt += RT02->CT2_VALOR
 
 		dbSelectArea("RT02")
-		
+
 		dbSkip()
 
 	End
@@ -1024,21 +1028,21 @@ Private oGetCTB
 
 		DbSelectArea("SX3")
 		SX3->(DbSetOrder(2))
-		
+
 		For nX := 1 to Len(aFields)
-		
+
 			If DbSeek(aFields[nX])
-				
+
 				Aadd(aFieldFill, CriaVar(SX3->X3_CAMPO))
-				
+
 			Endif
-			
+
 		Next nX
-		
+
 		Aadd(aFieldFill, .F.)
-		
+
 		Aadd(aColsEx, aFieldFill)
-		
+
 	EndIf
 
 	oGetCTB := MsNewGetDados():New( 006, 007, 194, 473, GD_INSERT+GD_DELETE+GD_UPDATE, "AllwaysTrue", "AllwaysTrue", "+Field1+Field2", aAlterFields,, 999, "AllwaysTrue", "", "AllwaysTrue", oDlgCT2, aHeaderEx, aColsEx)
@@ -1047,9 +1051,9 @@ Return()
 
 
 Method RetDesconto(cPrefixo, cNumero, cParcela, cTipo, cCliente) Class TRecebimentoAntecipado
-Local nRet := 0
-Local cSQL := ""
-Local cQry := GetNextAlias()
+	Local nRet := 0
+	Local cSQL := ""
+	Local cQry := GetNextAlias()
 
 	cSQL := " SELECT ISNULL(SUM(E5_VALOR), 0) AS E5_VALOR "
 	cSQL += " FROM " + RetSQLName("SE5")
@@ -1062,7 +1066,7 @@ Local cQry := GetNextAlias()
 	cSQL += " AND E5_TIPODOC = 'DC' "
 	cSQL += " AND E5_RECPAG = 'R' "
 	cSQL += " AND D_E_L_E_T_ = '' "
-		
+
 	TcQuery cSQL New Alias (cQry)
 
 	nRet := (cQry)->E5_VALOR

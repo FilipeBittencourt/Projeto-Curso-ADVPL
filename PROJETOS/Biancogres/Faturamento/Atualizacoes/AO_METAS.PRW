@@ -1083,7 +1083,9 @@ Static Function GerarSI(_nValor,_dIni,_dFim,_cIdPer,_lAuto)
 		SZO->ZO_SERIE   	:= 'S1'
 	ENDCASE
 
-	SZO->ZO_YTPACOR   	:= PZ5->PZ5_TPACOR
+	SZO->ZO_YTPACOR 	:= AllTrim(PZ5->PZ5_TPACOR)
+	SZO->ZO_FPAGTO   	:= AllTrim(PZ5->PZ5_TIPPAG)
+
 
 	SZO->(MsUnLock())
 

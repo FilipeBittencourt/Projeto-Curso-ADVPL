@@ -268,22 +268,22 @@ Static Function fCriaArquivo(lRefresh)
 	AADD(_ACAMPOS, {"VALOR"			, "C", 16, 0})
 	AADD(_ACAMPOS, {"MARCA"			, "C", 16, 0})
 	AADD(_ACAMPOS, {"GRUPO"			, "C", 40, 0})
-	AADD(_ACAMPOS, {"AUT_DE_INVEST"			, "C", 10, 0})
+	AADD(_ACAMPOS, {"ORIGEM"			, "C", 10, 0})
 
 	ACAMPOS0 := {}
 
-	AADD(ACAMPOS0, {"CCODIGO"		, "CÓDIGO"			      	, 08})
-	AADD(ACAMPOS0, {"CSTATUS"		, "STATUS"				    , 08})
-	AADD(ACAMPOS0, {"DATA_INV"		, "DATA INV." 				, 18})
-	AADD(ACAMPOS0, {"CLIENTE"		, "NOME CLIENTE" 			, 18})
-	AADD(ACAMPOS0, {"COD_REP"		, "REPRE."  				, 06})
-	AADD(ACAMPOS0, {"REPRE"			, "NOME REP." 		  		, 25})
-	AADD(ACAMPOS0, {"IT_CONT"		, "ITEM CONTABIL" 			, 09})
-	AADD(ACAMPOS0, {"FOR_PAG"		, "FORMA PAGAMENTO"			, 20})
-	AADD(ACAMPOS0, {"VALOR"			, "VALOR" 				  	, 18})
-	AADD(ACAMPOS0, {"MARCA"			, "MARCA" 				  	, 18})
+	AADD(ACAMPOS0, {"CCODIGO"		      , "CÓDIGO"			      	, 08})
+	AADD(ACAMPOS0, {"CSTATUS"		      , "STATUS"				    , 08})
+	AADD(ACAMPOS0, {"DATA_INV"	      , "DATA INV." 				, 18})
+	AADD(ACAMPOS0, {"CLIENTE"		      , "NOME CLIENTE" 			, 18})
+	AADD(ACAMPOS0, {"COD_REP"		      , "REPRE."  				    , 06})
+	AADD(ACAMPOS0, {"REPRE"			      , "NOME REP." 		  		, 25})
+	AADD(ACAMPOS0, {"IT_CONT"		      , "ITEM CONTABIL" 			, 09})
+	AADD(ACAMPOS0, {"FOR_PAG"		      , "FORMA PAGAMENTO"			, 20})
+	AADD(ACAMPOS0, {"VALOR"			      , "VALOR" 				  	, 18})
+	AADD(ACAMPOS0, {"MARCA"			      , "MARCA" 				  	, 18})
 	AADD(ACAMPOS0, {"GRUPO"		      	, "GRUPO CLIENTE" 			, 40})
-	AADD(ACAMPOS0, {"AUT_DE_INVEST"			, "AUT DE INVEST" 			, 40})
+	AADD(ACAMPOS0, {"ORIGEM"	     	, "ORIGEM" 			, 16})
 
 	oTableMain := FWTemporaryTable():New(cAliasTrab, /*aFields*/)
 
@@ -390,6 +390,8 @@ STATIC FUNCTION ATUALIZA_TELA(lRefresh)
 		(cAliasTrab)->AAOBS_APR	:= C_CONS->AAOBS_APR
 		(cAliasTrab)->COMPRO		:= C_CONS->ZO_YCOMPRO
 		(cAliasTrab)->GRUPO		:= C_CONS->ACY_DESCRI
+		(cAliasTrab)->ORIGEM		:= ALLTRIM(C_CONS->ZO_YTPACOR)
+
 
 		Do Case
 		Case C_CONS->ZO_EMP == '0101'
@@ -1312,6 +1314,7 @@ Static Function SQL_TODOS(_lDir)
 	cSql := "SELECT	CONVERT(VARCHAR(500),CONVERT(BINARY(500),ZO_YOBSAPR)) AS AAOBS_APR, CONVERT(VARCHAR(500),CONVERT(BINARY(500),ZO_YOBS)) AS AAOBS, SZO.R_E_C_N_O_ AS ARECNO "+ENTER
 
 	cSql += " , ZO_YCOD, ZO_SI, ZO_STATUS, ZO_DATA, ZO_SERIE, A1_COD, A1_LOJA, A1_NOME, A1_MUN, A1_EST, A3_COD, A3_NOME, ZO_ITEMCTA, ZO_VALOR, ZO_YCOMPRO, ZO_EMP, ISNULL((ACY_GRPVEN +' - '+  ACY_DESCRI), '-' ) AS ACY_DESCRI, " + ENTER
+	cSql += "	  ZO_YTPACOR , " + ENTER
 	cSql += "		PAGAMENTO = CASE	WHEN ZO_FPAGTO = '1' THEN 'Bonificacao' " + ENTER
 	cSql += "							WHEN ZO_FPAGTO = '2' THEN 'Desconto Pedido' " + ENTER
 	cSql += "							WHEN ZO_FPAGTO = '3' THEN 'Pagamento R$' " + ENTER
@@ -1424,7 +1427,7 @@ Static Function SQL_FILTRO()
 
 	cSql := "SELECT	CONVERT(VARCHAR(500),CONVERT(BINARY(500),ZO_YOBSAPR)) AS AAOBS_APR, CONVERT(VARCHAR(500),CONVERT(BINARY(500),ZO_YOBS)) AS AAOBS, SZO.R_E_C_N_O_ AS ARECNO "+ENTER
 	cSql += " , ZO_YCOD, ZO_SI, ZO_STATUS, ZO_DATA, ZO_SERIE, A1_COD, A1_LOJA, A1_NOME, A1_MUN, A1_EST, A3_COD, A3_NOME, ZO_ITEMCTA, ZO_VALOR, ZO_YCOMPRO, ZO_EMP,  ISNULL((ACY_GRPVEN +' - '+  ACY_DESCRI), '-' ) AS ACY_DESCRI, " + ENTER
-
+	cSql += "   ZO_YTPACOR,  " + ENTER
 	cSql += "		PAGAMENTO = CASE	WHEN ZO_FPAGTO = '1' THEN 'Bonificacao' " + ENTER
 	cSql += "							WHEN ZO_FPAGTO = '2' THEN 'Desconto Pedido' " + ENTER
 	cSql += "							WHEN ZO_FPAGTO = '3' THEN 'Pagamento R$' " + ENTER

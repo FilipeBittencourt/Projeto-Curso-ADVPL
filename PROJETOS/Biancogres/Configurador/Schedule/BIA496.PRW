@@ -15,13 +15,14 @@
 @version V12 revisado por Fernando Rocha
 @obs Ticket 801/3031 - revisado para usar a funcao CALC_SALDO_OP
 /*/
-User Function BIA496(AA_EMP, lEstAmo)
+User Function BIA496(AA_EMP, lEstAmo, cMarcaJob)
 
 	Local cLoad				:= ""
 	Local cFileName			:= ""
 	Local lWFlow			:= .F.
 
-	Default lEstAmo 		:= .F.
+	Default lEstAmo 	:= .F.
+	Default cMarcaJob := ""
 
 	If Type("DDATABASE") <> "D"
 		DO CASE
@@ -71,59 +72,63 @@ User Function BIA496(AA_EMP, lEstAmo)
 	cLoad				:= "BIA496" + cEmpAnt
 	cFileName			:= RetCodUsr() +"_"+ cLoad
 	// Validar utilização do relatório para representantes.
-	/*If !Empty(cRepAtu) .And. U_GETBIAPAR("REP_BLQRDSPR",.F.)	// BLoQeuio Relatório DiSPonibilidade Representantes.
+	If !Empty(cRepAtu) .And. U_GETBIAPAR("REP_BLQRDSPR",.F.)	// BLoQeuio Relatório DiSPonibilidade Representantes.
 		MsgInfo("Consulta temporariamente indisponível","BIA496")
 		Return
-EndIf*/
+	EndIf
 	// Utilização do relatório para usuários internos.
-If Empty(cRepAtu)
-	If !lWFlow	// Executar via REMOTE (MANUAL).
+	If Empty(cRepAtu)
+		If !lWFlow	// Executar via REMOTE (MANUAL).
 			lManual	 := .T.
 			aPergs 	 := {}
 			MV_PAR01 := SPACE(1)
 			aMarca	 := {'1=Biancogres', '2=Incesa', '3=Vinílico', '4=Todas'}
 
 			aAdd(aPergs ,{2, "Marca", MV_PAR01, aMarca, 65, ".T.", .F.})
-		If !ParamBox(aPergs, "Filtro",,,,,,,, cLoad, .T., .T.)
+			If !ParamBox(aPergs, "Filtro",,,,,,,, cLoad, .T., .T.)
 				Return()
-		EndIf
+			EndIf
 
 			MV_PAR01 := Val(ParamLoad(cFileName,, 1, MV_PAR01))
-		Do Case
-		Case (MV_PAR01 == 1)	// BIANCOGRES
+			Do Case
+			Case (MV_PAR01 == 1)	// BIANCOGRES
 				cInMarca  := "('0101','0199')" 	//cEmpresa := '01'
-		Case (MV_PAR01 == 2)	// INCESA
+			Case (MV_PAR01 == 2)	// INCESA
 				cInMarca  := "('0501','0599')"	//cEmpresa := '05'
-		Case (MV_PAR01 == 3)	// VINILICO
+			Case (MV_PAR01 == 3)	// VINILICO
 				cInMarca  := "('1302')"			//cEmpresa := '07'
 				lShowFil  := .T.
-		OtherWise
+			OtherWise
 				cInMarca  := "('0101','0199','0501','0599','1302')"	//cEmpresa := '01'
 				lShowFil  := .T.
-		EndCase
+			EndCase
 			cEmpresa := '01' // A emissão MANUAL SEMPRE é via empresa 01.
-	Else
-		If (cEmpresa == '01')
+		Else
+			If (cEmpresa == '01')
 				cInMarca  := "('0101','0199')"
-		ElseIf (cEmpresa == '05')
+			ElseIf (cEmpresa == '05')
 				cInMarca  := "('0501','0599')"
-		ElseIf (cEmpresa == '13')
+			ElseIf (cEmpresa == '13')
 				cInMarca  := "('1302')"
 				lShowFil  := .T.
-		ElseIf (cEmpresa == '07')
+			ElseIf (cEmpresa == '07')
 				cInMarca  := "('1302')"
 				lShowFil  := .T.
+			EndIf
 		EndIf
-	EndIf
-Else
+	Else
 
-		cInMarca := "('" + AllTrim(SA3->A3_YEMP) + "')"
+		If IsBlind() //JOB
+			cInMarca := "('" + AllTrim(cMarcaJob) + "')"
+		Else
+			cInMarca := "('" + AllTrim(SA3->A3_YEMP) + "')"
+		EndIf
 		cInMarca :=	 StrTran(  cInMarca, "/", "','")
 
-	If ( '1302' $ cInMarca )
+		If ( '1302' $ cInMarca )
 			lShowFil  := .T.
+		EndIf
 	EndIf
-EndIf
 
 	//conout('bia496-INICIADO')
 	ConOut(dtoc(dDatabase) + " - " + Time() + " - BIA496 INICIADO")
@@ -179,6 +184,10 @@ Static Function Calcula_EST()
 	QRY->(DbEval({|| _nCount++ }))
 	QRY->(DbGoTop())
 
+	if _nCount == 0 .AND. IsBlind()
+		return .T.
+	EndIF
+
 	DbSelectArea("QRY")
 	DbGotop()
 	//conout('bia496-2')
@@ -187,7 +196,7 @@ Static Function Calcula_EST()
 	cEmailCO := ''
 
 	cTime := Replace(Time(),":","_")
-	If Empty(CREPATU)
+	If IsBlind() .OR. Empty(CREPATU)
 		cArqHtml := "\P10\workflow\Estoque"+ cTime +".html"
 		cArqCSV	 := "\P10\workflow\Estoque"+ cTime +".csv"
 	Else
@@ -196,10 +205,6 @@ Static Function Calcula_EST()
 	EndIf
 
 
-	If IsBlind() //Se nao estiver sendo executado via SCHEDULE
-		cArqHtml := "\P10\workflow\Estoque"+ cTime +".html"
-		cArqCSV	 := "\P10\workflow\Estoque"+ cTime +".csv"
-	EndIf
 
 	//Verifica se o arquivo existe
 	If File(cArqHtml)
@@ -341,6 +346,8 @@ Static Function Enviar(cImpModel)
 	fClose(fHtml)
 	fClose(fCSV)
 
+	Envioemail(AllTrim(SA3->A3_EMAIL), cImpModel)
+/*
 	cSQL := ""
 	cSQL += "SELECT A3_COD, A3_NOME, A3_YEMP, A3_EMAIL "  + Enter
 	cSQL += "FROM " + RETSQLNAME("SA3") + " SA3 "  + Enter
@@ -378,10 +385,12 @@ Static Function Enviar(cImpModel)
 		lSohGer := .F.
 
 		//Envia para os gerentes...
-		cEmail := U_EmailWF('BIA496',cEmpAnt)
+		//cEmail := U_EmailWF('BIA496',cEmpAnt)
+
 		IF !EMPTY(cEmail)
 			Envioemail(cEmail, cImpModel)
 		ENDIF
+
 
 		If !lSohGer
 			WHILE !Eof()
@@ -400,7 +409,7 @@ Static Function Enviar(cImpModel)
 		EndIf
 
 	EndIf
-
+*/
 	FErase(cArqHtml)
 	FErase(cArqCSV)
 
@@ -457,10 +466,10 @@ Static Function Envioemail(cEmail, cImpModel)
 		cArqAnexo := cArqCSV
 	EndIf
 
-	cRecebe := "filipe.bittencourt@facilesistemas.com.br"
-	//cRecebeCC := ""
+	cRecebe   := "filipe.bittencourt@facilesistemas.com.br"
+	//cRecebeCC := "lohayne.moreira@biancogres.com.br"
 
-	U_BIAEnvMail(,cRecebe,cAssunto,cMensag,'',cArqAnexo,,cRecebeCC)
+	U_BIAEnvMail(,cRecebe,cAssunto+' - '+CREPATU,cMensag,'',cArqAnexo,,cRecebeCC)
 
 
 Return
@@ -717,16 +726,25 @@ Static Function GeraSql()
 	cSQL += "		ZZ8.ZZ8_DESC AS DESC_CLASSE,  " + Enter
 	cSQL += "		PEDCART = CASE WHEN (ROW_NUMBER() over (PARTITION BY B1_COD ORDER BY B1_COD DESC)) = 1 THEN (SELECT dbo.FN_SALDOPEDIDO(B1_LOCAL,B1_COD)) ELSE 0 END,   " + Enter
 	cSQL += "		GERAITEM = CASE WHEN SUM(PROD.QUANTIDADE - EMPENHO)> 0 THEN 'S' ELSE 'N' END,   " + Enter
-	cSQL += "		SALDOOP = CASE WHEN (ROW_NUMBER() over (PARTITION BY B1_COD ORDER BY B1_COD DESC)) = 1  " + Enter
-	//Fernando em 15/12/2017 - substituido o bloco de calculo de saldo de OP para usar a funcao SQL
-	If cEmpresa $ "01_05"
-		cSQL += "       THEN ISNULL((SELECT [dbo].[FNC_ROP_CALC_SALDO_OP_PRODUTO_01]('01',PROD.B1_COD ,'','',1)),0) ELSE 0 END, "  + Enter
-	ElseIf(cEmpresa $ "07")
-		//saldo empresa
-		cSQL += "       THEN ISNULL((SELECT [dbo].[FNC_ROP_CALC_SALDO_OP_PRODUTO_13]('01',PROD.B1_COD ,'','',1)),0) ELSE 0 END, "  + Enter
+
+	if lAmostra
+		cSQL += "		SALDOOP = 0 ," + Enter
 	Else
-		cSQL += "       THEN ISNULL((SELECT [dbo].[FNC_ROP_CALC_SALDO_OP_PRODUTO_"+AllTrim(CEMPANT)+"]('01',PROD.B1_COD ,'','',1)),0) ELSE 0 END, "  + Enter
+		cSQL += "		SALDOOP = CASE WHEN (ROW_NUMBER() over (PARTITION BY B1_COD ORDER BY B1_COD DESC)) = 1  " + Enter
+		//Fernando em 15/12/2017 - substituido o bloco de calculo de saldo de OP para usar a funcao SQL
+		If cEmpresa $ "01_05"
+			cSQL += "       THEN ISNULL((SELECT [dbo].[FNC_ROP_CALC_SALDO_OP_PRODUTO_01]('01',PROD.B1_COD ,'','',1)),0) ELSE 0 END, "  + Enter
+		ElseIf(cEmpresa $ "07")
+			//saldo empresa
+			cSQL += "       THEN ISNULL((SELECT [dbo].[FNC_ROP_CALC_SALDO_OP_PRODUTO_13]('01',PROD.B1_COD ,'','',1)),0) ELSE 0 END, "  + Enter
+		Else
+			cSQL += "       THEN ISNULL((SELECT [dbo].[FNC_ROP_CALC_SALDO_OP_PRODUTO_"+AllTrim(CEMPANT)+"]('01',PROD.B1_COD ,'','',1)),0) ELSE 0 END, "  + Enter
+		EndIf
+
 	EndIf
+
+
+
 	cSQL += "		ZZ6.ZZ6_DESC AS FORMATO, " + Enter
 	cSQL += "		ZZ6.ZZ6_FORNOP AS FORNO, " + Enter
 	cSQL += "		PROD.ZZ7_EMP AS MARCA, " + Enter
@@ -845,7 +863,9 @@ Static Function GeraSql()
 	cSQL += "		ZZ8.ZZ8_DESC AS DESC_CLASSE,  " + Enter
 	cSQL += "	 	PEDCART = '', GERAITEM = 'N', " + Enter
 
-	If cEmpresa $ "01_05"
+	if lAmostra
+		cSQL += "    SALDOOP = 0 , " + Enter
+	ElseIf cEmpresa $ "01_05"
 		cSQL += "    SALDOOP = ISNULL((select [dbo].[FNC_ROP_CALC_SALDO_OP_PRODUTO_01]('01',SB1.B1_COD ,'','',1)),0),  "+Enter
 	ElseIf(cEmpresa $ "07")
 		cSQL += "    SALDOOP = ISNULL((select [dbo].[FNC_ROP_CALC_SALDO_OP_PRODUTO_13]('01',SB1.B1_COD ,'','',1)),0),  "+Enter
@@ -970,7 +990,11 @@ Static Function GeraSql()
 	cSQL += " 	 SB8.B8_LOTECTL  = EST.LOTE_ORI 	AND																					"  + Enter
 	cSQL += "	 SB8.EMP		 = EST.EMP																								"  + Enter
 
-	cSQL += "	WHERE (SALDOOP > 0 OR ( QUANTIDADE - EMPENHO) > 0  OR  PEDCART > 0)  " + Enter
+	if lAmostra
+		cSQL += "	WHERE (SALDOOP = 0)  " + Enter
+	else
+		cSQL += "	WHERE (SALDOOP > 0 OR ( QUANTIDADE - EMPENHO) > 0  OR  PEDCART > 0)  " + Enter
+	EndIf
 
 	// Tiago Rossini Coradini - 17/10/16 - OS: 3364-16 - Raul Viana - Adicionado filtro de produtos com formato diferente de C1
 	cSQL += " 	AND SUBSTRING(B1_COD, 1, 2) <> 'C1' "  + Enter
