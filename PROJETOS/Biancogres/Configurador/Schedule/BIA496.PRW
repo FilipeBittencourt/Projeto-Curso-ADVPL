@@ -154,7 +154,7 @@ Return
 */
 Static Function Calcula_EST()
 	Local _nCount		:= 0
-	Local cPath			:= GetTempPath()
+	Local cPath			:= ""
 	Local cTime			:= Replace(Time(),":","_")
 
 	Private nTotalProd 	:= 0
@@ -172,6 +172,10 @@ Static Function Calcula_EST()
 	Private fCSV
 	Private aStru
 	Private fHtml
+
+	IF !IsBlind()
+		cPath			:= GetTempPath()
+	EndIf
 
 	cQry := GeraSql()
 	MemoWrite("\BIA496_QUERY.TXT", cQry)
@@ -466,7 +470,7 @@ Static Function Envioemail(cEmail, cImpModel)
 		cArqAnexo := cArqCSV
 	EndIf
 
-	cRecebe   := "filipe.bittencourt@facilesistemas.com.br"
+	//cRecebe   := "filipe.bittencourt@facilesistemas.com.br"
 	//cRecebeCC := "lohayne.moreira@biancogres.com.br"
 
 	U_BIAEnvMail(,cRecebe,cAssunto+' - '+CREPATU,cMensag,'',cArqAnexo,,cRecebeCC)

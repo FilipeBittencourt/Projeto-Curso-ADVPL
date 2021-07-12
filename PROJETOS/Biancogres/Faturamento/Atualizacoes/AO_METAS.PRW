@@ -1086,6 +1086,10 @@ Static Function GerarSI(_nValor,_dIni,_dFim,_cIdPer,_lAuto)
 	SZO->ZO_YTPACOR 	:= AllTrim(PZ5->PZ5_TPACOR)
 	SZO->ZO_FPAGTO   	:= AllTrim(PZ5->PZ5_TIPPAG)
 
+	If AllTrim(PZ5->PZ5_TPACOR) == "AG"
+		SZO->ZO_YDTVLD  	:= MonthSum(dDataBase, 12)
+	EndIf
+
 
 	SZO->(MsUnLock())
 

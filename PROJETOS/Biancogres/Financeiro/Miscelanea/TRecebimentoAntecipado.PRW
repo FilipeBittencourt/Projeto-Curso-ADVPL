@@ -471,13 +471,14 @@ Return(cNumTit)
 
 
 Method RetDtVenBol() Class TRecebimentoAntecipado
+
+	Local dRet := ::RetDtEntPed()
+
+	/* 
+	// Mundaça da regra: ticket: 31884 em 12/07/2021
 	Local dRet := dDataBase
 
-	If  SC5->C5_YCONF == 'S' .AND. SC5->C5_CONDPAG == '000' .AND.  SC5->C5_YFORMA == '3' .AND.  SC5->C5_YTPCRED == '5'
-
-		dRet := DataValida(DaySum(dDataBase, 8), .T.)
-
-	ElseIf ::PedidoRodape()
+	If ::PedidoRodape()
 
 		dRet := ::RetDtPedRod()
 
@@ -486,6 +487,7 @@ Method RetDtVenBol() Class TRecebimentoAntecipado
 		dRet := ::RetDtEntPed()
 
 	EndIf
+	*/
 
 Return(dRet)
 
@@ -496,7 +498,7 @@ Method DadosPed() Class TRecebimentoAntecipado
 	Local cSQL := ""
 	Local cQry := GetNextAlias()
 
-	cSQL := " SELECT CONDPAG=C5_CONDPAG, EMISSAO=C5_EMISSAO, TPSEG=A1_YTPSEG "
+	cSQL := " SELECT CONDPAG=C5_CONDPAG, EMISSAO=C5_EMISSAO, TPSEG=A1_YTPSEG, A1CGC=A1_CGC "
 	cSQL += " FROM " + RetSQLName("SC5") +" SC5"
 	cSQL += " INNER JOIN " +  RetSQLName("SA1") +" SA1 ON SC5.C5_CLIENTE = SA1.A1_COD AND  SC5.C5_LOJACLI = SA1.A1_LOJA AND SA1.D_E_L_E_T_ = ''"
 	cSQL += " WHERE C5_FILIAL = " + ValToSQL(xFilial("SC5"))+""
@@ -507,7 +509,7 @@ Method DadosPed() Class TRecebimentoAntecipado
 
 	If !(cQry)->(Eof())
 
-		cRet := { (cQry)->CONDPAG, (cQry)->TPSEG, (cQry)->EMISSAO  }
+		cRet := { (cQry)->CONDPAG, (cQry)->TPSEG, (cQry)->EMISSAO , (cQry)->A1CGC  }
 
 	EndIf
 
@@ -517,51 +519,22 @@ Return(cRet)
 
 
 Method RetDtEntPed() Class TRecebimentoAntecipado
-	Local dRet := dDataBase
-	Local cSQL := ""
-	Local cQry := GetNextAlias()
-	Local cSC6 := RetSQLName("SC6")
-	Local nCount := 0
-	Local dDtAux := Nil
+
+	Local dRet      := dDataBase
+	Local dDtAux    := Nil
 	Local aDadosPed := {}
-	Local dDtAux := Nil
-	Local aDadosPed := {}
-
-	cSQL := " SELECT MAX(C6_ENTREG) AS C6_ENTREG, MAX(C6_YDTNECE) AS C6_YDTNECE "
-	cSQL += " FROM " + cSC6
-	cSQL += " WHERE C6_FILIAL = " + ValToSQL(xFilial("SC6"))
-	cSQL += " AND C6_NUM = " + ValToSQL(::cNumPed)
-	cSQL += " AND D_E_L_E_T_ = '' "
-
-	TcQuery cSQL New Alias (cQry)
-
-	If !Empty((cQry)->C6_YDTNECE)
-
-		dRet := SToD((cQry)->C6_YDTNECE)
-
-	Else
-
-		dRet := SToD((cQry)->C6_ENTREG)
-
-	EndIf
-
-	(cQry)->(DbCloseArea())
-
-	If dRet < dDataBase
-
-		dRet := dDataBase
-
-	EndIf
+	Local nCount    := 0
 
 	aDadosPed := ::DadosPed()
 
 	//aDadosPed[1] CondPag
 	//aDadosPed[2] TpSeg
 	//aDadosPed[3] Emissao
-	If (aDadosPed[1] $ '000_208' .And. aDadosPed[2] $ 'E_R')
+	//aDadosPed[4] CNPJ/CPF DO CLIENTE
+	If (aDadosPed[1] $ '000_208' .And. (aDadosPed[2] $ 'E_R')  .OR.  u_fValFunc(aDadosPed[4]))
 
-		dDtAux := sToD(aDadosPed[3])
-		dDtAux := DaySum(dDtAux, 15)
+		dDtAux := dRet
+		dDtAux := DaySum(dDtAux, 7)
 
 		If dDtAux <> DataValida(dDtAux, .T.)
 
@@ -569,8 +542,11 @@ Method RetDtEntPed() Class TRecebimentoAntecipado
 
 		EndIf
 
-		If(Dtos(dRet) > Dtos(dDtAux))
-			dRet := DaySub(dRet, 5)
+	Else // Não identificamos um cenário para uso da regra abaixo
+
+		For nCount := 1 To 3
+
+			dRet := DaySum(dRet, 1)
 
 			If dRet <> DataValida(dRet, .T.)
 
@@ -578,23 +554,9 @@ Method RetDtEntPed() Class TRecebimentoAntecipado
 
 			EndIf
 
-			Return(dRet)
-
-		EndIf
+		Next
 
 	EndIf
-
-	For nCount := 1 To 3
-
-		dRet := DaySum(dRet, 1)
-
-		If dRet <> DataValida(dRet, .T.)
-
-			dRet := DataValida(dRet, .T.)
-
-		EndIf
-
-	Next
 
 Return(dRet)
 

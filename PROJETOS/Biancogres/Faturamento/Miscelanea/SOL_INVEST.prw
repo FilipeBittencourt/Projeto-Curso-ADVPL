@@ -23,7 +23,7 @@ USER FUNCTION SOL_INVEST()
 	PRIVATE CNOMEUSUARIO
 	PRIVATE CCODUSUARIO
 	PRIVATE ENTER 	:= CHR(13) + CHR(10)
-	PRIVATE NRADIO	:= 8
+	PRIVATE NRADIO	:= 9
 	PRIVATE NOVO_NRADIO 		:= ""
 	PRIVATE CDATADE, CDATAATE
 	PRIVATE S_TOT_FILTRO 		:= ""
@@ -116,10 +116,10 @@ USER FUNCTION SOL_INVEST()
 	OSAY1:LWORDWRAP := .T.
 
 	//Fernando/Facile em 13/04/2016 -> criado o statua Aguarda aprov dir para casos que exigem duas aprovacores - OS 4525-15
-	nLinha += 10
-	@ nLinha,01 RADIO NRADIO 3D PROMPT "Aguard. Aprov. Dir.", "Aguard. Aprov. Sup.", "Aguard. Aprov. Ger.", "Aprovado", "Reprovado", "Baixa Total", "Baixa Parcial", "Todos" SIZE  77,9 OF OSCR PIXEL
+	nLinha += 15
+	@ nLinha,01 RADIO NRADIO 3D PROMPT "Aguard. Aprov. Dir.", "Aguard. Aprov. Sup.", "Aguard. Aprov. Ger.", "Aprovado", "Reprovado", "Baixa Total", "Baixa Parcial", "Expirado", "Todos" SIZE  77,9 OF OSCR PIXEL
 
-	nLinha += 75
+	nLinha += 90
 	//FILTRO DO ITEM CONTABIL
 	OSAY1:= TSAY():NEW(nLinha,01,{||  REPLICATE(" ",10) + "ITEM CONTABIL" },OSCR,,OBOLD_10,,,,.T.,CLR_BLACK,CLR_WHITE,77,08)
 	OSAY1:LTRANSPARENT := .F.
@@ -269,6 +269,8 @@ Static Function fCriaArquivo(lRefresh)
 	AADD(_ACAMPOS, {"MARCA"			, "C", 16, 0})
 	AADD(_ACAMPOS, {"GRUPO"			, "C", 40, 0})
 	AADD(_ACAMPOS, {"ORIGEM"			, "C", 10, 0})
+	AADD(_ACAMPOS, {"VALIDADE"			, "D", 08, 0})
+
 
 	ACAMPOS0 := {}
 
@@ -284,6 +286,8 @@ Static Function fCriaArquivo(lRefresh)
 	AADD(ACAMPOS0, {"MARCA"			      , "MARCA" 				  	, 18})
 	AADD(ACAMPOS0, {"GRUPO"		      	, "GRUPO CLIENTE" 			, 40})
 	AADD(ACAMPOS0, {"ORIGEM"	     	, "ORIGEM" 			, 16})
+	AADD(ACAMPOS0, {"VALIDADE"	     	, "VALIDADE" 			, 18})
+
 
 	oTableMain := FWTemporaryTable():New(cAliasTrab, /*aFields*/)
 
@@ -391,6 +395,8 @@ STATIC FUNCTION ATUALIZA_TELA(lRefresh)
 		(cAliasTrab)->COMPRO		:= C_CONS->ZO_YCOMPRO
 		(cAliasTrab)->GRUPO		:= C_CONS->ACY_DESCRI
 		(cAliasTrab)->ORIGEM		:= ALLTRIM(C_CONS->ZO_YTPACOR)
+		(cAliasTrab)->VALIDADE	:= STOD(C_CONS->ZO_YDTVLD)
+
 
 
 		Do Case
@@ -1314,7 +1320,7 @@ Static Function SQL_TODOS(_lDir)
 	cSql := "SELECT	CONVERT(VARCHAR(500),CONVERT(BINARY(500),ZO_YOBSAPR)) AS AAOBS_APR, CONVERT(VARCHAR(500),CONVERT(BINARY(500),ZO_YOBS)) AS AAOBS, SZO.R_E_C_N_O_ AS ARECNO "+ENTER
 
 	cSql += " , ZO_YCOD, ZO_SI, ZO_STATUS, ZO_DATA, ZO_SERIE, A1_COD, A1_LOJA, A1_NOME, A1_MUN, A1_EST, A3_COD, A3_NOME, ZO_ITEMCTA, ZO_VALOR, ZO_YCOMPRO, ZO_EMP, ISNULL((ACY_GRPVEN +' - '+  ACY_DESCRI), '-' ) AS ACY_DESCRI, " + ENTER
-	cSql += "	  ZO_YTPACOR , " + ENTER
+	cSql += "	  ZO_YTPACOR , ZO_YDTVLD, " + ENTER
 	cSql += "		PAGAMENTO = CASE	WHEN ZO_FPAGTO = '1' THEN 'Bonificacao' " + ENTER
 	cSql += "							WHEN ZO_FPAGTO = '2' THEN 'Desconto Pedido' " + ENTER
 	cSql += "							WHEN ZO_FPAGTO = '3' THEN 'Pagamento R$' " + ENTER
@@ -1427,7 +1433,7 @@ Static Function SQL_FILTRO()
 
 	cSql := "SELECT	CONVERT(VARCHAR(500),CONVERT(BINARY(500),ZO_YOBSAPR)) AS AAOBS_APR, CONVERT(VARCHAR(500),CONVERT(BINARY(500),ZO_YOBS)) AS AAOBS, SZO.R_E_C_N_O_ AS ARECNO "+ENTER
 	cSql += " , ZO_YCOD, ZO_SI, ZO_STATUS, ZO_DATA, ZO_SERIE, A1_COD, A1_LOJA, A1_NOME, A1_MUN, A1_EST, A3_COD, A3_NOME, ZO_ITEMCTA, ZO_VALOR, ZO_YCOMPRO, ZO_EMP,  ISNULL((ACY_GRPVEN +' - '+  ACY_DESCRI), '-' ) AS ACY_DESCRI, " + ENTER
-	cSql += "   ZO_YTPACOR,  " + ENTER
+	cSql += "   ZO_YTPACOR, ZO_YDTVLD , " + ENTER
 	cSql += "		PAGAMENTO = CASE	WHEN ZO_FPAGTO = '1' THEN 'Bonificacao' " + ENTER
 	cSql += "							WHEN ZO_FPAGTO = '2' THEN 'Desconto Pedido' " + ENTER
 	cSql += "							WHEN ZO_FPAGTO = '3' THEN 'Pagamento R$' " + ENTER
@@ -1463,7 +1469,7 @@ Static Function SQL_FILTRO()
 		END IF
 	END IF
 
-	IF NRADIO <> 8
+	IF NRADIO <> 9
 		IF NRADIO = 1
 			cSql += "		AND ZO_STATUS = 'Aguard. Aprov. Dir.' " + ENTER
 		ELSEIF NRADIO = 2
@@ -1478,6 +1484,8 @@ Static Function SQL_FILTRO()
 			cSql += "		AND ZO_STATUS = 'Baixa Total'	 " + ENTER
 		ELSEIF NRADIO = 7
 			cSql += "		AND ZO_STATUS = 'Baixa Parcial' " + ENTER
+		ELSEIF NRADIO = 8
+			cSql += "		AND ZO_STATUS = 'Expirado' " + ENTER
 		END IF
 	END IF
 
@@ -1560,7 +1568,7 @@ Static Function SQL_FILTRO()
 		END IF
 	END IF
 
-	IF NRADIO <> 8
+	IF NRADIO <> 9
 		IF NRADIO = 1
 			C_cSql += "		AND ZO_STATUS = 'Aguard. Aprov. Dir.' " + ENTER
 		ELSEIF NRADIO = 2
@@ -1575,6 +1583,8 @@ Static Function SQL_FILTRO()
 			C_cSql += "		AND ZO_STATUS = 'Baixa Total'	 " + ENTER
 		ELSEIF NRADIO = 7
 			C_cSql += "		AND ZO_STATUS = 'Baixa Parcial' " + ENTER
+		ELSEIF NRADIO = 8
+			C_cSql += "		AND ZO_STATUS = 'Expirado' " + ENTER
 		END IF
 	ENDIF
 

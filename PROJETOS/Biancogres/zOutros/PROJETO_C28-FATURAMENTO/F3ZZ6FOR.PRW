@@ -4,8 +4,8 @@
 
 /*/{Protheus.doc} F3ZZ6FOR
 @description Consulta Padrao de formato de produtos
-@author Fernando Rocha
-@since 17/0/2021
+@author Filipe Bittencourt
+@since 17/06/2021
 @version undefined
 @type function
 /*/

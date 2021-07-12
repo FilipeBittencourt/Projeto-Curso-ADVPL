@@ -14,8 +14,12 @@ User Function TSTFIL()
     RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
   EndIf
 
-  // DbSelectArea("PZ5")
-  //X31UPDTABLE('PZ5')
+  cText := "FILIAL: "+aEmp[nI]+ " | "
+  cText += "Vendedor: "+aVeder[nK,1]+ " | "
+  cText += "Marca: "+aVeder[nK,3,nJ]
+  ConOut("BIA496A INICIADO em "+dtoc(dDatabase)+"__"+Time()+" - "+cMsg+"")
+  //DbSelectArea("SZO")
+  //X31UPDTABLE('SZO')
 
   //U_BIA729()
   //U_BAF022()

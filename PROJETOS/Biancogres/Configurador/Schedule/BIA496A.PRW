@@ -27,29 +27,22 @@
 
 User Function BIA496A()
 
- /*
-
-	
-	0101/0501/1399/1302	999999
-	*/
 
 	Local aArea     := {}
 	Local aEmp      := {}
 	Local aVeder    := {}
 	Local aMarca    := {}
-
-	Local cMarcJob  := ""
 	Local nI        := 1
 	Local nK        := 1
 	Local nJ        := 1
 	Local cSql      := ''
-	Local cEmpJob   := "01" //Start
+	Local cMsg      := ""
 	Local cQry      := GetNextAlias()
 
 	aAdd(aEmp, "01")
 	aAdd(aEmp, "05")
-	aAdd(aEmp, "13")
 	aAdd(aEmp, "07")
+	aAdd(aEmp, "13")
 
 	RpcSetType(3)
 	RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SA3","SF1", "SF2"})
@@ -68,7 +61,7 @@ User Function BIA496A()
 	cSql +="  AND SA3.A3_EMAIL <> '' " +CRLF
 	cSql +="  AND SA3.A3_YATIVO = 'S' " +CRLF
 	cSql +="  AND SA3.A3_YEMP  NOT LIKE '%XX%' " +CRLF
-	cSql +="  AND SA3.A3_COD   in ('999999') " +CRLF //000082, 000717, 999999
+	//cSql +="  AND SA3.A3_COD   in ('000082','000717','000025','000728') " +CRLF //000082, 000717, 999999
 	cSql +="  AND SA3.D_E_L_E_T_ = '' " +CRLF
 
 	TcQuery cSql Alias (cQry) New
@@ -103,15 +96,20 @@ User Function BIA496A()
 
 				For nJ := 1 To Len(aVeder[nK,3])  //Percorrendo Marcas do Representante
 
+					cMsg := "FILIAL: "+aEmp[nI]+ " | "
+					cMsg += "Vendedor: "+aVeder[nK,1]+ " | "
+					cMsg += "Marca: "+aVeder[nK,3,nJ]
+					ConOut("BIA496A INICIADO em "+dtoc(dDatabase)+"-"+Time()+" - "+cMsg+"")
+
 					If aEmp[nI] == "07" .AND. aVeder[nK,2] == "SP" .and. aVeder[nK,3,nJ] $ "1302#1301"
 
 						U_BIA496(aEmp[nI] , .F., aVeder[nK,3,nJ])
-						U_BIA496(aEmp[nI] , .T., aVeder[nK,3,nJ]) // 05 Envia WF de estoque de Amostra, precisa ser separado.
+						U_BIA496(aEmp[nI] , .T., aVeder[nK,3,nJ]) // Envia WF de estoque de Amostra, precisa ser separado.
 
 					Elseif left(aVeder[nK,3,nJ] ,2)  == aEmp[nI]
 
 						U_BIA496(aEmp[nI] , .F., aVeder[nK,3,nJ])
-						U_BIA496(aEmp[nI] , .T., aVeder[nK,3,nJ]) // 05 Envia WF de estoque de Amostra, precisa ser separado.
+						U_BIA496(aEmp[nI] , .T., aVeder[nK,3,nJ]) // Envia WF de estoque de Amostra, precisa ser separado.
 
 					EndIf
 

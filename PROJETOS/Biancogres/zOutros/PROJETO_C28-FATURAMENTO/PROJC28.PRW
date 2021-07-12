@@ -17,16 +17,16 @@
   "    border-bottom-width: 3px }"
 
 //--------------------------------------------------------------------
-/*/{Protheus.doc} UPROJC28
+/*/{Protheus.doc} PROJC28
 Função de update de dicionários para compatibilização
 
 @author TOTVS Protheus
-@since  28/06/21
+@since  12/07/21
 @obs    Gerado por EXPORDIC - V.6.3.0.1 EFS / Upd. V.5.0.0 EFS
 @version 1.0
 /*/
 //--------------------------------------------------------------------
-User Function UPROJC28( cEmpAmb, cFilAmb )
+User Function PROJC28( cEmpAmb, cFilAmb )
 
   Local   aSay      := {}
   Local   aButton   := {}
@@ -115,9 +115,9 @@ User Function UPROJC28( cEmpAmb, cFilAmb )
 
         If lAuto
           If lOk
-            MsgStop( "Atualização Realizada.", "UPROJC28" )
+            MsgStop( "Atualização Realizada.", "PROJC28" )
           Else
-            MsgStop( "Atualização não Realizada.", "UPROJC28" )
+            MsgStop( "Atualização não Realizada.", "PROJC28" )
           EndIf
           dbCloseAll()
         Else
@@ -148,7 +148,7 @@ Return NIL
 Função de processamento da gravação dos arquivos
 
 @author TOTVS Protheus
-@since  28/06/21
+@since  12/07/21
 @obs    Gerado por EXPORDIC - V.6.3.0.1 EFS / Upd. V.5.0.0 EFS
 @version 1.0
 /*/
@@ -311,6 +311,12 @@ Static Function FSTProc( lEnd, aMarcadas, lAuto )
         FSAtuSXB()
 
         //------------------------------------
+        // Atualiza o dicionário SX5
+        //------------------------------------
+        oProcess:IncRegua1( "Dicionário de tabelas sistema" + " - " + SM0->M0_CODIGO + " " + SM0->M0_NOME + " ..." )
+        FSAtuSX5()
+
+        //------------------------------------
         // Atualiza os helps
         //------------------------------------
         oProcess:IncRegua1( "Helps de Campo" + " - " + SM0->M0_CODIGO + " " + SM0->M0_NOME + " ..." )
@@ -360,7 +366,7 @@ Return lRet
 Função de processamento da gravação do SX3 - Campos
 
 @author TOTVS Protheus
-@since  28/06/21
+@since  12/07/21
 @obs    Gerado por EXPORDIC - V.6.3.0.1 EFS / Upd. V.5.0.0 EFS
 @version 1.0
 /*/
@@ -1317,9 +1323,9 @@ Static Function FSAtuSX3()
   { 'R'																	, .T. }, ; //X3_CONTEXT
   { ''																	, .T. }, ; //X3_OBRIGAT
   { ''																	, .T. }, ; //X3_VLDUSER
-  { '01=Bonificao;02=Desconto pedido;03=Pagamento R$'						, .T. }, ; //X3_CBOX
-  { '01=Bonificao;02=Desconto pedido;03=Pagamento R$'						, .T. }, ; //X3_CBOXSPA
-  { '01=Bonificao;02=Desconto pedido;03=Pagamento R$'						, .T. }, ; //X3_CBOXENG
+  { '1=Bonificacao;2=Desconto Pedido;3=Pagamento R$;6=Desc.Incondicional;5=Outros', .T. }, ; //X3_CBOX
+  { '1=Bonificacao;2=Desconto Pedido;3=Pagamento R$;6=Desc.Incondicional;5=Outros', .T. }, ; //X3_CBOXSPA
+  { '1=Bonificacao;2=Desconto Pedido;3=Pagamento R$;6=Desc.Incondicional;5=Outros', .T. }, ; //X3_CBOXENG
   { ''																	, .T. }, ; //X3_PICTVAR
   { ''																	, .T. }, ; //X3_WHEN
   { ''																	, .T. }, ; //X3_INIBRW
@@ -2120,6 +2126,3393 @@ Static Function FSAtuSX3()
   { ''																	, .T. }, ; //X3_MODAL
   { ''																	, .T. }} ) //X3_PYME
 
+//
+// Campos Tabela PZ6
+//
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '01'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_FILIAL'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 2																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Filial'																, .T. }, ; //X3_TITULO
+  { 'Sucursal'															, .T. }, ; //X3_TITSPA
+  { 'Branch'																, .T. }, ; //X3_TITENG
+  { 'Filial do Sistema'													, .T. }, ; //X3_DESCRIC
+  { 'Sucursal'															, .T. }, ; //X3_DESCSPA
+  { 'Branch of the System'												, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 1																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { ''																	, .T. }, ; //X3_VISUAL
+  { ''																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { '033'																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '02'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_CODIGO'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 6																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Cod.Acordo'															, .T. }, ; //X3_TITULO
+  { 'Cod.Acordo'															, .T. }, ; //X3_TITSPA
+  { 'Cod.Acordo'															, .T. }, ; //X3_TITENG
+  { 'Cod.Acordo'															, .T. }, ; //X3_DESCRIC
+  { 'Cod.Acordo'															, .T. }, ; //X3_DESCSPA
+  { 'Cod.Acordo'															, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '03'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_IDPER'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 30																	, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Id.Periodo'															, .T. }, ; //X3_TITULO
+  { 'Id.Periodo'															, .T. }, ; //X3_TITSPA
+  { 'Id.Periodo'															, .T. }, ; //X3_TITENG
+  { 'Identificador do Periodo'											, .T. }, ; //X3_DESCRIC
+  { 'Identificador do Periodo'											, .T. }, ; //X3_DESCSPA
+  { 'Identificador do Periodo'											, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '04'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_PERINI'															, .T. }, ; //X3_CAMPO
+  { 'D'																	, .T. }, ; //X3_TIPO
+  { 8																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Per.Inicio'															, .T. }, ; //X3_TITULO
+  { 'Per.Inicio'															, .T. }, ; //X3_TITSPA
+  { 'Per.Inicio'															, .T. }, ; //X3_TITENG
+  { 'Inicio do Periodo'													, .T. }, ; //X3_DESCRIC
+  { 'Inicio do Periodo'													, .T. }, ; //X3_DESCSPA
+  { 'Inicio do Periodo'													, .T. }, ; //X3_DESCENG
+  { ''																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '05'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_PERFIM'															, .T. }, ; //X3_CAMPO
+  { 'D'																	, .T. }, ; //X3_TIPO
+  { 8																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Per.Fim'																, .T. }, ; //X3_TITULO
+  { 'Per.Fim'																, .T. }, ; //X3_TITSPA
+  { 'Per.Fim'																, .T. }, ; //X3_TITENG
+  { 'Fim do Periodo'														, .T. }, ; //X3_DESCRIC
+  { 'Fim do Periodo'														, .T. }, ; //X3_DESCSPA
+  { 'Fim do Periodo'														, .T. }, ; //X3_DESCENG
+  { ''																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '06'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_BASREA'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 18																	, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Base Real'															, .T. }, ; //X3_TITULO
+  { 'Base Real'															, .T. }, ; //X3_TITSPA
+  { 'Base Real'															, .T. }, ; //X3_TITENG
+  { 'Base Realizado no Periodo'											, .T. }, ; //X3_DESCRIC
+  { 'Base Realizado no Periodo'											, .T. }, ; //X3_DESCSPA
+  { 'Base Realizado no Periodo'											, .T. }, ; //X3_DESCENG
+  { '@E 999,999,999,999,999.99'											, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '07'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_BASAJU'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 18																	, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Base Ajust.'															, .T. }, ; //X3_TITULO
+  { 'Base Ajust.'															, .T. }, ; //X3_TITSPA
+  { 'Base Ajust.'															, .T. }, ; //X3_TITENG
+  { 'Base Ajustada do Periodo'											, .T. }, ; //X3_DESCRIC
+  { 'Base Ajustada do Periodo'											, .T. }, ; //X3_DESCSPA
+  { 'Base Ajustada do Periodo'											, .T. }, ; //X3_DESCENG
+  { '@E 999,999,999,999,999.99'											, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '08'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_PERCF1'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 6																		, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Per.Cresc.F1'														, .T. }, ; //X3_TITULO
+  { 'Per.Cresc.F1'														, .T. }, ; //X3_TITSPA
+  { 'Per.Cresc.F1'														, .T. }, ; //X3_TITENG
+  { 'Percentual Crescimento F1'											, .T. }, ; //X3_DESCRIC
+  { 'Percentual Crescimento F1'											, .T. }, ; //X3_DESCSPA
+  { 'Percentual Crescimento F1'											, .T. }, ; //X3_DESCENG
+  { '@E 999.99'															, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { 'U_AOMETAVL()'														, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '09'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_PERCF2'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 6																		, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Per.Cresc.F2'														, .T. }, ; //X3_TITULO
+  { 'Per.Cresc.F2'														, .T. }, ; //X3_TITSPA
+  { 'Per.Cresc.F2'														, .T. }, ; //X3_TITENG
+  { 'Percentual Crescimento F2'											, .T. }, ; //X3_DESCRIC
+  { 'Percentual Crescimento F2'											, .T. }, ; //X3_DESCSPA
+  { 'Percentual Crescimento F2'											, .T. }, ; //X3_DESCENG
+  { '@E 999.99'															, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { 'U_AOMETAVL()'														, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '10'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_PERCF3'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 6																		, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Per.Cresc.F3'														, .T. }, ; //X3_TITULO
+  { 'Per.Cresc.F3'														, .T. }, ; //X3_TITSPA
+  { 'Per.Cresc.F3'														, .T. }, ; //X3_TITENG
+  { 'Percentual Crescimento F3'											, .T. }, ; //X3_DESCRIC
+  { 'Percentual Crescimento F3'											, .T. }, ; //X3_DESCSPA
+  { 'Percentual Crescimento F3'											, .T. }, ; //X3_DESCENG
+  { '@E 999.99'															, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { 'U_AOMETAVL()'														, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '11'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_PERCF4'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 6																		, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Per.Cresc.F4'														, .T. }, ; //X3_TITULO
+  { 'Per.Cresc.F4'														, .T. }, ; //X3_TITSPA
+  { 'Per.Cresc.F4'														, .T. }, ; //X3_TITENG
+  { 'Percentual Crescimento F4'											, .T. }, ; //X3_DESCRIC
+  { 'Percentual Crescimento F4'											, .T. }, ; //X3_DESCSPA
+  { 'Percentual Crescimento F4'											, .T. }, ; //X3_DESCENG
+  { '@E 999.99'															, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { 'U_AOMETAVL()'														, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '12'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_PERCF5'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 6																		, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Per.Cresc.F5'														, .T. }, ; //X3_TITULO
+  { 'Per.Cresc.F5'														, .T. }, ; //X3_TITSPA
+  { 'Per.Cresc.F5'														, .T. }, ; //X3_TITENG
+  { 'Percentual Crescimento F5'											, .T. }, ; //X3_DESCRIC
+  { 'Percentual Crescimento F5'											, .T. }, ; //X3_DESCSPA
+  { 'Percentual Crescimento F5'											, .T. }, ; //X3_DESCENG
+  { '@E 999.99'															, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { 'U_AOMETAVL()'														, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '13'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_METAF1'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 18																	, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Meta Rec. 1'															, .T. }, ; //X3_TITULO
+  { 'Meta Rec. 1'															, .T. }, ; //X3_TITSPA
+  { 'Meta Rec. 1'															, .T. }, ; //X3_TITENG
+  { 'Meta Rec. 1'															, .T. }, ; //X3_DESCRIC
+  { 'Meta Rec. 1'															, .T. }, ; //X3_DESCSPA
+  { 'Meta Rec. 1'															, .T. }, ; //X3_DESCENG
+  { '@E 999,999,999,999,999.99'											, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '13'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_METAP1'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 18																	, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Meta Posit 1'														, .T. }, ; //X3_TITULO
+  { 'Meta Posit 1'														, .T. }, ; //X3_TITSPA
+  { 'Meta Posit 1'														, .T. }, ; //X3_TITENG
+  { 'Meta Posit 1'														, .T. }, ; //X3_DESCRIC
+  { 'Meta Posit 1'														, .T. }, ; //X3_DESCSPA
+  { 'Meta Posit 1'														, .T. }, ; //X3_DESCENG
+  { '@E 999,999,999,999,999.99'											, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '14'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_METAF2'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 18																	, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Meta Rec. 2'															, .T. }, ; //X3_TITULO
+  { 'Meta Rec. 2'															, .T. }, ; //X3_TITSPA
+  { 'Meta Rec. 2'															, .T. }, ; //X3_TITENG
+  { 'Meta Rec. 2'															, .T. }, ; //X3_DESCRIC
+  { 'Meta Rec. 2'															, .T. }, ; //X3_DESCSPA
+  { 'Meta Rec. 2'															, .T. }, ; //X3_DESCENG
+  { '@E 999,999,999,999,999.99'											, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '14'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_METAP2'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 18																	, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Meta Posit 2'														, .T. }, ; //X3_TITULO
+  { 'Meta Posit 2'														, .T. }, ; //X3_TITSPA
+  { 'Meta Posit 2'														, .T. }, ; //X3_TITENG
+  { 'Meta Posit 2'														, .T. }, ; //X3_DESCRIC
+  { 'Meta Posit 2'														, .T. }, ; //X3_DESCSPA
+  { 'Meta Posit 2'														, .T. }, ; //X3_DESCENG
+  { '@E 999,999,999,999,999.99'											, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '15'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_METAF3'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 18																	, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Meta Rec. 3'															, .T. }, ; //X3_TITULO
+  { 'Meta Rec. 3'															, .T. }, ; //X3_TITSPA
+  { 'Meta Rec. 3'															, .T. }, ; //X3_TITENG
+  { 'Meta Rec. 3'															, .T. }, ; //X3_DESCRIC
+  { 'Meta Rec. 3'															, .T. }, ; //X3_DESCSPA
+  { 'Meta Rec. 3'															, .T. }, ; //X3_DESCENG
+  { '@E 999,999,999,999,999.99'											, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '15'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_METAP3'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 18																	, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Meta Posit 3'														, .T. }, ; //X3_TITULO
+  { 'Meta Posit 3'														, .T. }, ; //X3_TITSPA
+  { 'Meta Posit 3'														, .T. }, ; //X3_TITENG
+  { 'Meta Posit 3'														, .T. }, ; //X3_DESCRIC
+  { 'Meta Posit 3'														, .T. }, ; //X3_DESCSPA
+  { 'Meta Posit 3'														, .T. }, ; //X3_DESCENG
+  { '@E 999,999,999,999,999.99'											, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '16'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_METAF4'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 18																	, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Meta Rec. 4'															, .T. }, ; //X3_TITULO
+  { 'Meta Rec. 4'															, .T. }, ; //X3_TITSPA
+  { 'Meta Rec. 4'															, .T. }, ; //X3_TITENG
+  { 'Meta Rec. 4'															, .T. }, ; //X3_DESCRIC
+  { 'Meta Rec. 4'															, .T. }, ; //X3_DESCSPA
+  { 'Meta Rec. 4'															, .T. }, ; //X3_DESCENG
+  { '@E 999,999,999,999,999.99'											, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '16'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_METAP4'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 18																	, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Meta Posit 4'														, .T. }, ; //X3_TITULO
+  { 'Meta Posit 4'														, .T. }, ; //X3_TITSPA
+  { 'Meta Posit 4'														, .T. }, ; //X3_TITENG
+  { 'Meta Posit 4'														, .T. }, ; //X3_DESCRIC
+  { 'Meta Posit 4'														, .T. }, ; //X3_DESCSPA
+  { 'Meta Posit 4'														, .T. }, ; //X3_DESCENG
+  { '@E 999,999,999,999,999.99'											, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '17'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_METAF5'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 18																	, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Meta Rec. 5'															, .T. }, ; //X3_TITULO
+  { 'Meta Rec. 5'															, .T. }, ; //X3_TITSPA
+  { 'Meta Rec. 5'															, .T. }, ; //X3_TITENG
+  { 'Meta Rec. 5'															, .T. }, ; //X3_DESCRIC
+  { 'Meta Rec. 5'															, .T. }, ; //X3_DESCSPA
+  { 'Meta Rec. 5'															, .T. }, ; //X3_DESCENG
+  { '@E 999,999,999,999,999.99'											, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '17'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_METAP5'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 18																	, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Meta Posit 5'														, .T. }, ; //X3_TITULO
+  { 'Meta Posit 5'														, .T. }, ; //X3_TITSPA
+  { 'Meta Posit 5'														, .T. }, ; //X3_TITENG
+  { 'Meta Posit 5'														, .T. }, ; //X3_DESCRIC
+  { 'Meta Posit 5'														, .T. }, ; //X3_DESCSPA
+  { 'Meta Posit 5'														, .T. }, ; //X3_DESCENG
+  { '@E 999,999,999,999,999.99'											, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '18'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_VALREA'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 18																	, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'R. Realizada'														, .T. }, ; //X3_TITULO
+  { 'R. Realizada'														, .T. }, ; //X3_TITSPA
+  { 'R. Realizada'														, .T. }, ; //X3_TITENG
+  { 'R. Realizada'														, .T. }, ; //X3_DESCRIC
+  { 'R. Realizada'														, .T. }, ; //X3_DESCSPA
+  { 'R. Realizada'														, .T. }, ; //X3_DESCENG
+  { '@E 999,999,999,999,999.99'											, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '18'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_PREALI'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 18																	, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'P. Realizada'														, .T. }, ; //X3_TITULO
+  { 'P. Realizada'														, .T. }, ; //X3_TITSPA
+  { 'P. Realizada'														, .T. }, ; //X3_TITENG
+  { 'P. Realizada'														, .T. }, ; //X3_DESCRIC
+  { 'P. Realizada'														, .T. }, ; //X3_DESCSPA
+  { 'P. Realizada'														, .T. }, ; //X3_DESCENG
+  { '@E 999,999,999,999,999.99'											, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '19'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_BASVER'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 18																	, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'B.Calc.Bonus'														, .T. }, ; //X3_TITULO
+  { 'B.Calc.Bonus'														, .T. }, ; //X3_TITSPA
+  { 'B.Calc.Bonus'														, .T. }, ; //X3_TITENG
+  { 'Base de Calculo Bonus'												, .T. }, ; //X3_DESCRIC
+  { 'Base de Calculo Bonus'												, .T. }, ; //X3_DESCSPA
+  { 'Base de Calculo Bonus'												, .T. }, ; //X3_DESCENG
+  { '@E 999,999,999,999,999.99'											, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(65)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '20'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_PBONF1'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 6																		, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Per.Bonus F1'														, .T. }, ; //X3_TITULO
+  { 'Per.Bonus F1'														, .T. }, ; //X3_TITSPA
+  { 'Per.Bonus F1'														, .T. }, ; //X3_TITENG
+  { 'Percentual Bonus Faixa 1'											, .T. }, ; //X3_DESCRIC
+  { 'Percentual Bonus Faixa 1'											, .T. }, ; //X3_DESCSPA
+  { 'Percentual Bonus Faixa 1'											, .T. }, ; //X3_DESCENG
+  { '@E 999.99'															, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '21'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_PBONF2'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 6																		, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Per.Bonus F2'														, .T. }, ; //X3_TITULO
+  { 'Per.Bonus F2'														, .T. }, ; //X3_TITSPA
+  { 'Per.Bonus F2'														, .T. }, ; //X3_TITENG
+  { 'Percentual Bonus Faixa 2'											, .T. }, ; //X3_DESCRIC
+  { 'Percentual Bonus Faixa 2'											, .T. }, ; //X3_DESCSPA
+  { 'Percentual Bonus Faixa 2'											, .T. }, ; //X3_DESCENG
+  { '@E 999.99'															, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '22'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_PBONF3'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 6																		, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Per.Bonus F3'														, .T. }, ; //X3_TITULO
+  { 'Per.Bonus F3'														, .T. }, ; //X3_TITSPA
+  { 'Per.Bonus F3'														, .T. }, ; //X3_TITENG
+  { 'Percentual Bonus Faixa 3'											, .T. }, ; //X3_DESCRIC
+  { 'Percentual Bonus Faixa 3'											, .T. }, ; //X3_DESCSPA
+  { 'Percentual Bonus Faixa 3'											, .T. }, ; //X3_DESCENG
+  { '@E 999.99'															, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '23'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_PBONF4'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 6																		, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Per.Bonus F4'														, .T. }, ; //X3_TITULO
+  { 'Per.Bonus F4'														, .T. }, ; //X3_TITSPA
+  { 'Per.Bonus F4'														, .T. }, ; //X3_TITENG
+  { 'Percentual Bonus Faixa 4'											, .T. }, ; //X3_DESCRIC
+  { 'Percentual Bonus Faixa 4'											, .T. }, ; //X3_DESCSPA
+  { 'Percentual Bonus Faixa 4'											, .T. }, ; //X3_DESCENG
+  { '@E 999.99'															, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '24'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_PBONF5'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 6																		, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Per.Bonus F5'														, .T. }, ; //X3_TITULO
+  { 'Per.Bonus F5'														, .T. }, ; //X3_TITSPA
+  { 'Per.Bonus F5'														, .T. }, ; //X3_TITENG
+  { 'Percentual Bonus Faixa 5'											, .T. }, ; //X3_DESCRIC
+  { 'Percentual Bonus Faixa 5'											, .T. }, ; //X3_DESCSPA
+  { 'Percentual Bonus Faixa 5'											, .T. }, ; //X3_DESCENG
+  { '@E 999.99'															, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '25'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_BONUS'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 18																	, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Bônus'																, .T. }, ; //X3_TITULO
+  { 'Bônus'																, .T. }, ; //X3_TITSPA
+  { 'Bônus'																, .T. }, ; //X3_TITENG
+  { 'Bônus Gerado'														, .T. }, ; //X3_DESCRIC
+  { 'Bônus Gerado'														, .T. }, ; //X3_DESCSPA
+  { 'Bônus Gerado'														, .T. }, ; //X3_DESCENG
+  { '@E 999,999,999,999,999.99'											, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '26'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_SI'																, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 6																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Numero SI'															, .T. }, ; //X3_TITULO
+  { 'Numero SI'															, .T. }, ; //X3_TITSPA
+  { 'Numero SI'															, .T. }, ; //X3_TITENG
+  { 'Numero SI Gerada'													, .T. }, ; //X3_DESCRIC
+  { 'Numero SI Gerada'													, .T. }, ; //X3_DESCSPA
+  { 'Numero SI Gerada'													, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '27'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_DTULRE'															, .T. }, ; //X3_CAMPO
+  { 'D'																	, .T. }, ; //X3_TIPO
+  { 8																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Dt.Prc.Real'															, .T. }, ; //X3_TITULO
+  { 'Dt.Prc.Real'															, .T. }, ; //X3_TITSPA
+  { 'Dt.Prc.Real'															, .T. }, ; //X3_TITENG
+  { 'Data Proc. do Realizado'												, .T. }, ; //X3_DESCRIC
+  { 'Data Proc. do Realizado'												, .T. }, ; //X3_DESCSPA
+  { 'Data Proc. do Realizado'												, .T. }, ; //X3_DESCENG
+  { ''																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'PZ6'																	, .T. }, ; //X3_ARQUIVO
+  { '28'																	, .T. }, ; //X3_ORDEM
+  { 'PZ6_BVLREA'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 18																	, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'B.Calc.R$'															, .T. }, ; //X3_TITULO
+  { 'B.Calc.R$'															, .T. }, ; //X3_TITSPA
+  { 'B.Calc.R$'															, .T. }, ; //X3_TITENG
+  { 'Base Calc. em R$'													, .T. }, ; //X3_DESCRIC
+  { 'Base Calc. em R$'													, .T. }, ; //X3_DESCSPA
+  { 'Base Calc. em R$'													, .T. }, ; //X3_DESCENG
+  { '@E 999,999,999,999,999.99'											, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(65)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+//
+// Campos Tabela SZO
+//
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '01'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_FILIAL'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 2																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Filial'																, .T. }, ; //X3_TITULO
+  { 'Sucursal'															, .T. }, ; //X3_TITSPA
+  { 'Branch'																, .T. }, ; //X3_TITENG
+  { 'Filial do Sistema'													, .T. }, ; //X3_DESCRIC
+  { 'Sucursal'															, .T. }, ; //X3_DESCSPA
+  { 'Branch of the System'												, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 1																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { ''																	, .T. }, ; //X3_VISUAL
+  { ''																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { '033'																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '02'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_EMP'																, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 4																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Empresa'																, .T. }, ; //X3_TITULO
+  { 'Empresa'																, .T. }, ; //X3_TITSPA
+  { 'Empresa'																, .T. }, ; //X3_TITENG
+  { 'Empresa'																, .T. }, ; //X3_DESCRIC
+  { 'Empresa'																, .T. }, ; //X3_DESCSPA
+  { 'Empresa'																, .T. }, ; //X3_DESCENG
+  { ''																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { '"0101"'																, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { '€'																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { '0101=Biancogres'														, .T. }, ; //X3_CBOX
+  { '0101=Biancogres'														, .T. }, ; //X3_CBOXSPA
+  { '0101=Biancogres'														, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { 'N'																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { 'N'																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '03'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_SERIE'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 3																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Serie'																, .T. }, ; //X3_TITULO
+  { 'Serie'																, .T. }, ; //X3_TITSPA
+  { 'Serie'																, .T. }, ; //X3_TITENG
+  { 'Serie'																, .T. }, ; //X3_DESCRIC
+  { 'Serie'																, .T. }, ; //X3_DESCSPA
+  { 'Serie'																, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { 'S'																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { '€'																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '04'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_DATA'																, .T. }, ; //X3_CAMPO
+  { 'D'																	, .T. }, ; //X3_TIPO
+  { 8																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Data'																, .T. }, ; //X3_TITULO
+  { 'Data'																, .T. }, ; //X3_TITSPA
+  { 'Data'																, .T. }, ; //X3_TITENG
+  { 'Data'																, .T. }, ; //X3_DESCRIC
+  { 'Data'																, .T. }, ; //X3_DESCSPA
+  { 'Data'																, .T. }, ; //X3_DESCENG
+  { '@D'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { 'S'																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { '€'																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '05'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_CLIENTE'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 6																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Cod.Cliente'															, .T. }, ; //X3_TITULO
+  { 'Cod.Cliente'															, .T. }, ; //X3_TITSPA
+  { 'Cod.Cliente'															, .T. }, ; //X3_TITENG
+  { 'Codigo Cliente'														, .T. }, ; //X3_DESCRIC
+  { 'Codigo Cliente'														, .T. }, ; //X3_DESCSPA
+  { 'Codigo Cliente'														, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { 'vazio() .or. existcpo("SA1")'										, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { 'SA1001'																, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { 'S'																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { '€'																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { 'N'																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { 'N'																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '06'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_LOJA'																, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 2																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Loja'																, .T. }, ; //X3_TITULO
+  { 'Loja'																, .T. }, ; //X3_TITSPA
+  { 'Loja'																, .T. }, ; //X3_TITENG
+  { 'Loja'																, .T. }, ; //X3_DESCRIC
+  { 'Loja'																, .T. }, ; //X3_DESCSPA
+  { 'Loja'																, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { '€'																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { 'N'																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { 'N'																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '07'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_NOMCLI'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 50																	, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Nome Cliente'														, .T. }, ; //X3_TITULO
+  { 'Nome Cliente'														, .T. }, ; //X3_TITSPA
+  { 'Nome Cliente'														, .T. }, ; //X3_TITENG
+  { ''																	, .T. }, ; //X3_DESCRIC
+  { ''																	, .T. }, ; //X3_DESCSPA
+  { ''																	, .T. }, ; //X3_DESCENG
+  { ''																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'V'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { 'POSICIONE("SA1",1,XFILIAL("SA1")+SZO->ZO_CLIENTE,"A1_NOME")'			, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '08'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_REPRE'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 6																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Cod. Repres.'														, .T. }, ; //X3_TITULO
+  { 'Cod. Repres.'														, .T. }, ; //X3_TITSPA
+  { 'Cod. Repres.'														, .T. }, ; //X3_TITENG
+  { 'Cod. Repres.'														, .T. }, ; //X3_DESCRIC
+  { 'Cod. Repres.'														, .T. }, ; //X3_DESCSPA
+  { 'Cod. Repres.'														, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { 'vazio() .or. existcpo("SA3")'										, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { 'SA3'																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { '€'																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '09'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_VALOR'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 14																	, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Valor'																, .T. }, ; //X3_TITULO
+  { 'Valor'																, .T. }, ; //X3_TITSPA
+  { 'Valor'																, .T. }, ; //X3_TITENG
+  { 'Valor'																, .T. }, ; //X3_DESCRIC
+  { 'Valor'																, .T. }, ; //X3_DESCSPA
+  { 'Valor'																, .T. }, ; //X3_DESCENG
+  { '@E 999,999,999.99'													, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { '€'																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '10'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_FPAGTO'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 1																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Forma Pagto'															, .T. }, ; //X3_TITULO
+  { 'Forma Pagto'															, .T. }, ; //X3_TITSPA
+  { 'Forma Pagto'															, .T. }, ; //X3_TITENG
+  { 'Forma de Pagamento'													, .T. }, ; //X3_DESCRIC
+  { 'Forma de Pagamento'													, .T. }, ; //X3_DESCSPA
+  { 'Forma de Pagamento'													, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { '"1"'																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { '€'																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { '1=Bonificacao;2=Desconto Pedido;3=Pagamento R$;6=Desc.Incondicional;5=Outros', .T. }, ; //X3_CBOX
+  { '1=Bonificacao;2=Desconto Pedido;3=Pagamento R$;6=Desc.Incondicional;5=Outros', .T. }, ; //X3_CBOXSPA
+  { '1=Bonificacao;2=Desconto Pedido;3=Pagamento R$;6=Desc.Incondicional;5=Outros', .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '11'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_TPDES'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 30																	, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Tipo Despesa'														, .T. }, ; //X3_TITULO
+  { 'Tipo Despesa'														, .T. }, ; //X3_TITSPA
+  { 'Tipo Despesa'														, .T. }, ; //X3_TITENG
+  { 'Tipo Despesa'														, .T. }, ; //X3_DESCRIC
+  { 'Tipo Despesa'														, .T. }, ; //X3_DESCSPA
+  { 'Tipo Despesa'														, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { 'MD'																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { 'S'																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { 'N'																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { 'N'																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '12'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_DESCR'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 100																	, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Descricao'															, .T. }, ; //X3_TITULO
+  { 'Descricao'															, .T. }, ; //X3_TITSPA
+  { 'Descricao'															, .T. }, ; //X3_TITENG
+  { 'Descricao'															, .T. }, ; //X3_DESCRIC
+  { 'Descricao'															, .T. }, ; //X3_DESCSPA
+  { 'Descricao'															, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { '€'																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '13'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_YCOD'																, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 6																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Codigo'																, .T. }, ; //X3_TITULO
+  { 'Codigo'																, .T. }, ; //X3_TITSPA
+  { 'Codigo'																, .T. }, ; //X3_TITENG
+  { 'Codigo'																, .T. }, ; //X3_DESCRIC
+  { 'Codigo'																, .T. }, ; //X3_DESCSPA
+  { 'Codigo'																, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '14'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_STATUS'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 20																	, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Status'																, .T. }, ; //X3_TITULO
+  { 'Status'																, .T. }, ; //X3_TITSPA
+  { 'Status'																, .T. }, ; //X3_TITENG
+  { 'Status'																, .T. }, ; //X3_DESCRIC
+  { 'Status'																, .T. }, ; //X3_DESCSPA
+  { 'Status'																, .T. }, ; //X3_DESCENG
+  { ''																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '15'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_DATAPRO'															, .T. }, ; //X3_CAMPO
+  { 'D'																	, .T. }, ; //X3_TIPO
+  { 8																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Data Aprovad'														, .T. }, ; //X3_TITULO
+  { 'Data Aprovad'														, .T. }, ; //X3_TITSPA
+  { 'Data Aprovad'														, .T. }, ; //X3_TITENG
+  { 'Data Aprovad'														, .T. }, ; //X3_DESCRIC
+  { 'Data Aprovad'														, .T. }, ; //X3_DESCSPA
+  { 'Data Aprovad'														, .T. }, ; //X3_DESCENG
+  { ''																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '16'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_HORAAPR'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 10																	, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Hora Aprov'															, .T. }, ; //X3_TITULO
+  { 'Hora Aprov'															, .T. }, ; //X3_TITSPA
+  { 'Hora Aprov'															, .T. }, ; //X3_TITENG
+  { ''																	, .T. }, ; //X3_DESCRIC
+  { ''																	, .T. }, ; //X3_DESCSPA
+  { ''																	, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '17'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_USUAPRO'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 25																	, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Usuari Aprov'														, .T. }, ; //X3_TITULO
+  { 'Usuari Aprov'														, .T. }, ; //X3_TITSPA
+  { 'Usuari Aprov'														, .T. }, ; //X3_TITENG
+  { ''																	, .T. }, ; //X3_DESCRIC
+  { ''																	, .T. }, ; //X3_DESCSPA
+  { ''																	, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '18'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_YOBS'																, .T. }, ; //X3_CAMPO
+  { 'M'																	, .T. }, ; //X3_TIPO
+  { 10																	, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Obs'																	, .T. }, ; //X3_TITULO
+  { 'Obs'																	, .T. }, ; //X3_TITSPA
+  { 'Obs'																	, .T. }, ; //X3_TITENG
+  { ''																	, .T. }, ; //X3_DESCRIC
+  { ''																	, .T. }, ; //X3_DESCSPA
+  { ''																	, .T. }, ; //X3_DESCENG
+  { ''																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '19'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_YOBSAPR'															, .T. }, ; //X3_CAMPO
+  { 'M'																	, .T. }, ; //X3_TIPO
+  { 10																	, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Obs.Aprov.'															, .T. }, ; //X3_TITULO
+  { 'Obs.Aprov.'															, .T. }, ; //X3_TITSPA
+  { 'Obs.Aprov.'															, .T. }, ; //X3_TITENG
+  { 'Obs.Aprovador'														, .T. }, ; //X3_DESCRIC
+  { 'Obs.Aprovador'														, .T. }, ; //X3_DESCSPA
+  { 'Obs.Aprovador'														, .T. }, ; //X3_DESCENG
+  { ''																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 1																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '20'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_YVALPAR'															, .T. }, ; //X3_CAMPO
+  { 'N'																	, .T. }, ; //X3_TIPO
+  { 14																	, .T. }, ; //X3_TAMANHO
+  { 2																		, .T. }, ; //X3_DECIMAL
+  { 'Valor Parc.'															, .T. }, ; //X3_TITULO
+  { 'Valor Parc.'															, .T. }, ; //X3_TITSPA
+  { 'Valor Parc.'															, .T. }, ; //X3_TITENG
+  { 'Valor Parc.'															, .T. }, ; //X3_DESCRIC
+  { 'Valor Parc.'															, .T. }, ; //X3_DESCSPA
+  { 'Valor Parc.'															, .T. }, ; //X3_DESCENG
+  { '@E 999,999,999.99'													, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '21'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_YCOMPRO'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 50																	, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Comprovação'															, .T. }, ; //X3_TITULO
+  { 'Comprovação'															, .T. }, ; //X3_TITSPA
+  { 'Comprovação'															, .T. }, ; //X3_TITENG
+  { 'Comprovação'															, .T. }, ; //X3_DESCRIC
+  { 'Comprovação'															, .T. }, ; //X3_DESCSPA
+  { 'Comprovação'															, .T. }, ; //X3_DESCENG
+  { ''																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { ''																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { ''																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '22'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_SI'																, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 6																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Sol. Invest'															, .T. }, ; //X3_TITULO
+  { 'Sol. Invest'															, .T. }, ; //X3_TITSPA
+  { 'Sol. Invest'															, .T. }, ; //X3_TITENG
+  { 'Sol. Invest'															, .T. }, ; //X3_DESCRIC
+  { 'Sol. Invest'															, .T. }, ; //X3_DESCSPA
+  { 'Sol. Invest'															, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 1																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { 'N'																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { 'N'																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '23'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_ITEMCTA'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 9																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Item Conta'															, .T. }, ; //X3_TITULO
+  { 'Item Conta'															, .T. }, ; //X3_TITSPA
+  { 'Item Conta'															, .T. }, ; //X3_TITENG
+  { 'Item Conta'															, .T. }, ; //X3_DESCRIC
+  { 'Item Conta'															, .T. }, ; //X3_DESCSPA
+  { 'Item Conta'															, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { 'CTD'																	, .T. }, ; //X3_F3
+  { 1																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { '€'																	, .T. }, ; //X3_OBRIGAT
+  { 'EXISTCPO("CTD")'														, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { 'N'																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { 'N'																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '24'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_USUDIR'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 20																	, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Diretor.Apr.'														, .T. }, ; //X3_TITULO
+  { 'Diretor.Apr.'														, .T. }, ; //X3_TITSPA
+  { 'Diretor.Apr.'														, .T. }, ; //X3_TITENG
+  { 'Diretor Aprovador'													, .T. }, ; //X3_DESCRIC
+  { 'Diretor Aprovador'													, .T. }, ; //X3_DESCSPA
+  { 'Diretor Aprovador'													, .T. }, ; //X3_DESCENG
+  { ''																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { 'N'																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { 'N'																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '25'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_DATADIR'															, .T. }, ; //X3_CAMPO
+  { 'D'																	, .T. }, ; //X3_TIPO
+  { 8																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Data Apr.Dir'														, .T. }, ; //X3_TITULO
+  { 'Data Apr.Dir'														, .T. }, ; //X3_TITSPA
+  { 'Data Apr.Dir'														, .T. }, ; //X3_TITENG
+  { 'Data Aprovacao Diretor'												, .T. }, ; //X3_DESCRIC
+  { 'Data Aprovacao Diretor'												, .T. }, ; //X3_DESCSPA
+  { 'Data Aprovacao Diretor'												, .T. }, ; //X3_DESCENG
+  { ''																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { 'N'																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { 'N'																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '26'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_HORADIR'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 5																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Hora Apr.Dir'														, .T. }, ; //X3_TITULO
+  { 'Hora Apr.Dir'														, .T. }, ; //X3_TITSPA
+  { 'Hora Apr.Dir'														, .T. }, ; //X3_TITENG
+  { 'Hora Aprovacao Diretor'												, .T. }, ; //X3_DESCRIC
+  { 'Hora Aprovacao Diretor'												, .T. }, ; //X3_DESCSPA
+  { 'Hora Aprovacao Diretor'												, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'V'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { 'N'																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { 'N'																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '27'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_CLVL'																, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 9																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Classe Valor'														, .T. }, ; //X3_TITULO
+  { 'Classe Valor'														, .T. }, ; //X3_TITSPA
+  { 'Classe Valor'														, .T. }, ; //X3_TITENG
+  { 'Classe Valor'														, .T. }, ; //X3_DESCRIC
+  { 'Classe Valor'														, .T. }, ; //X3_DESCSPA
+  { 'Classe Valor'														, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { 'N'																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { 'N'																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '28'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_CONTA'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 20																	, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Conta Contab'														, .T. }, ; //X3_TITULO
+  { 'Conta Contab'														, .T. }, ; //X3_TITSPA
+  { 'Conta Contab'														, .T. }, ; //X3_TITENG
+  { 'Conta Contabil'														, .T. }, ; //X3_DESCRIC
+  { 'Conta Contabil'														, .T. }, ; //X3_DESCSPA
+  { 'Conta Contabil'														, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { 'N'																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { 'N'																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '29'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_HISTAPR'															, .T. }, ; //X3_CAMPO
+  { 'M'																	, .T. }, ; //X3_TIPO
+  { 10																	, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Hist. Aprov.'														, .T. }, ; //X3_TITULO
+  { 'Hist. Aprov.'														, .T. }, ; //X3_TITSPA
+  { 'Hist. Aprov.'														, .T. }, ; //X3_TITENG
+  { 'Hist. Aprov.'														, .T. }, ; //X3_DESCRIC
+  { 'Hist. Aprov.'														, .T. }, ; //X3_DESCSPA
+  { 'Hist. Aprov.'														, .T. }, ; //X3_DESCENG
+  { ''																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { 'N'																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { 'N'																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '30'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_OBSSUP'															, .T. }, ; //X3_CAMPO
+  { 'M'																	, .T. }, ; //X3_TIPO
+  { 10																	, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Obs. Sup.'															, .T. }, ; //X3_TITULO
+  { 'Obs. Sup.'															, .T. }, ; //X3_TITSPA
+  { 'Obs. Sup.'															, .T. }, ; //X3_TITENG
+  { 'Obs. Sup.'															, .T. }, ; //X3_DESCRIC
+  { 'Obs. Sup.'															, .T. }, ; //X3_DESCSPA
+  { 'Obs. Sup.'															, .T. }, ; //X3_DESCENG
+  { ''																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { 'N'																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { 'N'																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '31'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_DATASUP'															, .T. }, ; //X3_CAMPO
+  { 'D'																	, .T. }, ; //X3_TIPO
+  { 8																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Hora Sup.'															, .T. }, ; //X3_TITULO
+  { 'Hora Sup.'															, .T. }, ; //X3_TITSPA
+  { 'Hora Sup.'															, .T. }, ; //X3_TITENG
+  { 'Hora Sup.'															, .T. }, ; //X3_DESCRIC
+  { 'Hora Sup.'															, .T. }, ; //X3_DESCSPA
+  { 'Hora Sup.'															, .T. }, ; //X3_DESCENG
+  { ''																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { 'N'																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { 'N'																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '32'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_HORASUP'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 8																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Hora Sup.'															, .T. }, ; //X3_TITULO
+  { 'Hora Sup.'															, .T. }, ; //X3_TITSPA
+  { 'Hora Sup.'															, .T. }, ; //X3_TITENG
+  { 'Hora Sup.'															, .T. }, ; //X3_DESCRIC
+  { 'Hora Sup.'															, .T. }, ; //X3_DESCSPA
+  { 'Hora Sup.'															, .T. }, ; //X3_DESCENG
+  { ''																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { 'N'																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { 'N'																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '33'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_USUASUP'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 25																	, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Usuario Sup.'														, .T. }, ; //X3_TITULO
+  { 'Usuario Sup.'														, .T. }, ; //X3_TITSPA
+  { 'Usuario Sup.'														, .T. }, ; //X3_TITENG
+  { 'Usuario Sup.'														, .T. }, ; //X3_DESCRIC
+  { 'Usuario Sup.'														, .T. }, ; //X3_DESCSPA
+  { 'Usuario Sup.'														, .T. }, ; //X3_DESCENG
+  { ''																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { 'N'																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { 'N'																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '34'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_YTPACOR'															, .T. }, ; //X3_CAMPO
+  { 'C'																	, .T. }, ; //X3_TIPO
+  { 2																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Tipo Acordo'															, .T. }, ; //X3_TITULO
+  { 'Tipo Acordo'															, .T. }, ; //X3_TITSPA
+  { 'Tipo Acordo'															, .T. }, ; //X3_TITENG
+  { 'Tipo Acordo'															, .T. }, ; //X3_DESCRIC
+  { 'Tipo Acordo'															, .T. }, ; //X3_DESCSPA
+  { 'Tipo Acordo'															, .T. }, ; //X3_DESCENG
+  { '@!'																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'S'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { 'N'																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { 'N'																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
+  aAdd( aSX3, { ;
+    { 'SZO'																	, .T. }, ; //X3_ARQUIVO
+  { '35'																	, .T. }, ; //X3_ORDEM
+  { 'ZO_YDTVLD'															, .T. }, ; //X3_CAMPO
+  { 'D'																	, .T. }, ; //X3_TIPO
+  { 8																		, .T. }, ; //X3_TAMANHO
+  { 0																		, .T. }, ; //X3_DECIMAL
+  { 'Dt Validade'															, .T. }, ; //X3_TITULO
+  { 'Dt Validade'															, .T. }, ; //X3_TITSPA
+  { 'Dt Validade'															, .T. }, ; //X3_TITENG
+  { 'Dt Validade'															, .T. }, ; //X3_DESCRIC
+  { 'Dt Validade'															, .T. }, ; //X3_DESCSPA
+  { 'Dt Validade'															, .T. }, ; //X3_DESCENG
+  { ''																	, .T. }, ; //X3_PICTURE
+  { ''																	, .T. }, ; //X3_VALID
+  { Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(128) + ;
+    Chr(128) + Chr(128) + Chr(128) + Chr(128) + Chr(160)					, .T. }, ; //X3_USADO
+  { ''																	, .T. }, ; //X3_RELACAO
+  { ''																	, .T. }, ; //X3_F3
+  { 0																		, .T. }, ; //X3_NIVEL
+  { Chr(254) + Chr(192)													, .T. }, ; //X3_RESERV
+  { ''																	, .T. }, ; //X3_CHECK
+  { ''																	, .T. }, ; //X3_TRIGGER
+  { 'U'																	, .T. }, ; //X3_PROPRI
+  { 'N'																	, .T. }, ; //X3_BROWSE
+  { 'A'																	, .T. }, ; //X3_VISUAL
+  { 'R'																	, .T. }, ; //X3_CONTEXT
+  { ''																	, .T. }, ; //X3_OBRIGAT
+  { ''																	, .T. }, ; //X3_VLDUSER
+  { ''																	, .T. }, ; //X3_CBOX
+  { ''																	, .T. }, ; //X3_CBOXSPA
+  { ''																	, .T. }, ; //X3_CBOXENG
+  { ''																	, .T. }, ; //X3_PICTVAR
+  { ''																	, .T. }, ; //X3_WHEN
+  { ''																	, .T. }, ; //X3_INIBRW
+  { ''																	, .T. }, ; //X3_GRPSXG
+  { ''																	, .T. }, ; //X3_FOLDER
+  { ''																	, .T. }, ; //X3_CONDSQL
+  { ''																	, .T. }, ; //X3_CHKSQL
+  { ''																	, .T. }, ; //X3_IDXSRV
+  { 'N'																	, .T. }, ; //X3_ORTOGRA
+  { ''																	, .T. }, ; //X3_TELA
+  { ''																	, .T. }, ; //X3_POSLGT
+  { 'N'																	, .T. }, ; //X3_IDXFLD
+  { ''																	, .T. }, ; //X3_AGRUP
+  { ''																	, .T. }, ; //X3_MODAL
+  { ''																	, .T. }} ) //X3_PYME
+
 
 //
 // Atualizando dicionário
@@ -2260,7 +5653,7 @@ Return NIL
 Função de processamento da gravação do SIX - Indices
 
 @author TOTVS Protheus
-@since  28/06/21
+@since  12/07/21
 @obs    Gerado por EXPORDIC - V.6.3.0.1 EFS / Upd. V.5.0.0 EFS
 @version 1.0
 /*/
@@ -2288,6 +5681,84 @@ Static Function FSAtuSIX()
   'Cod.Acordo'															, ; //DESCRICAO
   'Cod.Acordo'															, ; //DESCSPA
   'Cod.Acordo'															, ; //DESCENG
+  'U'																		, ; //PROPRI
+  ''																		, ; //F3
+  ''																		, ; //NICKNAME
+  'S'																		} ) //SHOWPESQ
+
+//
+// Tabela PZ6
+//
+  aAdd( aSIX, { ;
+    'PZ6'																	, ; //INDICE
+  '1'																		, ; //ORDEM
+  'PZ6_FILIAL+PZ6_CODIGO'													, ; //CHAVE
+  'Cod.Acordo'															, ; //DESCRICAO
+  'Cod.Acordo'															, ; //DESCSPA
+  'Cod.Acordo'															, ; //DESCENG
+  'U'																		, ; //PROPRI
+  ''																		, ; //F3
+  ''																		, ; //NICKNAME
+  'S'																		} ) //SHOWPESQ
+
+//
+// Tabela SZO
+//
+  aAdd( aSIX, { ;
+    'SZO'																	, ; //INDICE
+  '1'																		, ; //ORDEM
+  'ZO_FILIAL+ZO_CLIENTE+ZO_REPRE'											, ; //CHAVE
+  'Cod.Cliente+Cod. Repres.'												, ; //DESCRICAO
+  'Cod.Cliente+Cod. Repres.'												, ; //DESCSPA
+  'Cod.Cliente+Cod. Repres.'												, ; //DESCENG
+  'U'																		, ; //PROPRI
+  ''																		, ; //F3
+  ''																		, ; //NICKNAME
+  ''																		} ) //SHOWPESQ
+
+  aAdd( aSIX, { ;
+    'SZO'																	, ; //INDICE
+  '2'																		, ; //ORDEM
+  'ZO_FILIAL+ZO_REPRE+ZO_CLIENTE'											, ; //CHAVE
+  'Cod. Repres.+Cod.Cliente'												, ; //DESCRICAO
+  'Cod. Repres.+Cod.Cliente'												, ; //DESCSPA
+  'Cod. Repres.+Cod.Cliente'												, ; //DESCENG
+  'U'																		, ; //PROPRI
+  ''																		, ; //F3
+  ''																		, ; //NICKNAME
+  ''																		} ) //SHOWPESQ
+
+  aAdd( aSIX, { ;
+    'SZO'																	, ; //INDICE
+  '3'																		, ; //ORDEM
+  'ZO_FILIAL+ZO_SERIE+DTOS(ZO_DATA)+ZO_CLIENTE'							, ; //CHAVE
+  'Serie+Data+Cod.Cliente'												, ; //DESCRICAO
+  'Serie+Data+Cod.Cliente'												, ; //DESCSPA
+  'Serie+Data+Cod.Cliente'												, ; //DESCENG
+  'U'																		, ; //PROPRI
+  ''																		, ; //F3
+  ''																		, ; //NICKNAME
+  'S'																		} ) //SHOWPESQ
+
+  aAdd( aSIX, { ;
+    'SZO'																	, ; //INDICE
+  '4'																		, ; //ORDEM
+  'ZO_FILIAL+ZO_YCOD'														, ; //CHAVE
+  'Codigo'																, ; //DESCRICAO
+  'Codigo'																, ; //DESCSPA
+  'Codigo'																, ; //DESCENG
+  'U'																		, ; //PROPRI
+  ''																		, ; //F3
+  ''																		, ; //NICKNAME
+  'S'																		} ) //SHOWPESQ
+
+  aAdd( aSIX, { ;
+    'SZO'																	, ; //INDICE
+  '5'																		, ; //ORDEM
+  'ZO_FILIAL+ZO_SI'														, ; //CHAVE
+  'Sol. Invest'															, ; //DESCRICAO
+  'Sol. Invest'															, ; //DESCSPA
+  'Sol. Invest'															, ; //DESCENG
   'U'																		, ; //PROPRI
   ''																		, ; //F3
   ''																		, ; //NICKNAME
@@ -2346,7 +5817,7 @@ Return NIL
 Função de processamento da gravação do SX7 - Gatilhos
 
 @author TOTVS Protheus
-@since  28/06/21
+@since  12/07/21
 @obs    Gerado por EXPORDIC - V.6.3.0.1 EFS / Upd. V.5.0.0 EFS
 @version 1.0
 /*/
@@ -2414,6 +5885,109 @@ Static Function FSAtuSX7()
   ''																		} ) //X7_CONDIC
 
 //
+// Campo ZO_CLIENTE
+//
+  aAdd( aSX7, { ;
+    'ZO_CLIENTE'															, ; //X7_CAMPO
+  '001'																	, ; //X7_SEQUENC
+  'SA1->A1_LOJA'															, ; //X7_REGRA
+  'ZO_LOJA'																, ; //X7_CDOMIN
+  'P'																		, ; //X7_TIPO
+  'S'																		, ; //X7_SEEK
+  'SA1'																	, ; //X7_ALIAS
+  1																		, ; //X7_ORDEM
+  'xFilial("SA1")+M->ZO_CLIENTE'											, ; //X7_CHAVE
+  'U'																		, ; //X7_PROPRI
+  ''																		} ) //X7_CONDIC
+
+  aAdd( aSX7, { ;
+    'ZO_CLIENTE'															, ; //X7_CAMPO
+  '002'																	, ; //X7_SEQUENC
+  'IF(ALLTRIM(M->ZO_SERIE)=="S1",SA1->A1_VEND,SA1->A1_YVENDI)'			, ; //X7_REGRA
+  'ZO_REPRE'																, ; //X7_CDOMIN
+  'P'																		, ; //X7_TIPO
+  'S'																		, ; //X7_SEEK
+  'SA1'																	, ; //X7_ALIAS
+  1																		, ; //X7_ORDEM
+  'xFilial("SA1")+M->ZO_CLIENTE+M->ZO_LOJA'								, ; //X7_CHAVE
+  'U'																		, ; //X7_PROPRI
+  ''																		} ) //X7_CONDIC
+
+  aAdd( aSX7, { ;
+    'ZO_CLIENTE'															, ; //X7_CAMPO
+  '003'																	, ; //X7_SEQUENC
+  '"Baixa Total"'															, ; //X7_REGRA
+  'ZO_STATUS'																, ; //X7_CDOMIN
+  'P'																		, ; //X7_TIPO
+  'N'																		, ; //X7_SEEK
+  ''																		, ; //X7_ALIAS
+  0																		, ; //X7_ORDEM
+  ''																		, ; //X7_CHAVE
+  'U'																		, ; //X7_PROPRI
+  ''																		} ) //X7_CONDIC
+
+  aAdd( aSX7, { ;
+    'ZO_CLIENTE'															, ; //X7_CAMPO
+  '004'																	, ; //X7_SEQUENC
+  'SA1->A1_NOME'															, ; //X7_REGRA
+  'ZO_NOMCLI'																, ; //X7_CDOMIN
+  'P'																		, ; //X7_TIPO
+  'S'																		, ; //X7_SEEK
+  'SA1'																	, ; //X7_ALIAS
+  1																		, ; //X7_ORDEM
+  'xFilial("SA1")+M->ZO_CLIENTE+M->ZO_LOJA'								, ; //X7_CHAVE
+  'U'																		, ; //X7_PROPRI
+  ''																		} ) //X7_CONDIC
+
+//
+// Campo ZO_DATA
+//
+  aAdd( aSX7, { ;
+    'ZO_DATA'																, ; //X7_CAMPO
+  '001'																	, ; //X7_SEQUENC
+  'M->ZO_SI'																, ; //X7_REGRA
+  'ZO_YCOD'																, ; //X7_CDOMIN
+  'P'																		, ; //X7_TIPO
+  'N'																		, ; //X7_SEEK
+  ''																		, ; //X7_ALIAS
+  0																		, ; //X7_ORDEM
+  ''																		, ; //X7_CHAVE
+  'U'																		, ; //X7_PROPRI
+  ''																		} ) //X7_CONDIC
+
+//
+// Campo ZO_SERIE
+//
+  aAdd( aSX7, { ;
+    'ZO_SERIE'																, ; //X7_CAMPO
+  '001'																	, ; //X7_SEQUENC
+  'IF(ALLTRIM(M->ZO_SERIE)=="S1",SA1->A1_VEND,SA1->A1_YVENDI)'			, ; //X7_REGRA
+  'ZO_REPRE'																, ; //X7_CDOMIN
+  'P'																		, ; //X7_TIPO
+  'S'																		, ; //X7_SEEK
+  'SA1'																	, ; //X7_ALIAS
+  1																		, ; //X7_ORDEM
+  'xFilial("SA1")+M->ZO_CLIENTE'											, ; //X7_CHAVE
+  'U'																		, ; //X7_PROPRI
+  ''																		} ) //X7_CONDIC
+
+//
+// Campo ZO_TPDES
+//
+  aAdd( aSX7, { ;
+    'ZO_TPDES'																, ; //X7_CAMPO
+  '001'																	, ; //X7_SEQUENC
+  'Tabela("MD",M->ZO_TPDES)'												, ; //X7_REGRA
+  'ZO_TPDES'																, ; //X7_CDOMIN
+  'P'																		, ; //X7_TIPO
+  'N'																		, ; //X7_SEEK
+  'SX5'																	, ; //X7_ALIAS
+  1																		, ; //X7_ORDEM
+  ''																		, ; //X7_CHAVE
+  'U'																		, ; //X7_PROPRI
+  ''																		} ) //X7_CONDIC
+
+//
 // Atualizando dicionário
 //
   oProcess:SetRegua2( Len( aSX7 ) )
@@ -2475,7 +6049,7 @@ Return NIL
 Função de processamento da gravação do SXB - Consultas Padrao
 
 @author TOTVS Protheus
-@since  28/06/21
+@since  12/07/21
 @obs    Gerado por EXPORDIC - V.6.3.0.1 EFS / Upd. V.5.0.0 EFS
 @version 1.0
 /*/
@@ -2572,6 +6146,141 @@ Static Function FSAtuSXB()
   ''																		, ; //XB_DESCENG
   ''																		, ; //XB_WCONTEM
   'J070F3GRUPO()'															} ) //XB_CONTEM
+
+//
+// Consulta CTD
+//
+  aAdd( aSXB, { ;
+    'CTD'																	, ; //XB_ALIAS
+  '1'																		, ; //XB_TIPO
+  '01'																	, ; //XB_SEQ
+  'DB'																	, ; //XB_COLUNA
+  'Item Contabil'															, ; //XB_DESCRI
+  'Item Contable'															, ; //XB_DESCSPA
+  'Accounting Item'														, ; //XB_DESCENG
+  ''																		, ; //XB_WCONTEM
+  'CTD'																	} ) //XB_CONTEM
+
+  aAdd( aSXB, { ;
+    'CTD'																	, ; //XB_ALIAS
+  '2'																		, ; //XB_TIPO
+  '01'																	, ; //XB_SEQ
+  '01'																	, ; //XB_COLUNA
+  'Codigo'																, ; //XB_DESCRI
+  'Codigo'																, ; //XB_DESCSPA
+  'Code'																	, ; //XB_DESCENG
+  ''																		, ; //XB_WCONTEM
+  ''																		} ) //XB_CONTEM
+
+  aAdd( aSXB, { ;
+    'CTD'																	, ; //XB_ALIAS
+  '2'																		, ; //XB_TIPO
+  '02'																	, ; //XB_SEQ
+  '04'																	, ; //XB_COLUNA
+  'Descricao'																, ; //XB_DESCRI
+  'Descripcion'															, ; //XB_DESCSPA
+  'Description'															, ; //XB_DESCENG
+  ''																		, ; //XB_WCONTEM
+  ''																		} ) //XB_CONTEM
+
+  aAdd( aSXB, { ;
+    'CTD'																	, ; //XB_ALIAS
+  '2'																		, ; //XB_TIPO
+  '03'																	, ; //XB_SEQ
+  '03'																	, ; //XB_COLUNA
+  'Cod. Reduzido'															, ; //XB_DESCRI
+  'Cod. Reducido'															, ; //XB_DESCSPA
+  'Reduced Code'															, ; //XB_DESCENG
+  ''																		, ; //XB_WCONTEM
+  ''																		} ) //XB_CONTEM
+
+  aAdd( aSXB, { ;
+    'CTD'																	, ; //XB_ALIAS
+  '3'																		, ; //XB_TIPO
+  '01'																	, ; //XB_SEQ
+  '01'																	, ; //XB_COLUNA
+  'Cadastra Novo'															, ; //XB_DESCRI
+  'Registra Nuevo'														, ; //XB_DESCSPA
+  'Add New'																, ; //XB_DESCENG
+  ''																		, ; //XB_WCONTEM
+  '01'																	} ) //XB_CONTEM
+
+  aAdd( aSXB, { ;
+    'CTD'																	, ; //XB_ALIAS
+  '4'																		, ; //XB_TIPO
+  '01'																	, ; //XB_SEQ
+  '01'																	, ; //XB_COLUNA
+  'Codigo'																, ; //XB_DESCRI
+  'Codigo'																, ; //XB_DESCSPA
+  'Code'																	, ; //XB_DESCENG
+  ''																		, ; //XB_WCONTEM
+  'CTD_ITEM'																} ) //XB_CONTEM
+
+  aAdd( aSXB, { ;
+    'CTD'																	, ; //XB_ALIAS
+  '4'																		, ; //XB_TIPO
+  '01'																	, ; //XB_SEQ
+  '02'																	, ; //XB_COLUNA
+  'Descricao'																, ; //XB_DESCRI
+  'Descripcion'															, ; //XB_DESCSPA
+  'Description'															, ; //XB_DESCENG
+  ''																		, ; //XB_WCONTEM
+  'CTD_DESC01'															} ) //XB_CONTEM
+
+  aAdd( aSXB, { ;
+    'CTD'																	, ; //XB_ALIAS
+  '4'																		, ; //XB_TIPO
+  '02'																	, ; //XB_SEQ
+  '01'																	, ; //XB_COLUNA
+  'Descricao'																, ; //XB_DESCRI
+  'Descripcion'															, ; //XB_DESCSPA
+  'Description'															, ; //XB_DESCENG
+  ''																		, ; //XB_WCONTEM
+  'CTD_DESC01'															} ) //XB_CONTEM
+
+  aAdd( aSXB, { ;
+    'CTD'																	, ; //XB_ALIAS
+  '4'																		, ; //XB_TIPO
+  '02'																	, ; //XB_SEQ
+  '02'																	, ; //XB_COLUNA
+  'Codigo'																, ; //XB_DESCRI
+  'Codigo'																, ; //XB_DESCSPA
+  'Code'																	, ; //XB_DESCENG
+  ''																		, ; //XB_WCONTEM
+  'CTD_ITEM'																} ) //XB_CONTEM
+
+  aAdd( aSXB, { ;
+    'CTD'																	, ; //XB_ALIAS
+  '4'																		, ; //XB_TIPO
+  '03'																	, ; //XB_SEQ
+  '01'																	, ; //XB_COLUNA
+  'Cod. Reduzido'															, ; //XB_DESCRI
+  'Cod. Reducido'															, ; //XB_DESCSPA
+  'Reduced Code'															, ; //XB_DESCENG
+  ''																		, ; //XB_WCONTEM
+  'CTD_RES'																} ) //XB_CONTEM
+
+  aAdd( aSXB, { ;
+    'CTD'																	, ; //XB_ALIAS
+  '4'																		, ; //XB_TIPO
+  '03'																	, ; //XB_SEQ
+  '02'																	, ; //XB_COLUNA
+  'Descricao'																, ; //XB_DESCRI
+  'Descripcion'															, ; //XB_DESCSPA
+  'Description'															, ; //XB_DESCENG
+  ''																		, ; //XB_WCONTEM
+  'CTD_DESC01'															} ) //XB_CONTEM
+
+  aAdd( aSXB, { ;
+    'CTD'																	, ; //XB_ALIAS
+  '5'																		, ; //XB_TIPO
+  '01'																	, ; //XB_SEQ
+  ''																		, ; //XB_COLUNA
+  ''																		, ; //XB_DESCRI
+  ''																		, ; //XB_DESCSPA
+  ''																		, ; //XB_DESCENG
+  ''																		, ; //XB_WCONTEM
+  'If(FunName()$' + DUPLAS  + 'CTBA080,CONA010' + DUPLAS  + ',' + SIMPLES + '' + DUPLAS  + '' + SIMPLES + '+CTD->CTD_ITEM+' + SIMPLES + '' + DUPLAS  + '' + SIMPLES + ',CTD->CTD_ITEM)'} ) //XB_CONTEM
 
 //
 // Consulta CTH
@@ -2888,6 +6597,53 @@ Static Function FSAtuSXB()
   '#CRMXFilSXB("SA1")'													} ) //XB_CONTEM
 
 //
+// Consulta SA1001
+//
+  aAdd( aSXB, { ;
+    'SA1001'																, ; //XB_ALIAS
+  '1'																		, ; //XB_TIPO
+  '01'																	, ; //XB_SEQ
+  'RE'																	, ; //XB_COLUNA
+  'Clientes'																, ; //XB_DESCRI
+  'Clientes'																, ; //XB_DESCSPA
+  'Clientes'																, ; //XB_DESCENG
+  ''																		, ; //XB_WCONTEM
+  'SA1'																	} ) //XB_CONTEM
+
+  aAdd( aSXB, { ;
+    'SA1001'																, ; //XB_ALIAS
+  '2'																		, ; //XB_TIPO
+  '01'																	, ; //XB_SEQ
+  '01'																	, ; //XB_COLUNA
+  ''																		, ; //XB_DESCRI
+  ''																		, ; //XB_DESCSPA
+  ''																		, ; //XB_DESCENG
+  ''																		, ; //XB_WCONTEM
+  'Ft320PreF3("SA1")'														} ) //XB_CONTEM
+
+  aAdd( aSXB, { ;
+    'SA1001'																, ; //XB_ALIAS
+  '5'																		, ; //XB_TIPO
+  '01'																	, ; //XB_SEQ
+  ''																		, ; //XB_COLUNA
+  ''																		, ; //XB_DESCRI
+  ''																		, ; //XB_DESCSPA
+  ''																		, ; //XB_DESCENG
+  ''																		, ; //XB_WCONTEM
+  'SA1->A1_COD'															} ) //XB_CONTEM
+
+  aAdd( aSXB, { ;
+    'SA1001'																, ; //XB_ALIAS
+  '5'																		, ; //XB_TIPO
+  '02'																	, ; //XB_SEQ
+  ''																		, ; //XB_COLUNA
+  ''																		, ; //XB_DESCRI
+  ''																		, ; //XB_DESCSPA
+  ''																		, ; //XB_DESCENG
+  ''																		, ; //XB_WCONTEM
+  'SA1->A1_LOJA'															} ) //XB_CONTEM
+
+//
 // Consulta SA3
 //
   aAdd( aSXB, { ;
@@ -3065,6 +6821,42 @@ Static Function FSAtuSXB()
   ''																		, ; //XB_DESCENG
   ''																		, ; //XB_WCONTEM
   'SA3->A3_COD'															} ) //XB_CONTEM
+
+//
+// Consulta SZOSC5
+//
+  aAdd( aSXB, { ;
+    'SZOSC5'																, ; //XB_ALIAS
+  '1'																		, ; //XB_TIPO
+  '01'																	, ; //XB_SEQ
+  'RE'																	, ; //XB_COLUNA
+  'SOLICITAÇÕES DE INVE'													, ; //XB_DESCRI
+  'SOLICITAÇÕES DE INVE'													, ; //XB_DESCSPA
+  'SOLICITAÇÕES DE INVE'													, ; //XB_DESCENG
+  ''																		, ; //XB_WCONTEM
+  'SZO'																	} ) //XB_CONTEM
+
+  aAdd( aSXB, { ;
+    'SZOSC5'																, ; //XB_ALIAS
+  '2'																		, ; //XB_TIPO
+  '01'																	, ; //XB_SEQ
+  '01'																	, ; //XB_COLUNA
+  ''																		, ; //XB_DESCRI
+  ''																		, ; //XB_DESCSPA
+  ''																		, ; //XB_DESCENG
+  ''																		, ; //XB_WCONTEM
+  'U_F3_C5_YNUMSI()'														} ) //XB_CONTEM
+
+  aAdd( aSXB, { ;
+    'SZOSC5'																, ; //XB_ALIAS
+  '5'																		, ; //XB_TIPO
+  '01'																	, ; //XB_SEQ
+  ''																		, ; //XB_COLUNA
+  ''																		, ; //XB_DESCRI
+  ''																		, ; //XB_DESCSPA
+  ''																		, ; //XB_DESCENG
+  ''																		, ; //XB_WCONTEM
+  'hk_Retur1'																} ) //XB_CONTEM
 
 //
 // Consulta X5ZH
@@ -3301,11 +7093,137 @@ Return NIL
 
 
 //--------------------------------------------------------------------
+/*/{Protheus.doc} FSAtuSX5
+Função de processamento da gravação do SX5 - Indices
+
+@author TOTVS Protheus
+@since  12/07/21
+@obs    Gerado por EXPORDIC - V.6.3.0.1 EFS / Upd. V.5.0.0 EFS
+@version 1.0
+/*/
+//--------------------------------------------------------------------
+Static Function FSAtuSX5()
+  Local aEstrut   := {}
+  Local aSX5      := {}
+  Local cAlias    := ""
+  Local cFilSX5   := xFilial( "SX5" )
+  Local nI        := 0
+  Local nJ        := 0
+  Local nTamFil   := Len( SX5->X5_FILIAL )
+
+  AutoGrLog( "Ínicio da Atualização SX5" + CRLF )
+
+  aEstrut := { "X5_FILIAL", "X5_TABELA", "X5_CHAVE", "X5_DESCRI", "X5_DESCSPA", "X5_DESCENG" }
+
+//
+// Tabela 00
+//
+  aAdd( aSX5, { ;
+    cFilSX5																	, ; //X5_FILIAL
+  '00'																	, ; //X5_TABELA
+  'X7'																	, ; //X5_CHAVE
+  'DASHBOARD - KPI'														, ; //X5_DESCRI
+  'DASHBOARD - KPI'														, ; //X5_DESCSPA
+  'DASHBOARD - KPI'														} ) //X5_DESCENG
+
+//
+// Tabela X7
+//
+  aAdd( aSX5, { ;
+    cFilSX5																	, ; //X5_FILIAL
+  'X7'																	, ; //X5_TABELA
+  '0101'																	, ; //X5_CHAVE
+  'TEMPO CARR.'															, ; //X5_DESCRI
+  'LOGISTICA'																, ; //X5_DESCSPA
+  'TEMPO CARR.'															} ) //X5_DESCENG
+
+  aAdd( aSX5, { ;
+    cFilSX5																	, ; //X5_FILIAL
+  'X7'																	, ; //X5_TABELA
+  '0102'																	, ; //X5_CHAVE
+  'NO SHOW'																, ; //X5_DESCRI
+  'LOGISTICA'																, ; //X5_DESCSPA
+  'NO SHOW'																} ) //X5_DESCENG
+
+  aAdd( aSX5, { ;
+    cFilSX5																	, ; //X5_FILIAL
+  'X7'																	, ; //X5_TABELA
+  '0103'																	, ; //X5_CHAVE
+  'SAUDE EST.'															, ; //X5_DESCRI
+  'LOGISTICA'																, ; //X5_DESCSPA
+  'SAUDE EST.'															} ) //X5_DESCENG
+
+  aAdd( aSX5, { ;
+    cFilSX5																	, ; //X5_FILIAL
+  'X7'																	, ; //X5_TABELA
+  '0104'																	, ; //X5_CHAVE
+  'ESTOQUE'																, ; //X5_DESCRI
+  'LOGISTICA'																, ; //X5_DESCSPA
+  'ESTOQUE'																} ) //X5_DESCENG
+
+  aAdd( aSX5, { ;
+    cFilSX5																	, ; //X5_FILIAL
+  'X7'																	, ; //X5_TABELA
+  '0105'																	, ; //X5_CHAVE
+  'CUMPR.PRZ.DISP'														, ; //X5_DESCRI
+  'LOGISTICA'																, ; //X5_DESCSPA
+  'CUMPR.PRZ.DISP'														} ) //X5_DESCENG
+
+  aAdd( aSX5, { ;
+    cFilSX5																	, ; //X5_FILIAL
+  'X7'																	, ; //X5_TABELA
+  '0201'																	, ; //X5_CHAVE
+  '% SHARE ENG.'															, ; //X5_DESCRI
+  'VENDA'																	, ; //X5_DESCSPA
+  '% SHARE ENG.'															} ) //X5_DESCENG
+
+//
+// Atualizando dicionário
+//
+  oProcess:SetRegua2( Len( aSX5 ) )
+
+  dbSelectArea( "SX5" )
+  SX5->( dbSetOrder( 1 ) )
+
+  For nI := 1 To Len( aSX5 )
+
+    oProcess:IncRegua2( "Atualizando tabelas..." )
+
+    If !SX5->( dbSeek( PadR( aSX5[nI][1], nTamFil ) + aSX5[nI][2] + aSX5[nI][3] ) )
+      AutoGrLog( "Item da tabela criado. Tabela " + AllTrim( aSX5[nI][1] ) + aSX5[nI][2] + "/" + aSX5[nI][3] )
+      RecLock( "SX5", .T. )
+    Else
+      AutoGrLog( "Item da tabela alterado. Tabela " + AllTrim( aSX5[nI][1] ) + aSX5[nI][2] + "/" + aSX5[nI][3] )
+      RecLock( "SX5", .F. )
+    EndIf
+
+    For nJ := 1 To Len( aSX5[nI] )
+      If FieldPos( aEstrut[nJ] ) > 0
+        FieldPut( FieldPos( aEstrut[nJ] ), aSX5[nI][nJ] )
+      EndIf
+    Next nJ
+
+    MsUnLock()
+
+    aAdd( aArqUpd, aSX5[nI][1] )
+
+    If !( aSX5[nI][1] $ cAlias )
+      cAlias += aSX5[nI][1] + "/"
+    EndIf
+
+  Next nI
+
+  AutoGrLog( CRLF + "Final da Atualização" + " SX5" + CRLF + Replicate( "-", 128 ) + CRLF )
+
+Return NIL
+
+
+//--------------------------------------------------------------------
 /*/{Protheus.doc} FSAtuHlp
 Função de processamento da gravação dos Helps de Campos
 
 @author TOTVS Protheus
-@since  28/06/21
+@since  12/07/21
 @obs    Gerado por EXPORDIC - V.6.3.0.1 EFS / Upd. V.5.0.0 EFS
 @version 1.0
 /*/
@@ -3322,6 +7240,12 @@ Static Function FSAtuHlp()
 
 //
 // Helps Tabela PZ5
+//
+//
+// Helps Tabela PZ6
+//
+//
+// Helps Tabela SZO
 //
   AutoGrLog( CRLF + "Final da Atualização" + " " + "Helps de Campos" + CRLF + Replicate( "-", 128 ) + CRLF )
 
@@ -3425,7 +7349,7 @@ Static Function EscEmpresa()
   @ 128, 80 Button oButDMar   Prompt "&Desmarcar" Size 32, 12 Pixel Action ( MarcaMas( oLbx, aVetor, cMascEmp, .F. ), VerTodos( aVetor, @lChk, oChkMar ) ) ;
     Message "Desmarcar usando" + CRLF + "máscara ( ?? )" Of oDlg
   oButDMar:SetCss( CSSBOTAO )
-  @ 112, 157  Button oButOk   Prompt "Processar"  Size 32, 12 Pixel Action (  RetSelecao( @aRet, aVetor ), IIf( Len( aRet ) > 0, oDlg:End(), MsgStop( "Ao menos um grupo deve ser selecionado", "UPROJC28" ) ) ) ;
+  @ 112, 157  Button oButOk   Prompt "Processar"  Size 32, 12 Pixel Action (  RetSelecao( @aRet, aVetor ), IIf( Len( aRet ) > 0, oDlg:End(), MsgStop( "Ao menos um grupo deve ser selecionado", "PROJC28" ) ) ) ;
     Message "Confirma a seleção e efetua" + CRLF + "o processamento" Of oDlg
   oButOk:SetCss( CSSBOTAO )
   @ 128, 157  Button oButCanc Prompt "Cancelar"   Size 32, 12 Pixel Action ( IIf( lTeveMarc, aRet :=  aMarcadas, .T. ), oDlg:End() ) ;
@@ -3581,7 +7505,7 @@ Return NIL
 Função de processamento abertura do SM0 modo exclusivo
 
 @author TOTVS Protheus
-@since  28/06/21
+@since  12/07/21
 @obs    Gerado por EXPORDIC - V.6.3.0.1 EFS / Upd. V.5.0.0 EFS
 @version 1.0
 /*/
@@ -3589,7 +7513,6 @@ Função de processamento abertura do SM0 modo exclusivo
 Static Function MyOpenSM0(lShared)
   Local lOpen := .F.
   Local nLoop := 0
-
   lShared := .T.
 
   If FindFunction( "_OpenSM0Excl" )
@@ -3626,7 +7549,7 @@ Return lOpen
 Função de leitura do LOG gerado com limitacao de string
 
 @author TOTVS Protheus
-@since  28/06/21
+@since  12/07/21
 @obs    Gerado por EXPORDIC - V.6.3.0.1 EFS / Upd. V.5.0.0 EFS
 @version 1.0
 /*/
