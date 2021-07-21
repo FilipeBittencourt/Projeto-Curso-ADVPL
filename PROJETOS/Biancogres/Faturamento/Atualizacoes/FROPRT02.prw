@@ -46,11 +46,11 @@ User Function FROPRT02(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 	If !( AllTrim(CEMPANT) $ "07#14" ) .OR. (SB1->B1_TIPO == "PR")
 
 		aRet := U_FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed, _cLoteSel,,_cUserName, _lNoTemp, _cMotExc, _cSubTp, _cNumRes)
-	
+
 	ElseIf (AllTrim(cEmpAnt) == '07' .And. AllTrim(cFilAnt) == '05' )
-	
+
 		aRet := U_FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed, _cLoteSel, ,_cUserName, _lNoTemp, _cMotExc, _cSubTp, _cNumRes)
-	
+
 	Else
 
 		SB1->(DbSetOrder(1))
@@ -83,13 +83,13 @@ User Function FROPRT02(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 			__EstTot := U_FROPSAL(_cProduto,_cLocal)
 
 			U_FROPMSG(TIT_MSG, 	"Não foi possível efetuar reserva do Lote:"+CRLF+;
-			"Quantidade a reservar: "+AllTrim(Str(_nQuant))+CRLF+;
-			"Produto: "+AllTrim(_cProduto)+CRLF+;
-			"Lote: "+_cLoteSel+CRLF+;
-			"Saldo Lote Calculado: "+AllTrim(Str( __EstLote ))+CRLF+;
-			"Saldo Total Arm. Calculado: "+AllTrim(Str( __EstTot ))+CRLF+CRLF+;
-			"Verificar - Inconsistência no estoque.";
-			,,3,"ATENÇÃO!!!")
+				"Quantidade a reservar: "+AllTrim(Str(_nQuant))+CRLF+;
+				"Produto: "+AllTrim(_cProduto)+CRLF+;
+				"Lote: "+_cLoteSel+CRLF+;
+				"Saldo Lote Calculado: "+AllTrim(Str( __EstLote ))+CRLF+;
+				"Saldo Total Arm. Calculado: "+AllTrim(Str( __EstTot ))+CRLF+CRLF+;
+				"Verificar - Inconsistência no estoque.";
+				,,3,"ATENÇÃO!!!")
 
 			aRet := {1,{}}
 
@@ -112,19 +112,19 @@ User Function FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 	Local _cFieldsC0
 	Local _cUserChv
 	Local _lOkRes
-	
+
 	Default _cVendPed 	:= ""
 	Default _cLoteSel 	:= ""
 	Default _cEmpOri 	:= ""
 	Default _cUserName 	:= CUSERNAME
 	Default _lNoTemp 	:= .F.
 	Default _cMotExc 	:= "LOK"
-	Default _cSubTp		:= "" 
+	Default _cSubTp		:= ""
 	Default _cNumRes	:= ""
-		
-		
-		
-		
+
+
+
+
 	//Indice 8 personalido -> C0_YPEDIDO+C0_YITEMPV   nick  'PEDIDO'
 	//Indice 9 personalido -> C0_YEMPORI+C0_YPITORI   nick  'EMPPEDORI'
 	//Apagar reservas anteriores
@@ -140,25 +140,25 @@ User Function FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 	EndIf
 
 	If (!Empty(_cNumRes))
-	
+
 		__nQuantAnt := U_GQTRESPI(_cUserName, _cProduto, _cLoteSel, _cPedido, _cItem, _cEmpOri, '')
 		If (__nQuantAnt > 0 .And.  __nQuantAnt <> _nQuant)
 			U_CSRESPRO(_cNumRes, _cProduto, _cLoteSel, __nQuantAnt)	//Volta a quantidad da reserva anterior*/
 		EndIf
-		
+
 		If !(U_EXRESPEI(_cUserName, _cProduto, _cLoteSel, _nQuant, _cPedido, _cItem, _cEmpOri, ''))
 			U_BSRESPRO(_cNumRes, _cProduto, _cLoteSel, _nQuant)
-		EndIf		 
-		 
+		EndIf
+
 	EndIf
-	
+
 	//Apagar reservas do Item para gerar novamente
 	U_FRRT02EX(_cPedido, _cItem, _cProduto, _cMotExc, _cEmpOri, _cUserName)
 
 	//Alert('Passei: '+_cNumRes)
-	
-		
-		
+
+
+
 	SB1->(DbSetOrder(1))
 	SB1->(DbSeek(XFilial("SB1")+_cProduto))
 
@@ -173,7 +173,7 @@ User Function FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 			_cExpLot := "% and 1 = 1 %"
 		EndIf
 
-		If AllTrim(CEMPANT) <> "13"  
+		If AllTrim(CEMPANT) <> "13"
 			If (_cLocal <> "05")
 				_cExpEnd := "% and BF_LOCALIZ in ('ZZZZ','P. DEVOL') %"
 			Else
@@ -182,11 +182,11 @@ User Function FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 		Else
 			_cExpEnd := "% and 1 = 1 %"
 		EndIf
-		
+
 		If (AllTrim(cEmpAnt) == '07' .And. AllTrim(cFilAnt) == '05' )
 			_cExpEnd := "% and BF_FILIAL	= '05' %"
 		EndIf
-		
+
 		cAliasSld := GetNextAlias()
 		BeginSql Alias cAliasSld
 			%NOPARSER%
@@ -255,13 +255,13 @@ User Function FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 		__EstTot := U_FROPSAL(_cProduto,_cLocal)
 
 		U_FROPMSG(TIT_MSG, 	"Não foi possível efetuar reserva do Lote:"+CRLF+;
-		"Quantidade a reservar: "+AllTrim(Str(_nQuant))+CRLF+;
-		"Produto: "+AllTrim(_cProduto)+CRLF+;
-		"Lote: "+_cLoteSel+CRLF+;
-		"Saldo Lote Calculado: "+AllTrim(Str( __EstLote ))+CRLF+;
-		"Saldo Total Arm. Calculado: "+AllTrim(Str( __EstTot ))+CRLF+CRLF+;
-		"Verificar - Incosistência no estoque.";
-		,,3,"ATENÇÃO!!!")
+			"Quantidade a reservar: "+AllTrim(Str(_nQuant))+CRLF+;
+			"Produto: "+AllTrim(_cProduto)+CRLF+;
+			"Lote: "+_cLoteSel+CRLF+;
+			"Saldo Lote Calculado: "+AllTrim(Str( __EstLote ))+CRLF+;
+			"Saldo Total Arm. Calculado: "+AllTrim(Str( __EstTot ))+CRLF+CRLF+;
+			"Verificar - Incosistência no estoque.";
+			,,3,"ATENÇÃO!!!")
 
 		return({1,aRetLotes})
 
@@ -270,11 +270,11 @@ User Function FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 		__EstTot := U_FROPSAL(_cProduto,_cLocal)
 
 		U_FROPMSG(TIT_MSG, 	"Não foi possível efetuar reserva do Produto:"+CRLF+;
-		"Quantidade a reservar: "+AllTrim(Str(_nQuant))+CRLF+;
-		"Produto: "+AllTrim(_cProduto)+CRLF+;
-		"Saldo Total Arm. Calculado: "+AllTrim(Str( __EstTot ))+CRLF+CRLF+;
-		"Verificar - Incosistência no estoque.";
-		,,3,"ATENÇÃO!!!")
+			"Quantidade a reservar: "+AllTrim(Str(_nQuant))+CRLF+;
+			"Produto: "+AllTrim(_cProduto)+CRLF+;
+			"Saldo Total Arm. Calculado: "+AllTrim(Str( __EstTot ))+CRLF+CRLF+;
+			"Verificar - Incosistência no estoque.";
+			,,3,"ATENÇÃO!!!")
 
 		return({1,aRetLotes})
 
@@ -290,13 +290,13 @@ User Function FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 			__EstTot := U_FROPSAL(_cProduto,_cLocal)
 
 			U_FROPMSG(TIT_MSG, 	"Não foi possível efetuar reserva do Lote:"+CRLF+;
-			"Quantidade a reservar: "+AllTrim(Str(Min(nSaldo,(cAliasSld)->SALDO)))+CRLF+;
-			"Produto: "+AllTrim(_cProduto)+CRLF+;
-			"Lote: "+(cAliasSld)->BF_LOTECTL+CRLF+;
-			"Saldo Lote Calculado: "+AllTrim(Str( __EstLote ))+CRLF+;
-			"Saldo Total Arm. Calculado: "+AllTrim(Str( __EstTot ))+CRLF+CRLF+;
-			"Verificar - Incosistência no estoque.";
-			,,3,"ATENÇÃO!!!")
+				"Quantidade a reservar: "+AllTrim(Str(Min(nSaldo,(cAliasSld)->SALDO)))+CRLF+;
+				"Produto: "+AllTrim(_cProduto)+CRLF+;
+				"Lote: "+(cAliasSld)->BF_LOTECTL+CRLF+;
+				"Saldo Lote Calculado: "+AllTrim(Str( __EstLote ))+CRLF+;
+				"Saldo Total Arm. Calculado: "+AllTrim(Str( __EstTot ))+CRLF+CRLF+;
+				"Verificar - Incosistência no estoque.";
+				,,3,"ATENÇÃO!!!")
 
 			Exit
 
@@ -305,28 +305,28 @@ User Function FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 			__EstTot := U_FROPSAL(_cProduto,_cLocal)
 
 			U_FROPMSG(TIT_MSG, 	"Não foi possível efetuar reserva do Produto:"+CRLF+;
-			"Quantidade a reservar: "+AllTrim(Str(_nQuant))+CRLF+;
-			"Produto: "+AllTrim(_cProduto)+CRLF+;
-			"Saldo Total Arm. Calculado: "+AllTrim(Str( __EstTot ))+CRLF+CRLF+;
-			"Verificar - Incosistência no estoque.";
-			,,3,"ATENÇÃO!!!")
+				"Quantidade a reservar: "+AllTrim(Str(_nQuant))+CRLF+;
+				"Produto: "+AllTrim(_cProduto)+CRLF+;
+				"Saldo Total Arm. Calculado: "+AllTrim(Str( __EstTot ))+CRLF+CRLF+;
+				"Verificar - Incosistência no estoque.";
+				,,3,"ATENÇÃO!!!")
 
 			Exit
 
 		EndIf
-		
+
 		cNumero := GetSx8Num("SC0","C0_NUM")
 		ConfirmSx8()
 
 		_lOkRes := a430Reserva({1,"VD","",_cUserName,XFilial("SC0")},;
-		cNumero,;
-		_cProduto,;
-		_cLocal,;
-		Round(Min(nSaldo,(cAliasSld)->SALDO),2),;
-		{	"",;
-		(cAliasSld)->BF_LOTECTL,;
-		(cAliasSld)->BF_LOCALIZ,;
-		(cAliasSld)->BF_NUMSERI})
+			cNumero,;
+			_cProduto,;
+			_cLocal,;
+			Round(Min(nSaldo,(cAliasSld)->SALDO),2),;
+			{	"",;
+			(cAliasSld)->BF_LOTECTL,;
+			(cAliasSld)->BF_LOCALIZ,;
+			(cAliasSld)->BF_NUMSERI})
 
 
 		If !_lOkRes
@@ -336,13 +336,13 @@ User Function FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 			__EstTot := U_FROPSAL(_cProduto,_cLocal)
 
 			U_FROPMSG(TIT_MSG, 	"Não foi possível efetuar reserva do Lote:"+CRLF+;
-			"Quantidade a reservar: "+AllTrim(Str(Min(nSaldo,(cAliasSld)->SALDO)))+CRLF+;
-			"Produto: "+AllTrim(_cProduto)+CRLF+;
-			"Lote: "+(cAliasSld)->BF_LOTECTL+CRLF+;
-			"Saldo Lote Calculado: "+AllTrim(Str( __EstLote ))+CRLF+;
-			"Saldo Total Arm. Calculado: "+AllTrim(Str( __EstTot ))+CRLF+CRLF+;
-			"Verificar - Incosistência no estoque.";
-			,,3,"ATENÇÃO!!!")
+				"Quantidade a reservar: "+AllTrim(Str(Min(nSaldo,(cAliasSld)->SALDO)))+CRLF+;
+				"Produto: "+AllTrim(_cProduto)+CRLF+;
+				"Lote: "+(cAliasSld)->BF_LOTECTL+CRLF+;
+				"Saldo Lote Calculado: "+AllTrim(Str( __EstLote ))+CRLF+;
+				"Saldo Total Arm. Calculado: "+AllTrim(Str( __EstTot ))+CRLF+CRLF+;
+				"Verificar - Incosistência no estoque.";
+				,,3,"ATENÇÃO!!!")
 
 			return({1,aRetLotes})
 			exit
@@ -392,13 +392,13 @@ User Function FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 			__EstTot := U_FROPSAL(_cProduto,_cLocal)
 
 			U_FROPMSG(TIT_MSG, 	"Não foi possível efetuar reserva do Lote:"+CRLF+;
-			"Quantidade a reservar: "+AllTrim(Str(Min(nSaldo,(cAliasSld)->SALDO)))+CRLF+;
-			"Produto: "+AllTrim(_cProduto)+CRLF+;
-			"Lote: "+(cAliasSld)->BF_LOTECTL+CRLF+;
-			"Saldo Lote Calculado: "+AllTrim(Str( __EstLote ))+CRLF+;
-			"Saldo Total Arm. Calculado: "+AllTrim(Str( __EstTot ))+CRLF+CRLF+;
-			"Verificar - Incosistência no estoque.";
-			,,3,"ATENÇÃO!!!")
+				"Quantidade a reservar: "+AllTrim(Str(Min(nSaldo,(cAliasSld)->SALDO)))+CRLF+;
+				"Produto: "+AllTrim(_cProduto)+CRLF+;
+				"Lote: "+(cAliasSld)->BF_LOTECTL+CRLF+;
+				"Saldo Lote Calculado: "+AllTrim(Str( __EstLote ))+CRLF+;
+				"Saldo Total Arm. Calculado: "+AllTrim(Str( __EstTot ))+CRLF+CRLF+;
+				"Verificar - Incosistência no estoque.";
+				,,3,"ATENÇÃO!!!")
 
 			return({1,aRetLotes})
 
@@ -452,10 +452,10 @@ User Function FRRT02EX(_cPedido, _cItem, _cProduto, _cMotExc, _cEmpOri, _cUserOr
 		ConOut("FRRT02EX => thread: "+AllTrim(Str(ThreadId()))+", PEDIDO: "+_cPedido+", Data: "+DTOC(dDataBase)+" Hora: "+Time()+" - Excluindo Reserva - NOT LM.")
 		U_FRRT02XR(_cPedido, _cItem, _cEmpOri, _cUserName, _cMotExc, _lDelTemp, _lDelOP)
 	ElseIf (AllTrim(cEmpAnt) == '07' .And. AllTrim(cFilAnt) == '05' )
-		
+
 		ConOut("FRRT02EX => thread: "+AllTrim(Str(ThreadId()))+", PEDIDO: "+_cPedido+", Data: "+DTOC(dDataBase)+" Hora: "+Time()+" - Excluindo Reserva - LM => FILAL 05.")
 		U_FRRT02XR(_cPedido, _cItem, _cEmpOri, _cUserName, _cMotExc, _lDelTemp, _lDelOP)
-	
+
 	Else
 
 		ConOut("FRRT02EX => thread: "+AllTrim(Str(ThreadId()))+", PEDIDO: "+_cPedido+", Data: "+DTOC(dDataBase)+" Hora: "+Time()+" - Excluindo Reserva - LM.")
@@ -530,14 +530,14 @@ User Function FRRT02XR(_cPedido, _cItem, _cEmpOri, _cUserName, _cMotExc, _lDelTe
 					__cChaveSDC := SC0->(C0_FILIAL+C0_PRODUTO+C0_LOCAL+'SC0'+C0_NUM)
 
 					a430Reserv({3,"VD","",_cUserName,XFilial("SC0")},;
-					SC0->C0_NUM,;
-					SC0->C0_PRODUTO,;
-					SC0->C0_LOCAL,;
-					SC0->C0_QUANT,;
-					{	SC0->C0_NUMLOTE,;
-					SC0->C0_LOTECTL,;
-					SC0->C0_LOCALIZ,;
-					SC0->C0_NUMSERI})
+						SC0->C0_NUM,;
+						SC0->C0_PRODUTO,;
+						SC0->C0_LOCAL,;
+						SC0->C0_QUANT,;
+						{	SC0->C0_NUMLOTE,;
+						SC0->C0_LOTECTL,;
+						SC0->C0_LOCALIZ,;
+						SC0->C0_NUMSERI})
 
 					//Checkagem se SDC existe - problema
 					U_FRCHKSDC(__cChaveSDC, _cUserName)
@@ -579,7 +579,7 @@ User Function FRRT02XR(_cPedido, _cItem, _cEmpOri, _cUserName, _cMotExc, _lDelTe
 			While !SC0->(Eof()) .And. SC0->(C0_FILIAL+C0_YPEDIDO+IIF(!Empty(_cItem),C0_YITEMPV,"")) == (XFilial("SC0")+_cPedido+AllTrim(_cItem))
 
 				ConOut("FRRT02XR => thread: "+AllTrim(Str(ThreadId()))+", PEDIDO: "+_cPedido+", Data: "+DTOC(dDataBase)+" Hora: "+Time()+" - Excluindo Reserva - Processamento.")
-				
+
 				//Marcar o item como NAO RESERVADO
 				SC6->(DbSetOrder(1))
 				If SC6->(DbSeek(XFilial("SC6")+SC0->C0_YPEDIDO+SC0->C0_YITEMPV))
@@ -593,14 +593,14 @@ User Function FRRT02XR(_cPedido, _cItem, _cEmpOri, _cUserName, _cMotExc, _lDelTe
 				__cChaveSDC := SC0->(C0_FILIAL+C0_PRODUTO+C0_LOCAL+'SC0'+C0_NUM)
 
 				a430Reserv({3,"VD","",_cUserName,XFilial("SC0")},;
-				SC0->C0_NUM,;
-				SC0->C0_PRODUTO,;
-				SC0->C0_LOCAL,;
-				SC0->C0_QUANT,;
-				{	SC0->C0_NUMLOTE,;
-				SC0->C0_LOTECTL,;
-				SC0->C0_LOCALIZ,;
-				SC0->C0_NUMSERI})
+					SC0->C0_NUM,;
+					SC0->C0_PRODUTO,;
+					SC0->C0_LOCAL,;
+					SC0->C0_QUANT,;
+					{	SC0->C0_NUMLOTE,;
+					SC0->C0_LOTECTL,;
+					SC0->C0_LOCALIZ,;
+					SC0->C0_NUMSERI})
 
 				U_FRCHKSDC(__cChaveSDC, _cUserName)
 
@@ -760,11 +760,11 @@ User Function FRRT02C9(_cPedido)
 Return
 
 User Function GETOPPED(_cPedido, _cItem)
-	
+
 	Local cAliasTrab	:= Nil
 	Local cQuery		:= ""
 	Local aRet			:= {"", "", "", "", ""}
-	
+
 	cQuery := " select * from "+RetSQLName("PZ0")+"						"
 	cQuery += " where 1=1							 					"
 	cQuery += " AND PZ0_FILIAL 		= '"+xFilial('PZ0')+"' 				"
@@ -773,30 +773,30 @@ User Function GETOPPED(_cPedido, _cItem)
 	cQuery += "	AND PZ0_STATUS 		= 'P'								"
 	cQuery += "	AND D_E_L_E_T_ 		= ''			 					"
 	cQuery += "	ORDER BY R_E_C_N_O_ DESC								"
-	
+
 	cAliasTrab := GetNextAlias()
 	TCQUERY cQuery ALIAS (cAliasTrab) NEW
-	
+
 	If !(cAliasTrab)->(Eof())
-		
+
 		aRet	:= {;
 			(cAliasTrab)->PZ0_FILIAL,;
 			(cAliasTrab)->PZ0_OPNUM,;
 			(cAliasTrab)->PZ0_OPITEM,;
 			(cAliasTrab)->PZ0_OPSEQ,;
 			(cAliasTrab)->PZ0_DATENT;
-			}			
-					
-	EndIf						
-	(cAliasTrab)->(DbCloseArea())	
-		
+			}
+
+	EndIf
+	(cAliasTrab)->(DbCloseArea())
+
 Return aRet
 
 User Function REFAZPZ0(_cPedido, _cItem, _cFilOp, _cNumOp, _cItemOp, _cSeqOp, _cDataEnt)
-	
+
 	Local cAreaC6 		:= SC6->(GetArea())
 	Local cAliasTmp		:= Nil
-				
+
 	SC6->(DbSetOrder(1))
 	If SC6->(DbSeek(XFilial("SC6")+_cPedido+_cItem))
 
@@ -808,7 +808,7 @@ User Function REFAZPZ0(_cPedido, _cItem, _cFilOp, _cNumOp, _cItemOp, _cSeqOp, _c
 			from %Table:SC6% SC6 where C6_FILIAL = %XFILIAL:SC6% and C6_NUM = %EXP:SC6->C6_NUM% and C6_ITEM = %EXP:SC6->C6_ITEM% and SC6.%NotDel%
 
 		EndSql
-			
+
 		If !(cAliasTmp)->(Eof()) .And. (cAliasTmp)->SALDO > 0
 
 			__aListRes := U_FRTE02LO("", SC6->C6_NUM, SC6->C6_ITEM, "", "")
@@ -816,37 +816,37 @@ User Function REFAZPZ0(_cPedido, _cItem, _cFilOp, _cNumOp, _cItemOp, _cSeqOp, _c
 			If Len(__aListRes) <= 0 .And. Alltrim(SC6->C6_BLQ) <> "R"
 
 				__nSaldoOp	:= U_FRSALDOP(cEmpAnt, _cFilOp, _cNumOp, _cItemOp, _cSeqOp, '', '')
-				
+
 				If .T.//(__nSaldoOp > 0 .And. (__nSaldoOp - (cAliasTmp)->SALDO) >= 0 )
-					
+
 					RecLock("PZ0",.T.)
-						PZ0->PZ0_FILIAL	:= XFilial("PZ0")
-						PZ0->PZ0_OPNUM 	:= _cNumOp
-						PZ0->PZ0_OPITEM := _cItemOp
-						PZ0->PZ0_OPSEQ 	:= _cSeqOp
-						PZ0->PZ0_CODPRO := SC6->C6_PRODUTO
-						PZ0->PZ0_PEDIDO := SC6->C6_NUM
-						PZ0->PZ0_ITEMPV := SC6->C6_ITEM
-						PZ0->PZ0_QUANT 	:= (cAliasTmp)->SALDO
-						PZ0->PZ0_USUINC := CUSERNAME
-						PZ0->PZ0_DATINC := Date()
-						PZ0->PZ0_HORINC := SubStr(Time(),1,5)
-						PZ0->PZ0_DATENT := stod(_cDataEnt)
-						PZ0->PZ0_STATUS := 'P'
-					PZ0->(MsUnlock()) 
-					
+					PZ0->PZ0_FILIAL	:= XFilial("PZ0")
+					PZ0->PZ0_OPNUM 	:= _cNumOp
+					PZ0->PZ0_OPITEM := _cItemOp
+					PZ0->PZ0_OPSEQ 	:= _cSeqOp
+					PZ0->PZ0_CODPRO := SC6->C6_PRODUTO
+					PZ0->PZ0_PEDIDO := SC6->C6_NUM
+					PZ0->PZ0_ITEMPV := SC6->C6_ITEM
+					PZ0->PZ0_QUANT 	:= (cAliasTmp)->SALDO
+					PZ0->PZ0_USUINC := CUSERNAME
+					PZ0->PZ0_DATINC := Date()
+					PZ0->PZ0_HORINC := SubStr(Time(),1,5)
+					PZ0->PZ0_DATENT := stod(_cDataEnt)
+					PZ0->PZ0_STATUS := 'P'
+					PZ0->(MsUnlock())
+
 					RecLock("SC6",.F.)
-						SC6->C6_YTPEST := "R"
+					SC6->C6_YTPEST := "R"
 					SC6->(MsUnlock())
-			
+
 				EndIf
-														
+
 			EndIf
 		EndIf
 		(cAliasTmp)->(DbCloseArea())
 	EndIf
 
-	RestArea(cAreaC6)	
+	RestArea(cAreaC6)
 Return
 
 
@@ -892,38 +892,37 @@ Return
 
 //Checkar se pedido e ponta ou arremate e retornar os dados
 User Function FR2CHKPT(_cProduto, _cLote, _nQtde, _lReserva, _cPedido, _cItemPV, _cSeqSC9, _CodEmp, _CodFil)
-	Local cAliasAux
-	Local _nQtPalete := 0
-	Local _nSaldo := 0
-	Local cSQL
-	Local _marca := ""	
-	Local aRet
+
+	Local cSQL   := ""
+	Local _marca := ""
+	Local aRet := {}
 
 	Default _lReserva	:= .F.
 	Default _cPedido	:= ""
 	Default _cItemPV	:= ""
 	Default _cSeqSC9	:= ""
 	Default _CodEmp		:= CEMPANT
-	Default _CodFil		:= CFILANT	
+	Default _CodFil		:= CFILANT
 
 	aRet := { "N", 0 }
-	
+
 	//produtos da marca Vinílico não devem ser retidos por esta trava.
 	_marca := U_CHECKMAR(_cProduto)
-	
+
 	If ( _CodEmp == "07" .Or. _CodEmp == "06" .Or. _marca == "1302")
 		Return aRet
 	EndIf
 
-	//Retorto {  Tipo: S = Arremate, P = Ponta, N = Normal;  Saldo do Lote }
-	cSQL := "select * from dbo.FNC_ROP_CONSULTA_PONTA_ARREMATE_"+AllTrim(_CodEmp)+"('"+AllTrim(_CodFil)+"','"+_cProduto+"','"+_cLote+"',"+AllTrim(Str(_nQtde))+",'"+_cPedido+"','"+_cItemPV+"','"+_cSeqSC9+"')"
+
 
 	If Select("QRYFR2") > 0
 		QRYFR2->(DbCloseArea())
 	EndIf
 
-	TCQUERY CSQL ALIAS "QRYFR2" NEW
+	//Retorto {  Tipo: S = Arremate, P = Ponta, N = Normal;  Saldo do Lote }
+	cSQL := "select * from dbo.FNC_ROP_CONSULTA_PONTA_ARREMATE_"+AllTrim(_CodEmp)+"('"+AllTrim(_CodFil)+"','"+_cProduto+"','"+_cLote+"',"+AllTrim(Str(_nQtde))+",'"+_cPedido+"','"+_cItemPV+"','"+_cSeqSC9+"')"
 
+	TCQUERY CSQL ALIAS "QRYFR2" NEW
 
 	If !QRYFR2->(Eof())
 		aRet := { QRYFR2->TIPO , QRYFR2->SALDO_RES }
@@ -936,7 +935,7 @@ Return aRet
 User Function CHECKMAR(_cProduto)
 	Local cSQLMARC
 	Local _marca      := ""
-	
+
 	cSQLMARC := "select ZZ7_EMP																			"
 	cSQLMARC += " FROM SB1010 with (nolock) INNER JOIN ZZ7010 ON B1_YLINHA = ZZ7_COD AND B1_YLINSEQ = ZZ7_LINSEQ		"
 	cSQLMARC += " WHERE B1_COD = '" + _cProduto + "' AND SB1010.D_E_L_E_T_ = '' AND ZZ7010.D_E_L_E_T_ = ''	"

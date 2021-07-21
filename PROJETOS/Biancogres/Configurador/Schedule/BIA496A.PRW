@@ -38,6 +38,10 @@ User Function BIA496A()
 	Local cSql      := ''
 	Local cMsg      := ""
 	Local cQry      := GetNextAlias()
+	Local aFiles := {} // O array receberá os nomes dos arquivos e do diretório
+	Local aSizes := {} // O array receberá os tamanhos dos arquivos e do diretorio
+
+
 
 	aAdd(aEmp, "01")
 	aAdd(aEmp, "05")
@@ -61,8 +65,9 @@ User Function BIA496A()
 	cSql +="  AND SA3.A3_EMAIL <> '' " +CRLF
 	cSql +="  AND SA3.A3_YATIVO = 'S' " +CRLF
 	cSql +="  AND SA3.A3_YEMP  NOT LIKE '%XX%' " +CRLF
-	//cSql +="  AND SA3.A3_COD   in ('000082','000717','000025','000728') " +CRLF //000082, 000717, 999999
+	//cSql +="  AND SA3.A3_COD   in ('000082', '000717', '999999') " +CRLF //000082, 000717, 999999
 	cSql +="  AND SA3.D_E_L_E_T_ = '' " +CRLF
+	cSql +="  ORDER BY SA3.A3_COD " +CRLF
 
 	TcQuery cSql Alias (cQry) New
 	SA3->(DbSetOrder(1))
@@ -103,13 +108,13 @@ User Function BIA496A()
 
 					If aEmp[nI] == "07" .AND. aVeder[nK,2] == "SP" .and. aVeder[nK,3,nJ] $ "1302#1301"
 
-						U_BIA496(aEmp[nI] , .F., aVeder[nK,3,nJ])
-						U_BIA496(aEmp[nI] , .T., aVeder[nK,3,nJ]) // Envia WF de estoque de Amostra, precisa ser separado.
+						U_BIA496(aEmp[1] , .F., aVeder[nK,3,nJ], "Estoque")
+						U_BIA496(aEmp[1] , .T., aVeder[nK,3,nJ], "Amostra") // Envia WF de estoque de Amostra, precisa ser separado.
 
 					Elseif left(aVeder[nK,3,nJ] ,2)  == aEmp[nI]
 
-						U_BIA496(aEmp[nI] , .F., aVeder[nK,3,nJ])
-						U_BIA496(aEmp[nI] , .T., aVeder[nK,3,nJ]) // Envia WF de estoque de Amostra, precisa ser separado.
+						U_BIA496(aEmp[1] , .F., aVeder[nK,3,nJ], "Estoque")
+						U_BIA496(aEmp[1] , .T., aVeder[nK,3,nJ], "Amostra") // Envia WF de estoque de Amostra, precisa ser separado.
 
 					EndIf
 
@@ -122,5 +127,10 @@ User Function BIA496A()
 		RpcClearEnv()
 
 	Next nI
+
+	ADir("\P10\workflow\*.*", aFiles, aSizes)
+	For nK := 1 To Len(aFiles)
+		FERASE("\P10\workflow\"+aFiles[nK])
+	Next nK
 
 Return()

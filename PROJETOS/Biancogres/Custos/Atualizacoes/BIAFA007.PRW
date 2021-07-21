@@ -311,6 +311,7 @@ User Function BIAF7FOK()
 	Local _cAlias2	:=	""
 	Local _cFormat	:=	""
 	Local _nQuant	:=	0
+	Local _nPci		:=	1
 	Private vfDtRef := dtos(M->Z91_DATA)
 
 	If (Alltrim(cMenVar) $ "M->Z91_MEDIDO/M->Z91_RECURS" .And.  Alltrim(GdFieldGet("Z91_MEDIDO",n)) $ "MED003/MED004/MED005/MED006" .AND. Alltrim(GdFieldGet("Z91_RECURS",n)) == 'EST001') .OR. Alltrim(GdFieldGet("Z91_RECURS",n)) == 'ATM000'
@@ -333,6 +334,11 @@ User Function BIAF7FOK()
 
 		vfDRecurso   := Posicione("SH1", 1, xFilial("SH1") + M->Z91_RECURS, "H1_DESCRI")
 		GdFieldPut("Z91_RECDES", vfDRecurso, n)
+
+		If INCLUI
+			_nPci	:=	fBFA7PCI()
+			fAltPci(_nPci,vfArea)
+		EndIf
 
 		For _nI	:=	1 to Len(aCols)
 			If n <> _nI .And. Alltrim(GdFieldGet("Z91_MEDIDO",_nI)) == 'MED003' .And. Alltrim(GdFieldGet("Z91_RECURS",_nI)) == 'EST001'
@@ -774,22 +780,8 @@ User Function BIAF7FOK()
 		calcM3Med(GdFieldGet("Z91_VAZM3",n),M->Z91_FATCOR)
 	ElseIf Alltrim(cMenVar) == "M->Z91_PCI"
 
-		For _nI := 1 to Len(aCols)
-			If n <> _nI
-				GdFieldPut("Z91_PCI", M->Z91_PCI, _nI)
-			EndIf
-			vfkCalm2 := GdFieldGet("Z91_CONSUM",_nI) * M->Z91_PCI
-			vfKgm2   := fCalcPeso(GdFieldGet("Z91_FORMAT",_nI)) //Posicione("ZZ6", 1, xFilial("ZZ6") + GdFieldGet("Z91_FORMAT",_nI), "ZZ6_KGM2") //  
-			vfkCalkg := 0
-			If vfKgm2 <> 0   
-				vfkCalkg := vfkCalm2 / vfKgm2
-			EndIf     
-			RestArea( vfArea )
-			GdFieldPut("Z91_PESO", vfKgm2, _nI)
-			GdFieldPut("Z91_KCALM2", vfkCalm2, _nI)
-			GdFieldPut("Z91_KCALKG", vfkCalkg, _nI)
+		fAltPci(M->Z91_PCI,vfArea)
 
-		Next
 	EndIf
 
 	oGetDados:Refresh()
@@ -1471,4 +1463,56 @@ Static Function fContrato(_cData)
 	MsgAlert(_cMsg)
 
 	(_cAlias)->(DbCloseArea())
+Return
+
+
+Static Function fBFA7PCI()
+
+	Local _nPci	:=	1
+	Local _cDtRef	:=	DtoS(M->Z91_DATA)
+	Local _cAlias	:= GetNExtAlias()
+
+	BeginSql Alias _cAlias
+		%NoParser%
+		SELECT ISNULL(ROUND(AVG(PCI), 0),1) PCI
+		FROM (
+			SELECT TOP 15 Z91_DATA
+				,MAX(Z91_PCI) PCI
+			FROM %TABLE:Z91% (NOLOCK)
+			WHERE Z91_FILIAL = %XFILIAL:Z91%
+				AND Z91_PCI > 1
+				AND Z91_DATA <= %Exp:_cDtRef%
+				AND %NotDel%
+			GROUP BY Z91_DATA
+			ORDER BY Z91_DATA DESC
+			) A
+	EndSql
+
+	_nPci	:=	(_cAlias)->PCI
+
+(_cAlias)->(DbCloseArea())
+
+Return _nPci
+
+Static Function fAltPci(_nPci,vfArea)
+
+	Local _nI
+
+	For _nI := 1 to Len(aCols)
+		If n <> _nI
+			GdFieldPut("Z91_PCI", _nPci, _nI)
+		EndIf
+		vfkCalm2 := GdFieldGet("Z91_CONSUM",_nI) * _nPci
+		vfKgm2   := fCalcPeso(GdFieldGet("Z91_FORMAT",_nI)) //Posicione("ZZ6", 1, xFilial("ZZ6") + GdFieldGet("Z91_FORMAT",_nI), "ZZ6_KGM2") //  
+		vfkCalkg := 0
+		If vfKgm2 <> 0   
+			vfkCalkg := vfkCalm2 / vfKgm2
+		EndIf     
+		RestArea( vfArea )
+		GdFieldPut("Z91_PESO", vfKgm2, _nI)
+		GdFieldPut("Z91_KCALM2", vfkCalm2, _nI)
+		GdFieldPut("Z91_KCALKG", vfkCalkg, _nI)
+	
+	Next
+
 Return

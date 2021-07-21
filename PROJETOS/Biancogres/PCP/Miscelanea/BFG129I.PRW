@@ -27,16 +27,17 @@ User Function BFG129I()
 Return
 
 Static Function RptiDetail()
-Local oExcel	:= Nil
-Local oExcelRel := Nil
-Local cHInicio	:= ""
-Local fPerg		:= ""
-Local fTamX1	:= ""
-Local nxPlan
-Local nxTabl
-Local xNmArq	:= "headcount_"+ dToS(Date()) +"-"+ StrTran(Time(), ":", "")
-Local cFile		:= xNmArq + ".xml"
-Local cArqDest	:= ""
+
+	Local oExcel	:= Nil
+	Local oExcelRel := Nil
+	Local cHInicio	:= ""
+	Local fPerg		:= ""
+	Local fTamX1	:= ""
+	Local nxPlan
+	Local nxTabl
+	Local xNmArq	:= "headcount_"+ dToS(Date()) +"-"+ StrTran(Time(), ":", "")
+	Local cFile		:= xNmArq + ".xml"
+	Local cArqDest	:= ""
 
 	cHInicio := Time()
 	fPerg := "BFG129I"
@@ -46,9 +47,6 @@ Local cArqDest	:= ""
 		Return
 	EndIf
 
-	//oLogProc := TBiaLogProc():New()
-	//oLogProc:LogIniProc("BIAFG129",fPerg)
-
 	oExcel := FWMSEXCEL():New()
 
 	nxPlan := "Planilha 01"
@@ -56,101 +54,105 @@ Local cArqDest	:= ""
 
 	oExcel:AddworkSheet(@nxPlan)
 	oExcel:AddTable (@nxPlan,@nxTabl)
-		oExcel:AddColumn(@nxPlan,@nxTabl, "Cd. Processo"	,1,1)
-		oExcel:AddColumn(@nxPlan,@nxTabl, "Matricula"		,1,1)
-		oExcel:AddColumn(@nxPlan,@nxTabl, "Gestor"			,1,1)
-		oExcel:AddColumn(@nxPlan,@nxTabl, "Tp. Processo"	,1,1)
-		oExcel:AddColumn(@nxPlan,@nxTabl, "Def. Tp. Proc."	,1,1)
-		oExcel:AddColumn(@nxPlan,@nxTabl, "Data Ref."		,1,1)
-		oExcel:AddColumn(@nxPlan,@nxTabl, "Mat. Gerente"	,1,1)
-		oExcel:AddColumn(@nxPlan,@nxTabl, "Status"			,1,1)
-		oExcel:AddColumn(@nxPlan,@nxTabl, "Def. Status"		,1,1)
-		oExcel:AddColumn(@nxPlan,@nxTabl, "Cd. Posicao"		,1,1)
-		oExcel:AddColumn(@nxPlan,@nxTabl, "Matricula"		,1,1)
-		oExcel:AddColumn(@nxPlan,@nxTabl, "Nome"			,1,1)
-		oExcel:AddColumn(@nxPlan,@nxTabl, "Situação"		,1,1)
-		oExcel:AddColumn(@nxPlan,@nxTabl, "Def. Situação"	,1,1)
-		oExcel:AddColumn(@nxPlan,@nxTabl, "Tipo"			,1,1)
-		oExcel:AddColumn(@nxPlan,@nxTabl, "Def. Tipo"		,1,1)
-		oExcel:AddColumn(@nxPlan,@nxTabl, "Observação"		,1,1)
-		oExcel:AddColumn(@nxPlan,@nxTabl, "Mat. Obs."		,1,1)
-		oExcel:AddColumn(@nxPlan,@nxTabl, "Motivo Obs."		,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Cd. Processo"	,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Matricula"		,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Gestor"			,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Tp. Processo"	,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Def. Tp. Proc."	,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Data Ref."		,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Mat. Gerente"	,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Status"			,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Def. Status"		,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Cod. Posicao"	,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Descr.Posicao"	,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Matricula"		,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Nome"			,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Situação"		,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Def. Situação"	,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Tipo"			,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Def. Tipo"		,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Observação"		,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Mat. Obs."		,1,1)
+	oExcel:AddColumn(@nxPlan,@nxTabl, "Motivo Obs."		,1,1)
 
 	QR008 := " WITH MGESTOR AS "
-    QR008 += "   			(SELECT RIGHT('00' + CAST(numemp AS VARCHAR(2)), 2) + RIGHT('000000' + CAST(numcad AS VARCHAR(6)), 6) MATGEST,
-    QR008 += "                    	nomfun NOMGEST
-    QR008 += "               FROM VETORH..r034fun a(NOLOCK)
-    QR008 += "               WHERE 
+	QR008 += "   			(SELECT RIGHT('00' + CAST(numemp AS VARCHAR(2)), 2) + RIGHT('000000' + CAST(numcad AS VARCHAR(6)), 6) MATGEST,
+	QR008 += "                    	nomfun NOMGEST
+	QR008 += "               FROM VETORH..r034fun a(NOLOCK)
+	QR008 += "               WHERE 
 	QR008 += "                    	tipcol = 1
-    QR008 += "               UNION ALL
-    QR008 += "   			SELECT '01999998',
-    QR008 += "                    	'MAX ZANCANARO'
-    QR008 += "               UNION ALL
-    QR008 += "   			SELECT '01999999',
-    QR008 += "                    	'LUCAS ZENI')
-    QR008 += "   		SELECT 
+	QR008 += "               UNION ALL
+	QR008 += "   			SELECT '01999998',
+	QR008 += "                    	'MAX ZANCANARO'
+	QR008 += "               UNION ALL
+	QR008 += "   			SELECT '01999999',
+	QR008 += "                    	'LUCAS ZENI')
+	QR008 += "   		SELECT 
 	QR008 += "                 	ZLC_CODIGO,
-    QR008 += "                 	ZLC_MAT,
-    QR008 += "                 	ZLCMAT.NOMGEST,
-    QR008 += "                 	ZLC_TIPO,
-    QR008 += "                 	ZLC_DTIPO = CASE
-    QR008 += "                 		WHEN ZLC_TIPO = '1'
-    QR008 += "                 		THEN 'Automatico'
-    QR008 += "                 		WHEN ZLC_TIPO = '2'
+	QR008 += "                 	ZLC_MAT,
+	QR008 += "                 	ZLCMAT.NOMGEST,
+	QR008 += "                 	ZLC_TIPO,
+	QR008 += "                 	ZLC_DTIPO = CASE
+	QR008 += "                 		WHEN ZLC_TIPO = '1'
+	QR008 += "                 		THEN 'Automatico'
+	QR008 += "                 		WHEN ZLC_TIPO = '2'
 	QR008 += "                 		THEN 'Manual'
-    QR008 += "                 		ELSE 'Erro-Verificar'
-    QR008 += "                 		END,
-    QR008 += "                 	ZLC_DATREF,
-    QR008 += "                 	ZLC_MATGER,
-    QR008 += "                	ZLC_STATUS,
-    QR008 += "                 	ZLC_DSTATU = CASE
-    QR008 += "                 		WHEN ZLC_STATUS = 'A'
-    QR008 += "                 		THEN 'Aberto'
-    QR008 += "                 		WHEN ZLC_STATUS = 'F'
-    QR008 += "                 		THEN 'Finalizado'
-    QR008 += "                 		WHEN ZLC_STATUS = 'I'
-    QR008 += "                 		THEN 'Iniciado'
-    QR008 += "                 		ELSE 'Erro-Verificar'
-    QR008 += "                 		END,
-    QR008 += "                 	ZLD_CODPOS,
-    QR008 += "                 	ZLD_MAT,
-    QR008 += "                 	ZLD_NOME = ISNULL(ZLDMAT.nomfun, ''),
-    QR008 += "                 	ZLD_SITUAC,
-    QR008 += "                 	ZLD_DSITUAC = ISNULL(ZLE_DESCRI, ''),
-    QR008 += "                 	ZLD_TIPO,
-    QR008 += "                 	ZLD_DTIPO = CASE
-    QR008 += "                 		WHEN ZLD_TIPO = '1'
-    QR008 += "                 		THEN 'Automatico'
-    QR008 += "                 		WHEN ZLD_TIPO = '2'
-    QR008 += "                 		THEN 'Manual'
-    QR008 += "                 		ELSE 'Erro-Verificar'
-    QR008 += "                 		END,
-    QR008 += "                 	ZLD_OBS,
-    QR008 += "                 	ZLD_MATOBS,
-    QR008 += "                 	ZLD_MOTOBS
-    QR008 += "   		FROM "+ RetSqlName("ZLD") +" ZLD(NOLOCK)
-    QR008 += "   			INNER JOIN "+ RetSqlName("ZLC") +" ZLC(NOLOCK) ON 
+	QR008 += "                 		ELSE 'Erro-Verificar'
+	QR008 += "                 		END,
+	QR008 += "                 	ZLC_DATREF,
+	QR008 += "                 	ZLC_MATGER,
+	QR008 += "                	ZLC_STATUS,
+	QR008 += "                 	ZLC_DSTATU = CASE
+	QR008 += "                 		WHEN ZLC_STATUS = 'A'
+	QR008 += "                 		THEN 'Aberto'
+	QR008 += "                 		WHEN ZLC_STATUS = 'F'
+	QR008 += "                 		THEN 'Finalizado'
+	QR008 += "                 		WHEN ZLC_STATUS = 'I'
+	QR008 += "                 		THEN 'Iniciado'
+	QR008 += "                 		ELSE 'Erro-Verificar'
+	QR008 += "                 		END,
+	QR008 += "                 	ZLD_CODPOS,
+	QR008 += "                 	ZLA_DESPOS,
+	QR008 += "                 	ZLD_MAT,
+	QR008 += "                 	ZLD_NOME = ISNULL(ZLDMAT.nomfun, ''),
+	QR008 += "                 	ZLD_SITUAC,
+	QR008 += "                 	ZLD_DSITUAC = ISNULL(ZLE_DESCRI, ''),
+	QR008 += "                 	ZLD_TIPO,
+	QR008 += "                 	ZLD_DTIPO = CASE
+	QR008 += "                 		WHEN ZLD_TIPO = '1'
+	QR008 += "                 		THEN 'Automatico'
+	QR008 += "                 		WHEN ZLD_TIPO = '2'
+	QR008 += "                 		THEN 'Manual'
+	QR008 += "                 		ELSE 'Erro-Verificar'
+	QR008 += "                 		END,
+	QR008 += "                 	ZLD_OBS,
+	QR008 += "                 	ZLD_MATOBS,
+	QR008 += "                 	ZLD_MOTOBS
+	QR008 += "   		FROM "+ RetSqlName("ZLD") +" ZLD(NOLOCK)
+	QR008 += "   			INNER JOIN "+ RetSqlName("ZLC") +" ZLC(NOLOCK) ON 
 	QR008 += "									ZLC_FILIAL = '"+ xFilial("ZLC") +"'
-    QR008 += "								AND ZLC_CODIGO = ZLD_CODIGO
-    QR008 += "								AND ZLC_DATREF BETWEEN '"+ DToS(MV_PAR01) +"' AND '"+ DToS(MV_PAR02) +"'
-    QR008 += "								AND ZLC_MAT BETWEEN '"+ MV_PAR03 +"' AND '"+ MV_PAR04 +"'
-    QR008 += "								AND ZLC.D_E_L_E_T_ = ' '
-    QR008 += "   			LEFT JOIN "+ RetSqlName("ZLE") +" ZLE(NOLOCK) ON 
+	QR008 += "								AND ZLC_CODIGO = ZLD_CODIGO
+	QR008 += "								AND ZLC_DATREF BETWEEN '"+ DToS(MV_PAR01) +"' AND '"+ DToS(MV_PAR02) +"'
+	QR008 += "								AND ZLC_MAT BETWEEN '"+ MV_PAR03 +"' AND '"+ MV_PAR04 +"'
+	QR008 += "								AND ZLC.D_E_L_E_T_ = ' '
+	QR008 += "   			INNER JOIN "+ RetSqlName("ZLA") +" ZLA(NOLOCK) ON ZLA_FILIAL = '"+ xFilial("ZLA") +"'
+	QR008 += "   			                                 AND ZLA_CODIGO = ZLD_CODPOS
+	QR008 += "   			                                 AND ZLA.D_E_L_E_T_ = ' '
+	QR008 += "   			LEFT JOIN "+ RetSqlName("ZLE") +" ZLE(NOLOCK) ON 
 	QR008 += "									ZLE_CODIGO = ZLD_SITUAC
-    QR008 += "								AND ZLE.D_E_L_E_T_ = ' '
-    QR008 += "   			LEFT JOIN MGESTOR ZLCMAT ON 
+	QR008 += "								AND ZLE.D_E_L_E_T_ = ' '
+	QR008 += "   			LEFT JOIN MGESTOR ZLCMAT ON 
 	QR008 += "									ZLC.ZLC_MAT = ZLCMAT.MATGEST
-    QR008 += "   			LEFT JOIN VETORH..r034fun ZLDMAT ON 
+	QR008 += "   			LEFT JOIN VETORH..r034fun ZLDMAT ON 
 	QR008 += "									CAST(SUBSTRING(ZLD.ZLD_MAT, 1, 2) AS INT) = ZLDMAT.numemp
-    QR008 += "								AND CAST(RIGHT(ZLD.ZLD_MAT, 6) AS INT) = ZLDMAT.numcad
-    QR008 += "								AND ZLDMAT.tipcol = 1
-    QR008 += "   		WHERE 
-	QR008 += "   			ZLD.ZLD_FILIAL = '"+ xFilial("ZLD") +"'
-    QR008 += "   		AND ZLD.D_E_L_E_T_ = ' '
-    QR008 += "   		ORDER BY 
+	QR008 += "								AND CAST(RIGHT(ZLD.ZLD_MAT, 6) AS INT) = ZLDMAT.numcad
+	QR008 += "								AND ZLDMAT.tipcol = 1
+	QR008 += "   		WHERE ZLD.ZLD_FILIAL = '"+ xFilial("ZLD") +"'
+	QR008 += "   		      AND ZLD.D_E_L_E_T_ = ' '
+	QR008 += "   		ORDER BY 
 	QR008 += "   			ZLC_CODIGO,
-    QR008 += "   			ZLC_MAT,
-    QR008 += "   			ZLD_CODPOS
+	QR008 += "   			ZLC_MAT,
+	QR008 += "   			ZLD_CODPOS
 
 	QRcIndex := CriaTrab(Nil,.f.)
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,QR008),'QR08',.F.,.T.)
@@ -162,26 +164,29 @@ Local cArqDest	:= ""
 		IncProc("Processamento1")
 
 		oExcel:AddRow(@nxPlan, @nxTabl, {	QR08->ZLC_CODIGO ,;
-											QR08->ZLC_MAT    ,;
-											QR08->NOMGEST    ,;
-											QR08->ZLC_TIPO   ,;
-											QR08->ZLC_DTIPO  ,;
-											QR08->ZLC_DATREF ,;
-											QR08->ZLC_MATGER ,;
-											QR08->ZLC_STATUS ,;
-											QR08->ZLC_DSTATU ,;
-											QR08->ZLD_CODPOS ,;
-											QR08->ZLD_MAT    ,;
-											QR08->ZLD_NOME   ,;
-											QR08->ZLD_SITUAC ,;
-											QR08->ZLD_DSITUAC,;                                          
-											QR08->ZLD_TIPO	 ,;
-											QR08->ZLD_DTIPO	 ,;
-											QR08->ZLD_OBS	 ,;
-											QR08->ZLD_MATOBS ,;
-											QR08->ZLD_MOTOBS })
+		QR08->ZLC_MAT    ,;
+		QR08->NOMGEST    ,;
+		QR08->ZLC_TIPO   ,;
+		QR08->ZLC_DTIPO  ,;
+		QR08->ZLC_DATREF ,;
+		QR08->ZLC_MATGER ,;
+		QR08->ZLC_STATUS ,;
+		QR08->ZLC_DSTATU ,;
+		QR08->ZLD_CODPOS ,;
+		QR08->ZLA_DESPOS ,;
+		QR08->ZLD_MAT    ,;
+		QR08->ZLD_NOME   ,;
+		QR08->ZLD_SITUAC ,;
+		QR08->ZLD_DSITUAC,;                                          
+		QR08->ZLD_TIPO	 ,;
+		QR08->ZLD_DTIPO	 ,;
+		QR08->ZLD_OBS	 ,;
+		QR08->ZLD_MATOBS ,;
+		QR08->ZLD_MOTOBS })
+
 		dbSelectArea("QR08")
 		dbSkip()
+
 	End
 
 	QR08->(dbCloseArea())
@@ -189,7 +194,6 @@ Local cArqDest	:= ""
 	Ferase(QRcIndex+OrdBagExt())          //indice gerado
 
 	oExcel:Activate()
-	//oExcel:GetXMLFile("C:\TEMP\"+ xArqTemp +".xml")
 
 	LjMsgRun( "Gerando o arquivo, aguarde...", "BIAFJ001", {|| oExcel:GetXMLFile( cFile ) } )
 	oExcel:DeActivate()
@@ -199,8 +203,6 @@ Local cArqDest	:= ""
 		oExcelRel:SetVisible(.T.)
 		oExcelRel:WorkBooks:Open( cArqDest )
 	EndIf
-
-	//oLogProc:LogFimProc()
 
 Return
 
@@ -243,19 +245,19 @@ Static Function ValidPerg(fPerg,fTamX1)
 Return
 
 static procedure ConvertXlsx(cDirOri,cArqOri)
-Local nHandler 
-Local cDrive	:= ""
-Local cDir		:= ""
-Local cNome		:= ""
-Local cExt		:= ""
-Local cVbs		:= ""
-Local cArqVbs	:= ""
-Local cDestino	:= AllTrim(GetTempPath())
-Local cArqDest	:= ""
-Local lContinua := .F.
+	Local nHandler 
+	Local cDrive	:= ""
+	Local cDir		:= ""
+	Local cNome		:= ""
+	Local cExt		:= ""
+	Local cVbs		:= ""
+	Local cArqVbs	:= ""
+	Local cDestino	:= AllTrim(GetTempPath())
+	Local cArqDest	:= ""
+	Local lContinua := .F.
 
-Default cDirOri	:= ""
-Default cArqOri := ""
+	Default cDirOri	:= ""
+	Default cArqOri := ""
 
 	If !Empty(cArqOri) .AnD. ApOleClient('MsExcel') 
 		If Empty(cDirOri)

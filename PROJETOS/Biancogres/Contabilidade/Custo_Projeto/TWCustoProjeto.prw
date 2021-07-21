@@ -395,7 +395,7 @@ Local aCurrency := {}
 		aCurrency := ::GetCurrency((cQry)->TIPO, (cQry)->FORNECEDOR, (cQry)->LOJA, (cQry)->DOC, (cQry)->VALOR)
 
 		aAdd(aRet, {(cQry)->CLVL, (cQry)->CONTRATO, (cQry)->ITEMCT, (cQry)->SUBITEM, (cQry)->NOME_FOR, (cQry)->TIPO, (cQry)->STATUS,;
-								(cQry)->DOC, (cQry)->DESCRICAO, dToC(sToD((cQry)->DATA)), aCurrency[1, 1], (cQry)->VALOR, aCurrency[1, 2], aCurrency[1, 3]})
+								(cQry)->DOC, (cQry)->DESCRICAO, dToC(sToD((cQry)->DATA)), aCurrency[1, 1], aCurrency[1, 3], aCurrency[1, 2], (cQry)->VALOR})
 	  
 	  (cQry)->(DbSkip())
 
@@ -712,7 +712,7 @@ Local cNumero := ""
 				
 			nMoeda := If ((cQry)->C7_MOEDA == 2, "US$", "EUR")
 			nCotacao := (cQry)->C7_TXMOEDA
-			nVlrCot := nValor * nCotacao
+			nVlrCot := nValor / nCotacao
 					  
 		  aAdd(aRet, {nMoeda, nCotacao, nVlrCot})
 		  		
@@ -740,22 +740,22 @@ Local cNumero := ""
 	
 		If (cQry)->E2_YMOEDA $ "2/3/4"
 		
-			If (cQry)->C7_MOEDA == "2"
+			If (cQry)->E2_YMOEDA == "2"
 
 				nMoeda := "US$"
 			
-			ElseIf (cQry)->C7_MOEDA == "3"
+			ElseIf (cQry)->E2_YMOEDA == "3"
 			
 				nMoeda := "EUR"
 			
-			ElseIf (cQry)->C7_MOEDA == "4"
+			ElseIf (cQry)->E2_YMOEDA == "4"
 			
 				nMoeda := "£"
 			
 			EndIf
 					
 			nCotacao := (cQry)->E2_YTXMOED
-			nVlrCot := nValor * nCotacao
+			nVlrCot := nValor / nCotacao
 					  
 		  aAdd(aRet, {nMoeda, nCotacao, nVlrCot})
 		  		

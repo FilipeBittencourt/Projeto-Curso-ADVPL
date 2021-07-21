@@ -29,12 +29,17 @@ Return()
 
 Method GerarArq(cQuery) Class TNFSaidaXML
 
-	Local lRet 			:= .F.
-	Local cAliasTemp	:= Nil
-	Local cNomeArq		:= ""
+	Local lRet       := .F.
+	Local cAliasTemp := Nil
+	Local cNomeArq   := ""
+	Local _cDir      := ::cDir
 
-	If ExistDir(::cDir)
+	If !ExistDir(_cDir)
+		FWMakeDir(_cDir)
+	EndIf
 	
+	If ExistDir(_cDir)
+
 		cAliasTemp	:= GetNextAlias()
 		
 		TcQuery cQuery New Alias (cAliasTemp)
@@ -51,8 +56,8 @@ Method GerarArq(cQuery) Class TNFSaidaXML
 				
 				If (!Empty(SPED050->DOC_CHV))
 					cNomeArq := ::cPrexi+SPED050->DOC_CHV+ ".XML"
-					If !File(::cDir+cNomeArq)
-						lRet := MemoWrite(::cDir+cNomeArq, Alltrim(SPED050->XML_SIG) )
+					If !File(_cDir+cNomeArq)
+						lRet := MemoWrite(_cDir+cNomeArq, Alltrim(SPED050->XML_SIG) )
 						If (lRet)
 							Conout(::cFunOri+" SUCESSO - GERACAO ARQUIVO XML - CHAVE NFE: "+::cChave+",  DATA/HORA: "+dtos(date())+"/"+substr(time(), 1, 5))
 						Else
@@ -71,18 +76,19 @@ Method GerarArq(cQuery) Class TNFSaidaXML
 		(cAliasTemp)->(DbCloseArea())
 		
 	Else
-		Conout(::cFunOri+" ERRO - DIRETORIO ARQUIVO XML: "+::cDir)
+		Conout(::cFunOri+" ERRO - DIRETORIO ARQUIVO XML: "+_cDir)
 	EndIf
 	
 Return lRet
 
 Method GerarArqPorChave(_cChave) Class TNFSaidaXML
 
-	Local cQuery 	:= ""
-	Local lRet 		:= .F.
-	Local _cError	:= NIL
+	Local cQuery    := ""
+	Local lRet      := .F.
+	Local _cError   := NIL
+	Local cBancoTSS := SuperGetMV("MV_YBDTSS", .F., "SPED050")
 	
-	Private cIdEnt	:=	GetCfgEntidade(@_cerror)
+	Private cIdEnt  := GetCfgEntidade(@_cerror)
 
 	::cChave 		:= _cChave
 	
@@ -90,7 +96,7 @@ Method GerarArqPorChave(_cChave) Class TNFSaidaXML
 	//cQuery += " XML=CONVERT(VARCHAR(8000),CONVERT(VARBINARY(8000),XML_SIG)),                                                  	"
 	//cQuery += " CHAVE=F2_CHVNFE                                                                                              	"
 	cQuery += " from " + RetSQLName("SF2")+" SF2 (NOLOCK)                                                                   	"
-	cQuery += " JOIN SPED050 SPED (NOLOCK) ON SPED.ID_ENT = '"+cIdEnt+"' AND F2_CHVNFE = DOC_CHV AND SPED.D_E_L_E_T_ = ''    	"
+	cQuery += " JOIN " + cBancoTSS + " SPED (NOLOCK) ON SPED.ID_ENT = '"+cIdEnt+"' AND F2_CHVNFE = DOC_CHV AND SPED.D_E_L_E_T_ = ''    	"
 	cQuery += " WHERE 1=1                                                                                                    	"
 	cQuery += " AND SF2.F2_FILIAL		= '"+xFilial("SF2")+"'																	"
 	cQuery += " AND SF2.F2_ESPECIE		= 'SPED'                                                                           		"

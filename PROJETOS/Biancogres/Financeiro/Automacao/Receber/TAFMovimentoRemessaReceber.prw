@@ -389,14 +389,19 @@ Method Get() Class TAFMovimentoRemessaReceber
 		//TODO FIDC INICIO - Provisório
 		
 		//FIDC - tratamento de recebimento antecipado 
-		If (AllTrim((cQry)->E1_YUFCLI) == 'ES' .And. AllTrim((cQry)->A1_YCDGREG) == '000029' .And. SubStr(oObj:cPrefixo, 1, 2) $ 'PR')
-			oObj:cGRCB := '000028'
+		If SubStr(oObj:cPrefixo, 1, 2) $ 'PR'
+			oObj:cGRCB := '000001' //Regra do BB para antecipado
 		EndIf
 		
 		//FIDC - tratamento de fatura
-		If (AllTrim((cQry)->E1_YUFCLI) == 'ES' .And. AllTrim((cQry)->A1_YCDGREG) == '000029' .And. AllTrim(oObj:cTipo) == 'FT')
-			oObj:cGRCB := '000028'
+		If AllTrim(oObj:cTipo) == 'FT' .Or. ( Alltrim(cEmpAnt) == '07' .And. !U_fVlFIDCLM((cQry)->E1_PEDIDO) )
+			If AllTrim((cQry)->E1_YUFCLI) == 'MG' 
+				oObj:cGRCB := '000028' // Regra Banestes para Fatura
+			else
+				oObj:cGRCB := '000001' // Regra BB para Fatura
+			EndIf
 		EndIf
+
 		// FIDC FIM - Provisório
 
 		::oLst:Add(oObj)

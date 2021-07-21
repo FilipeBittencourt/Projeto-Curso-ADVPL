@@ -1490,6 +1490,7 @@ User Function BIA677N4()
 	KR004 += Alltrim("                AND ZN8_DTREF BETWEEN '" + cDatIni + "' AND '" + cDatFin + "'                                 ") + msEnter
 	KR004 += Alltrim("                AND SUBSTRING(ZN8_PRODUT, 1, 2) = 'C1'                                                        ") + msEnter
 	KR004 += Alltrim("                AND ZN8_TPPROD = 'PP'                                                                         ") + msEnter
+	KR004 += Alltrim("                AND ZN8_CUS223 <> 0                                                                           ") + msEnter
 	KR004 += Alltrim("                AND ZN8.D_E_L_E_T_ = ' '                                                                      ") + msEnter
 	KR004 += Alltrim("          GROUP BY SUBSTRING(ZN8_PRODUT, 1, 7)),                                                              ") + msEnter
 	KR004 += Alltrim("      PROCRT02                                                                                                ") + msEnter

@@ -187,9 +187,9 @@ Static Function RptDetail()
 			(M001)->(dbGoTop())
 			If (M001)->CONTAD <> 1
 				MsgALERT("A versão informada não está ativa para execução deste processo." + msrhEnter + msrhEnter + "Favor verificar o preenchimento dos campos no tabela de controle de versão conforme abaixo:" + msrhEnter + msrhEnter + xfMensCompl + msrhEnter + msrhEnter + "Favor verificar com o responsável pelo processo Orçamentário!!!")
-				(M001)->(dbCloseArea())
-				T004->(dbCloseArea())
-				Return .F.
+				//(M001)->(dbCloseArea())
+				//T004->(dbCloseArea())
+				//Return .F.
 			EndIf	
 			(M001)->(dbCloseArea())
 
@@ -644,7 +644,10 @@ Static Function gB766Loop()
 			xk_EmpOri                          ,;
 			xf_Projetd                         ,;
 			wk_RefVl                           ,;
-			xk_Umidad                          })
+			xk_Umidad                          ,;
+			ESTRUT->QTRETN                     ,;
+			ESTRUT->RETORN                     ,;
+			ESTRUT->MISTUR                     })
 
 			ESTRUT->(dbSkip())
 		End
@@ -739,6 +742,7 @@ Static Function gB766Loop()
 				ql_Perct := 0
 
 				// Novo tratamento para adicional de umidade
+				ql_QtSeco := aDados2[i][6]
 				If aDados2[i][14] <> 0
 					ql_Quant := ql_Quant/(-(((aDados2[i][14]/100)/1)-1))
 				EndIf
@@ -877,9 +881,9 @@ Static Function gB766Loop()
 						ql_SeqGrv  ++
 						RecLock("Z46",.T.)
 						Z46->Z46_FILIAL := xFilial("Z46")
-						Z46->Z46_VERSAO	:= MV_PAR15
-						Z46->Z46_REVISA	:= MV_PAR16
-						Z46->Z46_ANOREF	:= MV_PAR17
+						Z46->Z46_VERSAO := MV_PAR15
+						Z46->Z46_REVISA := MV_PAR16
+						Z46->Z46_ANOREF := MV_PAR17
 						Z46->Z46_DATARF := MV_PAR11
 						Z46->Z46_SEQGRV := StrZero(ql_SeqGrv,4)
 						Z46->Z46_COD    := aDados2[i][1]
@@ -899,6 +903,11 @@ Static Function gB766Loop()
 						Z46->Z46_UMIDAD := aDados2[i][14]
 						Z46->Z46_CONTA  := IIF(SB1->B1_TIPO == "PA", "61111003", SB1->B1_YCTRIND)
 						Z46->Z46_ITCUS  := IIF(SB1->B1_TIPO == "PA", "063", xdItCus)
+						Z46->Z46_RETURN := aDados2[i][16]
+						Z46->Z46_MISTUR := aDados2[i][17]
+						Z46->Z46_QTSECO := ql_QtSeco - aDados2[i][15]
+						Z46->Z46_QTRETN := aDados2[i][15]
+						Z46->Z46_QTUMID := ql_Quant - ql_QtSeco - aDados2[i][15]
 						Z46->(MsUnLock())
 					EndIf
 
@@ -1073,6 +1082,12 @@ Static Function StrutBia(cProduto, nQuant, cAliasEstru, cArqTrab, lAsShow, cRevi
 		AADD(aCampos,{"QTDORI","N",Max(aTamSX3[1],18),aTamSX3[2]})
 		aTamSX3:=TamSX3("GG_NIV")
 		AADD(aCampos,{"NIVEL","N",Max(aTamSX3[1],18),aTamSX3[2]})
+		aTamSX3:=TamSX3("GG_QUANT")
+		AADD(aCampos,{"QTRETN","N",Max(aTamSX3[1],18),aTamSX3[2]})
+		aTamSX3:=TamSX3("GG_QUANT")
+		AADD(aCampos,{"RETORN","N",Max(aTamSX3[1],18),aTamSX3[2]})
+		aTamSX3:=TamSX3("GG_QUANT")
+		AADD(aCampos,{"MISTUR","N",Max(aTamSX3[1],18),aTamSX3[2]})
 		cArqTrab := CriaTrab(aCampos)
 		If Select(cAliasEstru) > 0
 			dbSelectArea(cAliasEstru)
@@ -1121,12 +1136,14 @@ Static Function StrutBia(cProduto, nQuant, cAliasEstru, cArqTrab, lAsShow, cRevi
 				sm_Perc := 0
 				sm_QtdPlus := 0
 				sm_QtdBkp := nQuant
+				sm_QtRetn := 0
 				If AK08->(dbSeek(SGG->GG_COD)) .and. AK08->PERC < 100
-					sm_Perc := (SGG->GG_YMISTUR / AK08->PERC) * 100
+					sm_QtRetn  := xBia776E(nQuant, MV_PAR10, MV_PAR11)
+					sm_Perc    := (SGG->GG_YMISTUR / AK08->PERC) * 100
 					sm_QtdPlus := sm_Perc * nQuant / SGG->GG_YMISTUR
-					nQuant := sm_QtdPlus
-					xSomaRet := .T.
-					xQtdRetn := AK08->PERC
+					nQuant     := sm_QtdPlus
+					xSomaRet   := .T.
+					xQtdRetn   := AK08->PERC
 				EndIf
 
 				nQuantItem := xBia776E(nQuant, MV_PAR10, MV_PAR11)
@@ -1144,11 +1161,15 @@ Static Function StrutBia(cProduto, nQuant, cAliasEstru, cArqTrab, lAsShow, cRevi
 					ESTRUT->TRT    := fRetTRT(SGG->GG_COD)
 					If MV_PAR03 == 1
 						ESTRUT->QUANT  := ( nQuantItem * (100 - SGG->GG_PERDA) ) / 100
+						sm_QtRetn      := ( sm_QtRetn * (100 - SGG->GG_PERDA) ) / 100
 					ElseIf MV_PAR03 == 2
 						ESTRUT->QUANT  := nQuantItem
 					EndIf
 					ESTRUT->QTDORI := SGG->GG_QUANT
 					ESTRUT->NIVEL  := xNivel
+					ESTRUT->QTRETN := ESTRUT->QUANT - sm_QtRetn
+					ESTRUT->RETORN := AK08->PERC
+					ESTRUT->MISTUR := SGG->GG_YMISTUR
 					MsUnlock()
 					lAdd:=.T.
 				EndIf

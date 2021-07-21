@@ -14,6 +14,10 @@ User Function BAF004()
 	Local oObj := Nil
 	Local _oSemaforo	:=	tBiaSemaforo():New()
 
+	If Upper(AllTrim(getenvserver())) == "DEV-FIDC" .And. Select("SX6") <= 0
+		RpcSetEnv('07', '01')
+	EndIf
+
 	U_GravaPZ2(0,"SE1","BAF004","INICIO","EMP:"+CEMPANT,"MNT",CUSERNAME)
 
 	_oSemaforo:cGrupo	:=	"FIN_BAIXAS_CR"

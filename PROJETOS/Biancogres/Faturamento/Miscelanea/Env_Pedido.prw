@@ -206,6 +206,31 @@ USER FUNCTION Env_Pedido(aaNUM_PED,lDigitou,lAtende,cEmpPed,lRpc,lVitcer)
 	_AUX_PEDIDO->(DbCloseArea())
 RETURN
 
+// User Function TESTEENVPED()
+
+// 	RpcSetEnv('07', '01')
+// 	//pedido LM: LG1890
+// 	//pedido origme Bianco: BJ8274
+// 	//na duvida consultar sl_helpindex SC5070 no banco de dados
+	
+// 	U_Env_Pedido("BJ8274",.F., .F.,'01',.T.,.F.)
+	
+// 	// SC5->(DbSetOrder(11))
+// 	// If !SC5->(DbSeek(xFilial("SC5")+"BJ8274"+'01'))
+// 	// 	RETURN
+// 	// EndIf
+
+// 	// nPed_Imp := SC5->C5_YPEDORI 
+// 	// cCodVend := SC5->C5_VEND1	
+
+// 	// IF U_CRIA_ARQUIVO(SC5->C5_NUM, '01')
+// 	// 	CRIA_EMAIL(SC5->C5_NUM)
+// 	// ENDIF
+
+// 	RpcClearEnv()
+
+// Return
+
 /*
 ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
@@ -306,24 +331,24 @@ STATIC Function CRIA_EMAIL()
 
 	C_HTML += '  </tr> '
 	C_HTML += '<tr> '             
-	C_HTML += '    <td><div align="left"> CNPJ: <b>' + TRANSFORM(SM0->M0_CGC,"@R 99.999.999/9999-99") +'<b></td> '
+	C_HTML += '    <td><div align="left"> CNPJ: <b>' + TRANSFORM(SM0->M0_CGC,"@R 99.999.999/9999-99") +'</b></td> '
 	C_HTML += '    <td><div align="left"> Data: '+ SUBSTR( DTOS(SC5->C5_EMISSAO),7,2)+"/"+SUBSTR( DTOS(SC5->C5_EMISSAO),5,2)+"/"+SUBSTR( DTOS(SC5->C5_EMISSAO),1,4) +'</td> '                      
 	C_HTML += '  </tr> '
 	C_HTML += '<tr> '
 	C_HTML += '    <td><div align="left"> Endereço: <b>' + SM0->M0_ENDCOB +'</b></td> '
-	C_HTML += '    <td><div align="left"> Código Representante: <b>' + Alltrim(SC5->C5_VEND1) +'<b></td> '
+	C_HTML += '    <td><div align="left"> Código Representante: <b>' + Alltrim(SC5->C5_VEND1) +'</b></td> '
 	C_HTML += '  </tr> '
 	C_HTML += '<tr> '
 	C_HTML += '    <td><div align="left"> Município: <b>' + SM0->M0_CIDCOB +'</b></td> '
-	C_HTML += '    <td><div align="left"> Cond. Pagamento: <b>' + Posicione("SE4",1,xFilial("SE4")+SC5->C5_CONDPAG,"E4_DESCRI") +'<b></td> '
+	C_HTML += '    <td><div align="left"> Cond. Pagamento: <b>' + Posicione("SE4",1,xFilial("SE4")+SC5->C5_CONDPAG,"E4_DESCRI") +'</b></td> '
 	C_HTML += '  </tr> '
 	C_HTML += '<tr> '
 	C_HTML += '    <td><div align="left"> Estado: <b>' + SM0->M0_ESTCOB +'</b></td> '
-	C_HTML += '    <td><div align="left"> Nome Representante: <b> '+Posicione("SA3",1,xFilial("SA3")+SC5->C5_VEND1,"A3_NREDUZ")+'<b></td> '
+	C_HTML += '    <td><div align="left"> Nome Representante: <b> '+Posicione("SA3",1,xFilial("SA3")+SC5->C5_VEND1,"A3_NREDUZ")+'</b></td> '
 	C_HTML += '  </tr> '
 	C_HTML += '<tr> '
 	C_HTML += '    <td><div align="left"> CEP: <b>' + SM0->M0_CEPCOB +'</b></td> '
-	C_HTML += '    <td><div align="left"> Forma de Pagamento: <b> '+IIF(SC5->C5_YFORMA=="1","BANCO",IIF(SC5->C5_YFORMA=="2","CHEQUE","OP"))+'<b></td> '
+	C_HTML += '    <td><div align="left"> Forma de Pagamento: <b> '+IIF(SC5->C5_YFORMA=="1","BANCO",IIF(SC5->C5_YFORMA=="2","CHEQUE","OP"))+'</b></td> '
 	C_HTML += '  </tr> '
 	C_HTML += '<tr> '
 	C_HTML += '    <td><div align="left"> País: <b>BRASIL</b></td> '
@@ -377,23 +402,23 @@ STATIC Function CRIA_EMAIL()
 	C_HTML += '  </tr> ' 
 	C_HTML += '<tr> '
 	If(Alltrim(SA1->A1_PESSOA)=='J')
-		C_HTML += '    <td><div align="left"> CNPJ: <b>' + TRANSFORM(SA1->A1_CGC,"@R 99.999.999/9999-99") +'<b></td> '
+		C_HTML += '    <td><div align="left"> CNPJ: <b>' + TRANSFORM(SA1->A1_CGC,"@R 99.999.999/9999-99") +'</b></td> '
 		If !Empty(SA1->A1_INSCR)
-			C_HTML += '    <td><div align="left"> I.E.: <b>' + SA1->A1_INSCR +'<b></td> '
+			C_HTML += '    <td><div align="left"> I.E.: <b>' + SA1->A1_INSCR +'</b></td> '
 		EndIf                                                                            
 	Else
-		C_HTML += '    <td><div align="left"> CPF: <b>' + TRANSFORM(SA1->A1_CGC,"@R 999.999.999-99") +'<b></td> '
+		C_HTML += '    <td><div align="left"> CPF: <b>' + TRANSFORM(SA1->A1_CGC,"@R 999.999.999-99") +'</b></td> '
 	EndIf           
-	C_HTML += '    <td><div align="left"> CEP: <b>' + SA1->A1_CEP +'<b></td> '             
+	C_HTML += '    <td><div align="left"> CEP: <b>' + SA1->A1_CEP +'</b></td> '             
 	C_HTML += '  </tr> ' 
 	C_HTML += '  <tr> ' 
-	C_HTML += '    <td><div align="left"> COMPRADOR: <b>' + Alltrim(SA1->A1_CONTATO) +'<b></td> '
-	C_HTML += '    <td><div align="left"> TELEFONE: <b>' + SA1->A1_TEL +'<b></td> '
-	C_HTML += '    <td><div align="left"> FAX: <b>' + SA1->A1_FAX +'<b></td> '
+	C_HTML += '    <td><div align="left"> COMPRADOR: <b>' + Alltrim(SA1->A1_CONTATO) +'</b></td> '
+	C_HTML += '    <td><div align="left"> TELEFONE: <b>' + SA1->A1_TEL +'</b></td> '
+	C_HTML += '    <td><div align="left"> FAX: <b>' + SA1->A1_FAX +'</b></td> '
 	C_HTML += '  </tr> ' 
 	C_HTML += '  <tr> ' 
-	C_HTML += '    <td><div align="left"> E-MAIL: <b>' + Alltrim(SA1->A1_EMAIL) +'<b></td> '
-	C_HTML += '    <td><div align="left"> TRANSPORTADORA: <b>' + Alltrim(Posicione("SA4",1,xFilial("SA4")+SC5->C5_TRANSP,"A4_NOME")) +'<b></td> '
+	C_HTML += '    <td><div align="left"> E-MAIL: <b>' + Alltrim(SA1->A1_EMAIL) +'</b></td> '
+	C_HTML += '    <td><div align="left"> TRANSPORTADORA: <b>' + Alltrim(Posicione("SA4",1,xFilial("SA4")+SC5->C5_TRANSP,"A4_NOME")) +'</b></td> '
 	C_HTML += '  </tr> ' 
 
 	C_HTML += '</font>'        
@@ -420,17 +445,17 @@ STATIC Function CRIA_EMAIL()
 	C_HTML += '<table width="900" border="1" cellspacing="0" cellpadding="2"> '
 	C_HTML += '<font color="black" size="2"> ' 
 	C_HTML += '<tr> ' 	
-	C_HTML += '    <th width="20" scope="col"> ITEM </span></th> '   
+	C_HTML += '    <th width="20" scope="col"> ITEM </th> '   
 	//C_HTML += '    <th width="50" scope="col"> QUANTIDADE </span></th> '  
-	C_HTML += '    <th width="50" scope="col"> QUANT. </span></th> '
+	C_HTML += '    <th width="50" scope="col"> QUANT. </th> '
 	//C_HTML += '    <th width="200" scope="col"> DESCRIÇÃO </span></th> '
-	C_HTML += '    <th width="200" scope="col"> PRODUTO </span></th> '    
+	C_HTML += '    <th width="200" scope="col"> PRODUTO </th> '    
 	//C_HTML += '    <th width="20" scope="col"> ENTREGA </span></th> '
-	C_HTML += '    <th width="20" scope="col"> PREV DISPONI </span></th> '                
+	C_HTML += '    <th width="20" scope="col"> PREV DISPONI </th> '                
 	//C_HTML += '    <th width="40" scope="col"> IPI </span></th> '    
-	C_HTML += '    <th width="40" scope="col"> DT NECES. ENG </span></th> '    
-	C_HTML += '    <th width="40" scope="col"> PREÇO </span></th> '    
-	C_HTML += '    <th width="100" scope="col"> TOTAL </span></th> '    
+	C_HTML += '    <th width="40" scope="col"> DT NECES. ENG </th> '    
+	C_HTML += '    <th width="40" scope="col"> PREÇO </th> '    
+	C_HTML += '    <th width="100" scope="col"> TOTAL </th> '    
 	C_HTML += '  </tr> '  
 	//C_HTML += '</table> ' 
 
@@ -457,12 +482,11 @@ STATIC Function CRIA_EMAIL()
 		//C_HTML += '    <td>0%</td> '    
 		//C_HTML += '    <td>'+DTOC(STOD(_AUX_PEDIDO->C6_YDTNECE))+'</td> '
 		C_HTML += '    <td>'+ Transform(_AUX_PEDIDO->C6_VALOR + _AUX_PEDIDO->C6_VALDESC,"@E 99,999,999.99") +'</td> ' 
+		C_HTML += '	</tr> '  
 
 		_AUX_PEDIDO->(DBSKIP())
 		nCount ++	                                          
-	EndDo     
-
-	C_HTML += '	</tr> '  
+	EndDo      
 
 	TOTAL_COMIPI 	:=  ((nTOTAL_TOTAL+_AUX_PEDIDO->C5_VLRFRET)-N_DESC_INC)
 
@@ -477,6 +501,7 @@ STATIC Function CRIA_EMAIL()
 	C_HTML += '    <td> '+Transform(nTOTAL_TOTAL,"@E 999,999.99")+' </td> '
 	C_HTML += '	</tr> '   
 
+	C_HTML += '</font>'   
 	C_HTML += '</table> '  
 
 	_AUX_PEDIDO->(DbGoTop())
@@ -484,18 +509,19 @@ STATIC Function CRIA_EMAIL()
 	C_HTML += '<table width="900" border="1" cellspacing="0" cellpadding="2"> '
 	C_HTML += '<font color="black" size="2"> ' 
 	C_HTML += '<tr> ' 	
-	C_HTML += '    <th width="800" scope="col"> SEGURO PRODUTO: '+IIF(_AUX_PEDIDO->C5_VLRFRET == 0,'NÃO','SIM') +'</span></th> ' 
-	C_HTML += '    <th width="100" scope="col"> '+Transform((_AUX_PEDIDO->C5_VLRFRET*nTOTAL_QUANT),"@E 9,999,999.99") +'</span></th> '    
+	C_HTML += '    <th width="800" scope="col"> SEGURO PRODUTO: '+IIF(_AUX_PEDIDO->C5_VLRFRET == 0,'NÃO','SIM') +'</th> ' 
+	C_HTML += '    <th width="100" scope="col"> '+Transform((_AUX_PEDIDO->C5_VLRFRET*nTOTAL_QUANT),"@E 9,999,999.99") +'</th> '    
 	C_HTML += '  </tr> '  
 	C_HTML += '  <tr> '  
-	C_HTML += '    <th width="800" scope="col"> DESCONCONTO INCONDICIONAL: </span></th> '  
-	C_HTML += '    <th width="100" scope="col"> '+Transform(N_DESC_INC,"@E 9,999,999.99") +'</span></th> '    
+	C_HTML += '    <th width="800" scope="col"> DESCONCONTO INCONDICIONAL: </th> '  
+	C_HTML += '    <th width="100" scope="col"> '+Transform(N_DESC_INC,"@E 9,999,999.99") +'</th> '    
 	C_HTML += '  </tr> '  
 	C_HTML += '  <tr> '  
-	C_HTML += '    <th width="800" scope="col"> TOTAL COM SEGURO E IPI: </span></th> '  
+	C_HTML += '    <th width="800" scope="col"> TOTAL COM SEGURO E IPI: </th> '  
 	//C_HTML += '    <th width="100" scope="col"> '+Transform(TOTAL_COMIPI+(_AUX_PEDIDO->C5_VLRFRET*nTOTAL_QUANT),"@E 9,999,999.99") +'</span></th> '   
-	C_HTML += '    <th width="100" scope="col"> '+Transform(TOTAL_COMIPI-N_DESC_INC,"@E 9,999,999.99") +'</span></th> '   
-	C_HTML += '  </tr> '  
+	C_HTML += '    <th width="100" scope="col"> '+Transform(TOTAL_COMIPI-N_DESC_INC,"@E 9,999,999.99") +'</th> '   
+	C_HTML += '  </tr> '
+	C_HTML += '</font>'     
 	C_HTML += '</table> ' 
 
 	//INFORMACOES OBRIGATORIAS	
@@ -524,32 +550,79 @@ STATIC Function CRIA_EMAIL()
 
 	If ( !_lVitcer )
 
+		// C_HTML += '<tr> '
+		// C_HTML += '    <td><div align="left"> 1 - Pedido sujeito a análise de crédito.</td> '
+		// C_HTML += '  </tr> '
+		// C_HTML += '<tr> '
+		// C_HTML += '    <td><div align="left"> 2 - Preço FOB fábrica. Para pedidos sem seguro, o transporte é por conta e risco do cliente.</td> '
+		// C_HTML += '  </tr> '
+		// C_HTML += '<tr> '
+		// C_HTML += '    <td><div align="left"> 3 - Os produtos a serem retirados na fábrica devem ser agendados com 48 horas de antecedência.</td> '
+		// C_HTML += '  </tr> '
+		// C_HTML += '<tr> '
+		// C_HTML += '    <td><div align="left"> 4 - Os produtos disponíveis para embarque que não forem retirados no prazo de 14 dias serão automaticamente cancelados.</td> '
+		// C_HTML += '  </tr> '
+		// C_HTML += '<tr> '
+		// C_HTML += '    <td><div align="left"> 5 - Preços e condições sujeitos a confirmação. Caso a inflação do setor seja superior a 5% entre a digitação do pedido e a data prevista de entrega, os preços serão renegociados. Caso haja alteração na legislação tributária os preços também deverão ser reajustados.</td> '
+		// C_HTML += '  </tr> '
+		// C_HTML += '<tr> '
+		// C_HTML += '    <td><div align="left"> 6 - O volume de cada item constante neste pedido pode sofrer variação de 10% para cima ou para baixo.</td> '
+		// C_HTML += '  </tr> '
+		// C_HTML += '<tr> '
+		// C_HTML += '    <td><div align="left"> 7 - Adquirir aproximadamente 10% a mais do produto para efeitos de reserva técnica (indicado inclusive pela norma a ABNT).</td> '
+		// C_HTML += '  </tr> '
+		// C_HTML += '<tr> '
+		// C_HTML += '    <td><div align="left"> 8 - Devido a utilização de matérias primas naturais que são queimadas em altas temperaturas, só poderemos garantir fornecimento com uniformidade de tonalidade e calibre para produtos do mesmo lote. A data de disponibilidade dos produtos poderá sofrer alteração na data de entrega pelo mesmo motivo e uma nova data será  informada.</td> '
+		// C_HTML += '  </tr> '
+		// C_HTML += '<tr> '
+		// C_HTML += '    <td><div align="left"> 9 - Para construções acima de 1.000 m² orientamos realizar o assentamento completo com rejuntamento em 01 (um) apartamento/casa para aprovação do produto/lote. Ressaltamos que reclamações após o assentamento do produto não serão aceitas.</td> '
+		// C_HTML += '  </tr> '
+
+		//Ticket 33102 - alteração do texto
 		C_HTML += '<tr> '
-		C_HTML += '    <td><div align="left"> 1 - Pedido sujeito a análise de crédito.</td> '
+		C_HTML += '    <td><div align="left"> 01 - Preços e condições sujeitos a confirmação no momento da implantação do pedido.</td> '
 		C_HTML += '  </tr> '
 		C_HTML += '<tr> '
-		C_HTML += '    <td><div align="left"> 2 - Preço FOB fábrica. Para pedidos sem seguro, o transporte é por conta e risco do cliente.</td> '
+		C_HTML += '    <td><div align="left"> 02 - Todo pedido é sujeito a análise de crédito.</td> '
 		C_HTML += '  </tr> '
 		C_HTML += '<tr> '
-		C_HTML += '    <td><div align="left"> 3 - Os produtos a serem retirados na fábrica devem ser agendados com 48 horas de antecedência.</td> '
+		C_HTML += '    <td><div align="left"> 03 - A quantidade de cada item do pedido pode sofrer variação de 10% para cima ou para baixo.</td> '
 		C_HTML += '  </tr> '
 		C_HTML += '<tr> '
-		C_HTML += '    <td><div align="left"> 4 - Os produtos disponíveis para embarque que não forem retirados no prazo de 14 dias serão automaticamente cancelados.</td> '
+		C_HTML += '    <td><div align="left"> 04 - Os preços são FOB fábrica.</td> '
 		C_HTML += '  </tr> '
 		C_HTML += '<tr> '
-		C_HTML += '    <td><div align="left"> 5 - Preços e condições sujeitos a confirmação. Caso a inflação do setor seja superior a 5% entre a digitação do pedido e a data prevista de entrega, os preços serão renegociados. Caso haja alteração na legislação tributária os preços também deverão ser reajustados.</td> '
+		C_HTML += '    <td><div align="left"> 05 - A previsão de disponibilidade dos produtos será confirmada no momento da implantação do pedido no sistema.</td> '
 		C_HTML += '  </tr> '
 		C_HTML += '<tr> '
-		C_HTML += '    <td><div align="left"> 6 - O volume de cada item constante neste pedido pode sofrer variação de 10% para cima ou para baixo.</td> '
+		C_HTML += '    <td><div align="left"> 06 - Caso a inflação do setor seja superior a 5% entre a digitação do pedido e a data prevista de entrega, os preços serão renegociados.</td> '
 		C_HTML += '  </tr> '
 		C_HTML += '<tr> '
-		C_HTML += '    <td><div align="left"> 7 - Adquirir aproximadamente 10% a mais do produto para efeitos de reserva técnica (indicado inclusive pela norma a ABNT).</td> '
+		C_HTML += '    <td><div align="left"> 07 - Caso haja alteração na legislação tributária os preços serão reajustados.</td> '
 		C_HTML += '  </tr> '
 		C_HTML += '<tr> '
-		C_HTML += '    <td><div align="left"> 8 - Devido a utilização de matérias primas naturais que são queimadas em altas temperaturas, só poderemos garantir fornecimento com uniformidade de tonalidade e calibre para produtos do mesmo lote. A data de disponibilidade dos produtos poderá sofrer alteração na data de entrega pelo mesmo motivo e uma nova data será  informada.</td> '
+		C_HTML += '    <td><div align="left"> 08 - O fabricante não possui responsabilidade sobre o preço do frete e da entrega. O valor do frete (R$/t) é uma estimativa do representante comercial junto com o transportador.</td> '
 		C_HTML += '  </tr> '
 		C_HTML += '<tr> '
-		C_HTML += '    <td><div align="left"> 9 - Para construções acima de 1.000 m² orientamos realizar o assentamento completo com rejuntamento em 01 (um) apartamento/casa para aprovação do produto/lote. Ressaltamos que reclamações após o assentamento do produto não serão aceitas.</td> '
+		C_HTML += '    <td><div align="left"> 09 - Os produtos disponíveis para embarque e não carregados serão automaticamente cancelados.</td> '
+		C_HTML += '  </tr> '
+		C_HTML += '<tr> '
+		C_HTML += '    <td><div align="left"> 10 – O carregamento dos produtos na fábrica devem ser agendados com 48 horas de antecedência.</td> '
+		C_HTML += '  </tr> '
+		C_HTML += '<tr> '
+		C_HTML += '    <td><div align="left"> 11 – Garantimos uniformidade de tonalidade e calibre para produtos do mesmo lote.</td> '
+		C_HTML += '  </tr> '
+		C_HTML += '<tr> '
+		C_HTML += '    <td><div align="left"> 12 – Reserva técnica para obras: sugerimos adquirir 20% a mais de cada produto para todos os formatos.</td> '
+		C_HTML += '  </tr> '
+		C_HTML += '<tr> '
+		C_HTML += '    <td><div align="left"> 13 - Para construções acima de 1.000 m², é necessário realizar o assentamento de um apartamento ou casa para aprovação do produto. Essa operação deve ser repetida a cada lote recebido.</td> '
+		C_HTML += '  </tr> '
+		C_HTML += '<tr> '
+		C_HTML += '    <td><div align="left"> 14 – Orientamos que independente da metragem adquirida seja realizado o assentamento de uma pequena metragem para avaliação e aprovação do produto.</td> '
+		C_HTML += '  </tr> '
+		C_HTML += '<tr> '
+		C_HTML += '    <td><div align="left"> 15 – Nosso site e embalagens contemplam informações importantes para o correto manuseio, instalação e manutenção dos nossos produtos. É imperativo seguir todas as orientações para a qualidade da sua obra e a garantia do seu produto.</td> '
 		C_HTML += '  </tr> '
 
 	Else
@@ -1066,26 +1139,53 @@ USER FUNCTION CRIA_ARQUIVO(aaNUM_PED,cEmpPed)
 
 	If ( !_lVitcer )
 
+		// cLin += PADR("| IMPORTANTE:                                                                                      |"										,99) + cEOL
+		// cLin += PADR("|    1 - Pedido sujeito a análise de crédito.                                                      |"										,99) + cEOL
+		// cLin += PADR("|    2 - Preço FOB fábrica. Para pedidos sem seguro o transporte é por conta e risco do cliente.   |"										,99) + cEOL
+		// cLin += PADR("|    3 - Os produtos a serem retirados na fábrica devem ser agendados com 48 horas de antecedência.|"										,99) + cEOL
+		// cLin += PADR("|    4 - Os produtos disponíveis para embarque que não forem retirados no prazo de 14 dias serão   |"										,99) + cEOL
+		// cLin += PADR("|        automaticamente cancelados.                                                               |"										,99) + cEOL
+		// cLin += PADR("|    5 - Preços e condições sujeitos a confirmação. Caso a inflação do setor seja superior a 5%    |"										,99) + cEOL
+		// cLin += PADR("|        entre a digitação do pedido e a data prevista de entrega, os preços serão renegociados.   |"										,99) + cEOL
+		// cLin += PADR("|        Caso haja alteração na legislação tributária os preços também deverão ser reajustados.    |"										,99) + cEOL
+		// cLin += PADR("|    6 - O volume de cada item constante no pedido pode sofrer variação de 10% para mais e para    |"										,99) + cEOL
+		// cLin += PADR("|        menos.                                                                                    |"										,99) + cEOL
+		// cLin += PADR("|    7 - Adquirir aproximadamente 10% a mais do produto para efeitos de reserva técnica (indicado  |"										,99) + cEOL
+		// cLin += PADR("|        inclusive pela norma a ABNT).                                                             |"										,99) + cEOL
+		// cLin += PADR("|    8 - Devido a utilização de matérias primas naturais que são queimadas em alta temperaturas,   |"										,99) + cEOL
+		// cLin += PADR("|        só poderemos garantir fornecimento com uniformidade de tonalidade e calibre para produtos |"										,99) + cEOL
+		// cLin += PADR("|        do mesmo lote. A data de disponibilidade dos produtos poderá sofrer alteração na data de  |"										,99) + cEOL
+		// cLin += PADR("|        entrega pelo mesmo motivo e uma nova data será  informada.                                |"										,99) + cEOL
+		// cLin += PADR("|    9 - Para construções acima de 1.000 m² orientamos realizar o assentamento completo com        |"										,99) + cEOL
+		// cLin += PADR("|        rejuntamento em 01 (um) apartamento / casa para aprovação do produto / lote. Ressaltamos  |"										,99) + cEOL
+		// cLin += PADR("|        que reclamações após o assentamento do produto não serão aceitas.                         |"										,99) + cEOL
+
+		//Ticket 33102 - alteração no texto
 		cLin += PADR("| IMPORTANTE:                                                                                      |"										,99) + cEOL
-		cLin += PADR("|    1 - Pedido sujeito a análise de crédito.                                                      |"										,99) + cEOL
-		cLin += PADR("|    2 - Preço FOB fábrica. Para pedidos sem seguro o transporte é por conta e risco do cliente.   |"										,99) + cEOL
-		cLin += PADR("|    3 - Os produtos a serem retirados na fábrica devem ser agendados com 48 horas de antecedência.|"										,99) + cEOL
-		cLin += PADR("|    4 - Os produtos disponíveis para embarque que não forem retirados no prazo de 14 dias serão   |"										,99) + cEOL
-		cLin += PADR("|        automaticamente cancelados.                                                               |"										,99) + cEOL
-		cLin += PADR("|    5 - Preços e condições sujeitos a confirmação. Caso a inflação do setor seja superior a 5%    |"										,99) + cEOL
-		cLin += PADR("|        entre a digitação do pedido e a data prevista de entrega, os preços serão renegociados.   |"										,99) + cEOL
-		cLin += PADR("|        Caso haja alteração na legislação tributária os preços também deverão ser reajustados.    |"										,99) + cEOL
-		cLin += PADR("|    6 - O volume de cada item constante no pedido pode sofrer variação de 10% para mais e para    |"										,99) + cEOL
-		cLin += PADR("|        menos.                                                                                    |"										,99) + cEOL
-		cLin += PADR("|    7 - Adquirir aproximadamente 10% a mais do produto para efeitos de reserva técnica (indicado  |"										,99) + cEOL
-		cLin += PADR("|        inclusive pela norma a ABNT).                                                             |"										,99) + cEOL
-		cLin += PADR("|    8 - Devido a utilização de matérias primas naturais que são queimadas em alta temperaturas,   |"										,99) + cEOL
-		cLin += PADR("|        só poderemos garantir fornecimento com uniformidade de tonalidade e calibre para produtos |"										,99) + cEOL
-		cLin += PADR("|        do mesmo lote. A data de disponibilidade dos produtos poderá sofrer alteração na data de  |"										,99) + cEOL
-		cLin += PADR("|        entrega pelo mesmo motivo e uma nova data será  informada.                                |"										,99) + cEOL
-		cLin += PADR("|    9 - Para construções acima de 1.000 m² orientamos realizar o assentamento completo com        |"										,99) + cEOL
-		cLin += PADR("|        rejuntamento em 01 (um) apartamento / casa para aprovação do produto / lote. Ressaltamos  |"										,99) + cEOL
-		cLin += PADR("|        que reclamações após o assentamento do produto não serão aceitas.                         |"										,99) + cEOL
+		cLin += PADR("|    1  - Preços e condições sujeitos a confirmação no momento da implantação do pedido.           |"										,99) + cEOL
+		cLin += PADR("|    2  - Todo pedido é sujeito a análise de crédito.   											 |"										,99) + cEOL
+		cLin += PADR("|    3  - A quantidade de cada item do pedido pode sofrer variação de 10% para cima ou para baixo. |"										,99) + cEOL
+		cLin += PADR("|    4  - Os preços são FOB fábrica.                                                               |"										,99) + cEOL
+		cLin += PADR("|    5  - A previsão de disponibilidade dos produtos será confirmada no momento da implantação do  |"										,99) + cEOL
+		cLin += PADR("|    		pedido no sistema.																		 |"										,99) + cEOL
+		cLin += PADR("|    6  - Caso a inflação do setor seja superior a 5% entre a digitação do pedido e a data 		 |"										,99) + cEOL
+		cLin += PADR("|    		prevista de entrega, os preços serão renegociados.                                       |"										,99) + cEOL
+		cLin += PADR("|    7  - Caso haja alteração na legislação tributária os preços serão reajustados.                |"										,99) + cEOL
+		cLin += PADR("|    8  - O fabricante não possui responsabilidade sobre o preço do frete e da entrega. O valor do |"										,99) + cEOL
+		cLin += PADR("|    		frete (R$/t) é uma estimativa do representante comercial junto com o transportador.      |"										,99) + cEOL
+		cLin += PADR("|    9  - Os produtos disponíveis para embarque e não carregados serão automaticamente cancelados. |"										,99) + cEOL
+		cLin += PADR("|    10 – O carregamento dos produtos na fábrica devem ser agendados com 48 horas de antecedência. |"										,99) + cEOL
+		cLin += PADR("|    11 – Garantimos uniformidade de tonalidade e calibre para produtos do mesmo lote.             |"										,99) + cEOL
+		cLin += PADR("|    12 – Reserva técnica para obras: sugerimos adquirir 20% a mais de cada produto para todos os  |"										,99) + cEOL
+		cLin += PADR("|    		formatos.                         														 |"										,99) + cEOL
+		cLin += PADR("|    13 - Para construções acima de 1.000 m², é necessário realizar o assentamento de um 			 |"										,99) + cEOL
+		cLin += PADR("|    		apartamento ou casa para aprovação do produto. Essa operação deve ser repetida a cada    |"										,99) + cEOL
+		cLin += PADR("|    		lote recebido.                         													 |"										,99) + cEOL
+		cLin += PADR("|    14 – Orientamos que independente da metragem adquirida seja realizado o assentamento de uma   |"										,99) + cEOL
+		cLin += PADR("|    		pequena metragem para avaliação e aprovação do produto.                        			 |"										,99) + cEOL
+		cLin += PADR("|    15 – Nosso site e embalagens contemplam informações importantes para o correto manuseio, 	 |"										,99) + cEOL
+		cLin += PADR("|    		instalação e manutenção dos nossos produtos. É imperativo seguir todas as orientações    |"										,99) + cEOL
+		cLin += PADR("|    		para a qualidade da sua obra e a garantia do seu produto.                        		 |"										,99) + cEOL
 
 	Else
 

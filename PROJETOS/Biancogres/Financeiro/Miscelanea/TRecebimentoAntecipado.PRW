@@ -521,7 +521,6 @@ Return(cRet)
 Method RetDtEntPed() Class TRecebimentoAntecipado
 
 	Local dRet      := dDataBase
-	Local dDtAux    := Nil
 	Local aDadosPed := {}
 	Local nCount    := 0
 
@@ -533,12 +532,11 @@ Method RetDtEntPed() Class TRecebimentoAntecipado
 	//aDadosPed[4] CNPJ/CPF DO CLIENTE
 	If (aDadosPed[1] $ '000_208' .And. (aDadosPed[2] $ 'E_R')  .OR.  u_fValFunc(aDadosPed[4]))
 
-		dDtAux := dRet
-		dDtAux := DaySum(dDtAux, 7)
+		dRet := DaySum(dRet, 7)
 
-		If dDtAux <> DataValida(dDtAux, .T.)
+		If dRet <> DataValida(dRet, .T.)
 
-			dDtAux := DataValida(dDtAux, .T.)
+			dRet := DataValida(dRet, .T.)
 
 		EndIf
 

@@ -15,7 +15,7 @@
 @version V12 revisado por Fernando Rocha
 @obs Ticket 801/3031 - revisado para usar a funcao CALC_SALDO_OP
 /*/
-User Function BIA496(AA_EMP, lEstAmo, cMarcaJob)
+User Function BIA496(AA_EMP, lEstAmo, cMarcaJob,cNomFile)
 
 	Local cLoad				:= ""
 	Local cFileName			:= ""
@@ -23,6 +23,10 @@ User Function BIA496(AA_EMP, lEstAmo, cMarcaJob)
 
 	Default lEstAmo 	:= .F.
 	Default cMarcaJob := ""
+	Default cNomFile := ""
+
+
+
 
 	If Type("DDATABASE") <> "D"
 		DO CASE
@@ -68,6 +72,10 @@ User Function BIA496(AA_EMP, lEstAmo, cMarcaJob)
 	Private lShowFil	:= .F.
 	Private lManual		:= .F.
 	Private cPergunta	:= "BIA999"
+	PRIVATE cMarcaJB  := ""
+	PRIVATE cNoArqJB  :=  cNomFile
+
+
 
 	cLoad				:= "BIA496" + cEmpAnt
 	cFileName			:= RetCodUsr() +"_"+ cLoad
@@ -76,6 +84,7 @@ User Function BIA496(AA_EMP, lEstAmo, cMarcaJob)
 		MsgInfo("Consulta temporariamente indisponível","BIA496")
 		Return
 	EndIf
+
 	// Utilização do relatório para usuários internos.
 	If Empty(cRepAtu)
 		If !lWFlow	// Executar via REMOTE (MANUAL).
@@ -119,11 +128,14 @@ User Function BIA496(AA_EMP, lEstAmo, cMarcaJob)
 	Else
 
 		If IsBlind() //JOB
-			cInMarca := "('" + AllTrim(cMarcaJob) + "')"
+			cMarcaJB :=  AllTrim(cMarcaJob)
+			cInMarca :=  "('" + AllTrim(cMarcaJob) + "')"
 		Else
+			cMarcaJB := "todas"
 			cInMarca := "('" + AllTrim(SA3->A3_YEMP) + "')"
 		EndIf
 		cInMarca :=	 StrTran(  cInMarca, "/", "','")
+
 
 		If ( '1302' $ cInMarca )
 			lShowFil  := .T.
@@ -174,63 +186,68 @@ Static Function Calcula_EST()
 	Private fHtml
 
 	IF !IsBlind()
-		cPath			:= GetTempPath()
+		cPath	:= GetTempPath()
 	EndIf
 
-	cQry := GeraSql()
-	MemoWrite("\BIA496_QUERY.TXT", cQry)
+	//////////////////////////
 
-	If chkfile("QRY")
-		dbSelectArea("QRY")
-		dbCloseArea()
-	EndIf
-	TCQUERY cQry ALIAS "QRY" NEW
-	QRY->(DbEval({|| _nCount++ }))
-	QRY->(DbGoTop())
-
-	if _nCount == 0 .AND. IsBlind()
-		return .T.
-	EndIF
-
-	DbSelectArea("QRY")
-	DbGotop()
-	//conout('bia496-2')
-	Setprc(0,0)
-	cEmailCC := ''
-	cEmailCO := ''
-
-	cTime := Replace(Time(),":","_")
-	If IsBlind() .OR. Empty(CREPATU)
-		cArqHtml := "\P10\workflow\Estoque"+ cTime +".html"
-		cArqCSV	 := "\P10\workflow\Estoque"+ cTime +".csv"
+	cTime := Replace(DTOC(Date()),"/","")
+	If IsBlind()
+		cArqHtml := "\P10\workflow\"+cNoArqJB+"_"+cMarcaJB+"_"+cTime+".html"
+		cArqCSV	 := "\P10\workflow\"+cNoArqJB+"_"+cMarcaJB+"_"+cTime+".csv"
 	Else
-		cArqHtml := cPath + "Estoque"+ cTime +".html"
-		cArqCSV	 := cPath + "Estoque"+ cTime +".csv"
+		cArqHtml := cPath + "Estoque_"+cTime+".html"
+		cArqCSV	 := cPath + "Estoque_"+cTime+".csv"
 	EndIf
-
 
 
 	//Verifica se o arquivo existe
-	If File(cArqHtml)
-		FErase(cArqHtml)
+	If IsBlind() .AND. (file(cArqCSV) .OR. File(cArqHtml))
+
+		Envioemail(AllTrim(SA3->A3_EMAIL), "2") // O solicitante pediu que não fosse criado parâmetro para troca do layout.
+
+	Else
+
+		cQry := GeraSql()
+		MemoWrite("\BIA496_QUERY.TXT", cQry)
+
+		If chkfile("QRY")
+			dbSelectArea("QRY")
+			dbCloseArea()
+		EndIf
+		TCQUERY cQry ALIAS "QRY" NEW
+		QRY->(DbEval({|| _nCount++ }))
+		QRY->(DbGoTop())
+
+		if _nCount == 0 .AND. IsBlind()
+			return .T.
+		EndIF
+
+		DbSelectArea("QRY")
+		DbGotop()
+		//conout('bia496-2')
+		Setprc(0,0)
+		cEmailCC := ''
+		cEmailCO := ''
+
+		fHtml := fCreate(cArqHtml)
+		fCSV  := fCreate(cArqCSV)
+		//nHdlCSV := MSFCREATE(cArqCSV,0)
+
+		If ( fHtml != -1 ) .AnD. ( fCSV != -1 )
+			GeraArq(_nCount)
+		EndIf
+
+		DbSelectArea("QRY")
+		If EoF()
+			DbCloseArea()
+		EndIf
+
 	EndIf
 
-	If file(cArqCSV)
-		FErase(cArqCSV)
-	EndIf
 
-	fHtml := fCreate(cArqHtml)
-	fCSV  := fCreate(cArqCSV)
-	//nHdlCSV := MSFCREATE(cArqCSV,0)
 
-	If ( fHtml != -1 ) .AnD. ( fCSV != -1 )
-		GeraArq(_nCount)
-	EndIf
 
-	DbSelectArea("QRY")
-	If EoF()
-		DbCloseArea()
-	EndIf
 
 Return
 
@@ -350,7 +367,7 @@ Static Function Enviar(cImpModel)
 	fClose(fHtml)
 	fClose(fCSV)
 
-	Envioemail(AllTrim(SA3->A3_EMAIL), cImpModel)
+
 /*
 	cSQL := ""
 	cSQL += "SELECT A3_COD, A3_NOME, A3_YEMP, A3_EMAIL "  + Enter
@@ -414,8 +431,13 @@ Static Function Enviar(cImpModel)
 
 	EndIf
 */
-	FErase(cArqHtml)
-	FErase(cArqCSV)
+
+	Envioemail(AllTrim(SA3->A3_EMAIL), cImpModel)
+
+
+	//	FErase(cArqHtml)
+	//	FErase(cArqCSV)
+
 
 	cMensag  := ''
 	cMens    := ''
@@ -424,19 +446,19 @@ Static Function Enviar(cImpModel)
 
 Return
 
-
 Static Function Envioemail(cEmail, cImpModel)
 
 	Local cNMarca := ""
 
 	Default cImpModel	:= "1"
+	Default cEmailCC	:= ""
+	Default cEmailCO	:= ""
+
 	// Email do Emissor
-	cRecebe   	:= cEmail																// Email do(s) receptor(es)
+	cRecebe   := cEmail																// Email do(s) receptor(es)
 	cRecebeCC	:= cEmailCC  												 			// Com Copia
 	cRecebeCO	:= cEmailCO
-	//cRecebe += ";luana.ribeiro@biancogres.com.br"
-	//cRecebeCC := ""
-	//cRecebeCO := ""
+
 
 	If (cEmpAnt == '01')
 		cNMarca := "BIANCOGRES"

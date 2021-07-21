@@ -303,7 +303,7 @@ Static Function SendMail()
 		_cCC := ""
 	Else          
 		_cTo := U_EmailWF("SOL_WFDI",CEMPANT)
-		_cTo += ";fernando@facilesistemas.com.br"
+		_cTo += ";ranisses.corona@biancogres.com.br"
 		//_cTo += ";"+_cMail
 		_cCC := ""
 	EndIf

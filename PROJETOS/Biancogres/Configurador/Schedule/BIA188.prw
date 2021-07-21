@@ -277,14 +277,15 @@ User Function BIA188(cPedOri, cEmpPed, lRpc)
 			//C_HTML += '    <td>0%</td> '
 			//C_HTML += '    <td>'+DTOC(SC6->C6_YDTNECE)+'</td> '
 			C_HTML += '    <td>'+ Transform(SC6->C6_VALOR + SC6->C6_VALDESC,"@E 99,999,999.99") +'</td> ' 
-
+			C_HTML += '	</tr> '  
+			
 			SC6->(DBSKIP())
 			nCount ++	                              
 
 		EndDo
 	EndIf
 
-	C_HTML += '	</tr> '  
+	
 
 	TOTAL_COMIPI 	:=  ((nTOTAL_TOTAL+SC5->C5_VLRFRET)-N_DESC_INC)
 

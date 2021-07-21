@@ -57,8 +57,15 @@ Return _cCateg
 // Preencher a categoria dos demais clientes do grupo ao alterar a categoria de um cliente
 User function BFG136B()
 Local _cSql	:=	""
+Local replic := .T.
+	
+	If(!IsBlind())
+		If(!MsgYesNo("Deseja replicar a nova categoria para todos os clientes do atual grupo de vendas?"))
+			replic := .F.
+		EndIf
+	EndIf
 
-	If !Empty(M->A1_GRPVEN) .And. !Empty(M->A1_YCAT) .And. MsgYesNo("Deseja replicar a nova categoria para todos os clientes do atual grupo de vendas?")
+	If !Empty(M->A1_GRPVEN) .And. !Empty(M->A1_YCAT) .And. replic
 	
 		_cSql	:= " UPDATE " + RetSqlName("SA1") + CRLF
 		_cSql	+= " SET A1_YCAT = " + ValtoSql(M->A1_YCAT) + CRLF

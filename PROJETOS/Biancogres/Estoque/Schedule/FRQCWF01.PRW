@@ -37,7 +37,6 @@ Static Function ProcWF()
 
 	Local aArea := GetArea() 
 	Local cFile
-	//Local _cDest := GetNewPar("FA_RQCDE"+AllTrim(cEmpAnt),"fernando@facilesistemas.com.br")
 	Local _cDest := U_EmailWF("FRQCWF01",AllTrim(cEmpAnt))
 	Local _cTexto   
 	Local _cHrBloq		:= GetNewPar("FA_RQCHRB","12:00")  //Horario de bloqueio de baixas no ultimo dia do mes

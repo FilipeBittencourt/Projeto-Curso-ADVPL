@@ -487,11 +487,19 @@ Method ValidEmail(cEmail) Class TAFRegraComunicacaoBancariaReceber
 	Local lRet := .T.
 	
 	For nW := 1 To Len(aEmail)
-	
-		If !IsEmail(aEmail[nW])
-				
-			lRet := .F.
+
+		If Upper(AllTrim(getenvserver())) == "DEV-FIDC"
+
+			lRet := .T.
 			
+		Else
+
+			If !IsEmail(aEmail[nW])
+					
+				lRet := .F.
+				
+			EndIf
+		
 		EndIf
 	
 	Next nW

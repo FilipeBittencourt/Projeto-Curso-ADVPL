@@ -5596,10 +5596,20 @@ static method movBcoFIDC(dDataRef) class FIDC
         if (!lRet)
             break
         endif
+        
+        If cEmpAnt == "07"
 
-        cBanco:=PadR("001",getSX3Cache("A6_COD","X3_TAMANHO"))
-        cAgencia:=PadR("34312",getSX3Cache("A6_AGENCIA","X3_TAMANHO"))
-        cConta:=PadR("55.097-3",getSX3Cache("A6_NUMCON","X3_TAMANHO"))
+            cBanco   := PadR("001",getSX3Cache("A6_COD","X3_TAMANHO"))
+            cAgencia := PadR("34312",getSX3Cache("A6_AGENCIA","X3_TAMANHO"))
+            cConta   := PadR("52868",getSX3Cache("A6_NUMCON","X3_TAMANHO"))
+
+        Else
+
+            cBanco   := PadR("001",getSX3Cache("A6_COD","X3_TAMANHO"))
+            cAgencia := PadR("34312",getSX3Cache("A6_AGENCIA","X3_TAMANHO"))
+            cConta   := PadR("55.097-3",getSX3Cache("A6_NUMCON","X3_TAMANHO"))
+
+        EndIf
 
         nZKBCount:=0
         nZKBOrder:=retOrder("ZKB","ZKB_FILIAL+ZKB_BANCO+ZKB_CODHIS")

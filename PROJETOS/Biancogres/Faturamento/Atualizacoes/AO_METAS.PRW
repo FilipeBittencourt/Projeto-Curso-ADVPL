@@ -73,16 +73,12 @@ User Function AOMETAMNT()
 	Private oGetTotBA
 	Private nGetTotBA := 0
 
-	//DEscomentar
-
-	/*
-
 	If (wOpcao $ "A_I_E")
 
-		If !U_VALOPER("AO2")
+		If !U_VALOPER("AO2") //REGRA NA TABELA ZZ0
 
-				Return
-				
+			Return
+
 		EndIf
 
 	EndIf
@@ -90,15 +86,15 @@ User Function AOMETAMNT()
 	If (wOpcao == "P")
 
 		If !U_VALOPER("AO1")
-				Return
+			Return
 		EndIf
 
-			lAprova := .T.
-			wOpcao  := "V"
+		lAprova := .T.
+		wOpcao  := "V"
 
 	EndIf
 
-	*/ 
+
 
 	//fim DEscomentar
 
@@ -123,11 +119,11 @@ User Function AOMETAMNT()
 
 			If lIncluir .Or.;
 					!(SubStr(SX3->X3_CAMPO,1,8) $ "PZ6_PERC#PZ6_META#PZ6_PBON") .Or.;
-					(	(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF1#PZ6_METAF1#PZ6_PBONF1") .Or.;
-					(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF2#PZ6_METAF2#PZ6_PBONF2" .And. M->PZ5_NFAIXA >= '2') .Or.;
-					(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF3#PZ6_METAF3#PZ6_PBONF3" .And. M->PZ5_NFAIXA >= '3') .Or.;
-					(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF4#PZ6_METAF4#PZ6_PBONF4" .And. M->PZ5_NFAIXA >= '4') .Or.;
-					(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF5#PZ6_METAF5#PZ6_PBONF5" .And. M->PZ5_NFAIXA >= '5') )
+					(	(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF1#PZ6_METAF1#PZ6_PBONF1#PZ6_METAP1") .Or.;
+					(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF2#PZ6_METAF2#PZ6_PBONF2#PZ6_METAP2" .And. M->PZ5_NFAIXA >= '2') .Or.;
+					(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF3#PZ6_METAF3#PZ6_PBONF3#PZ6_METAP3" .And. M->PZ5_NFAIXA >= '3') .Or.;
+					(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF4#PZ6_METAF4#PZ6_PBONF4#PZ6_METAP4" .And. M->PZ5_NFAIXA >= '4') .Or.;
+					(Alltrim(SX3->X3_CAMPO) $ "PZ6_PERCF5#PZ6_METAF5#PZ6_PBONF5#PZ6_METAP5" .And. M->PZ5_NFAIXA >= '5') )
 
 				nUsado := nUsado + 1
 
@@ -627,7 +623,7 @@ Static Function ProcM1()
 				TRB->(DbCloseArea())
 			EndIf
 
-			cSQL := "select dbo.FNC_AO_RECEITA('"+M->PZ5_MARCA+"','"+cTipCli+"','"+cCodCli+"','"+cLojCli+"','"+cDIniAnt+"','"+cDFimAnt+"','"+M->PZ5_TIPCAL+"','"+M->PZ5_TIPFIL+"','"+AllTrim(M->PZ5_PACOTE)+"')"
+			cSQL := "select dbo.FNC_AO_RECEITA('"+M->PZ5_MARCA+"','"+cTipCli+"','"+cCodCli+"','"+cLojCli+"','"+cDIniAnt+"','"+cDFimAnt+"','"+M->PZ5_TIPCAL+"','"+M->PZ5_TIPFIL+"','"+AllTrim(M->PZ5_PACOTE)+"','"+AllTrim(M->PZ5_PRODFO)+"')"
 			TCQuery cSQL Alias "TRB" New
 
 			TRB->(DbGoTop())
@@ -715,6 +711,7 @@ Static Function ProcM3()
 	Local nPBVLRea	:= aScan(aHeader, {|x| AllTrim(x[2]) == "PZ6_BVLREA" })
 	Local nPSI		:= aScan(aHeader, {|x| AllTrim(x[2]) == "PZ6_SI" })
 	Local nPDTUlt	:= aScan(aHeader, {|x| AllTrim(x[2]) == "PZ6_DTULRE" })
+	Local nPReali	:= aScan(aHeader, {|x| AllTrim(x[2]) == "PZ6_PREALI" })
 	Local cDIniAnt, cDFimAnt
 	Local cTipCli, cCodCli, cLojCli
 	Local cSQL
@@ -749,7 +746,7 @@ Static Function ProcM3()
 				TRB->(DbCloseArea())
 			EndIf
 
-			cSQL := "select dbo.FNC_AO_RECEITA('"+M->PZ5_MARCA+"','"+cTipCli+"','"+cCodCli+"','"+cLojCli+"','"+cDIniAnt+"','"+cDFimAnt+"','"+M->PZ5_TIPCAL+"','"+M->PZ5_TIPFIL+"','"+AllTrim(M->PZ5_PACOTE)+"')"
+			cSQL := "select dbo.FNC_AO_RECEITA('"+M->PZ5_MARCA+"','"+cTipCli+"','"+cCodCli+"','"+cLojCli+"','"+cDIniAnt+"','"+cDFimAnt+"','"+M->PZ5_TIPCAL+"','"+M->PZ5_TIPFIL+"','"+AllTrim(M->PZ5_PACOTE)+"','"+AllTrim(M->PZ5_PRODFO)+"')"
 
 			If Select("TRB") > 0
 				TRB->(DbCloseArea())
@@ -770,7 +767,7 @@ Static Function ProcM3()
 			//OS 1337-16 : Filtro dos pacotes para calculo da base da verba com pacotes diferenciados - solicitacao Incesa
 			If PZ6->(FieldPos("PZ6_BASVER")) > 0 .And. PZ5->(FieldPos("PZ5_PCTVER")) > 0 .And. !Empty(M->PZ5_PCTVER)
 
-				cSQL := "select dbo.FNC_AO_RECEITA('"+M->PZ5_MARCA+"','"+cTipCli+"','"+cCodCli+"','"+cLojCli+"','"+cDIniAnt+"','"+cDFimAnt+"','"+M->PZ5_TIPCAL+"','"+M->PZ5_TIPFIL+"','"+AllTrim(M->PZ5_PCTVER)+"')"
+				cSQL := "select dbo.FNC_AO_RECEITA('"+M->PZ5_MARCA+"','"+cTipCli+"','"+cCodCli+"','"+cLojCli+"','"+cDIniAnt+"','"+cDFimAnt+"','"+M->PZ5_TIPCAL+"','"+M->PZ5_TIPFIL+"','"+AllTrim(M->PZ5_PCTVER)+"','"+AllTrim(M->PZ5_PRODFO)+"')"
 
 				If Select("TRB") > 0
 					TRB->(DbCloseArea())
@@ -792,11 +789,11 @@ Static Function ProcM3()
 			//OS 3527-16 : armazenar valor da base real sempre em R$ para acordos do tipo Volume - para calcular o bonus que tem que ser em R$
 			If PZ6->(FieldPos("PZ6_BASVER")) > 0 .And. PZ5->(FieldPos("PZ5_PCTVER")) > 0 .And. !Empty(M->PZ5_PCTVER)
 
-				cSQL := "select dbo.FNC_AO_RECEITA('"+M->PZ5_MARCA+"','"+cTipCli+"','"+cCodCli+"','"+cLojCli+"','"+cDIniAnt+"','"+cDFimAnt+"','R','"+M->PZ5_TIPFIL+"','"+AllTrim(M->PZ5_PCTVER)+"')"
+				cSQL := "select dbo.FNC_AO_RECEITA('"+M->PZ5_MARCA+"','"+cTipCli+"','"+cCodCli+"','"+cLojCli+"','"+cDIniAnt+"','"+cDFimAnt+"','R','"+M->PZ5_TIPFIL+"','"+AllTrim(M->PZ5_PCTVER)+"','"+AllTrim(M->PZ5_PRODFO)+"')"
 
 			Else
 
-				cSQL := "select dbo.FNC_AO_RECEITA('"+M->PZ5_MARCA+"','"+cTipCli+"','"+cCodCli+"','"+cLojCli+"','"+cDIniAnt+"','"+cDFimAnt+"','R','"+M->PZ5_TIPFIL+"','"+AllTrim(M->PZ5_PACOTE)+"')"
+				cSQL := "select dbo.FNC_AO_RECEITA('"+M->PZ5_MARCA+"','"+cTipCli+"','"+cCodCli+"','"+cLojCli+"','"+cDIniAnt+"','"+cDFimAnt+"','R','"+M->PZ5_TIPFIL+"','"+AllTrim(M->PZ5_PACOTE)+"','"+AllTrim(M->PZ5_PRODFO)+"')"
 
 			EndIf
 
@@ -816,7 +813,26 @@ Static Function ProcM3()
 			TRB->(DbCloseArea())
 			//Fim bloco OS 3527-16
 
+			//C28 - Task 9: Calcula o campo Z6_PREALI quando for tipo de acordo Galleria
+			If Alltrim(M->PZ5_TPACOR) == "AG"
+				cSQL := "select dbo.FNC_AO_POSIT('"+M->PZ5_MARCA+"','"+cTipCli+"','"+cCodCli+"','"+cLojCli+"','"+cDIniAnt+"','"+cDFimAnt+"','"+M->PZ5_TIPCAL+"','"+M->PZ5_TIPFIL+"','"+AllTrim(M->PZ5_PACOTE)+"','"+AllTrim(M->PZ5_PRODFO)+"')"
 
+				If Select("TRB") > 0
+					TRB->(DbCloseArea())
+				EndIf
+
+				TCQuery cSQL Alias "TRB" New
+
+				TRB->(DbGoTop())
+
+				If !TRB->(Eof())
+					aCols[I][nPReali] := &(TRB->(Field(1)))
+				Else
+					aCols[I][nPReali] := 0
+				EndIf
+				TRB->(DbCloseArea())
+			Endif
+			//--> Fim cálculo
 
 		EndIf
 
@@ -868,6 +884,19 @@ Static Function ProcM4()
 	Local _nPBonus4 := 0
 	Local _nPBonus5 := 0
 
+	Local nPReali	:= aScan(aHeader, {|x| AllTrim(x[2]) == "PZ6_PREALI" })
+	Local nPMetaP1	:= aScan(aHeader, {|x| AllTrim(x[2]) == "PZ6_METAP1" })
+	Local nPMetaP2	:= aScan(aHeader, {|x| AllTrim(x[2]) == "PZ6_METAP2" })
+	Local nPMetaP3	:= aScan(aHeader, {|x| AllTrim(x[2]) == "PZ6_METAP3" })
+	Local nPMetaP4	:= aScan(aHeader, {|x| AllTrim(x[2]) == "PZ6_METAP4" })
+	Local nPMetaP5	:= aScan(aHeader, {|x| AllTrim(x[2]) == "PZ6_METAP5" })
+	Local _nMetaP1 	:= 0
+	Local _nMetaP2 	:= 0
+	Local _nMetaP3 	:= 0
+	Local _nMetaP4 	:= 0
+	Local _nMetaP5 	:= 0
+
+
 	FOR I := 1 To Len(ACols)
 
 		//Periodo definido - Encerrado - e sem SI gerada
@@ -910,36 +939,65 @@ Static Function ProcM4()
 				_nPBonus5	:= aCols[I][nPBonF5]
 			EndIf
 
+			// C28 - Task 9: Quando for tipo de acordo Galleria
+			If Alltrim(M->PZ5_TPACOR) == "AG"
+
+				If nPMetaP1 > 0
+					_nMetaP1		:= aCols[I][nPMetaP1]
+				Endif
+
+				If nPMetaP2 > 0
+					_nMetaP2		:= aCols[I][nPMetaP2]
+				Endif
+
+				If nPMetaP3 > 0
+					_nMetaP3		:= aCols[I][nPMetaP3]
+				Endif
+
+				If nPMetaP4 > 0
+					_nMetaP4		:= aCols[I][nPMetaP4]
+				Endif
+
+				If nPMetaP5 > 0
+					_nMetaP5		:= aCols[I][nPMetaP5]
+				Endif
+			EndIf
+
 			//Bonus na Faixa 1
-			If (_nMeta1 > 0 .And. _nValRea >= _nMeta1 .And. (nPMetaF2 <= 0 .Or. _nValRea < _nMeta2))
+			If (_nMeta1 > 0 .And. _nValRea >= _nMeta1 .And. (nPMetaF2 <= 0 .Or. _nValRea < _nMeta2)) .And.;
+					IIf(Alltrim(M->PZ5_TPACOR) == "AG", (_nMetaP1 > 0 .And. _nPReali >= _nMetaP1 .And. (nPMetaP2 <= 0 .Or. _nPReali < _nMetaP2)), .T.)
 
 				aCols[I][nPBonus] := (IIf(_nVBasVer > 0, _nVBasVer, _nValRea) * _nPBonus1) / 100
 
 			EndIf
 
 			//Bonus na Faixa 2
-			If (_nMeta2 > 0 .And. _nValRea >= _nMeta2 .And. (nPMetaF3 <= 0 .Or. _nValRea < _nMeta3))
+			If (_nMeta2 > 0 .And. _nValRea >= _nMeta2 .And. (nPMetaF3 <= 0 .Or. _nValRea < _nMeta3)) .And.;
+					IIf(Alltrim(M->PZ5_TPACOR) == "AG", (_nMetaP2 > 0 .And. _nPReali >= _nMetaP2 .And. (nPMetaP3 <= 0 .Or. _nPReali < _nMetaP3)), .T.)
 
 				aCols[I][nPBonus] := (IIf(_nVBasVer > 0, _nVBasVer, _nValRea) * _nPBonus2) / 100
 
 			EndIf
 
 			//Bonus na Faixa 3
-			If (_nMeta3 > 0 .And. _nValRea >= _nMeta3 .And. (nPMetaF4 <= 0 .Or. _nValRea < _nMeta4))
+			If (_nMeta3 > 0 .And. _nValRea >= _nMeta3 .And. (nPMetaF4 <= 0 .Or. _nValRea < _nMeta4)) .And.;
+					IIf(Alltrim(M->PZ5_TPACOR) == "AG", (_nMetaP3 > 0 .And. _nPReali >= _nMetaP3 .And. (nPMetaP4 <= 0 .Or. _nPReali < _nMetaP4)), .T.)
 
 				aCols[I][nPBonus] := (IIf(_nVBasVer > 0, _nVBasVer, _nValRea) * _nPBonus3) / 100
 
 			EndIf
 
 			//Bonus na Faixa 4
-			If (_nMeta4 > 0 .And. _nValRea >= _nMeta4 .And. (nPMetaF5 <= 0 .Or. _nValRea < _nMeta5))
+			If (_nMeta4 > 0 .And. _nValRea >= _nMeta4 .And. (nPMetaF5 <= 0 .Or. _nValRea < _nMeta5)) .And.;
+					IIf(Alltrim(M->PZ5_TPACOR) == "AG", (_nMetaP4 > 0 .And. _nPReali >= _nMetaP4 .And. (nPMetaP5 <= 0 .Or. _nPReali < _nMetaP5)), .T.)
 
 				aCols[I][nPBonus] := (IIf(_nVBasVer > 0, _nVBasVer, _nValRea) * _nPBonus4) / 100
 
 			EndIf
 
 			//Bonus na Faixa 5
-			If (_nMeta5 > 0 .And. _nValRea >= _nMeta5)
+			If (_nMeta5 > 0 .And. _nValRea >= _nMeta5) .And.;
+					IIf(Alltrim(M->PZ5_TPACOR) == "AG", _nMetaP5 > 0 .And. _nPReali >= _nMetaP5, .T.)
 
 				aCols[I][nPBonus] := (IIf(_nVBasVer > 0, _nVBasVer, _nValRea) * _nPBonus5) / 100
 
@@ -1229,7 +1287,7 @@ User Function AO_UPREA(_cCodigo)
 				cLojCli := ""
 			EndIf
 
-			cSQL := "select dbo.FNC_AO_RECEITA('"+PZ5->PZ5_MARCA+"','"+PZ5->PZ5_TIPCLI+"','"+cCodCli+"','"+cLojCli+"','"+DTOS(PZ6->PZ6_PERINI)+"','"+DTOS(PZ6->PZ6_PERFIM)+"','"+PZ5->PZ5_TIPCAL+"','"+PZ5->PZ5_TIPFIL+"','"+AllTrim(PZ5->PZ5_PACOTE)+"')"
+			cSQL := "select dbo.FNC_AO_RECEITA('"+PZ5->PZ5_MARCA+"','"+PZ5->PZ5_TIPCLI+"','"+cCodCli+"','"+cLojCli+"','"+DTOS(PZ6->PZ6_PERINI)+"','"+DTOS(PZ6->PZ6_PERFIM)+"','"+PZ5->PZ5_TIPCAL+"','"+PZ5->PZ5_TIPFIL+"','"+AllTrim(PZ5->PZ5_PACOTE)+"','"+AllTrim(PZ5->PZ5_PRODFO)+"')"
 			TCQuery cSQL Alias "TRB" New
 
 			TRB->(DbGoTop())
@@ -1244,6 +1302,34 @@ User Function AO_UPREA(_cCodigo)
 			EndIf
 
 			TRB->(DbCloseArea())
+
+			//C28 - Task 9: Calcula o campo Z6_PREALI quando for tipo de acordo Galleria
+			If Alltrim(PZ5->PZ5_TPACOR) == "AG"
+				cSQL := "select dbo.FNC_AO_POSIT('"+PZ5->PZ5_MARCA+"','"+PZ5->PZ5_TIPCLI+"','"+cCodCli+"','"+cLojCli+"','"+DTOS(PZ6->PZ6_PERINI)+"','"+DTOS(PZ6->PZ6_PERFIM)+"','"+PZ5->PZ5_TIPCAL+"','"+PZ5->PZ5_TIPFIL+"','"+AllTrim(PZ5->PZ5_PACOTE)+"','"+AllTrim(PZ5->PZ5_PRODFO)+"')"
+
+				If Select("TRB") > 0
+					TRB->(DbCloseArea())
+				EndIf
+
+				TCQuery cSQL Alias "TRB" New
+
+				TRB->(DbGoTop())
+
+				If !TRB->(Eof())
+					RecLock("PZ6",.F.)
+					PZ6->PZ6_PREALI := &("TRB->"+TRB->(Field(1)))
+					PZ6->(MsUnlock())
+				Endif
+				TRB->(DbCloseArea())
+			Endif
+			//--> Fim cálculo
+
+
+
+
+			//
+
+
 
 		EndIf
 
@@ -1870,7 +1956,7 @@ Static Function UpdReaAco(cCodAC)
 				TRB->(DbCloseArea())
 			EndIf
 
-			cSQL := "select VALOR = dbo.FNC_AO_RECEITA('"+PZ5->PZ5_MARCA+"','"+cTipCli+"','"+cCodCli+"','"+cLojCli+"','"+cDIni+"','"+cDFim+"','"+PZ5->PZ5_TIPCAL+"','"+PZ5->PZ5_TIPFIL+"','"+AllTrim(PZ5->PZ5_PACOTE)+"')"
+			cSQL := "select VALOR = dbo.FNC_AO_RECEITA('"+PZ5->PZ5_MARCA+"','"+cTipCli+"','"+cCodCli+"','"+cLojCli+"','"+cDIni+"','"+cDFim+"','"+PZ5->PZ5_TIPCAL+"','"+PZ5->PZ5_TIPFIL+"','"+AllTrim(PZ5->PZ5_PACOTE)+"','"+AllTrim(PZ5->PZ5_PRODFO)+"')"
 
 			If Select("TRB") > 0
 				TRB->(DbCloseArea())
@@ -1896,7 +1982,7 @@ Static Function UpdReaAco(cCodAC)
 			//OS 1337-16 : Filtro dos pacotes para calculo da base da verba com pacotes diferenciados - solicitacao Incesa
 			If PZ6->(FieldPos("PZ6_BASVER")) > 0 .And. PZ5->(FieldPos("PZ5_PCTVER")) > 0 .And. !Empty(PZ5->PZ5_PCTVER)
 
-				cSQL := "select VALOR = dbo.FNC_AO_RECEITA('"+PZ5->PZ5_MARCA+"','"+cTipCli+"','"+cCodCli+"','"+cLojCli+"','"+cDIni+"','"+cDFim+"','"+PZ5->PZ5_TIPCAL+"','"+PZ5->PZ5_TIPFIL+"','"+AllTrim(PZ5->PZ5_PCTVER)+"')"
+				cSQL := "select VALOR = dbo.FNC_AO_RECEITA('"+PZ5->PZ5_MARCA+"','"+cTipCli+"','"+cCodCli+"','"+cLojCli+"','"+cDIni+"','"+cDFim+"','"+PZ5->PZ5_TIPCAL+"','"+PZ5->PZ5_TIPFIL+"','"+AllTrim(PZ5->PZ5_PCTVER)+"','"+AllTrim(PZ5->PZ5_PRODFO)+"')"
 
 				If Select("TRB") > 0
 					TRB->(DbCloseArea())

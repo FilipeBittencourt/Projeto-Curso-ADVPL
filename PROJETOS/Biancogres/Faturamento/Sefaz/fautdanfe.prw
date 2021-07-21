@@ -3295,8 +3295,18 @@ Static Function RetTamCol(aCabec, aValores, oPrinter, oFontCabec, oFont)
 	If nAux < 603
 		aTamCol[2] += 603 - nAux
 	EndIf                       
+	
 	If nAux > 603               
-		aTamCol[2] -= nAux - 603 
+		
+		aTamCol[2] -= nAux - 603
+		
+		If aTamCol[2] < 150
+			
+			aTamCol[2] := 142
+			aTamCol[3] := 32
+			
+		EndIf
+		
 	EndIf
 
 Return aTamCol

@@ -3226,8 +3226,8 @@ USER FUNCTION fGeraFatura(dtIni,dtFim)
 	cQuery += " 		A.E1_CLIENTE = C.F2_CLIENTE		AND " + Enter
 	cQuery += " 		A.E1_LOJA    = C.F2_LOJA		AND " + Enter
 	
-	If Alltrim(cEmpAnt) == '01'
-		cQuery += " 		B.A1_YCDGREG <> '000029'		AND " + Enter
+	If Alltrim(cEmpAnt) == '01' //NAO GERA FATURA PARA CLIENTES FIDC
+		cQuery += " 		B.A1_YCDGREG <> '000029'		AND " + Enter 
 	EndIf
 	
 	cQuery += " 		B.A1_YGERFAT = 'S'				AND " + Enter
@@ -3255,6 +3255,12 @@ USER FUNCTION fGeraFatura(dtIni,dtFim)
 	DO WHILE ! _TITULOS->(EOF())
 
 		IncProc("Selecionando Titulos....")
+
+		//Elimina Títulos FIDC LM
+		If Alltrim(cEmpAnt) == '07' .And. U_fVlFIDCLM( _TITULOS->E1_PEDIDO)
+			_TITULOS->(DBSKIP())
+			Loop
+		EndIf
 
 		//Não considera os títulos de ST gerados para NF de Bonificação - ATIVADO EM 21/01/14
 		If Alltrim(_TITULOS->F2_YSUBTP) == "B" .And. Alltrim(_TITULOS->E1_NATUREZ) == "1230"
@@ -6832,7 +6838,7 @@ Return()
 /*/
 User Function LMFatRed(_CUF, _cPacote)
 
-	Local _cPar 		:= AllTrim(GetNewPar("MV_YLMFRD","RJ=0.80#MG=0.80#BA=0.80#ES=0.915")) //Ticket 10368
+	Local _cPar 		:= AllTrim(GetNewPar("MV_YLMFRD","ES=0.88")) //Ticket 10368
 	Local _nFator 		:= 1
 	Local _aFats 		:= StrToKarr(_cPar,"#")
 	Local _nPos 		:= AScan( _aFats, {|x| Left(x,2 )== _CUF} )
@@ -7506,20 +7512,10 @@ DO CASE
 		cCodReg := '000023'
 	CASE xCODCLI $ ('010083_004536_007871_026308_026423_018410_014395_018714_008615_028071') //Clientes Intragrupo
 		cCodReg := '000023'
-	CASE xUF == 'ES' //FIDC
-		cCodReg := '000029'
-	CASE xUF == 'SP'
-		cCodReg := '000025'
-	CASE xUF == 'RJ'
-		cCodReg := '000025'
-	CASE xUF == 'BA'
-		cCodReg := '000028'
-	CASE xUF == 'CE'
-		cCodReg := '000028'
-	CASE xUF == 'PE'
-		cCodReg := '000028'
+	CASE xUF == 'MG'
+		cCodReg := '000028'  //BANESTES
 	OTHERWISE
-		cCodReg := '000001'
+		cCodReg := '000029'  //FIDC
 ENDCASE
 
 Return(cCodReg)
@@ -7546,6 +7542,31 @@ EndIF
 TcQuery cSQL New Alias (cQry)
 
 If (cQry)->CPF == 11 
+	lRet := .T.
+EndIf
+
+(cQry)->(DbCloseArea())  
+
+Return(lRet)
+
+
+/*/{Protheus.doc} fVlFIDCLM
+@description Funcao PROVISÓRIA para validar se o titulo deverá ser enviado para FIDC na LM
+@author Ranisses A. Corona
+@since 19/07/2021
+@version undefined
+@history 19/07/2021, Ranisses A. Corona, Criacao da funcao de validaçao
+@type function
+/*/
+User Function fVlFIDCLM(xNUMPED)
+Local cSQL		:= ''
+Local cQry		:= GetNextAlias()
+Local lRet		:= .F.
+
+cSQL :="SELECT COUNT(*) QUANT FROM SC5070 WHERE C5_NUM = '"+xNUMPED+"' AND C5_EMISSAO >= '20210720' AND D_E_L_E_T_ = '' "
+TcQuery cSQL New Alias (cQry)
+
+If (cQry)->QUANT >= 1 
 	lRet := .T.
 EndIf
 

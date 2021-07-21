@@ -496,7 +496,7 @@ Static Function PrcResSdc()
 			SC0->C0_LOCALIZ,;
 			SC0->C0_NUMSERI})
 
-			U_BIAEnvMail(, "micheli.zanoni@biancogres.com.br;fernando@facilesistemas.com.br;suporte.ti@biancogres.com.br","RESERVA SEM EMPENHO EXCLUIDA", "ERRO - RESERVA: "+__CREST+" - Empresa: "+AllTrim(CEMPANT)+" Excluída por falta do arquivo SDC - Verificar.", '', '', , '')
+			U_BIAEnvMail(, "micheli.zanoni@biancogres.com.br;suporte.ti@biancogres.com.br","RESERVA SEM EMPENHO EXCLUIDA", "ERRO - RESERVA: "+__CREST+" - Empresa: "+AllTrim(CEMPANT)+" Excluída por falta do arquivo SDC - Verificar.", '', '', , '')
 
 		EndIf
 

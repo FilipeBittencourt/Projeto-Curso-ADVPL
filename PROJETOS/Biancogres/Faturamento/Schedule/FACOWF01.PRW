@@ -13,8 +13,10 @@ User Function FACOWF01(_lManual)
 	Local nCount := 0
 	Local _cAux
 	Local I
-	Local nI  
+	Local nI
 	Local xv_Emps
+	Local _cTpAcord	 := ""
+	Local _nTotBonus := 0
 
 	Private cSQL := ""
 	Private Qry := ""
@@ -24,7 +26,7 @@ User Function FACOWF01(_lManual)
 
 	//Ticket 28275 - Erro ao executar de forma manual. Pablo S. Nascimento
 	//RPCSetType(3)
-	//RpcSetEnv('01', '01') 
+	//RpcSetEnv('01', '01')
 
 	If (Upper(AllTrim(getenvserver())) == "SCHEDULE")
 		lManual := .F.
@@ -36,7 +38,7 @@ User Function FACOWF01(_lManual)
 
 	If lManual
 		xv_Emps := Array(1)
-	Else                                   
+	Else
 		xv_Emps    := U_BAGtEmpr("01_05")
 	EndIf
 
@@ -44,18 +46,18 @@ User Function FACOWF01(_lManual)
 	Private __CDATAFIM
 	Private __cAOINI	:= Space(6)
 	Private __cAOFIM	:= Space(6)
-	
+
 
 	If lManual
 
 		_aPergs := {}
 		_aRet := { CTOD(" "), CTOD(" "), __cAOINI, __cAOFIM }
-		aAdd( _aPergs ,{1,"Data de: " ,CTOD(" ") ,"","NAOVAZIO()",'','.T.',50,.F.})	
-		aAdd( _aPergs ,{1,"Data Ate:" ,CTOD(" ") ,"","NAOVAZIO()",'','.T.',50,.F.})	
+		aAdd( _aPergs ,{1,"Data de: " ,CTOD(" ") ,"","NAOVAZIO()",'','.T.',50,.F.})
+		aAdd( _aPergs ,{1,"Data Ate:" ,CTOD(" ") ,"","NAOVAZIO()",'','.T.',50,.F.})
 		aAdd( _aPergs ,{1,"Nº AO de" , __cAOINI, "", '', "",'.T.',20,.F.})
 		aAdd( _aPergs ,{1,"Nº AO até", __cAOFIM, "", '', "",'.T.',20,.F.})
 
-		
+
 		IF !ParamBox(_aPergs ,"Workflow de acompanhamento de AO",_aRet,,,,,,,,.T.,.T.)
 			Return
 		ENDIF
@@ -63,14 +65,14 @@ User Function FACOWF01(_lManual)
 		__CDATAINI := DTOS(_aRet[1])
 		__CDATAFIM := DTOS(_aRet[2])
 		__cAOINI  := _aRet[3]
-		__cAOFIM  := _aRet[4]		
+		__cAOFIM  := _aRet[4]
 
 	Else
 
 		__CDATAINI := StrZero(Year(Date()),4)+'0101'
 		__CDATAFIM := ""
 
-	EndIf 
+	EndIf
 
 	//Testar dias de execucao - somente 5, 15 e 25
 	If !(Day(Date()) == 5 .Or. Day(Date()) == 15 .Or. Day(Date()) == 25) .And. (Upper(AllTrim(getenvserver())) == "SCHEDULE")
@@ -79,11 +81,11 @@ User Function FACOWF01(_lManual)
 
 	For nI := 1 to Len(xv_Emps)
 
-		//Inicializa o ambiente   
+		//Inicializa o ambiente
 		If !lManual
 			RpcClearEnv()
 			RPCSetType(3)
-			WfPrepEnv(xv_Emps[nI,1], xv_Emps[nI,2]) 
+			WfPrepEnv(xv_Emps[nI,1], xv_Emps[nI,2])
 		EndIf
 
 		//Atualiza realizado de todos os acordos em andamento da empresa
@@ -102,21 +104,25 @@ User Function FACOWF01(_lManual)
 				_cCli := (Qry)->COD_CLI
 				_cNCli := (Qry)->NOME_CLI
 				_cCodPZ5 := (Qry)->PZ5_CODIGO
+				_cTpAcord	:= (Qry)->TPACOR
+				_nTotBonus 	:= 0
 
 				_nMaxFaixa := Val((Qry)->MAXFAIXA)
 
 				GetHeader()
-				GetColumnHeader(_cRep, _nMaxFaixa, _cNCli)
+				GetColumnHeader(_cRep, _nMaxFaixa, _cNCli, _cTpAcord)
 
 				While !(Qry)->(Eof()) .And. (Qry)->PZ5_CODVEN == _cRep .And. (Qry)->COD_CLI == _cCli
 
-					GetItems(_nMaxFaixa)
+					GetItems(_nMaxFaixa, _cTpAcord)
+
+					_nTotBonus 	+= (QRY)->BONUS
 
 					(Qry)->(DbSkip())
 				EndDo
 
 				cHtml += ' </table>
-				GetFooter()
+				GetFooter(_cTpAcord, _nTotBonus)
 				SendMail(_cRep, _cCodPZ5)
 
 				cHtml := ""
@@ -136,13 +142,13 @@ User Function FACOWF01(_lManual)
 
 	Next nI
 
-Return()                 
+Return()
 
 Static Function UpdAcordos()
 	Local cAliasTmp
 
 	cAliasTmp := GetNextAlias()
-	BeginSQL Alias cAliasTmp 
+	BeginSQL Alias cAliasTmp
 	%NOPARSER%
 
 	SELECT DISTINCT PZ5_CODIGO
@@ -157,15 +163,15 @@ Static Function UpdAcordos()
 	AND PZ5.D_E_L_E_T_='' 
 	order by PZ5_CODIGO
 
-	EndSQL 
+	EndSQL
 
 	(cAliasTmp)->(DbGoTop())
 	While !(cAliasTmp)->(Eof())
 
-		U_AO_UPREA((cAliasTmp)->PZ5_CODIGO)                            
+		U_AO_UPREA((cAliasTmp)->PZ5_CODIGO)
 
 		(cAliasTmp)->(DbSkip())
-	EndDo                   
+	EndDo
 	(cAliasTmp)->(DbCloseArea())
 
 Return
@@ -176,27 +182,27 @@ Static Function GetData()
 	Local cExpAOIni		:= ""
 	Local cExpAOFim		:= ""
 	Local cExpMaxPer	:= ""
-	
+
 
 	If !Empty(__CDATAFIM)
 		cExpFim := "% PZ6_PERFIM <= '"+__CDATAFIM+"' %"
 	Else
 		cExpFim := "% 1 = 1 %"
 	EndIf
-	
+
 	If !Empty(__cAOINI)
 		cExpAOIni := "% PZ5_CODIGO >= '"+__cAOINI+"' %"
 	Else
 		cExpAOIni := "% 1 = 1 %"
 	EndIf
-	
+
 	If !Empty(__cAOFIM)
 		cExpAOFim := "% PZ5_CODIGO <= '"+__cAOFIM+"' %"
 	Else
 		cExpAOFim := "% 1 = 1 %"
 	EndIf
-	
-	
+
+
 
 	If !lManual .And. AllTrim(CEMPANT) == "05"
 		cExpMaxPer := "% (select MAX(PZ6_PERFIM) from PZ6050 X where X.PZ6_FILIAL = PZ6.PZ6_FILIAL and X.PZ6_CODIGO = PZ6.PZ6_CODIGO and X.D_E_L_E_T_ = '') >= convert(varchar(8),dateadd(day,-1,(dateadd(month,1,convert(char(08),dateadd(mm,-1,getdate()) ,126)+'01'))), 112) %"
@@ -209,7 +215,7 @@ Static Function GetData()
 
 	IF Z79->(FieldPos("Z79_YCTPRO")) > 0
 
-		BeginSql Alias Qry   
+		BeginSql Alias Qry
 		%NOPARSER%
 
 		with tab_ao as
@@ -246,7 +252,43 @@ Static Function GetData()
 		METAF5 = PZ6_METAF5,
 		FALTAF5 = CASE WHEN PZ6_METAF5 <= 0 OR (PZ6_METAF5 - PZ6_VALREA) < 0 THEN 0 ELSE (PZ6_METAF5 - PZ6_VALREA) END,
 		BONUS = PZ6_BONUS,     
-		NUMSI = PZ6_SI
+		NUMSI = PZ6_SI,
+		TPACOR = PZ5_TPACOR,
+		PREALI = PZ6_PREALI,
+
+		VLRPROXCAT = CASE WHEN PZ5_TPACOR IN ('AG') THEN
+		CASE WHEN PZ6_METAF1 > 0 AND PZ6_METAP1 > 0 AND (PZ6_VALREA <= PZ6_METAF1 OR PZ6_PREALI <= PZ6_METAP1) AND PZ6_VALREA < PZ6_METAF2 THEN (PZ6_METAF2 - PZ6_VALREA)
+							 WHEN PZ6_METAF2 > 0 AND PZ6_METAP2 > 0 AND (PZ6_VALREA <= PZ6_METAF2 OR PZ6_PREALI <= PZ6_METAP2) AND PZ6_VALREA < PZ6_METAF3 THEN (PZ6_METAF3 - PZ6_VALREA) 
+							 WHEN PZ6_METAF3 > 0 AND PZ6_METAP3 > 0 AND (PZ6_VALREA <= PZ6_METAF3 OR PZ6_PREALI <= PZ6_METAP3) AND PZ6_VALREA < PZ6_METAF4 THEN (PZ6_METAF4 - PZ6_VALREA) 
+							 WHEN PZ6_METAF4 > 0 AND PZ6_METAP4 > 0 AND (PZ6_VALREA <= PZ6_METAF4 OR PZ6_PREALI <= PZ6_METAP4) AND PZ6_VALREA < PZ6_METAF5 THEN (PZ6_METAF5 - PZ6_VALREA) 
+		ELSE 0 END
+		ELSE 0 END,
+
+		ITPROXCAT = CASE WHEN PZ5_TPACOR IN ('AG') THEN
+		CASE WHEN PZ6_METAF1 > 0 AND PZ6_METAP1 > 0 AND (PZ6_VALREA <= PZ6_METAF1 OR PZ6_PREALI <= PZ6_METAP1) AND PZ6_PREALI < PZ6_METAP2 THEN (PZ6_METAP2 - PZ6_PREALI)
+				  			 WHEN PZ6_METAF2 > 0 AND PZ6_METAP2 > 0 AND (PZ6_VALREA <= PZ6_METAF2 OR PZ6_PREALI <= PZ6_METAP2) AND PZ6_PREALI < PZ6_METAP3 THEN (PZ6_METAP3 - PZ6_PREALI) 
+				  		  	 WHEN PZ6_METAF3 > 0 AND PZ6_METAP3 > 0 AND (PZ6_VALREA <= PZ6_METAF3 OR PZ6_PREALI <= PZ6_METAP3) AND PZ6_PREALI < PZ6_METAP4 THEN (PZ6_METAP4 - PZ6_PREALI) 
+				  		  	 WHEN PZ6_METAF4 > 0 AND PZ6_METAP4 > 0 AND (PZ6_VALREA <= PZ6_METAF4 OR PZ6_PREALI <= PZ6_METAP4) AND PZ6_PREALI < PZ6_METAP5 THEN (PZ6_METAP5 - PZ6_PREALI) 
+		ELSE 0 END
+		ELSE 0 END,
+
+		VLRMAXCAT = CASE WHEN PZ5_TPACOR IN ('AG') THEN
+		CASE  WHEN PZ5_NFAIXA = 5 AND PZ6_METAF5 > PZ6_VALREA THEN (PZ6_METAF5 - PZ6_VALREA)
+							  WHEN PZ5_NFAIXA = 4 AND PZ6_METAF4 > PZ6_VALREA THEN (PZ6_METAF4 - PZ6_VALREA)
+						  	  WHEN PZ5_NFAIXA = 3 AND PZ6_METAF3 > PZ6_VALREA THEN (PZ6_METAF3 - PZ6_VALREA)  
+				  		  	  WHEN PZ5_NFAIXA = 2 AND PZ6_METAF2 > PZ6_VALREA THEN (PZ6_METAF2 - PZ6_VALREA)
+				  		  	  WHEN PZ5_NFAIXA = 1 AND PZ6_METAF1 > PZ6_VALREA THEN (PZ6_METAF1 - PZ6_VALREA) 
+		ELSE 0 END
+		ELSE 0 END,
+
+		ITMAXCAT   = CASE WHEN PZ5_TPACOR IN ('AG') THEN
+		CASE  WHEN PZ5_NFAIXA = 5 AND PZ6_METAP5 > PZ6_PREALI THEN (PZ6_METAP5 - PZ6_PREALI)
+							  WHEN PZ5_NFAIXA = 4 AND PZ6_METAP4 > PZ6_PREALI THEN (PZ6_METAP4 - PZ6_PREALI)
+						  	  WHEN PZ5_NFAIXA = 3 AND PZ6_METAP3 > PZ6_PREALI THEN (PZ6_METAP3 - PZ6_PREALI)  
+				  		  	  WHEN PZ5_NFAIXA = 2 AND PZ6_METAP2 > PZ6_PREALI THEN (PZ6_METAP2 - PZ6_PREALI)  
+				  		  	  WHEN PZ5_NFAIXA = 1 AND PZ6_METAP1 > PZ6_PREALI THEN (PZ6_METAP1 - PZ6_PREALI) 
+		ELSE 0 END
+		ELSE 0 END
 
 		FROM %TABLE:PZ6% PZ6
 		JOIN %TABLE:PZ5% PZ5 on PZ5_CODIGO = PZ6_CODIGO
@@ -268,7 +310,7 @@ Static Function GetData()
 
 	ELSE
 
-		BeginSql Alias Qry   
+		BeginSql Alias Qry
 		%NOPARSER%
 
 		with tab_ao as
@@ -299,7 +341,43 @@ Static Function GetData()
 		METAF5 = PZ6_METAF5,
 		FALTAF5 = CASE WHEN PZ6_METAF5 <= 0 OR (PZ6_METAF5 - PZ6_VALREA) < 0 THEN 0 ELSE (PZ6_METAF5 - PZ6_VALREA) END,
 		BONUS = PZ6_BONUS,     
-		NUMSI = PZ6_SI
+		NUMSI = PZ6_SI,
+		TPACOR = PZ5_TPACOR,
+		PREALI = PZ6_PREALI,
+
+		VLRPROXCAT = CASE WHEN PZ5_TPACOR IN ('AG') THEN
+		CASE WHEN PZ6_METAF1 > 0 AND PZ6_METAP1 > 0 AND (PZ6_VALREA <= PZ6_METAF1 OR PZ6_PREALI <= PZ6_METAP1) AND PZ6_VALREA < PZ6_METAF2 THEN (PZ6_METAF2 - PZ6_VALREA)
+							 WHEN PZ6_METAF2 > 0 AND PZ6_METAP2 > 0 AND (PZ6_VALREA <= PZ6_METAF2 OR PZ6_PREALI <= PZ6_METAP2) AND PZ6_VALREA < PZ6_METAF3 THEN (PZ6_METAF3 - PZ6_VALREA) 
+							 WHEN PZ6_METAF3 > 0 AND PZ6_METAP3 > 0 AND (PZ6_VALREA <= PZ6_METAF3 OR PZ6_PREALI <= PZ6_METAP3) AND PZ6_VALREA < PZ6_METAF4 THEN (PZ6_METAF4 - PZ6_VALREA) 
+							 WHEN PZ6_METAF4 > 0 AND PZ6_METAP4 > 0 AND (PZ6_VALREA <= PZ6_METAF4 OR PZ6_PREALI <= PZ6_METAP4) AND PZ6_VALREA < PZ6_METAF5 THEN (PZ6_METAF5 - PZ6_VALREA) 
+		ELSE 0 END
+		ELSE 0 END,
+
+		ITPROXCAT = CASE WHEN PZ5_TPACOR IN ('AG') THEN
+		CASE WHEN PZ6_METAF1 > 0 AND PZ6_METAP1 > 0 AND (PZ6_VALREA <= PZ6_METAF1 OR PZ6_PREALI <= PZ6_METAP1) AND PZ6_PREALI < PZ6_METAP2 THEN (PZ6_METAP2 - PZ6_PREALI)
+				  			 WHEN PZ6_METAF2 > 0 AND PZ6_METAP2 > 0 AND (PZ6_VALREA <= PZ6_METAF2 OR PZ6_PREALI <= PZ6_METAP2) AND PZ6_PREALI < PZ6_METAP3 THEN (PZ6_METAP3 - PZ6_PREALI) 
+				  		  	 WHEN PZ6_METAF3 > 0 AND PZ6_METAP3 > 0 AND (PZ6_VALREA <= PZ6_METAF3 OR PZ6_PREALI <= PZ6_METAP3) AND PZ6_PREALI < PZ6_METAP4 THEN (PZ6_METAP4 - PZ6_PREALI) 
+				  		  	 WHEN PZ6_METAF4 > 0 AND PZ6_METAP4 > 0 AND (PZ6_VALREA <= PZ6_METAF4 OR PZ6_PREALI <= PZ6_METAP4) AND PZ6_PREALI < PZ6_METAP5 THEN (PZ6_METAP5 - PZ6_PREALI) 
+		ELSE 0 END
+		ELSE 0 END,
+
+		VLRMAXCAT = CASE WHEN PZ5_TPACOR IN ('AG') THEN
+		CASE  WHEN PZ5_NFAIXA = 5 AND PZ6_METAF5 > PZ6_VALREA THEN (PZ6_METAF5 - PZ6_VALREA)
+							  WHEN PZ5_NFAIXA = 4 AND PZ6_METAF4 > PZ6_VALREA THEN (PZ6_METAF4 - PZ6_VALREA)
+						  	  WHEN PZ5_NFAIXA = 3 AND PZ6_METAF3 > PZ6_VALREA THEN (PZ6_METAF3 - PZ6_VALREA)  
+				  		  	  WHEN PZ5_NFAIXA = 2 AND PZ6_METAF2 > PZ6_VALREA THEN (PZ6_METAF2 - PZ6_VALREA)
+				  		  	  WHEN PZ5_NFAIXA = 1 AND PZ6_METAF1 > PZ6_VALREA THEN (PZ6_METAF1 - PZ6_VALREA) 
+		ELSE 0 END
+		ELSE 0 END,
+
+		ITMAXCAT   = CASE WHEN PZ5_TPACOR IN ('AG') THEN
+		CASE  WHEN PZ5_NFAIXA = 5 AND PZ6_METAP5 > PZ6_PREALI THEN (PZ6_METAP5 - PZ6_PREALI)
+							  WHEN PZ5_NFAIXA = 4 AND PZ6_METAP4 > PZ6_PREALI THEN (PZ6_METAP4 - PZ6_PREALI)
+						  	  WHEN PZ5_NFAIXA = 3 AND PZ6_METAP3 > PZ6_PREALI THEN (PZ6_METAP3 - PZ6_PREALI)  
+				  		  	  WHEN PZ5_NFAIXA = 2 AND PZ6_METAP2 > PZ6_PREALI THEN (PZ6_METAP2 - PZ6_PREALI)  
+				  		  	  WHEN PZ5_NFAIXA = 1 AND PZ6_METAP1 > PZ6_PREALI THEN (PZ6_METAP1 - PZ6_PREALI) 
+		ELSE 0 END
+		ELSE 0 END
 
 		FROM %TABLE:PZ6% PZ6
 		JOIN %TABLE:PZ5% PZ5 on PZ5_CODIGO = PZ6_CODIGO
@@ -321,6 +399,10 @@ Static Function GetData()
 		EndSql
 
 	ENDIF
+	/* 
+	aDados := GetLastQuery()
+ 	cQry   := aDados[2]
+	*/
 
 Return()
 
@@ -338,6 +420,8 @@ Static Function GetHeader()
 	cHtml += '			.headProd {background: #0c2c65;	color: #FFF; font: 12px Arial, Helvetica, sans-serif}
 	cHtml += '			.headTexto {color: #1f3d71; font: 16px Arial, Helvetica, sans-serif; font-weight: Bold;}
 	cHtml += '			.headTexto1 {color: #1f3d71; font: 16px Arial, Helvetica, sans-serif}
+	cHtml += '			.footTexto  {color: #1f3d71; font: 16px Arial, Helvetica, sans-serif}
+	cHtml += '			.footTexto1 {color: #1f3d71; font: 16px Arial, Helvetica, sans-serif; font-weight: Bold;}
 	cHtml += '			.style12  {background: #f6f6f6;	color: #747474;	font: 11px Arial, Helvetica, sans-serif}
 	cHtml += '			.style123 {font face="Arial"; font-size: 12px; background: #f6f6f6;}
 	cHtml += '			.cabtab {background: #eff4ff;	color: #1f3d71; font: 12px Arial, Helvetica, sans-serif}
@@ -351,71 +435,138 @@ Static Function GetHeader()
 Return()
 
 
-Static Function GetColumnHeader(_cRep, _nMaxFaixa, _cNomeCli)
-	Local I  
+Static Function GetColumnHeader(_cRep, _nMaxFaixa, _cNomeCli, _cTpAcord)
+	Local I
 
 	SA3->(DbSetOrder(1))
 	SA3->(DbSeek(XFilial("SA3")+_cRep))
 
-	cHtml += '         <p><div class = "headTexto1">Prezado(s):</div></p>'
-	cHtml += '         <p/>'
-	cHtml += '         <p><div class = "headTexto">REPRESENTANTE: '+AllTrim(SA3->A3_NREDUZ)+'</div></p>'
-	cHtml += '         <p/>'
-	cHtml += '         <p><div class = "headTexto">CLIENTE: '+AllTrim(_cNomeCli)+'</div></p>'
-	cHtml += '         <p/>'
-	cHtml += '         <p><div class = "headTexto1">Segue para acompanhamento a evolução dos seus acordos objetivos em andamento:</div></p>'
-	cHtml += '         <p/>'
-	cHtml += '         <table align="center" width="1200" border="1" cellspacing="0" cellpadding="1">'
-	cHtml += '            <tr align=center>'
-	cHtml += '               <th class = "cabtab" width="40" scope="col"> Acordo </th>'
-	cHtml += '               <th class = "cabtab" width="40" scope="col"> Período </th>'
-	cHtml += '               <th class = "cabtab" width="20" scope="col"> Status </th>'
-	cHtml += '               <th class = "cabtab" width="40" scope="col"> Realizado </th>' 
+	If Alltrim(_cTpAcord) <> "AG"
 
-	For I := 1 To _nMaxFaixa
+		cHtml += '         <p><div class = "headTexto1">Prezado(s):</div></p>'
+		cHtml += '         <p/>'
+		cHtml += '         <p><div class = "headTexto">REPRESENTANTE: '+AllTrim(SA3->A3_NREDUZ)+'</div></p>'
+		cHtml += '         <p/>'
+		cHtml += '         <p><div class = "headTexto">CLIENTE: '+AllTrim(_cNomeCli)+'</div></p>'
+		cHtml += '         <p/>'
+		cHtml += '         <p><div class = "headTexto1">Segue para acompanhamento a evolução dos seus acordos objetivos em andamento:</div></p>'
+		cHtml += '         <p/>'
+		cHtml += '         <table align="center" width="1200" border="1" cellspacing="0" cellpadding="1">'
+		cHtml += '            <tr align=center>'
+		cHtml += '               <th class = "cabtab" width="40" scope="col"> Acordo </th>'
+		cHtml += '               <th class = "cabtab" width="40" scope="col"> Período </th>'
+		cHtml += '               <th class = "cabtab" width="20" scope="col"> Status </th>'
+		cHtml += '               <th class = "cabtab" width="40" scope="col"> Realizado </th>'
 
-		cHtml += '               <th class = "cabtab" width="40" scope="col"> Meta Faixa '+AllTrim(Str(I))+' </th>'
-		cHtml += '               <th class = "cabtab" width="40" scope="col"> Falta p/ Faixa '+AllTrim(Str(I))+' </th>'
+		For I := 1 To _nMaxFaixa
 
-	Next I                                                                                
+			cHtml += '               <th class = "cabtab" width="40" scope="col"> Meta Faixa '+AllTrim(Str(I))+' </th>'
+			cHtml += '               <th class = "cabtab" width="40" scope="col"> Falta p/ Faixa '+AllTrim(Str(I))+' </th>'
 
-	cHtml += '               <th class = "cabtab" width="40" scope="col"> Bônus </th>'
-	cHtml += '               <th class = "cabtab" width="40" scope="col"> No. SI </th>'
-	cHtml += '            </tr>
+		Next I
+
+		cHtml += '               <th class = "cabtab" width="40" scope="col"> Bônus </th>'
+		cHtml += '               <th class = "cabtab" width="40" scope="col"> No. SI </th>'
+		cHtml += '            </tr>
+
+	Else
+
+		cHtml += '         <p><div class = "headTexto1">Olá</div></p>'
+		cHtml += '         <br>'
+		cHtml += '         <br>'
+		cHtml += '         <p><div class = "headTexto1">Você está recebendo um relatório do seu desempenho no período e os valores que estarão disponíveis para a utilização no Programa de Benefícios Galleria Biancogres no próximo Semestre.</div></p>'
+		cHtml += '         <br>'
+		cHtml += '         <br>'
+		cHtml += '         <p><div class = "headTexto">CLIENTE: '+AllTrim(_cNomeCli)+'</div></p>'
+		cHtml += '         <p><div class = "headTexto">REPRESENTANTE: '+AllTrim(SA3->A3_NREDUZ)+'</div></p>'
+		cHtml += '         <br>'
+		cHtml += '         <table align="left" width="1200" border="1" cellspacing="0" cellpadding="1">'
+		cHtml += '            <tr align=center>'
+		cHtml += '               <th class = "cabtab" width="40" scope="col"> Acordo </th>'
+		cHtml += '               <th class = "cabtab" width="40" scope="col"> Período </th>'
+		cHtml += '               <th class = "cabtab" width="40" scope="col"> Realizado (em R$) </th>'
+		cHtml += '               <th class = "cabtab" width="40" scope="col"> Itens Exclusivos Positivados (produtos ativos até o período) </th>'
+		cHtml += '               <th class = "cabtab" width="40" scope="col"> Falta para subir para PRÓXIMA Categoria (em R$) </th>'
+		cHtml += '               <th class = "cabtab" width="40" scope="col"> Falta para subir para PRÓXIMA Categoria (em nº de items) </th>'
+		cHtml += '               <th class = "cabtab" width="40" scope="col"> Falta para chegar a MAIOR Categoria (em R$) </th>'
+		cHtml += '               <th class = "cabtab" width="40" scope="col"> Falta para chegar a MAIOR Categoria (em nº de items) </th>'
+		cHtml += '            </tr>
+
+	Endif
 
 Return()
 
 
-Static Function GetItems(_nMaxFaixa)
-	Local I  
+Static Function GetItems(_nMaxFaixa, _cTpAcord)
+	Local I
 
-	cHtml += " 			<tr align=center>
-	cHtml += "          	<td class='style12' width='100'scope='col'>"+ (Qry)->PZ5_CODIGO +"</td>"
-	cHtml += "          	<td class='style12' width='20'scope='col'>"+ (Qry)->PERIODO +"</td>"
-	cHtml += "          	<td class='style12' width='20'scope='col'>"+ (Qry)->STATUS +"</td>"
-	cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform((Qry)->REALIZADO,"@E 999,999,999.99") +"</td>"
+	If Alltrim(_cTpAcord) <> "AG"
 
-	For I := 1 To _nMaxFaixa
+		cHtml += " 			<tr align=center>
+		cHtml += "          	<td class='style12' width='100'scope='col'>"+ (Qry)->PZ5_CODIGO +"</td>"
+		cHtml += "          	<td class='style12' width='20'scope='col'>"+ (Qry)->PERIODO +"</td>"
+		cHtml += "          	<td class='style12' width='20'scope='col'>"+ (Qry)->STATUS +"</td>"
+		cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform((Qry)->REALIZADO,"@E 999,999,999.99") +"</td>"
 
-		cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform(&("(Qry)->METAF"+AllTrim(Str(I))+""),"@E 999,999,999.99") +"</td>"
-		cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform(&("(Qry)->FALTAF"+AllTrim(Str(I))+""),"@E 999,999,999.99") +"</td>"
+		For I := 1 To _nMaxFaixa
 
-	NexT                                                                                 
+			cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform(&("(Qry)->METAF"+AllTrim(Str(I))+""),"@E 999,999,999.99") +"</td>"
+			cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform(&("(Qry)->FALTAF"+AllTrim(Str(I))+""),"@E 999,999,999.99") +"</td>"
 
-	cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform((Qry)->BONUS,"@E 999,999,999.99") +"</td>"
-	cHtml += "          	<td class='style12' width='20'scope='col'>"+ (Qry)->NUMSI +"</td>"
-	cHtml += "          </tr>"
+		NexT
+
+		cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform((Qry)->BONUS,"@E 999,999,999.99") +"</td>"
+		cHtml += "          	<td class='style12' width='20'scope='col'>"+ (Qry)->NUMSI +"</td>"
+		cHtml += "          </tr>"
+
+	Else
+
+		cHtml += " 			<tr align=center>"
+		cHtml += "          	<td class='style12' width='100'scope='col'>"+ (Qry)->PZ5_CODIGO +"</td>"
+		cHtml += "          	<td class='style12' width='20'scope='col'>"+ (Qry)->PERIODO +"</td>"
+		cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform((Qry)->REALIZADO,"@E 999,999,999.99") +"</td>"
+		cHtml += "          	<td class='style12' width='20'scope='col'>"+ cValToChar((Qry)->PREALI) +"</td>"
+		cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform((Qry)->VLRPROXCAT,"@E 999,999,999.99") +"</td>"
+		cHtml += "          	<td class='style12' width='20'scope='col'>"+ cValToChar((Qry)->ITPROXCAT) +"</td>"
+		cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform((Qry)->VLRMAXCAT,"@E 999,999,999.99") +"</td>"
+		cHtml += "          	<td class='style12' width='20'scope='col'>"+ cValToChar((Qry)->ITMAXCAT) +"</td>"
+		cHtml += "          </tr>"
+
+	Endif
 
 Return()
 
 
-Static Function GetFooter()
+Static Function GetFooter(_cTpAcord, _nTotBonus)
 
-	cHtml += "		<table align='center' width='1200' border='1' cellspacing='0' cellpadding='1'>"
+	If Alltrim(_cTpAcord) <> "AG"
+		cHtml += "		<table align='center' width='1200' border='1' cellspacing='0' cellpadding='1'>"
+	Else
+		cHtml += "		<table align='left' width='1200' border='1' cellspacing='0' cellpadding='1'>"
+	Endif
 	cHtml += "          <tr>"
 	cHtml += "            <th class = 'tottab' width='1200' scope='col'> E-mail enviado automaticamente pelo sistema Protheus (FACOWF01).</th>"
 	cHtml += "			</tr>"
 	cHtml += "		</table>"
+
+	If Alltrim(_cTpAcord) == "AG"
+
+		cHtml += "		<br>"
+		cHtml += "		<br>"
+		cHtml += "		<br>"
+		cHtml += "		<br>"
+		cHtml += "		<br>"
+		cHtml += "		<br>"
+		cHtml += "      	<p><div class = 'footTexto'>Seu BÔNUS ESTIMADO para o próximo semestre até o momento é de: R$ " + Transform(_nTotBonus,"@E 999,999,999.99") + "</div></p>"
+		cHtml += "      <br>"
+		cHtml += "      <br>"
+		cHtml += "      	<p><div class = 'footTexto'>Consulte seu representante para que possamos alinhar nossas estratégias, a fim de busca a melhor faixa de benefício possível.</div></p>"
+		cHtml += "      <br>"
+		cHtml += "      <br>"
+		cHtml += "		<p><div class = 'footTexto1'>Biancogres</div></p>"
+
+	Endif
+
 	cHtml += "      </body>"
 	cHtml += "   </html>"
 	cHtml += "   </html>"
@@ -424,7 +575,7 @@ Return()
 
 
 Static Function SendMail(_cRep, _cCodPZ5)
-	Local _lRet  
+	Local _lRet
 	Local _cFrom	 	:= ""
 	Local _cTo 			:= ""
 	Local _cSubject		:= ""
@@ -434,11 +585,11 @@ Static Function SendMail(_cRep, _cCodPZ5)
 	Local _cAGMail		:= ""
 	Local _cAteMail		:= ""
 	Local _cGerMail		:= ""
-	
+
 	Local cDataBase    := AllTrim(U_DBNAME())
 
 	SA3->(DbSetOrder(1))
-	SA3->(DbSeek(XFilial("SA3")+_cRep))    
+	SA3->(DbSeek(XFilial("SA3")+_cRep))
 
 	/*SM0->(DbSetOrder(1))
 	SM0->(DbSeek(CEMPANT+CFILANT))*/
@@ -454,14 +605,14 @@ Static Function SendMail(_cRep, _cCodPZ5)
 
 	If !Empty(SA3->A3_EMAIL)
 		_cTo := AllTrim(SA3->A3_EMAIL) 
-	Else                       	
-		If AllTrim(CEMPANT) == "05"                                                     
+	Else
+		If AllTrim(CEMPANT) == "05"
 			_cTo := "mateus.fadini@bellacasaceramica.com.br"
 		Else
 			_cTo := "claudeir.fadini@biancogres.com.br"
 		EndIf
 		_cSubject := "Email Representante não cadastrado! Acompanhamento de Acordos Objetivos - "+ AllTrim(Z37->Z37_DESCR)
-	EndIf        
+	EndIf
 
 	//Pedro Henrique/Facile  - em 09/01/2018 - Ticket 8847
 	If PZ5->(FieldPos("PZ5_EMAILC")) > 0 .And. !Empty(PZ5->PZ5_EMAILC)
@@ -498,7 +649,8 @@ Static Function SendMail(_cRep, _cCodPZ5)
 	_cBody := cHtml      
 
 	Conout("FACOWF01 Fim - lManual = "+IIf(lManual,"SIM","NAO")+" - enviando e-mail para: "+_cTo)
-	_lRet := U_BIAEnvMail(, _cTo, _cSubject, _cBody, "", "", , _cCC, _oCC)
+	//_lRet := U_BIAEnvMail(, _cTo, _cSubject, _cBody, "", "", , _cCC, _oCC)    // aqui descomentar antes aplicar em produção
+	_lRet := U_BIAEnvMail(, 'karina.barbosa@biancogres.com.br;emerson.salvador@facilesistemas.com.br;', _cSubject, _cBody, "", "", , "", "")   //aqui retirar essa linha somente para testes
 
 Return(_lRet)
 
@@ -512,7 +664,7 @@ Static Function MailAteGer()
 	Local _cWhereSeg
 	Local _cSeg 		:= ""
 
-	If (PZ5->PZ5_TIPCLI == '1') 
+	If (PZ5->PZ5_TIPCLI == '1')
 
 		oGerenteAtendente	:= TGerenteAtendente():New()
 		oResult 			:= oGerenteAtendente:GetCliente(cEmpAnt+cFilAnt, PZ5->PZ5_CODCLI, PZ5->PZ5_LOJCLI, PZ5->PZ5_CODVEN)
@@ -538,89 +690,89 @@ Static Function MailAteGer()
 				/*If !(SA1->A1_YTPSEG $ _cSeg)
 					_cSeg += IIf(!Empty(_cSeg),",","")
 					_cSeg += "'"+SA1->A1_YTPSEG+"'"
-				EndIf
+			EndIf
 				*/
-				
-				oGerenteAtendente	:= TGerenteAtendente():New()
-				oResult 			:= oGerenteAtendente:GetCliente(cEmpAnt+cFilAnt, SA1->A1_COD, SA1->A1_LOJA, PZ5->PZ5_CODVEN)
-				
-				cRet += IIf(!Empty(cRet),";","")
-				cRet += oResult:cEmailAten
-				
-				cEmailGer := GetEmail(oResult:cGerente)
-				cRetGer += IIF(!Empty(cRetGer), ";", "")
-				cRetGer += IIF(!Empty(cEmailGer), cEmailGer, "")
-				
-				SA1->(DbSkip())	
-			EndDo
 
-			//_cWhereSeg := "% ZZI_TPSEG in ("+_cSeg+") %"
+			oGerenteAtendente	:= TGerenteAtendente():New()
+			oResult 			:= oGerenteAtendente:GetCliente(cEmpAnt+cFilAnt, SA1->A1_COD, SA1->A1_LOJA, PZ5->PZ5_CODVEN)
 
-		EndIf
+			cRet += IIf(!Empty(cRet),";","")
+			cRet += oResult:cEmailAten
 
-	Else  //Rede de Compras
+			cEmailGer := GetEmail(oResult:cGerente)
+			cRetGer += IIF(!Empty(cRetGer), ";", "")
+			cRetGer += IIF(!Empty(cEmailGer), cEmailGer, "")
 
-		SA1->(DbSetOrder(12))
-		If SA1->(DbSeek(XFilial("SA1")+PZ5->(PZ5_REDE)))
+			SA1->(DbSkip())
+		EndDo
 
-			While !SA1->(Eof()) .And. SA1->(A1_FILIAL+A1_YREDCOM) == (XFilial("SA1")+PZ5->(PZ5_REDE))
+		//_cWhereSeg := "% ZZI_TPSEG in ("+_cSeg+") %"
+
+	EndIf
+
+Else  //Rede de Compras
+
+	SA1->(DbSetOrder(12))
+	If SA1->(DbSeek(XFilial("SA1")+PZ5->(PZ5_REDE)))
+
+		While !SA1->(Eof()) .And. SA1->(A1_FILIAL+A1_YREDCOM) == (XFilial("SA1")+PZ5->(PZ5_REDE))
 
 				/*If !(SA1->A1_YTPSEG $ _cSeg)
 					_cSeg += IIf(!Empty(_cSeg),",","")
 					_cSeg += "'"+SA1->A1_YTPSEG+"'"
-				EndIf
-				*/
-				oGerenteAtendente	:= TGerenteAtendente():New()
-				oResult 			:= oGerenteAtendente:GetCliente(cEmpAnt+cFilAnt, SA1->A1_COD, SA1->A1_LOJA, PZ5->PZ5_CODVEN)
-				
-				cRet += IIf(!Empty(cRet),";","")
-				cRet += oResult:cEmailAten
-				
-				cEmailGer := GetEmail(oResult:cGerente)
-				cRetGer += IIF(!Empty(cRetGer), ";", "")
-				cRetGer += IIF(!Empty(cEmailGer), cEmailGer, "")
-				
-				SA1->(DbSkip())	
-			EndDo
-
-			//_cWhereSeg := "% ZZI_TPSEG in ("+_cSeg+") %"
-
 		EndIf
+				*/
+		oGerenteAtendente	:= TGerenteAtendente():New()
+		oResult 			:= oGerenteAtendente:GetCliente(cEmpAnt+cFilAnt, SA1->A1_COD, SA1->A1_LOJA, PZ5->PZ5_CODVEN)
 
-	EndIf
+		cRet += IIf(!Empty(cRet),";","")
+		cRet += oResult:cEmailAten
+
+		cEmailGer := GetEmail(oResult:cGerente)
+		cRetGer += IIF(!Empty(cRetGer), ";", "")
+		cRetGer += IIF(!Empty(cEmailGer), cEmailGer, "")
+
+		SA1->(DbSkip())
+	EndDo
+
+	//_cWhereSeg := "% ZZI_TPSEG in ("+_cSeg+") %"
+
+EndIf
+
+EndIf
 
 	/*If !Empty(_cWhereSeg)
 
 		cAliasTmp := GetNextAlias()
-		BeginSql Alias cAliasTmp
+BeginSql Alias cAliasTmp
 		%NOPARSER%
 		SELECT ZZI_ATENDE, ZZI_GERENT FROM VW_SAP_ZZI 
 		WHERE SubString(MARCA,1,2) = %EXP:AllTrim(CEMPANT)% 
 		AND ZZI_VEND = %EXP:PZ5->PZ5_CODVEN% 
 		and %EXP:_cWhereSeg%
-		EndSql
+EndSql
 
-		(cAliasTmp)->(DbGoTop())
-		While !(cAliasTmp)->(Eof())
+(cAliasTmp)->(DbGoTop())
+While !(cAliasTmp)->(Eof())
 
-			PswOrder(1)
-			If (PswSeek((cAliasTmp)->ZZI_ATENDE, .T.))
-				aUser := Pswret(1) 
-				cRet += IIf(!Empty(cRet),";","")
-				cRet += AllTrim(aUser[1][14])
-			EndIf  
-			
-			If !Empty((cAliasTmp)->ZZI_GERENT) 
-				cEmailGer := GetEmail((cAliasTmp)->ZZI_GERENT)
-				cRetGer += IIF(!Empty(cRetGer), ";", "")
-				cRetGer += IIF(!Empty(cEmailGer), cEmailGer, "")		 
-			EndIf    
-
-			(cAliasTmp)->(DbSkip())
-		EndDo
-
-		(cAliasTmp)->(DbCloseArea())
+	PswOrder(1)
+	If (PswSeek((cAliasTmp)->ZZI_ATENDE, .T.))
+		aUser := Pswret(1)
+		cRet += IIf(!Empty(cRet),";","")
+		cRet += AllTrim(aUser[1][14])
 	EndIf
+
+	If !Empty((cAliasTmp)->ZZI_GERENT)
+		cEmailGer := GetEmail((cAliasTmp)->ZZI_GERENT)
+		cRetGer += IIF(!Empty(cRetGer), ";", "")
+		cRetGer += IIF(!Empty(cEmailGer), cEmailGer, "")
+	EndIf
+
+	(cAliasTmp)->(DbSkip())
+EndDo
+
+(cAliasTmp)->(DbCloseArea())
+EndIf
 	*/
 
 Return {cRet, cRetGer}
@@ -628,17 +780,17 @@ Return {cRet, cRetGer}
 
 Static Function GetEmail(cCodVend)
 	Local aArea  := SA3->(GetArea())
-	Local cEmail := ""	
+	Local cEmail := ""
 
 	DbSelectArea('SA3')
 	SA3->(DbSetOrder(1))
 	SA3->(DbGoTop())
-	
+
 	If SA3->(DbSeek(XFilial("SA3")+cCodVend))
-		cEmail := AllTrim(SA3->A3_EMAIL) 
+		cEmail := AllTrim(SA3->A3_EMAIL)
 	EndIf
-	
-	SA3->(DbCloseArea())	
+
+	SA3->(DbCloseArea())
 	SA3->(RestArea(aArea))
 
 Return cEmail

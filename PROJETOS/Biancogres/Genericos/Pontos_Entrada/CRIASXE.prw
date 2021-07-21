@@ -81,9 +81,10 @@ If !Empty(cAlias) .and. !Empty(cCpoSx8) .and. !Empty(cAliasSx8)
 
 	Else
 
-		//Ordenação através do último campo CHAVE
+		//Ordenação através do último campo CHAVE. 
+		//Ticket 33395 - Registro ZI_DOC = 'ZERVPBQNY' provocou erros na criação do indice ultima vez e criou muitos ZI_DOC com codigo ZERV, mas não são a sequencia correta
 		If cAlias $ "SZI#"
-			cSql := "SELECT TOP 1 "+cCpoSx8+" AS NUMSEQ FROM "+RetSqlName(cAlias)+" WHERE D_E_L_E_T_ = '' ORDER BY "+cCpoSx8+" DESC "
+			cSql := "SELECT TOP 1 "+cCpoSx8+" AS NUMSEQ FROM "+RetSqlName(cAlias)+" WHERE "+cCpoSx8+" not like '%ZERV%' and D_E_L_E_T_ = '' ORDER BY "+cCpoSx8+" DESC "
 		
 		//Ordenação através do MAIOR campo CHAVE 
 		ElseIf cAlias $ "SC1#" .Or. cCpoSx8 $ "E5_PROCTRAB#"

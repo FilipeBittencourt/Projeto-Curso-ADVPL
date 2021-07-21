@@ -319,20 +319,23 @@ Method Recebe() Class TPedidoCompraEmail
 Local nMsg := 0
 Local nTotMsg := 0 
   
-  	::oServidor:SetUseSSL(::lUseSSL)
-
-  	::oServidor:Init(::cSrvPOP, "", ::cConta, ::cSenha, ::cPtPOP3, 0) 
+  ::oServidor := TMailMng():New(0, 2, 6)
+ 
+  ::oServidor:cSrvAddr := SubStr(GetMv("MV_YSRVPOP"),1, RAT(':', GetMv("MV_YSRVPOP"))-1)	
+  ::oServidor:cSMTPAddr := SubStr(GetMv("MV_RELSERV"),1, RAT(':', GetMv("MV_RELSERV"))-1)
+  ::oServidor:nSrvPort := Val(SubStr(GetMv("MV_YSRVPOP"), RAT(':', GetMv("MV_YSRVPOP"))+1, Len(Alltrim(GetMv("MV_YSRVPOP")))))
+  ::oServidor:cUser := GetMv("MV_YPCCT")
+  ::oServidor:cPass := GetMv("MV_YPCSN")
   
-  
-  If ::oServidor:PopConnect() == 0
+   If ::oServidor:Connect() == 0
 
-	  ::oServidor:GetNumMsgs(@nTotMsg)	  
+	  ::oServidor:GetNumMsgs(@nTotMsg)
 	  
 	  For nMsg := 1 To nTotMsg
 	      
 	    ::oMensagem:Clear()
 	     
-	    ::oMensagem:Receive(::oServidor, nMsg)	    	    	     	    	    
+	    ::oMensagem:Receive2(::oServidor, nMsg)	    	    	     	    	    
 	    
 	    ConOut(cValToChar(dDataBase) + "-" + Time() + " -- TPedidoCompraEmail:Recebe()")
 	    
@@ -346,11 +349,12 @@ Local nTotMsg := 0
 	    
 	  Next
 	  
-	  ::oServidor:POPDisconnect()
+	  ::oServidor:Disconnect()
   
   EndIf
   		
 Return()
+
 
 Method Valida()	Class TPedidoCompraEmail
 Local lRet := .F.

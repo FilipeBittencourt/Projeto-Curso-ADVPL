@@ -25,27 +25,31 @@ cEnvironment := iif(cEnvironment="PRODUCAO","DADOSADV",cEnvironment)
 cDataBase    := AllTrim(U_DBNAME())
 
 
-If !"FACILE" $ Alltrim(cUserName)
+If !"FACILE" $ Alltrim(cUserName) 
+	
+	If Upper(GetSrvProfString( 'theme','')) <> "SUNSET"
 
-	// Verifica se o Environment e o Nome do Banco de Dados sao o mesmo, se forem diferentes informa ao usuario
-	If !cEnvironment $ "REQUISICAO_REPRESENTANTE_BALREQ_REMOTO_FECHAMENTO_MARCOS-PROD_MARCOS-DES_LUANA-PROD_LUANA-DES_COLABORACAO_SCHEDULE_COMP-MARCOS_COMP-LUANA_COMP-RODRIGO_COMP-WANISAY_COMP-RANISSES_COMP-GABRIEL_COMP-FERNANDO_COMP-TIAGO_DESENVOLVIMENTO_DSNV-MARCOS"
-		If cEnvironment <> cDataBase
-			cMsg := ""
-			cMsg += "ATENCAO!!"+CHR(13)
-			cMsg += ""+CHR(13)
-			cMsg += ""+CHR(13)
-			cMsg += "O Environment e o Banco de Dados usados sao diferentes."+CHR(13)
-			cMsg += "Todos os trabalhos executados nesta secao do Siga serao"+CHR(13)
-			cMsg += "processados no Banco de Dados indicado abaixo.         "+CHR(13)
-			cMsg += ""+CHR(13)
-			cMsg += "environment:"+CHR(13)
-			cMsg += cEnvironment+CHR(13)
-			cMsg += ""+CHR(13)
-			cMsg += "banco:"+CHR(13)
-			cMsg += cDataBase+CHR(13)
-			alert(cMsg)
+		// Verifica se o Environment e o Nome do Banco de Dados sao o mesmo, se forem diferentes informa ao usuario
+		If !cEnvironment $ "REQUISICAO_REPRESENTANTE_BALREQ_REMOTO_FECHAMENTO_MARCOS-PROD_MARCOS-DES_LUANA-PROD_LUANA-DES_COLABORACAO_SCHEDULE_COMP-MARCOS_COMP-LUANA_COMP-RODRIGO_COMP-WANISAY_COMP-RANISSES_COMP-GABRIEL_COMP-FERNANDO_COMP-TIAGO_DESENVOLVIMENTO_DSNV-MARCOS"
+			If cEnvironment <> cDataBase
+				cMsg := ""
+				cMsg += "ATENCAO!!"+CHR(13)
+				cMsg += ""+CHR(13)
+				cMsg += ""+CHR(13)
+				cMsg += "O Environment e o Banco de Dados usados sao diferentes."+CHR(13)
+				cMsg += "Todos os trabalhos executados nesta secao do Siga serao"+CHR(13)
+				cMsg += "processados no Banco de Dados indicado abaixo.         "+CHR(13)
+				cMsg += ""+CHR(13)
+				cMsg += "environment:"+CHR(13)
+				cMsg += cEnvironment+CHR(13)
+				cMsg += ""+CHR(13)
+				cMsg += "banco:"+CHR(13)
+				cMsg += cDataBase+CHR(13)
+				alert(cMsg)
+			EndIf
+	
 		EndIf
-		
+
 	EndIf
 	
 EndIf

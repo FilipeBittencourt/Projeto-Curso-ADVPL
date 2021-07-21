@@ -431,7 +431,9 @@ Method EstornaMovimentacao(_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cCod,_cLocal,_
 		AND ZCZ_FORNEC = %Exp:_cFornece%
 		AND ZCZ_LOJA = %Exp:_cLoja%
 		AND ZCZ_ITEM = %Exp:_cItem%
+		AND ZCZ_LOCAL = %Exp:_cLocal%
 		AND ZCZ_TM = '001'
+		AND ZCZ_COD = %Exp:_cCod%
 		AND ZCZ.%NotDel%
 		GROUP BY ZCZ_FILIAL
 		,ZCZ_DOC

@@ -39,10 +39,10 @@ User Function BPOLGA01()
 	Private _nPDAI		:= aScan(aHeader,{|x| AllTrim(x[2]) == "C6_YDAI"})
 	Private _nPYDESCLI	:= aScan(aHeader,{|x| Alltrim(x[2]) == "C6_YDESCLI"})
 	Private _nPNECESS	:= aScan(aHeader,{|x| AllTrim(x[2]) == "C6_YDTNECE"})
-	
+
 	Private _nPDFRA		:= aScan(aHeader,{|x| AllTrim(x[2]) == "C6_YDFRA"})
-	
-	
+
+
 	Private _cSegmento := ""
 	Private _nPMaxAO	:= 0
 	Private _nPBonAO	:= 0
@@ -75,64 +75,64 @@ User Function BPOLGA01()
 	RestArea(aAreaA1)
 	RestArea(aArea)
 	return(_nQtdDig)
-	EndIf*/
+EndIf*/
 
 	//Ticket 10793 não disparar politica de preço para outros tipos de pedido
 	//Tratamento outros tipos de pedido
-	If (M->C5_TIPO <> "N")
+If (M->C5_TIPO <> "N")
 		RestArea(aAreaA1)
 		RestArea(aArea)
 		Return(_nQtdDig)
-	EndIf
+EndIf
 
-	If (AllTrim(M->C5_YSUBTP) $ "VO") .And. !(ALLTRIM(__READVAR) == 'M->C6_YDESP')
+If (AllTrim(M->C5_YSUBTP) $ "VO") .And. !(ALLTRIM(__READVAR) == 'M->C6_YDESP')
 		RestArea(aAreaA1)
 		RestArea(aArea)
 		Return(_nQtdDig)
-	EndIf
+EndIf
 
 	//transferencia vinilico
-	If (AllTrim(cEmpAnt) == "07" .And. AllTrim(M->C5_CLIENTE) == '029954' .AND. AllTrim(M->C5_YLINHA) == '6')
+If (AllTrim(cEmpAnt) == "07" .And. AllTrim(M->C5_CLIENTE) == '029954' .AND. AllTrim(M->C5_YLINHA) == '6')
 		Return(_nQtdDig)
-	EndIf
+EndIf
 	
 	//Verificando Segmento do Cliente
 	_cSegmento := U_fSegCliente(M->C5_YLINHA, M->C5_CLIENTE, M->C5_LOJACLI) 
 
-	If (_cSegmento == "E" .And. ALLTRIM(__READVAR) == 'M->C6_QTDVEN' .And. Empty(aCols[N][_nPNECESS]))
+If (_cSegmento == "E" .And. ALLTRIM(__READVAR) == 'M->C6_QTDVEN' .And. Empty(aCols[N][_nPNECESS]))
 		//Mensagem ja foi exibida no FROPGA02
 		RestArea(aAreaA1)
 		RestArea(aArea)
 		return(_nQtdDig)
-	EndIf
+EndIf
 	
 	//Validacao de campos
-	If Empty(_cCliente) .Or. Empty(_cVendedor) .Or. Empty(_cProduto)
+If Empty(_cCliente) .Or. Empty(_cVendedor) .Or. Empty(_cProduto)
 		MsgAlert("É obrigatório informar:  CLIENTE, VENDEDOR e PRODUTO - antes de digitar a quantidade vendida.","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
 		RestArea(aAreaA1)
 		RestArea(aArea)
 		return(0)
-	EndIf
+EndIf
 
 	//Validacoes do Desconto de AI/AO
-	If ( ALLTRIM(__READVAR) == 'M->C6_YDACO' ) .Or. ( ALLTRIM(__READVAR) == 'M->C6_YDVER' ) .Or. ( ALLTRIM(__READVAR) == 'M->C6_YDAI' )
-		If !(_lTpDVer)
+If ( ALLTRIM(__READVAR) == 'M->C6_YDACO' ) .Or. ( ALLTRIM(__READVAR) == 'M->C6_YDVER' ) .Or. ( ALLTRIM(__READVAR) == 'M->C6_YDAI' )
+	If !(_lTpDVer)
 			MsgAlert("TIPO de pedido inválido para uso deste deconto.","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
 			aCols[N][_nPDACO] := 0
 			aCols[N][_nPDVER] := 0
 			aCols[N][_nPDAI] := 0
-		EndIf
 	EndIf
+EndIf
 	
 	//Validacoes do Desconto de AI/AO
-	If ( ALLTRIM(__READVAR) == 'M->C6_YDACO' )
+If ( ALLTRIM(__READVAR) == 'M->C6_YDACO' )
 
-		If Empty(M->C5_YNUMSI)
+	If Empty(M->C5_YNUMSI)
 
 			MsgAlert("Para desconto de AO - É obrigatório informar o Número da AI no cabeçalho no campo 'No.AI ref.AO'.","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
 			aCols[N][_nPDACO] := 0
 
-		ElseIf !CheckAO(M->C5_YNUMSI, aCols[N][_nPDACO])
+	ElseIf !CheckAO(M->C5_YNUMSI, aCols[N][_nPDACO])
 
 			MsgAlert("Percentual de Desconto de AO é maior que o bônus da AI informada."+CRLF+;
 			"AI: "+M->C5_YNUMSI+" - Percentual de desconto máximo "+Transform(_nPMaxAO,"@E 999.99")+" %";		
@@ -140,71 +140,71 @@ User Function BPOLGA01()
 
 			aCols[N][_nPDACO] := 0
 
-		EndIf
-
 	EndIf
+
+EndIf
 	
 	//Validacoes do Desconto de OUTRAS AIs sem AO
-	If ( ALLTRIM(__READVAR) == 'M->C6_YDAI' )
+If ( ALLTRIM(__READVAR) == 'M->C6_YDAI' )
 
-		If Empty(M->C5_YNOUTAI)
+	If Empty(M->C5_YNOUTAI)
 
 			MsgAlert("Para desconto de outras AI's - É obrigatório informar o Número da AI no cabeçalho no campo 'No.AI Outras'.","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
 			aCols[N][_nPDAI] := 0
 
-		ElseIf !CheckAOValid(M->C5_YNOUTAI)
+	ElseIf !CheckAOValid(M->C5_YNOUTAI)
 			MsgAlert("Percentual de Desconto de outras AI's não permitido.","ATENÇÃO! DESCONTO DE AI -> BPOLGA01")
 
 			aCols[N][_nPDAI] := 0
-		ElseIf !(aCols[N][_nPDAI] >= 0 .And. aCols[N][_nPDAI] <= nMaxDAI)
+	ElseIf !(aCols[N][_nPDAI] >= 0 .And. aCols[N][_nPDAI] <= nMaxDAI)
 
 			MsgAlert("Percentual de Desconto de outras AI's não permitido - máximo = ("+AllTrim(Str(nMaxDAI))+"%).","ATENÇÃO! DESCONTO DE AI -> BPOLGA01")
 
 			aCols[N][_nPDAI] := 0
 
-		EndIf
-
 	EndIf
+
+EndIf
 	
 	//Alterando pedido - atendente - ao trocar o lote via F6 - checkar se o lote vai ficar paletizado e dar o desconto
-	If ALTERA .And. isincallstack("U_ConsEst") .And. Type("__FCESTALTLTPOL") <> "U"
+If ALTERA .And. isincallstack("U_ConsEst") .And. Type("__FCESTALTLTPOL") <> "U"
 
 		_lPaletizado := U_FRRT01P4(_cProduto, _cLocal, _nQtdDig, _cLote, _cSegmento, IIF(AllTrim(cEmpAnt)=="07", M->C5_YEMPPED, AllTrim(cEmpAnt)) )
 
 		//escolha de lote manual arrematando estoque
-		If (!_lPaletizado)
-			If (AllTrim(cEmpAnt) == "07" .And. !Empty(M->C5_YEMP) .And. Len(M->C5_YEMP) == 4)
+	If (!_lPaletizado)
+		If (AllTrim(cEmpAnt) == "07" .And. !Empty(M->C5_YEMP) .And. Len(M->C5_YEMP) == 4)
 				_nSaldoRet := U_FROPCPRO(SubStr(M->C5_YEMP, 1, 2),SubStr(M->C5_YEMP, 3, 2),"U_FRRT01PR", _cProduto, _cLocal, "", "", _nQtdDig, "", _cLote)
-			Else
+		Else
 				_nSaldoRet := U_FRRT01PR( _cProduto, _cLocal, "", "", _nQtdDig, "", _cLote)
-			EndIf
-			_lPaletizado := (_nSaldoRet == 0) .Or. ((_nSaldoRet - _nQtdDig) == 0) 
 		EndIf
-		
+			_lPaletizado := (_nSaldoRet == 0) .Or. ((_nSaldoRet - _nQtdDig) == 0) 
 	EndIf
+		
+EndIf
 
 	//Pedidos normais - processa politica  
-	If !(AllTrim(M->C5_YSUBTP) $ "A#M#F")
+If !(AllTrim(M->C5_YSUBTP) $ "A#M#F")
 
-		If AllTrim(M->C5_CLIENTE) <> "010064" //Não processa para Cliente LM, considera o desconto replicado
+	If AllTrim(M->C5_CLIENTE) <> "010064" //Não processa para Cliente LM, considera o desconto replicado
 			GAProc()		
-		EndIf
+	EndIf
 
 		//Desconto de Amostra	
-	Else
+Else
 		
 		
 		__nValDesc := 0
 		
-		If (M->C5_YLINHA == '6')//Vinilico
+	If (M->C5_YLINHA == '6')//Vinilico
 			__nValDesc	:= DescAmosEmp('1302')	
-		Else
+	Else
 			__nValDesc := 0
 			ZA0->(DbSetOrder(1))
-			If ZA0->(DbSeek(XFilial("ZA0")+"AMOS"))
+		If ZA0->(DbSeek(XFilial("ZA0")+"AMOS"))
 				__nValDesc := ZA0->ZA0_PDESC 
-			EndIf
 		EndIf
+	EndIf
 		
 		aCols[N][_nPDPAL]	:= 0
 		aCols[N][_nPDCAT] 	:= 0
@@ -213,13 +213,13 @@ User Function BPOLGA01()
 		aCols[N][_nPDPOL] 	:= __nValDesc
 		aCols[N][_nPDNV]  	:= 0
 		
-		If SC6->(FieldPos("C6_YDFRA")) > 0
+	If SC6->(FieldPos("C6_YDFRA")) > 0
 			aCols[N][_nPDFRA]  	:= 0
-		EndIf
+	EndIf
 		aCols[N][_nPDTOT]  	:= __nValDesc
 		aCols[N][_nPYDESCLI]:= __nValDesc	
 
-	EndIf
+EndIf
 
 	RestArea(aAreaA1)
 	RestArea(aArea)
@@ -256,11 +256,11 @@ Return nValor
 /*/
 Static Function GAProc()
 	Local oDesconto
-	
-	
+
+
 	oDesconto := TBiaPoliticaDesconto():New()
 	oDesconto:LoadParMem()  //Carrega todos os parametros necessarios para a busca da politica das variaveis na tela do pedido
-	
+
 	If (AllTrim(M->C5_YSUBTP) $ "VO") .And. (ALLTRIM(__READVAR) == 'M->C6_YDESP')
 		oDesconto:_lPaletizado := .F.
 		oDesconto:Calculate()
@@ -278,7 +278,7 @@ Static Function GAProc()
 		oDesconto:_lPaletizado := .T.
 	EndIf
 
-	
+
 	If oDesconto:GetPolitica()
 
 		//Fernando em 22/11 - qualquer outro campo que for digitado que influencie na politica zerar a norma
@@ -303,12 +303,12 @@ Static Function GAProc()
 			oDesconto:Calculate()
 
 		EndIf
-		
-		
+
+
 		//regras vendas fracionada
 		//Inicio venda fracionada
 		If SC6->(FieldPos("C6_YDFRA")) > 0
-		
+
 			If ( ALLTRIM(__READVAR) == 'M->C6_YDFRA'  .And. oDesconto:_lPaletizado)
 				aCols[N][_nPDFRA]	:= 0
 				oDesconto:DFRA		:= 0
@@ -332,7 +332,7 @@ Static Function GAProc()
 			EndIf
 			//Fim venda fracionada
 		EndIf
-		
+
 		If ( ALLTRIM(__READVAR) == 'M->C6_YDVER' )
 
 			If ( oDesconto:DVER_MAX > 0 )
@@ -369,11 +369,11 @@ Static Function GAProc()
 			oDesconto:DVER	:= aCols[N][_nPDVER]
 			oDesconto:DACO	:= aCols[N][_nPDACO]
 			oDesconto:DNV	:= aCols[N][_nPDNV]
-			
+
 			If SC6->(FieldPos("C6_YDFRA")) > 0
 				oDesconto:DFRA	:= aCols[N][_nPDFRA]
 			EndIf
-			
+
 			If SC6->(FieldPos("C6_YDAI")) > 0
 				oDesconto:DAI	:= aCols[N][_nPDAI]
 			EndIf
@@ -413,11 +413,11 @@ Static Function GAProc()
 		aCols[N][_nPDGER] := oDesconto:DGER
 		aCols[N][_nPDPOL] := oDesconto:DPOL
 		aCols[N][_nPDNV]  := oDesconto:DNV
-		
+
 		If SC6->(FieldPos("C6_YDFRA")) > 0
 			aCols[N][_nPDFRA]  := oDesconto:DFRA
 		EndIf
-		
+
 		If SC6->(FieldPos("C6_YDVER")) > 0
 			aCols[N][_nPDVER]  := oDesconto:DVER
 		EndIf
@@ -477,24 +477,24 @@ Static Function CheckAO(_NUMSI, _NPDACO)
 	Local _cEmp
 	Local _cMarca	:= ""
 	Local _cMarcaDesc:= ""
-	
+
 	Do Case
-		Case M->C5_YLINHA == "1"
+	Case M->C5_YLINHA == "1"
 		_cMarca	:= "0101"
 		_cMarcaDesc:= 'Biancogres'
-		Case M->C5_YLINHA == "2"
+	Case M->C5_YLINHA == "2"
 		_cMarca	:= "0501"
 		_cMarcaDesc:= 'Incesa'
-		Case M->C5_YLINHA == "3"
+	Case M->C5_YLINHA == "3"
 		_cMarca	:= "0599"
 		_cMarcaDesc:= 'BelaCasa'
-		Case M->C5_YLINHA == "4"
+	Case M->C5_YLINHA == "4"
 		_cMarca	:= "1399"
 		_cMarcaDesc:= 'Mudiali'
-		Case M->C5_YLINHA == "5"
+	Case M->C5_YLINHA == "5"
 		_cMarca	:= "0199"
 		_cMarcaDesc:= 'Pegasus'
-		Case M->C5_YLINHA == "6"
+	Case M->C5_YLINHA == "6"
 		_cMarca	:= "1302"
 		_cMarcaDesc:= 'Vinilico'
 	EndCase
@@ -539,14 +539,14 @@ Static Function CheckAO(_NUMSI, _NPDACO)
 		AND ZO_EMP != %Exp:_cMarca%
 		
 	EndSql
-	
+
 	If (!(cQryTemp)->(Eof()))
 		MsgAlert("AI informada não e da não é da marca "+_cMarcaDesc+".","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
 		lRet := .F.
-	EndIf	
+	EndIf
 	(cQryTemp)->(DbCloseArea())
-	
-	
+
+
 	//pesquisa AO na empresa origem
 	cQrySZO := GetNextAlias()
 	BeginSql Alias cQrySZO
@@ -560,19 +560,19 @@ Static Function CheckAO(_NUMSI, _NPDACO)
 	//and ZO_FPAGTO = '2'
 
 	(cQrySZO)->(DbGoTop())
-	
-	
+
+
 	If (!(cQrySZO)->(Eof()) .And.  AllTrim((cQrySZO)->ZO_FPAGTO) != '2' )
 		If ((cQrySZO)->ZO_FPAGTO != "")
 			MsgAlert("AI informada não é do 'Tipo de Pagamento:Desconto em Pedido'.","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
 			lRet := .F.
 		EndIf
 	EndIf
-	
-	
+
+
 	If (lRet)
 		IF !(cQrySZO)->(Eof()) .And. AllTrim((cQrySZO)->ZO_ITEMCTA) == "I0201"
-	
+
 			//Buscar se acordo tem percentuais de sugestao e maximo cadastrados - OS. 2508-17 - Fernando em 15/08/2017
 			cAliasTmp := GetNextAlias()
 			BeginSql Alias cAliasTmp
@@ -586,53 +586,55 @@ Static Function CheckAO(_NUMSI, _NPDACO)
 				and PZ5.D_E_L_E_T_ = ''
 	
 			EndSql
-	
+
 			(cAliasTmp)->(DbGoTop())
 			If !(cAliasTmp)->(Eof())
-	
+
 				_nPBonAO := (cAliasTmp)->PZ5_PPGSUG
 				_nPMaxAO := (cAliasTmp)->PZ5_PPGMAX
-	
+
 				If _nPBonAO > 0 .And. _nPMaxAO <= 0
 					_nPMaxAO := _nPBonAO + nAdDMax
 				EndIf
-	
+
 			EndIf
 			(cAliasTmp)->(DbCloseArea())
-	
-	
+
+
 			IF ( _nPBonAO <= 0 )
-	
+
 				cAliasTmp := GetNextAlias()
 				BeginSql Alias cAliasTmp
 					%NoParser%
 	
-					select PBONUS = case when PZ6_METAF5 > 0 and PZ6_VALREA >= PZ6_METAF5 then PZ6_PBONF5
-					when PZ6_METAF4 > 0 and PZ6_VALREA >= PZ6_METAF4 then PZ6_PBONF4
-					when PZ6_METAF3 > 0 and PZ6_VALREA >= PZ6_METAF3 then PZ6_PBONF3
-					when PZ6_METAF2 > 0 and PZ6_VALREA >= PZ6_METAF2 then PZ6_PBONF2
-					else PZ6_PBONF1 end
-					from %Exp:cTabPZ6% where PZ6_SI = %Exp:_NUMSI% and D_E_L_E_T_ = ''
+					select PBONUS = case when PZ6_METAF5 > 0 and PZ6_VALREA >= PZ6_METAF5 and ((PZ5_TPACOR = 'AG' and PZ6_METAP5 > 0 and PZ6_PREALI >= PZ6_METAP5) or PZ5_TPACOR <> 'AG') then PZ6_PBONF5
+					when PZ6_METAF4 > 0 and PZ6_VALREA >= PZ6_METAF4 and ((PZ5_TPACOR = 'AG' and PZ6_METAP4 > 0 and PZ6_PREALI >= PZ6_METAP4) or PZ5_TPACOR <> 'AG') then PZ6_PBONF4
+					when PZ6_METAF3 > 0 and PZ6_VALREA >= PZ6_METAF3 and ((PZ5_TPACOR = 'AG' and PZ6_METAP3 > 0 and PZ6_PREALI >= PZ6_METAP3) or PZ5_TPACOR <> 'AG') then PZ6_PBONF3
+					when PZ6_METAF2 > 0 and PZ6_VALREA >= PZ6_METAF2 and ((PZ5_TPACOR = 'AG' and PZ6_METAP2 > 0 and PZ6_PREALI >= PZ6_METAP2) or PZ5_TPACOR <> 'AG') then PZ6_PBONF2
+				else PZ6_PBONF1 end
+					from %Exp:cTabPZ6% PZ6 
+					join %Exp:cTabPZ5% PZ5 on PZ5_CODIGO = PZ6_CODIGO and PZ5.D_E_L_E_T_ = ''
+					where PZ6_SI = %Exp:_NUMSI% and PZ6.D_E_L_E_T_ = ''
 	
 				EndSql
-	
+
 				(cAliasTmp)->(DbGoTop())
 				If !(cAliasTmp)->(Eof())
-	
+
 					_nPBonAO := (cAliasTmp)->PBONUS
 					_nPMaxAO := _nPBonAO + nAdDMax
-	
+
 				EndIf
 				(cAliasTmp)->(DbCloseArea())
-	
+
 			ENDIF
-	
+
 		Else
 			MsgAlert("AI não localizada ou não é proveniente de Acordo Objetivo.","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
 			lRet := .F.
 		EndIf
 	EndIf
-	
+
 	(cQrySZO)->(DbCloseArea())
 
 	If lRet .And. _nPMaxAO > 0
@@ -652,28 +654,28 @@ Static Function CheckAOValid(_NUMSI)
 	Local _cEmp		:= Nil
 	Local _cMarca	:= ""
 	Local _cMarcaDesc:= ""
-	
+
 	Do Case
-		Case M->C5_YLINHA == "1"
+	Case M->C5_YLINHA == "1"
 		_cMarca	:= "0101"
 		_cMarcaDesc:= 'Biancogres'
-		Case M->C5_YLINHA == "2"
+	Case M->C5_YLINHA == "2"
 		_cMarca	:= "0501"
 		_cMarcaDesc:= 'Incesa'
-		Case M->C5_YLINHA == "3"
+	Case M->C5_YLINHA == "3"
 		_cMarca	:= "0599"
 		_cMarcaDesc:= 'BellaCasa'
-		Case M->C5_YLINHA == "4"
+	Case M->C5_YLINHA == "4"
 		_cMarca	:= "1399"
 		_cMarcaDesc:= 'Mudiali'
-		Case M->C5_YLINHA == "5"
+	Case M->C5_YLINHA == "5"
 		_cMarca	:= "0199"
 		_cMarcaDesc:= 'Pegasus'
-		Case M->C5_YLINHA == "6"
+	Case M->C5_YLINHA == "6"
 		_cMarca	:= "1302"
 		_cMarcaDesc:= 'Vinilico'
 	EndCase
-	
+
 	If Alltrim(M->C5_YLINHA) $ "2#3" .And. AllTrim(CEMPANT) $ "05"  //ticket 10958 marreta provisoria AI Incesa na Bianco
 		cTabSZO := "% SZO050 %"
 	Else
@@ -694,7 +696,7 @@ Static Function CheckAOValid(_NUMSI)
 		EndIf
 
 	EndIf
-	
+
 	cQryTemp := GetNextAlias()
 	BeginSql Alias cQryTemp
 		%NoParser%
@@ -703,13 +705,13 @@ Static Function CheckAOValid(_NUMSI)
 		AND ZO_EMP != %Exp:_cMarca%
 		
 	EndSql
-	
+
 	If (!(cQryTemp)->(Eof()))
 		MsgAlert("AI informada da não é da marca "+_cMarcaDesc+".","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
 		lRet := .F.
-	EndIf	
+	EndIf
 	(cQryTemp)->(DbCloseArea())
-	
+
 
 	//pesquisa AO na empresa origem
 	cQrySZO := GetNextAlias()
@@ -720,23 +722,23 @@ Static Function CheckAOValid(_NUMSI)
 		AND ZO_EMP = %Exp:_cMarca%  
 		
 	EndSql
-	
-	
-	
+
+
+
 	(cQrySZO)->(DbGoTop())
 	If (cQrySZO)->(Eof())
 		MsgAlert("AI não localizada ou não é proveniente de Acordo Objetivo.","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
 		lRet := .F.
 	Else
 		If (AllTrim((cQrySZO)->ZO_FPAGTO) != '2')
-			If ((cQrySZO)->ZO_FPAGTO != "") 
+			If ((cQrySZO)->ZO_FPAGTO != "")
 				MsgAlert("AI informada não é do 'Tipo de Pagamento:Desconto em Pedido'.","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
 				lRet := .F.
 			EndIf
 		EndIf
 	EndIf
-	
-	
+
+
 	(cQrySZO)->(DbCloseArea())
 
 

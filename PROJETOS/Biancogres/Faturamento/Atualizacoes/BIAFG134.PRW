@@ -7,7 +7,7 @@
 @description Tela para controle de parâmetros de bloqueios para representantes
 @type function
 /*/
-
+    // U_BIAFG134
 User Function BIAFG134()
 
 	Private _aBfg134	:=	{;
@@ -19,7 +19,6 @@ User Function BIAFG134()
 		{"REP_BLQPROPENG"	,"MV_PAR06"	,	'Proposta de Engenharia'};
 		}
 
-
 	If U_VALOPER('060')
 
 		ValidPerg()
@@ -27,8 +26,6 @@ User Function BIAFG134()
 	Else
 		MsgSTOP("Usuário sem permissão para acessar a rotina", "BIAFG134")
 	EndIf
-
-
 Return
 
 Static Function ValidPerg()
@@ -38,15 +35,18 @@ Static Function ValidPerg()
 
 	Local _nI
 
+
 	For _nI	:=	1 to Len(_aBfg134)
-		&(_aBfg134[_nI,2]) := U_GETBIAPAR(_aBfg134[_nI,1],.F.)
+
+        &(_aBfg134[_nI,2]) := U_GETBIAPAR(_aBfg134[_nI,1],.F.)
+
 
 		aAdd( aPergs ,{5,_aBfg134[_nI,3]  		  	,&(_aBfg134[_nI,2]) ,100,"",	.F.})
 
 	Next
 
 
-	If ParamBox(aPergs ,"Bloqueio de Rotinas para os Representantes",,,,,,,,,.T.,.T.)
+	If ParamBox(aPergs ,"Bloqueio de Rotinas para os Representantes",,,,,,,,,.F.,.F.)
 
 		For _nI	:=	1 to Len(_aBfg134)
 			U_PUTBIAPAR(_aBfg134[_nI,1],&(_aBfg134[_nI,2]))
@@ -54,3 +54,4 @@ Static Function ValidPerg()
 		MsgInfo("Parâmetros salvos com sucesso!","BIAFG134")
 	EndIf
 Return lRet
+

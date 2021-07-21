@@ -22,6 +22,8 @@ Class TAFRetornoBancario From TAFAbstractClass
 	Method Exist(nPos)
 	Method Validate(nPos)
 
+	Method GetEmpFil( nNossoNumero )
+
 EndClass
 
 
@@ -94,14 +96,21 @@ Return()
 
 Method Insert(nPos) Class TAFRetornoBancario
 
-	Local nVlOCre := 0
+	Local nVlOCre         := 0
 	
-	Local _cCodigoCedente	:= ""
-	Local _aRetEmp	:= {}
-	Local _cEmp		:= ""
-	Local _cFil		:= ""
-	Local _cRecno	:= ""
-		
+	Local _cCodigoCedente := ""
+	Local _cEmp           := ""
+	Local _cFil           := ""
+	Local _cRecno         := ""
+	Local _aRetEmp        := {}
+	Local _aRetorno       := {}
+	
+	_aRetorno := ::GetEmpFil( ::oLst:GetItem(nPos):cNosNum )
+
+	If !Empty( _aRetorno[1] )
+		::oLst:GetItem(nPos):cEmp	:= _aRetorno[1]
+		::oLst:GetItem(nPos):cFil	:= _aRetorno[2]
+	EndIf
 	
 	RecLock("ZK4", .T.)
 
@@ -324,3 +333,36 @@ Method Validate(nPos) Class TAFRetornoBancario
 Local lRet := .T.
 
 Return(lRet)
+
+
+Method GetEmpFil( cNossoNumero ) Class TAFRetornoBancario
+
+	Local aRetorno		:= {}
+	Local cEmpBoleto	:= ""
+	Local cFilBoleto	:= ""
+
+	If ValType(cNossoNumero) == "C"
+
+		//|Boleto da Biancogres |
+		If SubStr( cNossoNumero, 1, 2 ) == "61"	
+
+			cEmpBoleto	:= "01"
+			cFilBoleto	:= "01"
+
+		EndIf
+
+		//|Boleto da LM |
+		If SubStr( cNossoNumero, 1, 2 ) == "81"	
+
+			cEmpBoleto	:= "07"
+			cFilBoleto	:= "01"
+
+		EndIf
+
+	EndIf
+
+	//|retorno default |
+	aAdd( aRetorno, cEmpBoleto )
+	aAdd( aRetorno, cFilBoleto )
+
+Return aRetorno

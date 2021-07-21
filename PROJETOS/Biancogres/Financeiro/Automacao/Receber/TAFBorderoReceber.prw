@@ -298,7 +298,9 @@ Method CleanBorSE1(nSE1RecNo,cStatus,cCodBar) Class TAFBorderoReceber
 				//0=Pendente;1=Enviado;2=Retorno com Sucesso;3=Retorno com Erro
 				SE1->E1_YSITAPI:=cStatus	 
 				//Titulos FIDC nao entram no Fluxo de Caixa
-				SE1->E1_FLUXO:="N"
+				If SE1->E1_YFDCPER > 0 .And. SE1->E1_YFDCVAL > 0
+					SE1->E1_FLUXO := "N"
+				EndIf 
 				SE1->(MSUnlock())
 			endif
 

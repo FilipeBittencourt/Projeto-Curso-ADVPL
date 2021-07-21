@@ -57,6 +57,8 @@ Class TLoadEmpresa From LongClasName
 	Method GSEmpFil(aEmpOut,lEmpAnt)
 	Method GSA35EmpFil(aEmpOut,lEmpAnt)
 
+	Method GmtQuadroImp()
+
 EndClass
 
 Method New(lEmpAnt) Class TLoadEmpresa
@@ -686,6 +688,121 @@ Method GSA35EmpFil(aEmpOut,lEmpAnt) Class TLoadEmpresa
 
 Return()
 // Fim Marcos 20210616
+
+// Início Marcos 20210708
+Method GmtQuadroImp() Class TLoadEmpresa
+
+	//---------------------------------------------
+	// Parâmetro  nTipo
+	// 1 - Monta com Todas Empresas/Filiais
+	// 2 - Monta só com Empresas
+	// 3 - Monta só com Filiais de uma Empresa
+	//
+	// Parâmetro  aMarcadas
+	// Vetor com Empresas/Filiais pré marcadas
+	//
+	// Parâmetro  cEmpSel
+	// Empresa que será usada para montar seleção
+	//---------------------------------------------
+
+	Local   aRet      := {}
+	Local   aSalvAmb  := GetArea()
+	Local   aVetor    := {}
+	Local   cMascEmp  := "??"
+	Local   cVar      := ""
+	Local   lChk      := .F.
+	Local   lTeveMarc := .F.
+	Local   oNo       := LoadBitmap( GetResources(), "LBNO" )
+	Local   oOk       := LoadBitmap( GetResources(), "LBOK" )
+	Local   oDlg, oChkMar, oLbx
+	Local   oButDMar, oButInv, oButMarc, oButOk, oButCanc
+	Local   _cAlias   := GetNextAlias()
+
+	Local CSSBOTAO := "QPushButton { color: #024670; "+;
+	"    border-image: url(rpo:fwstd_btn_nml.png) 3 3 3 3 stretch; "+;
+	"    border-top-width: 3px; "+;
+	"    border-left-width: 3px; "+;
+	"    border-right-width: 3px; "+;
+	"    border-bottom-width: 3px }"+;
+	"QPushButton:pressed {	color: #FFFFFF; "+;
+	"    border-image: url(rpo:fwstd_btn_prd.png) 3 3 3 3 stretch; "+;
+	"    border-top-width: 3px; "+;
+	"    border-left-width: 3px; "+;
+	"    border-right-width: 3px; "+;
+	"    border-bottom-width: 3px }"
+
+	Local   aMarcadas := {}
+
+	BeginSql Alias _cAlias
+
+		%NoParser%
+		SELECT VISAGER = CODPLA, 
+		QDGMTIMP = QDRGMTIMP, 
+		DESCRICAO
+		FROM VW_BI_D_QUADROGMTIMPOSTOS
+		WHERE CODPLA = %Exp:xCodPla%
+		ORDER BY CODPLA, 
+		QDRGMTIMP
+
+	EndSql
+
+	While !(_cAlias)->(Eof())
+
+		aAdd(  aVetor, { aScan( aMarcadas, {|x| x[1] == (_cAlias)->VISAGER .and. x[2] == (_cAlias)->QDGMTIMP} ) > 0, (_cAlias)->VISAGER, (_cAlias)->QDGMTIMP, (_cAlias)->DESCRICAO, 0, 0, 0 } )
+
+		(_cAlias)->(dbSkip())
+
+	End	
+
+	Define MSDialog  oDlg Title "" From 0, 0 To 290, 395 Pixel
+
+	oDlg:cToolTip := "Tela para Múltiplas Seleções de Impostos"
+
+	oDlg:cTitle   := "Selecione a(s) Imposto(s)"
+
+	@ 10, 10 Listbox  oLbx Var  cVar Fields Header " ", "VisaGer", "Imposto", "Descrição" Size 178, 095 Of oDlg Pixel
+	oLbx:SetArray(  aVetor )
+	oLbx:bLine := {|| {IIf( aVetor[oLbx:nAt, 1], oOk, oNo ),;
+	Substr(aVetor[oLbx:nAt, 2], 1, 03),;
+	Substr(aVetor[oLbx:nAt, 3], 1, 02),;
+	Substr(aVetor[oLbx:nAt, 4], 1, 40)}}
+	oLbx:BlDblClick := { || aVetor[oLbx:nAt, 1] := !aVetor[oLbx:nAt, 1], ::VerTodos( aVetor, @lChk, oChkMar ), oChkMar:Refresh(), oLbx:Refresh()}
+	oLbx:cToolTip   :=  oDlg:cTitle
+	oLbx:lHScroll   := .F. // NoScroll
+
+	@ 112, 10 CheckBox oChkMar Var  lChk Prompt "Todos" Message "Marca / Desmarca"+ CRLF + "Todos" Size 40, 007 Pixel Of oDlg;
+	on Click ::MarcaTodos( lChk, @aVetor, oLbx )
+
+	@ 128, 10 Button oButInv    Prompt "&Inverter"  Size 32, 12 Pixel Action ( ::InvSelecao( @aVetor, oLbx, @lChk, oChkMar ), ::VerTodos( aVetor, @lChk, oChkMar ) ) ;
+	Message "Inverter Seleção" Of oDlg
+	oButInv:SetCss( CSSBOTAO )
+
+	@ 128, 50 Button oButMarc   Prompt "&Marcar"    Size 32, 12 Pixel Action ( ::MarcaMas( oLbx, aVetor, cMascEmp, .T. ), ::VerTodos( aVetor, @lChk, oChkMar ) ) ;
+	Message "Marcar usando" + CRLF + "máscara ( ?? )"    Of oDlg
+	oButMarc:SetCss( CSSBOTAO )
+
+	@ 128, 90 Button oButDMar   Prompt "&Desmarcar" Size 32, 12 Pixel Action ( ::MarcaMas( oLbx, aVetor, cMascEmp, .F. ), ::VerTodos( aVetor, @lChk, oChkMar ) ) ;
+	Message "Desmarcar usando" + CRLF + "máscara ( ?? )" Of oDlg
+	oButDMar:SetCss( CSSBOTAO )
+
+	@ 112, 157  Button oButOk   Prompt "Ok"  Size 32, 12 Pixel Action (  ::RetSelecao( @aRet, aVetor ), IIf( Len( aRet ) > 0, oDlg:End(), MsgStop( "Ao menos um grupo deve ser selecionado", "TLoadEmpresa" ) ) ) ;
+	Message "Confirma a seleção?" Of oDlg
+	oButOk:SetCss( CSSBOTAO )
+
+	@ 128, 157  Button oButCanc Prompt "Cancelar"   Size 32, 12 Pixel Action ( IIf( lTeveMarc, aRet :=  aMarcadas, .T. ), oDlg:End() ) ;
+	Message "Cancela e abandona a aplicação" Of oDlg
+	oButCanc:SetCss( CSSBOTAO )
+
+	Activate MSDialog  oDlg Center
+
+	::aEmpSel := aRet
+
+	RestArea(aSalvAmb)
+
+	Return(aRet)
+
+Return()
+// Fim Marcos 20210708	
 
 Method MarcaTodos( lMarca, aVetor, oLbx ) Class TLoadEmpresa
 	Local  nI := 0

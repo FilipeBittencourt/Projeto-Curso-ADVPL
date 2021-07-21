@@ -46,7 +46,7 @@ Static Function ListEmp()
 
 	Local nI		:= 0 
 	Local aRet 		:= {}
-	Local aListaEmp	:= {'01', '05', '07'}
+	Local aListaEmp	:= {'01', '05', '07', '14'}
 	
 	For nI := 1 To Len(aListaEmp) 
 		If (aListaEmp[nI] <> cEmpAnt)
@@ -66,7 +66,7 @@ Static Function fExecute()
 	Local nFCount		:= 0
 	Local cFName		:= ""
 	
-	If cEmpAnt $ "01/05"
+	If cEmpAnt $ "01/05/14"
 		
 		BeginTran()		
 		
@@ -216,7 +216,7 @@ Static Function fExecute()
 		TcRefresh(cDA1)
 				
 	Else		
-		MsgStop("Operação permitida somente nas empreas Biancogres e Incesa", "Replicação de Tabela de Preços")	
+		MsgStop("Operação permitida somente nas empreas Biancogres, Incesa e Vinílico", "Replicação de Tabela de Preços")	
 	EndIf
 
 	RestArea(aArea)

@@ -197,6 +197,13 @@ Static Function Prc697EX(oProcess)
 			UP001 += Alltrim("      AS (SELECT DISTINCT                                                                                                                                                         ") + msEnter
 			UP001 += Alltrim("                 REGTBL = @TBL.R_E_C_N_O_,                                                                                                                                        ") + msEnter
 			UP001 += Alltrim("                 NEGOCIO = CASE                                                                                                                                                   ") + msEnter
+			UP001 += Alltrim("                               WHEN('" + cEmpAnt + "' = '01')                                                                                                                     ") + msEnter
+			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' = '90'                                                                                                                   ") + msEnter
+			UP001 += Alltrim("                                       AND @TBL.@TBL_FILIAL = '01')                                                                                                               ") + msEnter
+			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' = '05')                                                                                                                  ") + msEnter
+			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' = '90'                                                                                                                   ") + msEnter
+			UP001 += Alltrim("                                       AND @TBL.@TBL_FILIAL = '05')                                                                                                               ") + msEnter
+			UP001 += Alltrim("                               THEN '1'                                                                                                                                           ") + msEnter
 			UP001 += Alltrim("                               WHEN('" + cEmpAnt + "' = '16')                                                                                                                     ") + msEnter
 			UP001 += Alltrim("                                   OR ('" + cEmpAnt + "' = '90'                                                                                                                   ") + msEnter
 			UP001 += Alltrim("                                       AND @TBL.@TBL_FILIAL = '16')                                                                                                               ") + msEnter
@@ -266,7 +273,7 @@ Static Function Prc697EX(oProcess)
 			UP001 += Alltrim("                                       AND @TBL.@TBL_FILIAL = '06'                                                                                                                ") + msEnter
 			UP001 += Alltrim("                                       AND SUBSTRING(@TBL.@TBL_DEBITO, 1, 3) = '318')                                                                                             ") + msEnter
 			UP001 += Alltrim("                               THEN '3'                                                                                                                                           ") + msEnter
-			UP001 += Alltrim("                               ELSE '1'                                                                                                                                           ") + msEnter
+			UP001 += Alltrim("                               ELSE '0'                                                                                                                                           ") + msEnter
 			UP001 += Alltrim("                           END                                                                                                                                                    ") + msEnter
 			UP001 += Alltrim("          FROM " + RetSqlName(msTabela) + " @TBL(NOLOCK)                                                                                                                          ") + msEnter
 			UP001 += Alltrim("               INNER JOIN " + RetSqlName("CVE") + " CVE(NOLOCK) ON CVE.CVE_FILIAL = '" + xFilial("CVE") + "'                                                                      ") + msEnter

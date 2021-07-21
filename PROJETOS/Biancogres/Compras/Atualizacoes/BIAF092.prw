@@ -10,17 +10,19 @@
 /*/
 
 User Function BIAF092()
-Local aArea := GetArea() 
+Local aArea := Nil
 Local oObj := Nil
 	
 	RpcSetType(3)
 	RpcSetEnv("01", "01")
+
+		aArea := GetArea()
 	
-	oObj := TPedidoCompraEmail():New()
-	
-	oObj:Recebe()
+		oObj := TPedidoCompraEmail():New()
+		oObj:Recebe()
 		
-	RestArea(aArea)
+		RestArea(aArea)
 	
 	RpcClearEnv()
+	
 Return()

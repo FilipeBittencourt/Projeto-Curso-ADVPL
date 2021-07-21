@@ -118,10 +118,77 @@ Static Function fProcessa()
 
 	
 	fAtuMundi()
-
+	fAtuVinilico()
 
 Return
 
+Static Function fAtuVinilico()
+
+	Local _cSql	:=	""
+
+	
+	_cSql	+=	"INSERT INTO ZCN140 (							"
+	_cSql	+=	"	[ZCN_FILIAL]								"
+	_cSql	+=	"	,[ZCN_COD]									"
+	_cSql	+=	"	,[ZCN_SEQUEN]								"
+	_cSql	+=	"	,[ZCN_LOCAL]								"
+	_cSql	+=	"	,[ZCN_ESTSEG]								"
+	_cSql	+=	"	,[ZCN_PONPED]								"
+	_cSql	+=	"	,[ZCN_LE]									"
+	_cSql	+=	"	,[ZCN_LOCALI]								"
+	_cSql	+=	"	,[D_E_L_E_T_]								"
+	_cSql	+=	"	,[R_E_C_N_O_]								"
+	_cSql	+=	"	,[R_E_C_D_E_L_]								"
+	_cSql	+=	"	,[ZCN_PORTAR]								"
+	_cSql	+=	"	,[ZCN_POLIT]								"
+	_cSql	+=	"	,[ZCN_MD]									"
+	_cSql	+=	"	,[ZCN_COMUM]								"
+	_cSql	+=	"	,[ZCN_OBSOLE]								"
+	_cSql	+=	"	,[ZCN_SOLIC]								"
+	_cSql	+=	"	)											"	
+	_cSql	+=	"SELECT '01'									"
+	_cSql	+=	"	,[ZCN_COD]                                  "
+	_cSql	+=	"	,[ZCN_SEQUEN]                               "
+	_cSql	+=	"	,[ZCN_LOCAL]                                "
+	_cSql	+=	"	,[ZCN_ESTSEG]                               "
+	_cSql	+=	"	,[ZCN_PONPED]                               "
+	_cSql	+=	"	,[ZCN_LE]                                   "
+	_cSql	+=	"	,[ZCN_LOCALI]                               "
+	_cSql	+=	"	,ZCN.[D_E_L_E_T_]                           "
+	_cSql	+=	"	,ROW_NUMBER() OVER (                        "
+	_cSql	+=	"		ORDER BY ZCN_FILIAL                     "
+	_cSql	+=	"			,ZCN_COD                            "
+	_cSql	+=	"		) + (                                   "
+	_cSql	+=	"		SELECT ISNULL(MAX(R_E_C_N_O_), 0)       "
+	_cSql	+=	"		FROM ZCN140                             "
+	_cSql	+=	"		)                                       "
+	_cSql	+=	"	,ZCN.[R_E_C_D_E_L_]                         "
+	_cSql	+=	"	,[ZCN_PORTAR]                               "
+	_cSql	+=	"	,[ZCN_POLIT]                                "
+	_cSql	+=	"	,[ZCN_MD]                                   "
+	_cSql	+=	"	,[ZCN_COMUM]                                "
+	_cSql	+=	"	,[ZCN_OBSOLE]                               "
+	_cSql	+=	"	,[ZCN_SOLIC]                                "
+	_cSql	+=	"FROM "+ RETSQLNAME("SB1") + " SB1                                "
+	_cSql	+=	"JOIN "+ RETSQLNAME("ZCN") + " ZCN ON ZCN.ZCN_FILIAL = "+ValtoSql(xFilial('ZCN'))+"       "
+	_cSql	+=	"	AND SB1.B1_COD = ZCN.ZCN_COD                "
+	_cSql	+=	"	AND ZCN_SEQUEN = '1'                        "
+	_cSql	+=	"	AND ZCN.D_E_L_E_T_ = ''                     "
+	_cSql	+=	"WHERE B1_YFORMAT IN ('VG', 'VH', 'VI')         "
+	_cSql	+=	"	AND SB1.D_E_L_E_T_ = ''                     "
+	_cSql	+=	"	AND NOT EXISTS (                            "
+	_cSql	+=	"		SELECT 1                                "
+	_cSql	+=	"		FROM ZCN140 ZCN14                       "
+	_cSql	+=	"		WHERE ZCN14.ZCN_FILIAL = ZCN.ZCN_FILIAL "
+	_cSql	+=	"			AND ZCN14.ZCN_COD = ZCN.ZCN_COD     "
+	_cSql	+=	"			AND ZCN14.ZCN_SEQUEN = '1'          "
+	_cSql	+=	"			AND ZCN14.D_E_L_E_T_ = ''           "
+	_cSql	+=	"		)                                       "
+	
+	
+	TcSqlExec(_cSql)
+
+Return
 
 Static Function fAtuMundi()
 

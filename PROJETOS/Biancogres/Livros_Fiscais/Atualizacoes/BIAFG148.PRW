@@ -30,7 +30,7 @@ Static Function Menudef()
 	aAdd(aRotina, {"Incluir"         , "AxInclui"  , 0, 3})
 	aAdd(aRotina, {"Alterar"         , "AxAltera"  , 0, 4})
 	aAdd(aRotina, {"Excluir"         , "AxDeleta"  , 0, 5})
-	aAdd(aRotina, {"Importar"  , "U_BFG148A" , 0, 7})
+	aAdd(aRotina, {"Importar"  , "U_BFG148A" , 0, 3})
 
 
 Return aRotina

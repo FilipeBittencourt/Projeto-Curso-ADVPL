@@ -20,6 +20,7 @@ User Function BIA679()
 	Local lRet  := .T.
 	Local oProcess
 	Local oPrcZera
+	Local xpq
 
 	Private cTitulo := "Processamento Gestão Matricial de Tributos"
 
@@ -38,6 +39,9 @@ User Function BIA679()
 	Private msCanPrc  := .F.
 	Private xVerRet   := .T.
 	Private msErroQuery
+	Private msVetImp  := ""
+	Private msImpArry := {}
+	Private msArryEmp := {}
 
 	Private xoButton1
 	Private xoMultiGe1
@@ -49,44 +53,83 @@ User Function BIA679()
 
 	If ValidPerg()
 
-		dDataIni := MV_PAR01
-		dDataFin := MV_PAR02
-		xVersao  := MV_PAR03
-		xRevisa  := MV_PAR04
-		xAnoRef  := MV_PAR05
-		xCodPla  := MV_PAR06
+		dDataIni := stod(MV_PAR01 + '01')
+		dDataFin := UltimoDia(stod(MV_PAR01 + '01'))
+		xVersao  := MV_PAR02
+		xRevisa  := MV_PAR03
+		xAnoRef  := MV_PAR04
+		xCodPla  := MV_PAR05
 
-		oEmp:GSEmpFil()
+		//Chamada de tela para seleção do Imposto
+		oEmp:GmtQuadroImp()
+		msImpArry := oEmp:aEmpSel
 
-		If Len(oEmp:aEmpSel) > 0
+		If Len(msImpArry) > 0
 
-			hhTmpINI  := TIME()
+			For xpq := 1 to Len(msImpArry)
+				msVetImp += "'" + msImpArry[xpq][2] + "'"
+				If xpq + 1 <= Len(msImpArry)
+					msVetImp += ","
+				EndIf
+			Next xpq
 
-			RpcSetType(3)
-			RpcSetEnv( cEmpAnt, cFilAnt )
-			RpcClearEnv()
+			//Chamada de tela para seleção da Empresa/Filial
+			oEmp:GSEmpFil()		
+			msArryEmp := oEmp:aEmpSel
 
-			//Begin Transaction
+			If Len(msArryEmp) > 0
 
-			For nW := 1 To Len(oEmp:aEmpSel)
+				hhTmpINI  := TIME()
 
 				RpcSetType(3)
-				RpcSetEnv( oEmp:aEmpSel[nW][1], Substr(oEmp:aEmpSel[nW][2], 1, 2) )
+				RpcSetEnv( cEmpAnt, cFilAnt )
+				RpcClearEnv()
 
-				smMsnPrc := oEmp:aEmpSel[nW][1] + "/" + Substr(oEmp:aEmpSel[nW][2], 1, 2) + " - " + Alltrim(oEmp:aEmpSel[nW][4])
-				oPrcZera := MsNewProcess():New({|lEnd| ExistThenD(@oPrcZera) }, "Deletando...", smMsnPrc, .T.)
-				oPrcZera:Activate()
+				//Begin Transaction
 
-				lRet := xVerRet
+				For nW := 1 To Len(msArryEmp)
 
-				If xVerRet
+					RpcSetType(3)
+					RpcSetEnv( msArryEmp[nW][1], Substr(msArryEmp[nW][2], 1, 2) )
 
-					oProcess := MsNewProcess():New({|lEnd| Prc679EX(@oProcess) }, "Gravando...", smMsnPrc, .T.)
-					oProcess:Activate()
+					smMsnPrc := msArryEmp[nW][1] + "/" + Substr(msArryEmp[nW][2], 1, 2) + " - " + Alltrim(msArryEmp[nW][4])
+
+					oPrcVerf := MsNewProcess():New({|lEnd| VerifFechP(@oPrcVerf) }, "Verficando Fechamento...", smMsnPrc, .T.)
+					oPrcVerf:Activate()
 
 					lRet := xVerRet
 
-					If !xVerRet
+					If xVerRet
+
+						oPrcZera := MsNewProcess():New({|lEnd| ExistThenD(@oPrcZera) }, "Deletando...", smMsnPrc, .T.)
+						oPrcZera:Activate()
+
+						lRet := xVerRet
+
+						If xVerRet
+
+							oProcess := MsNewProcess():New({|lEnd| Prc679EX(@oProcess) }, "Gravando...", smMsnPrc, .T.)
+							oProcess:Activate()
+
+							lRet := xVerRet
+
+							If !xVerRet
+
+								//DisarmTransaction()
+								msCanPrc  := .F.
+								Exit
+
+							EndIf
+
+						Else
+
+							//DisarmTransaction()
+							msCanPrc  := .F.
+							Exit
+
+						EndIf
+
+					Else
 
 						//DisarmTransaction()
 						msCanPrc  := .F.
@@ -94,19 +137,17 @@ User Function BIA679()
 
 					EndIf
 
-				Else
+					RpcClearEnv()
 
-					//DisarmTransaction()
-					msCanPrc  := .F.
-					Exit
+				Next nW
 
-				EndIf
+				//End Transaction
 
-				RpcClearEnv()
+			Else
 
-			Next nW
+				msCanPrc  := .T.
 
-			//End Transaction
+			EndIf
 
 		Else
 
@@ -161,19 +202,17 @@ Static Function ValidPerg()
 	local lRet		:= .F.
 	Local aPergs	:=	{}
 
-	MV_PAR01 :=	ctod("  /  /  ")
-	MV_PAR02 := ctod("  /  /  ")
-	MV_PAR03 := Space(10)
-	MV_PAR04 :=	Space(03)
-	MV_PAR05 :=	Space(04)
-	MV_PAR06 :=	Space(03)
+	MV_PAR01 :=	Space(06)
+	MV_PAR02 := Space(10)
+	MV_PAR03 :=	Space(03)
+	MV_PAR04 :=	Space(04)
+	MV_PAR05 :=	Space(03)
 
-	aAdd( aPergs ,{1, "Data Inicial"     ,MV_PAR01 ,""  ,"NAOVAZIO()"     ,''     ,'.T.',50,.F.})
-	aAdd( aPergs ,{1, "Data Final"       ,MV_PAR02 ,""  ,"NAOVAZIO()"     ,''     ,'.T.',50,.F.})
-	aAdd( aPergs ,{1, "Versão Orca"      ,MV_PAR03 ,""  ,"EXISTCPO('ZB5')",'ZB5'  ,'.T.',50,.F.})
-	aAdd( aPergs ,{1, "Revisão Orca"     ,MV_PAR04 ,""  ,"NAOVAZIO()"     ,''     ,'.T.',50,.F.})
-	aAdd( aPergs ,{1, "AnoRef Orca"      ,MV_PAR05 ,""  ,"NAOVAZIO()"     ,''     ,'.T.',50,.F.})
-	aAdd( aPergs ,{1, "Visão Gerencial"  ,MV_PAR06 ,""  ,"EXISTCPO('CVE')",'CVE'  ,'.T.',50,.F.})
+	aAdd( aPergs ,{1, "Ano/Mês"          ,MV_PAR01 ,"@R 9999/99"  ,"NAOVAZIO()"     ,''     ,'.T.',50,.F.})
+	aAdd( aPergs ,{1, "Versão Orca"      ,MV_PAR02 ,""            ,"EXISTCPO('ZB5')",'ZB5'  ,'.T.',50,.F.})
+	aAdd( aPergs ,{1, "Revisão Orca"     ,MV_PAR03 ,""            ,"NAOVAZIO()"     ,''     ,'.T.',50,.F.})
+	aAdd( aPergs ,{1, "AnoRef Orca"      ,MV_PAR04 ,""            ,"NAOVAZIO()"     ,''     ,'.T.',50,.F.})
+	aAdd( aPergs ,{1, "Visão Gerencial"  ,MV_PAR05 ,""            ,"EXISTCPO('CVE')",'CVE'  ,'.T.',50,.F.})
 
 	If ParamBox(aPergs ,"Processa GMT",,,,,,,,cLoad,.T.,.T.)
 
@@ -188,6 +227,56 @@ Static Function ValidPerg()
 
 Return lRet
 
+Static Function VerifFechP(oPrcVerf)
+
+	Local cSQL    := ""
+	Local cQry    := ""
+	Local lRet    := .T.
+	Local xxDtRef := Substr(dtos(dDataFin),1,6) + "01"
+
+	If fExistTabl(RetSqlName("ZNA"))
+
+		msErroQuery := "Empresa: " + cEmpAnt + msEnter + msEnter
+		msErroQuery += "Filial: " + cFilAnt + msEnter + msEnter
+		msErroQuery += "Verificar fechamento: " + msEnter + msEnter
+
+		cQry := GetNextAlias()
+
+		cSql := " SELECT ZNA.ZNA_CODIMP, "
+		cSql += "        ZNA.ZNA_DESIMP, "
+		cSql += "        ZNA.ZNA_ULTGMT "
+		cSql += " FROM " + RetSqlName("ZNA") + " ZNA(NOLOCK) "
+		cSql += " WHERE ZNA.ZNA_FILIAL = '" + xFilial("ZNA") + "' "
+		cSql += "       AND ZNA.ZNA_CODPLA = '" + xCodPla + "' "
+		cSql += "       AND ZNA.ZNA_CODIMP IN(" + msVetImp + ") "
+		cSql += "       AND ZNA.ZNA_ULTGMT > '" + xxDtRef + "' "
+		cSql += "       AND ZNA.D_E_L_E_T_ = ' ' "
+		TcQuery cSQL New Alias (cQry)
+
+		oPrcVerf:SetRegua1(1)
+		oPrcVerf:SetRegua2(1000)
+
+		oPrcVerf:IncRegua1(smMsnPrc)
+		While !(cQry)->(Eof())
+
+			oPrcVerf:IncRegua2("Verificando Fechamento de período...")
+
+			msErroQuery += "Imposto: " + (cQry)->ZNA_CODIMP + " - " + (cQry)->ZNA_DESIMP + " UltGMT: " + dtoc(stod((cQry)->ZNA_ULTGMT)) + msEnter
+
+			lRet := .F.
+
+			(cQry)->(DbSkip())
+
+		End
+
+		(cQry)->(DbCloseArea())
+
+	EndIf
+
+	xVerRet := lRet 
+
+Return ( lRet )
+
 Static Function ExistThenD(oPrcZera)
 
 	Local cSQL  := ""
@@ -199,13 +288,18 @@ Static Function ExistThenD(oPrcZera)
 
 		cQry := GetNextAlias()
 
-		cSql := " SELECT R_E_C_N_O_ RECNO "
+		cSql := " SELECT ZN6.R_E_C_N_O_ RECNO "
 		cSql += " FROM " + RetSqlName("ZN6") + " ZN6 (NOLOCK) "
+		cSql += "      INNER JOIN " + RetSqlName("CVF") + " CVF(NOLOCK) ON CVF_FILIAL = '" + xFilial("CVF") + "' "
+		cSql += "                                       AND CVF_CODIGO = ZN6_CODPLA "
+		cSql += "                                       AND CVF_CONTAG = ZN6_RUBVIS "
+		cSql += "                                       AND (SUBSTRING(CVF_YRFDRE, 4, 2) IN(" + msVetImp + ") "
+		cSql += "                                            OR CVF_CTASUP = '') "
+		cSql += "                                       AND CVF.D_E_L_E_T_ = ' ' "
 		cSql += " WHERE ZN6_FILIAL = '" + xFilial("ZN6") + "' "
 		cSql += "       AND ZN6_TIPO1 <> 'M' "
 		cSql += "       AND ZN6_DATREF = '" + dtos(dDataFin) + "' "
 		cSql += "       AND ZN6.D_E_L_E_T_    = ' ' "
-
 		TcQuery cSQL New Alias (cQry)
 
 		oPrcZera:SetRegua1(1)
@@ -270,7 +364,7 @@ Static Function Prc679EX(oProcess)
 	Local msCampoQ
 	Local lRet	   := .T.
 
-	Local xSubTrib := SuperGetMv( "MV_SUBTRIB", , "", ) 
+	Local xSubTrib := GetMv( "MV_SUBTRIB", , "" )
 
 	oProcess:SetRegua1(1)
 	oProcess:SetRegua2(1000)             
@@ -334,6 +428,7 @@ Static Function Prc679EX(oProcess)
 		GT007 += Alltrim("          FROM " + RetSqlName("CVE") + " CVE(NOLOCK)                                                                ") + msEnter
 		GT007 += Alltrim("               INNER JOIN " + RetSqlName("CVF") + " CVF(NOLOCK) ON CVF_FILIAL = '" + xFilial("CVF") + "'            ") + msEnter
 		GT007 += Alltrim("                                                AND CVF_CODIGO = CVE_CODIGO                                         ") + msEnter
+		GT007 += Alltrim("                                                AND SUBSTRING(CVF_YRFDRE, 4, 2) IN(" + msVetImp + ")                ") + msEnter
 		GT007 += Alltrim("                                                AND CVF.D_E_L_E_T_ = ' '                                            ") + msEnter
 		GT007 += Alltrim("          WHERE CVE_FILIAL = '" + xFilial("CVE") + "'                                                               ") + msEnter
 		GT007 += Alltrim("                AND CVE.CVE_CODIGO = '" + xCodPla + "'                                                              ") + msEnter

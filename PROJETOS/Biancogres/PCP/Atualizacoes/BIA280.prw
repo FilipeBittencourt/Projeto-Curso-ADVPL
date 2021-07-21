@@ -114,7 +114,7 @@ Static Function fLisProd()
 		A0001 += "        C2_DATPRF DATPRF,
 		A0001 += "        C2_QUANT QUANT,
 		A0001 += "        ISNULL((SELECT SUM(D3_QUANT)
-		A0001 += "                  FROM " + RetSqlName("SD3")
+		A0001 += "                  FROM " + RetSqlName("SD3")  + " (NOLOCK)
 		A0001 += "                 WHERE D3_FILIAL = '"+xFilial("SD3")+"'
 		A0001 += "                   AND D3_OP = C2_NUM+C2_ITEM+C2_SEQUEN+'  '
 		A0001 += "                   AND D3_COD = C2_PRODUTO
@@ -129,7 +129,7 @@ Static Function fLisProd()
 		A0001 += "       			AND D_E_L_E_T_ = ' '), 0) PRODUCAO,
 		A0001 += "        0 DIFER,
 		A0001 += "        ISNULL((SELECT MIN(D3_EMISSAO)
-		A0001 += "                  FROM " + RetSqlName("SD3")
+		A0001 += "                  FROM " + RetSqlName("SD3")  + " (NOLOCK)
 		A0001 += "                 WHERE D3_FILIAL = '"+xFilial("SD3")+"'
 		A0001 += "                   AND D3_OP = C2_NUM+C2_ITEM+C2_SEQUEN+'  '
 		A0001 += "                   AND D3_COD = C2_PRODUTO
@@ -137,7 +137,7 @@ Static Function fLisProd()
 		A0001 += "                   AND D3_ESTORNO = ' '
 		A0001 += "                   AND D_E_L_E_T_ = ' '), ' ') PRI_PRO,
 		A0001 += "        ISNULL((SELECT MAX(D3_EMISSAO)
-		A0001 += "                  FROM " + RetSqlName("SD3")
+		A0001 += "                  FROM " + RetSqlName("SD3")  + " (NOLOCK)
 		A0001 += "                 WHERE D3_FILIAL = '"+xFilial("SD3")+"'
 		A0001 += "                   AND D3_OP = C2_NUM+C2_ITEM+C2_SEQUEN+'  '
 		A0001 += "                   AND D3_COD = C2_PRODUTO
@@ -145,7 +145,7 @@ Static Function fLisProd()
 		A0001 += "                   AND D3_ESTORNO = ' '
 		A0001 += "                   AND D_E_L_E_T_ = ' '), ' ') ULT_PRO,
 		A0001 += "        ISNULL((SELECT MIN(D3_YDIMPOR)
-		A0001 += "                  FROM " + RetSqlName("SD3")
+		A0001 += "                  FROM " + RetSqlName("SD3") + " (NOLOCK)
 		A0001 += "                 WHERE D3_FILIAL = '"+xFilial("SD3")+"'
 		A0001 += "                   AND D3_OP = C2_NUM+C2_ITEM+C2_SEQUEN+'  '
 		A0001 += "                   AND D3_COD = C2_PRODUTO
@@ -153,7 +153,7 @@ Static Function fLisProd()
 		A0001 += "                   AND D3_ESTORNO = ' '
 		A0001 += "                   AND D_E_L_E_T_ = ' '), ' ') PRI_IPR,
 		A0001 += "        ISNULL((SELECT MAX(D3_YDIMPOR)
-		A0001 += "                  FROM " + RetSqlName("SD3")
+		A0001 += "                  FROM " + RetSqlName("SD3") + " (NOLOCK)
 		A0001 += "                 WHERE D3_FILIAL = '"+xFilial("SD3")+"'
 		A0001 += "                   AND D3_OP = C2_NUM+C2_ITEM+C2_SEQUEN+'  '
 		A0001 += "                   AND D3_COD = C2_PRODUTO
@@ -162,8 +162,8 @@ Static Function fLisProd()
 		A0001 += "                   AND D_E_L_E_T_ = ' '), ' ') ULT_IPR,
 		A0001 += "        C2_DATRF,
 		A0001 += "        C2_YOBSFIR
-		A0001 += "   FROM "+RetSqlName("SC2")+" SC2
-		A0001 += "  INNER JOIN "+RetSqlName("SB1")+" SB1 ON B1_FILIAL = '"+xFilial("SB1")+"'
+		A0001 += "   FROM "+RetSqlName("SC2")+" SC2 (NOLOCK)
+		A0001 += "  INNER JOIN "+RetSqlName("SB1")+" SB1  (NOLOCK) ON B1_FILIAL = '"+xFilial("SB1")+"'
 		A0001 += "                       AND B1_COD = C2_PRODUTO
 		A0001 += "                       AND B1_TIPO = 'PA'
 		A0001 += "                       AND SB1.D_E_L_E_T_ = ' '
@@ -243,10 +243,8 @@ Return
 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
 Static Function fNGDd1Ap()
 
-	Local nX
 	Local aHeaderEx    := {}
 	Local aColsEx      := {}
-	Local aFieldFill   := {}
 	Local aFields      := {"LINHA", "DTFIRME", "NUMOP", "ITOP", "SEQOP", "PROD", "DESCRIC", "PrevIni", "PrevFin", "QtdPrev", "Produzd", "Diferen", "IniProd", "FinProd", "ImportIn", "ImportFi", "Encerra", "ObsEnc"}
 	Local aAlterFields := {"ObsEnc"}
 
@@ -497,14 +495,14 @@ Static Function fMSNGFirme()
 	YR007 += "        B1_UM,
 	YR007 += "        D4_TRT,
 	YR007 += "        D4_QTDEORI
-	YR007 += "   FROM "+RetSqlName("SD4")+" SD4
-	YR007 += "  INNER JOIN "+RetSqlName("SB1")+" SB1 ON B1_FILIAL = '"+xFilial("SB1")+"'
+	YR007 += "   FROM "+RetSqlName("SD4")+" SD4  (NOLOCK)
+	YR007 += "  INNER JOIN "+RetSqlName("SB1")+" SB1  (NOLOCK) ON B1_FILIAL = '"+xFilial("SB1")+"'
 	YR007 += "                       AND B1_COD = D4_COD
 	YR007 += "                       AND SB1.D_E_L_E_T_ = ' '
 	YR007 += "  WHERE D4_FILIAL = '"+xFilial("SD4")+"'
 	YR007 += "    AND D4_OP IN(SELECT C2_NUM+C2_ITEM+C2_SEQUEN
-	YR007 += "                   FROM "+RetSqlName("SC2")+" SC2
-	YR007 += "                  INNER JOIN "+RetSqlName("SB1")+" SB1 ON B1_FILIAL = '"+xFilial("SB1")+"'
+	YR007 += "                   FROM "+RetSqlName("SC2")+" SC2  (NOLOCK)
+	YR007 += "                  INNER JOIN "+RetSqlName("SB1")+" SB1  (NOLOCK) ON B1_FILIAL = '"+xFilial("SB1")+"'
 	YR007 += "                                       AND B1_COD = C2_PRODUTO
 	YR007 += "                                       AND B1_TIPO IN('PA','PP','PS')
 	YR007 += "                                       AND SB1.D_E_L_E_T_ = ' '
@@ -589,7 +587,6 @@ Return
 Static Function grvOpFirm()
 
 	Local ih
-	Local _cMSg	:=	""
 	Private lMsErroAuto := .F.
 
 	If MsgNOYES("Os itens de empenho estão corretos? Pode prosseguir com a confirmação da OP?")
@@ -597,7 +594,7 @@ Static Function grvOpFirm()
 		nContaOpFr := 0
 		xrFirOpMae := 0
 		WR005 := " SELECT COUNT(*) CONTAD
-		WR005 += "   FROM " + RetSqlName("SC2")
+		WR005 += "   FROM " + RetSqlName("SC2") + " (NOLOCK)
 		WR005 += "  WHERE C2_FILIAL = '"+xFilial("SC2")+"'
 		WR005 += "    AND C2_PRODUTO = '"+sCodPro+"'
 		WR005 += "    AND C2_DATRF = '        '
@@ -751,7 +748,7 @@ Static Function gxEncOp()
 
 		// Tratamento implementado em 05/01/15 para atendimento do projeto - Pedido de Vendas amarrado a OP
 		VR007 := " SELECT SUM(PZ0_QUANT) QUANT
-		VR007 += "   FROM " + RetSqlName("PZ0")
+		VR007 += "   FROM " + RetSqlName("PZ0") + " (NOLOCK)
 		VR007 += "  WHERE PZ0_FILIAL = '"+xFilial("PZ0")+"'
 		VR007 += "    AND PZ0_OPNUM = '"+wt_NumOp+"'
 		VR007 += "    AND D_E_L_E_T_ = ' '
@@ -857,7 +854,7 @@ Static Function fMsgFirme()
 	Local _cMsg	:=	""
 
 	WR005 := " SELECT *
-	WR005 += "   FROM " + RetSqlName("SC2")
+	WR005 += "   FROM " + RetSqlName("SC2") + " (NOLOCK)
 	WR005 += "  WHERE C2_FILIAL = '"+xFilial("SC2")+"'
 	WR005 += "    AND C2_PRODUTO = '"+sCodPro+"'
 	WR005 += "    AND C2_DATRF = '        '

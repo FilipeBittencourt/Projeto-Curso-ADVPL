@@ -21,6 +21,7 @@ User Function BIAFG129()
 
 	Private nTotLin		:= 0
 	Private msTpProces  := ""
+	Private aArrayMatr  := {}
 
 	DbSelectArea('ZLC')
 
@@ -177,47 +178,70 @@ Static Function fGeraGd(_oDlg, aPosObj, pOpc)
 	Default aPosObj := Nil
 	Default pOpc	:= "V"
 
+	aArrayMatr := {}
+	Z0001 := " SELECT RIGHT('00' + Cast(numemp AS VARCHAR(2)), 2) + RIGHT('000000' + Cast(numcad AS VARCHAR(6)), 6) MAT "
+	Z0001 += " ,nomfun NOME "
+	Z0001 += " FROM VETORH..r034fun a "
+	Z0001 += " WHERE tipcol = 1 "
+	Z0001 += "      AND (sitafa <> 7 "
+	Z0001 += "           OR "
+	Z0001 += " ( "
+	Z0001 += "    SELECT COUNT(*) "
+	Z0001 += "    FROM " + RetSqlName("ZLB") + " "
+	Z0001 += "    WHERE CONVERT(NUMERIC, SUBSTRING(ZLB_MATRES, 3, 6)) = a.numcad "
+	Z0001 += "          AND CONVERT(VARCHAR, GETDATE(), 112) BETWEEN ZLB_DTINI AND ZLB_DTFIM "
+	Z0001 += "          AND D_E_L_E_T_ = ' ' "
+	Z0001 += " ) > 0) "
+	Z0001 += " ORDER BY numemp,numcad "
+	Z0cIndex := CriaTrab(Nil,.f.)
+	dbUseArea(.T.,"TOPCONN",TcGenQry(,,Z0001),'Z001',.F.,.T.)
+	dbSelectArea("Z001")
+	dbGoTop()
+	ProcRegua(RecCount())
+	While !Eof()
+		Aadd(aArrayMatr, {Z001->MAT, Z001->NOME, .F. })
+		dbSelectArea("Z001")
+		dbSkip()
+	End
+	Z001->(dbCloseArea())
+	Ferase(Z0cIndex+GetDBExtension())     //arquivo de trabalho
+	Ferase(Z0cIndex+OrdBagExt())          //indice gerado
+
+	Aadd(aArrayMatr, {'01999998', "MAX ZANCANARO"   , .F. })
+	Aadd(aArrayMatr, {'01999999', "LUCAS ZENI"      , .F. })
+
 	BeginSql Alias _cAlias
 
 		%NoParser%
-		SELECT 
-		CASE 
-		WHEN ZLD.ZLD_TIPO = '1'
-		THEN 'AUTOMATICO'
-		ELSE 'MANUAL'
-	END TIPO
-	,ZLA.ZLA_CODIGO
-	,ZLA.ZLA_DESPOS
-	,ZLD.ZLD_MAT
-	,ISNULL(MAT.nomfun, '') AS NOMFUN
-	,ISNULL(ZLE.ZLE_DESCRI, '') SITUAC
-	,ZLD_OBS
-	,ZLD_MATOBS
-	,ISNULL(MATSUB.nomfun, '') AS NOMOBS
-	,ZLD_DATOBS
-	,ZLD_MOTOBS
-	FROM %TABLE:ZLD% ZLD
-	JOIN %TABLE:ZLA% ZLA ON 
-	ZLA.ZLA_FILIAL = ZLD.ZLD_FILIAL
-	AND ZLA.ZLA_CODIGO = ZLD.ZLD_CODPOS
-	AND ZLA.%NotDel%
-	AND ZLD.%NotDel%
-	LEFT JOIN %TABLE:ZLE% ZLE ON 
-	ZLE.ZLE_CODIGO = ZLD.ZLD_SITUAC
-	AND ZLE.%NotDel%
-	LEFT JOIN VETORH_DEV..r034fun MAT ON 	// VETORH..r034fun
-	CAST(SUBSTRING(ZLD.ZLD_MAT, 1, 2) AS INT) = MAT.numemp
-	AND CAST(RIGHT(ZLD.ZLD_MAT, 6) AS INT) = MAT.numcad
-	AND MAT.tipcol = 1
-	AND MAT.sitafa <> 7
-	LEFT JOIN VETORH_DEV..r034fun MATSUB ON 
-	CAST(SUBSTRING(ZLD.ZLD_MATOBS, 1, 2) AS INT) = MATSUB.numemp
-	AND CAST(RIGHT(ZLD.ZLD_MATOBS, 6) AS INT) = MATSUB.numcad
-	AND MATSUB.tipcol = 1
-	AND MATSUB.sitafa <> 7
-	WHERE 
-	ZLD.ZLD_FILIAL = %Exp:ZLC->ZLC_FILIAL%
-	AND ZLD.ZLD_CODIGO = %Exp:ZLC->ZLC_CODIGO%
+
+		SELECT TIPO = CASE WHEN ZLD.ZLD_TIPO = '1' THEN 'AUTOMATICO' ELSE 'MANUAL' END, 
+		ZLA.ZLA_CODIGO, 
+		ZLA.ZLA_DESPOS, 
+		ZLD.ZLD_MAT, 
+		ISNULL(MAT.nomfun, '') AS NOMFUN, 
+		ISNULL(ZLE.ZLE_DESCRI, '') SITUAC, 
+		ZLD_OBS, 
+		ZLD_MATOBS, 
+		ISNULL(MATSUB.nomfun, '') AS NOMOBS, 
+		ZLD_DATOBS, 
+		ZLD_MOTOBS
+		FROM %TABLE:ZLD% ZLD(NOLOCK)
+		JOIN %TABLE:ZLA% ZLA(NOLOCK) ON ZLA.ZLA_FILIAL = ZLD.ZLD_FILIAL
+		AND ZLA.ZLA_CODIGO = ZLD.ZLD_CODPOS
+		AND ZLA.%NotDel%
+		LEFT JOIN %TABLE:ZLE% ZLE(NOLOCK) ON ZLE.ZLE_CODIGO = ZLD.ZLD_SITUAC
+		AND ZLE.%NotDel%
+		LEFT JOIN VETORH..r034fun MAT(NOLOCK) ON CAST(SUBSTRING(ZLD.ZLD_MAT, 1, 2) AS INT) = MAT.numemp
+		AND CAST(RIGHT(ZLD.ZLD_MAT, 6) AS INT) = MAT.numcad
+		AND MAT.tipcol = 1
+		AND MAT.sitafa <> 7
+		LEFT JOIN VETORH..r034fun MATSUB(NOLOCK) ON CAST(SUBSTRING(ZLD.ZLD_MATOBS, 1, 2) AS INT) = MATSUB.numemp
+		AND CAST(RIGHT(ZLD.ZLD_MATOBS, 6) AS INT) = MATSUB.numcad
+		AND MATSUB.tipcol = 1
+		AND MATSUB.sitafa <> 7
+		WHERE ZLD.ZLD_FILIAL = %Exp:ZLC->ZLC_FILIAL%
+		AND ZLD.ZLD_CODIGO = %Exp:ZLC->ZLC_CODIGO%
+		AND ZLD.%NotDel%
 
 	EndSql
 
@@ -238,17 +262,17 @@ Static Function fGeraGd(_oDlg, aPosObj, pOpc)
 
 	While (_cAlias)->(!EOF())
 
-		(_cAlias)->(aAdd(_aCols,{TIPO			 ,;
-		ZLA_CODIGO		 ,;
-		ZLA_DESPOS		 ,;
-		ZLD_MAT		 ,;
-		NOMFUN			 ,;
-		SITUAC			 ,;
-		ZLD_OBS		 ,;
-		ZLD_MATOBS		 ,;
-		NOMOBS			 ,;
+		(_cAlias)->(aAdd(_aCols,{TIPO,;
+		ZLA_CODIGO,;
+		ZLA_DESPOS,;
+		ZLD_MAT,;
+		NOMFUN,;
+		SITUAC,;
+		ZLD_OBS,;
+		ZLD_MATOBS,;
+		NOMOBS,;
 		Stod(ZLD_DATOBS),;
-		ZLD_MOTOBS		 ,;
+		ZLD_MOTOBS,;
 		.F.}))
 		(_cAlias)->(DbSkip())
 
@@ -266,13 +290,48 @@ Static Function fGeraGd(_oDlg, aPosObj, pOpc)
 			nGetOpc  	:= GD_UPDATE	//GD_INSERT + GD_UPDATE //+ GD_DELETE
 			aAltCpos 	:= {"MATRIC", "OBS", "MATOBS", "MOTOBS"}	// Campos editáveis.
 			// Montar a GET.
-			_oGetDados	:=	MsNewGetDados():New( aPosObj[1][1] + 10, aPosObj[1][2] + 5, aPosObj[1][3] - 5, aPosObj[1][4] - 5, nGetOpc, "AllwaysTrue", "AllwaysTrue", "", aAltCpos,/*cFieldOk*/, 999,/*cDelOk*/, "AllWaysTrue",, _oDlg, _aHeader, _aCols)
+			//_oGetDados	:= MsNewGetDados():New( aPosObj[1][1] + 10, aPosObj[1][2] + 5, aPosObj[1][3] - 5, aPosObj[1][4] - 5, nGetOpc, "AllwaysTrue", "AllwaysTrue", "", aAltCpos,/*cFieldOk*/, 999,/*cDelOk*/, "AllWaysTrue",, _oDlg, _aHeader, _aCols)
+			_oGetDados	:= MsNewGetDados():New( aPosObj[1][1] + 10, aPosObj[1][2] + 5, aPosObj[1][3] - 5, aPosObj[1][4] - 5, nGetOpc  , "AllwaysTrue", "AllwaysTrue", ""         , aAltCpos ,/*nFreeze*/, 9999   , "U_BFG129FK"/* cFieldOk*/,  /*cSuperDel*/,/*cDelOk*/, _oDlg        , _aHeader      , _aCols)
 		EndIf
 		nTotLin	:= Len(_oGetDados:aCols)
 
 	EndIf
 
 Return
+
+User Function BFG129FK()
+
+	Local cMenVar    := ReadVar()
+	Local _nAt       := n
+	Local msRetOk    := .T.
+
+	// PEGAR A IDEIA DO PROGRAMA TAL PARA MONTAR UM VETOR BIASRA623() POSSO CHAMAR UMA ÚNICA VEZ... 
+
+	Do Case
+
+		Case Alltrim(cMenVar) == "M->MATRIC"
+		nPos := aScan(aArrayMatr,{|x| Alltrim(x[1]) == Alltrim(M->MATRIC) })
+		If nPos <> 0
+			GdFieldPut("NOMFUN"     , aArrayMatr[nPos][2] , _nAt)
+			_oGetDados:aCols[_nAt][5] := aArrayMatr[nPos][2]
+		Else
+			MsgAlert("Matricula não cadastrada!!")
+			msRetOk := .F.
+		EndIf
+
+		Case Alltrim(cMenVar) == "M->MATOBS"
+		nPos := aScan(aArrayMatr,{|x| Alltrim(x[1]) == Alltrim(M->MATOBS) })
+		If nPos <> 0
+			GdFieldPut("NOMOBS"     , aArrayMatr[nPos][2] , _nAt)
+			_oGetDados:aCols[_nAt][9] := aArrayMatr[nPos][2]
+		Else 
+			MsgAlert("Matricula não cadastrada!!")
+			msRetOk := .F.
+		EndIf
+
+	EndCase
+
+Return ( msRetOk )
 
 User Function BFG129S()
 

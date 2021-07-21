@@ -269,8 +269,12 @@ Local cRet := ""
 	cRet += '                  </td>
 	cRet += '              </tr>
 	cRet += '              <tr >
-	cRet += '              		<td style="padding-left:70px !important;padding-top:30px">Representante da Biancogres: _______________________________________________________</td>
+	cRet += '              		<td style="padding-left:70px !important;padding-top:30px;text-decoration-line: overline;">Representante da Biancogres</td>
 	cRet += '				</tr>
+	cRet += '        		<br/>
+	cRet += '        		<tr>
+	cRet += '		            <td style="padding-left:70px !important;padding-top:20px;padding-bottom:20px;"> Nome: </td>
+	cRet += '        		</tr>
 	cRet += '       </table>
 	cRet += '    <br/>
 	cRet += '    <span style="font-family: Arial, Helvetica, sans-serif;">
@@ -280,9 +284,12 @@ Local cRet := ""
 	cRet += '    <br/>
 	cRet += '    <br/>
 	
-	cRet += '    <table style="padding-left:20px;font-family: Arial, Helvetica, sans-serif;" width="100%" border="0" cellspacing="0" cellpadding="2">
+	cRet += '    <table style="padding-left:20px;font-family: Arial, Helvetica, sans-serif;" width="100%" border="0" cellspacing="0" cellpadding="10">
 	cRet += '        <tr>
-	cRet += '        	<td >Responsável pela Obra: ________________________________________</td>
+	cRet += '        	<td style="text-decoration-line: overline;">Responsável pela Obra</td>
+	cRet += '        </tr>
+	cRet += '        <tr>
+	cRet += '            <td> Nome: </td>
 	cRet += '        </tr>
 	cRet += '        <tr>
 	cRet += '            <td> CPF: </td>

@@ -285,13 +285,16 @@ User Function FCOMXPED(cPedido, cEmpDest, _cRepAtu, _cUserName, cFilOri, lMatriz
 		SELECT %EXP:aSQLFields%
 		,SC5.C5_YEMP
 		,OBSMEMO = ISNULL(cast(convert(varbinary(5000),C5_YOBS) as varchar(5000)),'')
+		,A1_YCDGREG 
 		FROM SC5070 SC5
-		JOIN SC6070 SC6 ON C6_FILIAL = C5_FILIAL AND C6_NUM = C5_NUM
+		JOIN SC6070 SC6 ON C6_FILIAL  = C5_FILIAL AND C6_NUM 	 = C5_NUM
+		JOIN SA1010 SA1 ON C5_CLIENTE = A1_COD 	  AND C5_LOJACLI = A1_LOJA 
 		WHERE
 		SC5.C5_FILIAL = %EXP:cFilOri%
 		AND SC5.C5_NUM = %EXP:cPedido%
 		AND SC5.D_E_L_E_T_ = ' '
 		AND SC6.D_E_L_E_T_ = ' '
+		AND SA1.D_E_L_E_T_ = ' '
 		ORDER BY C5_NUM, C6_ITEM
 
 	EndSql
@@ -424,6 +427,11 @@ User Function FCOMXPED(cPedido, cEmpDest, _cRepAtu, _cUserName, cFilOri, lMatriz
 
 		EndIf
 
+	EndIf
+
+	//Tratamento para Condicao de Pagamento - FIDC
+	If (cAliasTmp)->A1_YCDGREG == "000029" .And. !U_fValidaRA((cAliasTmp)->C5_CONDPAG)
+		_cCondPag := "505"
 	EndIf
 
 	//Consolidacao - manter a mesma linha escolhida na LM
@@ -571,15 +579,11 @@ User Function FCOMXPED(cPedido, cEmpDest, _cRepAtu, _cUserName, cFilOri, lMatriz
 
 			Else
 
-				aRetPrc := CalcLM(cAliasTmp,_cLin, cFilOri)
+				aRetPrc := CalcLM(cAliasTmp, _cLin, cFilOri, _cCondPag )
 
 			EndIf
 
 		EndIf
-
-
-
-		//CalcLM >>> {_nC6_PRCVEN,_nC6_VALOR,_nC6_PRUNIT,_nC6_YPERC,_nC6_YDESC,_nC6_VALDESC,_nC6_DESCONT}
 
 		//TES de venda da origme para LM - se nao parametrizada busca da TES inteligente
 		If Empty(_cTESX)
@@ -934,7 +938,7 @@ RETURN cRet
 @param _cLinha, , descricao
 @type function
 /*/
-Static Function CalcLM(_cAliasPed,_cLinha, cFilOri)
+Static Function CalcLM(_cAliasPed,_cLinha, cFilOri, _cCondPag)
 	//Programa Transcrito do MTA416PV - regras para calculcar preços e descontos do pedido LM
 	//aRet >>> vetor de retorno na mesma ordem das variaveis/campos abaixo
 
@@ -948,10 +952,13 @@ Static Function CalcLM(_cAliasPed,_cLinha, cFilOri)
 	Local _nC6_DESCONT	:= (_cAliasPed)->C6_DESCONT
 	Local _nC6_YPERC	:= (_cAliasPed)->C6_YPERC
 	Local _nC6_YDESC	:= (_cAliasPed)->C6_YDESC
+	Local _nC5_YMAXCND	:= (_cAliasPed)->C5_YMAXCND
 	Local _nC6_YFATMUL	:= 0
 	Local _nC6_YFATRED	:= 1
+	Local _nNewFatFin	:= 0
 	Local _cPacote		:= ""
 	Local _aAreaM0		:= SM0->(GetArea())
+	Local _aAreaSE4		:= SE4->(GetArea())
 
 	SM0->(DbSetOrder(1))
 	SM0->(DbSeek("07"+cFilOri))
@@ -963,6 +970,16 @@ Static Function CalcLM(_cAliasPed,_cLinha, cFilOri)
 	_nC6_YFATRED		:= U_LMFatRed(SM0->M0_ESTCOB, _cPacote)
 
 	RestArea(_aAreaM0)
+
+	//Posiciona nova Condicao Pagamento - FIDC
+	SE4->(DbSetOrder(1))
+	SE4->(DbSeek(XFilial("SE4")+_cCondPag))
+
+	_nNewFatFin	:= SE4->E4_YMAXDES
+	RestArea(_aAreaSE4)
+
+	_nC6_YPRCTAB	:= _nC6_YPRCTAB / (_cAliasPed)->C5_YMAXCND	 	//RETIRA FATOR FINANCEIRO ORIGINAL
+	_nC6_YPRCTAB	:= _nC6_YPRCTAB * _nNewFatFin					//APLICA NOVO FATOR FINANCEIRO
 
 	IF AllTrim(cFilOri) == "01" .Or. (_cAliasPed)->C6_YFATMUL == 0
 		_nC6_YPRCTAB	:= Round(_nC6_YPRCTAB * _nC6_YFATRED, 4)
