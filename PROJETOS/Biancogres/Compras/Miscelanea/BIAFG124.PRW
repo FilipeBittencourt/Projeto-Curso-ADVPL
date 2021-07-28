@@ -214,12 +214,15 @@ Static Function fGetFunc(_cMat)
 	
 	Local _cSolic	:=	""
 	
+	Local _cAliasSr	:=	"%" + U_fGetDbSr() + ".dbo.r034fun" + "%"
+
+	
 	_cMat	:=	Iif(Len(_cMat) == 8,Substr(_cMat,3,6),_cMat)
 	
 	BeginSql Alias _cAlias
 	%NoParser%
 	SELECT TOP 1 NOMFUN
-	FROM VETORH..R034FUN
+	FROM %Exp:_cAliasSr%
 	WHERE NUMEMP = %Exp:_cEmpresa%
 		AND TIPCOL = 1
 		AND NUMCAD = %Exp:_cMat%

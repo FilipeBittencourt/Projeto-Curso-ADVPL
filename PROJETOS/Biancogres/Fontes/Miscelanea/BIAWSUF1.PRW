@@ -180,8 +180,7 @@ Static Function SendMail(cHtml)
 	_cSubject := "Conferência de cadastros de Zona Suframada"
 	
 	_cTo := "karina.barbosa@biancogres.com.br;ludmilla.servino@biancogres.com.br"
-	//_cTo := "pedrohenriquecruzcosta@gmail.com"
-	_cCC := "pedro@facilesistemas.com.br"
+	_cCC := "ranisses.corona@biancogres.com.br"
 	
 	_cBody := cHtml      
 	

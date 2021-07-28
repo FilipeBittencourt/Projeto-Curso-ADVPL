@@ -8,6 +8,34 @@
 @type function
 /*/
 
+User Function BFG103T()
+
+	RpcSetEnv('01','01')
+
+	Private msrhEnter := CHR(13) + CHR(10)
+	Private _cSequen	:=	""
+	Private _oAcessos	:=	tAcessosOrcamento():New()
+
+	
+	_cVersao   := "ORCA_21"   
+	_cRevisa   := "003"
+	_cAnoRef   := '2021'
+
+	_oAcessos:GetAcessos(_cVersao,_cRevisa,_cAnoRef,"RH","000098")
+
+	If aScan(_oAcessos:aAcessos,{|x| x[3] }) > 0
+
+		_cSequen	:=	fGetSeq()
+	
+		
+		BFG103A()
+
+	Endif
+
+	RpcClearEnv()
+
+Return
+
 User Function BIAFG103()
 
 	Local M001        := GetNextAlias()
@@ -82,6 +110,7 @@ Static Function BFG103A()
 	Local qyCustFun := ""
 	Local _cClVlIn	:=	""
 	Local _nI
+	Local _oFerias	:=	tBiaControleFerias():NEW()
 
 	MP007 := " SELECT ZBC_RUBRIC "
 	MP007 += "   FROM " + RetSqlName("ZBC") + " "
@@ -217,6 +246,9 @@ Static Function BFG103A()
 			msGravouCfccCh  := .F.
 			For mxFx := 1 to 12
 
+				_oFerias:GetDiasTrabalhados(_cVersao,_cRevisa,_cAnoRef,MQ07->ZBA_MATR,StrZero(mxFx,2))
+				
+
 				//                                                        Reajustes Previstos
 				//***************************************************************************
 				PV004 := " WITH REAJUST AS (SELECT REPLACE(ZBB_RUBRIC,'ZBA_','ZBG_') ZBB_RUBRIC, ZBB_M" + StrZero(mxFx,2) + " REAJMES "
@@ -339,11 +371,12 @@ Static Function BFG103A()
 				msHorProg := 0
 				msDSRProg := 0
 				msAdcNotr := 0
-				If MQ07->ZBA_MESFER <> StrZero(mxFx,2)
-					msHorProg := ( msSalario + msPericul + msInsalub ) / 220 * 2.0 * MQ07->ZBA_QTHEPR * &("RF04->M" + StrZero(mxFx,2))
-					msDSRProg := msHorProg / 25 * 5
-					msAdcNotr := ( msSalario + msPericul + msInsalub ) / 220 * 0.2 * MQ07->ZBA_QHADNO
-				EndIf
+
+				msHorProg := ( msSalario + msPericul + msInsalub ) / 220 * 2.0 * MQ07->ZBA_QTHEPR * &("RF04->M" + StrZero(mxFx,2))
+				msDSRProg := msHorProg / 25 * 5
+				msAdcNotr := ( msSalario + msPericul + msInsalub ) / 220 * 0.2 * MQ07->ZBA_QHADNO 
+
+
 				msPremPrd := MQ07->ZBA_PREMPR
 
 				//                                                                              Remuneração Total
@@ -451,18 +484,16 @@ Static Function BFG103A()
 					ZBG->ZBG_SEMAIL  := MQ07->ZBA_SEMAIL
 					ZBG->ZBG_CATGFU  := MQ07->ZBA_CATGFU
 
-					If MQ07->ZBA_MESFER <> StrZero(mxFx,2) .or. MQ07->ZBA_FMULTF == 0
-						ZBG->ZBG_SALARI  := msSalario
-						ZBG->ZBG_PPERIC  := MQ07->ZBA_PPERIC
-						ZBG->ZBG_PERICU  := msPericul
-						ZBG->ZBG_PINSAL  := MQ07->ZBA_PINSAL
-						ZBG->ZBG_INSALU  := msInsalub
-						ZBG->ZBG_QTHEPR  := MQ07->ZBA_QTHEPR* &("RF04->M" + StrZero(mxFx,2))
-						ZBG->ZBG_VHEPRG  := msHorProg
-						ZBG->ZBG_DSRPRG  := msDSRProg
-						ZBG->ZBG_QHADNO  := MQ07->ZBA_QHADNO
-						ZBG->ZBG_VADCNO  := msAdcNotr
-					EndIf
+					ZBG->ZBG_SALARI  := msSalario	* _oFerias:nPerDiasTrabalhados/100	
+					ZBG->ZBG_PPERIC  := MQ07->ZBA_PPERIC * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_PERICU  := msPericul * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_PINSAL  := MQ07->ZBA_PINSAL * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_INSALU  := msInsalub	* _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_QTHEPR  := MQ07->ZBA_QTHEPR* &("RF04->M" + StrZero(mxFx,2)) * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_VHEPRG  := msHorProg	* _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_DSRPRG  := msDSRProg * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_QHADNO  := MQ07->ZBA_QHADNO * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_VADCNO  := msAdcNotr * _oFerias:nPerDiasTrabalhados/100
 
 					ZBG->ZBG_PREMPR  := msPremPrd
 
@@ -470,16 +501,12 @@ Static Function BFG103A()
 					ZBG->ZBG_QVLTRT  := MQ07->ZBA_QVLTRT
 					ZBG->ZBG_VVTUNI  := MQ07->ZBA_VVTUNI
 					ZBG->ZBG_PRCAVT  := MQ07->ZBA_PRCAVT
-					If MQ07->ZBA_MESFER <> StrZero(mxFx,2) .or. MQ07->ZBA_FMULTF == 0
-						ZBG->ZBG_VVLTRT  := msVlrVT
-						ZBG->ZBG_REFEIC  := MQ07->ZBA_REFEIC
-						ZBG->ZBG_DESEJU  := MQ07->ZBA_DESEJU
-					EndIf
+					ZBG->ZBG_VVLTRT  := msVlrVT * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_REFEIC  := MQ07->ZBA_REFEIC * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_DESEJU  := MQ07->ZBA_DESEJU * _oFerias:nPerDiasTrabalhados/100
 					ZBG->ZBG_CALIME  := MQ07->ZBA_CALIME + ( MQ07->ZBA_CALIME * PV04->ZBG_CALIME / 100 )
-					If MQ07->ZBA_MESFER <> StrZero(mxFx,2)
-						ZBG->ZBG_CJTURN  := MQ07->ZBA_CJTURN + ( MQ07->ZBA_CJTURN * PV04->ZBG_CJTURN / 100 )
-						ZBG->ZBG_CJNOIT  := MQ07->ZBA_CJNOIT + ( MQ07->ZBA_CJNOIT * PV04->ZBG_CJNOIT / 100 )
-					EndIf
+					ZBG->ZBG_CJTURN  := MQ07->ZBA_CJTURN + ( MQ07->ZBA_CJTURN * PV04->ZBG_CJTURN / 100 ) * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_CJNOIT  := MQ07->ZBA_CJNOIT + ( MQ07->ZBA_CJNOIT * PV04->ZBG_CJNOIT / 100 ) * _oFerias:nPerDiasTrabalhados/100
 					ZBG->ZBG_CCOMBU  := MQ07->ZBA_CCOMBU + ( MQ07->ZBA_CCOMBU * PV04->ZBG_CCOMBU / 100 )
 					ZBG->ZBG_AJDCBD  := MQ07->ZBA_AJDCBD
 
@@ -513,23 +540,22 @@ Static Function BFG103A()
 					//EndIf
 					ZBG->ZBG_VLREPI  := MQ07->ZBA_VLREPI / 12 // Corrigido em 19/10/18 conforme alinhado com Claudia e Diego 
 
-					If MQ07->ZBA_MESFER <> StrZero(mxFx,2) .or. MQ07->ZBA_FMULTF == 0
-						ZBG->ZBG_PRCINS  := MQ07->ZBA_PRCINS
-						ZBG->ZBG_PRCFGT  := MQ07->ZBA_PRCFGT
-						ZBG->ZBG_PRCSEN  := MQ07->ZBA_PRCSEN
-						ZBG->ZBG_PRCSES  := MQ07->ZBA_PRCSES
-						ZBG->ZBG_VRINSF  := msFolINSS
-						ZBG->ZBG_VRFGTF  := msFolFGTS
-						ZBG->ZBG_VRSENF  := msFolSenai
-						ZBG->ZBG_VRSESF  := msFolSesi
-					EndIf
+					ZBG->ZBG_PRCINS  := MQ07->ZBA_PRCINS * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_PRCFGT  := MQ07->ZBA_PRCFGT * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_PRCSEN  := MQ07->ZBA_PRCSEN * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_PRCSES  := MQ07->ZBA_PRCSES * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_VRINSF  := msFolINSS * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_VRFGTF  := msFolFGTS * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_VRSENF  := msFolSenai * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_VRSESF  := msFolSesi * _oFerias:nPerDiasTrabalhados/100
 
-					ZBG->ZBG_FERIAS  := msProvFerias
-					ZBG->ZBG_ABONOF  := msAbonoFerias
-					ZBG->ZBG_INSFER  := msPrvFerINSS
-					ZBG->ZBG_FGTFER  := msPrvFerFGTS
-					ZBG->ZBG_SENFER  := msPrvFerSENAI
-					ZBG->ZBG_SESFER  := msPrvFerSESI
+					ZBG->ZBG_FERIAS  := msProvFerias * _oFerias:nPerDiasFerias/100
+					ZBG->ZBG_ABONOF  := msAbonoFerias * _oFerias:nPerDiasFerias/100
+					ZBG->ZBG_INSFER  := msPrvFerINSS * _oFerias:nPerDiasFerias/100
+					ZBG->ZBG_FGTFER  := msPrvFerFGTS * _oFerias:nPerDiasFerias/100
+					ZBG->ZBG_SENFER  := msPrvFerSENAI * _oFerias:nPerDiasFerias/100
+					ZBG->ZBG_SESFER  := msPrvFerSESI * _oFerias:nPerDiasFerias/100
+					
 					ZBG->ZBG_13OSAL  := msPrv13
 					ZBG->ZBG_INS13O  := msPrv13INSS
 					ZBG->ZBG_FGT13O  := msPrv13FGTS
@@ -556,14 +582,12 @@ Static Function BFG103A()
 					ZBG->ZBG_MULTAF  := msVrMult
 
 					// Diferenciação necessária para direcionamento da contabilização
-					If MQ07->ZBA_MESFER <> StrZero(mxFx,2) .or. MQ07->ZBA_FMULTF == 0
-						If MQ07->ZBA_CATGFU == "005"
-							ZBG->ZBG_HONORA  := msSalario
-						ElseIf MQ07->ZBA_CATGFU == "020"
-							ZBG->ZBG_BOLSAE  := msSalario
-						Else
-							ZBG->ZBG_SALMEN  := msSalario
-						EndIf
+					If MQ07->ZBA_CATGFU == "005"
+						ZBG->ZBG_HONORA  := msSalario * _oFerias:nPerDiasTrabalhados/100
+					ElseIf MQ07->ZBA_CATGFU == "020" 
+						ZBG->ZBG_BOLSAE  := msSalario * _oFerias:nPerDiasTrabalhados/100
+					Else
+						ZBG->ZBG_SALMEN  := msSalario * _oFerias:nPerDiasTrabalhados/100
 					EndIf
 
 					ZBG->ZBG_DPRVFR  := stod(MQ07->ZBA_DPRVFR)

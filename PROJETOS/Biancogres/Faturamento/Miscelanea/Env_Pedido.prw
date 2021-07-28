@@ -293,22 +293,22 @@ STATIC Function CRIA_EMAIL()
 	//C_HTML += '<table width="900" border="0" > '
 	C_HTML += '  <tr> '                                        
 	//C_HTML += '<font color="black"> '
-	C_HTML += '<font color="white"> '
+	// C_HTML += '<font color="white"> '
 
 	DO CASE
 		CASE cEmpAnt = "01"
-		C_HTML += '  <th scope="col"><div align="center">PEDIDO DE VENDA NA EMPRESA BIANCOGRES - '+(SC5->C5_NUM)+IIF(_lVitcer,' - PARA ATENDER PEDIDO RODAPÉ DA VITCER No:'+_cPedVit,'')+'<br>'			
+		C_HTML += '  <th scope="col"><div align="center" style="color:white">PEDIDO DE VENDA NA EMPRESA BIANCOGRES - '+(SC5->C5_NUM)+IIF(_lVitcer,' - PARA ATENDER PEDIDO RODAPÉ DA VITCER No:'+_cPedVit,'')+'<br>'			
 		CASE cEmpAnt = "05"   
-		C_HTML += '  <th scope="col"><div align="center">PEDIDO DE VENDA NA EMPRESA INCESA - '+(SC5->C5_NUM)+'<br>'			
+		C_HTML += '  <th scope="col"><div align="center" style="color:white">PEDIDO DE VENDA NA EMPRESA INCESA - '+(SC5->C5_NUM)+'<br>'			
 		OTHERWISE
-		C_HTML += '  <th scope="col"><div align="center">PEDIDO DE VENDA - '+(SC5->C5_NUM)+'<br>'			
+		C_HTML += '  <th scope="col"><div align="center" style="color:white">PEDIDO DE VENDA - '+(SC5->C5_NUM)+'<br>'			
 	ENDCASE                        
 
-	C_HTML += '</font>'            
+	// C_HTML += '</font>'            
 	C_HTML += '</tr> '             
 	C_HTML += '</table> '
 
-	C_HTML += '<table width="900" border="0" bgcolor="#00FA9A"> '
+	C_HTML += '<table width="900" border="0" bgcolor="#00FA9A" style="color:black"> '
 	C_HTML += '<font color="black"> '                          
 	C_HTML += '<tr> '
 	C_HTML += '    <th width="450" scope="col"> DADOS DA EMPRESA </th> '
@@ -371,12 +371,12 @@ STATIC Function CRIA_EMAIL()
 	//DADOS DO CLIENTE	
 	C_HTML += '<table width="900" border="0" bgcolor="black"> '
 	C_HTML += '  <tr> '                                        
-	C_HTML += '<font color="white"> '		
-	C_HTML += '</font>'            
+	// C_HTML += '<font color="white"> '		
+	// C_HTML += '</font>'            
 	C_HTML += '</tr> '             
 	C_HTML += '</table> '
 
-	C_HTML += '<table width="900" border="0" bgcolor="#00FA9A"> '
+	C_HTML += '<table width="900" border="0" bgcolor="#00FA9A" style="color:black"> '
 	C_HTML += '<font color="black"> '                          
 	C_HTML += '<tr> '
 	C_HTML += '    <th width="900" scope="col"> DADOS DO CLIENTE:  </th> '
@@ -385,7 +385,7 @@ STATIC Function CRIA_EMAIL()
 	C_HTML += '</font>'        
 	C_HTML += '</table> '        
 
-	C_HTML += '<table width="900" border="0" cellspacing="0" cellpadding="2"> '
+	C_HTML += '<table width="900" border="0" cellspacing="0" cellpadding="2" style="color:black"> '
 	C_HTML += '<font color="black" size="2"> ' 
 	C_HTML += '<tr> '
 	C_HTML += '    <td><div align="left"> CLIENTE: <b>'+Alltrim(SA1->A1_NOME)+'</b></td> '
@@ -429,12 +429,12 @@ STATIC Function CRIA_EMAIL()
 	//CABECALHO DOS ITENS DO PEDIDO 
 	C_HTML += '<table width="900" border="0" bgcolor="black"> '
 	C_HTML += '  <tr> '                                        
-	C_HTML += '<font color="white"> '		
-	C_HTML += '</font>'            
+	// C_HTML += '<font color="white"> '		
+	// C_HTML += '</font>'            
 	C_HTML += '</tr> '             
 	C_HTML += '</table> ' 
 
-	C_HTML += '<table width="900" border="0" bgcolor="#00FA9A"> '
+	C_HTML += '<table width="900" border="0" bgcolor="#00FA9A" style="color:black"> '
 	C_HTML += '<font color="black"> '                          
 	C_HTML += '<tr> '
 	C_HTML += '    <th width="900" scope="col">ITENS DO PEDIDO DE VENDA </th> '
@@ -442,7 +442,7 @@ STATIC Function CRIA_EMAIL()
 	C_HTML += '</font>'        
 	C_HTML += '</table> '  
 	//CABECALHO COLUNAS - ITENS
-	C_HTML += '<table width="900" border="1" cellspacing="0" cellpadding="2"> '
+	C_HTML += '<table width="900" border="1" cellspacing="0" cellpadding="2" style="color:black"> '
 	C_HTML += '<font color="black" size="2"> ' 
 	C_HTML += '<tr> ' 	
 	C_HTML += '    <th width="20" scope="col"> ITEM </th> '   
@@ -506,7 +506,7 @@ STATIC Function CRIA_EMAIL()
 
 	_AUX_PEDIDO->(DbGoTop())
 
-	C_HTML += '<table width="900" border="1" cellspacing="0" cellpadding="2"> '
+	C_HTML += '<table width="900" border="1" cellspacing="0" cellpadding="2" style="color:black"> '
 	C_HTML += '<font color="black" size="2"> ' 
 	C_HTML += '<tr> ' 	
 	C_HTML += '    <th width="800" scope="col"> SEGURO PRODUTO: '+IIF(_AUX_PEDIDO->C5_VLRFRET == 0,'NÃO','SIM') +'</th> ' 
@@ -530,13 +530,13 @@ STATIC Function CRIA_EMAIL()
 	C_HTML += '<BR>' 
 	C_HTML += '<table width="900" border="0" bgcolor="black"> '
 	C_HTML += '  <tr> '                                        
-	C_HTML += '<font color="white"> '
+	// C_HTML += '<font color="white"> '
 
-	C_HTML += '</font>'            
+	// C_HTML += '</font>'            
 	C_HTML += '</tr> '             
 	C_HTML += '</table> '
 
-	C_HTML += '<table width="900" border="0" bgcolor="#00FA9A"> '
+	C_HTML += '<table width="900" border="0" bgcolor="#00FA9A" style="color:black"> '
 	C_HTML += '<font color="black"> '                          
 	C_HTML += '<tr> '
 	C_HTML += '    <th width="900" scope="col"> IMPORTANTE:  </th> '
@@ -662,13 +662,13 @@ STATIC Function CRIA_EMAIL()
 		C_HTML += '<BR>' 
 		C_HTML += '<table width="900" border="0" bgcolor="black"> '
 		C_HTML += '  <tr> '                                        
-		C_HTML += '<font color="white"> '
+		// C_HTML += '<font color="white"> '
 
-		C_HTML += '</font>'            
+		// C_HTML += '</font>'            
 		C_HTML += '</tr> '             
 		C_HTML += '</table> '
 
-		C_HTML += '<table width="900" border="0" bgcolor="#00FA9A"> '
+		C_HTML += '<table width="900" border="0" bgcolor="#00FA9A" style="color:black"> '
 		C_HTML += '<font color="black"> '                          
 		C_HTML += '<tr> '
 		C_HTML += '    <th width="900" scope="col"> OBSERVAÇÃO:  </th> '
@@ -676,7 +676,7 @@ STATIC Function CRIA_EMAIL()
 		C_HTML += '</font>'        
 		C_HTML += '</table> '        
 
-		C_HTML += '<table width="900" border="0" cellspacing="0" cellpadding="2"> '
+		C_HTML += '<table width="900" border="0" cellspacing="0" cellpadding="2" style="color:black"> '
 		C_HTML += '<font color="black" size="2"> '  
 
 
@@ -693,7 +693,7 @@ STATIC Function CRIA_EMAIL()
 	//ASSINATURA PARA CLIENTES DE ENGENHARIA 
 	If(Alltrim(SA1->A1_YTPSEG)=='E')
 		C_HTML += '<BR><BR><BR>'
-		C_HTML += '<table width="900" border="0" bgcolor="white"> '
+		C_HTML += '<table width="900" border="0" bgcolor="white" style="color:black"> '
 		C_HTML += '<font color="black"> '                          
 		C_HTML += '<tr> '
 		C_HTML += '    <th width="900" scope="col"> ___________________________________________________________  </th> '

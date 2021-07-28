@@ -229,7 +229,7 @@ Static Function ListaEmail(aListaCod)
 	
 	cLCcEmail	+= "keytiane.coutinho@biancogres.com.br;barbara.madeira@biancogres.com.br;karina.barbosa@biancogres.com.br;claudeir.fadini@biancogres.com.br;"
 	cLCcEmail	+= "ana.barreto@biancogres.com.br;ludmilla.servino@biancogres.com.br;camila.oliveira@biancogres.com.br;"
-	cLCcEmail	+= "micheli.zanoni@biancogres.com.br;joicy.kuster@biancogres.com.br;caroline.almeida@biancogres.com.br;bruno.andrade@biancogres.com.br;pedro@facilesistemas.com.br"
+	cLCcEmail	+= "micheli.zanoni@biancogres.com.br;joicy.kuster@biancogres.com.br;caroline.almeida@biancogres.com.br;bruno.andrade@biancogres.com.br"
 	
 	
 	//cadastro de não estava correto

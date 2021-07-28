@@ -226,10 +226,10 @@ Static Function SendMail(cHtml)
 	_cSubject := "Estoque dos produtos do(s) almoxarifado(s): "+cDescAlmo
 	
 	_cTo := "robson.laurett@biancogres.com.br"	
-	_cCC := "pedro@facilesistemas.com.br"
+	_cCC := "ranisses.corona@biancogres.com.br"
 	
 	If !(Upper(AllTrim(getenvserver())) == "SCHEDULE" .Or. Upper(AllTrim(getenvserver())) == "PRODUCAO") .Or. ( cDataBase <> "DADOSADV" )
-		_cTo := "pedro@facilesistemas.com.br"
+		_cTo := "ranisses.corona@biancogres.com.br"
 	EndIf
 	
 	_cBody := cHtml      

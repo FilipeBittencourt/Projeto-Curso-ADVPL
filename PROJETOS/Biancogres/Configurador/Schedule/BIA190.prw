@@ -379,7 +379,6 @@ Static Function EnvMailMult()
 	cAssunto := "Listagem de Pedidos Empenhados "
 	cMensagem := C_HTML	
 
-	//cRecebe := "fernando@facilesistemas.com.br"
 	ConOut("HORA: "+TIME()+" - Envio de Email - Processo BIA190 " + cRecebe)
 	U_BIAEnvMail(,cRecebe,cAssunto,cMensagem)
 

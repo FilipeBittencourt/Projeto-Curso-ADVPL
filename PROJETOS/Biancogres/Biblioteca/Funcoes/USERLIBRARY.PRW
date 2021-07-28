@@ -3194,7 +3194,7 @@ USER FUNCTION fGeraFatura(dtIni,dtFim)
 	cQuery += "			A.E1_EMIS1, A.E1_SITUACA, A.E1_SALDO, A.E1_VENCORI, 				" + Enter
 	cQuery += "			A.E1_MOEDA, A.E1_FATURA, A.E1_OCORREN, A.E1_YUFCLI, A.E1_YBAIDEL, A.E1_YRECR, 										" + Enter
 	cQuery += "			A.E1_VEND1, A.E1_VEND2, A.E1_VEND3, A.E1_VEND4, A.E1_VEND5, A.E1_VLCRUZ, A.E1_PORCJUR, A.E1_STATUS, A.E1_ORIGEM, 	" + Enter
-	cQuery += "			A.E1_OK, A.E1_FATPREF, A.E1_DTFATUR, A.E1_YFORMA, A.E1_PORTADO, B.A1_YGERFAT, A.E1_YEMP, A.R_E_C_N_O_,				" + Enter
+	cQuery += "			A.E1_OK, A.E1_FATPREF, A.E1_DTFATUR, A.E1_YFORMA, A.E1_PORTADO, B.A1_YGERFAT, A.E1_YEMP, A.E1_PEDIDO, A.R_E_C_N_O_,	" + Enter
 	cQuery += "			(SELECT COUNT(*) 							" + Enter
 	cQuery += "			 FROM "+RetSqlName("SE1")+"	SE1				" + Enter
 	cQuery += "			 WHERE	SE1.E1_CLIENTE	= A.E1_CLIENTE	AND " + Enter
@@ -7057,11 +7057,13 @@ User Function fExcVenc(cRegra,cMarca,cCli,cLoja,dEmis,dVenc,nVlBr,nCond,nValIPI,
 	Local dData		      //Define se sera utilizado a Emissão ou Vencimento como base da analise
 	Local cIndZ01
 
+	Local aArea		:= GetArea()
 	Local aAreaSA1	:= SA1->(GetArea())
 	Local aAreaSE1	:= SE1->(GetArea())
-	Local cArq		:= ""
-	Local cInd		:= 0
-	Local cReg		:= 0
+	
+	//Local cArq		:= ""
+	//Local cInd		:= 0
+	//Local cReg		:= 0
 
 	//Variaveis de Retorno
 	Local dtVencto			//Nova Data Vencimento
@@ -7072,9 +7074,9 @@ User Function fExcVenc(cRegra,cMarca,cCli,cLoja,dEmis,dVenc,nVlBr,nCond,nValIPI,
 	Default cSerie	:= ""
 	Default cNF		:= ""
 
-	cArq := Alias()
-	cInd := IndexOrd()
-	cReg := Recno()
+	//cArq := Alias()
+	//cInd := IndexOrd()
+	//cReg := Recno()
 
 	//Posiciona no Cliente
 	SA1->(DbSetOrder(1))
@@ -7170,13 +7172,14 @@ User Function fExcVenc(cRegra,cMarca,cCli,cLoja,dEmis,dVenc,nVlBr,nCond,nValIPI,
 	Ferase(cIndZ01+GetDBExtension())	//arquivo de trabalho
 	Ferase(cIndZ01+OrdBagExt())			//indice gerado
 
+	//Volta area de Trabalho
 	RestArea(aAreaSA1)
 	RestArea(aAreaSE1)
+	RestArea(aArea)
 
-	//Volta area de Trabalho
-	DbSelectArea(cArq)
-	DbSetOrder(cInd)
-	DbGoTo(cReg)
+	//DbSelectArea(cArq)
+	//DbSetOrder(cInd)
+	//DbGoTo(cReg)
 
 Return(aRet)
 
@@ -7560,10 +7563,11 @@ Return(lRet)
 /*/
 User Function fVlFIDCLM(xNUMPED)
 Local cSQL		:= ''
+Local aArea		:= GetArea()
 Local cQry		:= GetNextAlias()
 Local lRet		:= .F.
 
-cSQL :="SELECT COUNT(*) QUANT FROM SC5070 WHERE C5_NUM = '"+xNUMPED+"' AND C5_EMISSAO >= '20210720' AND D_E_L_E_T_ = '' "
+cSQL :="SELECT COUNT(*) QUANT FROM SC5070 WHERE C5_NUM = '"+xNUMPED+"' AND C5_EMISSAO >= '20210720' AND C5_CONDPAG = '505' AND D_E_L_E_T_ = '' "
 TcQuery cSQL New Alias (cQry)
 
 If (cQry)->QUANT >= 1 
@@ -7572,4 +7576,49 @@ EndIf
 
 (cQry)->(DbCloseArea())  
 
+RestArea(aArea)
+
 Return(lRet)
+
+/*/{Protheus.doc} fGetDbSr
+@description Funcao para retornar o Alias da Database do sistema Senior
+@author Gabriel Rossi Mafioletti
+@since 16/07/2021
+@version undefined
+@history 
+@type function
+/*/
+
+User Function fGetDbSr()
+
+	Local _cRet		:=	""
+	If U_fValDEV()
+		_cRet	:=	"VETORH_DEV"
+	Else
+		_cRet	:=	"VETORH"
+	EndIf
+Return _cRet
+
+
+/*/{Protheus.doc} fGetDbSr
+@description Funcao utilizada para criacao de indices
+@author RANISSES A CORONA
+@since 22/07/2021
+@version undefined
+@history 
+@type function
+/*/
+
+User Function fCriaInd()
+
+	xv_Emps    := U_BAGtEmpr("01_02_03_04_05_06_07_08_09_10_11_12_13_14_15_16_17_90_91")
+
+	For xt := 1 To Len(xv_Emps)
+
+		RPCSetEnv(xv_Emps[xt,1], xv_Emps[xt,2])
+
+		RpcClearEnv()
+	
+	Next
+
+Return

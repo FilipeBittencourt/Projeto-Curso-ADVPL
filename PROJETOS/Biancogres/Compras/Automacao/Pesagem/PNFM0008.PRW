@@ -41,7 +41,7 @@ Static Function SendMail(cHtml)
 	_cSubject := "Inclusão - Produto Massa"
 	
 	_cTo := U_EmailWF('PNFM0008',cEmpAnt)
-	_cTo += "pedro@facilesistemas.com.br"
+	_cTo += "ranisses.corona@biancogres.com.br"
 	_cCC := ""
 	
 	_cBody := cHtml      

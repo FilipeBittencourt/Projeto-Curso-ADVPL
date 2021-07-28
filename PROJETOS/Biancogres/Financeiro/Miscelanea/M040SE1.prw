@@ -15,6 +15,7 @@ Local aVenc		:= {}
 Local cTpOri	:= ""
 Local cTpRpl	:= ""
 Local aNewVenc	:= {} //Retorno da função Exceção de Vencimento
+Local lVldFIDLM := U_fVlFIDCLM(SE1->E1_PEDIDO) //Valida se o Pedido de Venda é FIDC
 
 //Posiciona na Condição de Pagamento Original da NF
 SE4->(DbSetOrder(1))
@@ -123,7 +124,12 @@ IF IsInCallStack("U_BACP0010")  .OR. UPPER(ALLTRIM(FUNNAME())) == "MATA460A" .OR
 		
 		//Tratamento para Exceção de Vencimento de ST
 		If !Alltrim(SC5->C5_CONDPAG) $ "328_195_980_A80_331_192_982_A82_330_194"
-			aNewVenc := U_fExcVenc("ST",SC5->C5_YEMP,SF2->F2_CLIENTE,SF2->F2_LOJA,SF2->F2_EMISSAO,SE1->E1_VENCTO,SF2->F2_VALBRUT,SF2->F2_COND,SF2->F2_VALIPI,SF2->F2_ICMSRET)
+			If Alltrim(cempant) $ "01_05_13_14" .And. SA1->A1_COD == "010064" .And. !lVldFIDLM
+				aNewVenc := U_fExcVenc("ST",SC5->C5_YEMP,SC5->C5_YCLIORI,SC5->C5_YLOJORI,SF2->F2_EMISSAO,SE1->E1_VENCTO,SF2->F2_VALBRUT,SF2->F2_COND,SF2->F2_VALIPI,SF2->F2_ICMSRET)
+			Else
+				aNewVenc := U_fExcVenc("ST",SC5->C5_YEMP,SF2->F2_CLIENTE,SF2->F2_LOJA,SF2->F2_EMISSAO,SE1->E1_VENCTO,SF2->F2_VALBRUT,SF2->F2_COND,SF2->F2_VALIPI,SF2->F2_ICMSRET)
+			EndIf
+
 			If Len(aNewVenc) > 1
 				SE1->E1_VENCTO	:=	aNewVenc[1]
 				SE1->E1_VENCREA	:=	DATAVALIDA(aNewVenc[1])
@@ -171,14 +177,21 @@ IF IsInCallStack("U_BACP0010")  .OR. UPPER(ALLTRIM(FUNNAME())) == "MATA460A" .OR
 	
 	//SOLICITACAO DO SR. DIOGO E VAGNER NO DIA 23/06/09
 	//INCLUIDO MUNDI NO DIA 26/03/12
-	If Alltrim(cempant) $ "01_05_13" .And. SA1->A1_COD == "010064"
-		SE1->E1_VENCTO  := SE1->E1_VENCTO + 7
-		SE1->E1_VENCREA := DATAVALIDA(SE1->E1_VENCTO)
+	//Solicitado Por Nadine em 20/07/2021 para somar 5 dias e não mais 7
+	If Alltrim(cempant) $ "01_05_13_14" .And. SA1->A1_COD == "010064"
+		If !lVldFIDLM //Ajustes FIDC em 23/07/2021 
+			SE1->E1_VENCTO  := SE1->E1_VENCTO + 5
+			SE1->E1_VENCREA := DATAVALIDA(SE1->E1_VENCTO)
+		EndIf
 	EndIf
 		
 	//Tratamento para Exceção de Vencimento NF (SOBRESCREVE A REGRA DE ST)
 	If !Alltrim(SC5->C5_CONDPAG) $ "328_195_980_A80_331_192_982_A82_330_194"	
-		aNewVenc := U_fExcVenc("NF",SC5->C5_YEMP,SF2->F2_CLIENTE,SF2->F2_LOJA,SF2->F2_EMISSAO,SE1->E1_VENCTO,SF2->F2_VALBRUT,SF2->F2_COND,SF2->F2_VALIPI,SF2->F2_ICMSRET)
+		If Alltrim(cempant) $ "01_05_13_14" .And. SA1->A1_COD == "010064" .And. !lVldFIDLM
+			aNewVenc := U_fExcVenc("NF",SC5->C5_YEMP,SC5->C5_YCLIORI,SC5->C5_YLOJORI,SF2->F2_EMISSAO,SE1->E1_VENCTO,SF2->F2_VALBRUT,SF2->F2_COND,SF2->F2_VALIPI,SF2->F2_ICMSRET)
+		Else
+			aNewVenc := U_fExcVenc("NF",SC5->C5_YEMP,SF2->F2_CLIENTE,SF2->F2_LOJA,SF2->F2_EMISSAO,SE1->E1_VENCTO,SF2->F2_VALBRUT,SF2->F2_COND,SF2->F2_VALIPI,SF2->F2_ICMSRET)
+		EndIf
 		If Len(aNewVenc) > 1
 			SE1->E1_VENCTO	:=	aNewVenc[1]
 			SE1->E1_VENCREA	:=	DATAVALIDA(aNewVenc[1])

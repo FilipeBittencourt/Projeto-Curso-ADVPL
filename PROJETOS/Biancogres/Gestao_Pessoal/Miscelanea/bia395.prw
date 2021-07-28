@@ -229,6 +229,7 @@ Static Function fBIA395C()
 		aAdd(_oGetDados:aCols, {"245", "ZBA_AJDCBD", "Ajda.Cust BD", Space(20), Space(20), "ZBC", 0, .F. })
 		aAdd(_oGetDados:aCols, {"250", "ZBA_CFCCCH", "$ Cfcc Crach", Space(20), Space(20), "ZBC", 0, .F. })
 		aAdd(_oGetDados:aCols, {"255", "ZBA_VRHENP", "Vlr.HE.NPrg ", Space(20), Space(20), "ZBC", 0, .F. })
+		aAdd(_oGetDados:aCols, {"260", "ZBA_REEDSP", "Reemb. Desp.", Space(20), Space(20), "ZBC", 0, .F. })
 
 	EndIf	
 

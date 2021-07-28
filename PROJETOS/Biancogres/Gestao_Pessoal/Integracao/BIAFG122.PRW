@@ -132,13 +132,14 @@ Static Function fGetClVl(_cMat)
 	Local _cClVl	:=	""
 	Local _cAlias	:=	GetNextAlias()
 	Local _nMat		:=	Val(_cMat)
+	Local _cAliasSr	:=	"%" + U_fGetDbSr() + ".dbo.r034fun" + "%"
 
 	BeginSql Alias _cAlias
 
 		%NoParser%
 
 		SELECT codccu RA_CLVL
-		FROM VETORH..r034fun A
+		FROM %Exp:_cAliasSr% A
 		WHERE numemp = 1
 		AND tipcol = 1
 		AND numcad = %Exp:_nMat%

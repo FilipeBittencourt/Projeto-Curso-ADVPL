@@ -2083,7 +2083,13 @@ user function openAnexos
 	//cComando := "http://"+cServer+":"+cPorta+"/websc/u_viewFiles.apw?attch="+rtrim(SC1->C1_NUM)
 	//cComando := "http://srv_web_protheus:6969/ws02/u_viewFiles.apw?attch="+rtrim(SC1->C1_NUM)
 	If !Empty(SC1->C1_YBIZAGI)
-		cComando := "http://ares/AnexosSC/anexos.aspx?NUMSC="+SC1->C1_NUM+"&NUMITEM="+SC1->C1_ITEM+"&EMP="+cEmpAnt+"01"
+		
+		If Upper(AllTrim(GetSrvProfString("DbAlias", ""))) <> "PRODUCAO"
+			cComando := "http://nice/AnexoSC/anexos.aspx?NUMSC="+SC1->C1_NUM+"&NUMITEM="+SC1->C1_ITEM+"&EMP="+cEmpAnt+"01"
+		Else
+			cComando := "http://ares/AnexosSC/anexos.aspx?NUMSC="+SC1->C1_NUM+"&NUMITEM="+SC1->C1_ITEM+"&EMP="+cEmpAnt+"01"
+		EndIf
+
 	Else
 		cComando := "http://srv_web_protheus:6969/ws02/u_viewFiles.apw?attch="+rtrim(SC1->C1_NUM)
 	EndIf

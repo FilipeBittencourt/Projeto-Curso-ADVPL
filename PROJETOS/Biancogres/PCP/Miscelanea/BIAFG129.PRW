@@ -173,6 +173,9 @@ Static Function fGeraGd(_oDlg, aPosObj, pOpc)
 	Local aAltCpos	:= {}
 	Local _cAlias	:= GetNextAlias()
 	Local nGetOpc
+	Local _cAliasSr	:=	"%" + U_fGetDbSr() + ".dbo.r034fun" + "%"
+	Local _cAliasSr2	:=	U_fGetDbSr()
+
 
 	Default _oDlg	:= Nil				// V - Visualizar / A - Alterar.
 	Default aPosObj := Nil
@@ -181,7 +184,7 @@ Static Function fGeraGd(_oDlg, aPosObj, pOpc)
 	aArrayMatr := {}
 	Z0001 := " SELECT RIGHT('00' + Cast(numemp AS VARCHAR(2)), 2) + RIGHT('000000' + Cast(numcad AS VARCHAR(6)), 6) MAT "
 	Z0001 += " ,nomfun NOME "
-	Z0001 += " FROM VETORH..r034fun a "
+	Z0001 += " FROM "+_cAliasSr2+"..r034fun a "
 	Z0001 += " WHERE tipcol = 1 "
 	Z0001 += "      AND (sitafa <> 7 "
 	Z0001 += "           OR "
@@ -231,11 +234,11 @@ Static Function fGeraGd(_oDlg, aPosObj, pOpc)
 		AND ZLA.%NotDel%
 		LEFT JOIN %TABLE:ZLE% ZLE(NOLOCK) ON ZLE.ZLE_CODIGO = ZLD.ZLD_SITUAC
 		AND ZLE.%NotDel%
-		LEFT JOIN VETORH..r034fun MAT(NOLOCK) ON CAST(SUBSTRING(ZLD.ZLD_MAT, 1, 2) AS INT) = MAT.numemp
+		LEFT JOIN %Exp:_cAliasSr% MAT(NOLOCK) ON CAST(SUBSTRING(ZLD.ZLD_MAT, 1, 2) AS INT) = MAT.numemp
 		AND CAST(RIGHT(ZLD.ZLD_MAT, 6) AS INT) = MAT.numcad
 		AND MAT.tipcol = 1
 		AND MAT.sitafa <> 7
-		LEFT JOIN VETORH..r034fun MATSUB(NOLOCK) ON CAST(SUBSTRING(ZLD.ZLD_MATOBS, 1, 2) AS INT) = MATSUB.numemp
+		LEFT JOIN %Exp:_cAliasSr% MATSUB(NOLOCK) ON CAST(SUBSTRING(ZLD.ZLD_MATOBS, 1, 2) AS INT) = MATSUB.numemp
 		AND CAST(RIGHT(ZLD.ZLD_MATOBS, 6) AS INT) = MATSUB.numcad
 		AND MATSUB.tipcol = 1
 		AND MATSUB.sitafa <> 7

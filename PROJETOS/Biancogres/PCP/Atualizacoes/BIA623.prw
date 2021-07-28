@@ -92,6 +92,7 @@ Return .T.
 Static Function fMSNewSraDados1()
 
 	Local nX
+	Local _cAliasSr	:=	U_fGetDbSr()
 
 	dbSelectArea("SX3")
 	SX3->(dbSetOrder(2))
@@ -109,7 +110,7 @@ Static Function fMSNewSraDados1()
 
 	A0001 := " SELECT RIGHT('00' + Cast(numemp AS VARCHAR(2)), 2) + RIGHT('000000' + Cast(numcad AS VARCHAR(6)), 6) MAT "
 	A0001 += "		,nomfun NOME "
-	A0001 += "	FROM VETORH..r034fun a "
+	A0001 += "	FROM "+_cAliasSr+"..r034fun a "
 	A0001 += "	WHERE tipcol = 1 "
 	A0001 += "      AND (sitafa <> 7 "
 	A0001 += "           OR "

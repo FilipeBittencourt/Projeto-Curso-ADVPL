@@ -108,6 +108,10 @@ Static Function fQryDados()
 	local nEmp	:=	Val(cempAnt)
 
 	local cArqXML   := "BIAFG037_"+ALLTrim( DTOS(DATE())+"_"+StrTran( time(),':',''))
+	Local _cAliasSr		:=	U_fGetDbSr()
+	Local _cAliasFun	:=	"%" + _cAliasSr + ".dbo.r034fun" + "%"
+	Local _cAliasCar	:=	"%" + _cAliasSr + ".dbo.r024car" + "%"
+
 
 	BeginSql Alias _cAlias
 		%NoParser%
@@ -150,11 +154,11 @@ Static Function fQryDados()
 		LEFT JOIN %Table:ZZY% ZZY(NOLOCK) ON ZZY.ZZY_FILIAL = %xFilial:ZZY%
 			AND ZZY.ZZY_MATRIC = SD3.D3_YMATRIC
 			AND ZZY.%Notdel%
-		LEFT JOIN VETORH..r034fun CADFUN(NOLOCK) ON //SRA.SRA_FILIAL = %xFilial:SRA%
+		LEFT JOIN %Exp:_cAliasFun% CADFUN(NOLOCK) ON //SRA.SRA_FILIAL = %xFilial:SRA%
 			 CAST(SUBSTRING(SD3.D3_YMATRIC,3,6) AS INT) = CADFUN.numCad
 			 AND CADFUN.TIPCOL = 1
 			 AND CADFUN.numemp = %Exp:nEmp% 
-		LEFT JOIN VETORH..r024car CARFUN(nolock) ON
+		LEFT JOIN %Exp:_cAliasCar% CARFUN(nolock) ON
 		 	CADFUN.codcar = CARFUN.codcar
 		WHERE SD3.D3_FILIAL = %xFilial:SD3%
 			AND SD3.D3_EMISSAO BETWEEN %Exp:_cDataDe%

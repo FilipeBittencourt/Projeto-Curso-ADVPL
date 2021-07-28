@@ -884,17 +884,27 @@ Static Function ProcM4()
 	Local _nPBonus4 := 0
 	Local _nPBonus5 := 0
 
-	Local nPReali	:= aScan(aHeader, {|x| AllTrim(x[2]) == "PZ6_PREALI" })
+
 	Local nPMetaP1	:= aScan(aHeader, {|x| AllTrim(x[2]) == "PZ6_METAP1" })
 	Local nPMetaP2	:= aScan(aHeader, {|x| AllTrim(x[2]) == "PZ6_METAP2" })
 	Local nPMetaP3	:= aScan(aHeader, {|x| AllTrim(x[2]) == "PZ6_METAP3" })
 	Local nPMetaP4	:= aScan(aHeader, {|x| AllTrim(x[2]) == "PZ6_METAP4" })
 	Local nPMetaP5	:= aScan(aHeader, {|x| AllTrim(x[2]) == "PZ6_METAP5" })
+	Local nPReali	:= aScan(aHeader, {|x| AllTrim(x[2]) == "PZ6_PREALI" })
 	Local _nMetaP1 	:= 0
 	Local _nMetaP2 	:= 0
 	Local _nMetaP3 	:= 0
 	Local _nMetaP4 	:= 0
 	Local _nMetaP5 	:= 0
+	Local _nPReali  := 0
+
+	Local nReceit    := 0
+	Local nBonMeta   := 0
+
+	Local nPositiv   := 0
+	Local nBonPosi   := 0
+
+
 
 
 	FOR I := 1 To Len(ACols)
@@ -942,6 +952,8 @@ Static Function ProcM4()
 			// C28 - Task 9: Quando for tipo de acordo Galleria
 			If Alltrim(M->PZ5_TPACOR) == "AG"
 
+				_nPReali	    := aCols[I][nPReali]
+
 				If nPMetaP1 > 0
 					_nMetaP1		:= aCols[I][nPMetaP1]
 				Endif
@@ -961,39 +973,123 @@ Static Function ProcM4()
 				If nPMetaP5 > 0
 					_nMetaP5		:= aCols[I][nPMetaP5]
 				Endif
+
 			EndIf
 
 			//Bonus na Faixa 1
-			If (_nMeta1 > 0 .And. _nValRea >= _nMeta1 .And. (nPMetaF2 <= 0 .Or. _nValRea < _nMeta2)) .And.;
-					IIf(Alltrim(M->PZ5_TPACOR) == "AG", (_nMetaP1 > 0 .And. _nPReali >= _nMetaP1 .And. (nPMetaP2 <= 0 .Or. _nPReali < _nMetaP2)), .T.)
-
+			If (_nMeta1 > 0 .And. _nValRea >= _nMeta1 .And. (_nMeta2 <= 0 .Or. _nValRea < _nMeta2))
+				nReceit  := 1
+				nBonMeta :=  _nPBonus1
 				aCols[I][nPBonus] := (IIf(_nVBasVer > 0, _nVBasVer, _nValRea) * _nPBonus1) / 100
-
 			EndIf
 
 			//Bonus na Faixa 2
-			If (_nMeta2 > 0 .And. _nValRea >= _nMeta2 .And. (nPMetaF3 <= 0 .Or. _nValRea < _nMeta3)) .And.;
-					IIf(Alltrim(M->PZ5_TPACOR) == "AG", (_nMetaP2 > 0 .And. _nPReali >= _nMetaP2 .And. (nPMetaP3 <= 0 .Or. _nPReali < _nMetaP3)), .T.)
-
+			If (_nMeta2 > 0 .And. _nValRea >= _nMeta2 .And. (_nMeta3 <= 0 .Or. _nValRea < _nMeta3))
+				nReceit := 2
+				nBonMeta :=  _nPBonus2
 				aCols[I][nPBonus] := (IIf(_nVBasVer > 0, _nVBasVer, _nValRea) * _nPBonus2) / 100
-
 			EndIf
 
 			//Bonus na Faixa 3
-			If (_nMeta3 > 0 .And. _nValRea >= _nMeta3 .And. (nPMetaF4 <= 0 .Or. _nValRea < _nMeta4)) .And.;
-					IIf(Alltrim(M->PZ5_TPACOR) == "AG", (_nMetaP3 > 0 .And. _nPReali >= _nMetaP3 .And. (nPMetaP4 <= 0 .Or. _nPReali < _nMetaP4)), .T.)
-
+			If (_nMeta3 > 0 .And. _nValRea >= _nMeta3 .And. (_nMeta4 <= 0 .Or. _nValRea < _nMeta4))
+				nReceit := 3
+				nBonMeta :=  _nPBonus3
 				aCols[I][nPBonus] := (IIf(_nVBasVer > 0, _nVBasVer, _nValRea) * _nPBonus3) / 100
-
 			EndIf
 
 			//Bonus na Faixa 4
-			If (_nMeta4 > 0 .And. _nValRea >= _nMeta4 .And. (nPMetaF5 <= 0 .Or. _nValRea < _nMeta5)) .And.;
-					IIf(Alltrim(M->PZ5_TPACOR) == "AG", (_nMetaP4 > 0 .And. _nPReali >= _nMetaP4 .And. (nPMetaP5 <= 0 .Or. _nPReali < _nMetaP5)), .T.)
+			If (_nMeta4 > 0 .And. _nValRea >= _nMeta4 .And. (_nMeta5 <= 0 .Or. _nValRea < _nMeta5))
+				nReceit  := 4
+				nBonMeta :=  _nPBonus4
+				aCols[I][nPBonus] := (IIf(_nVBasVer > 0, _nVBasVer, _nValRea) * _nPBonus4) / 100
+			EndIf
+
+			//Bonus na Faixa 5
+			If (_nMeta5 > 0 .And. _nValRea >= _nMeta5)
+				nReceit  := 5
+				nBonMeta :=  _nPBonus5
+				aCols[I][nPBonus] := (IIf(_nVBasVer > 0, _nVBasVer, _nValRea) * _nPBonus5) / 100
+			EndIf
+
+			If Alltrim(M->PZ5_TPACOR) == "AG"
+
+				//Positivação na Faixa 1
+				if _nMetaP1 > 0  .And. _nPReali >= _nMetaP1 .And. (_nMetaP2 <= 0 .Or. _nPReali < _nMetaP2)
+					nPositiv  := 1
+					nBonPosi    := _nPBonus1
+				EndIf
+
+				//Positivação na Faixa 2
+				if (_nMetaP2 > 0 .And. _nPReali >= _nMetaP2 .And. (_nMetaP3 <= 0 .Or. _nPReali < _nMetaP3))
+					nPositiv  := 2
+					nBonPosi    := _nPBonus2
+				EndIf
+
+				//Positivação na Faixa 3
+				if(_nMetaP3 > 0 .And. _nPReali >= _nMetaP3 .And. (_nMetaP4 <= 0 .Or. _nPReali < _nMetaP4))
+					nPositiv  := 3
+					nBonPosi    := _nPBonus3
+				EndIf
+
+				//Positivação na Faixa 4
+				if(_nMetaP4 > 0 .And. _nPReali >= _nMetaP4 .And. (_nMetaP5 <= 0 .Or. _nPReali < _nMetaP5))
+					nPositiv  := 4
+					nBonPosi    := _nPBonus4
+				EndIf
+
+				//Positivação na Faixa 5
+				if(_nMetaP5 > 0 .And. _nPReali >= _nMetaP5)
+					nPositiv  := 5
+					nBonPosi    := _nPBonus5
+				EndIf
+
+				aCols[I][nPBonus] := 0
+				IF(nPositiv > 0 .AND. nReceit > 0)
+					If nPositiv >= nReceit
+						aCols[I][nPBonus] := (IIf(_nVBasVer > 0, _nVBasVer, _nValRea) * nBonMeta) / 100
+					Else
+						aCols[I][nPBonus] := (IIf(_nVBasVer > 0, _nVBasVer, _nValRea) * nBonPosi) / 100
+					EndIf
+
+				EndIf
+
+			EndIf
+
+
+
+
+       /*
+			//Bonus na Faixa 1
+			If (_nMeta1 > 0 .And. _nValRea >= _nMeta1 .And. (_nMeta2 <= 0 .Or. _nValRea < _nMeta2)) .And.;
+					IIf(Alltrim(M->PZ5_TPACOR) == "AG", (_nMetaP1 > 0 .And. _nPReali >= _nMetaP1 .And. (_nMetaP2 <= 0 .Or. _nPReali < _nMetaP2)), .T.)
+
+				aCols[I][nPBonus] := (IIf(_nVBasVer > 0, _nVBasVer, _nValRea) * _nPBonus1) / 100
+
+				EndIf
+
+			//Bonus na Faixa 2
+			If (_nMeta2 > 0 .And. _nValRea >= _nMeta2 .And. (_nMeta3 <= 0 .Or. _nValRea < _nMeta3)) .And.;
+					IIf(Alltrim(M->PZ5_TPACOR) == "AG", (_nMetaP2 > 0 .And. _nPReali >= _nMetaP2 .And. (_nMetaP3 <= 0 .Or. _nPReali < _nMetaP3)), .T.)
+
+				aCols[I][nPBonus] := (IIf(_nVBasVer > 0, _nVBasVer, _nValRea) * _nPBonus2) / 100
+
+				EndIf
+
+			//Bonus na Faixa 3
+			If (_nMeta3 > 0 .And. _nValRea >= _nMeta3 .And. (_nMeta4 <= 0 .Or. _nValRea < _nMeta4)) .And.;
+					IIf(Alltrim(M->PZ5_TPACOR) == "AG", (_nMetaP3 > 0 .And. _nPReali >= _nMetaP3 .And. (_nMetaP4 <= 0 .Or. _nPReali < _nMetaP4)), .T.)
+                                                                      
+				aCols[I][nPBonus] := (IIf(_nVBasVer > 0, _nVBasVer, _nValRea) * _nPBonus3) / 100
+
+				EndIf
+
+			//Bonus na Faixa 4
+			If (_nMeta4 > 0 .And. _nValRea >= _nMeta4 .And. (_nMeta5 <= 0 .Or. _nValRea < _nMeta5)) .And.;
+					IIf(Alltrim(M->PZ5_TPACOR) == "AG", (_nMetaP4 > 0 .And. _nPReali >= _nMetaP4 .And. (_nMetaP5 <= 0 .Or. _nPReali < _nMetaP5)), .T.)
 
 				aCols[I][nPBonus] := (IIf(_nVBasVer > 0, _nVBasVer, _nValRea) * _nPBonus4) / 100
 
-			EndIf
+				EndIf
 
 			//Bonus na Faixa 5
 			If (_nMeta5 > 0 .And. _nValRea >= _nMeta5) .And.;
@@ -1001,7 +1097,8 @@ Static Function ProcM4()
 
 				aCols[I][nPBonus] := (IIf(_nVBasVer > 0, _nVBasVer, _nValRea) * _nPBonus5) / 100
 
-			EndIf
+				EndIf
+			*/
 
 		EndIf
 
@@ -1022,6 +1119,8 @@ Static Function ProcM5()
 	Local cTipCli, cCodCli, cLojCli
 	Local cSQL
 	Local cNumSI
+	Local cErr := ""
+	Local cMsg := ""
 
 	If (PZ5->PZ5_STATUS <> "S")
 		MsgAlert("Acordo NÃO está Aprovado. Não é possível Gerar as SI.","ATENÇÃO")
@@ -1044,9 +1143,19 @@ Static Function ProcM5()
 				AADD(aTempSI,{M->PZ5_CODIGO,cNumSI,aCols[I,nPDtIni],aCols[I,nPDtFim]})
 			endif
 
+		Else
+
+			cErr += cValToChar(I)+","
+
 		EndIf
 
 	NEXT I
+
+	if !Empty(cErr)
+		cMsg += "Não foi gerado AI/SI das linhas abaixo, pois as regras não foram contempladas para ação."+CRLF+CRLF
+		cMsg += "Onde a <b>R.Realizada</b> tem que ser maior ou igual as Metas. E a <b>P.Realizada</b> tem que ser maior ou igual as Metas de Positivação."+CRLF+CRLF
+		FwAlertInfo(cMsg+"<b>Linha(s): </b>"+SUBSTR(cErr,1,Len(cErr)-1),'Info')
+	EndIf
 
 Return
 

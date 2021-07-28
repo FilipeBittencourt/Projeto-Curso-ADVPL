@@ -9,6 +9,7 @@ User Function TSTFIL()
   cText :=	 StrTran(  cText, "/", "','")
 
 
+
   RpcClearEnv()
   If Select("SX6") <= 0
     RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})

@@ -20,7 +20,13 @@ user function A130WEB
 		//cComando := "http://srv_web_protheus:8686/websc/u_viewitem.apw?codcom="+SY1->Y1_COD+"&emp="+cEmpAnt+"&fil="+cFilAnt+"&obj="+cValToChar(SC1->(recno()))
 		
 		If !Empty(SC1->C1_YBIZAGI)
-			cComando := "http://ares/AnexosSC/anexos.aspx?NUMSC="+SC1->C1_NUM+"&NUMITEM="+SC1->C1_ITEM+"&EMP="+cEmpAnt+"01"
+
+			If Upper(AllTrim(GetSrvProfString("DbAlias", ""))) <> "PRODUCAO"
+				cComando := "http://nice/AnexoSC/anexos.aspx?NUMSC="+SC1->C1_NUM+"&NUMITEM="+SC1->C1_ITEM+"&EMP="+cEmpAnt+"01"
+			Else
+				cComando := "http://ares/AnexosSC/anexos.aspx?NUMSC="+SC1->C1_NUM+"&NUMITEM="+SC1->C1_ITEM+"&EMP="+cEmpAnt+"01"
+			EndIf
+
 		Else
 			cComando := "http://srv_web_protheus:6969/ws02/u_viewitem.apw?codcom="+SY1->Y1_COD+"&emp="+cEmpAnt+"&fil="+cFilAnt+"&obj="+cValToChar(SC1->(recno()))
 		EndIf

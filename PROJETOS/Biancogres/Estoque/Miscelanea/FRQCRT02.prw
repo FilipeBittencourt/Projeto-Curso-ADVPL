@@ -24,7 +24,7 @@ Local aRet
 Local bProcessa
 Local cPedido := ""
 Local cFile
-Local _cDest := GetNewPar("FA_RQCDE"+AllTrim(cEmpDest),"fernando@facilesistemas.com.br")
+Local _cDest := GetNewPar("FA_RQCDE"+AllTrim(cEmpDest),"ranisses.corona@biancogres.com.br")
 Local _cTexto   
 
 Private aExcel

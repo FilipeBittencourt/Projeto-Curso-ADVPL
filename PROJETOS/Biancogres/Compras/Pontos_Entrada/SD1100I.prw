@@ -18,6 +18,7 @@ User Function SD1100I()
 	Local fpArea := GetArea()
 	Local _oMd	:=	TBiaControleMD():New()
 	Local _cSolic	:=	""
+	Local _cAliasSr	:=	U_fGetDbSr()
 	
 	Public xd_NumPrc := Space(6)
 
@@ -26,7 +27,7 @@ User Function SD1100I()
 		CSQL += "   SET ZCN_SOLIC =  "
 		CSQL += "	    ISNULL((SELECT MAX(SUBSTRING(NOMFUN,1,30))           "
 		CSQL += "		  		  FROM "+RETSQLNAME("SC7")+" SC7             "
-		CSQL += "			     INNER JOIN VETORH..R034FUN                  "
+		CSQL += "			     INNER JOIN "+_cAliasSr+"..R034FUN                  "
 		CSQL += "				    ON NUMEMP = "+ Subst(cEmpAnt,2,1)        
 		CSQL += "                  AND TIPCOL = 1                            "
 		CSQL += "				   AND NUMCAD =                              "

@@ -85,22 +85,13 @@ Static Function CheckCotPortal()
 	//apenas cotações vinda do portal
 	If (_cTipo $ '1_2')	
 	
-		//If (TCSPExist("BPORTAL.dbo.Sp_BPortal_Sinc_Protheus_Cotacao_Portal"))
-			TCSQLEXEC("exec BPORTAL.dbo.Sp_BPortal_Sinc_Protheus_Cotacao_Portal")
-		//EndIf
-		
-		//If (TCSPExist("BPORTAL.dbo.Sp_BPortal_Sinc_Cotacao_Portal_Protheus"))
-			TCSQLEXEC("exec BPORTAL.dbo.Sp_BPortal_Sinc_Cotacao_Portal_Protheus")
-		//EndIf
-		
 		cAliasTemp	:= GetNextAlias()
 	    
-	    cQuery := " SELECT * 									"
-	    cQuery += " FROM dbo.BZINTEGRACAO_COTACAO_PORTAL A 		"
-	    cQuery += " WHERE A.EMPRESA  = '" + cEmpAnt +"'			"
-	    cQuery += " AND A.FILIAL     = '" + cFilAnt +"'			"
-	    //cQuery += " AND A.STATUS     = 'P' 						"
-	    cQuery += " AND A.COTACAO    = '"+_cCotacao+"'			"
+	    cQuery := " SELECT * 										"
+	    cQuery += " FROM [BPORTAL_SA].[dbo].[CotacaoCompra] A 		"
+	    cQuery += " WHERE A.Empresa  = '" + cEmpAnt +"'				"
+	    cQuery += " AND A.Filial     = '" + cFilAnt +"'				"
+	    cQuery += " AND A.Cotacao    = '"+_cCotacao+"'				"
 	     
 	    TcQuery cQuery New Alias (cAliasTemp)
 	    If (cAliasTemp)->(EOF())

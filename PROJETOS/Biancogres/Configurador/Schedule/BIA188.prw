@@ -71,19 +71,19 @@ User Function BIA188(cPedOri, cEmpPed, lRpc)
 	C_HTML += '<body> '
 
 	//CABECALHO	                                               
-	C_HTML += '<table width="900" border="0" bgcolor="black"> '
+	C_HTML += '<table width="900" border="0" bgcolor="black" style="color:white"> '
 	C_HTML += '  <tr> '                                        
-	C_HTML += '<font color="white"> '
-	C_HTML += '  <th scope="col"><div align="center">PEDIDO ESTAVA BLOQUEADO POR DESCONTO/MARGEM E FOI LIBERADO <br> LIBERADO POR: ' +Alltrim(SC5->C5_YAPROV) 
-	C_HTML += '</font>'            
+	// C_HTML += '<font color="white"> '
+	C_HTML += '  <th scope="col"><div align="center" >PEDIDO ESTAVA BLOQUEADO POR DESCONTO/MARGEM E FOI LIBERADO <br> LIBERADO POR: ' +Alltrim(SC5->C5_YAPROV) 
+	// C_HTML += '</font>'            
 	C_HTML += '</tr> '             
 	C_HTML += '</table> '
 
-	C_HTML += '<table width="900" border="0" bgcolor="black"> '
+	C_HTML += '<table width="900" border="0" bgcolor="black" style="color:white"> '
 	//C_HTML += '<table width="900" border="0" > '
 	C_HTML += '  <tr> '                                        
 	//C_HTML += '<font color="black"> '
-	C_HTML += '<font color="white"> '
+	// C_HTML += '<font color="white"> '
 
 	DO CASE
 		CASE cEmpAnt = "01"
@@ -94,11 +94,11 @@ User Function BIA188(cPedOri, cEmpPed, lRpc)
 		C_HTML += '  <th scope="col"><div align="center">PEDIDO DE VENDA - '+(SC5->C5_NUM)+'<br>'			
 	ENDCASE                        
 
-	C_HTML += '</font>'            
+	// C_HTML += '</font>'            
 	C_HTML += '</tr> '             
 	C_HTML += '</table> '
 
-	C_HTML += '<table width="900" border="0" bgcolor="#00FA9A"> '
+	C_HTML += '<table width="900" border="0" bgcolor="#00FA9A" style="color:black"> '
 	C_HTML += '<font color="black"> '                          
 	C_HTML += '<tr> '
 	C_HTML += '    <th width="450" scope="col"> DADOS DA EMPRESA </th> '
@@ -108,7 +108,7 @@ User Function BIA188(cPedOri, cEmpPed, lRpc)
 	C_HTML += '</font>'        
 	C_HTML += '</table> '
 
-	C_HTML += '<table width="900" border="0" cellspacing="0" cellpadding="2"> '
+	C_HTML += '<table width="900" border="0" cellspacing="0" cellpadding="2" style="color:black"> '
 	C_HTML += '<font color="black" size="2"> ' 
 	C_HTML += '<tr> '
 	C_HTML += '    <td><div align="left"> Razão Social do Comprador: <b>'+ UPPER(SM0->M0_NOMECOM) +'</b></td> '
@@ -163,13 +163,11 @@ User Function BIA188(cPedOri, cEmpPed, lRpc)
 	DbSeek(xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI) 
 
 	C_HTML += '<table width="900" border="0" bgcolor="black"> '
-	C_HTML += '  <tr> '                                        
-	C_HTML += '<font color="white"> '		
-	C_HTML += '</font>'            
+	C_HTML += '  <tr> '                                                   
 	C_HTML += '</tr> '             
 	C_HTML += '</table> '
 
-	C_HTML += '<table width="900" border="0" bgcolor="#00FA9A"> '
+	C_HTML += '<table width="900" border="0" bgcolor="#00FA9A" style="color:black"> '
 	C_HTML += '<font color="black"> '                          
 	C_HTML += '<tr> '
 	C_HTML += '    <th width="900" scope="col"> DADOS DO CLIENTE:  </th> '
@@ -178,7 +176,7 @@ User Function BIA188(cPedOri, cEmpPed, lRpc)
 	C_HTML += '</font>'        
 	C_HTML += '</table> '        
 
-	C_HTML += '<table width="900" border="0" cellspacing="0" cellpadding="2"> '
+	C_HTML += '<table width="900" border="0" cellspacing="0" cellpadding="2" style="color:black"> '
 	C_HTML += '<font color="black" size="2"> ' 
 	C_HTML += '<tr> '
 	C_HTML += '    <td><div align="left"> CLIENTE: <b>'+Alltrim(SA1->A1_NOME)+'</b></td> '
@@ -222,13 +220,11 @@ User Function BIA188(cPedOri, cEmpPed, lRpc)
 
 	//CABECALHO DOS ITENS DO PEDIDO 
 	C_HTML += '<table width="900" border="0" bgcolor="black"> '
-	C_HTML += '  <tr> '                                        
-	C_HTML += '<font color="white"> '		
-	C_HTML += '</font>'            
+	C_HTML += '  <tr> '                                                
 	C_HTML += '</tr> '             
 	C_HTML += '</table> ' 
 
-	C_HTML += '<table width="900" border="0" bgcolor="#00FA9A"> '
+	C_HTML += '<table width="900" border="0" bgcolor="#00FA9A" style="color:black"> '
 	C_HTML += '<font color="black"> '                          
 	C_HTML += '<tr> '
 	C_HTML += '    <th width="900" scope="col">ITENS DO PEDIDO DE VENDA </th> '
@@ -236,7 +232,7 @@ User Function BIA188(cPedOri, cEmpPed, lRpc)
 	C_HTML += '</font>'        
 	C_HTML += '</table> '  
 	//CABECALHO COLUNAS - ITENS
-	C_HTML += '<table width="900" border="1" cellspacing="0" cellpadding="2"> '
+	C_HTML += '<table width="900" border="1" cellspacing="0" cellpadding="2" style="color:black"> '
 	C_HTML += '<font color="black" size="2"> ' 
 	C_HTML += '<tr> ' 	
 	C_HTML += '    <th width="20" scope="col"> ITEM </span></th> '   
@@ -304,7 +300,7 @@ User Function BIA188(cPedOri, cEmpPed, lRpc)
 
 	SC6->(DbGoTop())
 
-	C_HTML += '<table width="900" border="1" cellspacing="0" cellpadding="2"> '
+	C_HTML += '<table width="900" border="1" cellspacing="0" cellpadding="2" style="color:black"> '
 	C_HTML += '<font color="black" size="2"> ' 
 	C_HTML += '<tr> ' 	
 	C_HTML += '    <th width="800" scope="col"> SEGURO: '+IIF(SC5->C5_VLRFRET == 0,'NÃO','SIM') +'</span></th> ' 
@@ -325,14 +321,11 @@ User Function BIA188(cPedOri, cEmpPed, lRpc)
 
 	C_HTML += '<BR>' 
 	C_HTML += '<table width="900" border="0" bgcolor="black"> '
-	C_HTML += '  <tr> '                                        
-	C_HTML += '<font color="white"> '
-
-	C_HTML += '</font>'            
+	C_HTML += '  <tr> '                                                 
 	C_HTML += '</tr> '             
 	C_HTML += '</table> '
 
-	C_HTML += '<table width="900" border="0" bgcolor="#00FA9A"> '
+	C_HTML += '<table width="900" border="0" bgcolor="#00FA9A" style="color:black"> '
 	C_HTML += '<font color="black"> '                          
 	C_HTML += '<tr> '
 	C_HTML += '    <th width="900" scope="col"> IMPORTANTE:  </th> '
@@ -341,7 +334,7 @@ User Function BIA188(cPedOri, cEmpPed, lRpc)
 	C_HTML += '</font>'        
 	C_HTML += '</table> '        
 
-	C_HTML += '<table width="900" border="0" cellspacing="0" cellpadding="2"> '
+	C_HTML += '<table width="900" border="0" cellspacing="0" cellpadding="2" style="color:black"> '
 	C_HTML += '<font color="black" size="2"> ' 
 	C_HTML += '<tr> '
 	C_HTML += '    <td><div align="left"> 1 - Todos os pedidos com produtos disponíveis são para embarque imediato. </td> '
@@ -396,13 +389,10 @@ User Function BIA188(cPedOri, cEmpPed, lRpc)
 		C_HTML += '<BR>' 
 		C_HTML += '<table width="900" border="0" bgcolor="black"> '
 		C_HTML += '  <tr> '                                        
-		C_HTML += '<font color="white"> '
-
-		C_HTML += '</font>'            
 		C_HTML += '</tr> '             
 		C_HTML += '</table> '
 
-		C_HTML += '<table width="900" border="0" bgcolor="#00FA9A"> '
+		C_HTML += '<table width="900" border="0" bgcolor="#00FA9A" style="color:black"> '
 		C_HTML += '<font color="black"> '                          
 		C_HTML += '<tr> '
 		C_HTML += '    <th width="900" scope="col"> OBSERVAÇÃO:  </th> '
@@ -410,7 +400,7 @@ User Function BIA188(cPedOri, cEmpPed, lRpc)
 		C_HTML += '</font>'        
 		C_HTML += '</table> '        
 
-		C_HTML += '<table width="900" border="0" cellspacing="0" cellpadding="2"> '
+		C_HTML += '<table width="900" border="0" cellspacing="0" cellpadding="2" style="color:black"> '
 		C_HTML += '<font color="black" size="2"> '  
 
 
@@ -427,7 +417,7 @@ User Function BIA188(cPedOri, cEmpPed, lRpc)
 	//ASSINATURA PARA CLIENTES DE ENGENHARIA 
 	If(Alltrim(SA1->A1_YTPSEG)=='E')
 		C_HTML += '<BR><BR><BR>'
-		C_HTML += '<table width="900" border="0" bgcolor="white"> '
+		C_HTML += '<table width="900" border="0" bgcolor="white" style="color:black"> '
 		C_HTML += '<font color="black"> '                          
 		C_HTML += '<tr> '
 		C_HTML += '    <th width="900" scope="col"> ___________________________________________________________  </th> '

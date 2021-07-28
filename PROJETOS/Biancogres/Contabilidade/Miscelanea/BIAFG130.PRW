@@ -6,7 +6,7 @@
 @author Gabriel Rossi Mafioletti
 @since 26/08/20
 @version 1.0
-@description Rotina para geracao dos expurgos na empresa 90 - Consolidado
+@description Rotina para geracao dos expurgos na empresa 90 - Consolidado/Contabilização
 @type function
 /*/
 
@@ -46,10 +46,7 @@ Static Function Menudef()
 	Local aRotina := {}
 	aAdd( aRotina, { 'Pesquisar'           , 'AxPesqui' , 0, 1, 0, NIL } )
 	aAdd( aRotina, { 'Visualizar'          , 'AxVisual' , 0, 2, 0, NIL } )
-	aAdd( aRotina, { 'Incluir'             , 'AxInclui' , 0, 3, 0, NIL } )
-	aAdd( aRotina, { 'Alterar'             , 'AxAltera' , 0, 4, 0, NIL } )
-	aAdd( aRotina, { 'Excluir'             , 'AxDeleta' , 0, 5, 0, NIL } )
-	aAdd( aRotina, { 'Monta Consolidação'  , 'U_BFG130B', 0, 6, 0, NIL } )
+	aAdd( aRotina, { 'Monta Consolidação'  , 'U_BFG130B', 0, 3, 0, NIL } )
 	aAdd( aRotina, { 'Contabiliza Expurgos', 'U_BFG130C', 0, 7, 0, NIL } )
 
 Return aRotina

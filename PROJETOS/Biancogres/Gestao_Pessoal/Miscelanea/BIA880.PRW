@@ -94,6 +94,8 @@ Static Function fBIA880A()
 	Local msDatRef    := dtos(_cDataRef)
 	Local msPrcAnt    := 0
 	Local msCfgPrc    := .T.
+	Local _cAliasSr	:=	U_fGetDbSr() 
+
 
 	msDatRef := Substr(msDatRef, 1, 4) + "-" + Substr(msDatRef, 5, 2) + "-" + Substr(msDatRef, 7, 2)
 
@@ -209,7 +211,7 @@ Static Function fBIA880A()
 				TG003 += Alltrim("                              WHEN                                                                         ") + msrhEnter
 				TG003 += Alltrim("          (                                                                                                ") + msrhEnter
 				TG003 += Alltrim("              SELECT COUNT(*)                                                                              ") + msrhEnter
-				TG003 += Alltrim("              FROM VETORH.DBO.r038evt h(NOLOCK)                                                            ") + msrhEnter
+				TG003 += Alltrim("              FROM "+_cAliasSr+".DBO.r038evt h(NOLOCK)                                                            ") + msrhEnter
 				TG003 += Alltrim("              WHERE h.numemp = a.numemp                                                                    ") + msrhEnter
 				TG003 += Alltrim("                    AND h.tipcol = a.tipcol                                                                ") + msrhEnter
 				TG003 += Alltrim("                    AND h.numcad = a.numcad                                                                ") + msrhEnter
@@ -246,24 +248,24 @@ Static Function fBIA880A()
 				TG003 += Alltrim("                              ELSE '1'                                                                     ") + msrhEnter
 				TG003 += Alltrim("                           END,                                                                            ") + msrhEnter
 				TG003 += Alltrim("                 DPTOSR = [dbo].[FNC_BI_GETDEPART](" + cEmpAnt + ", a.numcad, '" + dtos(MV_PAR04) + "')    ") + msrhEnter
-				TG003 += Alltrim("          FROM VETORH.dbo.r034fun a(NOLOCK)                                                                ") + msrhEnter
+				TG003 += Alltrim("          FROM "+_cAliasSr+".dbo.r034fun a(NOLOCK)                                                                ") + msrhEnter
 				TG003 += Alltrim("               LEFT JOIN VW_BG_GESTOR_IMEDIATO v ON v.NUMEMP = a.numemp                                    ") + msrhEnter
 				TG003 += Alltrim("                                                         AND v.TIPCOL = a.tipcol                           ") + msrhEnter
 				TG003 += Alltrim("                                                         AND v.NUMCAD = a.numcad                           ") + msrhEnter
-				TG003 += Alltrim("               LEFT JOIN VETORH.DBO.r162ass b(NOLOCK) ON b.numemp = a.numemp                               ") + msrhEnter
+				TG003 += Alltrim("               LEFT JOIN "+_cAliasSr+".DBO.r162ass b(NOLOCK) ON b.numemp = a.numemp                               ") + msrhEnter
 				TG003 += Alltrim("                                                         AND b.tipcol = a.tipcol                           ") + msrhEnter
 				TG003 += Alltrim("                                                         AND b.numcad = a.numcad                           ") + msrhEnter
 				TG003 += Alltrim("                                                         AND b.codval = 5                                  ") + msrhEnter
-				TG003 += Alltrim("               LEFT JOIN VETORH.DBO.r006esc c(NOLOCK) ON c.codesc = a.codesc                               ") + msrhEnter
-				TG003 += Alltrim("               LEFT JOIN VETORH.dbo.r017adi t ON t.estpos = a.estpos                                       ") + msrhEnter
+				TG003 += Alltrim("               LEFT JOIN "+_cAliasSr+".DBO.r006esc c(NOLOCK) ON c.codesc = a.codesc                               ") + msrhEnter
+				TG003 += Alltrim("               LEFT JOIN "+_cAliasSr+".dbo.r017adi t ON t.estpos = a.estpos                                       ") + msrhEnter
 				TG003 += Alltrim("                                                          AND t.postra = a.postra                          ") + msrhEnter
-				TG003 += Alltrim("               INNER JOIN VETORH.dbo.r038hfi e(NOLOCK) ON e.numemp = a.numemp                              ") + msrhEnter
+				TG003 += Alltrim("               INNER JOIN "+_cAliasSr+".dbo.r038hfi e(NOLOCK) ON e.numemp = a.numemp                              ") + msrhEnter
 				TG003 += Alltrim("                                                          AND e.tipcol = a.tipcol                          ") + msrhEnter
 				TG003 += Alltrim("                                                          AND e.numcad = a.numcad                          ") + msrhEnter
 				TG003 += Alltrim("                                                          AND e.datalt =                                   ") + msrhEnter
 				TG003 += Alltrim("          (                                                                                                ") + msrhEnter
 				TG003 += Alltrim("              SELECT MAX(qq.datalt)                                                                        ") + msrhEnter
-				TG003 += Alltrim("              FROM VETORH.dbo.r038hfi qq(NOLOCK)                                                           ") + msrhEnter
+				TG003 += Alltrim("              FROM "+_cAliasSr+".dbo.r038hfi qq(NOLOCK)                                                           ") + msrhEnter
 				TG003 += Alltrim("              WHERE qq.datalt < '" + msDatRef + "'                                                         ") + msrhEnter
 				TG003 += Alltrim("                    AND qq.numemp = a.numemp                                                               ") + msrhEnter
 				TG003 += Alltrim("                    AND qq.tipcol = a.tipcol                                                               ") + msrhEnter
@@ -278,14 +280,14 @@ Static Function fBIA880A()
 				TG003 += Alltrim("             SALARIO =                                                                                     ") + msrhEnter
 				TG003 += Alltrim("      (                                                                                                    ") + msrhEnter
 				TG003 += Alltrim("          SELECT MAX(s.valsal)                                                                             ") + msrhEnter
-				TG003 += Alltrim("          FROM VETORH.dbo.R038HSA s                                                                        ") + msrhEnter
+				TG003 += Alltrim("          FROM "+_cAliasSr+".dbo.R038HSA s                                                                        ") + msrhEnter
 				TG003 += Alltrim("          WHERE s.tipcol = A.TIPCOL                                                                        ") + msrhEnter
 				TG003 += Alltrim("                AND s.numemp = A.NUMEMP                                                                    ") + msrhEnter
 				TG003 += Alltrim("                AND s.numcad = A.NUMCAD                                                                    ") + msrhEnter
 				TG003 += Alltrim("                AND s.datalt IN                                                                            ") + msrhEnter
 				TG003 += Alltrim("          (                                                                                                ") + msrhEnter
 				TG003 += Alltrim("              SELECT MAX(b.datalt)                                                                         ") + msrhEnter
-				TG003 += Alltrim("              FROM VETORH.dbo.R038HSA b                                                                    ") + msrhEnter
+				TG003 += Alltrim("              FROM "+_cAliasSr+".dbo.R038HSA b                                                                    ") + msrhEnter
 				TG003 += Alltrim("              WHERE b.tipcol = s.tipcol                                                                    ") + msrhEnter
 				TG003 += Alltrim("                    AND b.numemp = s.numemp                                                                ") + msrhEnter
 				TG003 += Alltrim("                    AND b.numcad = s.numcad                                                                ") + msrhEnter
@@ -422,6 +424,7 @@ Static Function fBIA880B()
 
 	Local M002        := GetNextAlias()
 	Local msChkErr    := .F.
+	Local _cAliasSr	:=	U_fGetDbSr()
 
 	xfCompl := ""
 	xfCompl += " Foram encontradas inconsistências no preenchimento" + msrhEnter
@@ -541,7 +544,7 @@ Static Function fBIA880B()
 	UP004 += "                        ELSE 0 "
 	UP004 += "                    END "
 	UP004 += " FROM " + RetSqlName("ZO0") + " ZO0 "
-	UP004 += "      INNER JOIN VETORH.dbo.r024car c ON c.codcar = CONVERT(NUMERIC, ZO0.ZO0_CARGO) "
+	UP004 += "      INNER JOIN "+_cAliasSr+".dbo.r024car c ON c.codcar = CONVERT(NUMERIC, ZO0.ZO0_CARGO) "
 	UP004 += " WHERE ZO0_FILIAL = '" + xFilial("ZO0") + "' "
 	UP004 += "       AND ZO0_VERSAO = '" + _cVersao + "' "
 	UP004 += "       AND ZO0_REVISA = '" + _cRevisa + "' "

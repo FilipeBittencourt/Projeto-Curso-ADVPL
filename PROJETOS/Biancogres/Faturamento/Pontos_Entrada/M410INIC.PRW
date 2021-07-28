@@ -28,7 +28,7 @@ If SC5->(FieldPos("C5_YCHVRES")) > 0
 EndIf
 
 If !Empty(cRepAtu) .And. U_GETBIAPAR("REP_BLQPED",.F.)
-	MsgInfo("Inclusão de pedidos temporariamente bloqueada pelo departamento comercial","M410INIC")
+	MsgInfo("Inclusão de pedidos temporariamente bloqueada pelo departamento comercial, exceto pedidos de amostra e mostruário","M410INIC")
 EndIf
 
 __lRep := Type("CREPATU") <> "U" .And. !Empty(CREPATU)
@@ -37,7 +37,7 @@ If (__lRep)
 	SA3->(DbSetOrder(1))
 	If SA3->(DbSeek(XFilial("SA3")+CREPATU))
 		If (SA3->A3_YBLQPED == 'S')
-			MsgInfo("Inclusão de pedidos temporariamente bloqueada pelo departamento comercial","M410INIC")
+			MsgInfo("Inclusão de pedidos temporariamente bloqueada pelo departamento comercial, exceto pedidos de amostra e mostruário","M410INIC")
 		EndIf
 	EndIf		
 EndIf

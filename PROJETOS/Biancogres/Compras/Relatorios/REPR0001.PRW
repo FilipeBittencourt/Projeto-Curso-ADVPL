@@ -112,7 +112,6 @@ Static Function MontaLinhas()
 	Local cAliasTemp	:= GetNextAlias()
 
 	cQuery += " SELECT ZI.*,
-	//cQuery += " ISNULL((SELECT  NOMFUN   FROM VETORH..VW_BG_COLABORADOR WHERE CAST(NUMFIS AS VARCHAR(30)) = ZI.ZI_RFIDCAL),'') AS ATENDENTE, "
 	cQuery += " ISNULL((SELECT  NOMFUN   FROM VW_BG_COLABORADOR WHERE NUMFIS = CAST(CASE WHEN IsNumeric(ZI.ZI_RFIDCAL) = 1 THEN ZI.ZI_RFIDCAL ELSE NULL END AS bigint)),'') AS ATENDENTE, "
 	cQuery += "        ZJ.*
 	cQuery += " FROM " + RetSqlName('SZI') + " ZI "

@@ -67,7 +67,7 @@ Method New(lJob) Class TIntegracaoMovimentoQuebra
 
     ::lFound := .F.
 
-    ::cEmail := U_EmailWF('INTMOVQB', cEmpAnt)//U_GetBiaPar("MV_EMAILINTMOVQUEB", "wlysses@facilesistemas.com.br")
+    ::cEmail := U_EmailWF('INTMOVQB', cEmpAnt)//U_GetBiaPar("MV_EMAILINTMOVQUEB", "ranisses.corona@biancogres.com.br")
 
 Return(Self)
 

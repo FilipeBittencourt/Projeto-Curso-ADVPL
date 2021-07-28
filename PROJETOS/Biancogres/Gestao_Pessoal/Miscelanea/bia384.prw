@@ -186,7 +186,7 @@ Static Function fBIA384C()
 		(_cAlias)->(aAdd(_oGetDados:aCols, {"B30", "zmCrtCom", "CARTAO COMBUSTIVEL"                , 0, "ZB3", 0, .F. }))
 		(_cAlias)->(aAdd(_oGetDados:aCols, {"B35", "zmAjdCBd", "AJUDA DE CUSTO BANCO DE DADOS"     , 0, "ZB3", 0, .F. }))
 		(_cAlias)->(aAdd(_oGetDados:aCols, {"B40", "zmCfccCh", "CONFECCAO DE CRACHAS NOVOS FU"     , 0, "ZB3", 0, .F. }))
-
+		(_cAlias)->(aAdd(_oGetDados:aCols, {"B45", "zmReeDesp", "REEMBOLSO DE DESPESAS DE VENDA"    , 0, "ZB3", 0, .F. }))
 	EndIf	
 
 	_oGetDados:Refresh()

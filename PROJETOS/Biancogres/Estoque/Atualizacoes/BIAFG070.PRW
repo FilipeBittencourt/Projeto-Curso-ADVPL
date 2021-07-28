@@ -172,7 +172,14 @@ Static Function fUpdMes()
 
 	Local _cMes	:=	Dtos(LastDay(StoD(SUBSTR(Dtos(MV_PAR03),1,4) + MV_PAR05 + '01')))
 
-	_cSql	:=	"UPDATE " + RetSqlName("ZCP") + " SET ZCP_MES = " + _cMes
+	_cSql := " UPDATE ZCP SET ZCP_MES = '" + _cMes + "' "
+	_cSql += " FROM " + RetSqlName("ZCP") + " ZCP(NOLOCK) "
+	_cSql += "      INNER JOIN " + RetSqlName("SB1") + " SB1(NOLOCK) ON SB1.B1_FILIAL = '" + xFilial("SB1") + "' "
+	_cSql += "                                       AND SB1.B1_COD = ZCP.ZCP_COD "	
+	_cSql += "                                       AND SB1.B1_GRUPO BETWEEN '" + MV_PAR01 + "' AND '" + MV_PAR02 + "' "
+	_cSql += "                                       AND SB1.D_E_L_E_T_ = ' ' "
+	_cSql += " WHERE ZCP_FILIAL = '" + xFilial("ZCP") + "' "
+	_cSql += "       AND ZCP.D_E_L_E_T_ = ' ' "	
 
 	TcSqlExec(_cSql)
 
@@ -199,9 +206,13 @@ Static Function fGeraCons()
 		,SUM(ZCP_Q11) ZCP_Q11
 		,SUM(ZCP_Q12) ZCP_Q12
 		FROM %TABLE:ZCP% ZCP
+		INNER JOIN %TABLE:SB1% SB1(NOLOCK) ON SB1.B1_FILIAL = %XFILIAL:SB1%
+		AND SB1.B1_COD = ZCP.ZCP_COD
+		AND SB1.B1_GRUPO BETWEEN %Exp:MV_PAR01%	AND %Exp:MV_PAR02%
+		AND SB1.%NotDel%
 		WHERE ZCP_FILIAL = %XFILIAL:ZCP%
 		AND ZCP_LOCAL IN ('01','20')
-		AND %NotDel%
+		AND ZCP.%NotDel%
 		GROUP BY ZCP_FILIAL
 		,ZCP_COD
 
@@ -211,7 +222,6 @@ Static Function fGeraCons()
 	While (_cAlias)->(!EOF())
 
 		IncProc()
-
 
 		If ZCP->(DbSeek(xFilial("ZCP")+(_cAlias)->ZCP_COD + 'ZZ'))
 

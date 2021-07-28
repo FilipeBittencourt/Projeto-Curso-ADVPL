@@ -15,6 +15,8 @@ User Function BIAF153()
 	Private aRotina := {}
 	Private cCadastro := "Calculo de Rubricas de Custo Funcionario"
 	Private cAlias := "ZBO"
+	Private _cAliasSr	:=	U_fGetDbSr()
+
 
 	aAdd(aRotina, {"Pesquisar"     , "PesqBrw"   , 0, 1})
 	aAdd(aRotina, {"Visualizar"    , "AxVisual"  , 0, 2})
@@ -168,18 +170,18 @@ Static Function msScriptGr()
 		TM004 += Alltrim("                             THEN a.valeve                                                                             ") + msEnter
 		TM004 += Alltrim("                             ELSE a.valeve * (-1)                                                                      ") + msEnter
 		TM004 += Alltrim("                         END                                                                                           ") + msEnter
-		TM004 += Alltrim("          FROM VETORH.dbo.r046ver a(NOLOCK)                                                                            ") + msEnter
-		TM004 += Alltrim("               INNER JOIN VETORH.dbo.r008evc b(NOLOCK) ON b.codeve = a.codeve                                          ") + msEnter
+		TM004 += Alltrim("          FROM "+_cAliasSr+".dbo.r046ver a(NOLOCK)                                                                            ") + msEnter
+		TM004 += Alltrim("               INNER JOIN "+_cAliasSr+".dbo.r008evc b(NOLOCK) ON b.codeve = a.codeve                                          ") + msEnter
 		TM004 += Alltrim("                                                          AND b.codtab = a.tabeve                                      ") + msEnter
-		TM004 += Alltrim("               INNER JOIN VETORH.dbo.r044cal c(NOLOCK) ON c.numemp = a.numemp                                          ") + msEnter
+		TM004 += Alltrim("               INNER JOIN "+_cAliasSr+".dbo.r044cal c(NOLOCK) ON c.numemp = a.numemp                                          ") + msEnter
 		TM004 += Alltrim("                                                          AND c.codcal = a.codcal                                      ") + msEnter
-		TM004 += Alltrim("               INNER JOIN VETORH.dbo.r038hfi e(NOLOCK) ON e.numemp = a.numemp                                          ") + msEnter
+		TM004 += Alltrim("               INNER JOIN "+_cAliasSr+".dbo.r038hfi e(NOLOCK) ON e.numemp = a.numemp                                          ") + msEnter
 		TM004 += Alltrim("                                                          AND e.tipcol = a.tipcol                                      ") + msEnter
 		TM004 += Alltrim("                                                          AND e.numcad = a.numcad                                      ") + msEnter
 		TM004 += Alltrim("                                                          AND e.datalt =                                               ") + msEnter
 		TM004 += Alltrim("          (                                                                                                            ") + msEnter
 		TM004 += Alltrim("              SELECT MAX(qq.datalt)                                                                                    ") + msEnter
-		TM004 += Alltrim("              FROM VETORH.dbo.r038hfi qq(NOLOCK)                                                                       ") + msEnter
+		TM004 += Alltrim("              FROM "+_cAliasSr+".dbo.r038hfi qq(NOLOCK)                                                                       ") + msEnter
 		TM004 += Alltrim("              WHERE qq.datalt < EOMONTH(c.perref)                                                                      ") + msEnter
 		TM004 += Alltrim("                    AND qq.numemp = a.numemp                                                                           ") + msEnter
 		TM004 += Alltrim("                    AND qq.tipcol = a.tipcol                                                                           ") + msEnter
@@ -211,16 +213,16 @@ Static Function msScriptGr()
 		TM004 += Alltrim("                 ratfap = 0,                                                                                           ") + msEnter
 		TM004 += Alltrim("                 basins = 0,                                                                                           ") + msEnter
 		TM004 += Alltrim("                 valor = a.ajuprv + a.prvmes                                                                           ") + msEnter
-		TM004 += Alltrim("          FROM VETORH.dbo.r146prv a(NOLOCK)                                                                            ") + msEnter
-		TM004 += Alltrim("               LEFT JOIN VETORH.dbo.r146det h(NOLOCK) ON h.tipprv = a.tipprv                                           ") + msEnter
+		TM004 += Alltrim("          FROM "+_cAliasSr+".dbo.r146prv a(NOLOCK)                                                                            ") + msEnter
+		TM004 += Alltrim("               LEFT JOIN "+_cAliasSr+".dbo.r146det h(NOLOCK) ON h.tipprv = a.tipprv                                           ") + msEnter
 		TM004 += Alltrim("                                                         AND h.tipval = a.tipval                                       ") + msEnter
-		TM004 += Alltrim("               INNER JOIN VETORH.dbo.r038hfi e(NOLOCK) ON e.numemp = a.numemp                                          ") + msEnter
+		TM004 += Alltrim("               INNER JOIN "+_cAliasSr+".dbo.r038hfi e(NOLOCK) ON e.numemp = a.numemp                                          ") + msEnter
 		TM004 += Alltrim("                                                          AND e.tipcol = a.tipcol                                      ") + msEnter
 		TM004 += Alltrim("                                                          AND e.numcad = a.numcad                                      ") + msEnter
 		TM004 += Alltrim("                                                          AND e.datalt =                                               ") + msEnter
 		TM004 += Alltrim("          (                                                                                                            ") + msEnter
 		TM004 += Alltrim("              SELECT MAX(qq.datalt)                                                                                    ") + msEnter
-		TM004 += Alltrim("              FROM VETORH.dbo.r038hfi qq(NOLOCK)                                                                       ") + msEnter
+		TM004 += Alltrim("              FROM "+_cAliasSr+".dbo.r038hfi qq(NOLOCK)                                                                       ") + msEnter
 		TM004 += Alltrim("              WHERE qq.datalt < EOMONTH(a.mesano)                                                                      ") + msEnter
 		TM004 += Alltrim("                    AND qq.numemp = a.numemp                                                                           ") + msEnter
 		TM004 += Alltrim("                    AND qq.tipcol = a.tipcol                                                                           ") + msEnter
@@ -255,20 +257,20 @@ Static Function msScriptGr()
 		TM004 += Alltrim("                             ELSE a.valeve * (-1)                                                                      ") + msEnter
 		TM004 += Alltrim("                         END,                                                                                          ") + msEnter
 		TM004 += Alltrim("                 d.incinm                                                                                              ") + msEnter
-		TM004 += Alltrim("          FROM VETORH.dbo.r046ver a                                                                                    ") + msEnter
-		TM004 += Alltrim("               INNER JOIN VETORH.dbo.r008evc b ON b.codeve = a.codeve                                                  ") + msEnter
+		TM004 += Alltrim("          FROM "+_cAliasSr+".dbo.r046ver a                                                                                    ") + msEnter
+		TM004 += Alltrim("               INNER JOIN "+_cAliasSr+".dbo.r008evc b ON b.codeve = a.codeve                                                  ") + msEnter
 		TM004 += Alltrim("                                                  AND b.codtab = a.tabeve                                              ") + msEnter
-		TM004 += Alltrim("               INNER JOIN VETORH.dbo.r044cal c ON c.numemp = a.numemp                                                  ") + msEnter
+		TM004 += Alltrim("               INNER JOIN "+_cAliasSr+".dbo.r044cal c ON c.numemp = a.numemp                                                  ") + msEnter
 		TM004 += Alltrim("                                                  AND c.codcal = a.codcal                                              ") + msEnter
-		TM004 += Alltrim("               INNER JOIN VETORH.dbo.r008inc d ON d.codeve = a.codeve                                                  ") + msEnter
+		TM004 += Alltrim("               INNER JOIN "+_cAliasSr+".dbo.r008inc d ON d.codeve = a.codeve                                                  ") + msEnter
 		TM004 += Alltrim("                                                  AND d.codtab = a.tabeve                                              ") + msEnter
-		TM004 += Alltrim("               INNER JOIN VETORH.dbo.r038hfi e ON e.numemp = a.numemp                                                  ") + msEnter
+		TM004 += Alltrim("               INNER JOIN "+_cAliasSr+".dbo.r038hfi e ON e.numemp = a.numemp                                                  ") + msEnter
 		TM004 += Alltrim("                                                  AND e.tipcol = a.tipcol                                              ") + msEnter
 		TM004 += Alltrim("                                                  AND e.numcad = a.numcad                                              ") + msEnter
 		TM004 += Alltrim("                                                  AND e.datalt =                                                       ") + msEnter
 		TM004 += Alltrim("          (                                                                                                            ") + msEnter
 		TM004 += Alltrim("              SELECT MAX(qq.datalt)                                                                                    ") + msEnter
-		TM004 += Alltrim("              FROM VETORH.dbo.r038hfi qq                                                                               ") + msEnter
+		TM004 += Alltrim("              FROM "+_cAliasSr+".dbo.r038hfi qq                                                                               ") + msEnter
 		TM004 += Alltrim("              WHERE qq.datalt < EOMONTH(c.perref)                                                                      ") + msEnter
 		TM004 += Alltrim("                    AND qq.numemp = a.numemp                                                                           ") + msEnter
 		TM004 += Alltrim("                    AND qq.tipcol = a.tipcol                                                                           ") + msEnter
@@ -303,22 +305,22 @@ Static Function msScriptGr()
 		TM004 += Alltrim("                 ratfap = ISNULL(ratnae, 0) * ISNULL(fatfap, 0),                                                       ") + msEnter
 		TM004 += Alltrim("                 basins = basins                                                                                       ") + msEnter
 		TM004 += Alltrim("          FROM AgrupaCustototal x                                                                                      ") + msEnter
-		TM004 += Alltrim("               LEFT JOIN VETORH.dbo.r030grp f ON f.numemp = x.numemp                                                   ") + msEnter
+		TM004 += Alltrim("               LEFT JOIN "+_cAliasSr+".dbo.r030grp f ON f.numemp = x.numemp                                                   ") + msEnter
 		TM004 += Alltrim("                                                 AND f.codfil = x.codfil                                               ") + msEnter
 		TM004 += Alltrim("                                                 AND f.datgrp =                                                        ") + msEnter
 		TM004 += Alltrim("          (                                                                                                            ") + msEnter
 		TM004 += Alltrim("              SELECT MAX(qq.datgrp)                                                                                    ") + msEnter
-		TM004 += Alltrim("              FROM VETORH.dbo.r030grp qq                                                                               ") + msEnter
+		TM004 += Alltrim("              FROM "+_cAliasSr+".dbo.r030grp qq                                                                               ") + msEnter
 		TM004 += Alltrim("              WHERE qq.datgrp < mesano                                                                                 ") + msEnter
 		TM004 += Alltrim("                    AND qq.numemp = x.numemp                                                                           ") + msEnter
 		TM004 += Alltrim("                    AND qq.codfil = x.codfil                                                                           ") + msEnter
 		TM004 += Alltrim("          )                                                                                                            ") + msEnter
-		TM004 += Alltrim("               LEFT JOIN VETORH.dbo.r026fpv g ON g.codfpa = 507                                                        ") + msEnter
+		TM004 += Alltrim("               LEFT JOIN "+_cAliasSr+".dbo.r026fpv g ON g.codfpa = 507                                                        ") + msEnter
 		TM004 += Alltrim("                                                 AND g.tipgrp = 1                                                      ") + msEnter
 		TM004 += Alltrim("                                                 AND g.datfpa =                                                        ") + msEnter
 		TM004 += Alltrim("          (                                                                                                            ") + msEnter
 		TM004 += Alltrim("              SELECT MAX(qq.datfpa)                                                                                    ") + msEnter
-		TM004 += Alltrim("              FROM VETORH.dbo.r026fpv qq                                                                               ") + msEnter
+		TM004 += Alltrim("              FROM "+_cAliasSr+".dbo.r026fpv qq                                                                               ") + msEnter
 		TM004 += Alltrim("              WHERE qq.datfpa < mesano                                                                                 ") + msEnter
 		TM004 += Alltrim("          )                                                                                                            ") + msEnter
 		TM004 += Alltrim("          WHERE x.tipcol = 1),                                                                                         ") + msEnter
@@ -548,14 +550,14 @@ Static Function msGrvEvent()
 			GV002 += Alltrim("        CLVL =                                                                                                   ") + msEnter
 			GV002 += Alltrim(" (                                                                                                               ") + msEnter
 			GV002 += Alltrim("     SELECT codccu                                                                                               ") + msEnter
-			GV002 += Alltrim("     FROM VETORH.dbo.r038hcc a                                                                                   ") + msEnter
+			GV002 += Alltrim("     FROM "+_cAliasSr+".dbo.r038hcc a                                                                                   ") + msEnter
 			GV002 += Alltrim("     WHERE a.numemp = tmp.numemp                                                                                 ") + msEnter
 			GV002 += Alltrim("           AND a.tipcol = tmp.tipcol                                                                             ") + msEnter
 			GV002 += Alltrim("           AND a.numcad = tmp.numcad                                                                             ") + msEnter
 			GV002 += Alltrim("           AND a.datalt IN                                                                                       ") + msEnter
 			GV002 += Alltrim("     (                                                                                                           ") + msEnter
 			GV002 += Alltrim("         SELECT MAX(datalt)                                                                                      ") + msEnter
-			GV002 += Alltrim("         FROM VETORH.dbo.r038hcc b                                                                               ") + msEnter
+			GV002 += Alltrim("         FROM "+_cAliasSr+".dbo.r038hcc b                                                                               ") + msEnter
 			GV002 += Alltrim("         WHERE b.numemp = a.numemp                                                                               ") + msEnter
 			GV002 += Alltrim("               AND b.tipcol = a.tipcol                                                                           ") + msEnter
 			GV002 += Alltrim("               AND b.numcad = a.numcad                                                                           ") + msEnter
@@ -567,7 +569,7 @@ Static Function msGrvEvent()
 			GV002 += Alltrim("        NOME =                                                                                                   ") + msEnter
 			GV002 += Alltrim(" (                                                                                                               ") + msEnter
 			GV002 += Alltrim("     SELECT nomfun                                                                                               ") + msEnter
-			GV002 += Alltrim("     FROM VETORH.dbo.r034fun FUN                                                                                 ") + msEnter
+			GV002 += Alltrim("     FROM "+_cAliasSr+".dbo.r034fun FUN                                                                                 ") + msEnter
 			GV002 += Alltrim("     WHERE FUN.tipcol = 1                                                                                        ") + msEnter
 			GV002 += Alltrim("           AND FUN.numemp = tmp.numemp                                                                           ") + msEnter
 			GV002 += Alltrim("           AND FUN.numcad = tmp.numcad                                                                           ") + msEnter

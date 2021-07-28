@@ -20,7 +20,7 @@ User Function BIA707()
 	Private xRevisa
 	Private xAnoRef
 	Private xCodPla
-	Private xRubVis
+	Private xRefDRE
 
 	If ValidPerg()
 
@@ -30,7 +30,7 @@ User Function BIA707()
 		xRevisa  := MV_PAR03
 		xAnoRef  := MV_PAR04
 		xCodPla  := MV_PAR05
-		xRubVis  := MV_PAR06
+		xRefDRE  := MV_PAR06
 
 		U_BIA707C()
 
@@ -68,7 +68,7 @@ Static Function ValidPerg()
 	aAdd( aPergs ,{1, "Revisão Orca"     ,MV_PAR03 ,""            ,"NAOVAZIO()"     ,''        ,'.T.',50,.F.})
 	aAdd( aPergs ,{1, "AnoRef Orca"      ,MV_PAR04 ,""            ,"NAOVAZIO()"     ,''        ,'.T.',50,.F.})
 	aAdd( aPergs ,{1, "Visão Gerencial"  ,MV_PAR05 ,""            ,"EXISTCPO('CVE')",'CVE'     ,'.T.',50,.F.})
-	aAdd( aPergs ,{1, "Rubrica"          ,MV_PAR06 ,""            ,"NAOVAZIO()"     ,'CVF707'  ,'.T.',50,.F.})
+	aAdd( aPergs ,{1, "Ref. DRE"         ,MV_PAR06 ,""            ,"NAOVAZIO()"     ,'CVF707'  ,'.T.',50,.F.})
 
 	If ParamBox(aPergs ,"Processa GMT",,,,,,,,cLoad,.T.,.T.)
 
@@ -127,10 +127,11 @@ Static Function fqBIA707()
 	Local xSubTrib := GetMv( "MV_SUBTRIB", , "" )
 
 	CVF->( dbSetOrder(5) )
-	CVF->( dbSeek( xFilial("CVF") + xCodPla + xRubVis ))
+	CVF->( dbSeek( xFilial("CVF") + xCodPla + xRefDRE ))
 
-	xDescrRub := xRubVis + "  |  " + CVF->CVF_CONTAG + "  |  " + CVF->CVF_DESCCG  
-	xYRFDre   := xRubVis
+	xDescrRub := xRefDRE + "  |  " + CVF->CVF_CONTAG + "  |  " + CVF->CVF_DESCCG  
+	xYRFDre   := xRefDRE
+	xRubVis   := CVF->CVF_CONTAG
 
 	For xhnf := 1 to 3
 

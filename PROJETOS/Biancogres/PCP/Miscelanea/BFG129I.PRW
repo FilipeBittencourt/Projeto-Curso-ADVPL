@@ -38,6 +38,8 @@ Static Function RptiDetail()
 	Local xNmArq	:= "headcount_"+ dToS(Date()) +"-"+ StrTran(Time(), ":", "")
 	Local cFile		:= xNmArq + ".xml"
 	Local cArqDest	:= ""
+	Local _cAliasSr	:=	U_fGetDbSr()
+
 
 	cHInicio := Time()
 	fPerg := "BFG129I"
@@ -78,7 +80,7 @@ Static Function RptiDetail()
 	QR008 := " WITH MGESTOR AS "
 	QR008 += "   			(SELECT RIGHT('00' + CAST(numemp AS VARCHAR(2)), 2) + RIGHT('000000' + CAST(numcad AS VARCHAR(6)), 6) MATGEST,
 	QR008 += "                    	nomfun NOMGEST
-	QR008 += "               FROM VETORH..r034fun a(NOLOCK)
+	QR008 += "               FROM "+_cAliasSr+"..r034fun a(NOLOCK)
 	QR008 += "               WHERE 
 	QR008 += "                    	tipcol = 1
 	QR008 += "               UNION ALL
@@ -143,7 +145,7 @@ Static Function RptiDetail()
 	QR008 += "								AND ZLE.D_E_L_E_T_ = ' '
 	QR008 += "   			LEFT JOIN MGESTOR ZLCMAT ON 
 	QR008 += "									ZLC.ZLC_MAT = ZLCMAT.MATGEST
-	QR008 += "   			LEFT JOIN VETORH..r034fun ZLDMAT ON 
+	QR008 += "   			LEFT JOIN "+_cAliasSr+"..r034fun ZLDMAT ON 
 	QR008 += "									CAST(SUBSTRING(ZLD.ZLD_MAT, 1, 2) AS INT) = ZLDMAT.numemp
 	QR008 += "								AND CAST(RIGHT(ZLD.ZLD_MAT, 6) AS INT) = ZLDMAT.numcad
 	QR008 += "								AND ZLDMAT.tipcol = 1

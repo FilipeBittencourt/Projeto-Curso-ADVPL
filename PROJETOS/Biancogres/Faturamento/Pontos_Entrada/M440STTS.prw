@@ -89,7 +89,7 @@ EndIf
 
 
     // Gabriel Pinheiro Leite da Silva(G3) - 28/05/2021 - OS:32367 - Configurar para que ao alterar os campos de data do pedido na empresa origem, eles repliquem para o pedido da LM.
-    If (Altera) .And. cEmpAnt != '07' //barba
+    If (Altera) .And. cEmpAnt != '07' 
 
         begincontent var cSql
 
@@ -101,19 +101,20 @@ EndIf
             JOIN SC5070 SC57 ON (SC57.C5_FILIAL=SC67.C6_FILIAL AND SC57.C5_NUM=SC67.C6_NUM)
             JOIN SC5010 SC51 ON (SC57.C5_YPEDORI=SC51.C5_NUM)
             JOIN SC6010 SC61 ON (SC51.C5_FILIAL=SC61.C6_FILIAL AND SC51.C5_NUM=SC61.C6_NUM)
-            JOIN SC9010 SC91 ON (SC61.C6_FILIAL=SC91.C9_FILIAL AND SC91.C9_PEDIDO=SC61.C6_NUM)
+           /* JOIN SC9010 SC91 ON (SC61.C6_FILIAL=SC91.C9_FILIAL AND SC91.C9_PEDIDO=SC61.C6_NUM) */
             WHERE   SC57.D_E_L_E_T_=''
                 AND SC67.D_E_L_E_T_=''
                 AND SC51.D_E_L_E_T_=''
                 AND SC61.D_E_L_E_T_=''
-                AND SC91.D_E_L_E_T_=''
+               /* AND SC91.D_E_L_E_T_='' */
                 AND SC51.C5_NUM='@C5_NUM'
                 AND SC57.C5_YEMP='@C5_YEMP'
                 AND SC67.C6_PRODUTO=SC61.C6_PRODUTO
                 AND SC67.C6_ITEM=SC61.C6_ITEM
                 AND SC51.C5_FILIAL='@C5_FILIAL'
-                AND SC91.C9_PEDIDO=SC61.C6_NUM
-                /* Barbara solicitou para não verificar itens, alteração em qualquer item da C9, deverá ser replicada para todos os itens.
+             /* AND SC91.C9_PEDIDO=SC61.C6_NUM
+                 Barbara solicitou para não verificar itens, alteração em qualquer item da C9, deverá ser replicada para todos os itens.
+                
                 AND SC91.C9_PRODUTO=SC61.C6_PRODUTO
 				AND SC91.C9_ITEM=SC61.C6_ITEM
                 */

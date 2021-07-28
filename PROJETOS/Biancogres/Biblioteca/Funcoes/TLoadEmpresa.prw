@@ -482,7 +482,7 @@ Method GSEmpFil(aEmpOut,lEmpAnt) Class TLoadEmpresa
 	dbGoTop()
 	While SM0->( !EOF() )
 
-		If !SM0->M0_CODIGO $ "90/91"
+		If !SM0->M0_CODIGO $ "02/04/15/90/91"
 			aAdd(  aVetor, { aScan( aMarcadas, {|x| x[1] == SM0->M0_CODIGO .and. x[2] == SM0->M0_CODFIL} ) > 0, SM0->M0_CODIGO, SM0->M0_CODFIL, SM0->M0_NOME, SM0->M0_FILIAL , SM0->(RecNo()) } )
 		EndIf
 		SM0->(dbSkip())

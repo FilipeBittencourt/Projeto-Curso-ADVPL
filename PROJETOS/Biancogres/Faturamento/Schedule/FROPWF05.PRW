@@ -221,7 +221,7 @@ Static Function SendMail(cHtml, cMailRep, cMailAte, cMailGer)
 
     _cTo := cMailRep
 
-    _CCO := "claudeir.fadini@biancogres.com.br;fernando@facilesistemas.com.br"
+    _CCO := "claudeir.fadini@biancogres.com.br;ranisses.corona@biancogres.com.br"
 
     If !Empty(_cCC) .And. !Empty(cMailGer)
         _cCC := _cCC + ";"+cMailGer

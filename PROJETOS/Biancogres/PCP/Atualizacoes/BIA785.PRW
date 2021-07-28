@@ -1224,7 +1224,6 @@ User Function BFIR785()
 
 		EndIF
 
-
 		dbSelectArea("MARK")
 		dj_Recno := Recno()
 		dbGoTop()
@@ -2125,7 +2124,9 @@ User Function BBXA785()
 						SC2->C2_DATRF   := dDataBase
 						MsUnLock()
 
-						//VJ008 := " UPDATE "+RetSqlName("SB2")+" SET B2_QEMP = B2_QEMP - D4_QUANT, B2_QEMP2 = B2_QEMP2 - D4_QTSEGUM "
+						// Retirado em 26/07/21, pois além de nao agregar ao processo Biancogres, ainda fica travando vez ou outra o pro-
+						// cessamento.
+						/*
 						VJ008 := "	SELECT SB2.R_E_C_N_O_ as REG, SD4.D4_QUANT, SD4.D4_QTSEGUM
 						VJ008 += "   FROM "+RetSqlName("SB2")+" SB2 WITH(NOLOCK) "
 						VJ008 += "  INNER JOIN "+RetSqlName("SD4")+" SD4 WITH(NOLOCK) ON D4_FILIAL = '"+xFilial("SD4")+"' "
@@ -2135,24 +2136,23 @@ User Function BBXA785()
 						VJ008 += "                       AND SD4.D_E_L_E_T_ = ' ' "
 						VJ008 += "  WHERE B2_FILIAL = '"+xFilial("SB2")+"' "
 						VJ008 += "    AND SB2.D_E_L_E_T_ = ' ' "
-						//					TcSQLExec(VJ008) Transformado em Select para depois utilizar seek + reclock
 						MscIndex := CriaTrab(Nil,.f.)
 						dbUseArea(.T.,"TOPCONN",TcGenQry(,,VJ008),'VJ08',.F.,.T.)
 						dbSelectArea("VJ08")
 						dbGoTop()
 						While VJ08->(!EOF())
-							SB2->(DbGoTo(VJ08->REG))
-							Reclock("SB2",.F.)
-							SB2->B2_QEMP 	:= SB2->B2_QEMP - VJ08->D4_QUANT
-							SB2->B2_QEMP2	:= SB2->B2_QEMP2 - VJ08->D4_QTSEGUM
-							SB2->(MsUnlock())
-							VJ08->(DbSkip())
+						SB2->(DbGoTo(VJ08->REG))
+						Reclock("SB2",.F.)
+						SB2->B2_QEMP 	:= SB2->B2_QEMP - VJ08->D4_QUANT
+						SB2->B2_QEMP2	:= SB2->B2_QEMP2 - VJ08->D4_QTSEGUM
+						SB2->(MsUnlock())
+						VJ08->(DbSkip())
 						End
 						VJ08->(dbCloseArea())
 						Ferase(MscIndex+GetDBExtension())     //arquivo de trabalho
 						Ferase(MscIndex+OrdBagExt())          //indice gerado
+						*/
 
-						//					VJ009 := " UPDATE "+RetSqlName("SD4")+" SET D4_QUANT = 0, D4_QTSEGUM = 0 "
 						VJ009 := " SELECT R_E_C_N_O_ REG
 						VJ009 += "   FROM "+RetSqlName("SD4")+" WITH(NOLOCK) "
 						VJ009 += "  WHERE D4_FILIAL = '"+xFilial("SD4")+"' "
@@ -2288,14 +2288,18 @@ User Function BBXA785()
 
 						While !Eof() .and. Alltrim(SD4->D4_OP) == Alltrim(cf_C2OP)
 
+							// Retirado em 26/07/21, pois além de nao agregar ao processo Biancogres, ainda fica travando vez ou outra o pro-
+							// cessamento.
+							/*
 							dbSelectArea("SB2")
 							dbSetOrder(1)
 							If dbSeek(xFilial("SB2")+SD4->D4_COD+SD4->D4_LOCAL)
-								RecLock("SB2",.F.)
-								SB2->B2_QEMP   -= SD4->D4_QUANT
-								SB2->B2_QEMP2  -= SD4->D4_QTSEGUM
-								MsUnLock()
+							RecLock("SB2",.F.)
+							SB2->B2_QEMP   -= SD4->D4_QUANT
+							SB2->B2_QEMP2  -= SD4->D4_QTSEGUM
+							MsUnLock()
 							EndIf
+							*/
 
 							dbSelectArea("SD4")
 							RecLock("SD4",.F.)

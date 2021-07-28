@@ -186,6 +186,8 @@ Method Incluir() Class TCotacaoCompra
 	
 	Local aListFornece	:= {} // A2_COD+A2_LOJA
 	Local cNumSC		:= ''
+	
+	Private l150Propost	:= .F. 
 		
 	If (::oObj:oItens:GetCount() > 0)
 		cNumSC := ::oObj:oItens:GetItem(1):cNumSc
@@ -368,6 +370,8 @@ Method Atualizar() Class TCotacaoCompra
 	Private lMsHelpAuto 	:= .T.
 	Private lAutoErrNoFile	:= .T.
 	
+	Private l150Propost 	:= .F. 
+	
 	If (!Empty(::oObj:cNumero))	
 		
 		aListFornece := ::ForneceUnico()
@@ -436,12 +440,10 @@ Method Execute(_oObj, _lNovo) Class TCotacaoCompra
 
 	::oObj 			:= _oObj
 				
-	::Incluir()//inserir registro da cotação
-				
 	Begin Transaction
-	
+		
 		If (_lNovo)
-			
+			::Incluir()//inserir registro da cotação
 			If(::oResult:lOk)
 				If (!Empty(::oObj:cNumero))
 					::Atualizar() //atualiza os registro inseridos

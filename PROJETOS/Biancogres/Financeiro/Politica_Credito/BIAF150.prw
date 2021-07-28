@@ -12,6 +12,7 @@
 User Function BIAF150()
 Local _cSql := ""
 Local cQry := ""
+Local _cAliasSr	:=	U_fGetDbSr()
 
 	RpcSetType(3)
 	RpcSetEnv("01", "01")
@@ -78,7 +79,7 @@ Local cQry := ""
 
 	_cSql := ""
 	_cSql += "DELETE ##CLIENTE "
-	_cSql += "FROM ##CLIENTE CLI INNER JOIN (SELECT DISTINCT(REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf)) CPF FROM VETORH.dbo.r034fun WITH (NOLOCK) ) FUNC ON CLI.A1_CGC = FUNC.CPF "
+	_cSql += "FROM ##CLIENTE CLI INNER JOIN (SELECT DISTINCT(REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf)) CPF FROM "+_cAliasSr+".dbo.r034fun WITH (NOLOCK) ) FUNC ON CLI.A1_CGC = FUNC.CPF "
 	TcSQLExec(_cSql)
 
 	_cSql := ""

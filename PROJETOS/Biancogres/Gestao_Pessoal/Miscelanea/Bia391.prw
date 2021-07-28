@@ -357,7 +357,7 @@ User Function B391FOK()
 
 	If _CtrlDigt $ " /1"
 
-		If _RegZBA == 0 .or. Alltrim(cMenVar) $ "M->ZBA_MADMNW/M->ZBA_MESDEM/M->ZBA_DMTDAA" .or. "NOVO" $ GdFieldGet("ZBA_MATR",_nAt)
+		If _RegZBA == 0 .or. Alltrim(cMenVar) $ "M->ZBA_MADMNW/M->ZBA_MESDEM/M->ZBA_DMTDAA/M->ZBA_PREMPR" .or. "NOVO" $ GdFieldGet("ZBA_MATR",_nAt)
 
 			Do Case
 
@@ -443,8 +443,18 @@ User Function B391FOK()
 
 			Next
 
-		Else 
-
+		ElseIf Alltrim(cMenVar) == "M->ZBA_VVLTRT"
+			
+			If !Alltrim(GdFieldGet("ZBA_CATGFU",_nAt)) == '035'
+			
+				MsgInfo("Não é possível realizar alteração nesse campo quando a categoria do funcionário for 035!!")
+				Return .F.
+				
+			EndIf
+		
+		
+		Else
+	 
 			MsgInfo("Para funcionários previamente registrados na empresa somente é permitido alterar, quando necessário, o MÊS de demissão!!!")
 			Return .F.
 

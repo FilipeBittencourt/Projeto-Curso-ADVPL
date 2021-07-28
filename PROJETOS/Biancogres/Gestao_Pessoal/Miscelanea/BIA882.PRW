@@ -82,6 +82,10 @@ Static Function BIA882A()
 	Local qyCustFun := ""
 	Local _cClVlIn	:=	""
 	Local _nI
+	Local _oFerias	:=	tBiaControleFerias():NEW()
+
+	Local _cAliasSr	:=	U_fGetDbSr()
+
 
 	Local msNmTMPII := "##TBIA882II" + cEmpAnt + cFilAnt + __cUserID + strzero(seconds() * 3500,10)
 
@@ -139,23 +143,6 @@ Static Function BIA882A()
 	MP07->(dbCloseArea())
 	Ferase(MPIndex+GetDBExtension())
 	Ferase(MPIndex+OrdBagExt())
-
-	//                                               Flutuação de Feriados no ano 
-	//***************************************************************************
-	RF004 := " WITH QFERIADOS AS (SELECT 'M' + SUBSTRING(ZB7_ANOMES,5,2) MES, ZB7_NRFERI NRFERI "
-	RF004 += "                      FROM " + RetSqlName("ZB7") + " ZB7 "
-	RF004 += "                     WHERE ZB7_VERSAO = '" + _cVersao + "' "
-	RF004 += "                       AND ZB7_REVISA = '" + _cRevisa + "' "
-	RF004 += "                       AND ZB7_ANOREF = '" + _cAnoRef + "' "
-	RF004 += "                       AND D_E_L_E_T_ = ' ') "
-	RF004 += " SELECT * "
-	RF004 += "   FROM QFERIADOS "
-	RF004 += "  PIVOT (SUM(NRFERI) "
-	RF004 += "    FOR MES IN([M01], [M02], [M03], [M04], [M05], [M06], [M07], [M08], [M09], [M10], [M11], [M12])) AS FIM "
-	RFIndex := CriaTrab(Nil,.f.)
-	dbUseArea(.T.,"TOPCONN",TcGenQry(,,RF004),'RF04',.T.,.T.)
-	dbSelectArea("RF04")
-	RF04->(dbGoTop())
 
 	//                       Valor considerado para Crachas de novos funcionários 
 	//***************************************************************************
@@ -230,6 +217,81 @@ Static Function BIA882A()
 
 		While MQ07->(!Eof())
 
+
+			//Captura feriados para a matrícula em questão
+			RF004 := "	SELECT SUM(CASE																" 
+			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '01'	"
+			RF004 += "					THEN 1														"
+			RF004 += "				ELSE 0															"
+			RF004 += "				END) AS M01														"
+			RF004 += "		,SUM(CASE 																"
+			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '02'	"
+			RF004 += "					THEN 1														"
+			RF004 += "				ELSE 0															"
+			RF004 += "				END) AS M02														"
+			RF004 += "		,SUM(CASE 																"
+			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '03'	"
+			RF004 += "					THEN 1														"
+			RF004 += "				ELSE 0															"
+			RF004 += "				END) AS M03														"
+			RF004 += "		,SUM(CASE 																"
+			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '04'	"
+			RF004 += "					THEN 1														"
+			RF004 += "				ELSE 0															"
+			RF004 += "				END) AS M04														"
+			RF004 += "		,SUM(CASE 																"
+			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '05'	"
+			RF004 += "					THEN 1														"
+			RF004 += "				ELSE 0															"
+			RF004 += "				END) AS M05														"
+			RF004 += "		,SUM(CASE 																"
+			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '06'	"
+			RF004 += "					THEN 1														"
+			RF004 += "				ELSE 0															"
+			RF004 += "				END) AS M06														"
+			RF004 += "		,SUM(CASE 																"
+			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '07'	"
+			RF004 += "					THEN 1														"
+			RF004 += "				ELSE 0															"
+			RF004 += "				END) AS M07														"
+			RF004 += "		,SUM(CASE 																"
+			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '08'	"
+			RF004 += "					THEN 1														"
+			RF004 += "				ELSE 0															"
+			RF004 += "				END) AS M08														"
+			RF004 += "		,SUM(CASE 																"
+			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '09'	"
+			RF004 += "					THEN 1														"
+			RF004 += "				ELSE 0															"
+			RF004 += "				END) AS M09														"
+			RF004 += "		,SUM(CASE 																"
+			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '10'	"
+			RF004 += "					THEN 1														"
+			RF004 += "				ELSE 0															"
+			RF004 += "				END) AS M10														"
+			RF004 += "		,SUM(CASE 																"
+			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '11'	"
+			RF004 += "					THEN 1														"
+			RF004 += "				ELSE 0															"
+			RF004 += "				END) AS M11														"
+			RF004 += "		,SUM(CASE 																"
+			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '12'	"
+			RF004 += "					THEN 1														"
+			RF004 += "				ELSE 0															"
+			RF004 += "				END) AS M12														"
+			RF004 += "	FROM "+_cAliasSr+"..USU_TR002TRA												"
+			RF004 += "	WHERE usu_numemp = 1														"
+			RF004 += "		AND usu_tipcol = 1														"
+			RF004 += "		AND CONVERT(VARCHAR, usu_datfer, 112) BETWEEN '" + _cAnoRef + "0101' 				"
+			RF004 += "			AND '" + _cAnoRef +  "1231' 														"
+			RF004 += "		AND usu_numcad = '" + MQ07->ZBA_MATR + "'												"
+			RF004 += "	GROUP BY usu_numcad															"
+			RFIndex := CriaTrab(Nil,.f.)
+			dbUseArea(.T.,"TOPCONN",TcGenQry(,,RF004),'RF04',.T.,.T.)
+			dbSelectArea("RF04")
+			RF04->(dbGoTop())
+
+
 			//                                                        Reajustes Eventuais
 			//***************************************************************************
 			MP002 := " SELECT * "
@@ -251,6 +313,9 @@ Static Function BIA882A()
 			msGravouCfccCh  := .F.
 			For mxFx := 1 to 12
 
+
+				_oFerias:GetDiasTrabalhados(_cVersao,_cRevisa,_cAnoRef,MQ07->ZBA_MATR,StrZero(mxFx,2))
+				
 				//                                                        Reajustes Previstos
 				//***************************************************************************
 				PV004 := " WITH REAJUST AS (SELECT REPLACE(ZBB_RUBRIC,'ZBA_','ZBG_') ZBB_RUBRIC, ZBB_M" + StrZero(mxFx,2) + " REAJMES "
@@ -324,7 +389,7 @@ Static Function BIA882A()
 				CT002 += Alltrim("                 QTDDEP = ISNULL(                                                                                ") + msrhEnter
 				CT002 += Alltrim("          (                                                                                                      ") + msrhEnter
 				CT002 += Alltrim("              SELECT COUNT(*)                                                                                    ") + msrhEnter
-				CT002 += Alltrim("              FROM VETORH.dbo.r164dep dep(NOLOCK)                                                                ") + msrhEnter
+				CT002 += Alltrim("              FROM "+_cAliasSr+".dbo.r164dep dep(NOLOCK)                                                                ") + msrhEnter
 				CT002 += Alltrim("              WHERE dep.numemp = ass.numemp                                                                      ") + msrhEnter
 				CT002 += Alltrim("                    AND dep.tipcol = ass.tipcol                                                                  ") + msrhEnter
 				CT002 += Alltrim("                    AND dep.numcad = ass.numcad                                                                  ") + msrhEnter
@@ -338,7 +403,7 @@ Static Function BIA882A()
 				CT002 += Alltrim("                 QTDAGR = 0,                                                                                     ") + msrhEnter
 				CT002 += Alltrim("                 VLRAGR = ISNULL(ZB1.ZB1_VLRAGR, 0),                                                             ") + msrhEnter
 				CT002 += Alltrim("                 PRCAGR = ISNULL(ZB1.ZB1_DSCAGR, 0)                                                              ") + msrhEnter
-				CT002 += Alltrim("          FROM VETORH.dbo.r164ass ass(NOLOCK)                                                                    ") + msrhEnter
+				CT002 += Alltrim("          FROM "+_cAliasSr+".dbo.r164ass ass(NOLOCK)                                                                    ") + msrhEnter
 				CT002 += Alltrim("               INNER JOIN " + RetSqlName("ZO0") + " ZO0(NOLOCK) ON ZO0.ZO0_FILIAL = '" + xFilial("ZO0") + "'     ") + msrhEnter
 				CT002 += Alltrim("                                        AND ZO0.ZO0_VERSAO = '" + _cVersao + "'                                  ") + msrhEnter
 				CT002 += Alltrim("                                        AND ZO0.ZO0_REVISA = '" + _cRevisa + "'                                  ") + msrhEnter
@@ -401,7 +466,7 @@ Static Function BIA882A()
 				msDSRProg := 0
 				msAdcNotr := 0
 				If MQ07->ZBA_MESFER <> StrZero(mxFx,2)
-					msHorProg := ( msSalario + msPericul + msInsalub ) / 220 * 2.0 * MQ07->ZBA_QTHEPR * &("RF04->M" + StrZero(mxFx,2))
+					msHorProg := ( msSalario + msPericul + msInsalub ) / 220 * 2.0 * MQ07->ZBA_QTHEPR * &("RF04->M" + StrZero(mxFx,2)) 
 					msDSRProg := msHorProg / 25 * 5
 					msAdcNotr := ( msSalario + msPericul + msInsalub ) / 220 * 0.2 * MQ07->ZBA_QHADNO
 				EndIf
@@ -513,18 +578,16 @@ Static Function BIA882A()
 					ZBG->ZBG_SEMAIL  := MQ07->ZBA_SEMAIL
 					ZBG->ZBG_CATGFU  := MQ07->ZBA_CATGFU
 
-					If MQ07->ZBA_MESFER <> StrZero(mxFx,2) .or. MQ07->ZBA_FMULTF == 0
-						ZBG->ZBG_SALARI  := msSalario
-						ZBG->ZBG_PPERIC  := MQ07->ZBA_PPERIC
-						ZBG->ZBG_PERICU  := msPericul
-						ZBG->ZBG_PINSAL  := MQ07->ZBA_PINSAL
-						ZBG->ZBG_INSALU  := msInsalub
-						ZBG->ZBG_QTHEPR  := MQ07->ZBA_QTHEPR* &("RF04->M" + StrZero(mxFx,2))
-						ZBG->ZBG_VHEPRG  := msHorProg
-						ZBG->ZBG_DSRPRG  := msDSRProg
-						ZBG->ZBG_QHADNO  := MQ07->ZBA_QHADNO
-						ZBG->ZBG_VADCNO  := msAdcNotr
-					EndIf
+					ZBG->ZBG_SALARI  := msSalario * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_PPERIC  := MQ07->ZBA_PPERIC * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_PERICU  := msPericul * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_PINSAL  := MQ07->ZBA_PINSAL * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_INSALU  := msInsalub * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_QTHEPR  := MQ07->ZBA_QTHEPR* &("RF04->M" + StrZero(mxFx,2)) * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_VHEPRG  := msHorProg * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_DSRPRG  := msDSRProg * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_QHADNO  := MQ07->ZBA_QHADNO * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_VADCNO  := msAdcNotr * _oFerias:nPerDiasTrabalhados/100
 
 					ZBG->ZBG_PREMPR  := msPremPrd
 
@@ -532,19 +595,17 @@ Static Function BIA882A()
 					ZBG->ZBG_QVLTRT  := MQ07->ZBA_QVLTRT
 					ZBG->ZBG_VVTUNI  := MQ07->ZBA_VVTUNI
 					ZBG->ZBG_PRCAVT  := MQ07->ZBA_PRCAVT
-					If MQ07->ZBA_MESFER <> StrZero(mxFx,2) .or. MQ07->ZBA_FMULTF == 0
-						ZBG->ZBG_VVLTRT  := msVlrVT
-						ZBG->ZBG_REFEIC  := MQ07->ZBA_REFEIC
-						ZBG->ZBG_DESEJU  := MQ07->ZBA_DESEJU
-					EndIf
+					
+					ZBG->ZBG_VVLTRT  := msVlrVT * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_REFEIC  := MQ07->ZBA_REFEIC * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_DESEJU  := MQ07->ZBA_DESEJU * _oFerias:nPerDiasTrabalhados/100
+					
 					ZBG->ZBG_CALIME  := MQ07->ZBA_CALIME + ( MQ07->ZBA_CALIME * PV04->ZBG_CALIME / 100 )
-					If MQ07->ZBA_MESFER <> StrZero(mxFx,2)
-						ZBG->ZBG_CJTURN  := MQ07->ZBA_CJTURN + ( MQ07->ZBA_CJTURN * PV04->ZBG_CJTURN / 100 )
-						ZBG->ZBG_CJNOIT  := MQ07->ZBA_CJNOIT + ( MQ07->ZBA_CJNOIT * PV04->ZBG_CJNOIT / 100 )
-					EndIf
+					ZBG->ZBG_CJTURN  := MQ07->ZBA_CJTURN + ( MQ07->ZBA_CJTURN * PV04->ZBG_CJTURN / 100 ) * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_CJNOIT  := MQ07->ZBA_CJNOIT + ( MQ07->ZBA_CJNOIT * PV04->ZBG_CJNOIT / 100 ) * _oFerias:nPerDiasTrabalhados/100
 					ZBG->ZBG_CCOMBU  := MQ07->ZBA_CCOMBU + ( MQ07->ZBA_CCOMBU * PV04->ZBG_CCOMBU / 100 )
 					ZBG->ZBG_AJDCBD  := MQ07->ZBA_AJDCBD
-
+					ZBG->ZBG_REEDSP  := MQ07->ZBA_REEDSP
 					If Substr(MQ07->ZBA_MATR,1,4) == "NOVO" .and. !msGravouCfccCh
 
 						ZBG->ZBG_CFCCCH  := zmCfccCh
@@ -575,23 +636,21 @@ Static Function BIA882A()
 					//EndIf
 					ZBG->ZBG_VLREPI  := MQ07->ZBA_VLREPI / 12 // Corrigido em 19/10/18 conforme alinhado com Claudia e Diego 
 
-					If MQ07->ZBA_MESFER <> StrZero(mxFx,2) .or. MQ07->ZBA_FMULTF == 0
-						ZBG->ZBG_PRCINS  := MQ07->ZBA_PRCINS
-						ZBG->ZBG_PRCFGT  := MQ07->ZBA_PRCFGT
-						ZBG->ZBG_PRCSEN  := MQ07->ZBA_PRCSEN
-						ZBG->ZBG_PRCSES  := MQ07->ZBA_PRCSES
-						ZBG->ZBG_VRINSF  := msFolINSS
-						ZBG->ZBG_VRFGTF  := msFolFGTS
-						ZBG->ZBG_VRSENF  := msFolSenai
-						ZBG->ZBG_VRSESF  := msFolSesi
-					EndIf
+					ZBG->ZBG_PRCINS  := MQ07->ZBA_PRCINS * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_PRCFGT  := MQ07->ZBA_PRCFGT * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_PRCSEN  := MQ07->ZBA_PRCSEN * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_PRCSES  := MQ07->ZBA_PRCSES * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_VRINSF  := msFolINSS * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_VRFGTF  := msFolFGTS * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_VRSENF  := msFolSenai * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_VRSESF  := msFolSesi * _oFerias:nPerDiasTrabalhados/100
 
-					ZBG->ZBG_FERIAS  := msProvFerias
-					ZBG->ZBG_ABONOF  := msAbonoFerias
-					ZBG->ZBG_INSFER  := msPrvFerINSS
-					ZBG->ZBG_FGTFER  := msPrvFerFGTS
-					ZBG->ZBG_SENFER  := msPrvFerSENAI
-					ZBG->ZBG_SESFER  := msPrvFerSESI
+					ZBG->ZBG_FERIAS  := msProvFerias * _oFerias:nPerDiasFerias/100
+					ZBG->ZBG_ABONOF  := msAbonoFerias * _oFerias:nPerDiasFerias/100
+					ZBG->ZBG_INSFER  := msPrvFerINSS * _oFerias:nPerDiasFerias/100
+					ZBG->ZBG_FGTFER  := msPrvFerFGTS * _oFerias:nPerDiasFerias/100
+					ZBG->ZBG_SENFER  := msPrvFerSENAI * _oFerias:nPerDiasFerias/100
+					ZBG->ZBG_SESFER  := msPrvFerSESI * _oFerias:nPerDiasFerias/100
 					ZBG->ZBG_13OSAL  := msPrv13
 					ZBG->ZBG_INS13O  := msPrv13INSS
 					ZBG->ZBG_FGT13O  := msPrv13FGTS
@@ -617,15 +676,13 @@ Static Function BIA882A()
 					ZBG->ZBG_13SESA  := ms13oSsA
 					ZBG->ZBG_MULTAF  := msVrMult
 
-					// Diferenciação necessária para direcionamento da contabilização
-					If MQ07->ZBA_MESFER <> StrZero(mxFx,2) .or. MQ07->ZBA_FMULTF == 0
-						If MQ07->ZBA_CATGFU == "005"
-							ZBG->ZBG_HONORA  := msSalario
-						ElseIf MQ07->ZBA_CATGFU == "020"
-							ZBG->ZBG_BOLSAE  := msSalario
-						Else
-							ZBG->ZBG_SALMEN  := msSalario
-						EndIf
+				// Diferenciação necessária para direcionamento da contabilização
+					If MQ07->ZBA_CATGFU == "005"
+						ZBG->ZBG_HONORA  := msSalario * _oFerias:nPerDiasTrabalhados/100
+					ElseIf MQ07->ZBA_CATGFU == "020"
+						ZBG->ZBG_BOLSAE  := msSalario * _oFerias:nPerDiasTrabalhados/100
+					Else
+						ZBG->ZBG_SALMEN  := msSalario * _oFerias:nPerDiasTrabalhados/100
 					EndIf
 
 					ZBG->ZBG_DPRVFR  := stod(MQ07->ZBA_DPRVFR)
@@ -673,6 +730,11 @@ Static Function BIA882A()
 			Ferase(MPIndex+GetDBExtension())
 			Ferase(MPIndex+OrdBagExt())
 
+			RF04->(dbCloseArea())
+			Ferase(RFIndex+GetDBExtension())
+			Ferase(RFIndex+OrdBagExt())
+
+
 			MQ07->(dbSkip())
 
 		End
@@ -683,9 +745,6 @@ Static Function BIA882A()
 	Ferase(MQIndex+GetDBExtension())
 	Ferase(MQIndex+OrdBagExt())
 
-	RF04->(dbCloseArea())
-	Ferase(RFIndex+GetDBExtension())
-	Ferase(RFIndex+OrdBagExt())
 
 	UL017 := " UPDATE " + RetSqlName("ZBG") + " SET ZBG_CSTFUN = " + qyCustFun
 	UL017 += "   FROM " + RetSqlName("ZBG") + " ZBG "

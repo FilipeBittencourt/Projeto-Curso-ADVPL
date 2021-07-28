@@ -118,14 +118,6 @@ USER FUNCTION MT131WF
 
 			TCSQLEXEC(cSQL)
 
-			If (AllTrim(_cTipo) $ '1_2')//quando vem do portal esse campo e preenchido
-				If (SUPERGETMV("MV_YRTPAY", .F., .F.))
-					//força sincronização com portal
-					//If (TCSPExist("BPORTAL.dbo.Sp_BPortal_Sinc_Cotacao_Protheus_Solicitacao_Servico"))
-					TCSQLEXEC("exec BPORTAL.dbo.Sp_BPortal_Sinc_Cotacao_Protheus_Solicitacao_Servico")
-					//EndIf
-				EndIf
-			EndIf
 
 			TCREFRESH(TabSC8)
 		ENDIF

@@ -251,12 +251,13 @@ Static Function fSeekMat()
 	Local _nEmp	:=	Val(Substr(_cMatricula,1,2))
 	Local _nMat	:=	Val(Substr(_cMatricula,3))
 	Local _lRet	:=	.F.
+	Local _cAliasSr	:=	"%" + U_fGetDbSr() + ".dbo.r034fun" + "%"
 
 	BeginSql Alias _cAlias
 
 		%NoParser%
 		SELECT *
-		FROM VETORH..r034fun a
+		FROM %Exp:_cAliasSr% a
 		WHERE tipcol = 1
 		AND numemp = %Exp:_nEmp% 
 		AND numcad = %Exp:_nMat%

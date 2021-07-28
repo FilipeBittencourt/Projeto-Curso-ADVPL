@@ -256,7 +256,7 @@ Static Function BIA392A()
 	HR007 += Alltrim("                             AND ZB3.ZB3_ANOREF = '" + _cAnoRef + "'                                                 ") + msrhEnter
 	HR007 += Alltrim("                             AND ZB3.D_E_L_E_T_ = ' ') AS TARE                                                       ") + msrhEnter
 	HR007 += Alltrim("                   PIVOT (SUM(ZB3_VCHEIO)                                                                            ") + msrhEnter
-	HR007 += Alltrim("                          FOR ZB3_VARIAV IN(zmSalMin, zmPrmPrd, zmValTrs, zmRefeic, zmDesejm, zmCrtAlm, zmCJanTr, zmCJanNo, zmCrtCom, zmAjdCBd, zmCfccCh) ) AS FIM )                                                                                                                                       ") + msrhEnter
+	HR007 += Alltrim("                          FOR ZB3_VARIAV IN(zmSalMin, zmPrmPrd, zmValTrs, zmRefeic, zmDesejm, zmCrtAlm, zmCJanTr, zmCJanNo, zmCrtCom, zmAjdCBd, zmCfccCh, zmReeDesp) ) AS FIM )                                                                                                                                       ") + msrhEnter
 	HR007 += Alltrim(",    DTEXAMES AS (SELECT TM5_MAT, MAX(TM5_DTRESU) DTRESU                                                             ") + msrhEnter
 	HR007 += Alltrim("                    FROM " + RetSqlName("TM5") + " TM5                                                               ") + msrhEnter
 	HR007 += Alltrim("                   WHERE TM5_EXAME = 'NR7'                                                                           ") + msrhEnter
@@ -387,6 +387,10 @@ Static Function BIA392A()
 	HR007 += Alltrim("                  END,                                                                                               ") + msrhEnter
 	HR007 += Alltrim("       AJDCTBD  = CASE                                                                                               ") + msrhEnter
 	HR007 += Alltrim("                    WHEN SRA.RA_YBNADC LIKE '%B35%' THEN zmAjdCBd                                                    ") + msrhEnter
+	HR007 += Alltrim("                    ELSE 0                                                                                           ") + msrhEnter
+	HR007 += Alltrim("                  END,                                                                                               ") + msrhEnter
+	HR007 += Alltrim("       REEDSP  = CASE                                                                                               ") + msrhEnter
+	HR007 += Alltrim("                    WHEN SRA.RA_YBNADC LIKE '%B45%' THEN zmReeDesp                                                    ") + msrhEnter
 	HR007 += Alltrim("                    ELSE 0                                                                                           ") + msrhEnter
 	HR007 += Alltrim("                  END,                                                                                               ") + msrhEnter
 	HR007 += Alltrim("       CFCCCRH  = CASE                                                                                               ") + msrhEnter
@@ -548,6 +552,7 @@ Static Function BIA392A()
 			ZBA->ZBA_CJNOIT  := HR07->CJANNOI
 			ZBA->ZBA_CCOMBU  := HR07->CARTCOM
 			ZBA->ZBA_AJDCBD  := HR07->AJDCTBD
+			ZBA->ZBA_REEDSP	 := HR07->REEDSP
 			ZBA->ZBA_CFCCCH  := HR07->CFCCCRH
 			ZBA->ZBA_PLSMED  := HR07->PLSMEDIC
 			ZBA->ZBA_PLSODO  := HR07->PLSODONT

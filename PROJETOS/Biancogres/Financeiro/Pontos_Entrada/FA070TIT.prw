@@ -166,7 +166,7 @@ Static Function GeraHtml()
 	C_DESTI		:= "gardenia.stelzer@biancogres.com.br"
 	
 	If lDebug
-		C_DESTI	:= "wlysses@facilesistemas.com.br"
+		C_DESTI	:= "ranisses.corona@biancogres.com.br"
 	EndIf
 
 	C_HTML := '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> '

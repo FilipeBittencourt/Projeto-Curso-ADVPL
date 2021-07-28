@@ -1,0 +1,67 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "TOPCONN.CH"
+
+/*/{Protheus.doc} TBiaControleFerias
+@author Gabriel Rossi Mafioletti (Facile)
+@since 14/06/2021
+@version 1.0
+@description Classe para Controle de férias 
+@type class
+/*/
+
+#DEFINE nR_DMes	30
+
+User Function GTSTFER()
+
+	Local _oteste
+	
+	RpcSetEnv("01","01")
+	_oTeste	:=	tBiaControleFerias():NEW()
+	_oTeste:GetDiasTrabalhados("ORCA_21",'003','2021','000414','1')
+	
+
+RETURN
+
+Class tBiaControleFerias From LongClassName
+
+	Public Data nDiasTrabalhados
+	Public Data nDiasFerias
+	Public Data nPerDiasTrabalhados
+	Public Data nPerDiasFerias
+	
+	PUBLIC Method New() Constructor
+	PUBLIC Method GetDiasTrabalhados(_cVersao,_cRevisa,_cAnoRef,_cMat,_cMesRef)
+
+
+EndClass
+
+Method New() Class tBiaControleFerias
+
+	::nDiasTrabalhados	:=	nR_DMes
+	::nDiasFerias		:=	0
+	::nPerDiasTrabalhados	:=	100
+	::nPerDiasFerias	:=	0
+Return
+
+Method GetDiasTrabalhados(_cVersao,_cRevisa,_cAnoRef,_cMat,_cMesRef) Class tBiaControleFerias
+
+	::nDiasTrabalhados		:=	nR_DMes
+	::nDiasFerias			:=	0
+	::nPerDiasTrabalhados	:=	100
+	::nPerDiasFerias		:=	0
+
+	DbSelectArea("ZOJ")
+	ZOJ->(DbSetOrder(1))
+	If ZOJ->(DbSeek(xFilial("ZOJ")+PADR(_cVersao,TamSx3("ZOJ_VERSAO")[1])+;
+	PADR(_cRevisa,TamSx3("ZOJ_REVISA")[1])+;
+	PADR(_cAnoref,TamSx3("ZOJ_ANOREF")[1])+;
+	PADR(_cMat,TamSx3("ZOJ_MAT")[1])))
+
+		::nDiasTrabalhados		:= nR_DMes - &("ZOJ->ZOJ_MES"+PADL(Alltrim(_cMesRef),2,'0'))
+		::nDiasFerias			:=	&("ZOJ->ZOJ_MES"+PADL(Alltrim(_cMesRef),2,'0'))
+		::nPerDiasTrabalhados	:=	ROUND(::nDiasTrabalhados / nR_DMes * 100,8)
+		::nPerDiasFerias		:=	100 - ::nPerDiasTrabalhados
+		
+	
+	EndIf
+Return 

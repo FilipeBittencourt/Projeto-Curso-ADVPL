@@ -29,12 +29,14 @@ Method ConfirmReg(lNovo, cID, cCotacao, cItem, cNUser) Class TPortalIntegracaoCC
 	
 	Default cNUser		:= 'JOB'
 	
-	cQuery := " UPDATE BZINTEGRACAO_COTACAO_PORTAL SET 							"
-	cQuery += " DATA_HORA_PROTHEUS 	= GETDATE()									"
-	cQuery += " ,STATUS 				= 'P'  									"
+	cQuery := " UPDATE [BPORTAL_SA].[dbo].[CotacaoCompra] SET 					"
+	cQuery += " DataIntegracaoERP 	= GETDATE()									"
+	cQuery += " ,Status 				= 'P'  									"
+	cQuery += " ,StatusIntegracao		= '0'  									"
+	
 	If(lNovo)
-		cQuery += " ,COTACAO			= '"+cCotacao+"' 	 					"
-		cQuery += " ,COTACAO_ITEM	 	= '"+cItem+"'	 						"
+		cQuery += " ,Cotacao			= '"+cCotacao+"' 	 					"
+		cQuery += " ,CotacaoItem	 	= '"+cItem+"'	 						"
 	EndIf
 	cQuery += " WHERE ID 		= '"+AllTrim(cvaltochar(cID))+"'				"
 	
@@ -56,15 +58,22 @@ Method AtualizaContrato(cCotacao, cCotacaoItem, cFornece, cLoja, cProduto, cProp
 	
 	Default cNUser		:= 'JOB'
 	
-	cQuery := " UPDATE BZINTEGRACAO_COTACAO_PORTAL SET 							"
-	cQuery += " CONTRATO		 	= '"+cContrato+"'  ,						"
-	cQuery += " CONTRATO_ITEM	 	= '"+cItemContrato+"'	 					"
-	cQuery += " WHERE COTACAO 		= '"+AllTrim(cCotacao)+"'					"
-	cQuery += " AND COTACAO_ITEM	= '"+AllTrim(cCotacaoItem)+"'				"
-	cQuery += " AND FORNE_COD		= '"+AllTrim(cFornece)+"'					"
-	cQuery += " AND FORNE_LOJA		= '"+AllTrim(cLoja)+"'						"
-	cQuery += " AND PRODUTO			= '"+AllTrim(cProduto)+"'					"
-	cQuery += " AND PROPOSTA		= '"+AllTrim(cProposta)+"'					"
+	cQuery := " UPDATE [BPORTAL_SA].[dbo].[CotacaoCompra] SET 										"
+	cQuery += " Contrato		 	= '"+cContrato+"'  ,											"
+	cQuery += " ContratoItem	 	= '"+cItemContrato+"',	 										"
+	cQuery += " StatusIntegracao	= '0',	  														"
+	cQuery += " TipoEvento			= (CASE WHEN TipoEvento='NC' THEN TipoEvento ELSE 'AC' END)		"
+	cQuery += " WHERE Cotacao 		= '"+AllTrim(cCotacao)+"'										"
+	cQuery += " AND CotacaoItem		= '"+AllTrim(cCotacaoItem)+"'									"
+	cQuery += " AND FornecedorCodigo= '"+AllTrim(cFornece)+"'										"
+	cQuery += " AND FornecedorLoja	= '"+AllTrim(cLoja)+"'											"
+	cQuery += " AND Produto			= '"+AllTrim(cProduto)+"'										"
+	cQuery += " AND Proposta		= '"+AllTrim(cProposta)+"'										"
+	
+	//propostas vinda do portal
+	If (AllTrim(cProposta) == '01')
+		cQuery += " AND TipoEvento	IN ('NCP', 'AC') AND Origem=1									"
+	EndIf
 	
 	Conout("Portal Integração - AtualizaContrato - Query: "+cQuery)
 	
@@ -84,15 +93,22 @@ Method AtualizaPedido(cCotacao, cCotacaoItem, cFornece, cLoja, cProduto, cPropos
 	
 	Default cNUser		:= 'JOB'
 	
-	cQuery := " UPDATE BZINTEGRACAO_COTACAO_PORTAL SET 							"
-	cQuery += " PEDIDO			 	= '"+cPedido+"' , 							"
-	cQuery += " PEDIDO_ITEM		 	= '"+cItemPedido+"'		 					"
-	cQuery += " WHERE COTACAO 		= '"+AllTrim(cCotacao)+"'					"
-	cQuery += " AND COTACAO_ITEM	= '"+AllTrim(cCotacaoItem)+"'				"
-	cQuery += " AND FORNE_COD		= '"+AllTrim(cFornece)+"'					"
-	cQuery += " AND FORNE_LOJA		= '"+AllTrim(cLoja)+"'						"
-	cQuery += " AND PRODUTO			= '"+AllTrim(cProduto)+"'					"
-	cQuery += " AND PROPOSTA		= '"+AllTrim(cProposta)+"'					"
+	cQuery := " UPDATE [BPORTAL_SA].[dbo].[CotacaoCompra] SET 									"
+	cQuery += " Pedido			 	= '"+cPedido+"' , 											"
+	cQuery += " PedidoItem		 	= '"+cItemPedido+"',			 							"
+	cQuery += " StatusIntegracao	= '0',	  													"
+	cQuery += " TipoEvento			= (CASE WHEN TipoEvento='NC' THEN TipoEvento ELSE 'AC' END)	"
+	cQuery += " WHERE Cotacao 		= '"+AllTrim(cCotacao)+"'									"
+	cQuery += " AND CotacaoItem		= '"+AllTrim(cCotacaoItem)+"'								"
+	cQuery += " AND FornecedorCodigo= '"+AllTrim(cFornece)+"'									"
+	cQuery += " AND FornecedorLoja	= '"+AllTrim(cLoja)+"'										"
+	cQuery += " AND Produto			= '"+AllTrim(cProduto)+"'									"
+	cQuery += " AND Proposta		= '"+AllTrim(cProposta)+"'									"
+	
+	//propostas vinda do portal
+	If (AllTrim(cProposta) == '01')
+		cQuery += " AND TipoEvento	IN ('NCP', 'AC') AND Origem=1										"
+	EndIf
 	
 	Conout("Portal Integração - AtualizaPedido - Query: "+cQuery)
 	
@@ -113,17 +129,24 @@ Method AtualizaVencedor(cCotacao, cCotacaoItem, cFornece, cLoja, cProduto, cProp
 	Default cNUser		:= 'JOB'
 	
 	
-	cQuery := " UPDATE BZINTEGRACAO_COTACAO_PORTAL SET 							"
-	cQuery += " VENCEDOR			= '1' 			 							"
-	cQuery += " WHERE COTACAO 		= '"+AllTrim(cCotacao)+"'					"
-	cQuery += " AND COTACAO_ITEM	= '"+AllTrim(cCotacaoItem)+"'				"
-	cQuery += " AND FORNE_COD		= '"+AllTrim(cFornece)+"'					"
-	cQuery += " AND FORNE_LOJA		= '"+AllTrim(cLoja)+"'						"
-	cQuery += " AND PRODUTO			= '"+AllTrim(cProduto)+"'					"
-	cQuery += " AND PROPOSTA		= '"+AllTrim(cProposta)+"'					"
+	cQuery := " UPDATE [BPORTAL_SA].[dbo].[CotacaoCompra] SET 									"
+	cQuery += " Vencedor			= '1',		 			 									"
+	cQuery += " StatusIntegracao	= '0',	  													"
+	cQuery += " TipoEvento			= (CASE WHEN TipoEvento='NC' THEN TipoEvento ELSE 'AC' END)	"
+	cQuery += " WHERE Cotacao 		= '"+AllTrim(cCotacao)+"'									"
+	cQuery += " AND CotacaoItem		= '"+AllTrim(cCotacaoItem)+"'								"
+	cQuery += " AND FornecedorCodigo= '"+AllTrim(cFornece)+"'									"
+	cQuery += " AND FornecedorLoja	= '"+AllTrim(cLoja)+"'										"
+	cQuery += " AND Produto			= '"+AllTrim(cProduto)+"'									"
+	cQuery += " AND Proposta		= '"+AllTrim(cProposta)+"'									"
+	
+	//propostas vinda do portal
+	If (AllTrim(cProposta) == '01')
+		cQuery += " AND TipoEvento	IN ('NCP', 'AC') AND Origem=1								"
+	EndIf
 	
 	Conout("Portal Integração - AtualizaPedido - Query: "+cQuery)
-	
+		
 	nStatus := TCSqlExec(cQuery)
    
 	If (nStatus < 0)
@@ -139,17 +162,23 @@ Method Get() Class TPortalIntegracaoCC
 	Local oList				:= ArrayList():New()
 	
 	cQuery	+= " select 								 									"
-	cQuery	+= " DT_INI_CON=CONVERT(varchar(8), DATA_INICIO_CONTRATO, 112), 				"
-	cQuery	+= " DT_FIN_CON=CONVERT(varchar(8), DATA_FINAL_CONTRATO, 112), 					"
-	cQuery	+= " DT_VALIDADE=CONVERT(varchar(8), DATA_VALIDADE, 112),	 					"
-	cQuery	+= " DT_NECESSIDADE=CONVERT(varchar(8), DATA_NECESSIDADE, 112),	 				"
-	
+	cQuery	+= "  DtIniCon = CONVERT(varchar(8), DataInicioContrato, 112), 					"
+	cQuery	+= "  DtFinCon = CONVERT(varchar(8), DataFinalContrato, 112),                   "
+	cQuery	+= "  DtValidade = CONVERT(varchar(8), DataValidade, 112),	                    "
+	cQuery	+= "  DtNecessidade = CONVERT(varchar(8), DataNecessidade, 112),                "
+	cQuery	+= "  DtEmissao = CONVERT(varchar(8), DataEmissao, 112),                        "
+	cQuery	+= "  ForneCodigo = FornecedorCodigo,                                           "
+	cQuery	+= "  ForneLoja = FornecedorLoja,                                               "
+	cQuery	+= "  ForneOrcamento = FornecedorOrcamento,                                     "
+	cQuery	+= "  CondPag = CondicaoPagamento,                                              "
+	cQuery	+= "  ValorSub = ValorSubstituicao,		                                        "
+
 	cQuery	+= " * from																		"
-	cQuery	+= " BZINTEGRACAO_COTACAO_PORTAL												"
-	cQuery	+= " where STATUS = 'A' AND DATA_HORA_PROTHEUS IS NULL	AND NUMERO_SC <> ''		"
-	cQuery	+= " AND ORIGEM != '2'															"
-	
-	cQuery	+= "  order by  FILIAL, COTACAO, FORNE_COD, FORNE_LOJA, PROPOSTA, COTACAO_ITEM												"
+	cQuery	+= " [BPORTAL_SA].[dbo].[CotacaoCompra]											"
+	cQuery	+= " where Status = 'A' AND DataIntegracaoERP IS NULL	AND NumeroSC <> ''		"
+	cQuery	+= " AND Origem = '1'															"
+	cQuery	+= "  order by (CASE WHEN Cotacao is null or Cotacao=''  THEN Numero ELSE Cotacao END)				"
+	//cQuery	+= "  order by  Filial, Cotacao, FornecedorCodigo, FornecedorLoja, Proposta, CotacaoItem												"
 	
 	oList	:= ::List(cQuery)
 	
@@ -161,17 +190,22 @@ Method GetPorContrato(_cContra, _cContraItem) Class TPortalIntegracaoCC
 	Local cQuery			:= ""
 	Local oList				:= ArrayList():New()
 	
-	cQuery	+= " select 								 									"
-	cQuery	+= " DT_INI_CON=CONVERT(varchar(8), DATA_INICIO_CONTRATO, 112), 				"
-	cQuery	+= " DT_FIN_CON=CONVERT(varchar(8), DATA_FINAL_CONTRATO, 112), 					"
-	cQuery	+= " DT_VALIDADE=CONVERT(varchar(8), DATA_VALIDADE, 112),	 					"
-	cQuery	+= " DT_NECESSIDADE=CONVERT(varchar(8), DATA_NECESSIDADE, 112),	 					"
-	
-	cQuery	+= " * from																		"
-	cQuery	+= " BZINTEGRACAO_COTACAO_PORTAL												"
-	cQuery	+= " where CONTRATO = '"+_cContra+"'											"
-	cQuery	+= " AND CONTRATO_ITEM = '"+_cContraItem+"'										"
-	
+	cQuery	+= " select 								 										"
+	cQuery	+= "  DtIniCon = CONVERT(varchar(8), DataInicioContrato, 112), 						"
+	cQuery	+= "  DtFinCon = CONVERT(varchar(8), DataFinalContrato, 112),                   	"
+	cQuery	+= "  DtValidade = CONVERT(varchar(8), DataValidade, 112),	                    	"
+	cQuery	+= "  DtNecessidade = CONVERT(varchar(8), DataNecessidade, 112),                	"
+	cQuery	+= "  DtEmissao = CONVERT(varchar(8), DataEmissao, 112),                        	"
+	cQuery	+= "  ForneCodigo = FornecedorCodigo,                                           	"
+	cQuery	+= "  ForneLoja = FornecedorLoja,                                               	"
+	cQuery	+= "  ForneOrcamento = FornecedorOrcamento,                                     	"
+	cQuery	+= "  CondPag = CondicaoPagamento,                                              	"
+	cQuery	+= "  ValorSub = ValorSubstituicao,		                                        	"
+	cQuery	+= " * from																			"
+	cQuery	+= " [BPORTAL_SA].[dbo].[CotacaoCompra]												"
+	cQuery	+= " where Contrato = '"+_cContra+"'												"
+	cQuery	+= " AND ContratoItem = '"+_cContraItem+"'											"
+	cQuery	+= " AND Origem = '1'																"
 	conout(cQuery)
 	oList	:= ::List(cQuery)
 	
@@ -197,20 +231,20 @@ Method List(cQuery) Class TPortalIntegracaoCC
 		cMsgLog				:= ""
 		oCCStruct			:= TCCStruct():New()
 		
-		oCCStruct:cNumero	:= (cAliasTemp)->COTACAO
-		oCCStruct:cEmp      := (cAliasTemp)->EMPRESA
-		oCCStruct:cFil      := (cAliasTemp)->FILIAL
-		oCCStruct:cID 	    := (cAliasTemp)->CODIGO
+		oCCStruct:cNumero	:= (cAliasTemp)->Cotacao
+		oCCStruct:cEmp      := (cAliasTemp)->Empresa
+		oCCStruct:cFil      := (cAliasTemp)->Filial
+		oCCStruct:cID 	    := (cAliasTemp)->Numero
 		
 		cChave := ""
 		bValid	:= {|| }
 		
-		If (Empty((cAliasTemp)->COTACAO))
-			cChave	:= AllTrim((cAliasTemp)->CODIGO)
-			bValid	:= {|| AllTrim((cAliasTemp)->CODIGO) == cChave }
+		If (Empty((cAliasTemp)->Cotacao))
+			cChave	:= AllTrim((cAliasTemp)->Numero)
+			bValid	:= {|| AllTrim((cAliasTemp)->Numero) == cChave }
 		Else
-			cChave	:= AllTrim((cAliasTemp)->COTACAO)
-			bValid	:= {|| AllTrim((cAliasTemp)->COTACAO) == cChave }
+			cChave	:= AllTrim((cAliasTemp)->Cotacao)
+			bValid	:= {|| AllTrim((cAliasTemp)->Cotacao) == cChave }
 		EndIf
 		
 		
@@ -220,75 +254,75 @@ Method List(cQuery) Class TPortalIntegracaoCC
 			DbSelectArea('SA2')
 			SA2->(DbSetOrder(1))
 			
-			If (SA2->(DbSeek(xFilial('SA1')+PADR((cAliasTemp)->FORNE_COD, TamSx3("A2_COD")[1])+PADR((cAliasTemp)->FORNE_LOJA, TamSx3("A2_LOJA")[1]))))
+			If (SA2->(DbSeek(xFilial('SA1')+PADR((cAliasTemp)->ForneCodigo, TamSx3("A2_COD")[1])+PADR((cAliasTemp)->ForneLoja, TamSx3("A2_LOJA")[1]))))
 				
 				DbSelectArea('SB1')
 				SB1->(DbSetOrder(1))
-				If (SB1->(DbSeek(xFilial('SB1')+PADR((cAliasTemp)->PRODUTO, TamSx3("B1_COD")[1]))))
+				If (SB1->(DbSeek(xFilial('SB1')+PADR((cAliasTemp)->Produto, TamSx3("B1_COD")[1]))))
 					
 					oCCItemStruct	 				:= TCCItemStruct():New()
 					oCCItemStruct:cID		 	   	:= (cAliasTemp)->ID
 					oCCItemStruct:cNomeFornece 	   	:= SA2->A2_NOME
 					oCCItemStruct:cForMail			:= SA2->A2_EMAIL
-					oCCItemStruct:cFornece 	    	:= (cAliasTemp)->FORNE_COD
-					oCCItemStruct:cLoja	    		:= (cAliasTemp)->FORNE_LOJA
+					oCCItemStruct:cFornece 	    	:= (cAliasTemp)->ForneCodigo
+					oCCItemStruct:cLoja	    		:= (cAliasTemp)->ForneLoja
 					oCCItemStruct:cCond      	  	:= SA2->A2_COND 
-					oCCItemStruct:cContato   	  	:= (cAliasTemp)->CONTATO
-					oCCItemStruct:cTipoFrete	   	:= IIF((cAliasTemp)->TIPO_FRETE == '1', 'C', 'F')
-					oCCItemStruct:cMoeda       		:= (cAliasTemp)->MOEDA
-					oCCItemStruct:dEmissao  	   	:= (cAliasTemp)->DATA_EMISSAO
+					oCCItemStruct:cContato   	  	:= (cAliasTemp)->Contato
+					oCCItemStruct:cTipoFrete	   	:= IIF((cAliasTemp)->TipoFrete == '1', 'C', 'F')
+					oCCItemStruct:cMoeda       		:= (cAliasTemp)->Moeda
+					oCCItemStruct:dEmissao  	   	:= (cAliasTemp)->DtEmissao
 						
-					oCCItemStruct:cNumSc        	:= (cAliasTemp)->NUMERO_SC
-					oCCItemStruct:cItemSc       	:= (cAliasTemp)->ITEM_SC
+					oCCItemStruct:cNumSc        	:= (cAliasTemp)->NumeroSC
+					oCCItemStruct:cItemSc       	:= (cAliasTemp)->ItemSC
 					
-					oCCItemStruct:cNumPro			:= (cAliasTemp)->PROPOSTA
-					oCCItemStruct:cProd            	:= (cAliasTemp)->PRODUTO
-					oCCItemStruct:cItem            	:= (cAliasTemp)->ITEM
+					oCCItemStruct:cNumPro			:= (cAliasTemp)->Proposta
+					oCCItemStruct:cProd            	:= (cAliasTemp)->Produto
+					oCCItemStruct:cItem            	:= (cAliasTemp)->Item
 					
-					If (!Empty((cAliasTemp)->COTACAO_ITEM))
-						oCCItemStruct:cItem			:= (cAliasTemp)->COTACAO_ITEM
+					If (!Empty((cAliasTemp)->CotacaoItem))
+						oCCItemStruct:cItem			:= (cAliasTemp)->CotacaoItem
 					EndIf
 					
 					oCCItemStruct:cUM				:= SB1->B1_UM 
 					oCCItemStruct:cSegUM			:= SB1->B1_SEGUM //TODO tratar fator conversão
-					oCCItemStruct:nQuantSegUM 	    := (cAliasTemp)->QUANTIDADE
+					oCCItemStruct:nQuantSegUM 	    := (cAliasTemp)->Quantidade
 					
-					oCCItemStruct:nQuant          	:= (cAliasTemp)->QUANTIDADE
-					oCCItemStruct:nPreco          	:= (cAliasTemp)->PRECO
-					oCCItemStruct:nTotal          	:= ((cAliasTemp)->QUANTIDADE * (cAliasTemp)->PRECO)
+					oCCItemStruct:nQuant          	:= (cAliasTemp)->Quantidade
+					oCCItemStruct:nPreco          	:= (cAliasTemp)->Preco
+					oCCItemStruct:nTotal          	:= ((cAliasTemp)->Quantidade * (cAliasTemp)->Preco)
 					oCCItemStruct:nDesc           	:= 0
 					
 					oCCItemStruct:cTes            	:= ""
-					oCCItemStruct:cMarca          	:= (cAliasTemp)->MARCA
-					oCCItemStruct:nAliqIpi        	:= (cAliasTemp)->ALIQ_IPI
-					oCCItemStruct:cObervacao      	:= (cAliasTemp)->OBSERVACAO
-					oCCItemStruct:nPrazo          	:= (cAliasTemp)->PRAZO
-					oCCItemStruct:cOrcForn        	:= (cAliasTemp)->FORNE_ORCAMENTO
-					oCCItemStruct:dValidade       	:= (cAliasTemp)->DT_VALIDADE
+					oCCItemStruct:cMarca          	:= (cAliasTemp)->Marca
+					oCCItemStruct:nAliqIpi        	:= (cAliasTemp)->Ipi
+					oCCItemStruct:cObervacao      	:= (cAliasTemp)->Observacao
+					oCCItemStruct:nPrazo          	:= (cAliasTemp)->Prazo
+					oCCItemStruct:cOrcForn        	:= (cAliasTemp)->ForneOrcamento
+					oCCItemStruct:dValidade       	:= (cAliasTemp)->DtValidade
 					oCCItemStruct:cFlag           	:= ""
 					
-					oCCItemStruct:nValorSub      	:= (cAliasTemp)->VALOR_SUB
+					oCCItemStruct:nValorSub      	:= (cAliasTemp)->ValorSub
 					
-					oCCItemStruct:dInicioContrato  	:= (cAliasTemp)->DT_INI_CON
-					oCCItemStruct:dFinalContrato   	:= (cAliasTemp)->DT_FIN_CON
-					oCCItemStruct:dNecessidade		:= (cAliasTemp)->DT_NECESSIDADE
+					oCCItemStruct:dInicioContrato  	:= (cAliasTemp)->DtIniCon
+					oCCItemStruct:dFinalContrato   	:= (cAliasTemp)->DtFinCon
+					oCCItemStruct:dNecessidade		:= (cAliasTemp)->DtNecessidade
 					
-					oCCItemStruct:cCondCotacao		:= (cAliasTemp)->COND_PAG
+					oCCItemStruct:cCondCotacao		:= (cAliasTemp)->CondPag
 					
 					//oCCItemStruct:cEmail          := ""
 					//oCCItemStruct:dDataChe		:= ""
 					
-					oCCItemStruct:cTipoServico		:= (cAliasTemp)->TIPO_SERVICO
+					oCCItemStruct:cTipoServico		:= (cAliasTemp)->TipoCompra
 					
 					oCCStruct:oItens:Add(oCCItemStruct)
 				
 				Else
 					lOk			:= .F.
-					cMsgLog 	+= "[Portal Integração - Solicitação Servico/Produto:  "+cCodigo+"/"+(cAliasTemp)->PRODUTO+"] => não encontrado."+ CRLF
+					cMsgLog 	+= "[Portal Integração - Solicitação Servico/Produto:  "+cCodigo+"/"+(cAliasTemp)->Produto+"] => não encontrado."+ CRLF
 				EndIf
 			Else	
 				lOk			:= .F.
-				cMsgLog 	+= "[Portal Integração - Solicitação Servico/Fornecedor: "+cCodigo+"/"+(cAliasTemp)->FORNE_COD+"] => não encontrado."+ CRLF
+				cMsgLog 	+= "[Portal Integração - Solicitação Servico/Fornecedor: "+cCodigo+"/"+(cAliasTemp)->FornecedorCodigo+"] => não encontrado."+ CRLF
 			EndIf
 			
 			(cAliasTemp)->(DbSkip())
