@@ -294,7 +294,8 @@ Static Function ExistThenD(oPrcZera)
 		cSql += "                                       AND CVF_CODIGO = ZN6_CODPLA "
 		cSql += "                                       AND CVF_CONTAG = ZN6_RUBVIS "
 		cSql += "                                       AND (SUBSTRING(CVF_YRFDRE, 4, 2) IN(" + msVetImp + ") "
-		cSql += "                                            OR CVF_CTASUP = '') "
+		cSql += "                                            OR CVF_CTASUP = '' "
+		cSql += "                                            OR LEN(RTRIM(CVF_YRFDRE)) = 5) "
 		cSql += "                                       AND CVF.D_E_L_E_T_ = ' ' "
 		cSql += " WHERE ZN6_FILIAL = '" + xFilial("ZN6") + "' "
 		cSql += "       AND ZN6_TIPO1 <> 'M' "
@@ -380,7 +381,9 @@ Static Function Prc679EX(oProcess)
 	QX005 += Alltrim("      INNER JOIN VW_BI_D_OPERACAO OPR ON 1 = 1                                                                         ") + msEnter
 	QX005 += Alltrim(" WHERE CVF_FILIAL = '" + xFilial("CVF") + "'                                                                           ") + msEnter
 	QX005 += Alltrim("       AND CVF_CODIGO = '" + xCodPla + "'                                                                              ") + msEnter
-	QX005 += Alltrim("       AND CVF_CTASUP = ''                                                                                             ") + msEnter
+	QX005 += Alltrim("       AND (CVF_CTASUP = ''                                                                                            ") + msEnter
+	QX005 += Alltrim("            OR LEN(RTRIM(CVF_YRFDRE)) = 5)                                                                             ") + msEnter
+	QX005 += Alltrim("       AND CVF_CLASSE = '1'                                                                                            ") + msEnter
 	QX005 += Alltrim("       AND CVF.D_E_L_E_T_ = ' '                                                                                        ") + msEnter
 	QX005 += Alltrim(" ORDER BY CVF_ORDEM                                                                                                    ") + msEnter
 	QXIndex := CriaTrab(Nil,.f.)

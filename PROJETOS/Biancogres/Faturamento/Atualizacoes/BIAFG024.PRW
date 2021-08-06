@@ -18,7 +18,7 @@ User Function BIAFG024()
 
 	If Select("SX6") == 0
 
-		xv_Emps    := U_BAGtEmpr("01_05")
+		xv_Emps    := U_BAGtEmpr("01_05_14")
 
 		For xt	:=	1 to Len(xv_Emps)
 
@@ -59,6 +59,8 @@ Static Function fProcessa()
 	ELSEIF cEmpAnt == "05"
 		//kt_BsDad	:= "%DADOS_05_EOS%"
 		Return
+	ELSEIF cEmpAnt == "14"
+		kt_BsDad	:= "%DADOS_14_EOS%"		
 	ELSE
 		//Alterar quando houver outras emnpresas usando o Ecosis
 		Return
@@ -292,6 +294,8 @@ Static Function fCancIt(_cNum, _cItem)
 	ELSEIF cEmpAnt == "05"
 		//kt_BsDad	:= "%DADOS_05_EOS%"
 		Return
+	ELSEIF cEmpAnt == "14"
+		kt_BsDad	:= "%DADOS_14_EOS%"	
 	ELSE
 		//Alterar quando houver outras emnpresas usando o Ecosis
 		Return

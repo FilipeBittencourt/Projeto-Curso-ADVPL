@@ -84,7 +84,7 @@ User Function MT100LOK()
 	Private cArqSF1	:= ""
 	Private cIndSF1	:= 0
 	Private cRegSF1	:= 0
-	
+
 	Private cCtrBloq := 0
 	Private cDtVigen := 0
 
@@ -96,8 +96,10 @@ User Function MT100LOK()
 
 	If FwIsInCallStack('U_GATI001')
 		U_GTPE004()
-		If l103Auto
-			Return .T.
+		If FwIsInCallStack('MATA103')
+			If l103Auto
+				Return .T.
+			EndIf
 		EndIf
 	EndIf
 
@@ -576,31 +578,31 @@ User Function MT100LOK()
 				IF SC3->C3_MSBLQL == '1' .and. cCtrBloq <> 2 
 					cCtrBloq := 1
 				ELSE
-				  cCtrBloq := 2
+					cCtrBloq := 2
 				ENDIF
 				IF (dDatabase < SC3->C3_DATPRI .OR. dDatabase > SC3->C3_DATPRF) .and. cDtVigen <> 2
-				    cDtVigen := 1
+					cDtVigen := 1
 				ELSE
-				  cDtVigen := 2
+					cDtVigen := 2
 				ENDIF
 			ENDIF
 
 			DbSelectArea("SC3")
 			DbSkip()
 		END
-		
+
 		IF cCtrBloq == 1	
-		  MsgBox("Este contrato está bloqueado.", "MT100LOK(xM)", "STOP")
-          AutoGrLog("MT100LOK ==> Este contrato está bloqueado.")
-		  lRetorno := .F.
-		  cCtrBloq := 0
+			MsgBox("Este contrato está bloqueado.", "MT100LOK(xM)", "STOP")
+			AutoGrLog("MT100LOK ==> Este contrato está bloqueado.")
+			lRetorno := .F.
+			cCtrBloq := 0
 		ENDIF
-		
+
 		IF cDtVigen == 1
-		  MSGBOX("Esta NF não poderá ser inclusa pois a data está fora da vigência do contrato.", "MT100LOK(xN)", "STOP")
-		  AutoGrLog("MT100LOK ==> Esta NF não poderá ser inclusa pois a data está fora da vigência do contrato.")
-		  lRetorno := .F.
-		  cDtVigen := 0
+			MSGBOX("Esta NF não poderá ser inclusa pois a data está fora da vigência do contrato.", "MT100LOK(xN)", "STOP")
+			AutoGrLog("MT100LOK ==> Esta NF não poderá ser inclusa pois a data está fora da vigência do contrato.")
+			lRetorno := .F.
+			cDtVigen := 0
 		ENDIF
 
 		IF !lPassei
@@ -747,17 +749,17 @@ User Function MT100LOK()
 								cLojaOri := xtVetNfo[n][4]								
 
 							Else
-								
+
 								cDocOri := ""
 								cSerieOri := ""
 								cFornOri := ""
 								cLojaOri := ""								
-							
+
 								If !ZAA->(Eof()) 
-									
+
 									oLoadXML := TLoadXMLCTe():New(ZAA->ZAA_XML, 1)
 									oNFeResulStruct := oLoadXML:GetCTe()
-									
+
 									If (oNFeResulStruct:lOk)
 										nPos := oNFeResulStruct:oResult:oCTeItens:GetCount()
 										If (nPos > 0)
@@ -1368,16 +1370,16 @@ Static Function GetCompPreco()
 				oLoadXML := TLoadXMLCTe():New(ZAA->ZAA_XML, 1)
 				oNFeResulStruct := oLoadXML:GetCTe()
 				If (oNFeResulStruct:lOk)
-										
+
 					nPos := oNFeResulStruct:oResult:oCTeItens:GetCount()
 
 					If (nPos == 1)
-	
+
 						cDocOri 	:= oNFeResulStruct:oResult:oCTeItens:GetItem(nPos):cDoc
 						cSerieOri	:= oNFeResulStruct:oResult:oCTeItens:GetItem(nPos):cSerie
 						cFornOri 	:= oNFeResulStruct:oResult:oCTeItens:GetItem(nPos):cFornece
 						cLojaOri 	:= oNFeResulStruct:oResult:oCTeItens:GetItem(nPos):cLoja	
-	
+
 						A0002 := " SELECT SUM(D1_QUANT) QUANT, SUM(D1_YTICKET) TICKET, SUM(D1_TOTAL) VLRTOT
 						A0002 += "   FROM " + RetSqlName("SD1")
 						A0002 += "  WHERE D1_FILIAL = '"+xFilial("SD1")+"'
@@ -1387,7 +1389,7 @@ Static Function GetCompPreco()
 						A0002 += "    AND D1_LOJA = '"+cLojaOri+"'
 						A0002 += "    AND D1_COD = '"+aCols[n,cPCod]+"'
 						A0002 += "    AND D_E_L_E_T_ = ' '
-	
+
 						TcQuery A0002 New Alias "A002"
 						dbSelectArea("A002")
 						dbGoTop()
@@ -1395,7 +1397,7 @@ Static Function GetCompPreco()
 						xy_Tickt 		:= A002->TICKET
 						xy_VlrTt 		:= A002->VLRTOT
 						A002->(dbCloseArea())
-	
+
 					EndIf
 				EndIf
 			EndIf

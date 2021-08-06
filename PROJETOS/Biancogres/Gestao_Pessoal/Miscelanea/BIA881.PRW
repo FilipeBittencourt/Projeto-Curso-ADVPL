@@ -484,8 +484,8 @@ Static Function BIA881A()
 	HR007 += Alltrim("                    WHEN ZO0.ZO0_BNADC LIKE '%B35%' THEN zmAjdCBd                                                    ") + msrhEnter
 	HR007 += Alltrim("                    ELSE 0                                                                                           ") + msrhEnter
 	HR007 += Alltrim("                  END,                                                                                               ") + msrhEnter
-	HR007 += Alltrim("       REEDSP  = CASE                                                                                               ") + msrhEnter
-	HR007 += Alltrim("                    WHEN ZO0.ZO0_BNADC LIKE '%B35%' THEN zmReeDesp                                                    ") + msrhEnter
+	HR007 += Alltrim("       REEDSP  = CASE                                                                                                ") + msrhEnter
+	HR007 += Alltrim("                    WHEN ZO0.ZO0_BNADC LIKE '%B45%' THEN zmReeDesp                                                   ") + msrhEnter
 	HR007 += Alltrim("                    ELSE 0                                                                                           ") + msrhEnter
 	HR007 += Alltrim("                  END,                                                                                               ") + msrhEnter
 	HR007 += Alltrim("       CFCCCRH  = CASE                                                                                               ") + msrhEnter

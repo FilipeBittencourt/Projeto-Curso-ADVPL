@@ -17,6 +17,8 @@ User Function VALESTEC(cCarga)
 		cBanco		:= "DADOS_05_EOS"
 	ElseIf(AllTrim(cEmpAnt) == '13')
 		cBanco		:= "DADOS_13_EOS"
+	ElseIf(AllTrim(cEmpAnt) == '14')
+		cBanco		:= "DADOS_14_EOS"			
 	EndIf
 		
 	cQuery += " select C9_PRODUTO, C9_LOTECTL, C9_QTDLIB, cod_produto, sdo_lote, SALDO_ECOS=sdo_saldo_estoque 	"+ CRLF

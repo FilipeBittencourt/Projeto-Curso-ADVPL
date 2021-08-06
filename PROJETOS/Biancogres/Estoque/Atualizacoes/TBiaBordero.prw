@@ -49,6 +49,8 @@ Method New(oColetor) Class TBiaBordero
 		::cBaseDados := "DADOSEOS"
 	ElseIf cEmpAnt == "05"
 		::cBaseDados := "DADOS_05_EOS"
+	ElseIf cEmpAnt == "14"
+		::cBaseDados := "DADOS_14_EOS"
 	endif
 Return                              
 

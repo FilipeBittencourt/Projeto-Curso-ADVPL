@@ -2703,7 +2703,7 @@ method LoadFiliais() class TAutomacaoDevolucaoIntercompany
 
     while SM0->( !eof() )
         if SM0->( !Deleted() )
-            if ( allTrim(SM0->M0_CODIGO)$"01|05|07|13" )
+            if ( allTrim(SM0->M0_CODIGO)$"01|07" )
                 SM0->(aAdd(aFiliais,{M0_CODIGO,M0_CODFIL,M0_CGC,RECNO()}))
             endif
         endif

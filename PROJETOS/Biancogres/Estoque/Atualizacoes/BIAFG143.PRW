@@ -9,6 +9,14 @@
 @type function
 /*/
 
+User Function BFG143T()
+
+	RpcSetEnv('01','01')
+	U_BIAFG143()
+	RpcClearEnv()
+
+Return
+
 User Function BIAFG143()
 
 	Local _nSaldoMov	:=	0
@@ -84,7 +92,7 @@ Static Function ValidPerg()
 	MV_PAR05 :=	0		
 	MV_PAR06 := SPACE(300)
 
-	aAdd( aPergs ,{1,"Solicit." 	   			,MV_PAR01 ,""  ,"ExistCpo('ZZY',,3).And. U_BFG143SL()",'ZZY'  ,'.T.',50,.T.})
+	aAdd( aPergs ,{1,"Solicit." 	   			,MV_PAR01 ,""  ,"(MV_PAR01 == 'ZZZZZZZZ' .OR. ExistCpo('ZZY',,3) ) .And. U_BFG143SL()",'ZZY'  ,'.T.',50,.T.})
 	aAdd( aPergs ,{1,"Produto" 	   			,MV_PAR02 ,""  ,"ExistCpo('SB1').And. U_BFG143SL()",'SB1'  ,'.T.',50,.T.})
 	aAdd( aPergs ,{1,"Almoxarif." 	   			,MV_PAR03 ,""  ,"U_BFG143SL()",''  ,'.T.',20,.F.})
 	aAdd( aPergs ,{1,"Saldo" 	   		,MV_PAR04 ,"@E 9,999,999.99999999"  ,"",''  ,'.F.',50,.F.})

@@ -274,7 +274,7 @@ Method Check() Class TBloqueioPedidoVenda
 		Else
 
 			cMsgBloq := ::ArrayToSring(aMsgBloq, "/")
-			//MsgBox(cMsgBloq + CRLF+"Favor solicitar ao "+cNomeAprov+" liberar este pedido!", "M410STTS", "STOP")
+			MsgBox(cMsgBloq + CRLF+"Favor solicitar ao "+cNomeAprov+" liberar este pedido!", "M410STTS", "STOP")
 
 		EndIf
 
@@ -691,14 +691,14 @@ Method GetQuerySC6() Class TBloqueioPedidoVenda
 	cQuery +="	(                                                                                                       														"+ CRLF
 	cQuery +="			SELECT C6_PRODUTO FROM "+RetSQLName("SC6")+" X where X.C6_NUM = '"+::cNumPed+"' and X.D_E_L_E_T_= ''       												"+ CRLF
 	cQuery +="	) AND ZA6.D_E_L_E_T_= '' ) THEN 'S' ELSE 'N' END RODAPE                                                   														"+ CRLF
-	cQuery +=" , "+cFiltroVer+"													                                        														"+ CRLF
-	cQuery +=" , "+cFiltroExCl+"                                                                                          														"+ CRLF
-	cQuery +=" , "+cQueryDupli+"                                                                                          														"+ CRLF
-	cQuery +=" , "+cQueryCli+"
-	cQuery +=" , "+cQueryExEng+"
-	cQuery +=" , "+cQueryPallet+"
-	cQuery +=" , "+cQueryFormato+"
-	"+ CRLF
+	cQuery +=" , "+cFiltroVer+"													                                        													"+ CRLF
+	cQuery +=" , "+cFiltroExCl+"                                                                                          "+ CRLF
+	cQuery +=" , "+cQueryDupli+"                                                                                          "+ CRLF
+	cQuery +=" , "+cQueryCli+"                                                                                            "+ CRLF
+	cQuery +=" , "+cQueryExEng+"																																													"+ CRLF
+	cQuery +=" , "+cQueryPallet+"                                                                                         "+ CRLF
+	cQuery +=" , "+cQueryFormato+"                                                                                      	"+ CRLF
+
 	cQuery +=" FROM "+RetSQLName("SC6")+"                                                                                          												"+ CRLF
 	cQuery +=" WHERE 	C6_FILIAL	='"+xFilial("SC6")+"' 	AND                                                             													"+ CRLF
 	cQuery +=" C6_NUM 				= '"+::cNumPed+"' 		AND                                                                     											"+ CRLF
@@ -710,3 +710,31 @@ Method GetQuerySC6() Class TBloqueioPedidoVenda
 
 
 Return cQuery
+
+
+
+
+//Valida a regra se o pedido tiver AI se for acordo galeria = AG
+User Function fValAG(C5YNUMSI)
+
+	Local lRet := .F.
+	Local cSql := ""
+	Local cAliaSZO 	:= GetNextAlias()
+
+	// Somente a bianco gera AO e AI no momento até 06-08-2021.
+	cSql += " SELECT  *  " + CRLF
+	cSql += " FROM SZO010  " + CRLF
+	cSql += " where ZO_FILIAL = '01' " + CRLF
+	cSql += " AND   ZO_SI  = '"+C5YNUMSI+"'     " + CRLF
+	cSql += " AND  ZO_YTPACOR = 'AG'  "+ CRLF
+	cSql += " and D_E_L_E_T_ = ''     "+ CRLF
+
+	TcQuery cSql New Alias (cAliaSZO)
+
+	IF (!(cAliaSZO)->(Eof()))
+		lRet := .T.
+	EndIf
+
+	(cAliaSZO)->(DbCloseArea())
+
+Return(lRet)

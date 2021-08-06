@@ -86,6 +86,8 @@ ElseIf cEmpAnt == "05"
 ElseIf cEmpAnt == "13"
 	guTablEco := "DADOS_13_EOS"
 	//guLocPadE := "02','04"
+ElseIf cEmpAnt == "14"
+	guTablEco := "DADOS_14_EOS"
 Else
 	Aviso( 'BIA506', 'Empresa não configurada para o sistema Ecosis', {'Ok'} )
 	Return

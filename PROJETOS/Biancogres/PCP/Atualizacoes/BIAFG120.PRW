@@ -30,7 +30,6 @@ Return
 
 User Function BIAFG120()
 
-	Local   x
 	Private _lMarkAll	:=	.T.
 	Private zx_Ambi        := ""
 	Private oButton1
@@ -258,12 +257,22 @@ Return
 Static Function fGrvProd()
 
 	If xyEmpr == "01"
+
 		kt_BsDad := "DADOSEOS"
+
 	ElseIf xyEmpr == "05"
+
 		kt_BsDad := "DADOS_05_EOS"
+
+	ElseIf xyEmpr == "14"
+
+		kt_BsDad := "DADOS_14_EOS"
+
 	Else
-		MsgINFO("Empresa não configurada para apontamento automático de Cerâmica!!!")
+
+		MsgINFO("Empresa não configurada para apontamento automático de Cerâmica!!!", "BIAFG120")
 		Return
+
 	EndIf
 
 	fgRfDtAn := Substr(dtos(MV_PAR01),1,4)+"-"+Substr(dtos(MV_PAR01),5,2)+"-"+Substr(dtos(MV_PAR01),7,2)
@@ -614,10 +623,8 @@ Return
 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
 Static Function fNGDd1Ap()
 
-	Local nX
 	Local aHeaderEx    := {}
 	Local aColsEx      := {}
-	Local aFieldFill   := {}
 	Local aFields      := {"STATUS","ETIQUET","SEQUENC","DTMOV","HORA","NUMOP","D3COD","DESCRIC","PROD","REFER","LOTEPR","QTDM2","TRANSAC","ESCOLHA","CODEMP","LOTEEMP","REGSD4","QTDECX"}
 	Local aAlterFields := {"NUMOP","D3COD","CODEMP","LOTEEMP"}
 	Local _cCor	:=	""
@@ -726,7 +733,6 @@ Return
 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
 Static Function gxApAtPr( xRecbAcl )
 
-	Local j
 	Local sd
 
 	_cLogTxt	   := ""
@@ -2341,7 +2347,6 @@ Static Function ftransf()
 
 	Local _cBkpPar01	:=	MV_PAR01
 	Local _dBkpDt
-	Local _aTransf	:=	{}
 
 	If fPergMult()
 
@@ -2703,7 +2708,6 @@ Static Function fGeraPonta()
 	Local _nPercD
 	Local _nQtdFil
 	Local _nQuantA		:=	MV_PAR02
-	Local _nQtdRtf	:=	0
 
 	For _nI	:= 1 to 3
 

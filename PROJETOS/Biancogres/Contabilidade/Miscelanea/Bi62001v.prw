@@ -42,7 +42,7 @@ If DbSeek(xFilial("SD2")+SF2->F2_DOC+SF2->F2_SERIE+SF2->F2_CLIENTE+SF2->F2_LOJA,
 			dbSetOrder(1)
 			dbSeek(xFilial("SC5")+SD2->D2_PEDIDO,.F.)
 			If Alltrim(SC5->C5_YFLAG) == "2" //Busca UF e MUN do Local de Entrega
-				cEST	:= SC5->C5_YEST
+				cEST	:= SC5->C5_YEST
 				cMun	:= SC5->C5_YCODMUN //SC5->C5_YMUN
 			Else
 				IF !(SF2->F2_TIPO $ "DB")

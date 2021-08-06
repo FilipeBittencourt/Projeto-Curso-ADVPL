@@ -23,8 +23,7 @@ Static Function RptDetail()
 	Private lNegEstr  := GETMV("MV_NEGESTR")
 	Private xMkDesMk  := .T.
 
-
-	private bErro := ErrorBlock( { |oErr|  MsgAlert(oErr:Description) })
+	private bErro := ErrorBlock( { |oErr|  MsgAlert(oErr:Description,"BIA370") })
 
 	cHInicio := Time()
 	fPerg := "BIA370"
@@ -550,7 +549,6 @@ Static Function xBia370E(nQuant, dDataStru)
 
 	LOCAL nQuantItem:=0, cUnidMod, nG1Quant:=0, nQBase:=0, nDecimal:=0, nBack:=0
 	LOCAL aTamSX3:={}
-	LOCAL cAlias:=Alias(), nRecno:=Recno(), nOrder:=IndexOrd()
 	LOCAL lOk:=.T.
 	LOCAL nDecOrig:=Set(3,8)
 
@@ -620,7 +618,6 @@ Static Function fxAtuSD4()
 	Local nt
 	Local _nAux	:=	0
 	Local _cLocal	:=	""
-	Local _lRetLoc	:=	.F.
 	Local _cAlias
 
 	For nt := 1 To Len(aDados2)
@@ -675,15 +672,16 @@ Static Function fxAtuSD4()
 			SD4->D4_TRT      := aDados2[nt][12]
 			MsUnLock()
 
-			dbSelectArea("SB2")
-			dbSetOrder(1)
-			If dbSeek(xFilial("SB2")+SD4->D4_COD+SD4->D4_LOCAL)
-				_nAux	:=	ConvUm(SB2->B2_COD, SB2->B2_QEMP, 0, 2)
-				RecLock("SB2",.F.)
-				SB2->B2_QEMP   += jiQuant
-				SB2->B2_QEMP2  := _nAux
-				MsUnLock()
-			EndIf
+			// Retirado para evitar travamento com o programa BIA280 - Por Marcos 02/08/21
+			//dbSelectArea("SB2")
+			//dbSetOrder(1)
+			//If dbSeek(xFilial("SB2")+SD4->D4_COD+SD4->D4_LOCAL)
+			//	_nAux	:=	ConvUm(SB2->B2_COD, SB2->B2_QEMP, 0, 2)
+			//	RecLock("SB2",.F.)
+			//	SB2->B2_QEMP   += jiQuant
+			//	SB2->B2_QEMP2  := _nAux
+			//	MsUnLock()
+			//EndIf
 
 		Else                                                      // Caso já existe registro no SD4
 			***************************************************************************************
@@ -694,15 +692,16 @@ Static Function fxAtuSD4()
 				dbSelectArea("SD4")
 				dbGoTo(aDados2[nt][11])
 
-				dbSelectArea("SB2")
-				dbSetOrder(1)
-				If dbSeek(xFilial("SB2")+SD4->D4_COD+SD4->D4_LOCAL)
-					_nAux	:=	ConvUm(SB2->B2_COD, SB2->B2_QEMP, 0, 2)
-					RecLock("SB2",.F.)
-					SB2->B2_QEMP   -= SD4->D4_QUANT
-					SB2->B2_QEMP2  := _nAux
-					MsUnLock()
-				EndIf
+				// Retirado para evitar travamento com o programa BIA280 - Por Marcos 02/08/21
+				//dbSelectArea("SB2")
+				//dbSetOrder(1)
+				//If dbSeek(xFilial("SB2")+SD4->D4_COD+SD4->D4_LOCAL)
+				//	_nAux	:=	ConvUm(SB2->B2_COD, SB2->B2_QEMP, 0, 2)
+				//	RecLock("SB2",.F.)
+				//	SB2->B2_QEMP   -= SD4->D4_QUANT
+				//	SB2->B2_QEMP2  := _nAux
+				//	MsUnLock()
+				//EndIf
 
 				dbSelectArea("SD4")
 				RecLock("SD4",.F.)
@@ -735,15 +734,16 @@ Static Function fxAtuSD4()
 				SD4->D4_QTSEGUM  := _nAux
 				MsUnLock()
 
-				dbSelectArea("SB2")
-				dbSetOrder(1)
-				If dbSeek(xFilial("SB2")+SD4->D4_COD+SD4->D4_LOCAL)
-					_nAux	:=	ConvUm(SB2->B2_COD, SB2->B2_QEMP, 0, 2)
-					RecLock("SB2",.F.)
-					SB2->B2_QEMP   += kMudQtd
-					SB2->B2_QEMP2  := _nAux
-					MsUnLock()
-				EndIf
+				// Retirado para evitar travamento com o programa BIA280 - Por Marcos 02/08/21
+				//dbSelectArea("SB2")
+				//dbSetOrder(1)
+				//If dbSeek(xFilial("SB2")+SD4->D4_COD+SD4->D4_LOCAL)
+				//	_nAux	:=	ConvUm(SB2->B2_COD, SB2->B2_QEMP, 0, 2)
+				//	RecLock("SB2",.F.)
+				//	SB2->B2_QEMP   += kMudQtd
+				//	SB2->B2_QEMP2  := _nAux
+				//	MsUnLock()
+				//EndIf
 
 			EndIf
 
@@ -988,7 +988,6 @@ Return
 Static Function fCriaSem(_cLocal)
 
 	Local _lRet	:=	.T.
-	Local _cSql	:=	""
 
 	Default _cLocal	:=	""
 

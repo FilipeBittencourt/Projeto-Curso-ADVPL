@@ -183,7 +183,7 @@ User Function fGetUF(nFuncao)
 
 		If Alltrim(M->C5_YFLAG) == "2"
 			lAchouPes	:= .T.
-			cEST		:= M->C5_YEST
+			cEST		:= M->C5_YEST
 			cMUN		:= M->C5_YCODMUN
 			cRegEsp		:= Posicione("SA1",1,xFilial("SA1")+M->C5_CLIENTE+M->C5_LOJACLI,"A1_YREGESP")
 		Else
@@ -209,7 +209,7 @@ User Function fGetUF(nFuncao)
 	Else
 
 		If Alltrim(SC5->C5_YFLAG) == "2"
-			cEST		:= SC5->C5_YEST
+			cEST		:= SC5->C5_YEST
 			cMUN		:= SC5->C5_YCODMUN
 			cRegEsp		:= Posicione("SA1",1,xFilial("SA1")+SC5->C5_CLIENTE+SC5->C5_LOJACLI,"A1_YREGESP")
 		Else

@@ -146,9 +146,16 @@ Static Function bRptFG130()
 			//Grupo de Produtos
 			nGrupos := U_MontaSQLIN(ROTEIRO->ZN0_TPPROD,'_',3)
 
+			msEmpRef := ""
+			If Alltrim(ROTEIRO->ZN0_TPPROD) == "ARG"
+				msEmpRef := "ZN4_EMPORI"
+			Else
+				msEmpRef := "ZN4_EMPDES"
+			EndIf
+
 			//Define empresas para busca das informacoes
 			cSql := " SELECT ZN4_MESANO, "
-			cSql += "        ZN4_EMPDES, "
+			cSql += "        " + msEmpRef + " EMPREF, "
 			cSql += "        ZN4_FIL FIL, "
 			cSql += "        ISNULL(ZN4_TPCTB,'') TP_CTB "
 			cSql += " FROM " + RetSqlName("ZN4") + " ZN4(NOLOCK) "
@@ -156,7 +163,7 @@ Static Function bRptFG130()
 			If !Empty(Alltrim(ROTEIRO->ZN0_FIL))
 				cSql += "		ZN4_FIL  = '" + Alltrim(ROTEIRO->ZN0_FIL) + "' AND "
 			EndIf
-			If 	!Empty(Alltrim(nGrupos))
+			If !Empty(Alltrim(nGrupos))
 				cSql += "		ZN4_TPPROD IN (" + Alltrim(nGrupos) + ") AND "
 			EndIf
 			If !Empty(Alltrim(ROTEIRO->ZN0_EMPDES))
@@ -173,11 +180,13 @@ Static Function bRptFG130()
 			EndIf
 			cSql += "		ZN4_MESANO >= '" + nMesAnoD + "' AND ZN4_MESANO <= '" + nMesAnoA + "' "
 			cSql += " GROUP BY ZN4_MESANO, "
-			cSql += "          ZN4_EMPDES, "
-			cSql += "          ZN4_FIL, ZN4_TPCTB  "
+			cSql += "          " + msEmpRef + ", "
+			cSql += "          ZN4_FIL, "
+			cSql += "          ZN4_TPCTB "
 			cSql += " ORDER BY ZN4_MESANO, "
-			cSql += "          ZN4_EMPDES, " 
-			cSql += "          ZN4_FIL, ZN4_TPCTB  "
+			cSql += "          " + msEmpRef + ", "
+			cSql += "          ZN4_FIL, "
+			cSql += "          ZN4_TPCTB "
 			If chkfile("EMP")
 				dbSelectArea("EMP")
 				dbCloseArea()
@@ -188,12 +197,18 @@ Static Function bRptFG130()
 
 				//Se estiver vazio, EMPRESA ORIGEM E DESTINO SÃO IGUAIS
 
-				If Empty(Alltrim(ROTEIRO->ZN0_EMPDES))
-					nEmpDes := EMP->ZN4_EMPDES
-					nEmpOri := EMP->ZN4_EMPDES
+				If Alltrim(ROTEIRO->ZN0_TPPROD) == "ARG"
+					nEmpDes := "  "
+					nEmpOri := EMP->EMPREF
+
+				ElseIf Empty(Alltrim(ROTEIRO->ZN0_EMPDES))
+					nEmpDes := EMP->EMPREF
+					nEmpOri := EMP->EMPREF
+
 				Else
-					nEmpDes := EMP->ZN4_EMPDES
+					nEmpDes := EMP->EMPREF
 					nEmpOri := ROTEIRO->ZN0_EMPDES
+
 				EndIf
 
 				If Alltrim(ROTEIRO->ZN0_CONTA) == "31601003"

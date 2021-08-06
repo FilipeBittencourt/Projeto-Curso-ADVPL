@@ -389,7 +389,8 @@ Method Get() Class TAFMovimentoRemessaReceber
 		//TODO FIDC INICIO - Provisório
 		
 		//FIDC - tratamento de recebimento antecipado 
-		If SubStr(oObj:cPrefixo, 1, 2) $ 'PR'
+		//If SubStr(oObj:cPrefixo, 1, 2) $ 'PR'
+		If AllTrim(oObj:cTipo) == 'BOL' //Contempla os títulos de RA e Contrato
 			oObj:cGRCB := '000001' //Regra do BB para antecipado
 		EndIf
 		

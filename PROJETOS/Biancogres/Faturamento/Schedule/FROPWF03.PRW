@@ -333,7 +333,6 @@ Static Function MontaQuery()
 	
 	cQuery += " SELECT * FROM ( "+ Enter 
 	
-	
 	cQuery += " SELECT * FROM ( "+ Enter 
 	cQuery += "  	SELECT   "+ Enter 
 	cQuery += "  		CONVERT(DATE, C6_YEMISSA)		AS DATA_EMI, "+ Enter 
@@ -380,8 +379,8 @@ Static Function MontaQuery()
 	cQuery += "  DATA_ENT <= CONVERT (DATE, GETDATE())    "+ Enter 
 	
 	cQuery += " UNION ALL "+ Enter 
+
 	//empresa 05
-	
 	cQuery += " SELECT * FROM ( "+ Enter 
 	cQuery += "  	SELECT   "+ Enter 
 	cQuery += "  		CONVERT(DATE, C6_YEMISSA)		AS DATA_EMI, "+ Enter 
@@ -426,7 +425,55 @@ Static Function MontaQuery()
 	cQuery += "  ) A "+ Enter 
 	cQuery += "  WHERE  "+ Enter 
 	cQuery += "  DATA_ENT <= CONVERT (DATE, GETDATE())    "+ Enter 
-	
+
+	cQuery += " UNION ALL "+ Enter 
+
+	//empresa 14
+	cQuery += " SELECT * FROM ( "+ Enter 
+	cQuery += "  	SELECT   "+ Enter 
+	cQuery += "  		CONVERT(DATE, C6_YEMISSA)		AS DATA_EMI, "+ Enter 
+	cQuery += "  		CONVERT(DATE, C6_ENTREG)		AS DATA_ENT, "+ Enter 
+	cQuery += "  		CASE WHEN SC5_7.C5_NUM IS NOT NULL THEN		SA1_1.A1_COD	ELSE SA1_2.A1_COD		END AS COD_CLI,"+ Enter 
+	cQuery += "  		CASE WHEN SC5_7.C5_NUM IS NOT NULL THEN		SA1_1.A1_LOJA	ELSE SA1_2.A1_LOJA		END AS LOJA_CLI,"+ Enter 
+	cQuery += " 		CASE WHEN SC5_7.C5_NUM IS NOT NULL THEN		SA1_1.A1_NOME	ELSE SA1_2.A1_NOME		END AS NOME_CLI,"+ Enter 
+	cQuery += " 		CASE WHEN SC5_7.C5_NUM IS NOT NULL THEN		SA1_1.A1_YTPSEG	ELSE SA1_2.A1_YTPSEG	END AS TPSEG,"+ Enter 
+	cQuery += " 		CASE WHEN SC5_7.C5_NUM IS NOT NULL THEN		SA1_1.A1_EST	ELSE SA1_2.A1_EST		END AS UF,"+ Enter 
+	cQuery += " 		CASE WHEN SC5_7.C5_NUM IS NOT NULL THEN		SA3_1.A3_COD	ELSE SA3_2.A3_COD		END AS COD_VEN,"+ Enter 
+	cQuery += " 		CASE WHEN SC5_7.C5_NUM IS NOT NULL THEN		SA3_1.A3_NREDUZ	ELSE SA3_2.A3_NREDUZ	END AS NOME_VEN,"+ Enter 
+	cQuery += " 		C0_YPEDIDO		AS PEDIDO, "+ Enter 
+	cQuery += "  		C0_YITEMPV		AS ITEMP,  "+ Enter 
+	cQuery += "  		C0_PRODUTO		AS COD_PROD, "+ Enter 
+	cQuery += "  		B1_DESC			AS NOME_PROD, "+ Enter 
+	cQuery += "  		C0_LOTECTL		AS LOTE, "+ Enter 
+	cQuery += "  		C0_QUANT		AS QUANT, "+ Enter 
+	cQuery += "  		C0_NUM			AS NUM_RES, "+ Enter 
+	cQuery += "  		Z37_DESCR		AS MARCA, "+ Enter 
+	cQuery += "  		C0_YUSER		AS USUARIO, "+ Enter 
+	cQuery += "  		'14'			AS EMPRESA "+ Enter 
+	cQuery += "  	FROM SC0140 SC0 "+ Enter 
+	cQuery += "  	INNER JOIN SB1010 SB1 ON (SC0.C0_PRODUTO	=  SB1.B1_COD	AND SB1.D_E_L_E_T_ = '') "+ Enter 
+	cQuery += "  	INNER JOIN SC5140 SC5 ON (SC0.C0_YPEDIDO	=  SC5.C5_NUM	AND	SC0.C0_FILIAL = SC5.C5_FILIAL		AND	SC5.D_E_L_E_T_ = '') "+ Enter 
+	cQuery += "  	INNER JOIN SC6140 SC6 ON (SC0.C0_YPEDIDO	=  SC6.C6_NUM	AND	SC0.C0_PRODUTO = SC6.C6_PRODUTO		AND SC0.C0_YITEMPV = SC6.C6_ITEM AND	SC6.D_E_L_E_T_ = '') "+ Enter 
+	cQuery += " "+ Enter 
+	cQuery += " 	LEFT JOIN SC5070 SC5_7 ON (SC0.C0_YPEDIDO	=  SC5_7.C5_YPEDORI	AND	SC0.C0_FILIAL = SC5_7.C5_FILIAL	AND	SC5_7.D_E_L_E_T_ = '' AND SC5_7.C5_YEMPPED = '14') "+ Enter 
+	cQuery += "  	"+ Enter 
+	cQuery += "  	LEFT JOIN SA1010 SA1_1 ON (SC5_7.C5_CLIENTE		=  SA1_1.A1_COD		AND SC5_7.C5_LOJACLI	= SA1_1.A1_LOJA	AND SA1_1.D_E_L_E_T_ = '') "+ Enter 
+	cQuery += "  	LEFT JOIN SA1010 SA1_2 ON (SC5.C5_CLIENTE		=  SA1_2.A1_COD		AND SC5.C5_LOJACLI		= SA1_2.A1_LOJA	AND SA1_2.D_E_L_E_T_ = '') "+ Enter 
+	cQuery += "  	"+ Enter 
+	cQuery += " 	LEFT JOIN SA3010 SA3_1 ON (SC5_7.C5_VEND1		=  SA3_1.A3_COD	AND SA3_1.D_E_L_E_T_ = '')"+ Enter 
+	cQuery += " 	LEFT JOIN SA3010 SA3_2 ON (SC5.C5_VEND1			=  SA3_2.A3_COD	AND SA3_2.D_E_L_E_T_ = '') "+ Enter 
+	cQuery += " "+ Enter 
+	cQuery += "  	LEFT JOIN ZZ7010  ZZ7 ON (SB1.B1_YLINHA		= ZZ7.ZZ7_COD	AND SB1.B1_YLINSEQ = ZZ7.ZZ7_LINSEQ		AND	ZZ7.D_E_L_E_T_ = '') "+ Enter 
+	cQuery += "  	LEFT JOIN Z37010  Z37 ON (ZZ7.ZZ7_EMP		= Z37.Z37_MARCA AND Z37.D_E_L_E_T_ = '')  "+ Enter 
+	cQuery += "  	WHERE  "+ Enter 
+	cQuery += "  	SC0.C0_YTEMP			= 'N'	 "+ Enter 
+	cQuery += "  	AND SC0.D_E_L_E_T_		= '' "+ Enter 
+	cQuery += "  	AND SC0.C0_LOCALIZ  <> 'AMT' "+ Enter 
+	cQuery += "  	 "+ Enter 
+	cQuery += "  ) A "+ Enter 
+	cQuery += "  WHERE  "+ Enter 
+	cQuery += "  DATA_ENT <= CONVERT (DATE, GETDATE())    "+ Enter 
+
 	cQuery += "  ) B  "+ Enter 
 	
 	cQuery += "  ORDER BY EMPRESA, DATA_ENT, COD_CLI, LOJA_CLI, PEDIDO, ITEMP, COD_PROD"+ Enter 

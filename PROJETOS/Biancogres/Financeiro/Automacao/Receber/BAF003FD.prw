@@ -10,9 +10,9 @@ User Function BAF003FD()
 
     local lDateVld  as logical
 
-		If Upper(AllTrim(getenvserver())) == "DEV-FIDC" .And. Select("SX6") <= 0
+	If Upper(AllTrim(getenvserver())) == "DEV-FIDC" .And. Select("SX6") <= 0
    		RpcSetEnv('07', '01')
-		EndIf
+	EndIf
    
     dDate:=Date()
     dDateVld:=DataValida(dDate,.T.)

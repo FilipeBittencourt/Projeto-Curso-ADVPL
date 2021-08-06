@@ -178,6 +178,7 @@ Static Function fBIA371C()
 			ZBD_BNCB30,;
 			ZBD_BNCB35,;
 			ZBD_BNCB40,;
+			ZBD_BNCB45,;
 			ZBD_BNCC05,;
 			ZBD_BNCC10,;
 			"ZBD",;
@@ -218,6 +219,7 @@ Static Function fGrvDados()
 	Local _msBNCB30 := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZBD_BNCB30"})
 	Local _msBNCB35 := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZBD_BNCB35"})
 	Local _msBNCB40 := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZBD_BNCB40"})
+	Local _msBNCB45 := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZBD_BNCB45"})
 	Local _msBNCC05 := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZBD_BNCC05"})
 	Local _msBNCC10 := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZBD_BNCC10"})
 
@@ -255,6 +257,7 @@ Static Function fGrvDados()
 					ZBD->ZBD_BNCB30 := _oGetDados:aCols[_nI,_msBNCB30]
 					ZBD->ZBD_BNCB35 := _oGetDados:aCols[_nI,_msBNCB35]
 					ZBD->ZBD_BNCB40 := _oGetDados:aCols[_nI,_msBNCB40]
+					ZBD->ZBD_BNCB45 := _oGetDados:aCols[_nI,_msBNCB45]
 					ZBD->ZBD_BNCC05 := _oGetDados:aCols[_nI,_msBNCC05]
 					ZBD->ZBD_BNCC10 := _oGetDados:aCols[_nI,_msBNCC10]
 					ZBD->(MsUnlock())
@@ -289,6 +292,7 @@ Static Function fGrvDados()
 					ZBD->ZBD_BNCB30 := _oGetDados:aCols[_nI,_msBNCB30]
 					ZBD->ZBD_BNCB35 := _oGetDados:aCols[_nI,_msBNCB35]
 					ZBD->ZBD_BNCB40 := _oGetDados:aCols[_nI,_msBNCB40]
+					ZBD->ZBD_BNCB45 := _oGetDados:aCols[_nI,_msBNCB45]
 					ZBD->ZBD_BNCC05 := _oGetDados:aCols[_nI,_msBNCC05]
 					ZBD->ZBD_BNCC10 := _oGetDados:aCols[_nI,_msBNCC10]
 					ZBD->(MsUnlock())
@@ -325,10 +329,6 @@ Return
 User Function B371FOK()
 
 	Local cMenVar   := ReadVar()
-	Local vfArea    := GetArea()
-	Local _cAlias
-	Local _nAt		:=	_oGetDados:nAt
-	Local _nI
 	Local _ColunaM  := Right(Alltrim(cMenVar),3)
 
 	If !&(Alltrim(cMenVar)) $ "***/" + _ColunaM
@@ -433,8 +433,6 @@ Static Function fProcImport()
 	Local cTabImp			:= 'ZBD'
 	Local aItem 			:= {}
 	Local aLinha			:= {}
-	Local aErro				:= {}
-	Local cErro 			:= ''
 	Local nImport			:= 0
 	Local cConteudo			:= ''
 	Local nTotLin			:= 0
@@ -612,6 +610,7 @@ User Function B371RPLC()
 			ZBD_BNCB30,;
 			ZBD_BNCB35,;
 			ZBD_BNCB40,;
+			ZBD_BNCB45,;
 			ZBD_BNCC05,;
 			ZBD_BNCC10,;
 			"ZBD",;

@@ -615,63 +615,68 @@ Static Function grvOpFirm()
 
 		ElseIf nContaOpFr == 0 .or. ( nContaOpFr == 1 .And. MsgYesno(fMsgFirme()) )
 
-			// Grava OP's das classes B e D devivadas da OP MAE
-			For ih := 1 to 2
+			// Em Atendimento ao ticket 33947 - Projeto Vinilico
+			If cEmpAnt <> "14"
 
-				ftClsPr  := ih+1
-				ftProdt  := Substr(sCodPro,1,7) + Alltrim(Str(ftClsPr))
-				ftPercB  := 40 // Percentual sobre a quantidade da OP MAE - Produto classe A
-				ftPercD  := 25  // Percentual sobre a quantidade da OP MAE - Produto classe B
-				ftQtdeOp := IIf(ftClsPr == 2, fyQtdOp * ftPercB, fyQtdOp * ftPercD) / 100
+				// Grava OP's das classes B e D devivadas da OP MAE
+				For ih := 1 to 2
 
-				SC2->(dbSetOrder(1))
-				SC2->(dbSeek(xFilial("SC2")+sNumOpr+"01"+"001"))
+					ftClsPr  := ih+1
+					ftProdt  := Substr(sCodPro,1,7) + Alltrim(Str(ftClsPr))
+					ftPercB  := 40 // Percentual sobre a quantidade da OP MAE - Produto classe A
+					ftPercD  := 25  // Percentual sobre a quantidade da OP MAE - Produto classe B
+					ftQtdeOp := IIf(ftClsPr == 2, fyQtdOp * ftPercB, fyQtdOp * ftPercD) / 100
 
-				SG1->(dbSetOrder(1))
-				If SG1->(dbSeek(xFilial("SG1")+ftProdt))
+					SC2->(dbSetOrder(1))
+					SC2->(dbSeek(xFilial("SC2")+sNumOpr+"01"+"001"))
 
-					SB1->(dbSetOrder(1))
-					If SB1->(dbSeek(xFilial("SB1")+ftProdt))
+					SG1->(dbSetOrder(1))
+					If SG1->(dbSeek(xFilial("SG1")+ftProdt))
 
-						If SB1->B1_YESTROK = "S"
+						SB1->(dbSetOrder(1))
+						If SB1->(dbSeek(xFilial("SB1")+ftProdt))
 
-							aMata650  := {{'C2_ITEM'     ,StrZero(ftClsPr,2)                                            ,NIL},;
-							{              'C2_SEQUEN'   ,"001"                                                         ,NIL},;
-							{              'C2_LINHA'    ,SC2->C2_LINHA                                                         ,NIL},;
-							{              'C2_PRODUTO'  ,ftProdt                                                       ,NIL},;
-							{              'C2_QUANT'    ,ftQtdeOp                                                      ,NIL},;
-							{              'C2_QTSEGUM'  ,ConvUm(ftProdt,ftQtdeOp,0,2)                                  ,NIL},;
-							{              'C2_UM'       ,SB1->B1_UM                                                    ,NIL},;
-							{              'C2_CC'       ,SB1->B1_CC                                                    ,NIL},;
-							{              'C2_SEGUM'    ,SB1->B1_SEGUM                                                 ,NIL},;
-							{              'C2_DATPRI'   ,IIF(SC2->C2_DATPRI < dDataBase, dDataBase, SC2->C2_DATPRI)    ,NIL},;
-							{              'C2_DATPRF'   ,IIF(SC2->C2_DATPRF < dDataBase, dDataBase, SC2->C2_DATPRF)    ,NIL},;
-							{              'C2_REVISAO'  ,SB1->B1_REVATU                                               ,NIL},;
-							{              'C2_TPOP'     ,"F"                                                           ,NIL},;
-							{              'C2_EMISSAO'  ,dDataBase                                                     ,NIL},;
-							{              'C2_ROTEIRO'  ,SB1->B1_OPERPAD                                               ,NIL},;
-							{              'C2_OPC'      ,""                                                            ,NIL},;
-							{              'C2_NUM'      ,sNumOpr                                                       ,NIL},;
-							{              'AUTEXPLODE'  ,'S'                                                           ,NIL} }
-							MsExecAuto({|x,Y| Mata650(x,Y)},aMata650,3)
-							If lMsErroAuto
-								Mostraerro()
-							Else
-								xrFirOpMae ++
+							If SB1->B1_YESTROK = "S"
+
+								aMata650  := {{'C2_ITEM'     ,StrZero(ftClsPr,2)                                            ,NIL},;
+								{              'C2_SEQUEN'   ,"001"                                                         ,NIL},;
+								{              'C2_LINHA'    ,SC2->C2_LINHA                                                 ,NIL},;
+								{              'C2_PRODUTO'  ,ftProdt                                                       ,NIL},;
+								{              'C2_QUANT'    ,ftQtdeOp                                                      ,NIL},;
+								{              'C2_QTSEGUM'  ,ConvUm(ftProdt,ftQtdeOp,0,2)                                  ,NIL},;
+								{              'C2_UM'       ,SB1->B1_UM                                                    ,NIL},;
+								{              'C2_CC'       ,SB1->B1_CC                                                    ,NIL},;
+								{              'C2_SEGUM'    ,SB1->B1_SEGUM                                                 ,NIL},;
+								{              'C2_DATPRI'   ,IIF(SC2->C2_DATPRI < dDataBase, dDataBase, SC2->C2_DATPRI)    ,NIL},;
+								{              'C2_DATPRF'   ,IIF(SC2->C2_DATPRF < dDataBase, dDataBase, SC2->C2_DATPRF)    ,NIL},;
+								{              'C2_REVISAO'  ,SB1->B1_REVATU                                                ,NIL},;
+								{              'C2_TPOP'     ,"F"                                                           ,NIL},;
+								{              'C2_EMISSAO'  ,dDataBase                                                     ,NIL},;
+								{              'C2_ROTEIRO'  ,SB1->B1_OPERPAD                                               ,NIL},;
+								{              'C2_OPC'      ,""                                                            ,NIL},;
+								{              'C2_NUM'      ,sNumOpr                                                       ,NIL},;
+								{              'AUTEXPLODE'  ,'S'                                                           ,NIL} }
+								MsExecAuto({|x,Y| Mata650(x,Y)},aMata650,3)
+								If lMsErroAuto
+									Mostraerro()
+								Else
+									xrFirOpMae ++
+								EndIf
+
 							EndIf
 
 						EndIf
 
 					EndIf
 
-				EndIf
+				Next ih
 
-			Next ih
+			EndIf
 
 			// Atualiza os campos das OPs derivadas com base na OP MAE
 			SB1->(dbSetOrder(1))
 			SB1->(dbSeek(xFilial("SB1")+sCodPro))			
-			If xrFirOpMae > 0 .or. SB1->B1_YTPPROD == "RP" .or. Substr(sCodPro,1,7) $ "A81364W,A81365E,AT0366B,AT0367B,BB0367E,BB0367B,A63368R,A63369E,A63369S,A63370E,AU0434F,AU0434L,AU0367E,AU0366B"
+			If xrFirOpMae > 0 .or. SB1->B1_YTPPROD == "RP" .or. Substr(sCodPro,1,7) $ "A81364W,A81365E,AT0366B,AT0367B,BB0367E,BB0367B,A63368R,A63369E,A63369S,A63370E,AU0434F,AU0434L,AU0367E,AU0366B" .or. cEmpAnt == "14"
 
 				SC2->(dbSetOrder(1))
 				SC2->(dbSeek(xFilial("SC2")+sNumOpr+"01"+"001"))
@@ -732,7 +737,7 @@ Static Function gxEncOp()
 	Local df_Assu := ""
 	Local df_Erro := ""
 	Local _cMsg
-	
+
 	wt_NumOp := oGdHisto:ACOLS[oGdHisto:NAT][3]
 	wt_ItnOp := oGdHisto:ACOLS[oGdHisto:NAT][4]
 	wt_SeqOp := oGdHisto:ACOLS[oGdHisto:NAT][5]
@@ -780,18 +785,18 @@ Static Function gxEncOp()
 					RecLock("SC2",.F.)
 					SC2->C2_YOBSFIR := oGdHisto:ACOLS[oGdHisto:NAT][18]
 					MsUnLock()
-				
+
 					If SC2->C2_SEQUEN == '001' .And. SC2->C2_YITGMES == 'S'
-							
+
 						df_Assu := "Encerramento de OP - " + SC2->C2_NUM 
 						df_Erro := df_Assu + " não enviado. Favor verificar!!!"	
-							
+
 						_cMsg	:=	"A OP de número " + SC2->C2_NUM + " foi encerrada e estava integrada com o TOTVS MES" 
-											
+
 						U_BIAEnvMail(, df_Dest, df_Assu, _cMsg, df_Erro)	
-					
+
 					EndIf
-				
+
 				EndIf
 
 			EndIf

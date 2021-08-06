@@ -100,6 +100,8 @@ User Function FACOWF01(_lManual)
 
 			While !(Qry)->(Eof())
 
+
+
 				_cRep := (Qry)->PZ5_CODVEN
 				_cCli := (Qry)->COD_CLI
 				_cNCli := (Qry)->NOME_CLI
@@ -108,6 +110,7 @@ User Function FACOWF01(_lManual)
 				_nTotBonus 	:= 0
 
 				_nMaxFaixa := Val((Qry)->MAXFAIXA)
+
 
 				GetHeader()
 				GetColumnHeader(_cRep, _nMaxFaixa, _cNCli, _cTpAcord)
@@ -126,6 +129,7 @@ User Function FACOWF01(_lManual)
 				SendMail(_cRep, _cCodPZ5)
 
 				cHtml := ""
+
 
 			EndDo
 
@@ -225,7 +229,7 @@ Static Function GetData()
 		PZ5_CODVEN,
 		PZ5_NFAIXA,
 		PZ5_TIPCLI,
-
+		
 		COD_CLI = CASE WHEN PZ5_TIPCLI = '1' THEN PZ5_CODCLI+PZ5_LOJCLI 
 		WHEN PZ5_TIPCLI = '2' THEN PZ5_CODGRP
 		ELSE PZ5_REDE END,
@@ -449,7 +453,7 @@ Static Function GetColumnHeader(_cRep, _nMaxFaixa, _cNomeCli, _cTpAcord)
 		cHtml += '         <p/>'
 		cHtml += '         <p><div class = "headTexto">CLIENTE: '+AllTrim(_cNomeCli)+'</div></p>'
 		cHtml += '         <p/>'
-		cHtml += '         <p><div class = "headTexto1">Segue para acompanhamento a evolução dos seus acordos objetivos em andamento:</div></p>'
+		cHtml += '         <p><div class = "headTexto1">Segue para acompanhamento a evolução dos seus acordos de objetivos em andamento:</div></p>'
 		cHtml += '         <p/>'
 		cHtml += '         <table align="center" width="1200" border="1" cellspacing="0" cellpadding="1">'
 		cHtml += '            <tr align=center>'
@@ -474,7 +478,7 @@ Static Function GetColumnHeader(_cRep, _nMaxFaixa, _cNomeCli, _cTpAcord)
 		cHtml += '         <p><div class = "headTexto1">Olá</div></p>'
 		cHtml += '         <br>'
 		cHtml += '         <br>'
-		cHtml += '         <p><div class = "headTexto1">Você está recebendo um relatório do seu desempenho no período e os valores que estarão disponíveis para a utilização no Programa de Benefícios Galleria Biancogres no próximo Semestre.</div></p>'
+		cHtml += '         <p><div class = "headTexto1">Você está recebendo um relatório do seu desempenho no período e os valores que estarão disponíveis para a utilização no Programa de Benefícios Galeria Biancogres no próximo Semestre.</div></p>'
 		cHtml += '         <br>'
 		cHtml += '         <br>'
 		cHtml += '         <p><div class = "headTexto">CLIENTE: '+AllTrim(_cNomeCli)+'</div></p>'
@@ -506,16 +510,16 @@ Static Function GetItems(_nMaxFaixa, _cTpAcord)
 		cHtml += "          	<td class='style12' width='100'scope='col'>"+ (Qry)->PZ5_CODIGO +"</td>"
 		cHtml += "          	<td class='style12' width='20'scope='col'>"+ (Qry)->PERIODO +"</td>"
 		cHtml += "          	<td class='style12' width='20'scope='col'>"+ (Qry)->STATUS +"</td>"
-		cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform((Qry)->REALIZADO,"@E 999,999,999.99") +"</td>"
+		cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform((Qry)->REALIZADO,"@E 999,999,999,999.99") +"</td>"
 
 		For I := 1 To _nMaxFaixa
 
-			cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform(&("(Qry)->METAF"+AllTrim(Str(I))+""),"@E 999,999,999.99") +"</td>"
-			cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform(&("(Qry)->FALTAF"+AllTrim(Str(I))+""),"@E 999,999,999.99") +"</td>"
+			cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform(&("(Qry)->METAF"+AllTrim(Str(I))+""),"@E 999,999,999,999.99") +"</td>"
+			cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform(&("(Qry)->FALTAF"+AllTrim(Str(I))+""),"@E 999,999,999,999.99") +"</td>"
 
 		NexT
 
-		cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform((Qry)->BONUS,"@E 999,999,999.99") +"</td>"
+		cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform((Qry)->BONUS,"@E 999,999,999,999.99") +"</td>"
 		cHtml += "          	<td class='style12' width='20'scope='col'>"+ (Qry)->NUMSI +"</td>"
 		cHtml += "          </tr>"
 
@@ -524,11 +528,11 @@ Static Function GetItems(_nMaxFaixa, _cTpAcord)
 		cHtml += " 			<tr align=center>"
 		cHtml += "          	<td class='style12' width='100'scope='col'>"+ (Qry)->PZ5_CODIGO +"</td>"
 		cHtml += "          	<td class='style12' width='20'scope='col'>"+ (Qry)->PERIODO +"</td>"
-		cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform((Qry)->REALIZADO,"@E 999,999,999.99") +"</td>"
+		cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform((Qry)->REALIZADO,"@E 999,999,999,999.99") +"</td>"
 		cHtml += "          	<td class='style12' width='20'scope='col'>"+ cValToChar((Qry)->PREALI) +"</td>"
-		cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform((Qry)->VLRPROXCAT,"@E 999,999,999.99") +"</td>"
+		cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform((Qry)->VLRPROXCAT,"@E 999,999,999,999.99") +"</td>"
 		cHtml += "          	<td class='style12' width='20'scope='col'>"+ cValToChar((Qry)->ITPROXCAT) +"</td>"
-		cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform((Qry)->VLRMAXCAT,"@E 999,999,999.99") +"</td>"
+		cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform((Qry)->VLRMAXCAT,"@E 999,999,999,999.99") +"</td>"
 		cHtml += "          	<td class='style12' width='20'scope='col'>"+ cValToChar((Qry)->ITMAXCAT) +"</td>"
 		cHtml += "          </tr>"
 
@@ -557,7 +561,7 @@ Static Function GetFooter(_cTpAcord, _nTotBonus)
 		cHtml += "		<br>"
 		cHtml += "		<br>"
 		cHtml += "		<br>"
-		cHtml += "      	<p><div class = 'footTexto'>Seu BÔNUS ESTIMADO para o próximo semestre até o momento é de: R$ " + Transform(_nTotBonus,"@E 999,999,999.99") + "</div></p>"
+		cHtml += "      	<p><div class = 'footTexto'>Seu BÔNUS ESTIMADO para o próximo semestre até o momento é de: R$ " + Transform(_nTotBonus,"@E 999,999,999,999.99") + "</div></p>"
 		cHtml += "      <br>"
 		cHtml += "      <br>"
 		cHtml += "      	<p><div class = 'footTexto'>Consulte seu representante para que possamos alinhar nossas estratégias, a fim de busca a melhor faixa de benefício possível.</div></p>"
@@ -650,7 +654,8 @@ Static Function SendMail(_cRep, _cCodPZ5)
 
 	Conout("FACOWF01 Fim - lManual = "+IIf(lManual,"SIM","NAO")+" - enviando e-mail para: "+_cTo)
 	//_lRet := U_BIAEnvMail(, _cTo, _cSubject, _cBody, "", "", , _cCC, _oCC)    // aqui descomentar antes aplicar em produção
-	_lRet := U_BIAEnvMail(, 'karina.barbosa@biancogres.com.br;emerson.salvador@facilesistemas.com.br;', _cSubject, _cBody, "", "", , "", "")   //aqui retirar essa linha somente para testes
+	_lRet := U_BIAEnvMail(, 'karina.barbosa@biancogres.com.br;emerson.salvador@facilesistemas.com.br;filipe.bittencourt@facilesistemas.com.br', _cSubject, _cBody, "", "", , "", "")   //aqui retirar essa linha somente para testes
+	
 
 Return(_lRet)
 

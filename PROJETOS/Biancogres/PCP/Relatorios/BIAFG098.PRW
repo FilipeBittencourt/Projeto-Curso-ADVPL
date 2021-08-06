@@ -166,7 +166,7 @@ Local _cHead	:=	""
 	_cHead	+=	'    </style>                                                                                                               '
 	_cHead	+=	'</head>                                                                                                                    '
 	_cHead	+=	'<body>                                                                                                                     '
-	_cHead	+=	'    <p>Data: '+DtoC(Stod(_cData))+' - Turno: '+Iif(_cTurno == "D","Dia","Noite")+' </p>                                                              '
+	_cHead	+=	'    <p>Data: '+DtoC(Stod(_cData))+' - Turno: '+Iif(_cTurno == "D","Dia",IIF(_cTurno == "T","Tarde", "Noite"))+' </p>                                                              '
 	_cHead 	+= 	'         <table align="center" width="1200" border="1" cellspacing="0" cellpadding="1">'
 	_cHead	+=	'        <tr>                                                                                                               '
 	_cHead	+=	'            <th class = "cabtab" scope="col"> Código				 </th>        '

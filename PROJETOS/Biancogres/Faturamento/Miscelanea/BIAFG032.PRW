@@ -26,6 +26,8 @@ User Function BIAFG032(_cPedido,_cItem)
 		kt_BsDad	:= "%DADOSEOS%"
 	ELSEIF cEmpAnt == "05"
 		kt_BsDad	:= "%DADOS_05_EOS%"
+	ELSEIF cEmpAnt == "14"
+		kt_BsDad	:= "%DADOS_14_EOS%"
 	ELSE
 		//Alterar quando houver outras emnpresas usando o Ecosis
 		Return _lRet

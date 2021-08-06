@@ -121,7 +121,31 @@ ElseIf cEmpAnt == "05"
 	// Incluido e retirada por Marcos Alberto
 	// Inicialmente solicitaram disponibilizar esta implementação, entretanto, ela gerava problema nos dias de virada de saldo (decendialmente). Então dia 16/02/12 Jeová solicitou retirá-la.
 	//and convert(smalldatetime, A.ce_data_movimento, 120) < convert(smalldatetime,convert(varchar(10),GetDate(),112)+' 06:00',120)
-	
+ElseIf cEmpAnt == "14"
+	BeginSql Alias cAliasTmp
+		SELECT
+		A.id_mov_prod
+		, A.cod_transacao
+		, A.cod_produto
+		, A.ce_lote
+		, A.ce_qtdade
+		,substring(convert(varchar(10), B.etiq_data, 112),1,10) DATA
+		,substring(convert(varchar(16), B.etiq_data, 120),12,5) HORA
+		FROM DADOS_14_EOS..cep_movimento_produto A
+		JOIN DADOS_14_EOS..cep_etiqueta_pallet B on B.id_cia = A.id_cia and B.cod_etiqueta = A.ce_numero_docto
+		WHERE
+		A.id_cia = 1
+		and ((A.cod_transacao = 1) or (A.cod_transacao = 64 and A.ce_docto = 'CP'))
+		and B.etiq_transito_producao = 0
+		and A.ce_lote <> ' '
+		and B.cod_endereco not in ('RETIDO')
+		and convert(smalldatetime, A.ce_data_movimento, 120) >= convert(smalldatetime,convert(varchar(10),GetDate()-30,112)+' 06:00',120)
+		and convert(smalldatetime, A.ce_data_movimento, 120) >= convert(smalldatetime,'20120124 06:00',120)
+		and convert(smalldatetime, B.etiq_data, 120) >= convert(smalldatetime,'20120124 06:00',120)
+		and id_mov_prod not in (select D3_YIDECO from SD3140 SD3 where SD3.D3_FILIAL = '01' AND SD3.D3_YIDECO <> ' ' AND (SD3.D3_TM <> '499' OR SD3.D3_YORIMOV = 'PR0') AND SD3.D_E_L_E_T_ = ' ')
+		AND A.CE_NUMERO_DOCTO <= 59058
+		and ce_qtdade > 0
+	EndSql		
 EndIf
 
 (cAliasTmp)->(DbGoTop())
@@ -175,12 +199,16 @@ Private lAutoErrNoFile := .T.
 //Define variaveis para uso de cada empresa
 If cEmpAnt == "01"
 	nTable	:= "%SD3010%"
-	nClvl		:= "3000"
+	nClvl	:= "3000"
 	cLocal	:= "02"
-Else
+ElseIf cEmpAnt == "05"
 	nTable	:= "%SD3050%"
-	nClvl		:= "3003"
+	nClvl	:= "3003"
 	cLocal 	:= "04"
+ElseIf cEmpAnt == "14"
+	nTable	:= "%SD3140%"
+	nClvl	:= "3501"
+	cLocal 	:= "02"
 EndIf
 
 //VALIDACOES

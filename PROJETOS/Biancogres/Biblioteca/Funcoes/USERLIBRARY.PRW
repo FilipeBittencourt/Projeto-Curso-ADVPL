@@ -7564,17 +7564,44 @@ Return(lRet)
 User Function fVlFIDCLM(xNUMPED)
 Local cSQL		:= ''
 Local aArea		:= GetArea()
-Local cQry		:= GetNextAlias()
+Local cQryLM	:= GetNextAlias()
+Local cQryOri	:= GetNextAlias()
 Local lRet		:= .F.
 
-cSQL :="SELECT COUNT(*) QUANT FROM SC5070 WHERE C5_NUM = '"+xNUMPED+"' AND C5_EMISSAO >= '20210720' AND C5_CONDPAG = '505' AND D_E_L_E_T_ = '' "
-TcQuery cSQL New Alias (cQry)
+If cEmpAnt == "07"
 
-If (cQry)->QUANT >= 1 
-	lRet := .T.
+	//Consulta Pedido LM
+	cSQL :="SELECT C5_YPEDORI, C5_YEMPPED FROM "+RetSqlName("SC5")+" WHERE C5_NUM = '"+xNUMPED+"' AND C5_EMISSAO >= '20210720' AND D_E_L_E_T_ = '' "
+	TcQuery cSQL New Alias (cQryLM)
+
+	If !(cQryLM)->(Eof()) .And. !Empty(Alltrim((cQryLM)->C5_YPEDORI)) .And. !Empty(Alltrim((cQryLM)->C5_YEMPPED))
+
+		cSQL :="SELECT COUNT(*) QUANT FROM SC5"+(cQryLM)->C5_YEMPPED+"0 WHERE C5_NUM = '"+(cQryLM)->C5_YPEDORI+"' AND C5_EMISSAO >= '20210720' AND C5_CONDPAG = '505' AND D_E_L_E_T_ = '' "
+		TcQuery cSQL New Alias (cQryOri)
+
+		If (cQryOri)->QUANT >= 1 
+			lRet := .T.
+		EndIf
+	
+		(cQryOri)->(DbCloseArea())  
+	
+	EndIf
+
+	(cQryLM)->(DbCloseArea())  
+
+
+else
+		
+	cSQL :="SELECT COUNT(*) QUANT FROM "+RetSqlName("SC5")+" WHERE C5_NUM = '"+xNUMPED+"' AND C5_EMISSAO >= '20210720' AND C5_CONDPAG = '505' AND D_E_L_E_T_ = '' "
+	TcQuery cSQL New Alias (cQryOri)
+
+	If (cQryOri)->QUANT >= 1 
+		lRet := .T.
+	EndIf
+
+	(cQryOri)->(DbCloseArea())  
+
 EndIf
-
-(cQry)->(DbCloseArea())  
 
 RestArea(aArea)
 
@@ -7601,7 +7628,7 @@ Return _cRet
 
 
 /*/{Protheus.doc} fGetDbSr
-@description Funcao utilizada para criacao de indices
+@description Funcao utilizada para criacao de indices em todas as empresas
 @author RANISSES A CORONA
 @since 22/07/2021
 @version undefined
@@ -7610,8 +7637,8 @@ Return _cRet
 /*/
 
 User Function fCriaInd()
-
-	xv_Emps    := U_BAGtEmpr("01_02_03_04_05_06_07_08_09_10_11_12_13_14_15_16_17_90_91")
+Local xv_Emps	:= U_BAGtEmpr("01_02_03_04_05_06_07_08_09_10_11_12_13_14_15_16_17_90_91")
+Local xt		:= 0
 
 	For xt := 1 To Len(xv_Emps)
 

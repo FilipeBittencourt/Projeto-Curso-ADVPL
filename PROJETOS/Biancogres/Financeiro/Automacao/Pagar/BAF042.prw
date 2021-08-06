@@ -22,7 +22,10 @@ User Function BAF042()
     							{"002912",  "01" , "2101"},;
     							{"004695",  "01" , "2999"};
     							}
-    
+	
+	If Upper( AllTrim( GetEnvServer() ) ) == "COMP-PONTIN" .And. Select("SX6") <= 0
+   		RpcSetEnv('07', '01')
+	EndIf 
        
     cBckFunc := FUNNAME()
 

@@ -82,7 +82,7 @@ If SF1->F1_FORNECE == "003721" .and. SF1->F1_TIPO == "N" //F1_TIPO = "N" : TIPO 
 EndIf
 
 // Tratamento implementado por Marcos Alberto Soprani em 19/01/15 para adequar o Totvs Colaboração à sistemática de leitura de XML (BIA296)
-If UPPER(Alltrim(FunName())) <> "MATA116"  .And. !IsInCallStack("U_PNFM0003")
+If UPPER(Alltrim(FunName())) <> "MATA116"  .And. !IsInCallStack("U_PNFM0003") .and. !FwIsInCallStack('MATA116')
 
 	If l103Class .Or. UPPER(Alltrim(FunName())) == "U_GATI001" 
 		

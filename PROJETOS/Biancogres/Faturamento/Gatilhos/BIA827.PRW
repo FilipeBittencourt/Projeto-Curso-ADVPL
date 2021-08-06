@@ -31,8 +31,8 @@ If AllTrim(FunName()) $ GetNewPar("FA_XPEDRPC","BFATRT01###FCOMRT01###BFVCXPED##
 		wRet := Tabela("ZF","4E")
 	ElseIf wLinha == "5"		//PEGASUS
 		wRet := Tabela("ZF","5E")
-	//ElseIf wLinha == "6"		//VINILICO
-	//	wRet := Tabela("ZF","6E")
+	ElseIf wLinha == "6"		//VINILICO
+		wRet := Tabela("ZF","6E")
 	EndIf
 	Return(wRet)
 EndIf
@@ -47,7 +47,7 @@ Else 											//Pedido de Venda
 	wLinha	:= Alltrim(M->C5_YLINHA)
 EndIf
 
-If wLinha == "1"				//BIANCOGRES
+If wLinha == "1"			//BIANCOGRES
 	wRet := Tabela("ZF","1E")
 ElseIf wLinha == "2"		//INCESA
 	wRet := Tabela("ZF","2E")
@@ -57,16 +57,8 @@ ElseIf wLinha == "4"		//MUNDI
 	wRet := Tabela("ZF","4E")
 ElseIf wLinha == "5"		//PEGASUS
 	wRet := Tabela("ZF","5E")
-//ElseIf wLinha == "6"		//VINILICO
-//	wRet := Tabela("ZF","6E")	
+ElseIf wLinha == "6"		//VINILICO
+	wRet := Tabela("ZF","6E")	
 EndIf
 
-// Implementado por Marcos Alberto Soprani em 26/01/2015 para resolver problema de pedido de retorno de remessa
-If cEmpAnt == "14"
-	If Alltrim(M->C5_YSUBTP) $ "RR/RQ"
-		wRet := "002"
-	EndIf
-EndIf
-
-Return(wRet)
-	
+Return(wRet)	

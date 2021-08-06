@@ -10,12 +10,16 @@
 @obs OS: 0504-17 - Jaqueline - Preparar sistema para para tratamento de condições de pagamento do Tipo 3 
 @type function
 /*/
+
 User Function M040SE1
 Local aVenc		:= {}
 Local cTpOri	:= ""
 Local cTpRpl	:= ""
 Local aNewVenc	:= {} //Retorno da função Exceção de Vencimento
 Local lVldFIDLM := U_fVlFIDCLM(SE1->E1_PEDIDO) //Valida se o Pedido de Venda é FIDC
+Local cQrySA1	:= GetNextAlias()
+Local cSQL		:= ""
+Local nDiaVenc	:= 0
 
 //Posiciona na Condição de Pagamento Original da NF
 SE4->(DbSetOrder(1))
@@ -175,16 +179,6 @@ IF IsInCallStack("U_BACP0010")  .OR. UPPER(ALLTRIM(FUNNAME())) == "MATA460A" .OR
 		EndIf
 	EndIf
 	
-	//SOLICITACAO DO SR. DIOGO E VAGNER NO DIA 23/06/09
-	//INCLUIDO MUNDI NO DIA 26/03/12
-	//Solicitado Por Nadine em 20/07/2021 para somar 5 dias e não mais 7
-	If Alltrim(cempant) $ "01_05_13_14" .And. SA1->A1_COD == "010064"
-		If !lVldFIDLM //Ajustes FIDC em 23/07/2021 
-			SE1->E1_VENCTO  := SE1->E1_VENCTO + 5
-			SE1->E1_VENCREA := DATAVALIDA(SE1->E1_VENCTO)
-		EndIf
-	EndIf
-		
 	//Tratamento para Exceção de Vencimento NF (SOBRESCREVE A REGRA DE ST)
 	If !Alltrim(SC5->C5_CONDPAG) $ "328_195_980_A80_331_192_982_A82_330_194"	
 		If Alltrim(cempant) $ "01_05_13_14" .And. SA1->A1_COD == "010064" .And. !lVldFIDLM
@@ -198,6 +192,49 @@ IF IsInCallStack("U_BACP0010")  .OR. UPPER(ALLTRIM(FUNNAME())) == "MATA460A" .OR
 			SE1->E1_VENCORI	:=	aNewVenc[1]
 		EndIf						
 	EndIf
+
+	//ROTINA TRANSFERIDA DO P.E. MT461VCT - desenvolvido de forma incorreta na automacao
+	//AJUSTE REALIZADO EM 04/08/2021 COM AS VALIDACOES FIDC
+	//ADICIONA REGRA PARA CLIENTES ESPECIAIS, CASO TENHA O CAMPO PREENCHIDO
+	cSQL := ""
+	cSQL += "SELECT A1_COD, A1_LOJA, A1_NOME, A1_GRPVEN, A1_YSUMCE, ISNULL(ACY_YSUMCE,0) ACY_YSUMCE "
+	cSQL += "FROM SA1010 SA1 LEFT JOIN ACY010 ACY ON A1_GRPVEN = ACY_GRPVEN AND ACY.D_E_L_E_T_ = '' "
+	If Alltrim(cempant) $ "01_05_13_14" .And. SA1->A1_COD == "010064" 
+		cSQL += "WHERE A1_COD = '"+SC5->C5_YCLIORI+"' AND A1_LOJA = '"+SC5->C5_YLOJORI+"' AND SA1.D_E_L_E_T_ = ''  
+	else
+		cSQL += "WHERE A1_COD = '"+SF2->F2_CLIENTE+"' AND A1_LOJA = '"+SF2->F2_LOJA+"' AND SA1.D_E_L_E_T_ = '' 
+	EndIf
+	TcQuery cSQL New Alias (cQrySA1)
+
+	If !(cQrySA1)->(Eof()) .And. (cQrySA1)->A1_YSUMCE > 0
+		
+		nDiaVenc := (cQrySA1)->A1_YSUMCE
+
+		If (cQrySA1)->ACY_YSUMCE > 0
+
+			nDiaVenc := (cQrySA1)->ACY_YSUMCE
+
+		EndIf
+
+	EndIf 
+
+	(cQrySA1)->(DbCloseArea()) 
+
+	If nDiaVenc > 0
+		SE1->E1_VENCTO  := SE1->E1_VENCTO + nDiaVenc
+		SE1->E1_VENCREA := DATAVALIDA(SE1->E1_VENCTO)
+	EndIf
+			
+	
+	//SOLICITACAO DO SR. DIOGO E VAGNER NO DIA 23/06/09
+	//INCLUIDO MUNDI NO DIA 26/03/12
+	//Em 20/07/2021 - Solicitado Por Nadine  para somar 5 dias e não mais 7
+	//Em 28/07/2021 - Ticket 32275 - Vencimento Coligadas - DEPOIS DE TODOS OS INCREMENTOS O SISTEMA DEVERÁ ACRESCENTAR 5 DIAS
+	If Alltrim(cempant) $ "01_05_13_14" .And. SA1->A1_COD == "010064" .And. !lVldFIDLM //Ajustes FIDC em 23/07/2021
+		SE1->E1_VENCTO  := SE1->E1_VENCTO + 5
+		SE1->E1_VENCREA := DATAVALIDA(SE1->E1_VENCTO)
+	EndIf
+
 		
 	If SE1->E1_NATUREZ <> "1230"
 		IF SA1->A1_EST == "EX"  // Venda Exportacao

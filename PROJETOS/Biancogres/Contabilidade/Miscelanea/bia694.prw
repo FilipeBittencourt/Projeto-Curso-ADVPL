@@ -259,6 +259,8 @@ Static Function MontaQrys(oProcess)
 	GT007 += Alltrim("                        THEN 'DIRETA'                                                             ") + msEnter
 	GT007 += Alltrim("                        WHEN ZN6.ZN6_OPERAC = 'I'                                                 ") + msEnter
 	GT007 += Alltrim("                        THEN 'INTERCOMPANY'                                                       ") + msEnter
+	GT007 += Alltrim("                        WHEN ZN6.ZN6_OPERAC = 'S'                                                 ") + msEnter
+	GT007 += Alltrim("                        THEN 'GERACAO SALDO'                                                      ") + msEnter
 	GT007 += Alltrim("                        ELSE 'VERIFICAR'                                                          ") + msEnter
 	GT007 += Alltrim("                    END,                                                                          ") + msEnter
 	GT007 += Alltrim("        VALOR = ZN6.ZN6_VALOR,                                                                    ") + msEnter

@@ -75,7 +75,7 @@ User Function TOT_NOTA()
 	Local I
 
 	If Alltrim(M->C5_YFLAG) == "2"	//Busca UF e MUN do Local de Entrega
-		cEST	:= M->C5_YEST
+		cEST	:= M->C5_YEST
 		cMUN	:= M->C5_YCODMUN	//M->C5_YMUN
 	Else
 		IF !(M->C5_TIPO $ "DB")

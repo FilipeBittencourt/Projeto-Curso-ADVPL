@@ -32,13 +32,15 @@ Static Function RptDetail()
 		kt_BsDad := "DADOSEOS"
 	ElseIf cEmpAnt == "05"
 		kt_BsDad := "DADOS_05_EOS"
+	ElseIf cEmpAnt == "14"
+		kt_BsDad := "DADOS_14_EOS"	
 	Else
 		// Acompanhar possíveis impactos nos resultados
 	EndIf
 
 	aDados2 := {}
 
-	If dtos(MV_PAR02) <= '20150531' .or. cEmpAnt == "14"
+	If dtos(MV_PAR02) <= '20150531'
 
 		A0001 := " SELECT D3_EMISSAO EMISSAO,
 		A0001 += "        D3_YDIMPOR DIMPORT,

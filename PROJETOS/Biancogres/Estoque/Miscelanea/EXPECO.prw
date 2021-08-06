@@ -40,13 +40,20 @@ User Function EXPECO(gtOrigProc)
 	EndIf
 
 	If MV_PAR01 == "1"
-		_aBaseEco := {"DADOSEOS"} 
+		_aBaseEco := {"DADOSEOS"}
+
 	ElseIf MV_PAR01 == "2"
 		_aBaseEco := {"DADOS_05_EOS"}
+
 	ElseIf MV_PAR01 == "3"
 		_aBaseEco := {"DADOS_13_EOS"}
+
 	ElseIf MV_PAR01 == "4"
-		_aBaseEco := {"DADOSEOS","DADOS_05_EOS","DADOS_13_EOS"}
+		_aBaseEco := {"DADOSEOS","DADOS_05_EOS","DADOS_13_EOS","DADOS_14_EOS"}
+
+	ElseIf MV_PAR01 == "5"
+		_aBaseEco := {"DADOS_14_EOS"}
+
 	EndIf     
 
 	For _nI := 1 to Len(_aBaseEco)
@@ -337,6 +344,10 @@ Static Function EXPECO1(cTabEcosis)
 				EndIf  
 			EndIf
 
+			If Alltrim(cBaseEco) == "DADOS_14_EOS"
+				cMarca := '1' //VINILICO
+			EndIf  
+
 			//UNIDADE DE MEDIDA
 			If(Alltrim(SB1->B1_UM) =='M2')
 				cUm := '1'
@@ -351,12 +362,12 @@ Static Function EXPECO1(cTabEcosis)
 			DbSeek(xFilial("ZZ6")+SB1->B1_YFORMAT)		     
 
 			cInsert := ""
-			cInsert += "INSERT INTO " +cBaseEco+".."+cTabEcosis+ " (cod_produto,id_marca,id_un_medidas,id_linha_produtos,prd_referencia,dsc_tamanho_produtos, " +ENTER
-			cInsert += " cod_familia,dsc_produto,dsc_abreviado,prd_ativo,prd_prod_propria,prd_cia,prd_peso_bruto,prd_m2_caixa,prd_pecas_caixa,prd_integra) " +ENTER
+			cInsert += "INSERT INTO " + cBaseEco + ".." + cTabEcosis + " (cod_produto, id_marca, id_un_medidas, id_linha_produtos, prd_referencia, dsc_tamanho_produtos, " +ENTER
+			cInsert += " cod_familia, dsc_produto, dsc_abreviado, prd_ativo, prd_prod_propria, prd_cia, prd_peso_bruto, prd_m2_caixa, prd_pecas_caixa, prd_integra) " +ENTER
 			cInsert += " VALUES "+ENTER
-			cInsert += " ('"+Alltrim(SB1->B1_COD)+"',"+cMarca+","+cUm+","+cLinha+",'"+cRef_produtos+"','"+cDescTamProd+"', "
-			cInsert += " '"+Alltrim(SB1->B1_COD)+"','"+Substr(Alltrim(SB1->B1_DESC),1,55)+"','"+Substr(Alltrim(ZZ7->ZZ7_DESC),1,20)+"',1,1,1,"
-			cInsert += " "+cValtoChar(SB1->B1_PESO)+","+cValtoChar(SB1->B1_CONV)+","+cValtoChar(SB1->B1_YPECA)+",1)"  
+			cInsert += " ('" + Alltrim(SB1->B1_COD) + "'," + cMarca + "," + cUm + "," + cLinha + ",'" + cRef_produtos + "','" + cDescTamProd + "', "
+			cInsert += " '" + Alltrim(Substr(SB1->B1_COD,1,7)) + "','" + Substr(Alltrim(SB1->B1_DESC),1,55) + "','" + Substr(Alltrim(ZZ7->ZZ7_DESC),1,20) + "', 1, 1, 1,"
+			cInsert += " " + cValtoChar(SB1->B1_PESO) + "," + cValtoChar(SB1->B1_CONV) + "," + cValtoChar(SB1->B1_YPECA) + ", 1)"  
 
 			ZZ6->(DbCloseArea())
 
@@ -387,6 +398,10 @@ Static Function EXPECO1(cTabEcosis)
 					cMarca := '4'
 				EndIf  
 			EndIf
+
+			If Alltrim(cBaseEco) == "DADOS_14_EOS"
+				cMarca := '1'
+			EndIf        
 
 			//UNIDADE DE MEDIDA - PC
 			cUm := '2'
@@ -455,7 +470,7 @@ Return lRet
 
 User Function UpProdEco(cCodProd, cSitBloq, cCodBar, nPesoFat)
 
-	Local aBasesEco := {"DADOSEOS","DADOS_05_EOS","DADOS_13_EOS"}
+	Local aBasesEco := {"DADOSEOS", "DADOS_05_EOS", "DADOS_13_EOS", "DADOS_14_EOS"}
 	Local i :=0
 
 	cUpECO := ""
@@ -490,12 +505,11 @@ Static Function ValidPerg()
 	local cLoad	    := "EXPECO" + cEmpAnt
 	local cFileName := RetCodUsr() +"_"+ cLoad
 	local lRet		:= .F.
-	Local _nPeso	:=	0
 	Local aPergs	:=	{}
 
 	MV_PAR01 := "1"
 
-	aAdd( aPergs ,{2,"Integracao do Cadastro Ecosis" 	   		,MV_PAR01 ,{"1=Biancogres","2=Incesa","3=Mundi","4=Bianco/Incesa"},50,"NAOVAZIO()",.T.})	
+	aAdd( aPergs ,{2,"Integracao do Cadastro Ecosis" 	   		,MV_PAR01 ,{"1=Biancogres","2=Incesa","3=Mundi","4=Bianco/Incesa","5=B.Vinílico"},50,"NAOVAZIO()",.T.})	
 
 	If ParamBox(aPergs ,"Integracao do Cadastro Ecosis ",,,,,,,,cLoad,.T.,.T.)
 

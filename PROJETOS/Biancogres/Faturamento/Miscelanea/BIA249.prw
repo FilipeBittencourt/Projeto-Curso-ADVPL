@@ -104,6 +104,10 @@ Static Function fProcess()
 
 		kt_BsDad := "DADOS_05_EOS"
 
+	ElseIf cEmpAnt == "14"
+
+		kt_BsDad := "DADOS_14_EOS"
+
 	Else
 
 		MsgINFO("Empresa não configurada para controle de BALANÇA!!!")
@@ -715,6 +719,8 @@ Static Function xptDetal()
 		kt_BsDad := "DADOSEOS"
 	ElseIf cEmpAnt == "05"
 		kt_BsDad := "DADOS_05_EOS"
+	ElseIf cEmpAnt == "14"
+		kt_BsDad := "DADOS_14_EOS"		
 	Else
 		MsgINFO("Empresa não configurada para controle de BALANÇA!!!")
 		Return
@@ -951,8 +957,8 @@ Static Function fPesEco(cTicket)
 	While !(cQryCar)->(Eof())
 
 		cSQL := " SELECT ISNULL(SUM(iord_peso), 0) AS PESO "
-		cSQL += " FROM " + If ((cQryCar)->EMP == "01", "DADOSEOS", "DADOS_05_EOS") + ".dbo.fat_ordem_faturamento ORDEM "
-		cSQL += " INNER JOIN " + If ((cQryCar)->EMP == "01", "DADOSEOS", "DADOS_05_EOS") + ".dbo.fat_itens_ordem ITENS "
+		cSQL += " FROM " + If ((cQryCar)->EMP == "01","DADOSEOS",If ((cQryCar)->EMP == "05","DADOS_05_EOS","DADOS_14_EOS")) + ".dbo.fat_ordem_faturamento ORDEM "
+		cSQL += " INNER JOIN " + If ((cQryCar)->EMP == "01", "DADOSEOS",If ((cQryCar)->EMP == "05","DADOS_05_EOS","DADOS_14_EOS")) + ".dbo.fat_itens_ordem ITENS "
 		cSQL += " ON ITENS.ford_numero = ORDEM.ford_numero "
 		cSQL += " WHERE ORDEM.ford_num_carga COLLATE Latin1_General_BIN = " + ValToSQL((cQryCar)->CARGA)
 
@@ -983,10 +989,10 @@ Static Function fSQLCarga(cTicket)
 
 	If cEmpAnt == "01"
 
-		cEmp := "05"
-		cDBEco := "DADOS_05_EOS"
+		cEmp := "14"
+		cDBEco := "DADOS_14_EOS"
 
-	ElseIf cEmpAnt == "05"
+	ElseIf cEmpAnt == "14"
 
 		cEmp := "01"
 		cDBEco := "DADOSEOS"

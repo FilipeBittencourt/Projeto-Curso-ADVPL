@@ -717,7 +717,7 @@ Static Function Prenche_Re()
 		//Preenche o Pedido de Venda
 	ELSEIF UPPER(ALLTRIM(FUNNAME())) == "MATA410"
 
-		IF (AllTrim(CEMPANT) <> "14") .And. (AllTrim(_cLoteSel) <> "AMT") .And.  (_nQtdDispo % SB1->B1_CONV) > 0
+		IF (AllTrim(_cLoteSel) <> "AMT") .And.  (_nQtdDispo % SB1->B1_CONV) > 0
 			MSGALERT("ATENÇÃO! Estoque disponivel do lote NÃO é caixa fechada."+Chr(10)+Chr(13)+"Favor verificar o estoque.","Valida Caixa Fechada")
 			return
 		ENDIF
@@ -956,7 +956,7 @@ Static Function FilProc()
 	cAlmox 		:= U_MontaSQLIN(cAlmox,',',2)
 
 	IF EMPTY(cAlmox)
-		cAlmox := '02/04/05'
+		cAlmox := '01/02/04/05'
 		cAlmox := U_MontaSQLIN(cAlmox,'/',2)
 	ENDIF
 
@@ -988,13 +988,15 @@ Static Function FilProc()
 	cSQL += "	JOIN "
 	If (cEmpAnt == '07' .And. cFilAnt == '05')
 		cSQL += " (SELECT '"+cEmpAnt+"' EMP, * FROM "+RetSqlName("SBF")+" WHERE BF_FILIAL = '"+XFILIAL("SBF")+"' AND BF_LOCAL IN (" + cAlmox + ") AND D_E_L_E_T_ = '') SBF " + CRLF
-	ElseIf cEmpAnt $ "01_05_07" .And. !lFiltraEmp
+	ElseIf cEmpAnt $ "01_05_07_14" .And. !lFiltraEmp
 		cSQL += "			(SELECT '01' EMP, * FROM SBF010 WHERE BF_FILIAL = '01' AND SUBSTRING(BF_PRODUTO,4,4) NOT IN ('0000','000C') AND BF_LOCAL IN (" + cAlmox + ") AND D_E_L_E_T_ = '' 		"  + CRLF
 		cSQL += "			UNION																																							            "  + CRLF
 		cSQL += "			SELECT '05' EMP, * FROM SBF050 WHERE BF_FILIAL = '01' AND SUBSTRING(BF_PRODUTO,4,4) NOT IN ('0000','000C')  AND BF_LOCAL IN (" + cAlmox + ") AND D_E_L_E_T_ = ''		"  + CRLF
 		cSQL += "			UNION																																										"  + CRLF
 		cSQL += "			SELECT '13' EMP, * FROM SBF130 WHERE BF_FILIAL = '01' AND SUBSTRING(BF_PRODUTO,4,4) NOT IN ('0000','000C')  AND BF_LOCAL IN (" + cAlmox + ") AND D_E_L_E_T_ = '' 		"  + CRLF
 		cSQL += "			UNION																																																							"  + CRLF
+		cSQL += "			SELECT '14' EMP, * FROM SBF140 WHERE BF_FILIAL = '01' AND SUBSTRING(BF_PRODUTO,4,4) NOT IN ('0000','000C')  AND BF_LOCAL IN (" + cAlmox + ") AND D_E_L_E_T_ = '' 		"  + CRLF
+		cSQL += "			UNION	
 		cSQL += "			SELECT '"+cEmpAnt+"' EMP, * FROM "+RetSqlName("SBF")+" WHERE BF_FILIAL = '01' AND SUBSTRING(BF_PRODUTO,4,4) NOT IN ('0000','000C') AND BF_LOCAL IN (" + cAlmox + ") AND D_E_L_E_T_ = '' ) SBF	"  + CRLF
 	Else
 		cSQL += "		 	(SELECT '"+cEmpAnt+"' EMP, * FROM "+RetSqlName("SBF")+" WHERE BF_FILIAL = '"+XFILIAL("SBF")+"' AND BF_LOCAL IN (" + cAlmox + ") AND D_E_L_E_T_ = '') SBF " + CRLF
@@ -1009,150 +1011,173 @@ Static Function FilProc()
     
 
 	If (cEmpAnt == '07' .And. cFilAnt == '05')
-		cSQL += "	(SELECT '"+cEmpAnt+"' EMPRESA,DC_PRODUTO, DC_LOTECTL , ISNULL(SUM(CASE "
-		cSQL += "				WHEN DC_ORIGEM = 'SC6' "
-		cSQL += "					THEN DC_QUANT "
-		cSQL += "				ELSE 0 "
-		cSQL += "				END),0) EMPC6 "
-		cSQL += "		,ISNULL(SUM(CASE "
-		cSQL += "				WHEN DC_ORIGEM = 'SC0' "
-		cSQL += "					THEN DC_QUANT "
-		cSQL += "				ELSE 0 "
-		cSQL += "				END),0) EMPC0 "
-		cSQL += "	FROM ( "
-		cSQL += "		SELECT DC_ORIGEM "
-		cSQL += "			,DC_PRODUTO "
-		cSQL += "			,DC_LOTECTL "				
-		cSQL += "			,DC_QUANT "
-		cSQL += "		FROM "+RetSqlName("SDC")+" "
-		cSQL += "		WHERE DC_FILIAL = '"+XFILIAL("SDC")+"' "
-		cSQL += "			AND DC_LOCAL IN (" + cAlmox + ")
-		cSQL += "			AND D_E_L_E_T_ = '' "
-		cSQL += "		) A "
-		cSQL += "		GROUP BY DC_PRODUTO,DC_LOTECTL ) SDC "
+		cSQL += "	(SELECT '"+cEmpAnt+"' EMPRESA,DC_PRODUTO, DC_LOTECTL , ISNULL(SUM(CASE " + CRLF
+		cSQL += "				WHEN DC_ORIGEM = 'SC6' " + CRLF
+		cSQL += "					THEN DC_QUANT " + CRLF
+		cSQL += "				ELSE 0 " + CRLF
+		cSQL += "				END),0) EMPC6 " + CRLF
+		cSQL += "		,ISNULL(SUM(CASE " + CRLF
+		cSQL += "				WHEN DC_ORIGEM = 'SC0' " + CRLF
+		cSQL += "					THEN DC_QUANT " + CRLF
+		cSQL += "				ELSE 0 " + CRLF
+		cSQL += "				END),0) EMPC0 " + CRLF
+		cSQL += "	FROM ( " + CRLF
+		cSQL += "		SELECT DC_ORIGEM " + CRLF
+		cSQL += "			,DC_PRODUTO " + CRLF
+		cSQL += "			,DC_LOTECTL " + CRLF				
+		cSQL += "			,DC_QUANT " + CRLF
+		cSQL += "		FROM "+RetSqlName("SDC")+" " + CRLF
+		cSQL += "		WHERE DC_FILIAL = '"+XFILIAL("SDC")+"' " + CRLF
+		cSQL += "			AND DC_LOCAL IN (" + cAlmox + ") + CRLF
+		cSQL += "			AND D_E_L_E_T_ = '' " + CRLF
+		cSQL += "		) A " + CRLF
+		cSQL += "		GROUP BY DC_PRODUTO,DC_LOTECTL ) SDC " + CRLF
 
-	ElseIf cEmpAnt $ "01_05_07" .And. !lFiltraEmp
-		cSQL += "	(SELECT '01' EMPRESA, DC_PRODUTO, DC_LOTECTL , ISNULL(SUM(CASE "
-		cSQL += "				WHEN DC_ORIGEM = 'SC6' "
-		cSQL += "					THEN DC_QUANT "
-		cSQL += "				ELSE 0 "
-		cSQL += "				END),0) EMPC6 "
-		cSQL += "		,ISNULL(SUM(CASE "
-		cSQL += "				WHEN DC_ORIGEM = 'SC0' "
-		cSQL += "					THEN DC_QUANT "
-		cSQL += "				ELSE 0 "
-		cSQL += "				END),0) EMPC0 "
-		cSQL += "	FROM ( "
-		cSQL += "		SELECT DC_ORIGEM "
-		cSQL += "			,DC_PRODUTO "
-		cSQL += "			,DC_LOTECTL "				
-		cSQL += "			,DC_QUANT "
-		cSQL += "		FROM SDC010 "
-		cSQL += "		WHERE DC_FILIAL = '01' "
-		cSQL += "			AND SUBSTRING(DC_PRODUTO,4,4) NOT IN ('0000','000C') "
-		cSQL += "			AND DC_LOCAL IN (" + cAlmox + ")
-		cSQL += "			AND D_E_L_E_T_ = '' "
-		cSQL += "		) A "
-		cSQL += "		GROUP BY DC_PRODUTO,DC_LOTECTL "
-		cSQL += "	UNION "
-		cSQL += "	SELECT '05' EMPRESA, DC_PRODUTO, DC_LOTECTL , ISNULL(SUM(CASE "
-		cSQL += "				WHEN DC_ORIGEM = 'SC6' "
-		cSQL += "					THEN DC_QUANT "
-		cSQL += "				ELSE 0 "
-		cSQL += "				END),0) EMPC6 "
-		cSQL += "		,ISNULL(SUM(CASE "
-		cSQL += "				WHEN DC_ORIGEM = 'SC0' "
-		cSQL += "					THEN DC_QUANT "
-		cSQL += "				ELSE 0 "
-		cSQL += "				END),0) EMPC0 "
-		cSQL += "	FROM ( "
-		cSQL += "		SELECT DC_ORIGEM "
-		cSQL += "			,DC_PRODUTO "
-		cSQL += "			,DC_LOTECTL "				
-		cSQL += "			,DC_QUANT "
-		cSQL += "		FROM SDC050 "
-		cSQL += "		WHERE DC_FILIAL = '01' "
-		cSQL += "			AND SUBSTRING(DC_PRODUTO,4,4) NOT IN ('0000','000C') "
-		cSQL += "			AND DC_LOCAL IN (" + cAlmox + ")
-		cSQL += "			AND D_E_L_E_T_ = '' "
-		cSQL += "		) A"
-		cSQL += "		GROUP BY DC_PRODUTO,DC_LOTECTL "
-		cSQL += "	UNION "
-		cSQL += "	SELECT '13' EMPRESA, DC_PRODUTO, DC_LOTECTL , ISNULL(SUM(CASE "
-		cSQL += "				WHEN DC_ORIGEM = 'SC6' "
-		cSQL += "					THEN DC_QUANT "
-		cSQL += "				ELSE 0 "
-		cSQL += "				END),0) EMPC6 "
-		cSQL += "		,ISNULL(SUM(CASE "
-		cSQL += "				WHEN DC_ORIGEM = 'SC0' "
-		cSQL += "					THEN DC_QUANT "
-		cSQL += "				ELSE 0 "
-		cSQL += "				END),0) EMPC0 "
-		cSQL += "	FROM ( "
-		cSQL += "		SELECT DC_ORIGEM "
-		cSQL += "			,DC_PRODUTO "
-		cSQL += "			,DC_LOTECTL "				
-		cSQL += "			,DC_QUANT "
-		cSQL += "		FROM SDC130 "
-		cSQL += "		WHERE DC_FILIAL = '01' "
-		cSQL += "			AND SUBSTRING(DC_PRODUTO,4,4) NOT IN ('0000','000C') "
-		cSQL += "			AND DC_LOCAL IN (" + cAlmox + ")
-		cSQL += "			AND D_E_L_E_T_ = '' "
-		cSQL += "		) A "
-		cSQL += "		GROUP BY DC_PRODUTO,DC_LOTECTL "
-		cSQL += "	UNION "
-		cSQL += "	SELECT '"+cEmpAnt+"' EMPRESA, DC_PRODUTO, DC_LOTECTL , ISNULL(SUM(CASE "
-		cSQL += "				WHEN DC_ORIGEM = 'SC6' "
-		cSQL += "					THEN DC_QUANT "
-		cSQL += "				ELSE 0 "
-		cSQL += "				END),0) EMPC6 "
-		cSQL += "		,ISNULL(SUM(CASE "
-		cSQL += "				WHEN DC_ORIGEM = 'SC0' "
-		cSQL += "					THEN DC_QUANT "
-		cSQL += "				ELSE 0 "
-		cSQL += "				END),0) EMPC0 "
-		cSQL += "	FROM ( "
-		cSQL += "		SELECT DC_ORIGEM "
-		cSQL += "			,DC_PRODUTO "
-		cSQL += "			,DC_LOTECTL "				
-		cSQL += "			,DC_QUANT "
-		cSQL += "		FROM "+RetSqlName("SDC")+" "
-		cSQL += "		WHERE DC_FILIAL = '"+XFILIAL("SDC")+"' "
-		cSQL += "			AND SUBSTRING(DC_PRODUTO,4,4) NOT IN ('0000','000C') "
-		cSQL += "			AND DC_PRODUTO = " +ValtoSql(cProduto)+ " "
-		cSQL += "			AND DC_LOTECTL = "+ValtoSql(aAlote)+" "
-		cSQL += "			AND DC_LOCAL IN (" + cAlmox + ")
-		cSQL += "			AND D_E_L_E_T_ = '' "
-		cSQL += "		) A "
-		cSQL += "		GROUP BY DC_PRODUTO,DC_LOTECTL ) SDC "
+	ElseIf cEmpAnt $ "01_05_07_14" .And. !lFiltraEmp
+		cSQL += "	(SELECT '01' EMPRESA, DC_PRODUTO, DC_LOTECTL , ISNULL(SUM(CASE " + CRLF
+		cSQL += "				WHEN DC_ORIGEM = 'SC6' " + CRLF
+		cSQL += "					THEN DC_QUANT " + CRLF
+		cSQL += "				ELSE 0 " + CRLF
+		cSQL += "				END),0) EMPC6 " + CRLF
+		cSQL += "		,ISNULL(SUM(CASE " + CRLF
+		cSQL += "				WHEN DC_ORIGEM = 'SC0' " + CRLF
+		cSQL += "					THEN DC_QUANT " + CRLF
+		cSQL += "				ELSE 0 " + CRLF
+		cSQL += "				END),0) EMPC0 " + CRLF
+		cSQL += "	FROM ( " + CRLF
+		cSQL += "		SELECT DC_ORIGEM " + CRLF
+		cSQL += "			,DC_PRODUTO " + CRLF
+		cSQL += "			,DC_LOTECTL " + CRLF				
+		cSQL += "			,DC_QUANT " + CRLF
+		cSQL += "		FROM SDC010 " + CRLF
+		cSQL += "		WHERE DC_FILIAL = '01' " + CRLF
+		cSQL += "			AND SUBSTRING(DC_PRODUTO,4,4) NOT IN ('0000','000C') " + CRLF
+		cSQL += "			AND DC_LOCAL IN (" + cAlmox + ") " + CRLF
+		cSQL += "			AND D_E_L_E_T_ = '' " + CRLF
+		cSQL += "		) A " + CRLF
+		cSQL += "		GROUP BY DC_PRODUTO,DC_LOTECTL " + CRLF
+		cSQL += "	UNION " + CRLF
+		cSQL += "	SELECT '05' EMPRESA, DC_PRODUTO, DC_LOTECTL , ISNULL(SUM(CASE " + CRLF
+		cSQL += "				WHEN DC_ORIGEM = 'SC6' " + CRLF
+		cSQL += "					THEN DC_QUANT " + CRLF
+		cSQL += "				ELSE 0 " + CRLF
+		cSQL += "				END),0) EMPC6 " + CRLF
+		cSQL += "		,ISNULL(SUM(CASE " + CRLF
+		cSQL += "				WHEN DC_ORIGEM = 'SC0' " + CRLF
+		cSQL += "					THEN DC_QUANT " + CRLF
+		cSQL += "				ELSE 0 " + CRLF
+		cSQL += "				END),0) EMPC0 " + CRLF
+		cSQL += "	FROM ( " + CRLF
+		cSQL += "		SELECT DC_ORIGEM " + CRLF
+		cSQL += "			,DC_PRODUTO " + CRLF
+		cSQL += "			,DC_LOTECTL " + CRLF				
+		cSQL += "			,DC_QUANT " + CRLF
+		cSQL += "		FROM SDC050 " + CRLF
+		cSQL += "		WHERE DC_FILIAL = '01' " + CRLF
+		cSQL += "			AND SUBSTRING(DC_PRODUTO,4,4) NOT IN ('0000','000C') " + CRLF
+		cSQL += "			AND DC_LOCAL IN (" + cAlmox + ") " + CRLF
+		cSQL += "			AND D_E_L_E_T_ = '' " + CRLF
+		cSQL += "		) A" + CRLF
+		cSQL += "		GROUP BY DC_PRODUTO,DC_LOTECTL " + CRLF
+		cSQL += "	UNION " + CRLF
+		cSQL += "	SELECT '13' EMPRESA, DC_PRODUTO, DC_LOTECTL , ISNULL(SUM(CASE " + CRLF
+		cSQL += "				WHEN DC_ORIGEM = 'SC6' " + CRLF
+		cSQL += "					THEN DC_QUANT " + CRLF
+		cSQL += "				ELSE 0 " + CRLF
+		cSQL += "				END),0) EMPC6 " + CRLF
+		cSQL += "		,ISNULL(SUM(CASE " + CRLF
+		cSQL += "				WHEN DC_ORIGEM = 'SC0' " + CRLF
+		cSQL += "					THEN DC_QUANT " + CRLF
+		cSQL += "				ELSE 0 " + CRLF
+		cSQL += "				END),0) EMPC0 " + CRLF
+		cSQL += "	FROM ( " + CRLF
+		cSQL += "		SELECT DC_ORIGEM " + CRLF
+		cSQL += "			,DC_PRODUTO " + CRLF
+		cSQL += "			,DC_LOTECTL " + CRLF				
+		cSQL += "			,DC_QUANT " + CRLF
+		cSQL += "		FROM SDC130 " + CRLF
+		cSQL += "		WHERE DC_FILIAL = '01' " + CRLF
+		cSQL += "			AND SUBSTRING(DC_PRODUTO,4,4) NOT IN ('0000','000C') " + CRLF
+		cSQL += "			AND DC_LOCAL IN (" + cAlmox + ") " + CRLF
+		cSQL += "			AND D_E_L_E_T_ = '' " + CRLF
+		cSQL += "		) A " + CRLF
+		cSQL += "		GROUP BY DC_PRODUTO,DC_LOTECTL " + CRLF
+		cSQL += "	UNION " + CRLF
+		cSQL += "	SELECT '14' EMPRESA, DC_PRODUTO, DC_LOTECTL , ISNULL(SUM(CASE " + CRLF
+		cSQL += "				WHEN DC_ORIGEM = 'SC6' " + CRLF
+		cSQL += "					THEN DC_QUANT " + CRLF
+		cSQL += "				ELSE 0 " + CRLF
+		cSQL += "				END),0) EMPC6 " + CRLF
+		cSQL += "		,ISNULL(SUM(CASE " + CRLF
+		cSQL += "				WHEN DC_ORIGEM = 'SC0' " + CRLF
+		cSQL += "					THEN DC_QUANT " + CRLF
+		cSQL += "				ELSE 0 " + CRLF
+		cSQL += "				END),0) EMPC0 " + CRLF
+		cSQL += "	FROM ( " + CRLF
+		cSQL += "		SELECT DC_ORIGEM " + CRLF
+		cSQL += "			,DC_PRODUTO " + CRLF
+		cSQL += "			,DC_LOTECTL " + CRLF				
+		cSQL += "			,DC_QUANT " + CRLF
+		cSQL += "		FROM SDC140 " + CRLF
+		cSQL += "		WHERE DC_FILIAL = '01' " + CRLF
+		cSQL += "			AND SUBSTRING(DC_PRODUTO,4,4) NOT IN ('0000','000C') " + CRLF
+		cSQL += "			AND DC_LOCAL IN (" + cAlmox + ") " + CRLF
+		cSQL += "			AND D_E_L_E_T_ = '' " + CRLF
+		cSQL += "		) A " + CRLF
+		cSQL += "		GROUP BY DC_PRODUTO,DC_LOTECTL " + CRLF	
+		cSQL += "	UNION " + CRLF
+		cSQL += "	SELECT '"+cEmpAnt+"' EMPRESA, DC_PRODUTO, DC_LOTECTL , ISNULL(SUM(CASE " + CRLF
+		cSQL += "				WHEN DC_ORIGEM = 'SC6' " + CRLF
+		cSQL += "					THEN DC_QUANT " + CRLF
+		cSQL += "				ELSE 0 " + CRLF
+		cSQL += "				END),0) EMPC6 " + CRLF
+		cSQL += "		,ISNULL(SUM(CASE " + CRLF
+		cSQL += "				WHEN DC_ORIGEM = 'SC0' " + CRLF
+		cSQL += "					THEN DC_QUANT " + CRLF
+		cSQL += "				ELSE 0 " + CRLF
+		cSQL += "				END),0) EMPC0 " + CRLF
+		cSQL += "	FROM ( " + CRLF
+		cSQL += "		SELECT DC_ORIGEM " + CRLF
+		cSQL += "			,DC_PRODUTO " + CRLF
+		cSQL += "			,DC_LOTECTL " + CRLF				
+		cSQL += "			,DC_QUANT " + CRLF
+		cSQL += "		FROM "+RetSqlName("SDC")+" " + CRLF
+		cSQL += "		WHERE DC_FILIAL = '"+XFILIAL("SDC")+"' " + CRLF
+		cSQL += "			AND SUBSTRING(DC_PRODUTO,4,4) NOT IN ('0000','000C') " + CRLF
+		cSQL += "			AND DC_PRODUTO = " +ValtoSql(cProduto)+ " " + CRLF
+		cSQL += "			AND DC_LOTECTL = "+ValtoSql(aAlote)+" " + CRLF
+		cSQL += "			AND DC_LOCAL IN (" + cAlmox + ") " + CRLF
+		cSQL += "			AND D_E_L_E_T_ = '' " + CRLF
+		cSQL += "		) A " + CRLF
+		cSQL += "		GROUP BY DC_PRODUTO,DC_LOTECTL ) SDC " + CRLF
 	Else
-		cSQL += "	(SELECT '"+cEmpAnt+"' EMPRESA, DC_PRODUTO, DC_LOTECTL , ISNULL(SUM(CASE "
-		cSQL += "				WHEN DC_ORIGEM = 'SC6' "
-		cSQL += "					THEN DC_QUANT "
-		cSQL += "				ELSE 0 "
-		cSQL += "				END),0) EMPC6 "
-		cSQL += "		,ISNULL(SUM(CASE "
-		cSQL += "				WHEN DC_ORIGEM = 'SC0' "
-		cSQL += "					THEN DC_QUANT "
-		cSQL += "				ELSE 0 "
-		cSQL += "				END),0) EMPC0 "
-		cSQL += "	FROM ( "
-		cSQL += "		SELECT DC_ORIGEM "
-		cSQL += "			,DC_PRODUTO "
-		cSQL += "			,DC_LOTECTL "				
-		cSQL += "			,DC_QUANT "
-		cSQL += "		FROM "+RetSqlName("SDC")+" "
-		cSQL += "		WHERE DC_FILIAL = '"+XFILIAL("SDC")+"' "
-		cSQL += "			AND DC_PRODUTO = " +ValtoSql(cProduto)+ " "
-		cSQL += "			AND DC_LOTECTL = "+ValtoSql(aAlote)+" "
-		cSQL += "			AND DC_LOCAL IN (" + cAlmox + ")
-		cSQL += "			AND D_E_L_E_T_ = '' "
-		cSQL += "		) A "
-		cSQL += "		GROUP BY DC_PRODUTO,DC_LOTECTL ) SDC "
+		cSQL += "	(SELECT '"+cEmpAnt+"' EMPRESA, DC_PRODUTO, DC_LOTECTL , ISNULL(SUM(CASE " + CRLF
+		cSQL += "				WHEN DC_ORIGEM = 'SC6' " + CRLF
+		cSQL += "					THEN DC_QUANT " + CRLF
+		cSQL += "				ELSE 0 " + CRLF
+		cSQL += "				END),0) EMPC6 " + CRLF
+		cSQL += "		,ISNULL(SUM(CASE " + CRLF
+		cSQL += "				WHEN DC_ORIGEM = 'SC0' " + CRLF
+		cSQL += "					THEN DC_QUANT " + CRLF
+		cSQL += "				ELSE 0 " + CRLF
+		cSQL += "				END),0) EMPC0 " + CRLF
+		cSQL += "	FROM ( " + CRLF
+		cSQL += "		SELECT DC_ORIGEM " + CRLF
+		cSQL += "			,DC_PRODUTO " + CRLF
+		cSQL += "			,DC_LOTECTL "		 + CRLF		
+		cSQL += "			,DC_QUANT " + CRLF
+		cSQL += "		FROM "+RetSqlName("SDC")+" " + CRLF
+		cSQL += "		WHERE DC_FILIAL = '"+XFILIAL("SDC")+"' " + CRLF
+		cSQL += "			AND DC_PRODUTO = " +ValtoSql(cProduto)+ " " + CRLF
+		cSQL += "			AND DC_LOTECTL = "+ValtoSql(aAlote)+" " + CRLF
+		cSQL += "			AND DC_LOCAL IN (" + cAlmox + ") " + CRLF
+		cSQL += "			AND D_E_L_E_T_ = '' " + CRLF
+		cSQL += "		) A " + CRLF
+		cSQL += "		GROUP BY DC_PRODUTO,DC_LOTECTL ) SDC " + CRLF
 	EndIf
 
-	cSQL += " ON SDC.DC_PRODUTO = ZZ9.ZZ9_PRODUT "
-	cSQL += "	AND SDC.DC_LOTECTL = ZZ9.ZZ9_LOTE "
+	cSQL += " ON SDC.DC_PRODUTO = ZZ9.ZZ9_PRODUT " + CRLF
+	cSQL += "	AND SDC.DC_LOTECTL = ZZ9.ZZ9_LOTE " + CRLF
 
 	cSQL += "	WHERE	SB1.B1_FILIAL		= '"+xFilial("SB1")+"'	AND "  + CRLF
 	cSQL += "				ZZ9.ZZ9_FILIAL	= '"+xFilial("ZZ9")+"'	AND "  + CRLF
@@ -1170,7 +1195,7 @@ Static Function FilProc()
 		cSQL += " FROM " +RETSQLNAME("SB8") + "																										"  + CRLF
 		cSQL += " WHERE D_E_L_E_T_ = '' AND B8_SALDO <> 0 AND B8_FILIAL = '"+XFILIAL("SB8")+"'														"  + CRLF
 		cSQL += " GROUP BY B8_PRODUTO, B8_LOTECTL, B8_LOCAL, B8_DTVALID)SB8
-	ElseIf cEmpAnt $ "01_05_07"
+	ElseIf cEmpAnt $ "01_05_07_14"
 		cSQL += " ((SELECT '01' EMP, B8_PRODUTO, B8_LOTECTL, B8_LOCAL, B8_DTVALID, MIN(B8_DATA) AS DTPRILOTE ,MAX(B8_DATA) AS DTULTIMOLOTE 			"  + CRLF
 		cSQL += "  FROM  SB8010 																													"  + CRLF
 		cSQL += " WHERE D_E_L_E_T_ = '' AND B8_SALDO <> 0																							"  + CRLF
@@ -1184,7 +1209,12 @@ Static Function FilProc()
 		cSQL += " (SELECT '13' EMP, B8_PRODUTO, B8_LOTECTL, B8_LOCAL, B8_DTVALID, MIN(B8_DATA) AS DTPRILOTE ,MAX(B8_DATA) AS DTULTIMOLOTE 			"  + CRLF
 		cSQL += "  FROM  SB8130   																													"  + CRLF
 		cSQL += " WHERE D_E_L_E_T_ = '' AND B8_SALDO <> 0																							"  + CRLF
-		cSQL += " GROUP BY B8_PRODUTO, B8_LOTECTL, B8_LOCAL, B8_DTVALID))SB8																		"  + CRLF
+		cSQL += " GROUP BY B8_PRODUTO, B8_LOTECTL, B8_LOCAL, B8_DTVALID)																			"  + CRLF
+		cSQL += " UNION 																															"  + CRLF
+		cSQL += " (SELECT '14' EMP, B8_PRODUTO, B8_LOTECTL, B8_LOCAL, B8_DTVALID, MIN(B8_DATA) AS DTPRILOTE ,MAX(B8_DATA) AS DTULTIMOLOTE 			"  + CRLF
+		cSQL += "  FROM  SB8140   																													"  + CRLF
+		cSQL += " WHERE D_E_L_E_T_ = '' AND B8_SALDO <> 0																							"  + CRLF
+		cSQL += " GROUP BY B8_PRODUTO, B8_LOTECTL, B8_LOCAL, B8_DTVALID))SB8
 	Else
 		cSQL += " (SELECT '"+cEmpAnt+"' EMP, B8_PRODUTO, B8_LOTECTL, B8_LOCAL, B8_DTVALID, MIN(B8_DATA) AS DTPRILOTE ,MAX(B8_DATA) AS DTULTIMOLOTE  "  + CRLF
 		cSQL += " FROM " +RETSQLNAME("SB8") + "																										"  + CRLF
@@ -1220,6 +1250,7 @@ Static Function FilProc()
 
 
 	//Fernando - Ticket 4910 - Adicionando estoque de produtos PR - LM (manta) na consulta
+
 	IF AllTrim(CEMPANT) == "07"
 
 		cSQL += " UNION ALL " + CRLF
@@ -1269,10 +1300,9 @@ Static Function FilProc()
 		cSQL += " AND SB2.D_E_L_E_T_=' ' " + CRLF
 
 	ENDIF
-
 	cSQL += "ORDER BY PROD.B1_COD, PROD.CAIXA  "  + CRLF
 
-	MemoWrite("\Consulta_Estoque.TXT", cSQL)
+	MemoWrite("\Consulta_EstoqueRAC.TXT", cSQL)
 
 	//Atualiza a tela da Consulta
 	AtualizaBrowse()
@@ -1522,6 +1552,9 @@ Static Function Browse1(PRO,cEmpresa)
 	ElseIf cEmpresa == "13"
 		cTabSC0 := "SC0130"
 		cTabPZ0 := "PZ0130"
+	ElseIf cEmpresa == "14"
+		cTabSC0 := "SC0140"
+		cTabPZ0 := "PZ0140"		
 	ElseIf cEmpresa == "07"
 		cTabSC0 := "SC0070"
 		cTabPZ0 := "PZ0070"
@@ -1561,13 +1594,15 @@ Static Function Browse1(PRO,cEmpresa)
 	cSql += "			ELSE C5.C5_YCLIORI+C5.C5_YLOJORI END, "
 	cSql += "					convert( numeric(15,4), (C6_QTDVEN-(C6_QTDEMP+C6_QTDENT))) AS SALDOTOTAL  "
 
-	If cEmpAnt $ "01_05_07" .And. cEmpresa != "07"
+	If cEmpAnt $ "01_05_07_14" .And. cEmpresa != "07"
 		If cEmpresa == "01"
 			cSql += "	FROM SC5010 AS C5, SC6010 AS C6 "
 		ElseIf cEmpresa == "05"
 			cSql += "	FROM SC5050 AS C5, SC6050 AS C6 "
 		ElseIf cEmpresa == "13"
 			cSql += "	FROM SC5130 AS C5, SC6130 AS C6 "
+		ElseIf cEmpresa == "14"
+			cSql += "	FROM SC5140 AS C5, SC6140 AS C6 "			
 		EndIf
 	Else
 		cSql += "	FROM "+RetSqlName("SC5")+" AS C5,"+RETSQLNAME("SC6")+" AS C6 "
@@ -1634,13 +1669,15 @@ Static Function Browse2(PRO,CCLOTE,cEmpresa)
 	cSql += "		C0_VALIDA  AS VALIDADE, 	"
 	cSql += " 		C0_EMISSAO AS EMISSAO  	"
 
-	If cEmpAnt $ "01_05_07" .And. cEmpresa != "07"
+	If cEmpAnt $ "01_05_07_14" .And. cEmpresa != "07"
 		If cEmpresa == "01"
 			cSql += "FROM SC0010 "
 		ElseIf cEmpresa == "05"
 			cSql += "FROM SC0050 "
 		ElseIf cEmpresa == "13"
 			cSql += "FROM SC0130 "
+		ElseIf cEmpresa == "14"
+			cSql += "FROM SC0140 "
 		EndIf
 	Else
 		cSql += " FROM " + RETSQLNAME("SC0") + " "
@@ -1709,13 +1746,15 @@ Static Function Browse3(PRO,cEmpresa)
 	cSql += "		C9_DATALIB AS EMPENHO, "
 	cSql += "		DC_QUANT AS SALDOTOTAL, "
 	cSql += "		C6_YDTNECE AS DTNECE "
-	If cEmpAnt $ "01_05_07".And. cEmpresa != "07"// (Thiago Dantas - 24/02/15)-> Se o local é LM, busca na LM
+	If cEmpAnt $ "01_05_07_14".And. cEmpresa != "07"// (Thiago Dantas - 24/02/15)-> Se o local é LM, busca na LM
 		If cEmpresa == "01"
 			cSql += " FROM SDC010 DC, SC9010 C9, SC5010 C5, SC6010 C6 "
 		ElseIf cEmpresa == "05"
 			cSql += " FROM SDC050 DC, SC9050 C9, SC5050 C5, SC6050 C6 "
 		ElseIf cEmpresa == "13"
 			cSql += " FROM SDC130 DC, SC9130 C9, SC5130 C5, SC6130 C6 "
+		ElseIf cEmpresa == "14"
+			cSql += " FROM SDC140 DC, SC9130 C9, SC5140 C5, SC6140 C6 "
 		EndIf
 	Else
 		cSql += " FROM " + RETSQLNAME("SDC") +  " DC, " + RETSQLNAME("SC9") +  " C9, " + RETSQLNAME("SC5") +  " C5 WITH (NOLOCK), " + RETSQLNAME("SC6") +  " C6 WITH (NOLOCK)"

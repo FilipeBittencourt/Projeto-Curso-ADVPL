@@ -17,7 +17,7 @@ User Function BIAF065()
 	Local nRecSM0  		:= 0 
 	Local aEmpres  		:= {}   
 	Local nx	   		:= 0   
-	Local cEFjob		:= "0101/0501" 
+	Local cEFjob		:= "0101/0501/1401" //Empresa+Filial
 	Local aSays	   		:= {} 
 	Local aButtons 		:= {}  
 	Local lConfirm 		:= .F. 
@@ -167,6 +167,8 @@ Static Function fProcInteg(_cEmp,_cFil)
 		cBaseDados := "% DADOSEOS..cep_movimento_produto %"
 	ElseIf cEmpAnt == "05"
 		cBaseDados := "% DADOS_05_EOS..cep_movimento_produto %"
+	ElseIf cEmpAnt == "14"
+		cBaseDados := "% DADOS_14_EOS..cep_movimento_produto %"
 	Else
 		AADD(aErro,"Empresa "+cEmpAnt+" não configurada para Integração Ecosis vs Protheus - EXPEDIÇÃO !!")
 		if lWind   

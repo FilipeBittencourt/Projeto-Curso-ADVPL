@@ -6,20 +6,20 @@ Class TPesagemCarga From LongClassName
 	
 	//atributos publico
 
-	Public Data cId					as character
+	Public Data cId						as character
 	Public Data cNumTicket				as character
 	Public Data cNumExTicket			as character
 	Public Data cNumCarga				as character
 	Public Data cDataIni 				as character
-	Public Data cPlaca 				as character
-	Public Data cMotorista 			as character
-	Public Data cObsTicket 			as character
+	Public Data cPlaca 					as character
+	Public Data cMotorista 				as character
+	Public Data cObsTicket 				as character
 	Public Data cGuardian 				as character
 	Public Data nPesoBalanca 			as numeric
-	Public Data nPesoBruto 			as numeric
+	Public Data nPesoBruto 				as numeric
 	Public Data nPesoFat				as numeric
 	Public Data nPesoEcosis 			as numeric
-	Public Data nCapVeiculo			as numeric
+	Public Data nCapVeiculo				as numeric
 	Public Data nPesoVeiculo			as numeric
 	Public Data nPesoAdCarroceria		as numeric
 	Public Data cConferido				as character
@@ -31,7 +31,7 @@ Class TPesagemCarga From LongClassName
 	Public Data nDiverPeso				as numeric
 	Public Data cTipoDivergencia		as character
 	
-	Public Data cEmailWorkflow			as cEmailWorkflow 
+	Public Data cEmailWorkflow			as character 
 		
 	//atributos privado
 	
@@ -254,13 +254,14 @@ Method BancoEmp(_cEmp) Class TPesagemCarga
 		cBanco	:= "DADOS_05_EOS"
 	ElseIf AllTrim(_cEmp) == "13"
 		cBanco	:= "DADOS_13_EOS"
+	ElseIf AllTrim(_cEmp) == "14"
+		cBanco	:= "DADOS_14_EOS"		
 	EndIf
 	
 Return cBanco
 
 Method CalcDiverVeiculo() Class TPesagemCarga
 	
-	Local nValor := 0
 	//regra capacidade veiculo
 	::nDiverCapacidade := ((::nPesoBruto + ::nPesoAdCarroceria) / ::nCapVeiculo)
 	

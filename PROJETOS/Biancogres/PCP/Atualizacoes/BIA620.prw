@@ -157,6 +157,8 @@ Static Function RptPDetail()
 			kt_BsDad := "DADOSEOS"
 		ElseIf cEmpAnt == "05"
 			kt_BsDad := "DADOS_05_EOS"
+		ElseIf cEmpAnt == "14"
+			kt_BsDad := "DADOS_14_EOS"			
 		EndIf
 
 		//                                                                                      Etiquetado
@@ -1510,7 +1512,7 @@ Static Function B6SAPJst(oProcJst)
 	Local MS007
 	Local nSrvDB := Iif( "PROD" $ Upper(AllTrim(getenvserver())) , "HERMES" , "HIMEROS" ) //TRATAMENTO PARA DIFERENCIAR AMBIENTE DE PRD E DEV
 
-	MS007 := " EXEC "+nSrvDB+".msdb.dbo.sp_start_job N'SAP->DM_GERAL_JUSTIFICATIVA' "
+	MS007 := " EXEC "+nSrvDB+".msdb.dbo.sp_start_job N'SAP->DM_GERAL_JUSTIFICATIVA' "
 	U_BIAMsgRun("Start JOB... Aguarde... ",,{|| TcSQLExec(MS007)})
 
 	mCtrFimJob := .F. 
@@ -1524,7 +1526,7 @@ Static Function B6SAPJst(oProcJst)
 		oProcJst:IncRegua2("JOB em progresso a: " + Alltrim(ElapTime(hhTmpINI, TIME())) )   
 
 		MS004 := " EXEC "+nSrvDB+".msdb.dbo.sp_help_job "
-		MS004 += "    @job_name = N'SAP->DM_GERAL_JUSTIFICATIVA', "
+		MS004 += "    @job_name = N'SAP->DM_GERAL_JUSTIFICATIVA', "
 		MS004 += "    @job_aspect = N'JOB', "
 		MS004 += "    @execution_status = 1 "
 		MScIndex := CriaTrab(Nil,.f.)

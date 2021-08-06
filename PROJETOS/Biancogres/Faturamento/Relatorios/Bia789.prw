@@ -73,7 +73,7 @@ User Function BIA789()
 	MV_PAR18 := SPACE(1)    //	   "Filtra Vendedores?"
 	MV_PAR19 := SPACE(6)    //	   "Atendente?"
 	MV_PAR20 := SPACE(6)    //	   "Segmento De?"
-	MV_PAR21 := SPACE(6)    //	   "Segmento Ate?"
+	MV_PAR21 := SPACE(6)    //	   "Segmento Ate? "
 	MV_PAR22 := SPACE(2)    //	   "Tipo do Pedido ?"
 	MV_PAR23 := SPACE(1)    //	   "Considera Rotas?"
 	MV_PAR24 := SPACE(15)    //	   "Pedido de Compra Cliente?"
@@ -85,6 +85,12 @@ User Function BIA789()
 	MV_PAR30 := SPACE(2)    //	   "Regiao Ate?"
 	MV_PAR31 := SPACE(6)    //	   "Rede de Compras De?"
 	MV_PAR32 := SPACE(6)    //	   "Rede de Compras Ate?"
+    MV_PAR33 := SPACE(1)    // Tp Segmento ? A1_YTPSEG
+
+ 
+    //MV_PAR33 := ''
+
+
 	aMarca		:= {'1=Biancogres', '2=Incesa', '3=Bellacasa', '4=Incesa/Bellacasa', '5=Pegasus','6=Vinilico', '7=Todas'}
 	aPergs		:= {}
 
@@ -108,9 +114,13 @@ User Function BIA789()
 	aAdd( aPergs ,{1,"Grupo ate"     			, MV_PAR17	,"",,"ACY",'.T.',50,.F.})
 	aAdd( aPergs ,{2,"Filtra Vendedores"		, MV_PAR18, {'1=Sim', '2=Não'}, 50, ".T.",.F.})
 	aAdd( aPergs ,{1,"Atendente"	   			, MV_PAR19	,"",,"USR",'.T.',50,.F.})
-	aAdd( aPergs ,{1,"Segmento De"     		, MV_PAR20	,"",,"T3",'.T.',50,.F.})
-	aAdd( aPergs ,{1,"Segmento Ate"     		, MV_PAR21	,"",,"T3",'.T.',50,.F.})
-	aAdd( aPergs ,{1,"Tipo do Pedido "			, MV_PAR22	,"",,"",'.T.',50,.F.})
+
+   // aAdd( aPergs ,{2,"Segmento"     		, MV_PAR33	,{'1=R','2=E','3=H','4=X','5=Todos'}, 50, ".T.",.F.}) 
+
+    aAdd( aPergs ,{1,"Segmento De"     		, MV_PAR20	,"",,"T3",'.F.',50,.F.}) 
+	aAdd( aPergs ,{1,"Segmento Ate"     		, MV_PAR21	,"",,"T3",'.F.',50,.F.}) 
+	
+    aAdd( aPergs ,{1,"Tipo do Pedido "			, MV_PAR22	,"",,"",'.T.',50,.F.})
 	aAdd( aPergs ,{2,"Considera Rotas"			, MV_PAR23, {'1=Sim', '2=Não'}, 50, ".T.",.F.})
 	aAdd( aPergs ,{1,"Pedido de Compra Cliente", MV_PAR24	,"",,"",'.T.',50,.F.})
 	aAdd( aPergs ,{2,"Exportar Para Excel"		, MV_PAR25, {'1=Sim', '2=Não'}, 50, ".T.",.F.})
@@ -122,6 +132,7 @@ User Function BIA789()
 	aAdd( aPergs ,{1,"Rede de Compras De"  	, MV_PAR31	,"",,"Z79",'.T.',50,.F.})
 	aAdd( aPergs ,{1,"Rede de Compras Ate" 	, MV_PAR32	,"",,"Z79",'.T.',50,.F.})
 
+    aAdd( aPergs ,{2,"Segmento"     		, MV_PAR33	,{'1=R','2=E','3=H','4=X','5=Todos'}, 50, ".T.",.F.}) 
 
 	dbSelectArea("SC5")
 	dbSetOrder(1)
@@ -164,9 +175,9 @@ EndIf
 	MV_PAR16 := ParamLoad(cFileName,,16,MV_PAR16)
 	MV_PAR17 := ParamLoad(cFileName,,17,MV_PAR17)
 	MV_PAR18 := Val(ParamLoad(cFileName,,18,MV_PAR18))
-	MV_PAR19 := ParamLoad(cFileName,,19,MV_PAR19)
-	MV_PAR20 := ParamLoad(cFileName,,20,MV_PAR20)
-	MV_PAR21 := ParamLoad(cFileName,,21,MV_PAR21)
+	MV_PAR19 := ParamLoad(cFileName,,19,MV_PAR19)    
+    MV_PAR20 := ParamLoad(cFileName,,20,MV_PAR20) 
+	MV_PAR21 := ParamLoad(cFileName,,21,MV_PAR21) 
 	MV_PAR22 := ParamLoad(cFileName,,22,MV_PAR22)
 	MV_PAR23 := Val(ParamLoad(cFileName,,23,MV_PAR23))
 	MV_PAR24 := ParamLoad(cFileName,,24,MV_PAR24)
@@ -183,6 +194,9 @@ EndIf
 	MV_PAR35 := ParamLoad(cFileName,,35,MV_PAR35)
 	MV_PAR36 := ParamLoad(cFileName,,36,MV_PAR36)
 
+    MV_PAR20 := '000001'
+    MV_PAR21 := '999999'
+
 	//NomeProg
 	//Monta a interface padrao com o usuario...
 	NomeProg := SetPrint(cString,NomeProg,"",@titulo,cDesc1,cDesc2,cDesc3,.T.,aOrd,.T.,Tamanho,,.F.)
@@ -198,6 +212,16 @@ If nLastKey == 27
 Endif
 
 	nTipo := If(aReturn[4]==1,15,18)
+
+If MV_PAR33== "1"
+    MV_PAR33 := 'R'
+ElseIf MV_PAR33 == "2"
+    MV_PAR33 := 'E'
+ElseIF MV_PAR33 == "3"
+    MV_PAR33 := 'H' 
+ElseIF MV_PAR33 == "4"
+    MV_PAR33 := 'X'
+EndIf
 
 if MV_PAR18 == 1
 		lOk       := .T.
@@ -634,7 +658,7 @@ Static Function Monta_Arq()
 		cSql += "	AND C6.C6_YEMISSA >= '20120101' " + Enter
 		cSql += "	AND B1.B1_YLINHA <> '0000' " + Enter
 		cSql += "	AND C5.D_E_L_E_T_ = '' " + Enter
-
+        
 	Else
 
 		cSql := ""
@@ -686,7 +710,7 @@ Static Function Monta_Arq()
 		cSql += "	AND C6.C6_YEMISSA	>= '20120101' " + Enter
 		cSql += "	AND B1.B1_YLINHA	<> '0000' " + Enter
 		cSql += "	AND C5.D_E_L_E_T_ = '' " + Enter
-
+        
 	EndIf
 
 	cSql += " ) TMP  "+ Enter
@@ -929,8 +953,13 @@ Static Function Monta_Arq()
 
 
 		cQuery += "			A1.A1_GRPVEN BETWEEN '"+MV_PAR16+"' AND '"+MV_PAR17+"' AND " + Enter
-		cQuery += "			A1.A1_SATIV1 BETWEEN '"+MV_PAR20+"' AND '"+MV_PAR21+"' AND " + Enter
-		cQuery += "			A1.A1_YREDCOM BETWEEN '"+MV_PAR31+"' AND '"+MV_PAR32+"' " + Enter
+		cQuery += "			A1.A1_SATIV1 BETWEEN '"+MV_PAR20+"' AND '"+MV_PAR21+"' AND " + Enter 
+        If MV_PAR33 == "5"
+            cQuery += "			A1.A1_YTPSEG in ('R','E','H','X') AND " + Enter
+        Else
+            cQuery += "			A1.A1_YTPSEG = '"+MV_PAR33+"' AND " + Enter
+        EndIf
+        cQuery += "			A1.A1_YREDCOM BETWEEN '"+MV_PAR31+"' AND '"+MV_PAR32+"' " + Enter
 		cQuery += "	INNER JOIN " + RetSqlName("SE4") + " E4 WITH (NOLOCK) " + Enter
 		cQuery += "		ON C5.C5_CONDPAG	= E4.E4_CODIGO	AND " + Enter
 		cQuery += "			E4_FILIAL = '" + xFilial('SE4') + "' AND " + Enter
@@ -963,14 +992,15 @@ Static Function Monta_Arq()
 		cQuery += "			A4.D_E_L_E_T_ = '' " + Enter
 		cQuery += "WHERE C5_FILIAL = '"+xFilial('SC5')+"' AND	" + Enter
 		cQuery += "			C5.C5_NUM BETWEEN '"+MV_PAR01+"'  AND '"+MV_PAR02+"' AND	" + Enter
-		IF alltrim(cRepAtu) = ""
+	
+        IF alltrim(cRepAtu) = ""
 
 			IF MV_PAR18 == 2
 				cQuery += "	C5.C5_VEND BETWEEN '"+MV_PAR03+"' AND '"+MV_PAR04+"' AND " + Enter
 			ELSE
 				cQuery += "	C5.C5_VEND IN ("+cVend+") AND " + Enter
 			ENDIF
-
+         
 			If Alltrim(MV_PAR19) <> ""
 
 				cQuery += " ISNULL((SELECT ATENDE FROM [dbo].[GET_ZKP] (A1.A1_YTPSEG, C5_YEMP, A1.A1_EST, C5_VEND, A1.A1_YCAT, A1.A1_GRPVEN)), '') = '"+MV_PAR19+"'  AND "+ Enter
@@ -1196,8 +1226,14 @@ Static Function Monta_Arq()
 		END IF
 
 		cQuery += "			A1.A1_GRPVEN BETWEEN '"+MV_PAR16+"' AND '"+MV_PAR17+"' AND " + Enter
-		cQuery += "			A1.A1_SATIV1 BETWEEN '"+MV_PAR20+"' AND '"+MV_PAR21+"' AND " + Enter
-		cQuery += "			A1.A1_YREDCOM BETWEEN '"+MV_PAR31+"' AND '"+MV_PAR32+"' " + Enter
+		cQuery += "			A1.A1_SATIV1 BETWEEN '"+MV_PAR20+"' AND '"+MV_PAR21+"' AND " + Enter 
+		If MV_PAR33 == "5"
+            cQuery += "			A1.A1_YTPSEG in ('R','E','H','X') AND " + Enter
+        Else
+            cQuery += "			A1.A1_YTPSEG = '"+MV_PAR33+"' AND " + Enter
+        EndIf
+        
+        cQuery += "			A1.A1_YREDCOM BETWEEN '"+MV_PAR31+"' AND '"+MV_PAR32+"' " + Enter
 		cQuery += "	INNER JOIN " + RetSqlName("SE4") + " E4 WITH (NOLOCK) " + Enter
 		cQuery += "		ON C5.C5_CONDPAG	= E4.E4_CODIGO	  AND " + Enter
 		cQuery += "			E4_FILIAL = '" + xFilial('SE4') + "' AND " + Enter

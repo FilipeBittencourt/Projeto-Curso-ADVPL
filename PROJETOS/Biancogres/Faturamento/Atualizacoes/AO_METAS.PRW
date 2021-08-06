@@ -1230,6 +1230,12 @@ Static Function GerarSI(_nValor,_dIni,_dFim,_cIdPer,_lAuto)
 	SZO->ZO_DESCR		:= "Bonus do Acordo: "+PZ5->PZ5_CODIGO
 	SZO->ZO_YOBS		:= "Gerada Automaticamente - Bônus do Acordo de Objetivos: "+PZ5->PZ5_CODIGO+" - Período: "+AllTrim(_cIdPer)
 
+	If Alltrim(M->PZ5_TPACOR) == "AG"
+		SZO->ZO_DESCR		:= "Bônus do Acordo Galleria: "+PZ5->PZ5_CODIGO
+		SZO->ZO_YOBS		:= "Gerada Automaticamente - Bônus do Acordo Galleria: "+PZ5->PZ5_CODIGO+" - Período: "+AllTrim(_cIdPer)
+	EndIf
+
+
 	SZO->ZO_EMP	:= PZ5->PZ5_MARCA
 
 	DO CASE

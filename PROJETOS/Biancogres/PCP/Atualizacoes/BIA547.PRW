@@ -36,6 +36,8 @@ Static Function RptDetail()
 		kt_BsDad := "DADOSEOS"
 	ElseIf xyEmpr == "05"
 		kt_BsDad := "DADOS_05_EOS"
+	ElseIf xyEmpr == "14"
+		kt_BsDad := "DADOS_14_EOS"		
 	Else
 		MsgINFO("Empresa não configurada para apontamento automático de Cerâmica!!!")
 		Return

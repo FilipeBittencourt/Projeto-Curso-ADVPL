@@ -15,6 +15,9 @@ function u_VLDENDFA() as logical
 
     if (stackTools():IsInStackCall({"ProcPedido","ProcessaDevolucao"}))
         evalBlock():evalBlock({||lRet:=chkDev()},nil,.T.)
+        If lRet
+        	Return lRet
+        EndIf
     endif
 
     lRet:=VLDENDFA()

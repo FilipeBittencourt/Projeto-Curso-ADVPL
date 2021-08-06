@@ -174,11 +174,23 @@ Method Get() Class TPortalIntegracaoCC
 	cQuery	+= "  ValorSub = ValorSubstituicao,		                                        "
 
 	cQuery	+= " * from																		"
-	cQuery	+= " [BPORTAL_SA].[dbo].[CotacaoCompra]											"
+	cQuery	+= " [BPORTAL_SA].[dbo].[CotacaoCompra]	A										"
 	cQuery	+= " where Status = 'A' AND DataIntegracaoERP IS NULL	AND NumeroSC <> ''		"
 	cQuery	+= " AND Origem = '1'															"
-	cQuery	+= "  order by (CASE WHEN Cotacao is null or Cotacao=''  THEN Numero ELSE Cotacao END)				"
-	//cQuery	+= "  order by  Filial, Cotacao, FornecedorCodigo, FornecedorLoja, Proposta, CotacaoItem												"
+	
+	cQuery += " AND NOT EXISTS  															"
+    cQuery += " ( 																			"
+    cQuery += "     SELECT 1 																"
+    cQuery += "     FROM [BPORTAL_SA].[dbo].[CotacaoCompra] B 								"
+    cQuery += "     WHERE B.Empresa  		= A.Empresa 									"
+    cQuery += "     AND B.Filial     		= A.Filial 										"
+    cQuery += "     AND B.Numero			= A.Numero	 									"
+    cQuery += "     AND B.Status        	<> 'A'											"
+    cQuery += "     AND Origem				= '1'											"
+    cQuery += " ) 																			"
+	
+	cQuery	+= "  order by (CASE WHEN Cotacao is null or Cotacao=''  THEN Numero ELSE Cotacao END)	"
+	
 	
 	oList	:= ::List(cQuery)
 	
@@ -206,6 +218,9 @@ Method GetPorContrato(_cContra, _cContraItem) Class TPortalIntegracaoCC
 	cQuery	+= " where Contrato = '"+_cContra+"'												"
 	cQuery	+= " AND ContratoItem = '"+_cContraItem+"'											"
 	cQuery	+= " AND Origem = '1'																"
+	
+	
+	
 	conout(cQuery)
 	oList	:= ::List(cQuery)
 	

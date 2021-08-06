@@ -24,10 +24,10 @@ User Function BIA448()
 	{                "Incluir"                ,'Execblock("BIA448B" ,.F.,.F.,"I")'    ,0, 3},;
 	{                "Alterar"                ,'Execblock("BIA448B" ,.F.,.F.,"A")'    ,0, 4},;
 	{                "Excluir"                ,'Execblock("BIA448B" ,.F.,.F.,"E")'    ,0, 5},;
-	{                "Ajuste Meta C.VARIAVEL" ,"U_BIA448D()"                          ,0, 6},;
-	{                "Ajuste Meta RECEITA"    ,"U_BIA448R()"                          ,0, 7},;
-	{                "Ajuste PARADA"          ,"U_BIA448P()"                          ,0, 8},;
-	{                "Carga DW"               ,"U_B448DWB()"                          ,0, 9} }
+	{                "Ajuste Meta C.VARIAVEL" ,"U_BIA448D()"                          ,0, 3},;
+	{                "Ajuste Meta RECEITA"    ,"U_BIA448R()"                          ,0, 3},;
+	{                "Ajuste PARADA"          ,"U_BIA448P()"                          ,0, 3},;
+	{                "Carga DW"               ,"U_B448DWB()"                          ,0, 3} }
 
 	//Iniciamos a construção básica de um Browse.
 	oBrowse := FWMBrowse():New()
@@ -618,11 +618,13 @@ Static Function RptrDetail()
 	RT005 := " WITH REALREC "
 	RT005 += "      AS (SELECT MARCA, "
 	RT005 += "                 CASE "
-	RT005 += "                     WHEN MARCA = '1302' "
+	RT005 += "                     WHEN MARCA IN('1302','1410') "
 	RT005 += "                     THEN '23' "
 	RT005 += "                     WHEN MARCA = '0101' "
 	RT005 += "                     THEN '21' "
-	RT005 += "                     ELSE '22' "
+	RT005 += "                     WHEN MARCA = '0501' "
+	RT005 += "                     THEN '22' "
+	RT005 += "                     ELSE '  ' "
 	RT005 += "                 END RAIZCLVL, "
 	RT005 += "                 SUM(VALOR) VALOR "
 	RT005 += "          FROM VW_SAP_CML_MOVVENDAS "
@@ -637,11 +639,13 @@ Static Function RptrDetail()
 	RT005 += "          UNION ALL "
 	RT005 += "          SELECT MARCA, "
 	RT005 += "                 CASE "
-	RT005 += "                     WHEN MARCA = '1302' "
+	RT005 += "                     WHEN MARCA IN('1302','1410') "
 	RT005 += "                     THEN '23' "
 	RT005 += "                     WHEN MARCA = '0101' "
 	RT005 += "                     THEN '21' "
-	RT005 += "                     ELSE '22' "
+	RT005 += "                     WHEN MARCA = '0501' "
+	RT005 += "                     THEN '22' "
+	RT005 += "                     ELSE '  ' "
 	RT005 += "                 END RAIZCLVL, "
 	RT005 += "                 SUM(VALOR) * (-1) "
 	RT005 += "          FROM VW_SAP_CML_MOVDEVOLUCOES "
@@ -656,11 +660,13 @@ Static Function RptrDetail()
 	RT005 += "      ORCAREC "
 	RT005 += "      AS (SELECT ZBH_MARCA MARCA, "
 	RT005 += "                 CASE "
-	RT005 += "                     WHEN ZBH_MARCA = '1302' "
+	RT005 += "                     WHEN ZBH_MARCA IN('1302','1410') "
 	RT005 += "                     THEN '23' "
 	RT005 += "                     WHEN ZBH_MARCA = '0101' "
 	RT005 += "                     THEN '21' "
-	RT005 += "                     ELSE '22' "
+	RT005 += "                     WHEN ZBH_MARCA = '0501' "
+	RT005 += "                     THEN '22' "
+	RT005 += "                     ELSE '  ' "
 	RT005 += "                 END RAIZCLVL, "
 	RT005 += "                 ZBH_CANALD CANALD, "
 	RT005 += "                 ZBH_ANOREF + ZBH_PERIOD + '01' TEMPO, "

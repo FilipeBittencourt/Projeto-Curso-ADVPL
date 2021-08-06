@@ -415,11 +415,14 @@ User Function MT103NFE()
 				__PLiqui := aInfOri[17]
 
 				//Define o TES
-				kjTES := "0A2"
+				If(cEmpAnt != '14')
+					kjTES := "0A2"
+				EndIf
+				
 				If Alltrim(aInfOri[15]) == 'B'
 					kjTES := '0A5'
 				Else
-					If zp_Empr == '01' .or. zp_Empr == '05'
+					If (zp_Empr == '01' .or. zp_Empr == '05') .And. cEmpAnt != '14'
 						kjTES := '0A2'
 						If cEmpAnt = '05'
 							kjTES := '2A3'
@@ -439,8 +442,8 @@ User Function MT103NFE()
 						kjTES := '0A4'
 					ElseIf zp_Empr == '13' .and. Alltrim(aInfOri[15]) == 'A'
 						kjTES := '1C6'
-					ElseIf cEmpAnt == '14' .and. zp_Empr == '01'
-						kjTES := '001'
+					// ElseIf cEmpAnt == '14' .and. zp_Empr == '01'
+					// 	kjTES := '001'
 					EndIf
 				EndIf
 

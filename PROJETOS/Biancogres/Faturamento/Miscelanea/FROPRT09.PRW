@@ -13,7 +13,7 @@
 
 User Function FROPRT09()
 
-	Local xv_Emps    := U_BAGtEmpr("01_05_13")
+	Local xv_Emps    := U_BAGtEmpr("01_05_13_14")
 	Local nI
 
 	For nI := 1 to Len(xv_Emps)
@@ -32,6 +32,7 @@ Static Function ProcRT09()
 	Local aDadRes01 := {}
 	Local aDadRes05 := {}
 	Local aDadRes13 := {}
+	Local aDadRes14 := {}	
 	Local aAux
 
 	Private cAliasTmp
@@ -51,7 +52,7 @@ Static Function ProcRT09()
 		join %TABLE:ZZ7% ZZ7 on ZZ7_COD = B1_YLINHA and ZZ7_LINSEQ = B1_YLINSEQ
 		
 		LEFT JOIN %TABLE:SC5% SC5 with(nolock) ON (SC0.C0_YPEDIDO	=  SC5.C5_NUM	AND	SC0.C0_FILIAL = SC5.C5_FILIAL		AND	SC5.D_E_L_E_T_ = '') 
-		LEFT JOIN SC5070 SC5_7 with(nolock) ON (SC0.C0_YPEDIDO	=  SC5_7.C5_YPEDORI	AND	SC0.C0_FILIAL = SC5_7.C5_FILIAL	AND	SC5_7.D_E_L_E_T_ = '' AND SC5_7.C5_YEMPPED = '01' AND SC0.C0_YPEDIDO <> '')
+		LEFT JOIN SC5070 SC5_7 with(nolock) ON (SC0.C0_YPEDIDO	=  SC5_7.C5_YPEDORI	AND	SC0.C0_FILIAL = SC5_7.C5_FILIAL	AND	SC5_7.D_E_L_E_T_ = '' AND SC5_7.C5_YEMPPED = %EXP:cEmpAnt% AND SC0.C0_YPEDIDO <> '')
 		
 		LEFT JOIN SA1010 SA1_1 with(nolock) ON (SC5_7.C5_CLIENTE		=  SA1_1.A1_COD		AND SC5_7.C5_LOJACLI	= SA1_1.A1_LOJA	AND SA1_1.D_E_L_E_T_ = '')
 		LEFT JOIN SA1010 SA1_2 with(nolock) ON (SC5.C5_CLIENTE		=  SA1_2.A1_COD		AND SC5.C5_LOJACLI		= SA1_2.A1_LOJA	AND SA1_2.D_E_L_E_T_ = '')
@@ -93,6 +94,8 @@ Static Function ProcRT09()
 			AAdd(aDadRes01,aAux)         
 		ElseIf (cAliasTmp)->EMPRESA == "1399"
 			AAdd(aDadRes13,aAux)
+		ElseIf (cAliasTmp)->EMPRESA == "1302"
+			AAdd(aDadRes14,aAux)			
 		Else
 			AAdd(aDadRes05,aAux)
 		EndIf
@@ -114,6 +117,10 @@ Static Function ProcRT09()
 	If Len(aDadRes13) > 0
 		MailProc(aDadRes13, "13")
 	EndIf
+
+	If Len(aDadRes14) > 0
+		MailProc(aDadRes14, "14")
+	EndIf	
 
 Return()
 

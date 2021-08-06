@@ -9,13 +9,7 @@
 @type function
 /*/
 User Function CT105LOK()
-	if (.f.)
-		CT105LOK()
-	endif
-return(.T.)
-
-static function CT105LOK()
-
+	
 	Local aArea 	:= GetArea()
 	Local aAreaCT1 	:= CT1->(GetArea())
 	Local lOK := .T.

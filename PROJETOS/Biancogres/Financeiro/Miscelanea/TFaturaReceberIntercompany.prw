@@ -101,7 +101,7 @@ Method FaturaReceberDestino(nSumDay) Class TFaturaReceberIntercompany
 	Local cLoja_	:= If(MV_PAR01 == 1, cLoja, cLojaP)
 	Local cFat		:= ""
 
-	Default nSumDay	:= If(IsInCallStack("U_BAF042"), 0, 0)
+	Default nSumDay	:= If(IsInCallStack("U_BAF042") .Or. IsInCallStack("U_BAF042FD"), 0, 0)
 	
 	::oEmpresa := TLoadEmpresa():New()
 	

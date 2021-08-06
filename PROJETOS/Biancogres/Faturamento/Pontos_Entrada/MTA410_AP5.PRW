@@ -191,7 +191,7 @@ Static Function MTA410()
 		EndIf
 	EndIf
 
-	If cEmpAnt $ ("01_05_13")
+	If cEmpAnt $ ("01_05_13_14")
 		If Alltrim(M->C5_CLIENTE) == "010064"
 			If !Empty(Alltrim(M->C5_TRANSP)) .Or. !Alltrim(M->C5_TPFRETE) == "S"
 				Msgbox("O campo Transportadora deve estar vazio e o campo Tipo Frete preenchido com 'S'!","MTA410","STOP")
@@ -201,7 +201,7 @@ Static Function MTA410()
 	EndIF
 
 	//Fernando/Facile em 17/10/2014 - Projeto Acordo de Objetivos
-	If cEmpAnt $ ("01_05_07_13")
+	If cEmpAnt $ ("01_05_07_13_14")
 		If Alltrim(M->C5_YITEMCT) == "I0201" .And. Empty(M->C5_YNUMSI)
 			Msgbox("O campo 'Numero SI' deve se preenchido para pedidos de Acordo de Objetivos!","MTA410","STOP")
 			Return(.F.)
@@ -210,7 +210,7 @@ Static Function MTA410()
 
 
 	//Fernando/Facile em 25/07/2016 - Projeto Contratos de Verba
-	If cEmpAnt $ ("01_05_07_13")
+	If cEmpAnt $ ("01_05_07_13_14")
 
 		If SC5->(FieldPos("C5_YCTRVER")) > 0
 
@@ -258,7 +258,7 @@ Static Function MTA410()
 	//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 	//Obriga digitacao dos campos Cliente/Loja Origem para vendas LM
 	//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-	If cEmpAnt $ ("01_05_13") .And. Alltrim(M->C5_CLIENTE) == "010064" .And. Alltrim(M->C5_TIPO) == "N" .And. (Empty(Alltrim(M->C5_YCLIORI)) .Or. Empty(Alltrim(M->C5_YLOJORI)))
+	If cEmpAnt $ ("01_05_13_14") .And. Alltrim(M->C5_CLIENTE) == "010064" .And. Alltrim(M->C5_TIPO) == "N" .And. (Empty(Alltrim(M->C5_YCLIORI)) .Or. Empty(Alltrim(M->C5_YLOJORI)))
 		Msgbox("Vendas para empresa LM, é necessário informar os campos Cliente/Loja Origem!","MTA410","STOP")
 		Return(.F.)
 	EndIf
@@ -266,7 +266,7 @@ Static Function MTA410()
 	//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 	//Não permite digitação dos campos Cliente/Loja Origem para vendas que não sejam LM
 	//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-	If cEmpAnt $ ("01_05") .And. !(Alltrim(M->C5_CLIENTE) $ "010064_008615") .And. Alltrim(M->C5_TIPO) == "N" .And. (!Empty(Alltrim(M->C5_YCLIORI)) .Or. !Empty(Alltrim(M->C5_YLOJORI)))
+	If cEmpAnt $ ("01_05_14") .And. !(Alltrim(M->C5_CLIENTE) $ "010064_008615") .And. Alltrim(M->C5_TIPO) == "N" .And. (!Empty(Alltrim(M->C5_YCLIORI)) .Or. !Empty(Alltrim(M->C5_YLOJORI)))
 		Msgbox("Os campos Cliente/Loja Origem devem ser preenchidos apenas para vendas para as empresas LM/VITCER!","MTA410","STOP")
 		Return(.F.)
 	EndIf
@@ -458,9 +458,11 @@ Static Function MTA410()
 	//-------------------------------------------------------------------------------------
 	//(Thiago Dantas - 08/04/2014) -> Verifca Total da comissão <-
 	//-------------------------------------------------------------------------------------
-	nTotComiss := M->C5_COMIS1 + M->C5_COMIS2 +  M->C5_COMIS3 + M->C5_COMIS4 + M->C5_COMIS5
+	If (cEmpAnt <> '14')
+		nTotComiss := M->C5_COMIS1 + M->C5_COMIS2 +  M->C5_COMIS3 + M->C5_COMIS4 + M->C5_COMIS5
+	EndIf
 
-	If (cEmpAnt $ '01_05_07_13')
+	If (cEmpAnt $ '01_05_07_13_14')
 
 		cAuxMsg := "Não é possível gravar o pedido pois Comissão excedeu "
 		lExcedVlr := .F.
@@ -507,7 +509,7 @@ Static Function MTA410()
 	//GRAVA COMISSAO ZERO E VEND1 999999 PARA PEDIDOS DE VENDA DA LM
 	//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 	//If Alltrim(cempant) == "07"
-	If Alltrim(cempant) $ "01_05_13" .And. M->C5_CLIENTE == "010064"
+	If Alltrim(cempant) $ "01_05_13_14" .And. M->C5_CLIENTE == "010064"
 		M->C5_VEND1		:= "999999"
 		M->C5_VEND2		:= ""
 		M->C5_VEND3		:= ""
@@ -717,10 +719,10 @@ Static Function MTA410()
 	EndIf
 
 	//Conforme solicitação da Tatiane/Incesa
-	If Alltrim(M->C5_CONDPAG) == "145" .And. !cEmpAnt $ "01_13"
+	If Alltrim(M->C5_CONDPAG) == "145" .And. !cEmpAnt $ "01_13_14"
 		MsgBox("Está condição de pagamento só pode ser utilizada na Empresa Biancogres!.","MTA410","STOP")
 		Return(.F.)
-	ElseIf Alltrim(M->C5_CONDPAG) == "945" .And. !cEmpAnt $ "05_13"
+	ElseIf Alltrim(M->C5_CONDPAG) == "945" .And. !cEmpAnt $ "05_13_14"
 		MsgBox("Está condição de pagamento só pode ser utilizada na Empresa Incesa Revestimentos!.","MTA410","STOP")
 		Return(.F.)
 	EndIf
@@ -1068,7 +1070,12 @@ User Function fValPed(lSaldo,lAtuImp)
 				nQtdVen	:= Gdfieldget("C6_QTDVEN",I)
 
 				If Alltrim(cBlqRes) <> "R" .And. nQtdVen-nQtdEnt > 0
-					nValPed += Round((nQtdVen-nQtdEnt)/nQtdVen*Gdfieldget("C6_YVLIMP",I),2)
+					//Ticket 29806
+					If(AllTrim(M->C5_CLIENTE) == "017151" .And. Alltrim(M->C5_YSUBTP) == 'FE')
+						nValPed += Round((nQtdVen-nQtdEnt)/nQtdVen*IIF(Gdfieldget("C6_YVLIMP",I) != 0, Gdfieldget("C6_YVLIMP",I), 1),2)
+					else
+						nValPed += Round((nQtdVen-nQtdEnt)/nQtdVen*Gdfieldget("C6_YVLIMP",I),2)
+					EndIf
 				EndIf
 			EndIf
 		EndIf

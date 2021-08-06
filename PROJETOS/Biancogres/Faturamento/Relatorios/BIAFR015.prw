@@ -14,7 +14,7 @@ User Function BIAFR015()
 Local oReport
 Local oParam := TParBIAFR015():New()
 
-	If cEmpAnt $ "01/05"
+	If cEmpAnt $ "01/05/14"
 	
 		If oParam:Box()
 	
@@ -68,7 +68,7 @@ Local cSQL := ""
 	cSQL += " INNER JOIN "+ RetSQLName("SC6") +" SC6 "
 	cSQL += " ON C5_FILIAL = C6_FILIAL "
 	cSQL += " AND C5_NUM = C6_NUM "
-	cSQL += " INNER JOIN " + If (cEmpAnt == "01", "DADOSEOS", "DADOS_05_EOS") + ".dbo.cep_ctrl_amostra "
+	cSQL += " INNER JOIN " + If ( cEmpAnt == "01", "DADOSEOS", If ( cEmpAnt == "05", "DADOS_05_EOS" , "DADOS_14_EOS") ) + ".dbo.cep_ctrl_amostra "
 	cSQL += " ON C6_YECONAM = cca_codigo COLLATE Latin1_General_BIN "
 	cSQL += " WHERE C5_FILIAL = "+ ValToSQL(xFilial("SC5"))
 	cSQL += " AND C5_EMISSAO BETWEEN "+ ValToSQL(oParam:dDatDe) + " AND " + ValToSQL(oParam:dDatAte)

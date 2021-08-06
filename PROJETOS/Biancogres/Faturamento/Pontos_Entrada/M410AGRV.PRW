@@ -71,33 +71,20 @@ User Function M410AGRV()
 		//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 		//Grava Empresa
 		//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-		If cEmpAnt == "14"
-			M->C5_YEMP	:= "1401"
-		ElseIf cEmpAnt == "13"
-			If M->C5_YLINHA == "4"
-				M->C5_YEMP	:= "1399"
-			ElseIf M->C5_YLINHA == "6"
-				M->C5_YEMP	:= "1302"	
-			Else
-				M->C5_YEMP	:= "1301"
-			EndIf	
-		Else
-			Do Case
-				Case M->C5_YLINHA == "1"
+		Do Case
+			Case M->C5_YLINHA == "1"
 				M->C5_YEMP	:= "0101"
-				Case M->C5_YLINHA == "2"
+			Case M->C5_YLINHA == "2"
 				M->C5_YEMP	:= "0501"
-				Case M->C5_YLINHA == "3"
+			Case M->C5_YLINHA == "3"
 				M->C5_YEMP	:= "0599"
-				Case M->C5_YLINHA == "4"
+			Case M->C5_YLINHA == "4"
 				M->C5_YEMP	:= "1399"
-				Case M->C5_YLINHA == "5"
+			Case M->C5_YLINHA == "5"
 				M->C5_YEMP	:= "0199"
-				Case M->C5_YLINHA == "6"
+			Case M->C5_YLINHA == "6"
 				M->C5_YEMP	:= "1302"
-
-			EndCase
-		EndIf
+		EndCase
 
 		//Forca gravação do Fator Financeiro para empresa Mundi, caso esteja errado.
 		If cEmpAnt == "13" .And. M->C5_CLIENTE == "010064" .And. M->C5_YMAXCND <> 1
@@ -177,6 +164,22 @@ User Function M410AGRV()
 						M->C5_YRESUL2 := "S"
 					EndIf
 				EndIf
+
+			ElseIf cEmpAnt == "13"							//MUNDI
+
+				If 	(M->C5_CLIENTE) $ "010064"
+					M->C5_YRESUL2 := "N"
+				Else
+					M->C5_YRESUL2 := "S"
+				EndIF
+
+			ElseIf cEmpAnt == "14"							//BIANCOGRES VINILICO
+
+				If 	(M->C5_CLIENTE) $ "010064"
+					M->C5_YRESUL2 := "N"
+				Else
+					M->C5_YRESUL2 := "S"
+				EndIF
 
 			Else
 
@@ -380,7 +383,7 @@ User Function M410AGRV()
 		//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 		//Grava Mensagem Padrao para Vendas LM 
 		//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-		If Alltrim(cempant) $ "01_05_13" .And. M->C5_CLIENTE == "010064" //ALTERAÇÃO EM 26/10/2015 - OS 3844-15
+		If Alltrim(cempant) $ "01_05_13_14" .And. M->C5_CLIENTE == "010064" //ALTERAÇÃO EM 26/10/2015 - OS 3844-15
 
 			If Alltrim(cEmpAnt) == "01" .And. Alltrim(M->C5_YSUBTP) == "N" //Biancogres p/ LM venda Normal
 				M->C5_MENPAD	:= "076"
@@ -390,6 +393,8 @@ User Function M410AGRV()
 				M->C5_MENPAD	:= "078"
 			ElseIf Alltrim(cEmpAnt) == "13" .And. Alltrim(M->C5_YSUBTP) == "A" //Mundi p/ LM venda de Amostra
 				M->C5_MENPAD	:= "001"    
+			ElseIf Alltrim(cEmpAnt) == "14" .And. Alltrim(M->C5_YSUBTP) == "A" //Mundi p/ LM venda de Amostra
+				M->C5_MENPAD	:= "" //DEFINIR MENSAGEM PADRAO PARA VINILICO  
 			EndIf
 
 			//ESTA OPCAO FOI DESATIVADA DO PEDIDO DE VENDA E SERA UTILIZADA NO SF2460I
@@ -600,7 +605,7 @@ User Function M410AGRV()
 		//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 		//GRAVA COMISSAO ZERO E VEND1 999999 PARA PEDIDOS DE VENDA DA LM PARA FARBICA
 		//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-		If Alltrim(cempant) $ "01_05_13" .And. 	M->C5_CLIENTE == "010064"
+		If Alltrim(cempant) $ "01_05_13_14" .And. 	M->C5_CLIENTE == "010064"
 			M->C5_VEND1		:= "999999"
 			M->C5_VEND2		:= ""
 			M->C5_VEND3		:= ""
@@ -667,7 +672,7 @@ User Function M410AGRV()
 
 					//Ajusta Itens Comissão
 					//Grava comissao zero para os Pedidos de Venda LM
-					If Alltrim(cempant) $ "01_05_13" .And. 	M->C5_CLIENTE == "010064" 
+					If Alltrim(cempant) $ "01_05_13_14" .And. M->C5_CLIENTE == "010064" 
 
 						ConOut("M410AGRV => ACERTA COMISSAO CLIENTE LM")
 
@@ -763,12 +768,12 @@ User Function M410AGRV()
 	EndIf
 
 	//Exclusao de pedido
-	If nOpcao == 3 .And. !Empty(M->C5_YNUMSI) .And. !(AllTrim(CEMPANT) $ '14')
+	If nOpcao == 3 .And. !Empty(M->C5_YNUMSI) 
 		//Verificar se existe baixa de AI do pedido e excluir a baixa
 		U_AIEXCBX(M->C5_NUM, M->C5_YLINHA, M->C5_YNUMSI, M->C5_CLIENTE, M->C5_YEMPPED)
 	EndIf
 
-	If SC6->(FieldPos("C6_YDAI")) > 0 .And. nOpcao == 3 .And. !Empty(M->C5_YNOUTAI) .And. !(AllTrim(CEMPANT) $ '14')
+	If SC6->(FieldPos("C6_YDAI")) > 0 .And. nOpcao == 3 .And. !Empty(M->C5_YNOUTAI)
 		//Verificar se existe baixa de AI do pedido e excluir a baixa
 		U_AIEXCBX(M->C5_NUM, M->C5_YLINHA, M->C5_YNOUTAI, M->C5_CLIENTE, M->C5_YEMPPED)
 	EndIf

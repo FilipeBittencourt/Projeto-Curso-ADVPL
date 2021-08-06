@@ -71,10 +71,16 @@ User Function MT116TOK()
 			RetIndex("SB1")
 		EndIf
 	Next
-	
+
 	// Por Marcos Alberto Soprani em 19/07/12 conforme OS Effettivo 1327-12.
 	// Esta regra deve andar em conjunto com o ponto de entrada MT100TOK
-	If Alltrim(cEspecie) $ "SPED/CTE/CTEOS" .and. Empty(M->F1_CHVNFE)
+	//If Alltrim(cEspecie) $ "SPED/CTE/CTEOS" .and. Empty(M->F1_CHVNFE) .and. Empty(aNFEDanfe[13])
+	xfChvNfe := M->F1_CHVNFE
+	If Empty(xfChvNfe)
+		xfChvNfe := aNFEDanfe[13]
+	EndIf
+
+	If Alltrim(cEspecie) $ "SPED/CTE/CTEOS" .and. Empty(xfChvNfe)
 
 		MsgBox("Se a ESPECIE for SPED,CTE ou CTEOS a chave deverá ser informada.", "MT116TOK", "STOP")
 		xfRet := .F.
@@ -85,7 +91,7 @@ User Function MT116TOK()
 			TX001 := " SELECT COUNT(*) CONTAD
 			TX001 += "   FROM " + RetSqlName("SF1")
 			TX001 += "  WHERE F1_FILIAL = '"+xFilial("SF1")+"'
-			TX001 += "    AND F1_CHVNFE = '"+M->F1_CHVNFE+"'
+			TX001 += "    AND F1_CHVNFE = '"+xfChvNfe+"'
 			TX001 += "    AND D_E_L_E_T_ = ' '
 			TCQUERY TX001 ALIAS "TX01" NEW
 			dbSelectArea("TX01")
@@ -105,14 +111,14 @@ User Function MT116TOK()
 					SA2->(dbSeek(xFilial("SA2") + ca100For + cLoja))
 					xfCnpj := SA2->A2_CGC
 				EndIf
-				If Substr(M->F1_CHVNFE,7,14) <> xfCnpj
+				If Substr(xfChvNfe,7,14) <> xfCnpj
 					MsgBox("A chave eletrônica desta nota não pertence ao fornecedor corrente. Favor verificar!","MT116TOK", "STOP")
 					xfRet := .F.
 				EndIf
 			EndIf
 		EndIf
 		// Implementado em 19/07/12 por Marcos Alberto Soprani ni intuito de diminuir um pouco a quantidade de erro de usuário
-		If !Empty(M->F1_CHVNFE) .and. !Alltrim(cEspecie) $ "SPED/CTE/CTEOS"
+		If !Empty(xfChvNfe) .and. !Alltrim(cEspecie) $ "SPED/CTE/CTEOS"
 			MsgBox("O Campo Chave Eletrônica foi informado portanto é necessário informar o ESPECIE como SPED,CTE ou CTEOS","MT116TOK", "STOP")
 			xfRet := .F.
 		EndIf
@@ -125,9 +131,9 @@ User Function MT116TOK()
 		MsgBox("Impossível prosseguir, pois este movimento interfere no fechamento de custo!!! Favor verificar com a contabilidade!!!","MT116TOK", "STOP")
 		xfRet := .F.
 	EndIf
-	
+
 	If (!IsInCallStack("U_PNFM0003")) 
 		U_BIAF101()
 	EndIf
-	
+
 Return(xfRet)

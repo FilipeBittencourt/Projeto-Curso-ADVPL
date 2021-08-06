@@ -17,7 +17,7 @@ User Function BIA230()
 	Private cPerg 		:= "BIA230"
 	Private cQry 		:= GetNextAlias()
 
-	If !Alltrim(cEmpAnt) $ "01_05_13"
+	If !Alltrim(cEmpAnt) $ "01_05_13_14"
 		MsgAlert('Este relatório somente poderá ser emitido nas empresas Biancogres, Incesa e Mundi')
 		Return
 	EndIf
@@ -451,6 +451,8 @@ Static Function InfGalpao(cCarga, cEmp)
 		cBanco		:= "DADOS_05_EOS"
 	ElseIf(AllTrim(cEmp) == '13')
 		cBanco		:= "DADOS_13_EOS"
+	ElseIf(AllTrim(cEmp) == '14')
+		cBanco		:= "DADOS_14_EOS"			
 	EndIf
 
 
@@ -493,6 +495,8 @@ Static Function ListGalpao()
 		cBanco		:= "DADOS_05_EOS"
 	ElseIf(AllTrim(cEmpAnt) == '13')
 		cBanco		:= "DADOS_13_EOS"
+	ElseIf(AllTrim(cEmpAnt) == '14')
+		cBanco		:= "DADOS_14_EOS"		
 	EndIf
 
 	cQuery := "SELECT DISTINCT DESCRICAO=dsc_local FROM ["+cBanco+"].[dbo].[cep_cad_local] (nolock)  ORDER BY 1"

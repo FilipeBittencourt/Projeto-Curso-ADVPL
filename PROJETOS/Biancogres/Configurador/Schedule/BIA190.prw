@@ -222,15 +222,13 @@ Static Function GeraCab()
 	C_HTML += '<body> ' 
 
 	//cabecalho	
-	C_HTML += '<table width="900" border="0" bgcolor="black"> '
+	C_HTML += '<table width="900" border="0" bgcolor="black" style="color:white"> '
 	C_HTML += '  <tr> '                                        
-	C_HTML += '<font face="Arial" color="white"> ' 	
 	C_HTML += '    <th scope="col"><div align="center">WORKFLOW DIÁRIO DE ACOMPANHAMENTO DOS ITENS DE PEDIDOS - GERADO EM: '+ SUBSTR(dToS(dDatabase-1),7,2)+"/"+SUBSTR(dToS(dDatabase-1),5,2)+"/"+SUBSTR(dToS(dDatabase-1),1,4) +'  <BR>'				
-	C_HTML += '</font>'            
 	C_HTML += '</tr> '             
 	C_HTML += '</table> '
 
-	C_HTML += '<table width="900" border="0" bgcolor="#FFFFFF> '
+	C_HTML += '<table width="900" border="0" bgcolor="#FFFFFF style="color:black"> '
 	C_HTML += '<font face="Arial" color="black"> '                          
 	C_HTML += '<tr align=center> '
 	C_HTML += '<br> '
@@ -274,9 +272,7 @@ Static Function GeraCabItm(cSituaca)
 
 	//cabecalho dos itens do pedido 
 	C_HTML += '<table width="900" border="0" bgcolor="black"> '
-	C_HTML += '  <tr> '                                        
-	C_HTML += '<font face="Arial" color="white"> '		
-	C_HTML += '</font>'            
+	C_HTML += '  <tr> '                                              
 	C_HTML += '</tr> '             
 	C_HTML += '</table> ' 
 
@@ -289,7 +285,7 @@ Static Function GeraCabItm(cSituaca)
 
 	If (cSituaca == "1") // DO DIA
 
-		C_HTML += '<table width="900" border="0" bgcolor="#00BB73"> '
+		C_HTML += '<table width="900" border="0" bgcolor="#00BB73" style="color:black"> '
 		C_HTML += '<font face="Arial" color="black"> '                          
 		C_HTML += '<tr> ' 	
 		C_HTML += '    <th width="900" scope="col">ITENS EMPENHADOS NO DIA - PROVIDENCIAR CARREGAMENTO IMEDIATO </th> '
@@ -300,7 +296,8 @@ Static Function GeraCabItm(cSituaca)
 		C_HTML += '<table width="900" border="0" bgcolor="#FAD400"> '
 		C_HTML += '<font face="Arial" color="black"> '                          
 		C_HTML += '<tr> ' 		
-		C_HTML += '    <th width="900" scope="col">PEDIDOS EMPENHADOS COM MAIS DE '+ AllTrim(Str(nPrzCancA)) +' DIAS SERÃO AUTOMATICAMENTE CANCELADOS (PRODUTO CLASSE A)</th> '		
+		C_HTML += '    <th width="900" scope="col">PEDIDOS COM ATÉ '+ AllTrim(Str(nPrzCancA)) +' DIAS DE EMPENHO (PRODUTO CLASSE A)</th> '		
+		// C_HTML += '    <th width="900" scope="col">PEDIDOS EMPENHADOS COM MAIS DE '+ AllTrim(Str(nPrzCancA)) +' DIAS SERÃO AUTOMATICAMENTE CANCELADOS (PRODUTO CLASSE A)</th> '		
 
 		//CANCELAMENTO PRODUTO A	
 	ElseIf (cSituaca == "3")
@@ -308,7 +305,8 @@ Static Function GeraCabItm(cSituaca)
 		C_HTML += '<table width="900" border="0" bgcolor="#FA0400"> '
 		C_HTML += '<font face="Arial" color="black"> '                          
 		C_HTML += '<tr> ' 
-		C_HTML += '    <th width="900" scope="col">PEDIDOS PARA SEREM CANCELADOS POR FALTA DE CARREGAMENTO (PRODUTO CLASSE A)</th> '
+		C_HTML += '    <th width="900" scope="col"> PEDIDOS ACIMA DE ' + AllTrim(Str(nPrzCancA)) + ' DIAS QUE SERÃO CANCELADOS POR FALTA DE CARREGAMENTO (PRODUTO CLASSE A)</th> '
+		// C_HTML += '    <th width="900" scope="col">PEDIDOS PARA SEREM CANCELADOS POR FALTA DE CARREGAMENTO (PRODUTO CLASSE A)</th> '
 
 		//AVISO DE CANCELAMENTO PRODUTO B
 	ElseIf (cSituaca == "4") 
@@ -316,7 +314,8 @@ Static Function GeraCabItm(cSituaca)
 		C_HTML += '<table width="900" border="0" bgcolor="#FAD400"> '
 		C_HTML += '<font face="Arial" color="black"> '                          
 		C_HTML += '<tr> ' 		
-		C_HTML += '    <th width="900" scope="col">PEDIDOS EMPENHADOS COM MAIS DE '+ AllTrim(Str(nPrzCancB)) +' DIAS SERÃO AUTOMATICAMENTE CANCELADOS (PRODUTO CLASSE B) </th> '		
+		C_HTML += '    <th width="900" scope="col">PEDIDOS COM ATÉ '+ AllTrim(Str(nPrzCancB)) +' DIAS DE EMPENHO (PRODUTO CLASSE B) </th> '		
+		// C_HTML += '    <th width="900" scope="col">PEDIDOS EMPENHADOS COM MAIS DE '+ AllTrim(Str(nPrzCancB)) +' DIAS SERÃO AUTOMATICAMENTE CANCELADOS (PRODUTO CLASSE B) </th> '		
 
 		//CANCELAMENTO PRODUTO B	
 	ElseIf (cSituaca == "5")
@@ -324,7 +323,8 @@ Static Function GeraCabItm(cSituaca)
 		C_HTML += '<table width="900" border="0" bgcolor="#FA0400"> '
 		C_HTML += '<font face="Arial" color="black"> '                          
 		C_HTML += '<tr> ' 
-		C_HTML += '    <th width="900" scope="col">PEDIDOS PARA SEREM CANCELADOS POR FALTA DE CARREGAMENTO (PRODUTO CLASSE B) </th> '
+		C_HTML += '    <th width="900" scope="col">PEDIDOS ACIMA DE ' + AllTrim(Str(nPrzCancB)) + ' DIAS QUE SERÃO CANCELADOS POR FALTA DE CARREGAMENTO (PRODUTO CLASSE B) </th> '
+		// C_HTML += '    <th width="900" scope="col">PEDIDOS PARA SEREM CANCELADOS POR FALTA DE CARREGAMENTO (PRODUTO CLASSE B) </th> '
 	Else
 
 		C_HTML += '<table width="900" border="0" bgcolor="#14A9C7"> '

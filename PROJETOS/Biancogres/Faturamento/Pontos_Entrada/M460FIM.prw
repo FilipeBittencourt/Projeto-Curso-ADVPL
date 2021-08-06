@@ -23,10 +23,13 @@ User Function M460FIM()
 	Local cFilOri 		:= xFilial("SF2")
 	Local cSerieOri 	:= SF2->F2_SERIE
 	Local cDocOri 		:= SF2->F2_DOC
-	Local cClienteOri	:= SF2->F2_CLIENTE
+	Local cCliOri		:= SF2->F2_CLIENTE
 	Local cLojaOri 		:= SF2->F2_LOJA
 	Local oObj460FIM	:= BIAF029():New()
 	Local oObjFatPart	:= TWFaturamentoemPartes():New(.F.)
+	Local cQrySC9		:= GetNextAlias()
+	Local cFornece		:= ""
+
 
 	//Variaveis de Posicionamento
 	//--------------------------------
@@ -209,49 +212,98 @@ User Function M460FIM()
 	//EndIf	
 
 
-	If AllTrim(CEMPANT) == "07"
+	If AllTrim(cEmpAnt) == "07"
 
-		CSQL := " with tab_SE2 as "
-		CSQL += " ( "
-		CSQL += " select distinct RECSE2 = SE2.R_E_C_N_O_, E2_FILIAL,E2_PREFIXO,E2_NUM,E2_PARCELA, CHVSE1 = (E1_FILIAL+E1_PREFIXO+E1_NUM+E1_PARCELA+E1_TIPO) "
-		CSQL += " from SC9070 SC9 "
-		CSQL += " join SE1070 SE1 on E1_FILIAL = C9_FILIAL and E1_PREFIXO = C9_SERIENF and E1_NUM = C9_NFISCAL "
-		CSQL += " join SE2070 SE2 on " 
-		CSQL += " 	E2_FILIAL = '"+cFilOri+"' "
-		CSQL += " 	and E2_PREFIXO = SUBSTRING(C9_BLINF,12,3) "
-		CSQL += " 	and E2_NUM = SUBSTRING(C9_BLINF,3,9) "
-		CSQL += " 	and E2_PARCELA = case when exists (select 1 from SE1070 X " 
-		CSQL += " 										where X.E1_FILIAL	= '"+cFilOri+"' "
-		CSQL += " 										and X.E1_NUM 		= '"+cDocOri+"' "
-		CSQL += " 										and X.E1_PREFIXO 	= '"+cSerieOri+"' "
-		CSQL += " 										and X.E1_TIPO 		= 'NF' "
-		CSQL += " 										and X.E1_NATUREZ 	= '1230') " 
-		CSQL += " 								then " 
-		CSQL += " 									(select top 1 E2_PARCELA from SE2070 X " 
-		CSQL += " 													where X.E2_FILIAL = '"+cFilOri+"' "
-		CSQL += " 													and X.E2_PREFIXO = SUBSTRING(C9_BLINF,12,3) "
-		CSQL += " 													and X.E2_NUM = SUBSTRING(C9_BLINF,3,9) "
-		CSQL += " 													and X.E2_TIPO 		= 'NF' "
-		CSQL += " 													and X.E2_PARCELA < SE1.E1_PARCELA "
-		CSQL += " 													order by X.E2_PARCELA desc) "
-		CSQL += " 								else SE1.E1_PARCELA "
-		CSQL += " 								end "
-		CSQL += " where " 
-		CSQL += " C9_FILIAL = '"+cFilOri+"' "
-		CSQL += " and C9_SERIENF = '"+cSerieOri+"' "
-		CSQL += " and C9_NFISCAL = '"+cDocOri+"' "
-		CSQL += " and E1_TIPO = 'NF' "
-		CSQL += " and E1_NATUREZ 	<> '1230' "
-		CSQL += " and SC9.D_E_L_E_T_='' "
-		CSQL += " and SE1.D_E_L_E_T_='' "
-		CSQL += " and SE2.D_E_L_E_T_='' "
-		CSQL += " ) "
-		CSQL += " update SE2070 "
-		CSQL += " set E2_YCHVSE1 = T.CHVSE1 "
-		CSQL += " from SE2070 SE2 "
-		CSQL += " join tab_SE2 T on T.RECSE2 = SE2.R_E_C_N_O_ "
+		//Posiciona no SC9 Faturado para buscar as informações da NF de Origem
+		cSQL :=""
+		CSQL += "SELECT C9_BLINF, SUBSTRING(C9_BLINF,1,2) EMPRESA, SUBSTRING(C9_BLINF,12,3) PREFIXO, SUBSTRING(C9_BLINF,3,9) NOTA, SUBSTRING(C9_BLINF,15,6) PEDIDO, SUBSTRING(C9_BLINF,21,2) ITEM, SUBSTRING(C9_BLINF,23,2) SEQ "
+		CSQL += "FROM SC9070 "
+		CSQL += "WHERE C9_FILIAL = '"+cFilOri+"' AND C9_NFISCAL = '"+cDocOri+"' AND C9_SERIENF = '"+cSerieOri+"' AND C9_CLIENTE = '"+cCliOri+"' AND C9_LOJA = '"+cLojaOri+"' AND C9_BLINF <> '' AND D_E_L_E_T_ = '' "
+		TcQuery cSQL New Alias (cQrySC9)
 
-		TCSQLExec(CSQL)
+		If !(cQrySC9)->(Eof())
+
+			If (cQrySC9)->EMPRESA == "01"
+				cFornece := "000534"
+			ElseIf (cQrySC9)->EMPRESA == "05"
+				cFornece := "002912"
+			ElseIf (cQrySC9)->EMPRESA == "13"
+				cFornece := "004695"
+			ElseIf (cQrySC9)->EMPRESA == "14"
+				cFornece := "003721"
+			Else
+				cFornece := "000534"				
+			EndIf	
+
+			CSQL := ""
+			CSQL += " with TAB_SE2 as "
+			CSQL += " ( "
+			CSQL += " SELECT DISTINCT RECSE2 = SE2.R_E_C_N_O_, E2_FILIAL,E2_PREFIXO,E2_NUM,E2_PARCELA, CHVSE1 = (E1_FILIAL+E1_PREFIXO+E1_NUM+E1_PARCELA+E1_TIPO) "
+			CSQL += " from SE1070 SE1 INNER JOIN SE2070 SE2 on " 
+			CSQL += " 		E2_FILIAL 	= '"+cFilOri+"' "
+			CSQL += " 	and E2_PREFIXO	= '"+(cQrySC9)->PREFIXO+"' "
+			CSQL += " 	and E2_NUM 		= '"+(cQrySC9)->NOTA+"' "
+			CSQL += " 	and E2_FORNECE	= '"+cFornece+"' "
+			CSQL += " 	and E2_PARCELA = case "	
+			CSQL += "							when (select COUNT(*) QUANT from SE1070 X " 
+			CSQL += " 										where X.E1_FILIAL	= '"+cFilOri+"' "
+			CSQL += " 										and X.E1_NUM 		= '"+cDocOri+"' "
+			CSQL += " 										and X.E1_PREFIXO 	= '"+cSerieOri+"' "
+			CSQL += " 										and X.E1_TIPO 		= 'NF' "
+			CSQL += " 										and X.E1_NATUREZ 	<> '1230') = 1  OR "
+			CSQL += "								(select COUNT(*) QUANT from SE2070 X " 
+			CSQL += " 										where X.E2_FILIAL 	= '"+cFilOri+"' "
+			CSQL += " 										and X.E2_PREFIXO 	= '"+(cQrySC9)->PREFIXO+"' "
+			CSQL += " 										and X.E2_NUM 		= '"+(cQrySC9)->NOTA+"' "
+			CSQL += "										and X.E2_FORNECE	= '"+cFornece+"' "
+			CSQL += " 										and X.E2_TIPO 		= 'NF' ) = 1 "
+			CSQL += "								then  '' "  			
+			CSQL += " 							when (select COUNT(*) QUANT from SE1070 X " 
+			CSQL += " 										where X.E1_FILIAL	= '"+cFilOri+"' "
+			CSQL += " 										and X.E1_NUM 		= '"+cDocOri+"' "
+			CSQL += " 										and X.E1_PREFIXO 	= '"+cSerieOri+"' "
+			CSQL += " 										and X.E1_TIPO 		= 'NF' "
+			CSQL += " 										and X.E1_NATUREZ 	= '1230') = 1 " 
+			CSQL += " 								then (select top 1 E2_PARCELA from SE2070 X " 
+			CSQL += " 													where X.E2_FILIAL 	= '"+cFilOri+"' "
+			CSQL += " 													and X.E2_PREFIXO 	= '"+(cQrySC9)->PREFIXO+"' "
+			CSQL += " 													and X.E2_NUM 		= '"+(cQrySC9)->NOTA+"' "
+			CSQL += "													and X.E2_FORNECE	= '"+cFornece+"' "
+			CSQL += " 													and X.E2_TIPO 		= 'NF' "
+			CSQL += " 													and X.E2_PARCELA 	< SE1.E1_PARCELA "
+			CSQL += " 													order by X.E2_PARCELA desc) "
+			CSQL += " 							when (select COUNT(*) QUANT from SE1070 X " 
+			CSQL += " 										where X.E1_FILIAL	= '"+cFilOri+"' "
+			CSQL += " 										and X.E1_NUM 		= '"+cDocOri+"' "
+			CSQL += " 										and X.E1_PREFIXO 	= '"+cSerieOri+"' "
+			CSQL += " 										and X.E1_TIPO 		= 'NF' "
+			CSQL += " 										and X.E1_NATUREZ 	<> '1230') > 1 " 
+			CSQL += " 								then (select top 1 E2_PARCELA from SE2070 X " 
+			CSQL += " 													where X.E2_FILIAL	= '"+cFilOri+"' "
+			CSQL += " 													and X.E2_PREFIXO	= '"+(cQrySC9)->PREFIXO+"' "
+			CSQL += " 													and X.E2_NUM 		= '"+(cQrySC9)->NOTA+"' "
+			CSQL += "													and X.E2_FORNECE	= '"+cFornece+"' "
+			CSQL += " 													and X.E2_TIPO 		= 'NF' "
+			CSQL += " 													and X.E2_PARCELA 	= SE1.E1_PARCELA "
+			CSQL += " 													order by X.E2_PARCELA desc) "
+			CSQL += " 							else SE1.E1_PARCELA "
+			CSQL += " 							end "
+			CSQL += " where " 
+			CSQL += " 	  E1_FILIAL  = '"+cFilOri+"' "
+			CSQL += " and E1_PREFIXO = '"+cSerieOri+"' "
+			CSQL += " and E1_NUM	 = '"+cDocOri+"' "
+			CSQL += " and E1_TIPO 	 = 'NF' "
+			CSQL += " and E1_NATUREZ 	<> '1230' "
+			CSQL += " and SE1.D_E_L_E_T_='' "
+			CSQL += " and SE2.D_E_L_E_T_='' "
+			CSQL += " ) "
+			CSQL += " UPDATE SE2070 SET E2_YCHVSE1 = T.CHVSE1 "
+			CSQL += " FROM SE2070 SE2 INNER JOIN TAB_SE2 T on T.RECSE2 = SE2.R_E_C_N_O_ "
+			TCSQLExec(CSQL)
+
+		EndIf
+
+		(cQrySC9)->(DbCloseArea()) 
 
 	EndIf
 

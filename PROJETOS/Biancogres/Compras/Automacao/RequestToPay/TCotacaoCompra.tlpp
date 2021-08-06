@@ -18,6 +18,7 @@ Class TCotacaoCompra from LongClassName
 	Method ForneceUnico() 
 	
 	Public Method Incluir()
+	Public Method SetItemCotacao()
 	Public Method Atualizar()
 	Public Method Execute()
 	Public Method New() Constructor		
@@ -164,6 +165,28 @@ Method GetItens(cChaveFornece) Class TCotacaoCompra
 	    
 Return aItens
 
+
+Method SetItemCotacao() Class TCotacaoCompra
+	
+	Local cNumSC		:= ''
+	Local cItemSC		:= ''
+	Local nI			:= 0
+	
+	For nI := 1 To ::oObj:oItens:GetCount()
+		cNumSC 	:= ::oObj:oItens:GetItem(nI):cNumSc
+		cItemSc	:= ::oObj:oItens:GetItem(nI):cItemSc 
+		
+		//C8_FILIAL, C8_NUMSC, C8_ITEMSC, R_E_C_N_O_, D_E_L_E_T_	
+		DbSelectArea('SC8')
+		SC8->(DbSetOrder(12))
+		If (SC8->(DbSeek(xFilial('SC8')+cNumSC+cItemSc)))
+			::oObj:oItens:GetItem(nI):cItem := SC8->C8_ITEM
+			Conout('SetItemCotacao: '+ SC8->C8_ITEM)
+		EndIf
+	Next nI
+	
+Return 
+
 //ExecAuto MVC, diferente dos outros
 Method Incluir() Class TCotacaoCompra
 	
@@ -243,6 +266,16 @@ Method Incluir() Class TCotacaoCompra
 			
 			nSC1	:= 1
 			While (!SC1->(Eof()) .And. xFilial('SC1')+cNumSC == SC1->(C1_FILIAL+C1_NUM))
+				
+				DbSelectArea('SB1')
+				SB1->(DbSetOrder(1))
+				SB1->(DbSeek(xFilial('SB1')+SC1->C1_PRODUTO))
+				
+				//desconsiderar produtos que não so do grupo corrente
+				If (Alltrim(SB1->B1_GRUPO) != AllTrim(SBM->BM_GRUPO)) 
+					SC1->(DbSkip())
+					Loop
+				EndIf
 				
 				oModPrd	:= oModel:GetModel('SC1DETAIL')
 				If (nSC1 != 1)//primeira item não precisa adicionar linha no grid
@@ -446,6 +479,7 @@ Method Execute(_oObj, _lNovo) Class TCotacaoCompra
 			::Incluir()//inserir registro da cotação
 			If(::oResult:lOk)
 				If (!Empty(::oObj:cNumero))
+					::SetItemCotacao()
 					::Atualizar() //atualiza os registro inseridos
 					If(!::oResult:lOk)
 						DisarmTransaction()

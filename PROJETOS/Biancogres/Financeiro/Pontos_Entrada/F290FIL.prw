@@ -14,7 +14,8 @@
 
 User Function F290FIL()
 
-	Local cSQL := ""
+	Local cSQL  := ""
+	Local __lOk := .T.
 
 	Private oDlgMvAd
 	Private oButton1
@@ -29,7 +30,9 @@ User Function F290FIL()
 	Private oSay3
 	Private fh_Esc := .F.
 
-	If !IsInCallStack("U_BAF042")
+	If IsInCallStack("U_BAF042") .Or. IsInCallStack("U_BAF042FD")
+		__lOk := .T.
+	Else
 
 		If (AllTrim(FunName()) == 'RPC') .Or. (Upper(AllTrim(FunName())) == 'WFPREPENV') .Or. (Upper(AllTrim(FunName())) == 'FINA373')
 			Return cSQL

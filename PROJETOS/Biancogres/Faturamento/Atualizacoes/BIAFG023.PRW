@@ -17,7 +17,7 @@ User Function BIAFG023()
 
 	If Select("SX6") == 0
 
-		xv_Emps    := U_BAGtEmpr("01_05")
+		xv_Emps    := U_BAGtEmpr("01_05_14")
 
 		For xt	:=	1 to Len(xv_Emps)
 
@@ -70,6 +70,9 @@ Static Function fProcessa(_lJob)
 	ELSEIF cEmpAnt == "05"
 		_cEmpresa := "0501"
 		kt_BsDad	:= "%DADOS_05_EOS%"
+	ELSEIF cEmpAnt == "14"
+		_cEmpresa := "1401"
+		kt_BsDad	:= "%DADOS_14_EOS%"			
 	ELSE
 		//Alterar quando houver outras emnpresas usando o Ecosis
 		Return

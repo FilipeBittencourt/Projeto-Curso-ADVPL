@@ -1316,7 +1316,7 @@ Static Function AtuGalpao(cCarga)
 	Local aLista		:= ""
 	Local nI			:= 0
 
-	If (AllTrim(cEmpAnt) $ '01/05/13')
+	If (AllTrim(cEmpAnt) $ '01/05/13/14')
 
 		If(AllTrim(cEmpAnt) == '01')
 			cBanco		:= "DADOSEOS"
@@ -1324,6 +1324,8 @@ Static Function AtuGalpao(cCarga)
 			cBanco		:= "DADOS_05_EOS"
 		ElseIf(AllTrim(cEmpAnt) == '13')
 			cBanco		:= "DADOS_13_EOS"
+		ElseIf(AllTrim(cEmpAnt) == '14')
+			cBanco		:= "DADOS_14_EOS"			
 		EndIf
 
 

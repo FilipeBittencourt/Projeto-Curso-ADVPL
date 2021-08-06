@@ -13,6 +13,8 @@ para replica da fatura na filial destino.
 
 Class TFaturaPagarIntercompany FROM LongClasName
 
+    Data lFidc
+
     Method New() Constructor
     Method Processa()
 
@@ -20,6 +22,7 @@ EndClass
 
 Method New() Class TFaturaPagarIntercompany
 
+    ::lFidc     := .F.
 
 Return()
 
@@ -33,12 +36,12 @@ Method Processa(cForne, cLojaForne, cNatureza) Class TFaturaPagarIntercompany
     Local cAliasTmp        	:= GetNextAlias()
 
     Local dDataDe			:= CTOD("01/01/2000")
-    Local dDataAte          := dDataBase
+    Local dDataAte          := IIf( ::lFidc, dDataBase - 1, dDataBase )
+    
     Default cForne			:= ""
     Default cLojaForne		:= "" 
     Default cNatureza		:= ""
     
-
     cSQL := " SELECT E2_NUM, E2_PREFIXO, E2_PARCELA, E2_TIPO, " + CRLF
     cSQL += " E2_FORNECE, E2_LOJA, E2_SALDO, E2_EMISSAO, E2_VENCREA, R_E_C_N_O_ AS RECNO " + CRLF
     cSQL += " FROM " + RetSQLName("SE2") + " A (NOLOCK) " + CRLF
@@ -50,58 +53,89 @@ Method Processa(cForne, cLojaForne, cNatureza) Class TFaturaPagarIntercompany
     cSQL += " AND E2_SALDO    > 0 " + CRLF
     //cSQL += " AND E2_SALDO    = E2_VALOR " + CRLF
     cSQL += " AND E2_FATURA   = '' " + CRLF
-    cSQL += " AND E2_EMISSAO  BETWEEN " + ValToSQL(dDataDe) + " AND " + ValToSQL(dDataAte) + CRLF
-    cSQL += " AND E2_VENCREA  BETWEEN " + ValToSQL(dDataDe) + " AND " + ValToSQL(dDataAte) + CRLF
+    
+    If !::lFidc
+
+        cSQL += " AND E2_EMISSAO  BETWEEN " + ValToSQL(dDataDe) + " AND " + ValToSQL(dDataAte) + CRLF
+        cSQL += " AND E2_VENCREA  BETWEEN " + ValToSQL(dDataDe) + " AND " + ValToSQL(dDataAte) + CRLF
+    
+    EndIf
+    
     cSQL += " AND A.D_E_L_E_T_ = '' " + CRLF
 
     //cSQL += " AND E2_NUM      IN ('000020690', '000023137', '000023103', '000001058') " + CRLF
+    
+    If ::lFidc
 
-    cSQL += " AND ( "+CRLF
-    cSQL += "	(E2_YCHVSE1 = '') "+CRLF
-    cSQL += "	or exists (select 1 from SE1070 X (NOLOCK) "+CRLF
+        cSQL += "	AND exists (select 1 from SE1070 X (NOLOCK) "+CRLF
+
+    Else
+
+        cSQL += " AND ( "+CRLF
+        cSQL += "	(E2_YCHVSE1 = '') "+CRLF
+        cSQL += "	or exists (select 1 from SE1070 X (NOLOCK) "+CRLF
+    
+    EndIf
+
     cSQL += "			where X.E1_FILIAL = Substring(E2_YCHVSE1,1,2) "+CRLF
     cSQL += "			and X.E1_PREFIXO = Substring(E2_YCHVSE1,3,3) "+CRLF
     cSQL += "			and X.E1_NUM = Substring(E2_YCHVSE1,6,9) "+CRLF
     cSQL += "			and X.E1_PARCELA = Substring(E2_YCHVSE1,15,1) "+CRLF
     cSQL += "			and X.E1_TIPO = Substring(E2_YCHVSE1,16,3) "+CRLF
-    cSQL += "			and X.E1_BAIXA <> '' "+CRLF
-    cSQL += "			and X.E1_FATURA = '' "+CRLF
-    cSQL += "			and X.D_E_L_E_T_='') "+CRLF
-    cSQL += "	or (
-    cSQL += "			exists (select 1 from SE1070 X2 (NOLOCK) "+CRLF
-    cSQL += " 					where X2.E1_FILIAL = '"+XFilial("SE1")+"' "+CRLF
-    cSQL += " 					and X2.E1_PREFIXO in ('FAT','01','1','2','3','4','5') "+CRLF  //unica forma que o SQL ficou rapido - avaliar!?
-    cSQL += " 					and X2.E1_NUM = (select X.E1_FATURA from SE1070 X (NOLOCK) "+CRLF
-    cSQL += "		 								where X.E1_FILIAL = Substring(E2_YCHVSE1,1,2) "+CRLF
-    cSQL += "										and X.E1_PREFIXO = Substring(E2_YCHVSE1,3,3) "+CRLF
-    cSQL += "										and X.E1_NUM = Substring(E2_YCHVSE1,6,9) "+CRLF
-    cSQL += "										and X.E1_PARCELA = Substring(E2_YCHVSE1,15,1) "+CRLF
-    cSQL += "										and X.E1_TIPO = Substring(E2_YCHVSE1,16,3) "+CRLF
-    cSQL += "										and X.D_E_L_E_T_='') "+CRLF
-    cSQL += " 					and X2.E1_TIPO = 'FT'  "+CRLF
-    cSQL += "					and X2.E1_FATURA = 'NOTFAT   ' "+CRLF
-    cSQL += "					and X2.E1_BAIXA <> ''  "+CRLF
-    cSQL += "					and X2.D_E_L_E_T_='') "+CRLF
-    cSQL += "				and "+CRLF
-    cSQL += "				not exists (select 1 from SE1070 X2 (NOLOCK) "+CRLF
-    cSQL += "					where X2.E1_FILIAL = '01'   "+CRLF
-    cSQL += "		 			and X2.E1_PREFIXO in ('FAT','01','1','2','3','4','5') "+CRLF
-    cSQL += "					and X2.E1_NUM = (select X.E1_FATURA from SE1070 X (NOLOCK)   "+CRLF
-    cSQL += "			 						where X.E1_FILIAL = Substring(E2_YCHVSE1,1,2) "+CRLF
-    cSQL += "									and X.E1_PREFIXO = Substring(E2_YCHVSE1,3,3)  "+CRLF
-    cSQL += "									and X.E1_NUM = Substring(E2_YCHVSE1,6,9)  "+CRLF
-    cSQL += "									and X.E1_PARCELA = Substring(E2_YCHVSE1,15,1)  "+CRLF
-    cSQL += "									and X.E1_TIPO = Substring(E2_YCHVSE1,16,3)  "+CRLF
-    cSQL += "									and X.D_E_L_E_T_='')   "+CRLF
-    cSQL += "					and X2.E1_TIPO = 'FT'  "+CRLF
-    cSQL += "					and X2.E1_FATURA = 'NOTFAT   ' "+CRLF
-    cSQL += "					and X2.E1_VENCREA < '"+DTOS(dDataBase-1)+"'  "+CRLF
-    cSQL += "					and X2.E1_SALDO > 0  "+CRLF
-    cSQL += "					and X2.D_E_L_E_T_='')  "+CRLF
-    cSQL += "	) "+CRLF
-    cSQL += " ) "+CRLF
+
+    If ::lFidc
+        
+        //|Seleciona apenas titulos FIDC |
+        cSQL += "			and X.E1_YFDCPER > 0 "+CRLF
+        cSQL += "           AND X.E1_DATABOR  BETWEEN " + ValToSQL(dDataDe) + " AND " + ValToSQL(dDataAte) + CRLF
+
+        cSQL += "			and X.E1_FATURA = '' "+CRLF
+        cSQL += "			and X.D_E_L_E_T_='') "+CRLF
+
+    Else
+
+        cSQL += "			and X.E1_BAIXA <> '' "+CRLF
+        cSQL += "			and X.E1_FATURA = '' "+CRLF
+        
+        //|Ignora os títulos do FIDC |
+        cSQL += "			and X.E1_YFDCPER = 0 "+CRLF
+
+        cSQL += "			and X.D_E_L_E_T_='') "+CRLF
+        cSQL += "	or (
+        cSQL += "			exists (select 1 from SE1070 X2 (NOLOCK) "+CRLF
+        cSQL += " 					where X2.E1_FILIAL = '"+XFilial("SE1")+"' "+CRLF
+        cSQL += " 					and X2.E1_PREFIXO in ('FAT','01','1','2','3','4','5') "+CRLF  //unica forma que o SQL ficou rapido - avaliar!?
+        cSQL += " 					and X2.E1_NUM = (select X.E1_FATURA from SE1070 X (NOLOCK) "+CRLF
+        cSQL += "		 								where X.E1_FILIAL = Substring(E2_YCHVSE1,1,2) "+CRLF
+        cSQL += "										and X.E1_PREFIXO = Substring(E2_YCHVSE1,3,3) "+CRLF
+        cSQL += "										and X.E1_NUM = Substring(E2_YCHVSE1,6,9) "+CRLF
+        cSQL += "										and X.E1_PARCELA = Substring(E2_YCHVSE1,15,1) "+CRLF
+        cSQL += "										and X.E1_TIPO = Substring(E2_YCHVSE1,16,3) "+CRLF
+        cSQL += "										and X.D_E_L_E_T_='') "+CRLF
+        cSQL += " 					and X2.E1_TIPO = 'FT'  "+CRLF
+        cSQL += "					and X2.E1_FATURA = 'NOTFAT   ' "+CRLF
+        cSQL += "					and X2.E1_BAIXA <> ''  "+CRLF
+        cSQL += "					and X2.D_E_L_E_T_='') "+CRLF
+        cSQL += "				and "+CRLF
+        cSQL += "				not exists (select 1 from SE1070 X2 (NOLOCK) "+CRLF
+        cSQL += "					where X2.E1_FILIAL = '01'   "+CRLF
+        cSQL += "		 			and X2.E1_PREFIXO in ('FAT','01','1','2','3','4','5') "+CRLF
+        cSQL += "					and X2.E1_NUM = (select X.E1_FATURA from SE1070 X (NOLOCK)   "+CRLF
+        cSQL += "			 						where X.E1_FILIAL = Substring(E2_YCHVSE1,1,2) "+CRLF
+        cSQL += "									and X.E1_PREFIXO = Substring(E2_YCHVSE1,3,3)  "+CRLF
+        cSQL += "									and X.E1_NUM = Substring(E2_YCHVSE1,6,9)  "+CRLF
+        cSQL += "									and X.E1_PARCELA = Substring(E2_YCHVSE1,15,1)  "+CRLF
+        cSQL += "									and X.E1_TIPO = Substring(E2_YCHVSE1,16,3)  "+CRLF
+        cSQL += "									and X.D_E_L_E_T_='')   "+CRLF
+        cSQL += "					and X2.E1_TIPO = 'FT'  "+CRLF
+        cSQL += "					and X2.E1_FATURA = 'NOTFAT   ' "+CRLF
+        cSQL += "					and X2.E1_VENCREA < '"+DTOS(dDataBase-1)+"'  "+CRLF
+        cSQL += "					and X2.E1_SALDO > 0  "+CRLF
+        cSQL += "					and X2.D_E_L_E_T_='')  "+CRLF
+        cSQL += "	) "+CRLF
+        cSQL += " ) "+CRLF
     
-    
+    EndIf
   
     TcQuery cSQL New Alias (cAliasTmp)
 
