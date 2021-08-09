@@ -25,8 +25,8 @@ User Function FACOWF01(_lManual)
 	Private lManual := _lManual
 
 	//Ticket 28275 - Erro ao executar de forma manual. Pablo S. Nascimento
-	//RPCSetType(3)
-	//RpcSetEnv('01', '01')
+	RPCSetType(3)
+	RpcSetEnv('01', '01')
 
 	If (Upper(AllTrim(getenvserver())) == "SCHEDULE")
 		lManual := .F.
@@ -100,36 +100,39 @@ User Function FACOWF01(_lManual)
 
 			While !(Qry)->(Eof())
 
+				IF AllTrim((Qry)->PZ5_CODIGO) == "000467" .or. AllTrim((Qry)->PZ5_CODIGO) == "000468"
+
+					_cRep := (Qry)->PZ5_CODVEN
+					_cCli := (Qry)->COD_CLI
+					_cNCli := (Qry)->NOME_CLI
+					_cCodPZ5 := (Qry)->PZ5_CODIGO
+					_cTpAcord	:= (Qry)->TPACOR
+					_nTotBonus 	:= 0
+
+					_nMaxFaixa := Val((Qry)->MAXFAIXA)
 
 
-				_cRep := (Qry)->PZ5_CODVEN
-				_cCli := (Qry)->COD_CLI
-				_cNCli := (Qry)->NOME_CLI
-				_cCodPZ5 := (Qry)->PZ5_CODIGO
-				_cTpAcord	:= (Qry)->TPACOR
-				_nTotBonus 	:= 0
+					GetHeader()
+					GetColumnHeader(_cRep, _nMaxFaixa, _cNCli, _cTpAcord)
 
-				_nMaxFaixa := Val((Qry)->MAXFAIXA)
+					While !(Qry)->(Eof()) .And. (Qry)->PZ5_CODVEN == _cRep .And. (Qry)->COD_CLI == _cCli
 
+						GetItems(_nMaxFaixa, _cTpAcord)
 
-				GetHeader()
-				GetColumnHeader(_cRep, _nMaxFaixa, _cNCli, _cTpAcord)
+						_nTotBonus 	+= (QRY)->BONUS
 
-				While !(Qry)->(Eof()) .And. (Qry)->PZ5_CODVEN == _cRep .And. (Qry)->COD_CLI == _cCli
+						(Qry)->(DbSkip())
+					EndDo
 
-					GetItems(_nMaxFaixa, _cTpAcord)
+					cHtml += ' </table>
+					GetFooter(_cTpAcord, _nTotBonus)
+					SendMail(_cRep, _cCodPZ5)
 
-					_nTotBonus 	+= (QRY)->BONUS
-
+					cHtml := ""
+				ELSE
 					(Qry)->(DbSkip())
-				EndDo
 
-				cHtml += ' </table>
-				GetFooter(_cTpAcord, _nTotBonus)
-				SendMail(_cRep, _cCodPZ5)
-
-				cHtml := ""
-
+				ENDIF
 
 			EndDo
 

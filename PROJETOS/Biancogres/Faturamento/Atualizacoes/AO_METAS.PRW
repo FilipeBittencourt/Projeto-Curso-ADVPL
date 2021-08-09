@@ -1189,7 +1189,7 @@ Static Function GerarSI(_nValor,_dIni,_dFim,_cIdPer,_lAuto)
 			cSQL := "select dbo.FNC_AO_TOP_CLI('"+PZ5->PZ5_MARCA+"','"+PZ5->PZ5_CODGRP+"','"+DTOS(_dIni)+"','"+DTOS(_dFim)+"')"
 		EndIf
 
-		PZ5->PZ5_TIPCLI
+		//PZ5->PZ5_TIPCLI
 
 		TCQuery cSQL Alias "TRB" New
 
@@ -1197,6 +1197,7 @@ Static Function GerarSI(_nValor,_dIni,_dFim,_cIdPer,_lAuto)
 		If !TRB->(Eof())
 			cCodCli := SubStr(&("TRB->"+TRB->(Field(1))),1,6)
 			cLojCli := SubStr(&("TRB->"+TRB->(Field(1))),7,2)
+
 		EndIf
 
 		TRB->(DbCloseArea())
