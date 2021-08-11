@@ -25,8 +25,8 @@ User Function FACOWF01(_lManual)
 	Private lManual := _lManual
 
 	//Ticket 28275 - Erro ao executar de forma manual. Pablo S. Nascimento
-	RPCSetType(3)
-	RpcSetEnv('01', '01')
+//	RPCSetType(3)
+//	RpcSetEnv('01', '01')
 
 	If (Upper(AllTrim(getenvserver())) == "SCHEDULE")
 		lManual := .F.
@@ -100,39 +100,36 @@ User Function FACOWF01(_lManual)
 
 			While !(Qry)->(Eof())
 
-				IF AllTrim((Qry)->PZ5_CODIGO) == "000467" .or. AllTrim((Qry)->PZ5_CODIGO) == "000468"
-
-					_cRep := (Qry)->PZ5_CODVEN
-					_cCli := (Qry)->COD_CLI
-					_cNCli := (Qry)->NOME_CLI
-					_cCodPZ5 := (Qry)->PZ5_CODIGO
-					_cTpAcord	:= (Qry)->TPACOR
-					_nTotBonus 	:= 0
-
-					_nMaxFaixa := Val((Qry)->MAXFAIXA)
 
 
-					GetHeader()
-					GetColumnHeader(_cRep, _nMaxFaixa, _cNCli, _cTpAcord)
+				_cRep := (Qry)->PZ5_CODVEN
+				_cCli := (Qry)->COD_CLI
+				_cNCli := (Qry)->NOME_CLI
+				_cCodPZ5 := (Qry)->PZ5_CODIGO
+				_cTpAcord	:= (Qry)->TPACOR
+				_nTotBonus 	:= 0
 
-					While !(Qry)->(Eof()) .And. (Qry)->PZ5_CODVEN == _cRep .And. (Qry)->COD_CLI == _cCli
+				_nMaxFaixa := Val((Qry)->MAXFAIXA)
 
-						GetItems(_nMaxFaixa, _cTpAcord)
 
-						_nTotBonus 	+= (QRY)->BONUS
+				GetHeader()
+				GetColumnHeader(_cRep, _nMaxFaixa, _cNCli, _cTpAcord)
 
-						(Qry)->(DbSkip())
-					EndDo
+				While !(Qry)->(Eof()) .And. (Qry)->PZ5_CODVEN == _cRep .And. (Qry)->COD_CLI == _cCli
 
-					cHtml += ' </table>
-					GetFooter(_cTpAcord, _nTotBonus)
-					SendMail(_cRep, _cCodPZ5)
+					GetItems(_nMaxFaixa, _cTpAcord)
 
-					cHtml := ""
-				ELSE
+					_nTotBonus 	+= (QRY)->BONUS
+
 					(Qry)->(DbSkip())
+				EndDo
 
-				ENDIF
+				cHtml += ' </table>
+				GetFooter(_cTpAcord, _nTotBonus)
+				SendMail(_cRep, _cCodPZ5)
+
+				cHtml := ""
+
 
 			EndDo
 
@@ -481,7 +478,7 @@ Static Function GetColumnHeader(_cRep, _nMaxFaixa, _cNomeCli, _cTpAcord)
 		cHtml += '         <p><div class = "headTexto1">Olá</div></p>'
 		cHtml += '         <br>'
 		cHtml += '         <br>'
-		cHtml += '         <p><div class = "headTexto1">Você está recebendo um relatório do seu desempenho no período e os valores que estarão disponíveis para a utilização no Programa de Benefícios Galeria Biancogres no próximo Semestre.</div></p>'
+		cHtml += '         <p><div class = "headTexto1">Você está recebendo um relatório do seu desempenho no período e os valores que estarão disponíveis para a utilização no Programa de Benefícios Galleria Biancogres no próximo Semestre.</div></p>'
 		cHtml += '         <br>'
 		cHtml += '         <br>'
 		cHtml += '         <p><div class = "headTexto">CLIENTE: '+AllTrim(_cNomeCli)+'</div></p>'

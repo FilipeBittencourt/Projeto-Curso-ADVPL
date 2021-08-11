@@ -660,7 +660,7 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 	Local nSomaPreco	:= 0
 	Local nSomaValor	:= 0
 	Local nZKLRecNo
-	Local nVlrBonus := 0
+	Local nVlrDesAG := 0
 
 	DbSelectArea('SC5')
 	SC5->(DbSetOrder(1))
@@ -917,11 +917,11 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 		cHTML += ' 									 </tr>                                                                                                                                                          '
 	EndIf
 
-	nVlrBonus := ::TPAcordo()
-	If nVlrBonus > 0
+	nVlrDesAG := ::TPAcordo()
+	If nVlrDesAG > 0
 		cHTML += ' 									 <tr>                                                                                                                                                           '
-		cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> BONUS GALERIA </td>                                                                                   '
-		cHTML += ' 										<td colspan="3" align="left"> '+Transform(nVlrBonus,"@E 999,999,999,999.99")+' </td>                                                                                                                                   '
+		cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> DESCONTO ACORDO GALLERIA </td>                                                                                   '
+		cHTML += ' 										<td colspan="3" align="left" style="color:red;"> '+Transform(nVlrDesAG,"@E 999,999,999,999.99")+' </td>                                                                                                                                   '
 		cHTML += ' 									 </tr>                                                                                                                                                          '
 	EndIf
 
@@ -1367,24 +1367,42 @@ Return(cRet)
 //Valida a regra se o pedido tiver AI se for acordo galeria = AG
 Method TPAcordo() Class TAprovaPedidoVendaEMail
 
-	Local nBonus := 0
-	Local cSql := ""
-	Local cAliaSZO 	:= GetNextAlias()
+	Local nDescont  := 0
+	Local cSql      := ""
+	Local cAliaZZQ 	:= Nil
 
-	// Somente a bianco gera AO e AI no momento até 06-08-2021.
-	cSql += " SELECT  *  " + CRLF
-	cSql += " FROM SZO010  " + CRLF
-	cSql += " where ZO_FILIAL = '01' " + CRLF
-	cSql += " AND   ZO_SI  = '"+SC5->C5_YNUMSI+"'     " + CRLF
-	cSql += " AND   ZO_YTPACOR = 'AG'  "+ CRLF
-	cSql += " and D_E_L_E_T_ = ''     "+ CRLF
+	IF !EMPTY(SC5->C5_YNUMSI)
 
-	TcQuery cSql New Alias (cAliaSZO)
+		cAliaZZQ 	:= GetNextAlias()
 
-	IF (!(cAliaSZO)->(Eof()))
-		nBonus := (cAliaSZO)->ZO_VALOR
+		//INCLUSAO DE BAIXAS DE ACORDO APOS COLOCACAO DO PEDIDO
+		u_AO_INCBX(SC5->C5_NUM,SC5->C5_YNUMSI)
+
+		// Somente a bianco gera AO e AI no momento até 06-08-2021.
+
+		cSql += " SELECT TOP 1 SZO.ZO_YTPACOR , ZZQ.ZZQ_VALOR  " + CRLF
+		cSql += " FROM ZZQ010 ZZQ  " + CRLF
+
+		cSql += " INNER JOIN  SZO010 SZO ON ZZQ.ZZQ_FILIAL = SZO.ZO_FILIAL  " + CRLF
+		cSql += " AND ZZQ.ZZQ_COD    = SZO.ZO_SI " + CRLF
+		cSql += " AND SZO.ZO_YTPACOR = 'AG'  " + CRLF
+		cSql += " AND SZO.D_E_L_E_T_ = ''   " + CRLF
+
+		cSql += " WHERE ZZQ.ZZQ_FILIAL = '01'
+		cSql += " AND ZZQ.ZZQ_COD     = '"+SC5->C5_YNUMSI+"'     " + CRLF
+		cSql += " AND ZZQ.ZZQ_EMPORI  = '"+cEmpAnt+cFilAnt+"' "  + CRLF
+		cSql += " AND ZZQ.ZZQ_DOC   LIKE '%"+SC5->C5_NUM+"%'     " + CRLF
+		cSql += " AND ZZQ.D_E_L_E_T_ =  ''
+		cSql += " ORDER BY ZZQ.R_E_C_N_O_ DESC
+
+		TcQuery cSql New Alias (cAliaZZQ)
+
+		IF (!(cAliaZZQ)->(Eof()))
+			nDescont := (cAliaZZQ)->ZZQ_VALOR
+		EndIf
+
+		(cAliaZZQ)->(DbCloseArea())
+
 	EndIf
 
-	(cAliaSZO)->(DbCloseArea())
-
-Return(nBonus)
+Return(nDescont)

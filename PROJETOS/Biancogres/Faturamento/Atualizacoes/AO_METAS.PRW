@@ -1262,7 +1262,7 @@ Static Function GerarSI(_nValor,_dIni,_dFim,_cIdPer,_lAuto)
 
 	If AllTrim(PZ5->PZ5_TPACOR) == "AG"
 		SZO->ZO_YDTVLD  	:= MonthSum(dDataBase, 12)
-		SZO->ZO_YOBS		:= "Gerada Automaticamente - Bônus de Acordo Galeria: "+PZ5->PZ5_CODIGO+" - Período: "+AllTrim(_cIdPer)
+		SZO->ZO_YOBS		:= "Gerada Automaticamente - Bônus de Acordo Galleria: "+PZ5->PZ5_CODIGO+" - Período: "+AllTrim(_cIdPer)
 	EndIf
 
 
