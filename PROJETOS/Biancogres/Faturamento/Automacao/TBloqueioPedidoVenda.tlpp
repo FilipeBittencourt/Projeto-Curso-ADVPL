@@ -269,12 +269,12 @@ Method Check() Class TBloqueioPedidoVenda
 		If Empty (cAprov)
 
 			cNomeAprov := "SEM LIBERADOR"
-			MsgBox("Este pedido será bloqueado, pois não foi encontrado aprovador!"+CRLF+"Favor informar ao seu Atendente ou Gerente Comercial!", "M410STTS", "STOP")
+			MsgBox("Este pedido será bloqueado, pois não foi encontrado aprovador!"+CRLF+"Favor informar ao seu Atendente ou Gerente Comercial!", "TBloqueioPedidoVenda", "STOP")
 
 		Else
 
 			cMsgBloq := ::ArrayToSring(aMsgBloq, "/")
-			MsgBox(cMsgBloq + CRLF+"Favor solicitar ao "+cNomeAprov+" liberar este pedido!", "M410STTS", "STOP")
+			MsgBox(cMsgBloq + CRLF+"Favor solicitar ao "+cNomeAprov+" liberar este pedido!", "TBloqueioPedidoVenda", "STOP")
 
 		EndIf
 
@@ -691,6 +691,7 @@ Method GetQuerySC6() Class TBloqueioPedidoVenda
 	cQuery +="	(                                                                                                       														"+ CRLF
 	cQuery +="			SELECT C6_PRODUTO FROM "+RetSQLName("SC6")+" X where X.C6_NUM = '"+::cNumPed+"' and X.D_E_L_E_T_= ''       												"+ CRLF
 	cQuery +="	) AND ZA6.D_E_L_E_T_= '' ) THEN 'S' ELSE 'N' END RODAPE                                                   														"+ CRLF
+
 	cQuery +=" , "+cFiltroVer+"													                                        													"+ CRLF
 	cQuery +=" , "+cFiltroExCl+"                                                                                          "+ CRLF
 	cQuery +=" , "+cQueryDupli+"                                                                                          "+ CRLF
@@ -699,7 +700,8 @@ Method GetQuerySC6() Class TBloqueioPedidoVenda
 	cQuery +=" , "+cQueryPallet+"                                                                                         "+ CRLF
 	cQuery +=" , "+cQueryFormato+"                                                                                      	"+ CRLF
 
-	cQuery +=" FROM "+RetSQLName("SC6")+"                                                                                          												"+ CRLF
+
+	cQuery +=" FROM "+RetSQLName("SC6")+"                                                         												"+ CRLF
 	cQuery +=" WHERE 	C6_FILIAL	='"+xFilial("SC6")+"' 	AND                                                             													"+ CRLF
 	cQuery +=" C6_NUM 				= '"+::cNumPed+"' 		AND                                                                     											"+ CRLF
 	cQuery +=" D_E_L_E_T_ 			= '' 					                                                                    												"+ CRLF
