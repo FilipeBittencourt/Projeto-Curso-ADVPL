@@ -25,8 +25,8 @@ User Function FACOWF01(_lManual)
 	Private lManual := _lManual
 
 	//Ticket 28275 - Erro ao executar de forma manual. Pablo S. Nascimento
-//	RPCSetType(3)
-//	RpcSetEnv('01', '01')
+	//RPCSetType(3)
+	//RpcSetEnv('01', '01')
 
 	If (Upper(AllTrim(getenvserver())) == "SCHEDULE")
 		lManual := .F.
@@ -102,6 +102,7 @@ User Function FACOWF01(_lManual)
 
 
 
+
 				_cRep := (Qry)->PZ5_CODVEN
 				_cCli := (Qry)->COD_CLI
 				_cNCli := (Qry)->NOME_CLI
@@ -129,6 +130,7 @@ User Function FACOWF01(_lManual)
 				SendMail(_cRep, _cCodPZ5)
 
 				cHtml := ""
+
 
 
 			EndDo
@@ -475,10 +477,10 @@ Static Function GetColumnHeader(_cRep, _nMaxFaixa, _cNomeCli, _cTpAcord)
 
 	Else
 
-		cHtml += '         <p><div class = "headTexto1">Olá</div></p>'
+		cHtml += '         <p><div class = "headTexto1">Olá, </div></p>'
 		cHtml += '         <br>'
 		cHtml += '         <br>'
-		cHtml += '         <p><div class = "headTexto1">Você está recebendo um relatório do seu desempenho no período e os valores que estarão disponíveis para a utilização no Programa de Benefícios Galleria Biancogres no próximo Semestre.</div></p>'
+		cHtml += '         <p><div class = "headTexto1">Você está recebendo o relatório do seu desempenho no período e também os valores previstos que estarão disponíveis para a utilização no Programa de Benefícios Galleria Biancogres no próximo semestre.</div></p>'
 		cHtml += '         <br>'
 		cHtml += '         <br>'
 		cHtml += '         <p><div class = "headTexto">CLIENTE: '+AllTrim(_cNomeCli)+'</div></p>'
@@ -491,9 +493,10 @@ Static Function GetColumnHeader(_cRep, _nMaxFaixa, _cNomeCli, _cTpAcord)
 		cHtml += '               <th class = "cabtab" width="40" scope="col"> Realizado (em R$) </th>'
 		cHtml += '               <th class = "cabtab" width="40" scope="col"> Itens Exclusivos Positivados (produtos ativos até o período) </th>'
 		cHtml += '               <th class = "cabtab" width="40" scope="col"> Falta para subir para PRÓXIMA Categoria (em R$) </th>'
-		cHtml += '               <th class = "cabtab" width="40" scope="col"> Falta para subir para PRÓXIMA Categoria (em nº de items) </th>'
+		cHtml += '               <th class = "cabtab" width="40" scope="col"> Falta para subir para PRÓXIMA Categoria (em nº de itens) </th>'
 		cHtml += '               <th class = "cabtab" width="40" scope="col"> Falta para chegar a MAIOR Categoria (em R$) </th>'
-		cHtml += '               <th class = "cabtab" width="40" scope="col"> Falta para chegar a MAIOR Categoria (em nº de items) </th>'
+		cHtml += '               <th class = "cabtab" width="40" scope="col"> Falta para chegar a MAIOR Categoria (em nº de itens) </th>'
+		cHtml += '               <th class = "cabtab" width="40" scope="col"> No. AG </th>'
 		cHtml += '            </tr>
 
 	Endif
@@ -534,6 +537,7 @@ Static Function GetItems(_nMaxFaixa, _cTpAcord)
 		cHtml += "          	<td class='style12' width='20'scope='col'>"+ cValToChar((Qry)->ITPROXCAT) +"</td>"
 		cHtml += "          	<td class='style12' width='20'scope='col'>"+ Transform((Qry)->VLRMAXCAT,"@E 999,999,999,999.99") +"</td>"
 		cHtml += "          	<td class='style12' width='20'scope='col'>"+ cValToChar((Qry)->ITMAXCAT) +"</td>"
+		cHtml += "          	<td class='style12' width='20'scope='col'>"+ (Qry)->NUMSI +"</td>"
 		cHtml += "          </tr>"
 
 	Endif
@@ -560,11 +564,14 @@ Static Function GetFooter(_cTpAcord, _nTotBonus)
 		cHtml += "		<br>"
 		cHtml += "		<br>"
 		cHtml += "		<br>"
-		cHtml += "		<br>"
-		cHtml += "      	<p><div class = 'footTexto'>Seu BÔNUS ESTIMADO para o próximo semestre até o momento é de: R$ " + Transform(_nTotBonus,"@E 999,999,999,999.99") + "</div></p>"
+
+		cHtml += "      	<p><div class = 'footTexto'>Seu BÔNUS ESTIMADO para o próximo semestre até o momento é de: R$ "+Transform(_nTotBonus,"@E 999,999,999,999.99")+". Para conferir o seu extrato na fábrica basta solicitá-lo através do código gerado na coluna No. AG.</div></p>"
 		cHtml += "      <br>"
 		cHtml += "      <br>"
-		cHtml += "      	<p><div class = 'footTexto'>Consulte seu representante para que possamos alinhar nossas estratégias, a fim de busca a melhor faixa de benefício possível.</div></p>"
+		cHtml += "      	<p><div class = 'footTexto'>Consulte seu representante para que possamos alinhar nossas estratégias, com objetivo de buscar a melhor faixa de benefício possível.</div></p>"
+		cHtml += "      <br>"
+		cHtml += "      <br>"
+		cHtml += "      	<p><div class = 'footTexto'>Boas Vendas,</div></p>"
 		cHtml += "      <br>"
 		cHtml += "      <br>"
 		cHtml += "		<p><div class = 'footTexto1'>Biancogres</div></p>"
@@ -604,7 +611,7 @@ Static Function SendMail(_cRep, _cCodPZ5)
 	Z37->(DbSetOrder(1))
 	Z37->(DbSeek(PZ5->PZ5_FILIAL+PZ5->PZ5_MARCA))
 
-
+ 
 	_cSubject := "Acompanhamento de Acordos Objetivos - "+  AllTrim(Z37->Z37_DESCR)
 
 	If !Empty(SA3->A3_EMAIL)
@@ -617,6 +624,11 @@ Static Function SendMail(_cRep, _cCodPZ5)
 		EndIf
 		_cSubject := "Email Representante não cadastrado! Acompanhamento de Acordos Objetivos - "+ AllTrim(Z37->Z37_DESCR)
 	EndIf
+
+	If Alltrim(PZ5->PZ5_TPACOR) == "AG"
+	_cSubject := "Acompanhamento de Acordos Galleria - "+  AllTrim(Z37->Z37_DESCR)
+	EndIf
+
 
 	//Pedro Henrique/Facile  - em 09/01/2018 - Ticket 8847
 	If PZ5->(FieldPos("PZ5_EMAILC")) > 0 .And. !Empty(PZ5->PZ5_EMAILC)
@@ -655,6 +667,7 @@ Static Function SendMail(_cRep, _cCodPZ5)
 	Conout("FACOWF01 Fim - lManual = "+IIf(lManual,"SIM","NAO")+" - enviando e-mail para: "+_cTo)
 	//_lRet := U_BIAEnvMail(, _cTo, _cSubject, _cBody, "", "", , _cCC, _oCC)    // aqui descomentar antes aplicar em produção
 	_lRet := U_BIAEnvMail(, 'karina.barbosa@biancogres.com.br;emerson.salvador@facilesistemas.com.br;filipe.bittencourt@facilesistemas.com.br', _cSubject, _cBody, "", "", , "", "")   //aqui retirar essa linha somente para testes
+	
 	
 
 Return(_lRet)

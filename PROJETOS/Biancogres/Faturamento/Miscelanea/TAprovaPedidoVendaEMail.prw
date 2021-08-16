@@ -917,6 +917,7 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 		cHTML += ' 									 </tr>                                                                                                                                                          '
 	EndIf
 
+	nVlrDesAG := 0
 	nVlrDesAG := ::TPAcordo()
 	If nVlrDesAG > 0
 		cHTML += ' 									 <tr>                                                                                                                                                           '

@@ -186,12 +186,15 @@ Static Function fTdOk(oModel)
   
   If nOpc != MODEL_OPERATION_DELETE
 
-    If  EMPTY(dDTINI) .OR.EMPTY(dDTINI)
+    If  EMPTY(dDTINI) .OR.EMPTY(dDTFIM)
       Help(,,"Help",,"Favor informar as datas de inicio e fim.", 1, 0,,,,,,{" "})
-      RETURN .F.
+      RETURN .F.    
     EndIf
 
-    
+    If dDTINI >= dDTFIM
+      Help(,,"Help",,"A data inicio deve ser menor ou igual a data fim.", 1, 0,,,,,,{" "})
+      RETURN .F.    
+    EndIf
 
     IF !ExistCpo("Z37", cMARCA)
         Help(,,"Help",,"O codigo marca não é válido", 1, 0,,,,,,{" "})
@@ -209,7 +212,7 @@ Static Function fTdOk(oModel)
 
 
     If !EMPTY(cGRupo) .and. lVerify == .F.
-      IF ExistCpo("AYC", cGRupo)
+      IF ExistCpo("ACY", cGRupo)
         lVerify := .T. 
       Else
         Help(,,"Help",,"O codigo do grupo não é válido.", 1, 0,,,,,,{" "})

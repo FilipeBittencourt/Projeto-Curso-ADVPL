@@ -11,12 +11,9 @@ User Function TSTFIL()
   Local vTotal  := 0
   local cText := "0501/0113"
 
-  nTotal  := (((nVlrTot * nPerc) -  nVlrTot) * nPerc) /100
 
 
 
-
-  cText :=	 StrTran(  cText, "/", "','")
 
   RpcClearEnv()
   If Select("SX6") <= 0
