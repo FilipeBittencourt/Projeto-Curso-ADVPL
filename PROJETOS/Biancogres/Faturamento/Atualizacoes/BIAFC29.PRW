@@ -60,7 +60,7 @@ Static Function ModelDef()
   //Criação da estrutura de dados utilizada na interface
   Local oStZNB := NIL
 
-  oStZNB := FWFormStruct(1, "ZNB", { |x| AllTrim(x) $ "ZNB_MARCA|ZNB_DTINI|ZNB_DTFIM|ZNB_CLIENT|ZNB_LOJA|ZNB_GRUPO|ZNB_REDE|ZNB_TIPO|ZNB_PERC"})
+  oStZNB := FWFormStruct(1, "ZNB", { |x| AllTrim(x) $ "ZNB_MARCA|ZNB_DTINI|ZNB_DTFIM|ZNB_CLIENT|ZNB_LOJA|ZNB_GRUPO|ZNB_REDE|ZNB_PERC"})
 
   //Instanciando o modelo, não é recomendado colocar nome da user function (por causa do u_), respeitando 10 caracteres
   oModel := MPFormModel():New("BIAFC29M",{|oModel| ZNBbPre(oModel)},{|oModel| fTdOk(oModel)},/*<bCommit >*/,/*bCancel*/)
@@ -100,7 +100,7 @@ Static Function ViewDef()
 	Local oView := Nil
 
   	//Criação da estrutura de dados utilizada na interface do cadastro de Autor
-	oStZNB := FWFormStruct(2, "ZNB", { |x| AllTrim(x) $ "ZNB_MARCA|ZNB_DTINI|ZNB_DTFIM|ZNB_CLIENT|ZNB_LOJA|ZNB_GRUPO|ZNB_REDE|ZNB_TIPO|ZNB_PERC"})
+	oStZNB := FWFormStruct(2, "ZNB", { |x| AllTrim(x) $ "ZNB_MARCA|ZNB_DTINI|ZNB_DTFIM|ZNB_CLIENT|ZNB_LOJA|ZNB_GRUPO|ZNB_REDE|ZNB_PERC"})
 	
 
 	//Criando a view que será o retorno da função e setando o modelo da rotina
@@ -233,9 +233,6 @@ Static Function fTdOk(oModel)
       Help(,,"Help",,cVerify, 1, 0,,,,,,{" "})
       RETURN .F. 
     EndIf
-
-
-
   
 
     cQuery += " select * , R_E_C_N_O_ as RECNO from "+RetSqlName("ZNB")+ " "+  CRLF

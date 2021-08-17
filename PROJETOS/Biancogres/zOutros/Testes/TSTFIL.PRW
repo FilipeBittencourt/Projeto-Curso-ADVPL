@@ -20,8 +20,8 @@ User Function TSTFIL()
     RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
   EndIf
 
-  DbSelectArea("SZO")
-  X31UPDTABLE('SZO')
+  DbSelectArea("ZNB")
+  X31UPDTABLE('ZNB')
 
   //U_BIA729()
   //U_BAF022()
