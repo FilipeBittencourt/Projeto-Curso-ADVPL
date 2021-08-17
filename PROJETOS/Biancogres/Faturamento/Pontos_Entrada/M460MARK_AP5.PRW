@@ -13,7 +13,9 @@
 
 User Function M460MARK()
 
-	Local lUsaCarga	:= GetNewPar("MV_YUSACAR",.F.)  //Define se utiliza a rotina de carga
+	Local lUsaCarga		:= GetNewPar("MV_YUSACAR",.F.)  //Define se utiliza a rotina de carga
+
+	Local cQryTMP		:= ""
 
 	Private aArea		:= GetArea()
 	Private cArq    	:= ""
@@ -103,7 +105,7 @@ User Function M460MARK()
 	//Implementado por Ranisses               em 29/06/15 conforme OS effettivo 0090-15 MV_YEXR1R2
 	If cEmpAnt == "07" .And. GETMV("MV_YVLVDLM") .And. !ALLTRIM(_SC9->C9_CLIENTE)+ALLTRIM(_SC9->C9_LOJA) $ ALLTRIM(GETMV("MV_YEXR1R2")) .And. !(SB1->B1_TIPO == "PR") .And. !(Posicione("SC5", 1, xFilial("SC5")+ _SC9->C9_PEDIDO,"C5_TIPO") $ "C#I#P")
 		
-			
+		cQryTMP	:= GetNextAlias()	
 		TK004 := " SELECT COUNT(C6_CF) CONTAD
 		TK004 += "   FROM "+RetSqlName("SC9")+" SC9
 		TK004 += "  INNER JOIN "+RetSqlName("SC6")+" SC6 ON C6_FILIAL = '"+xFilial("SC6")+"'
@@ -128,20 +130,14 @@ User Function M460MARK()
 			TK004 += cFilM460QRY 
 		EndIf
 		TK004 += "    AND SC9.D_E_L_E_T_ = ' '
-		TkIndex := CriaTrab(Nil,.f.)
-		dbUseArea(.T.,"TOPCONN",TcGenQry(,,TK004),'TK04',.T.,.T.)
-		dbSelectArea("TK04")
-		dbGoTop()
-		If TK04->CONTAD > 0
+		TcQuery TK004 New Alias (cQryTMP)
+
+		If (cQryTMP)->CONTAD > 0
 			Aviso("Atenção (M460MARK)!!!", "Não é permitido faturamento na empresa LM de pedido com CFOP 5401 e suas derivações", {"Ok"})
-			TK04->(dbCloseArea())
-			Ferase(TkIndex+GetDBExtension())     //arquivo de trabalho
-			Ferase(TkIndex+OrdBagExt())          //indice gerado
+			(cQryTMP)->(DbCloseArea())
 			Return(.F.)
 		EndIf
-		TK04->(dbCloseArea())
-		Ferase(TkIndex+GetDBExtension())     //arquivo de trabalho
-		Ferase(TkIndex+OrdBagExt())          //indice gerado
+		(cQryTMP)->(DbCloseArea())
 
 		// Checa venda com entrega por conta e ordem: não controla saldo do pedido de vendas.- Solicitado pelo Robert em 03/06/13 - implementado por Marcos Alberto Soprani
 		TK071 := " SELECT COUNT(*) CONTAD
@@ -242,6 +238,44 @@ User Function M460MARK()
 			HF007 += "        + ISNULL((SELECT COUNT(*) " + Enter
 			HF007 += "                    FROM SD2050 XD2 " + Enter
 			HF007 += "                   INNER JOIN SC5050 XC5 ON XC5.C5_FILIAL = '01' " + Enter
+			HF007 += "                                       AND XC5.C5_NUM = D2_PEDIDO " + Enter
+			HF007 += "                                       AND XC5.C5_CLIENTE = D2_CLIENTE " + Enter
+			HF007 += "                                       AND XC5.C5_LOJACLI = D2_LOJA " + Enter
+			HF007 += "                                       AND XC5.D_E_L_E_T_ = ' ' " + Enter
+			HF007 += "                   WHERE XD2.D2_FILIAL = '01' " + Enter
+			HF007 += "                     AND XD2.D2_EMISSAO = '"+dtos(dDataBase)+"' " + Enter
+			HF007 += "                     AND XD2.D2_EMISSAO + XC5.C5_YCLIORI  " + Enter
+			HF007 += "                         + XC5.C5_YLOJORI + XD2.D2_PEDIDO + XD2.D2_COD " + Enter
+			HF007 += "                         + XD2.D2_LOTECTL + CONVERT(VARCHAR, XD2.D2_QUANT) IN (SELECT '"+dtos(dDataBase)+"' + (case when C5_CLIENTE in ('025633','025634','025704') then C5_YCLIORI else C5_CLIENTE end) " + Enter
+			HF007 += "                                                                                      + C5_LOJACLI + SC5.C5_YPEDORI + C9_PRODUTO " + Enter
+			HF007 += "                                                                                      + C9_LOTECTL + CONVERT(VARCHAR, C9_QTDLIB) " + Enter
+			HF007 += "                                                                                 FROM "+RetSqlName("SC9")+" SC9	" + Enter
+			HF007 += "                                                                                INNER JOIN "+RetSqlName("SC5")+" SC5 ON C5_FILIAL = '"+xFilial("SC5")+"' " + Enter
+			HF007 += "                                                                                                     AND C5_NUM = C9_PEDIDO " + Enter
+			HF007 += "                                                                                                     AND C5_CLIENTE = C9_CLIENTE " + Enter
+			HF007 += "                                                                                                     AND C5_LOJACLI = C9_LOJA " + Enter
+			HF007 += "                                                                                                     AND C5_TIPO NOT IN('B','D') " + Enter
+			HF007 += "                                                                                                     AND SC5.D_E_L_E_T_ = ' ' " + Enter
+			HF007 += "                                                                                WHERE C9_FILIAL = '"+xFilial("SC9")+"' " + Enter
+			HF007 += "                                                                                  AND C9_NFISCAL = '         ' " + Enter
+			HF007 += "                                                                                  AND C9_AGREG >= '"+MV_PAR09+"' " + Enter
+			HF007 += "                                                                                  AND C9_AGREG <= '"+MV_PAR10+"' " + Enter
+			HF007 += "                                                                                  AND C9_PEDIDO >= '"+cPedDe+"' " + Enter
+			HF007 += "                                                                                  AND C9_PEDIDO <= '"+cPedAte+"' " + Enter
+			If ThisInv()
+				HF007 += "                                                                                  AND C9_OK <> '"+ThisMark()+"' " + Enter
+			Else 
+				HF007 += "                                                                                  AND C9_OK = '"+ThisMark()+"' " + Enter
+			EndIf
+			If Len(aPedOri) > 0
+				HF007 += cFilM460QRY + Enter 
+			EndIf
+			HF007 += "                                                                                  AND SC9.D_E_L_E_T_ = ' ') " + Enter
+			HF007 += "                     AND XD2.D_E_L_E_T_ = ' '), 0) " + Enter
+			// Verifica na empresa Biancogres Vinilico
+			HF007 += "        + ISNULL((SELECT COUNT(*) " + Enter
+			HF007 += "                    FROM SD2140 XD2 " + Enter
+			HF007 += "                   INNER JOIN SC5140 XC5 ON XC5.C5_FILIAL = '01' " + Enter
 			HF007 += "                                       AND XC5.C5_NUM = D2_PEDIDO " + Enter
 			HF007 += "                                       AND XC5.C5_CLIENTE = D2_CLIENTE " + Enter
 			HF007 += "                                       AND XC5.C5_LOJACLI = D2_LOJA " + Enter
@@ -442,7 +476,7 @@ User Function M460MARK()
 			ENDIF
 
 			//Verifica se os itens do pedido esta com o campo C6_YEMP preenchido
-			If cEmpAnt $ "01_05_07_13"
+			If cEmpAnt $ "01_05_07_13_14"
 				cSql := "SELECT COUNT(*) COUNT							" + Enter
 				cSql += "FROM "+RetSqlName("SC6")+" SC6					" + Enter
 				cSql += "WHERE	C6_FILIAL  	= '"+xFilial("SC6")+"'	AND " + Enter
@@ -833,7 +867,7 @@ User Function M460MARK()
 
 
 		//Verifica se Quantidade de Caixas esta correta
-		If Alltrim(_SC9->C9_GRUPO) == "PA" .AND. _SC9->DIF <> 0 .AND. !_SC9->C9_LOCAL == "05" .AND. cEmpAnt <> '14'
+		If Alltrim(_SC9->C9_GRUPO) == "PA" .AND. _SC9->DIF <> 0 .AND. !_SC9->C9_LOCAL == "05"
 			MsgBox("A quantidade de Caixas para o Pedido "+_SC9->C9_PEDIDO+ " está incorreta. Favor comunicar a TI!","Atencao","ALERT")
 			Return(.F.)
 		EndIf

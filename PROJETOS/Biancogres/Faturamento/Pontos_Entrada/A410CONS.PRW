@@ -18,7 +18,7 @@
 */
 User Function A410CONS()
 	Local aButton := {}  
-	Local cEmpNPOL := AllTrim(GetNewPar("FA_EMPNPOL","14#"))
+	Local cEmpNPOL := AllTrim(GetNewPar("FA_EMPNPOL",""))
 	Local I
 
 	AADD(aButton,{ "PEDIDO"  , { || U_TOT_NOTA() },"Frete Autonomo" })

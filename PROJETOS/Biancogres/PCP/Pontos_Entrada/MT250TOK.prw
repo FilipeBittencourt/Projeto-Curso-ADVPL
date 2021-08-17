@@ -20,7 +20,7 @@ Local gtArea  := GetArea()
 Local xsRet   := .T.
 
 // Tratamento implementado em 22/04/14, por Marcos Alberto Soprani
-If ( M->D3_QUANT + SC2->C2_QUJE ) > SC2->C2_QUANT .and. cEmpAnt <> "14"
+If ( M->D3_QUANT + SC2->C2_QUJE ) > SC2->C2_QUANT
 	
 	Aviso('MT250TOK (Produção A MAIOR)','O apontamento de produção que se pretende realizar somado ao que já foi apontamento é maior que a quantidade prevista para a OP em questão. Favor encerrar esta OP '+Alltrim(M->D3_OP)+ ' e firmar uma nova OP para prosseguir com os apontamentos.',{'Ok'})
 	lxPrdMaior := .T.

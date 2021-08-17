@@ -4,14 +4,14 @@
 #DEFINE _NBIANCOGRES 	1
 #DEFINE _NINCESA 		2
 #DEFINE _NBELLACASA 	3
-//#DEFINE _NVITCER 		4
 #DEFINE _MUNDIALLI		4
 #DEFINE _PEGASUS		5
-#DEFINE _V01			6
-#DEFINE _V02			7
-#DEFINE _V03			8
-#DEFINE _VRP			9
-#DEFINE _VRT			10
+#DEFINE _VINILICO		6
+#DEFINE _V01			7
+#DEFINE _V02			8
+#DEFINE _V03			9
+#DEFINE _VRP			10
+#DEFINE _VRT			11
 
 //---------------------------------------------------------------------------------
 // Desenv 	: Thiago Dantas
@@ -57,7 +57,7 @@ nMarca := MV_PAR01
 
 aPergs := {}
 MV_PAR01 := SPACE(1)
-aMarca	:= {'1=Biancogres', '2=Incesa', '3=Bellacasa', '4=Mundialli', '5=Pegasus', '6=LM Matriz Dentro ES', '7=LM Matriz Fora ES', '8=LM Filial SP','9=LM Replicação Mundi', '10=LM Replicação Mundi Transferencia'}
+aMarca	:= {'1=Biancogres', '2=Incesa', '3=Bellacasa', '4=Mundialli', '5=Pegasus', '6=Vinilico', '7=Vinilico Dentro ES', '8=Vinilico Fora ES', '9=LM Filial SP','10=LM Replicação Mundi', '11=LM Replicação Mundi Transferencia'}
 aAdd( aPergs ,{2,"Marca"				, MV_PAR01, aMarca, 100, ".T.",.F.})
 
 If !ParamBox(aPergs ,"Filtro",,,,,,,,cLoad,.T.,.T.)
@@ -78,6 +78,8 @@ Do Case
        cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ '4P_4E'"
     Case nMarca == _PEGASUS
        cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ '5P_5E'"      
+    Case nMarca == _VINILICO
+       cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ '6P_5E'"  
     Case nMarca == _V01
        cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ 'V01'"  
     Case nMarca == _V02

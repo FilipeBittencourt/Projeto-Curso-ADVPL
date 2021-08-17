@@ -15,18 +15,11 @@ Local cPedido := M->C5_NUM
 Local _cProduto
      
 //Cancelando Inclusao de Pedido - Projeto Reserva de OP - Verificar se pedido tem reserva temporaria e excluir
-If aOpc[1] == 0 .And. INCLUI .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES","14")))
+If aOpc[1] == 0 .And. INCLUI .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES","")))
 
 	If Type("n") <> "U" .And. (n > 0)          
 	
 		_cProduto := Gdfieldget("C6_PRODUTO",1)
-		
-		If (AllTrim(CEMPANT) == "14")
-			ZA6->(DbSetOrder(2))
- 			If ZA6->(DbSeek(XFilial("ZA6")+_cProduto))
- 				_cProduto := ZA6->ZA6_BASE
- 			EndIf
-		EndIf		
 		
 		If !Empty(_cProduto)
 			U_FRRT02EX(cPedido,,_cProduto,"XIN")

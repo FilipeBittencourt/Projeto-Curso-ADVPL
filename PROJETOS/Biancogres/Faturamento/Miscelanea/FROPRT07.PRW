@@ -16,7 +16,7 @@
 
 User Function FROPRT07() 
 
-	Local xv_Emps    := U_BAGtEmpr("01_14") //01_05
+	Local xv_Emps    := U_BAGtEmpr("01") //01_05
 	Local nI
 
 	For nI := 1 to Len(xv_Emps)

@@ -81,6 +81,43 @@ IF IsInCallStack("U_BACP0010")  .OR. UPPER(ALLTRIM(FUNNAME())) == "MATA460A" .OR
 	//Dados para Cobranca
 	SE1->E1_YUFCLI	:= SA1->A1_EST
 	SE1->E1_YFORMA 	:= SC5->C5_YFORMA
+
+	//ROTINA TRANSFERIDA DO P.E. MT461VCT - desenvolvido de forma incorreta na automacao
+	//AJUSTE REALIZADO EM 04/08/2021 COM AS VALIDACOES FIDC
+	//ADICIONA REGRA PARA CLIENTES ESPECIAIS, CASO TENHA O CAMPO PREENCHIDO
+	If !U_fValidaRA(SF2->F2_COND)
+	
+		cSQL := ""
+		cSQL += "SELECT A1_COD, A1_LOJA, A1_NOME, A1_GRPVEN, A1_YSUMCE, ISNULL(ACY_YSUMCE,0) ACY_YSUMCE "
+		cSQL += "FROM SA1010 SA1 LEFT JOIN ACY010 ACY ON A1_GRPVEN = ACY_GRPVEN AND ACY.D_E_L_E_T_ = '' "
+		If Alltrim(cempant) $ "01_05_13_14" .And. SA1->A1_COD == "010064" 
+			cSQL += "WHERE A1_COD = '"+SC5->C5_YCLIORI+"' AND A1_LOJA = '"+SC5->C5_YLOJORI+"' AND SA1.D_E_L_E_T_ = ''  
+		else
+			cSQL += "WHERE A1_COD = '"+SF2->F2_CLIENTE+"' AND A1_LOJA = '"+SF2->F2_LOJA+"' AND SA1.D_E_L_E_T_ = '' 
+		EndIf
+		TcQuery cSQL New Alias (cQrySA1)
+
+		If !(cQrySA1)->(Eof()) .And. (cQrySA1)->A1_YSUMCE > 0
+			
+			nDiaVenc := (cQrySA1)->A1_YSUMCE
+
+			If (cQrySA1)->ACY_YSUMCE > 0
+
+				nDiaVenc := (cQrySA1)->ACY_YSUMCE
+
+			EndIf
+
+		EndIf 
+
+		(cQrySA1)->(DbCloseArea()) 
+
+		If nDiaVenc > 0
+			SE1->E1_VENCTO  := SE1->E1_VENCTO + nDiaVenc
+			SE1->E1_VENCREA := DATAVALIDA(SE1->E1_VENCTO)
+		EndIf
+	
+	EndIf
+
 	
 	// tratamento para titulos de subistituicao tributaria
 	If SF2->F2_ICMSRET > 0 .And. Alltrim(SF2->F2_EST) $ GetMV("MV_YUFSTCD") .And. Alltrim(SE1->E1_PARCELA) == 'A' .And. Alltrim(cEmpAnt) $ '01_05_07'
@@ -193,39 +230,6 @@ IF IsInCallStack("U_BACP0010")  .OR. UPPER(ALLTRIM(FUNNAME())) == "MATA460A" .OR
 		EndIf						
 	EndIf
 
-	//ROTINA TRANSFERIDA DO P.E. MT461VCT - desenvolvido de forma incorreta na automacao
-	//AJUSTE REALIZADO EM 04/08/2021 COM AS VALIDACOES FIDC
-	//ADICIONA REGRA PARA CLIENTES ESPECIAIS, CASO TENHA O CAMPO PREENCHIDO
-	cSQL := ""
-	cSQL += "SELECT A1_COD, A1_LOJA, A1_NOME, A1_GRPVEN, A1_YSUMCE, ISNULL(ACY_YSUMCE,0) ACY_YSUMCE "
-	cSQL += "FROM SA1010 SA1 LEFT JOIN ACY010 ACY ON A1_GRPVEN = ACY_GRPVEN AND ACY.D_E_L_E_T_ = '' "
-	If Alltrim(cempant) $ "01_05_13_14" .And. SA1->A1_COD == "010064" 
-		cSQL += "WHERE A1_COD = '"+SC5->C5_YCLIORI+"' AND A1_LOJA = '"+SC5->C5_YLOJORI+"' AND SA1.D_E_L_E_T_ = ''  
-	else
-		cSQL += "WHERE A1_COD = '"+SF2->F2_CLIENTE+"' AND A1_LOJA = '"+SF2->F2_LOJA+"' AND SA1.D_E_L_E_T_ = '' 
-	EndIf
-	TcQuery cSQL New Alias (cQrySA1)
-
-	If !(cQrySA1)->(Eof()) .And. (cQrySA1)->A1_YSUMCE > 0
-		
-		nDiaVenc := (cQrySA1)->A1_YSUMCE
-
-		If (cQrySA1)->ACY_YSUMCE > 0
-
-			nDiaVenc := (cQrySA1)->ACY_YSUMCE
-
-		EndIf
-
-	EndIf 
-
-	(cQrySA1)->(DbCloseArea()) 
-
-	If nDiaVenc > 0
-		SE1->E1_VENCTO  := SE1->E1_VENCTO + nDiaVenc
-		SE1->E1_VENCREA := DATAVALIDA(SE1->E1_VENCTO)
-	EndIf
-			
-	
 	//SOLICITACAO DO SR. DIOGO E VAGNER NO DIA 23/06/09
 	//INCLUIDO MUNDI NO DIA 26/03/12
 	//Em 20/07/2021 - Solicitado Por Nadine  para somar 5 dias e não mais 7

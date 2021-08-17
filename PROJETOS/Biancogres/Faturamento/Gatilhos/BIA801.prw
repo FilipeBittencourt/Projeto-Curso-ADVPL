@@ -15,6 +15,7 @@
 /*/                           	
 
 User Function BIA801()
+Local aArea	:= GetArea()
 
 //Tratamento especial para Replcacao de pedido LM
 If AllTrim(FunName()) $ GetNewPar("FA_XPEDRPC","BFATRT01###FCOMRT01###BFVCXPED###FCOMXPED###TESTEF1###RPC") .OR. AllTrim(FunName()) $ GetNewPar("FA_XPEDRQC","FRQCTE01###FRQCRT02") 
@@ -30,10 +31,6 @@ Private cInd	:= 0
 Private cReg	:= 0
 Private lRet	:= .F.
 
-cArq := Alias()
-cInd := IndexOrd()
-cReg := Recno()
-
 If ALLTRIM(FUNNAME()) == "MATA410" .Or. ALLTRIM(FUNNAME()) == "MATA416"
 	wCondPag	:= M->C5_CONDPAG
 	wCliente	:= M->C5_CLIENTE
@@ -46,17 +43,9 @@ Else
 	wLinha		:= M->CJ_YLINHA
 EndIf
 
-//Buscando informações do Cliente de acordo com a Linha/Empresa do Pedido
-If wLinha $ "1_5" 
-	cSql := "SELECT A1_COD, A1_LOJA, A1_YFORMA, A1_YTPSEG FROM SA1010 WHERE A1_COD = '"+wCliente+"' AND A1_LOJA = '"+wLoja+"' AND D_E_L_E_T_ = '' "
-Else
-	cSql := "SELECT A1_COD, A1_LOJA, A1_YFORMA, A1_YTPSEG FROM SA1050 WHERE A1_COD = '"+wCliente+"' AND A1_LOJA = '"+wLoja+"' AND D_E_L_E_T_ = '' "
-EndIf
-If chkfile("_SA1")
-	dbSelectArea("_SA1")
-	dbCloseArea()
-EndIf
-TcQuery cSql ALIAS "_SA1" NEW
+//Posiciona no Cliente (ja deve estar posicionado)
+SA1->(DbSetOrder(1))
+SA1->(DbSeek(xFilial("SA1")+wCliente+wLoja))
 
 //Definindo a Forma de Pagamento
 If U_fValidaRA(wCondPag) 
@@ -64,7 +53,7 @@ If U_fValidaRA(wCondPag)
 	wForma := "3"
 Else
 	//Forma de Pagamento do Cliente
-	wForma := _SA1->A1_YFORMA
+	wForma := SA1->A1_YFORMA
 EndIf
 
 //Para Pedidos "Devolucao" ou "Utiliza Fornecedor" lanca OP
@@ -89,18 +78,10 @@ If wForma == "4"
 EndIf
 
 //Se o Cliente for de Engenharia, altera o Tipo de Credito
-If !Alltrim(M->C5_YSUBTP) $ "A_B_G_O_C_M_" .And. Alltrim(_SA1->A1_YTPSEG) == "E" .And. Alltrim(wForma) <> "4"
+If !Alltrim(M->C5_YSUBTP) $ "A_B_G_O_C_M_" .And. Alltrim(SA1->A1_YTPSEG) == "E" .And. Alltrim(wForma) <> "4"
 	M->C5_YTPCRED := "5" //Eng.
 EndIf
 
-//Fechando arquivo temporario
-If chkfile("_SA1")
-	dbSelectArea("_SA1")
-	dbCloseArea()
-EndIf
-
-DbSelectArea(cArq)
-DbSetOrder(cInd)
-DbGoTo(cReg)
+RestArea(aArea)
 
 Return(wForma)

@@ -784,7 +784,7 @@ Static Function Prenche_Re()
 		EndIf
 
 		//Fernando/Facile em 21/01/15 - preencher campos para reserva de estoque
-		IF !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES","14"))) .And. !(M->C5_YSUBTP $ AllTrim(GetNewPar("FA_TPNLOT","A #M #G #B #RI#"))) .And. !(M->C5_YLINHA == "4")
+		IF !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES",""))) .And. !(M->C5_YSUBTP $ AllTrim(GetNewPar("FA_TPNLOT","A #M #G #B #RI#"))) .And. !(M->C5_YLINHA == "4")
 
 			Gdfieldput("C6_YTPEST"	,"E",n)
 			U_FROPCLFU()
@@ -796,7 +796,7 @@ Static Function Prenche_Re()
 
 		IF Alltrim(Gdfieldget("C6_PRODUTO",n)) == ALLTRIM(_cProdSel)
 
-			IF (AllTrim(CEMPANT) <> "14") .And. (AllTrim(_cLoteSel) <> "AMT") .And. (_nQtdDispo % SB1->B1_CONV) > 0
+			IF (AllTrim(_cLoteSel) <> "AMT") .And. (_nQtdDispo % SB1->B1_CONV) > 0
 				MSGALERT("ATENÇÃO! Estoque disponivel do lote NÃO é caixa fechada."+Chr(10)+Chr(13)+"Favor verificar o estoque.","Valida Caixa Fechada")
 				return
 			ENDIF
@@ -883,7 +883,7 @@ Static Function Prenche_Re()
 			
 
 			//Fernando/Facile em 08/04/2015 - preencher campos de bloqueio quando a selecao manual de lote - para tela de permissao do gerente
-			IF !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES","14"))) .And. !(M->C5_YSUBTP $ AllTrim(GetNewPar("FA_TPNLOT","A #M #G #B #RI#"))) .And. !(M->C5_YLINHA == "4")
+			IF !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES",""))) .And. !(M->C5_YSUBTP $ AllTrim(GetNewPar("FA_TPNLOT","A #M #G #B #RI#"))) .And. !(M->C5_YLINHA == "4")
 
 				Gdfieldput("C6_YTPEST"	,"E",n)
 
@@ -1028,7 +1028,7 @@ Static Function FilProc()
 		cSQL += "			,DC_QUANT " + CRLF
 		cSQL += "		FROM "+RetSqlName("SDC")+" " + CRLF
 		cSQL += "		WHERE DC_FILIAL = '"+XFILIAL("SDC")+"' " + CRLF
-		cSQL += "			AND DC_LOCAL IN (" + cAlmox + ") + CRLF
+		cSQL += "			AND DC_LOCAL IN (" + cAlmox + ") " + CRLF
 		cSQL += "			AND D_E_L_E_T_ = '' " + CRLF
 		cSQL += "		) A " + CRLF
 		cSQL += "		GROUP BY DC_PRODUTO,DC_LOTECTL ) SDC " + CRLF
@@ -1754,7 +1754,7 @@ Static Function Browse3(PRO,cEmpresa)
 		ElseIf cEmpresa == "13"
 			cSql += " FROM SDC130 DC, SC9130 C9, SC5130 C5, SC6130 C6 "
 		ElseIf cEmpresa == "14"
-			cSql += " FROM SDC140 DC, SC9130 C9, SC5140 C5, SC6140 C6 "
+			cSql += " FROM SDC140 DC, SC9140 C9, SC5140 C5, SC6140 C6 "
 		EndIf
 	Else
 		cSql += " FROM " + RETSQLNAME("SDC") +  " DC, " + RETSQLNAME("SC9") +  " C9, " + RETSQLNAME("SC5") +  " C5 WITH (NOLOCK), " + RETSQLNAME("SC6") +  " C6 WITH (NOLOCK)"

@@ -167,6 +167,7 @@ Method LoadFiliais() Class TGnreTransmissao
 	aAdd( aFil , { "01", "01" } )
 	aAdd( aFil , { "05", "01" } )
 	aAdd( aFil , { "07", "01" } )
+	aAdd( aFil , { "14", "01" } )
 
 Return(aFil)
 

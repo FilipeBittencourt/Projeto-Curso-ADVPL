@@ -68,6 +68,12 @@ User Function M461SER()
 			cSer := "2  "
 		EndIf		
 
+	ElseIf cEmpAnt == "14" //Biancogres Vinilico
+
+		If Alltrim(SC5->C5_YEMP) == "1302"
+			cSer := "1  "
+		EndIf				
+
 	EndIf
 
 	cSerie	:= cSer												//Atualiza Série, de acordo com a regra.

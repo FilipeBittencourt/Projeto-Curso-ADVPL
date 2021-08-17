@@ -17,6 +17,7 @@
 User Function BIA827()
 Local wRet 		:= ""
 Local wLinha	:= ""
+Local cUF		:= ""
 
 //Tratamento especial para Replcacao de pedido LM
 If AllTrim(FunName()) $ GetNewPar("FA_XPEDRPC","BFATRT01###FCOMRT01###BFVCXPED###FCOMXPED###TESTEF1###RPC")
@@ -34,12 +35,41 @@ If AllTrim(FunName()) $ GetNewPar("FA_XPEDRPC","BFATRT01###FCOMRT01###BFVCXPED##
 	ElseIf wLinha == "6"		//VINILICO
 		wRet := Tabela("ZF","6E")
 	EndIf
+
+	If (Alltrim(wLinha) == "6" .And. (cEmpAnt == '07' .Or. cEmpAnt == '14') )
+		
+		If !(Empty(M->C5_CLIENTE))
+			
+			cUF := Posicione("SA1",1,XFILIAL("SA1")+M->C5_CLIENTE+M->C5_LOJACLI,"A1_EST")
+			
+			If (cFilAnt <> '05')
+				
+				If (AllTrim(cUF) == "ES")
+					wRet := Tabela("ZF","V01")
+				Else
+					wRet := Tabela("ZF","V02")
+				EndIf
+			
+			Else
+			
+				wRet := Tabela("ZF","V03")
+			
+			EndIf
+			
+		EndIf
+		
+	ElseIf (Alltrim(M->C5_YLINHA) == "6" .And. cEmpAnt == '13') //tabela de replicação
+		
+		wRet := Tabela("ZF","VRP")
+		
+	EndIf	
+
 	Return(wRet)
 EndIf
               
 If AllTrim(FunName()) $ "BFATTE01###BIA229"  //Obras e Prosposta Comercial Engenharia - Fernando em 03/03/2016
 	wLinha	:= Alltrim(M->Z68_LINHA)
-ElseIf Funname() == "MATA415"						//Orcamento
+ElseIf Funname() == "MATA415"					//Orcamento
 	wLinha	:= Alltrim(M->CJ_YLINHA)
 ElseIf Funname() == "RPC"
 	wLinha	:= Alltrim(M->CJ_YLINHA)
@@ -59,6 +89,34 @@ ElseIf wLinha == "5"		//PEGASUS
 	wRet := Tabela("ZF","5E")
 ElseIf wLinha == "6"		//VINILICO
 	wRet := Tabela("ZF","6E")	
+EndIf
+
+If (Alltrim(wLinha) == "6" .And. (cEmpAnt == '07' .Or. cEmpAnt == '14') )
+	
+	If !(Empty(M->C5_CLIENTE))
+		
+		cUF := Posicione("SA1",1,XFILIAL("SA1")+M->C5_CLIENTE+M->C5_LOJACLI,"A1_EST")
+		
+		If (cFilAnt <> '05')
+			
+			If (AllTrim(cUF) == "ES")
+				wRet := Tabela("ZF","V01")
+			Else
+				wRet := Tabela("ZF","V02")
+			EndIf
+		
+		Else
+		
+			wRet := Tabela("ZF","V03")
+		
+		EndIf
+		
+	EndIf
+	
+ElseIf (Alltrim(M->C5_YLINHA) == "6" .And. cEmpAnt == '13') //tabela de replicação
+	
+	wRet := Tabela("ZF","VRP")
+	
 EndIf
 
 Return(wRet)	

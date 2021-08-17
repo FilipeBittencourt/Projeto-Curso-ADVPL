@@ -424,7 +424,7 @@ User Function FRRT03V3()
 
 	//Alteração de Pedido - Modo Atendente - Deletar Linha
 	//Nao permitir Alterar o Produto
-	If !INCLUI .And. Empty(CREPATU) .And. M->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES","14"))) .And. M->C5_YLINHA <> "4"
+	If !INCLUI .And. Empty(CREPATU) .And. M->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES",""))) .And. M->C5_YLINHA <> "4"
 
 		//Se for o mesmo produto - somente dando ENTER para ativar gatilhos - permite
 		If AllTrim(M->C6_PRODUTO) == AllTrim(gdfieldget("C6_PRODUTO"))

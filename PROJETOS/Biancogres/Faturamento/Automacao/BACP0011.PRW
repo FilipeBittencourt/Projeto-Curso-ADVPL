@@ -19,7 +19,7 @@ User Function BACP0011()
 
 	RpcSetEnv('01','01')
 
-	xv_Emps    := U_BAGtEmpr("01_05_07_13")
+	xv_Emps    := U_BAGtEmpr("01_05_07_13_14")
 
 	RpcClearEnv()
 
@@ -88,6 +88,9 @@ Static Function fProcessa(_cEmp)
 			Case (_cEmp == '13')
 			_cZZW		:=	"%ZZW130%"
 			_cZZV		:=  "%ZZV130%"
+			Case (_cEmp == '14')
+			_cZZW		:=	"%ZZW140%"
+			_cZZV		:=  "%ZZV140%"			
 			OtherWise
 			ConOut('BACP0011::Empresa/Filial não Cadastrada... '+cEmpAnt+'/'+cFilAnt+' - '+ Time())
 			Return

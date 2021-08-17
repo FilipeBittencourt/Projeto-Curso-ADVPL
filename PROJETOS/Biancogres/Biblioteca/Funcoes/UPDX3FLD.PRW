@@ -11,7 +11,7 @@ Return
 
 Static Function ImpCliECO()
 
-	Local aEmp		:= {"01","05","13"}
+	Local aEmp		:= {"01","05","13","14"}
 	Local x			:= 0
 	Local nTable	:= ""
 	Local cSql 		:= ""

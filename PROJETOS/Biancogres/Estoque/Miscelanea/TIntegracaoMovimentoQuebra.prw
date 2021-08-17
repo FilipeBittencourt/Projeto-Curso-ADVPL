@@ -54,6 +54,7 @@ Class TIntegracaoMovimentoQuebra From LongClassName
     Public Method GravaLog()
     Public Method Workflow()
     Public Method ErroWorkflow()
+    Public Method AtualizaDoctoECOSIS(etiqueta, num_docto)
     
     Public Method Log(cTab, cQry, cLog, cStatus)
 
@@ -546,9 +547,23 @@ Method GravaLog() Class TIntegracaoMovimentoQuebra
         
         ::ErroWorkflow(cEtiqueta, cProduto, cLote, cQuantidade, ::aErro[nW][3])
         
+        ::AtualizaDoctoECOSIS(cEtiqueta, ::aErro[nW][5])
+        
     Next nW
     
 Return()
+
+Method AtualizaDoctoECOSIS(etiqueta, num_docto) class TIntegracaoMovimentoQuebra
+    
+    Local cSQL	:= ""
+
+    If !Empty(Alltrim(etiqueta)) .And. !Empty(Alltrim(num_docto))
+        cSQL := "UPDATE DADOSEOS..cep_etiqueta_class_quebra SET ecq_docto = '"+Alltrim(num_docto)+"' WHERE cod_etiqueta = '" + Alltrim(etiqueta) + "'"
+    	TCSQLExec(cSQL)
+    EndIf
+
+Return()
+
 
 Method Workflow(cQrySC9, cQry) Class TIntegracaoMovimentoQuebra
 	

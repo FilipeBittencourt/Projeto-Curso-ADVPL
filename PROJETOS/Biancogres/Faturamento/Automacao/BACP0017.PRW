@@ -19,7 +19,7 @@ User Function BACP0017(cCarga)
 
 	RpcSetEnv('01','01')
 
-	xv_Emps    := U_BAGtEmpr("01_05_13")
+	xv_Emps    := U_BAGtEmpr("01_05_13_14")
 
 	RpcClearEnv()
 

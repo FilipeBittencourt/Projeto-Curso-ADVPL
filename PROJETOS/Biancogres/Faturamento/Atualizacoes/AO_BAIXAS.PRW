@@ -398,7 +398,7 @@ User Function AO_VAL_E(_NUM_SI)
 
 	IF !QRY->(Eof())
 		
-		If Alltrim(M->C5_YSUBTP) == "B" .And. AllTrim(QRY->ZO_FPAGTO) != "1"
+		If Alltrim(M->C5_YSUBTP) == "B" .And. AllTrim(QRY->ZO_FPAGTO) != "1" .And. AllTrim(QRY->ZO_FPAGTO) != ""
 			Aviso("AUTORIZAÇÃO DE INVESTIMENTO","Atenção: A SI informada não é do 'Tipo de Pagamento: Bonificacao' e não está autorizada para esse tipo de pedido",{"OK"},2,"SI informada: "+_NUM_SI)
 			QRY->(DbCloseArea())
 			Return(.F.)		
@@ -603,7 +603,7 @@ User Function AO_INCBX(_CPEDIDO,_CNUMSI, _CTEXTO, _NOPC)
 
 		EndIf 
 
-		If Empty(_cEmpDest) .Or. ( AllTrim(CEMPANT) $ "01#05#13" )  // Ajuste Ticket 11063 - Se o pedido está na empresa fabrica - a AI tem que estar nesta empresa - nao usar a regra da marca pois apos consolidacao os pedidos sao todos na Biancogres 
+		If Empty(_cEmpDest) .Or. ( AllTrim(CEMPANT) $ "01#05#13#14" )  // Ajuste Ticket 11063 - Se o pedido está na empresa fabrica - a AI tem que estar nesta empresa - nao usar a regra da marca pois apos consolidacao os pedidos sao todos na Biancogres 
 
 			lRet := U_AO_IBX_E(_CPEDIDO,_CNUMSI,_NVALOR,,_CTEXTO)
 

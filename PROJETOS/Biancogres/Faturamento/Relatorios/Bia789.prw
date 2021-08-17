@@ -2826,6 +2826,8 @@ Static Function ReportPrint(oReport)
 		oSection1:Cell('MARCA'	  		):SetValue("Bellacasa")
 	Case cLinha == "1399"
 		oSection1:Cell('MARCA'	  		):SetValue("Mundialli")
+	Case cLinha == "1302"
+		oSection1:Cell('MARCA'	  		):SetValue("Vinilico")		
 	Case cLinha == "1401"
 		oSection1:Cell('MARCA'	  		):SetValue("Vitcer")
 	OTHERWISE

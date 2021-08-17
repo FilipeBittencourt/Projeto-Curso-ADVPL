@@ -28,7 +28,7 @@ Return(uRet)
 
 Static Function BIA660()
 
-	Local cEmpNPOL := AllTrim(GetNewPar("FA_EMPNPOL","14#"))
+	Local cEmpNPOL := AllTrim(GetNewPar("FA_EMPNPOL",""))
 	local _ni
 
 	//Inicialização de variáveis

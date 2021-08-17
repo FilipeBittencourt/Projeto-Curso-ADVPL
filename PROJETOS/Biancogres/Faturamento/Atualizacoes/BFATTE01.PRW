@@ -1192,6 +1192,8 @@ User Function BF01PRXX(_cLinha, _cCodCli, _cLojCli, _cProduto, _dDEmissa)
 		_cCodTab := Tabela("ZF","3E")
 	ElseIf _cLinha == "4"		//MUNDI
 		_cCodTab := Tabela("ZF","4E")
+	ElseIf _cLinha == "6"		//BIANCOGRES VINILICO
+		_cCodTab := Tabela("ZF","6E")		
 	EndIf
 
 	//Preco

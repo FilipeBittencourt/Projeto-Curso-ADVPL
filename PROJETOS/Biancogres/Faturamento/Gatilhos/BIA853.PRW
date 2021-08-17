@@ -55,11 +55,6 @@ If Empty(Alltrim(nProduto))
 	Return(0)
 EndIf
 
-// Tratamento para Empresa 14. Primeiros passos. Por Marcos Alberto Soprani em 18/09/13
-If cEmpAnt == "14"
-	Return(nQtdM2)
-EndIf
-
 //Busca informações do Lote do Produto 
 cAliasZZ9 := GetNextAlias()
 BeginSql Alias cAliasZZ9

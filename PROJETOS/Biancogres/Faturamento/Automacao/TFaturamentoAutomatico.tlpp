@@ -76,6 +76,14 @@ Method GetPedidosFaturar(_cCarga,_cEmp) Class TFaturamentoAutomatico
 		_cSA4		:=	"%SA4010%"
 		_cSB1		:=	"%SB1010%"
 		_cSC9		:=  "%SC9130%"
+		Case (_cEmp == '14')
+		_cZZV		:=	"%ZZV140%"
+		_cZZW		:=	"%ZZW140%"
+		_cSE4		:=	"%SE4010%"
+		_cSF4		:=	"%SF4140%"
+		_cSA4		:=	"%SA4010%"
+		_cSB1		:=	"%SB1010%"
+		_cSC9		:=  "%SC9140%"		
 		OtherWise
 		ConOut('BACP0012::Empresa/Filial não Cadastrada... '+_cEmp+'/'+cFilAnt+' - '+ Time())
 		Return

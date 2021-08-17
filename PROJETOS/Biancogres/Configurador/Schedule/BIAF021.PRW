@@ -23,6 +23,12 @@ Private _cMensag := ''
 Private cEmail := cDest
 Private cBoleto := cNumBol
 	
+	// desliga envio do ambiente teste FAVARO
+	cServerIP:=strTran(getServerIP(),".","")
+	IF cServerIP=="1921682018"
+		Return()
+	EndIf
+
 	GeraWF(cNumPed)
 	
 	RestArea(aArea)

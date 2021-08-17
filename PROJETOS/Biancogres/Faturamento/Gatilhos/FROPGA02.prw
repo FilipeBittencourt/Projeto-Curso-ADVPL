@@ -58,7 +58,7 @@ User Function FROPGA02()
 	Local _lAchouOPE	:= .F.
 	Local _cSegmento	:= "R"
 
-	Local _aDadCli		:= {}
+	//Local _aDadCli		:= {}
 	Local _cTrtEsp		:= ""
 	Local _cCategoria	:= ""
 	Local _cLotRes		:= ""
@@ -88,12 +88,6 @@ User Function FROPGA02()
 	Local _YGaleria := ""
 	
 	Public __cResSilver := .F.
-
-	//Empresas - Vitcer nao usa
-	If AllTrim(CEMPANT) == "14"
-		aCols[N][_nPTPEST] := "E"
-		Return(_nQtdDig)
-	EndIf
 
 	//Tratamento outros tipos de pedido
 	If M->C5_TIPO <> "N"
@@ -154,11 +148,11 @@ User Function FROPGA02()
 	SA1->(DbSetOrder(1))
 	If SA1->(DbSeek(XFilial("SA1")+M->C5_CLIENTE+M->C5_LOJACLI))
 
-		_aDadCli	:= U_fInfCliente(M->C5_YLINHA, M->C5_CLIENTE, M->C5_LOJACLI)
-		_cTrtEsp	:= _aDadCli[1]
-		_cCategoria	:= _aDadCli[2]
-		_cSegmento	:= _aDadCli[3]
-		_cLotRes 	:= _aDadCli[4]
+		//_aDadCli	:= U_fInfCliente(M->C5_YLINHA, M->C5_CLIENTE, M->C5_LOJACLI) //desativado em 10/08/2021 Ranisses - Projeto Vinilico
+		_cTrtEsp	:= SA1->A1_YTRTESP	//_aDadCli[1]
+		_cCategoria	:= SA1->A1_YCAT 	//_aDadCli[2]
+		_cSegmento	:= SA1->A1_YTPSEG 	//_aDadCli[3]
+		_cLotRes 	:= SA1->A1_YLOTRES	//_aDadCli[4]
 
 		_cUFCli		:= SA1->A1_EST
 		_YGaleria	:= SA1->A1_YGALERI
@@ -389,7 +383,7 @@ User Function FROPGA02()
 					_nQtdRet 	:= _nQtdDig
 
 					//OP futura sempre vincular a Biancogres - projeto consolidacao - 14/11/2018
-					_cEmpOri	:= "01"
+					_cEmpOri	:= Subst(SB1->B1_YEMPEST,1,2)
 					SBZ->(DbSetOrder(1))
 					If SBZ->(DbSeek(XFilial("SBZ")+_cProd)) .And. !Empty(SBZ->BZ_LOCPAD)
 						_cLocEst	:= SBZ->BZ_LOCPAD

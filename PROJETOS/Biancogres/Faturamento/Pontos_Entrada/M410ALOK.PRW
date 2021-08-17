@@ -30,7 +30,7 @@ User Function M410ALOK
 		EndIf
 
 
-		If SC5->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES","14"))) .And. SC5->C5_YLINHA <> "4"
+		If SC5->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES",""))) .And. SC5->C5_YLINHA <> "4"
 
 			lRetorno := U_FROPRT03(SC5->C5_NUM)
 

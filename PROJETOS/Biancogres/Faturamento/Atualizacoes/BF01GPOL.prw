@@ -41,11 +41,6 @@ Local nDTOT
 
 Default _lUpdACols := .T.
                                                                      
-Private _cSegmento := ""
-
-//Verificando Segmento do Cliente
-_cSegmento := U_fSegCliente(_cLinha, _cCodCli, _cLojCli) 
-
 //Validacao de campos
 If Empty(_cCliente) .Or. Empty(_cVendedor) .Or. Empty(_cProduto)
 	MsgAlert("É obrigatório informar:  CLIENTE, VENDEDOR e PRODUTO - antes de digitar a quantidade vendida.","ATENÇÃO! POLITICA DE DESCONTO -> BF01GPOL")
@@ -78,16 +73,16 @@ oDesconto:DESP			:= _nDESP
 SB1->(DbSetOrder(1))
 SB1->(DbSeek(XFilial("SB1")+_cProduto))
 
-_aPal	:= CalcPalete(_cProduto, _nQtdDig)
+_aPal					:= CalcPalete(_cProduto, _nQtdDig)
 oDesconto:_lPaletizado	:= ( _aPal[2] == _nQtdDig )
 
-_aImposto		:= U_fGetImp({"IT_ALIQICM","IT_ALIQPIS","IT_ALIQCOF"}, _cCodCli, _cLojCli, _cProduto,, 0, 0, 0)
+_aImposto				:= U_fGetImp({"IT_ALIQICM","IT_ALIQPIS","IT_ALIQCOF"}, _cCodCli, _cLojCli, _cProduto,, 0, 0, 0)
 
 oDesconto:_nPICMS 		:= _aImposto[1]
 oDesconto:_nPPIS		:= _aImposto[2]
 oDesconto:_nPCOF		:= _aImposto[3]
 
-_cComis1		:= Posicione("SA1",1,xFilial("SA1")+_cCodCli+_cLojCli,"A1_COMIS")
+_cComis1				:= Posicione("SA1",1,xFilial("SA1")+_cCodCli+_cLojCli,"A1_COMIS")
 oDesconto:_nAComis		:= U_fCalComi(_cComis1,oDesconto:_cProduto)
 
 oDesconto:DNV			:= Gdfieldget("Z69_DNV" ,N)

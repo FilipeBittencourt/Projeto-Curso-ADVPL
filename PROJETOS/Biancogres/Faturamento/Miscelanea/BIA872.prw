@@ -88,7 +88,7 @@ Static Function RunProcCli()
 	Local nNomeTMP	:= ""
 	Local nTempCLI	:= ""
 	Local nTempVEN	:= ""
-	Local aMarca	:= {"0101","0501","0599","1399"}
+	Local aMarca	:= {"0101","0501","0599","1302","1399"}
 	Local dDtIni	:= FirstDate(Stod(MV_PAR02+MV_PAR01+"01"))
 	Local dDtFim	:= LastDate(Stod(MV_PAR02+MV_PAR01+"01"))
 	Local dDt6Ini	:= FirstDate(MonthSub((Stod(MV_PAR02+MV_PAR01+"01")),6))
@@ -96,18 +96,24 @@ Static Function RunProcCli()
 	Local x
 
 	//Limpando os registros já gravados
-	For x := 1 to Len(aMarca)
+	cSql := "UPDATE SD2010 SET D2_YCLIINV = 0, D2_YEMPINV = 0 WHERE D2_FILIAL = '01' AND D2_EMISSAO >= '"+DTOS(dDtIni)+"' AND D2_EMISSAO <= '"+DTOS(dDtFim)+"' AND D_E_L_E_T_ = ''  "
+	U_BIAMsgRun("Limpando registros Faturamento Empresa 01 ...",,{|| TcSQLExec(cSql)})
 
-		cSql := "UPDATE SD2"+Substr(aMarca[x],1,2)+"0 SET D2_YCLIINV = 0, D2_YEMPINV = 0 WHERE D2_FILIAL = '01' AND D2_EMISSAO >= '"+DTOS(dDtIni)+"' AND D2_EMISSAO <= '"+DTOS(dDtFim)+"' AND D_E_L_E_T_ = ''  "
-		U_BIAMsgRun("Limpando registros Faturamento Marca "+aMarca[x]+"...",,{|| TcSQLExec(cSql)})
+	cSql := "UPDATE SD2050 SET D2_YCLIINV = 0, D2_YEMPINV = 0 WHERE D2_FILIAL = '01' AND D2_EMISSAO >= '"+DTOS(dDtIni)+"' AND D2_EMISSAO <= '"+DTOS(dDtFim)+"' AND D_E_L_E_T_ = ''  "
+	U_BIAMsgRun("Limpando registros Faturamento Empresa 05 ...",,{|| TcSQLExec(cSql)})
 
-		cSql := "UPDATE SD2070 SET D2_YCLIINV = 0, D2_YEMPINV = 0 WHERE D2_FILIAL = '01' AND D2_YEMP = '"+aMarca[x]+"' AND D2_EMISSAO >= '"+DTOS(dDtIni)+"' AND D2_EMISSAO <= '"+DTOS(dDtFim)+"' AND D_E_L_E_T_ = ''  "
-		U_BIAMsgRun("Limpando registros Faturamento Empresa 07 + Marca "+aMarca[x]+"...",,{|| TcSQLExec(cSql)})
+	cSql := "UPDATE SD2070 SET D2_YCLIINV = 0, D2_YEMPINV = 0 WHERE D2_FILIAL = '01' AND D2_EMISSAO >= '"+DTOS(dDtIni)+"' AND D2_EMISSAO <= '"+DTOS(dDtFim)+"' AND D_E_L_E_T_ = ''  "
+	U_BIAMsgRun("Limpando registros Faturamento Empresa 07 ...",,{|| TcSQLExec(cSql)})
 
-		cSql := "UPDATE ZCF010 SET D_E_L_E_T_ = '*', R_E_C_D_E_L_ = R_E_C_N_O_ WHERE ZCF_MARCA = '"+aMarca[x]+"' AND ZCF_DATA >= '"+DTOS(dDtIni)+"' AND ZCF_DATA <= '"+DTOS(dDtFim)+"' AND D_E_L_E_T_ = ''  "
-		U_BIAMsgRun("Limpando registros Rateio Marca "+aMarca[x]+"...",,{|| TcSQLExec(cSql)})
+	cSql := "UPDATE SD2130 SET D2_YCLIINV = 0, D2_YEMPINV = 0 WHERE D2_FILIAL = '01' AND D2_EMISSAO >= '"+DTOS(dDtIni)+"' AND D2_EMISSAO <= '"+DTOS(dDtFim)+"' AND D_E_L_E_T_ = ''  "
+	U_BIAMsgRun("Limpando registros Faturamento Empresa 13 ...",,{|| TcSQLExec(cSql)})
 
-	Next
+	cSql := "UPDATE SD2140 SET D2_YCLIINV = 0, D2_YEMPINV = 0 WHERE D2_FILIAL = '01' AND D2_EMISSAO >= '"+DTOS(dDtIni)+"' AND D2_EMISSAO <= '"+DTOS(dDtFim)+"' AND D_E_L_E_T_ = ''  "
+	U_BIAMsgRun("Limpando registros Faturamento Empresa 14 ...",,{|| TcSQLExec(cSql)})
+
+	cSql := "UPDATE ZCF010 SET D_E_L_E_T_ = '*', R_E_C_D_E_L_ = R_E_C_N_O_ WHERE ZCF_DATA >= '"+DTOS(dDtIni)+"' AND ZCF_DATA <= '"+DTOS(dDtFim)+"' AND D_E_L_E_T_ = ''  "
+	U_BIAMsgRun("Limpando registros Rateio ...",,{|| TcSQLExec(cSql)})
+
 
 	For x := 1 to Len(aMarca)
 
@@ -123,7 +129,7 @@ Static Function RunProcCli()
 		cSql += "		SZO.ZO_FPAGTO  IN ('1','3') 			AND		" + Enter
 		cSql += "		SZO.ZO_CLIENTE NOT IN ('000481','022551','005884','005885','004536','010083','010064','025633','025634','025704','999999') AND		" + Enter
 		cSql += "		SZO.ZO_STATUS  = 'Baixa Total' 			AND		" + Enter
-		cSql += "		SZO.ZO_SI  	   = '999999' 				AND		" + Enter	
+		cSql += "		SZO.ZO_SI 	   = '999999' 				AND		" + Enter	
 		cSql += "		SZO.D_E_L_E_T_ = ''				 				" + Enter
 		cSql += "GROUP BY ZO_REPRE, ZO_CLIENTE, ZO_LOJA					" + Enter
 		cSql += "ORDER BY ZO_REPRE, ZO_CLIENTE, ZO_LOJA					" + Enter

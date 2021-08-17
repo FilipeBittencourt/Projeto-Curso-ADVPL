@@ -795,8 +795,8 @@ User Function FCOMXPED(cPedido, cEmpDest, _cRepAtu, _cUserName, cFilOri, lMatriz
 
 			EndIf
 
-			//GRAVA COMISSAO ZERO PARA PEDIDOS DE VENDA DA LM PARA FARBICA
-			If Alltrim(cEmpAnt) $ "01_05_13" .And. 	SC5->C5_CLIENTE == "010064"
+			//GRAVA COMISSAO ZERO PARA PEDIDOS DE VENDA DA LM PARA FABRICA
+			If Alltrim(cEmpAnt) $ "01_05_13_14" .And. 	SC5->C5_CLIENTE == "010064"
 				ConOut("FCOMRT01 => ACERTA COMISSAO CLIENTE LM")
 
 				SC6->(DbSetOrder(1))

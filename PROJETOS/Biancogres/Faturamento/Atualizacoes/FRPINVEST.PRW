@@ -38,7 +38,7 @@ User Function FRINVEST()
 	private cMatAte	   := space(TamSX3("RA_MAT")[1])
 
 	private cQEmp	   := "XX"
-	private	aEmps	   := {"XX=Ambas","01=Biancogres","05=Incesa"}
+	private	aEmps	   := {"XX=Todas","01=Biancogres","05=Incesa","14=Vinilico"}
 
 	private lEmail     := .F.
 
@@ -1350,7 +1350,7 @@ Return
 Static Function ValidLin(aTabRel, np, cLogRet)
 
 	Local _cTxt
-	Local _CCLVLALL   := GetNewPar("FA_CVLMALL","01#05")  //Parametro para Empresas permitidas para classe de valor LM de investimentos
+	Local _CCLVLALL   := GetNewPar("FA_CVLMALL","01#05#14")  //Parametro para Empresas permitidas para classe de valor LM de investimentos
 
 	Default cLogRet := ""
 

@@ -225,6 +225,8 @@ User Function MT500APO()
 			C_HTML += '    <td><div align="center" class="style41"> BELLACASA CERAMICA     </div></td> '
 			Case Alltrim(SC6->C6_YEMP) = "1301"
 			C_HTML += '    <td><div align="center" class="style41"> MUNDI                  </div></td> '
+			Case Alltrim(SC6->C6_YEMP) = "1302"
+			C_HTML += '    <td><div align="center" class="style41"> BIANCOGRES VINILICO    </div></td> '			
 			Case Alltrim(SC6->C6_YEMP) = "1401"
 			C_HTML += '    <td><div align="center" class="style41"> VITCER                 </div></td> '
 			Otherwise
@@ -312,6 +314,10 @@ User Function MT500APO()
 			aDestinatario	:= nEmail+"; " + U_EmailWF("WPELIMRES1301","","","D") //"rodolfo.stanke.mundi@biancogres.com.br"
 			aCC	:= cMailAnted+"; " + U_EmailWF("WPELIMRES1301","","","C") //"cancelamento.biancogres@biancogres.com.br"	
 			aCCO := "" 																								//"ranisses.corona@biancogres.com.br"
+			Case Alltrim(SC6->C6_YEMP) == "1302"
+			aDestinatario	:= nEmail+"; " + U_EmailWF("WPELIMRES0101","","","D")  
+			aCC := cMailAnted+"; " + U_EmailWF("WPELIMRES0101","","","C") 
+			aCCO := "" 																						
 			Case Alltrim(SC6->C6_YEMP) == "1401"
 			aDestinatario	:= nEmail+"; " + U_EmailWF("WPELIMRES1401","","","D") //"joan.mareto@vitcer.com.br"
 			aCC	:= cMailAnted+"; " + U_EmailWF("WPELIMRES1401","","","C") //"cancelamento.biancogres@biancogres.com.br"	

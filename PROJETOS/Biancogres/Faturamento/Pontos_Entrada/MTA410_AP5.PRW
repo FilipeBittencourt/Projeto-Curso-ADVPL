@@ -156,7 +156,7 @@ Static Function MTA410()
 	//BLOCO TRANSCRITIO DO PONTO DE ENTRADA M410LIOK ONDE FOI COMENTADO
 	nDescInc	:= 0
 	//IF !cEmpAnt $ "02_13_14" .And. M->C5_YCONF == "S"//Nao executa esta regra para Ceramica Incesa e Mundi. Empresa14 - tratamento feito por Marcos Alberto Soprani em 18/09/13
-	IF !cEmpAnt $ "02_13_14" .And. M->C5_YCONF == "S" .And. M->C5_TIPO <> "D"  //Adicionado a regra para o tipo de Devolução. - Carlos Junqueira  O.S 1785-16
+	IF !cEmpAnt $ "02_13" .And. M->C5_YCONF == "S" .And. M->C5_TIPO <> "D"  //Adicionado a regra para o tipo de Devolução. - Carlos Junqueira  O.S 1785-16
 		FOR I := 1 TO LEN(ACOLS)
 			nDescInc	:= Gdfieldget("C6_VALDESC",I)		//Desconto Incondicional
 			nProd		:= Gdfieldget("C6_PRODUTO",I)
@@ -266,8 +266,8 @@ Static Function MTA410()
 	//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 	//Não permite digitação dos campos Cliente/Loja Origem para vendas que não sejam LM
 	//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-	If cEmpAnt $ ("01_05_14") .And. !(Alltrim(M->C5_CLIENTE) $ "010064_008615") .And. Alltrim(M->C5_TIPO) == "N" .And. (!Empty(Alltrim(M->C5_YCLIORI)) .Or. !Empty(Alltrim(M->C5_YLOJORI)))
-		Msgbox("Os campos Cliente/Loja Origem devem ser preenchidos apenas para vendas para as empresas LM/VITCER!","MTA410","STOP")
+	If cEmpAnt $ ("01_05_13_14") .And. !(Alltrim(M->C5_CLIENTE) $ "010064") .And. Alltrim(M->C5_TIPO) == "N" .And. (!Empty(Alltrim(M->C5_YCLIORI)) .Or. !Empty(Alltrim(M->C5_YLOJORI)))
+		Msgbox("Os campos Cliente/Loja Origem devem ser preenchidos apenas para vendas para as empresas LM!","MTA410","STOP")
 		Return(.F.)
 	EndIf
 
@@ -390,7 +390,7 @@ Static Function MTA410()
 	//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 	//ROTINA PARA VERIFICAR SE O VENDEDOR ESTA CADASTRADO NA TABELA ZZI - AMARRACAO VEND X SUP X GER X SEG
 	//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-	If cEmpAnt $ "01_05" .And. SF4->F4_DUPLIC == "S" .And. Substr(Alltrim(Gdfieldget('C6_PRODUTO',1)),1,1) >= "A"
+	If cEmpAnt $ "01_05_14" .And. SF4->F4_DUPLIC == "S" .And. Substr(Alltrim(Gdfieldget('C6_PRODUTO',1)),1,1) >= "A"
 
 		/*cSql := "SELECT COUNT(*) QUANT " + Enter
 		cSql += "FROM "+RetSqlName("ZZI")+" ZZI " + Enter
@@ -405,9 +405,7 @@ Static Function MTA410()
 		TcQuery cSql ALIAS "_RRR" NEW
 		*/
 		__cYEmp := ""
-		If cEmpAnt == "14"
-			__cYEmp	:= "1401"
-		ElseIf cEmpAnt == "13"
+		If cEmpAnt == "13"
 			If M->C5_YLINHA == "4"
 				__cYEmp	:= "1399"
 			ElseIf M->C5_YLINHA == "6"
@@ -458,9 +456,7 @@ Static Function MTA410()
 	//-------------------------------------------------------------------------------------
 	//(Thiago Dantas - 08/04/2014) -> Verifca Total da comissão <-
 	//-------------------------------------------------------------------------------------
-	If (cEmpAnt <> '14')
-		nTotComiss := M->C5_COMIS1 + M->C5_COMIS2 +  M->C5_COMIS3 + M->C5_COMIS4 + M->C5_COMIS5
-	EndIf
+	nTotComiss := M->C5_COMIS1 + M->C5_COMIS2 +  M->C5_COMIS3 + M->C5_COMIS4 + M->C5_COMIS5
 
 	If (cEmpAnt $ '01_05_07_13_14')
 
@@ -479,10 +475,13 @@ Static Function MTA410()
 		ElseIf (M->C5_YLINHA == _MUNDI 		.AND. nTotComiss > GETMV("MV_YPCOMMD"))
 			cAuxMsg 	+= AllTrim(Str(GETMV("MV_YPCOMMD"))) +"%!"
 			lExcedVlr 	:= .T.
+		ElseIf (M->C5_YLINHA == _VINILICO	.AND. nTotComiss > GETMV("MV_YPCOMVN"))
+			cAuxMsg 	+= AllTrim(Str(GETMV("MV_YPCOMVN"))) +"%!"
+			lExcedVlr 	:= .T.
 		EndIf
 
 		If lExcedVlr
-			MsgBox(cAuxMsg,"MTA410","STOP")
+			MsgBox(cAuxMsg,"MTA410","STOP") 
 			Return(.F.)
 		EndIf
 
@@ -662,14 +661,9 @@ Static Function MTA410()
 
 						dDatUltPar := Z60->&(cCampoData)
 
-						// Regra não utilzada pela Vitcer
-						If cEmpAnt <> "14"
-
-							If Z60->&(cCampoVal) < nParcMin
-								MsgBox("A Parcela "+cValToChar(nCont)+" está com valor abaixo do mínimo permitido - R$ "+cValToChar(nParcMin)+".","MTA410","ALERT")
-								Return(.F.)
-							EndIf
-
+						If Z60->&(cCampoVal) < nParcMin
+							MsgBox("A Parcela "+cValToChar(nCont)+" está com valor abaixo do mínimo permitido - R$ "+cValToChar(nParcMin)+".","MTA410","ALERT")
+							Return(.F.)
 						EndIf
 
 					EndIf
@@ -692,14 +686,9 @@ Static Function MTA410()
 					EndIf
 				EndIf
 
-				// Regra não utilzada pela Vitcer
-				If cEmpAnt <> "14"
-
-					// Valida quantidade minina por contrato
-					If !QtdMinPed()
-						Return(.F.)
-					EndIf
-
+				// Valida quantidade minina por contrato
+				If !QtdMinPed()
+					Return(.F.)
 				EndIf
 
 			Else

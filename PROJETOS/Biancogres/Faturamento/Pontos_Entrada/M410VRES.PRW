@@ -36,7 +36,7 @@ User Function M410VRES()
 	//---------------------------------------------------------------------------------------------------------------------------
 	//FERNANDO/FACILE em 24/03/2014 - Projeto RESERVA DE OP - Validar pedidos com RESERVA
 	//---------------------------------------------------------------------------------------------------------------------------
-	If lRet .And. SC5->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES","14")))
+	If lRet .And. SC5->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES","")))
 
 		SC6->(DbSetOrder(1))
 

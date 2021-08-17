@@ -75,29 +75,21 @@ User Function BIA863()
 		//TODO REMOVER
 		//Avaliação caso tenha atualizado o grupo, poderá impactar na rede de compras
 		IF M->A1_GRPVEN != SA1->A1_GRPVEN 
-			
+
+			cQryRED	:= GetNextAlias()
+	
 			IF TRIM( M->A1_GRPVEN) != ""
-			
-			
 				sqlRed := "SELECT MAX(Z79_REDE) REDE from Z79010 where Z79_CODGRP = '"+ M->A1_GRPVEN +"' and D_E_L_E_T_ = ''"
-				If chkfile("_REDE")
-					dbSelectArea("_REDE")
-					dbCloseArea()
-				EndIf
-				TCQUERY sqlRed ALIAS "_REDE" NEW
-				
-				M->A1_YREDCOM := _REDE->REDE	
-			ELSE
+			Else
 				sqlRed := "SELECT MAX(Z79_REDE) REDE from Z79010 where Z79_CODCLI = '"+ M->A1_COD +"' and Z79_LOJCLI = '"+M->A1_LOJA+"' and D_E_L_E_T_ = ''"
-				If chkfile("_REDE")
-					dbSelectArea("_REDE")
-					dbCloseArea()
-				EndIf
-				TCQUERY sqlRed ALIAS "_REDE" NEW
+			EndIf
+			TcQuery sqlRed New Alias (cQryRED)
 				
-				M->A1_YREDCOM := _REDE->REDE	
-				
-			END IF	
+			If !(cQryRED)->(Eof())
+				M->A1_YREDCOM := (cQryRED)->REDE
+			EndIf	
+
+			(cQryRED)->(DbCloseArea()) 
 		
 		END IF
 			
@@ -112,8 +104,9 @@ User Function BIA863()
 		//Cadastrar Contatos	
 		Processa({|| fGravSU5() }, "Aguarde...", "Cadastrando Contatos...",.F.)
 
+		//DESATIVADO EM 12/08/2021 - REPLICACAO NO CADASTRO DE CLIENTE / CORRIGIDO AS SPs EOS_VALID_EXP_OC_XXXX QUE GRAVA O CLIENTE NO ECOSIS
 		//Replica Cadastro de Clientes no Sistema Ecosis
-		Processa({|| ImpCliECO() }, "Aguarde...", "Replicando Clientes para sistema Ecosis...",.F.)    									
+		//Processa({|| ImpCliECO() }, "Aguarde...", "Replicando Clientes para sistema Ecosis...",.F.)    									
 
 	EndIf
 
@@ -650,7 +643,7 @@ Return
 /*/
 Static Function ImpCliECO()
 
-	Local aEmp		:= {"01","05","13"}
+	Local aEmp		:= {"01","05","13","14"}
 	Local x			:= 0
 	Local nTable	:= ""
 	Local cSql 		:= ""
@@ -704,30 +697,30 @@ Return
 
 /*INICIANDO NOVO PADRÃO*/
 User Function valYFORMA(__EMPRESA, __GRUPO)
-	Local iYForma
-	Local Enter := CHR(13)+CHR(10)
-	Local aux := ""
-	
-	aux += "SELECT ZK1.ZK1_TPCOM" + Enter
-	aux += "FROM ZK0010 ZK0 WITH(NOLOCK)" + Enter
-	aux += "	INNER JOIN ZK1010 ZK1 WITH(NOLOCK)" + Enter
-	aux += "		ON ZK0.ZK0_FILIAL = ZK1.ZK1_FILIAL" + Enter
-	aux += "			AND ZK0.ZK0_CODREG = ZK1.ZK1_CODREG" + Enter
-	aux += "			AND ZK1.ZK1_CODEMP = '" + Substr(__EMPRESA,1,2) + "'" + Enter
-	aux += "			AND ZK1.D_E_L_E_T_ = ''" + Enter
-	aux += "WHERE ZK0.ZK0_FILIAL = '" + xFilial("ZK0") + "'" + Enter
-	aux += "	AND ZK0.ZK0_CODGRU = '" + __GRUPO + "'" + Enter
-	aux += "	AND ZK0.D_E_L_E_T_ = ''" + Enter
-	If ChkFile("_aux")
-		DbSelectArea("_aux")
-		DbCloseArea()
-	EndIf
-	TcQuery aux Alias "_aux" New
-	
-	If _aux->ZK1_TPCOM == "0"
-		iYForma := "3"
-	Else
-		iYForma := "1"
-	EndIf
+Local iYForma	:= ""
+Local Enter 	:= CHR(13)+CHR(10)
+Local cSQL 		:= ""
+Local cQryTMP	:= GetNextAlias()
+
+cSQL += "SELECT ZK1.ZK1_TPCOM" + Enter
+cSQL += "FROM ZK0010 ZK0 WITH(NOLOCK)" + Enter
+cSQL += "	INNER JOIN ZK1010 ZK1 WITH(NOLOCK)" + Enter
+cSQL += "		ON ZK0.ZK0_FILIAL = ZK1.ZK1_FILIAL" + Enter
+cSQL += "			AND ZK0.ZK0_CODREG = ZK1.ZK1_CODREG" + Enter
+cSQL += "			AND ZK1.ZK1_CODEMP = '" + Substr(__EMPRESA,1,2) + "'" + Enter
+cSQL += "			AND ZK1.D_E_L_E_T_ = ''" + Enter
+cSQL += "WHERE ZK0.ZK0_FILIAL = '" + xFilial("ZK0") + "'" + Enter
+cSQL += "	AND ZK0.ZK0_CODGRU = '" + __GRUPO + "'" + Enter
+cSQL += "	AND ZK0.D_E_L_E_T_ = ''" + Enter
+TcQuery cSQL New Alias (cQryTMP)	
+
+If (cQryTMP)->(Eof()) .Or. (cQryTMP)->ZK1_TPCOM == "0"
+	iYForma := "3"
+Else
+	iYForma := "1"
+EndIf
+
+(cQryTMP)->(DbCloseArea()) 
+
 Return iYForma
 

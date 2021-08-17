@@ -31,21 +31,24 @@ EndClass
 Method FromCodLin(cCodLojSA1, cLinhaPed) Class TPedidoVendaClienteRegras
 
 	Local aAreaA1 := SA1->(GetArea())
-	Local _aDadCli
+	//Local _aDadCli
 
 	::Codigo 	:= SubStr(cCodLojSA1,1,6)
 	::Loja 		:= SubStr(cCodLojSA1,7,2)
 
 	SA1->(DbSetOrder(1))
 	If SA1->(DbSeek(XFilial("SA1")+::Codigo+::Loja))
-		::Nome		:= SA1->A1_NOME		::cUF		:= SA1->A1_EST
+
+		::Nome		:= SA1->A1_NOME
+		::cUF		:= SA1->A1_EST
+		::Segmento 	:= SA1->A1_YTPSEG
+		::lEspecial	:= (SA1->A1_YTRTESP == "1") 
 		
 	EndIf
 
-	_aDadCli := U_fInfCliente(cLinhaPed, ::Codigo, ::Loja)
-
-	::Segmento 	:= _aDadCli[3]
-	::lEspecial	:= ( _aDadCli[1] == "1" )
+	//_aDadCli := U_fInfCliente(cLinhaPed, ::Codigo, ::Loja)
+	//::Segmento 	:= _aDadCli[3]
+	//::lEspecial	:= ( _aDadCli[1] == "1" )
 
 	RestArea(aAreaA1)
 

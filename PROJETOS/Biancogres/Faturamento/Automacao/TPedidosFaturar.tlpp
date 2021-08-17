@@ -72,6 +72,8 @@ Method GetSerie() Class TPedidosFaturar
 			::cSerie := "4  "
 		ElseIf AllTrim(::cEmpresa) == '0199'
 			::cSerie := "6  "
+		ElseIf AllTrim(::cEmpresa) == '1302'
+			::cSerie := "7  "			
 		EndIf
 		
 	ElseIf cEmpAnt == "13" //Mundi
@@ -80,6 +82,12 @@ Method GetSerie() Class TPedidosFaturar
 			::cSerie := "1  "
 		ElseIf Alltrim(::cEmpresa) == "1302"
 			::cSerie := "2  "
+		EndIf
+
+	ElseIf cEmpAnt == "14" //Vinilico
+
+		If Alltrim(::cEmpresa) == "1302"
+			::cSerie := "1  "
 		EndIf
 
 	EndIf
