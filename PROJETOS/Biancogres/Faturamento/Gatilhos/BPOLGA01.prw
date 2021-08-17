@@ -14,7 +14,7 @@ User Function BPOLGA01()
 
 	Local aArea 	:= GetArea()
 	Local aAreaA1 	:= SA1->(GetArea())
-	Local cEmpNPOL 	:= AllTrim(GetNewPar("FA_EMPNPOL",""))
+	Local cEmpNPOL 	:= AllTrim(GetNewPar("FA_EMPNPOL","14#"))
 	Local cTpDVER	:= AllTrim(GetNewPar("FA_TPEDVDA","N #E #IM#R1#R2#"))
 	Local nMaxDAI 	:= GetNewPar("BF_MAXDAI", 30)  //maximo de desconto de outras AI
 
@@ -607,14 +607,12 @@ Static Function CheckAO(_NUMSI, _NPDACO)
 				BeginSql Alias cAliasTmp
 					%NoParser%
 	
-					select PBONUS = case when PZ6_METAF5 > 0 and PZ6_VALREA >= PZ6_METAF5 and ((PZ5_TPACOR = 'AG' and PZ6_METAP5 > 0 and PZ6_PREALI >= PZ6_METAP5) or PZ5_TPACOR <> 'AG') then PZ6_PBONF5
-					when PZ6_METAF4 > 0 and PZ6_VALREA >= PZ6_METAF4 and ((PZ5_TPACOR = 'AG' and PZ6_METAP4 > 0 and PZ6_PREALI >= PZ6_METAP4) or PZ5_TPACOR <> 'AG') then PZ6_PBONF4
-					when PZ6_METAF3 > 0 and PZ6_VALREA >= PZ6_METAF3 and ((PZ5_TPACOR = 'AG' and PZ6_METAP3 > 0 and PZ6_PREALI >= PZ6_METAP3) or PZ5_TPACOR <> 'AG') then PZ6_PBONF3
-					when PZ6_METAF2 > 0 and PZ6_VALREA >= PZ6_METAF2 and ((PZ5_TPACOR = 'AG' and PZ6_METAP2 > 0 and PZ6_PREALI >= PZ6_METAP2) or PZ5_TPACOR <> 'AG') then PZ6_PBONF2
+					select PBONUS = case when PZ6_METAF5 > 0 and PZ6_VALREA >= PZ6_METAF5 then PZ6_PBONF5
+					when PZ6_METAF4 > 0 and PZ6_VALREA >= PZ6_METAF4 then PZ6_PBONF4
+					when PZ6_METAF3 > 0 and PZ6_VALREA >= PZ6_METAF3 then PZ6_PBONF3
+					when PZ6_METAF2 > 0 and PZ6_VALREA >= PZ6_METAF2 then PZ6_PBONF2
 				else PZ6_PBONF1 end
-					from %Exp:cTabPZ6% PZ6 
-					join %Exp:cTabPZ5% PZ5 on PZ5_CODIGO = PZ6_CODIGO and PZ5.D_E_L_E_T_ = ''
-					where PZ6_SI = %Exp:_NUMSI% and PZ6.D_E_L_E_T_ = ''
+					from %Exp:cTabPZ6% where PZ6_SI = %Exp:_NUMSI% and D_E_L_E_T_ = ''
 	
 				EndSql
 
@@ -731,13 +729,7 @@ Static Function CheckAOValid(_NUMSI)
 		lRet := .F.
 	Else
 		If (AllTrim((cQrySZO)->ZO_FPAGTO) != '2')
-<<<<<<< .mine
-			If ((cQrySZO)->ZO_FPAGTO != "")
-||||||| .r11542
-			If ((cQrySZO)->ZO_FPAGTO != "") 
-=======
-			If (Alltrim((cQrySZO)->ZO_FPAGTO) != "") 
->>>>>>> .r11590
+			If (Alltrim((cQrySZO)->ZO_FPAGTO) != "")
 				MsgAlert("AI informada não é do 'Tipo de Pagamento:Desconto em Pedido'.","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
 				lRet := .F.
 			EndIf
