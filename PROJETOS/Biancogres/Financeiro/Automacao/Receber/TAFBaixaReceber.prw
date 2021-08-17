@@ -1330,9 +1330,9 @@ Method Exist(oObj) Class TAFBaixaReceber
 
 		SE1->(MsGoTo(nSE1RecNo))
 
-		//Solicitacao da Nadine em 30/04/19 - titulo que tinha desconto mas o cliente pagou o valor integral
-		//SE o valor pago for maior que o saldo nùo baixar e gerar workflow
-		If (cQry)->E1_SALDO > 0 .And. ( oObj:nVlRec > ROUND((cQry)->E1_SALDO + (cQry)->E1_YTXCOBR, 2) ) .And. oObj:nVlJuro == 0 .And. oObj:nVlOCre == 0
+		// Caso o valor recebido seja maior que o saldo do titulo, envia workflow para analise
+		If (cQry)->E1_SALDO > 0 .And. (oObj:nVlRec > Round((cQry)->E1_SALDO + (cQry)->E1_YTXCOBR, 2) .And. oObj:nVlJuro == 0 .And. oObj:nVlOCre == 0);
+		 		.Or. (oObj:nVlRec - oObj:nVlJuro > Round((cQry)->E1_SALDO + (cQry)->E1_YTXCOBR, 2))
 
 			lRet := .F.
 
@@ -2002,7 +2002,7 @@ Method GetDescOc(oObj) Class TAFBaixaReceber
 
 	Else
 
-		cRet := SubStr(oObj:cCodOco, 1, 2) + "-Ocorrùncia nùo identificada"
+		cRet := SubStr(oObj:cCodOco, 1, 2) + "-OcorrÍncia n„o identificada"
 
 	EndIf
 

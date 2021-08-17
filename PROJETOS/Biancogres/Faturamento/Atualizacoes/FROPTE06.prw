@@ -12,7 +12,7 @@ User Function FROPTE06()
 	Local lRet := .T.
 	Local aArea := GetArea()
 	Local cTpDVER	:= AllTrim(GetNewPar("FA_TPEDVDA","N #E #IM#R1#R2#"))
-	Local _cEmpDACO := AllTrim(GetNewPar("FA_EMPDACO","01#05#07#"))
+	Local _cEmpDACO := AllTrim(GetNewPar("FA_EMPDACO","01#05#07#14"))
 	Local oAceTela 	:= TAcessoTelemarketing():New()
 
 //Tratamento especial para Replcacao de pedido LM

@@ -27,9 +27,12 @@ User Function M460FIM()
 	Local cLojaOri 		:= SF2->F2_LOJA
 	Local oObj460FIM	:= BIAF029():New()
 	Local oObjFatPart	:= TWFaturamentoemPartes():New(.F.)
-	Local cQrySC9		:= GetNextAlias()
 	Local cFornece		:= ""
-
+	Local cQrySC9		:= ""
+	Local cQryPED		:= ""
+	Local cQryTES		:= ""
+	Local cQrySD2		:= ""
+	Local cQrySDB		:= ""
 
 	//Variaveis de Posicionamento
 	//--------------------------------
@@ -42,6 +45,7 @@ User Function M460FIM()
 	If MV_PAR11 == 2 //PARAMETRO QUE DEFINE SE O SISTEMA IRA AGLUTINAR OS PEDIDOS
 
 		//VERIFICA SE FOI UTILIZADO MAIS DE UM PEDIDO NA GERACAO DA NF (ESTE PROBLEMA PASSOU A OCORRER APÓS A MIGRAÇÃO PARA O PROTHEUS11
+		cQryPED	:= GetNextAlias()
 		CSQL := "SELECT COUNT(*) QUANT	"
 		CSQL += "FROM					"
 		CSQL += "	(SELECT D2_PEDIDO, COUNT(*) COUNT				"
@@ -51,19 +55,18 @@ User Function M460FIM()
 		CSQL += "			D2_SERIE 	= '"+SF2->F2_SERIE+"'	AND "
 		CSQL += "			D_E_L_E_T_ 	= ''						"
 		CSQL += "	GROUP BY D2_PEDIDO) TMP							"
-		If chkfile("_RAC")
-			dbSelectArea("_RAC")
-			dbCloseArea()
-		EndIf
-		TCQUERY cSQL ALIAS "_RAC" NEW
+		TcQuery cSQL New Alias (cQryPED)
 
-		If _RAC->QUANT <> 1
+		If (cQryPED)->QUANT <> 1
 			MsgBox("O SISTEMA UTILIZOU MAIS DE UM PEDIDO PARA GERAR A NF "+SF2->F2_SERIE+"/"+SF2->F2_DOC+". FAVOR CONTACTAR O SETOR DE TI!","M460FIM","STOP")
 		EndIf
+
+		(cQryPED)->(DbCloseArea())
 
 	EndIf
 
 	//VERIFICA SE FOI UTILIZADO MAIS DE UM TES NA GERACAO DA NF
+	cQryTES	:= GetNextAlias()
 	CSQL := "SELECT COUNT(*) QUANT	"
 	CSQL += "FROM					"
 	CSQL += "	(SELECT D2_TES, COUNT(*) COUNT					"
@@ -73,39 +76,15 @@ User Function M460FIM()
 	CSQL += "			D2_SERIE 	= '"+SF2->F2_SERIE+"'	AND "
 	CSQL += "			D_E_L_E_T_ 	= ''						"
 	CSQL += "	GROUP BY D2_TES) TMP							"
-	If chkfile("_RAC1")
-		dbSelectArea("_RAC1")
-		dbCloseArea()
-	EndIf
-	TCQUERY cSQL ALIAS "_RAC1" NEW
+	TcQuery cSQL New Alias (cQryTES)
 
-	If _RAC1->QUANT <> 1 .and. SF2->F2_CLIENTE <> "004536" // Por Marcos em 16/01/18 para atender venda Fábrica vs Fábrica
+	If (cQryTES)->QUANT <> 1 .and. SF2->F2_CLIENTE <> "004536" // Por Marcos em 16/01/18 para atender venda Fábrica vs Fábrica
 		MsgBox("O SISTEMA UTILIZOU MAIS DE UM TES PARA GERAR A NF "+SF2->F2_SERIE+"/"+SF2->F2_DOC+". FAVOR CONTACTAR O SETOR DE TI!","M460FIM","STOP")
 	EndIf
 
-	//SELECIONANDO OS ITENS DA NOTA FISCAL E A TES.
-	CSQL := "SELECT SUM(D2_QUANT) AS QUANT, D2_TES FROM " + RETSQLNAME("SD2") + " "
-	CSQL += "WHERE 	D2_FILIAL	= '" + xFilial("SD2") + "'	 AND "
-	CSQL += "		D2_DOC 		= '" + SF2->F2_DOC + "'	 AND "
-	CSQL += "		D2_SERIE 	= '" + SF2->F2_SERIE + "'	 AND "
-	CSQL += "		D_E_L_E_T_ 	= '' "
-	CSQL += "		GROUP BY D2_TES "
-	If chkfile("_SD2")
-		dbSelectArea("_SD2")
-		dbCloseArea()
-	EndIf
-	TCQUERY cSQL ALIAS "_SD2" NEW
+	(cQryTES)->(DbCloseArea())
 
-	//SELECIONANDO A TES DA NOTA FISCAL
-	CSQL := "SELECT F4_ESTOQUE FROM " + RETSQLNAME("SF4") + " "
-	CSQL += "WHERE F4_CODIGO = '" + _SD2->D2_TES + "' AND "
-	CSQL += "		D_E_L_E_T_ = ''  "
-	If chkfile("_SF4")
-		dbSelectArea("_SF4")
-		dbCloseArea()
-	EndIf
-	TCQUERY cSQL ALIAS "_SF4" NEW
-
+	cQrySDB	:= GetNextAlias()
 	CSQL := "SELECT SUM(DB_QUANT) AS QUANT FROM " + RETSQLNAME("SDB") + " "
 	CSQL += "WHERE 	DB_FILIAL	=  '" + xFilial("SDB") 	+ "' AND "
 	CSQL += "		DB_DOC 		=  '" + SF2->F2_DOC 	+ "' AND "
@@ -115,43 +94,36 @@ User Function M460FIM()
 	CSQL += "		DB_TM >= '500' AND "
 	CSQL += "		DB_ESTORNO 	=  ''  AND "
 	CSQL += "		D_E_L_E_T_ 	=  ''  "
-	If chkfile("_SDB")
-		dbSelectArea("_SDB")
-		dbCloseArea()
-	EndIf
-	TCQUERY cSQL ALIAS "_SDB" NEW
+	TcQuery cSQL New Alias (cQrySDB)
 
-	CSQL := "SELECT SUM(D2_QUANT) AS QUANT, D2_TP FROM " + RETSQLNAME("SD2") + " "
+	cQrySD2 := GetNextAlias()
+	CSQL := "SELECT D2_TP, D2_ESTOQUE, SUM(D2_QUANT) AS QUANT FROM " + RETSQLNAME("SD2") + " "
 	CSQL += "WHERE 	D2_FILIAL	=  '" + xFilial("SD2") 	+ "' AND "
 	CSQL += "		D2_DOC		=  '" + SF2->F2_DOC 	+ "' AND "
 	CSQL += "		D2_SERIE	=  '" + SF2->F2_SERIE	+ "' AND "
 	CSQL += "		D2_CLIENTE	=  '" + SF2->F2_CLIENTE + "' AND "
 	CSQL += "		D2_LOJA		=  '" + SF2->F2_LOJA   	+ "' AND "
 	CSQL += "		D_E_L_E_T_ = '' "
-	CSQL += "		GROUP BY D2_TP "
-	If chkfile("SD2A")
-		dbSelectArea("SD2A")
-		dbCloseArea()
-	EndIf
-	TCQUERY cSQL ALIAS "SD2A" NEW
+	CSQL += "		GROUP BY D2_TP, D2_ESTOQUE "
+	TcQuery cSQL New Alias (cQrySD2)
 
 	If cEmpAnt <> "06"  // Projeto JK
 
-		IF SD2A->D2_TP == "PA"
+		IF (cQrySD2)->D2_TP == "PA" .And. (cQrySD2)->D2_ESTOQUE == "S"
 
-			IF _SF4->F4_ESTOQUE = 'S'	 // SO VERIFIA SE A TES ATUALIZA ESTOQUE
+			IF (cQrySD2)->QUANT <> (cQrySDB)->QUANT
 
-				IF _SD2->QUANT <> _SDB->QUANT
-
-					MsgBox("NOTA FISCAL COM PROBLEMA, FAVOR EXCLUIR E GERAR A NOTA FISCAL NOVAMENTE OU CONTACTAR O SETOR DE TI!","M460FIM","STOP")
-
-				ENDIF
+				MsgBox("NOTA FISCAL COM PROBLEMA, FAVOR EXCLUIR E GERAR A NOTA FISCAL NOVAMENTE OU CONTACTAR O SETOR DE TI!","M460FIM","STOP")
 
 			ENDIF
 
 		ENDIF
 
 	EndIf
+
+	(cQrySD2)->(DbCloseArea())
+	
+	(cQrySDB)->(DbCloseArea())
 
 	//DESATIVADO EM 23/10/17 POR RANISSES - NÃO É REALIZADO O CALCULO DO MC1
 	//EXECUTAR STORED PROCEDURE PARA CALCULO DO D2_YMC1 - FERNANDO ROCHA - 04/11/2010
@@ -164,38 +136,6 @@ User Function M460FIM()
 	//** Imprementado tratamento para controle de vendas a funcionários em 11/04/13 por Marcos Alberto Soprani   **
 	//*************************************************************************************************************
 	fIncFunc()
-
-	//Apaga area de trabalho
-	//--------------------------------
-	If chkfile("_SD2")
-		dbSelectArea("_SD2")
-		dbCloseArea()
-	EndIf
-
-	If chkfile("_SF4")
-		dbSelectArea("_SF4")
-		dbCloseArea()
-	EndIf
-
-	If chkfile("_SDB")
-		dbSelectArea("_SDB")
-		dbCloseArea()
-	EndIf
-
-	If chkfile("SD2A")
-		dbSelectArea("SD2A")
-		dbCloseArea()
-	EndIf
-
-	If chkfile("_RAC")
-		dbSelectArea("_RAC")
-		dbCloseArea()
-	EndIf
-
-	If chkfile("_RAC1")
-		dbSelectArea("_RAC1")
-		dbCloseArea()
-	EndIf
 
 	// Informações complementares da nota
 	U_BIAF026()	
@@ -215,6 +155,7 @@ User Function M460FIM()
 	If AllTrim(cEmpAnt) == "07"
 
 		//Posiciona no SC9 Faturado para buscar as informações da NF de Origem
+		cQrySC9	:= GetNextAlias()
 		cSQL :=""
 		CSQL += "SELECT C9_BLINF, SUBSTRING(C9_BLINF,1,2) EMPRESA, SUBSTRING(C9_BLINF,12,3) PREFIXO, SUBSTRING(C9_BLINF,3,9) NOTA, SUBSTRING(C9_BLINF,15,6) PEDIDO, SUBSTRING(C9_BLINF,21,2) ITEM, SUBSTRING(C9_BLINF,23,2) SEQ "
 		CSQL += "FROM SC9070 "

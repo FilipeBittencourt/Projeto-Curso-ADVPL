@@ -23,7 +23,7 @@ User Function BIAFC29()
 
   //Instânciando FWMBrowse - Somente com dicionário de dados
   oBrowse := FWMBrowse():New()
-  //Setando a tabela de cadastro de Autor/Interprete
+  //Setando a tabela de cadastro
   oBrowse:SetAlias("ZNB")
 
   //Setando a descrição da rotina
@@ -44,9 +44,8 @@ Static Function MenuDef()
 
   //Adicionando opções
   ADD OPTION aRot TITLE 'Visualizar' ACTION 'VIEWDEF.BIAFC29' OPERATION MODEL_OPERATION_VIEW   ACCESS 0 //OPERATION 1
-  //ADD OPTION aRot TITLE 'Legenda'    ACTION 'u_zMod1Leg'      OPERATION 6                      ACCESS 0 //OPERATION X
   ADD OPTION aRot TITLE 'Incluir'    ACTION 'VIEWDEF.BIAFC29' OPERATION MODEL_OPERATION_INSERT ACCESS 0 //OPERATION 3
-  //ADD OPTION aRot TITLE 'Alterar'    ACTION 'VIEWDEF.BIAFC29' OPERATION MODEL_OPERATION_UPDATE ACCESS 0 //OPERATION 4
+  ADD OPTION aRot TITLE 'Alterar'    ACTION 'VIEWDEF.BIAFC29' OPERATION MODEL_OPERATION_UPDATE ACCESS 0 //OPERATION 4
   ADD OPTION aRot TITLE 'Excluir'    ACTION 'VIEWDEF.BIAFC29' OPERATION MODEL_OPERATION_DELETE ACCESS 0 //OPERATION 5
 
 Return aRot
@@ -93,13 +92,13 @@ Return oModel
 Static Function ViewDef()
 	Local aStruZNB	:= ZNB->(DbStruct())
 	
-	//Criação do objeto do modelo de dados da Interface do Cadastro de Autor/Interprete
+	//Criação do objeto do modelo de dados da Interface do Cadastro
 	Local oModel := FWLoadModel("BIAFC29")
 
 	//Criando oView como nulo
 	Local oView := Nil
 
-  	//Criação da estrutura de dados utilizada na interface do cadastro de Autor
+  	//Criação da estrutura de dados utilizada na interface do cadastro
 	oStZNB := FWFormStruct(2, "ZNB", { |x| AllTrim(x) $ "ZNB_MARCA|ZNB_DTINI|ZNB_DTFIM|ZNB_CLIENT|ZNB_LOJA|ZNB_GRUPO|ZNB_REDE|ZNB_PERC"})
 	
 
@@ -127,7 +126,6 @@ Return oView
 Static Function ZNBbPre(oModel)
    
   Local lRet       := .T.
-  //Local nOpc       := oModel:GetOperation()
 
   oModel:GetModel('FORMZNB'):GetStruct():SetProperty('ZNB_CLIENT',   MODEL_FIELD_WHEN,    FwBuildFeature(STRUCT_FEATURE_WHEN,   ".T."))
   oModel:GetModel('FORMZNB'):GetStruct():SetProperty('ZNB_LOJA',    MODEL_FIELD_WHEN,    FwBuildFeature(STRUCT_FEATURE_WHEN,    ".T."))
@@ -246,6 +244,10 @@ Static Function fTdOk(oModel)
       cQuery += " AND ZNB_GRUPO   = "+ValToSql(cGRupo)+ " "+ CRLF
     Else
       cQuery += " AND ZNB_REDE   = "+ValToSql(cRede)+ " "+ CRLF
+    EndIf
+
+    If nOpc == MODEL_OPERATION_UPDATE
+     cQuery += " AND R_E_C_N_O_  <> "+cValToChar(ZNB->(Recno()))+ CRLF
     EndIf
 
     TcQuery cQuery New Alias (cQry)

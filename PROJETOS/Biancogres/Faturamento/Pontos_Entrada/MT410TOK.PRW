@@ -90,7 +90,7 @@ User Function MT410TOK
 	_cSegmento := U_fSegCliente(M->C5_YLINHA, M->C5_CLIENTE, M->C5_LOJACLI)
 
 	///Validar Inclusao de Pedido - Projeto Reserva de OP - Verificar se tem item nao reservado e Bloquear
-	If lRetorno .And. nOpc == 3 .And. M->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES","14"))) .And. M->C5_YLINHA <> "4"
+	If lRetorno .And. nOpc == 3 .And. M->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES",""))) .And. M->C5_YLINHA <> "4"
 
 		If (_cSegmento == "E") .And. (AllTrim(M->C5_YSUBTP) $ "N#E") .And. Empty(M->C5_YNPRENG)
 			If !MsgYesNo( "Pedido com cliente do segmento='Engenharia' é necessario informar 'Numero da Proposta', Deseja continuar sem 'Numero da Proposta'?", 'MT410TOK' )
@@ -225,7 +225,7 @@ User Function MT410TOK
 
 	EndIf
 
-	If	lRetorno .And. Altera .And. M->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES","14"))) .And. M->C5_YLINHA <> "4"
+	If	lRetorno .And. Altera .And. M->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES",""))) .And. M->C5_YLINHA <> "4"
 
 		For I := 1 To Len(aCols)
 
@@ -271,7 +271,7 @@ User Function MT410TOK
 
 	EndIf
 	
-	If (lRetorno .And. INCLUI .And. ALLTRIM(M->C5_YSUBTP) <> "A" .And. M->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES","14"))) .And. M->C5_YLINHA <> "4")
+	If (lRetorno .And. INCLUI .And. ALLTRIM(M->C5_YSUBTP) <> "A" .And. M->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES",""))) .And. M->C5_YLINHA <> "4")
 		
 		conout("MV_YVRESPE => "+cvaltochar(SUPERGETMV("MV_YVRESPE", .F., .T.)))
 	

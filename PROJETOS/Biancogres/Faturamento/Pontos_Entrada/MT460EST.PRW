@@ -36,7 +36,7 @@ User Function MT460EST()
 		SC5->(DbSetOrder(1))
 		SC5->(DbSeek(XFilial("SC5")+SC9->C9_PEDIDO))
 
-		If SC5->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES","14"))) .And. SC5->C5_YLINHA <> "4" .And. !(SC5->C5_YSUBTP $ _cTpNRes) .And. !(AllTrim(FunName()) == "BIAEC001") .And. AllTrim(CEMPANT) <> "07" .And. !(AllTrim(SC5->C5_YSUBTP) $ "A#M")
+		If SC5->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES",""))) .And. SC5->C5_YLINHA <> "4" .And. !(SC5->C5_YSUBTP $ _cTpNRes) .And. !(AllTrim(FunName()) == "BIAEC001") .And. AllTrim(CEMPANT) <> "07" .And. !(AllTrim(SC5->C5_YSUBTP) $ "A#M")
 
 			If (AllTrim(CEMPANT) == "14")
 				RestArea(_aArea)

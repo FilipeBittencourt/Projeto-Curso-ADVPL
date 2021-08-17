@@ -9,18 +9,22 @@
 /*/
 
 User Function BIAFG069()
+	Local x
+	xv_Emps    := U_BAGtEmpr("01_14")
 
-	RPCSetType(3)
-	RPCSetEnv('01', '01')
+	For x := 1 to Len(xv_Emps)
+		RPCSetType(3)
+		//RPCSetEnv('01', '01')
+		RPCSetEnv(xv_Emps[x,1], xv_Emps[x,2])
 
-	ConOut("HORA: "+TIME()+" - Iniciando Processo BIAFG069 " + cEmpAnt)
+		ConOut("HORA: "+TIME()+" - Iniciando Processo BIAFG069 " + xv_Emps[x,1])
 
-	Processa({|| fProcessa( .T. )})
+		Processa({|| fProcessa( .T. )})
 
-	ConOut("HORA: "+TIME()+" - Finalizando Processo BIAFG069 " + cEmpAnt)
+		ConOut("HORA: "+TIME()+" - Finalizando Processo BIAFG069 " + xv_Emps[x,1])
 
-	RpcClearEnv()
-
+		RpcClearEnv()
+	Next
 Return
 
 

@@ -61,7 +61,16 @@ User Function NFCARPDF( _cCarga, _cEmpOri, _cFilOri, aListNota, lJob, lTermo)
 		cNomeArq	:= Upper(AllTrim(_cCarga)+'_'+AllTrim(cEmpOri) + '_DANFE')
 	Else
 		cLocal		:= "\P10\AUTOMACAO\DANFE\TEMP\"
-		cNomeArq	:= Upper(AllTrim(cEmpOri)+"_"+AllTrim(_cCarga)+'_'+AllTrim(cData))
+
+		dataForm := cData
+		//Ticket 34053 - alteração no formato da data que vai pro nome do arquivo por solicitação da DocSystem para comunicação entre sistemas.
+		//Exemplo do formato desejado: 01_INSF_02072021
+		If .Not. Empty(Alltrim(cData))
+			dataD := StoD(cData)
+			dataForm := Day2Str(dataD)+Month2Str(dataD)+Year2Str(dataD)
+		EndIf
+
+		cNomeArq	:= Upper(AllTrim(cEmpOri)+"_"+AllTrim(_cCarga)+'_'+AllTrim(dataForm))
 	EndIf
 
 	oDanfe := FWMSPrinter():New(cNomeArq, IMP_PDF, .F., '\spool\', .T., , ,, .T., .F.)

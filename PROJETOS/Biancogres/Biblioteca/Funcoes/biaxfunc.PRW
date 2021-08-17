@@ -2781,11 +2781,6 @@ Return
 
 User Function BACVT001()
 
-	If cEmpAnt <> '14'
-		MsgINFO("Empresa Errada")
-		Return
-	EndIf
-
 	RT005 := " SELECT B6_DOC,
 	RT005 += "        B6_SERIE,
 	RT005 += "        B6_CLIFOR,

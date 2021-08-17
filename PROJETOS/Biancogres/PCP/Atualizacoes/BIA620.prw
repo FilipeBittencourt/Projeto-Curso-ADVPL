@@ -151,7 +151,7 @@ Static Function RptPDetail()
 	ZP003 += "    AND D_E_L_E_T_ = ' ' "
 	U_BIAMsgRun("Aguarde... Movimentação da produção no período definido",,{|| TCSQLExec(ZP003)})
 
-	If cEmpAnt $ "01/05"
+	If cEmpAnt $ "01/05/14"
 
 		If cEmpAnt == "01"
 			kt_BsDad := "DADOSEOS"

@@ -302,7 +302,7 @@ static function M410LIOK()
 		// Tratamento para Empresa14. Primeiros passos. Por Marcos Alberto Soprani em 18/09/13
 		If !(Alltrim(M->C5_YSUBTP) == "N" .and. M->C5_CLIENTE == "004536") // Por Marcos em 16/01/18
 
-			If cEmpAnt <> "02" .and. cEmpAnt <> "14"
+			If cEmpAnt <> "02" 
 
 				If Empty(Alltrim(nEmpZZ7))
 					cAliasTmp := GetNextAlias()
@@ -356,17 +356,17 @@ static function M410LIOK()
 	EndIf
 
 	//VERIFICA SE O PRODUTO ESTA COM O CAMPO DE CODIGO DE BARRAS PREENCHIDO.
-	If cEmpAnt <> "14" //não verificar codigo de barras para Vitcer
-		//BIANCOGRES - 78967825 (ativo)
-		//INCESA	 - 78985522 (antigo)
-		//INCESA	 - 78994535 (ativo)    
-		//MUNDI  	 - 78997765 (ativo)
-		//If !Substr(Alltrim(SB1->B1_CODBAR),1,8) $  "78985522_78967825_78994535_78997765" .And. Alltrim(SB1->B1_GRUPO)=="PA"
-		If !Substr(Alltrim(SB1->B1_CODBAR),1,8) $ GETMV("MV_YCODBAR") .And. Alltrim(SB1->B1_GRUPO)=="PA" .And. Substr(SB1->B1_CODGTIN,1,14) <> "00000000000000"
-			Msgbox("Favor preencher o Código de Barras do Produto ou o Cód. GTIN com '00000000000000' para 'SEM GTIN'. Cód. Barras: " + Alltrim(SB1->B1_CODBAR) + "/Cód. GTIN: " + Alltrim(SB1->B1_CODGTIN),"M410LIOK","STOP")
-			Return(.F.)
-		END IF
-	EndIf
+	//BIANCOGRES - 78967825 (ativo)
+	//INCESA	 - 78985522 (antigo)
+	//INCESA	 - 78994535 (ativo)    
+	//MUNDI  	 - 78997765 (ativo)
+	//VINILICO   - ????????
+	//If !Substr(Alltrim(SB1->B1_CODBAR),1,8) $  "78985522_78967825_78994535_78997765" .And. Alltrim(SB1->B1_GRUPO)=="PA"
+	If !Substr(Alltrim(SB1->B1_CODBAR),1,8) $ GETMV("MV_YCODBAR") .And. Alltrim(SB1->B1_GRUPO)=="PA" .And. Substr(SB1->B1_CODGTIN,1,14) <> "00000000000000"
+		Msgbox("Favor preencher o Código de Barras do Produto ou o Cód. GTIN com '00000000000000' para 'SEM GTIN'. Cód. Barras: " + Alltrim(SB1->B1_CODBAR) + "/Cód. GTIN: " + Alltrim(SB1->B1_CODGTIN),"M410LIOK","STOP")
+		Return(.F.)
+	END IF
+
 
 	// MADALENO NAO PERMITIR LANCAR PEDIDO QUANDO O PRODUTO ESTIVER BLOQUEADO.
 	DbSelectArea("SBZ")
@@ -578,7 +578,7 @@ static function M410LIOK()
 	//FERNANDO/FACILE em 24/02/2014 - validar e gerar reservas de estoque ou OP para os itens do pedido
 	//ATENCAO - MATER SEMPRE POR ULTIMO NO PONTO DE ENTRADA PORQUE ALTERA DADOS
 	//------------------------------------------------------------------------------------------------
-	If lRetorno .And. M->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES","14"))) .And. M->C5_YLINHA <> "4" .And. !(IsInCallStack("U_M410RPRC"))
+	If lRetorno .And. M->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES",""))) .And. M->C5_YLINHA <> "4" .And. !(IsInCallStack("U_M410RPRC"))
 
 		Private __cPed		:= M->C5_NUM
 		Private __nItem		:= Gdfieldget("C6_ITEM",n)

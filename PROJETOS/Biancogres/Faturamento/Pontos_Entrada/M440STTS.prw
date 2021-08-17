@@ -79,7 +79,7 @@ EndIf
 
 //Projeto reserva de OP - Fernando/Facile em 08/10/2014 - Apagar reservas e gerar novamento com o saldo pendente    
 //Fernando em 07/01 - nao faz sentido fazer esse metodo para LM - nao deve ter reservas na LM nem alterar as reserva na origem
-If M->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES","14"))) .And. (AllTrim(CEMPANT) <> "07") .And. M->C5_YLINHA <> "4"
+If M->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES",""))) .And. (AllTrim(CEMPANT) <> "07") .And. M->C5_YLINHA <> "4"
 
 	//SC6->(DbSetOrder(1))
 	//If !((AllTrim(CEMPANT) == "14") .And. SC6->(DbSeek(XFilial("SC6")+M->C5_NUM)) .And. !U_CHKRODA(SC6->C6_PRODUTO))

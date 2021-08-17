@@ -19,7 +19,7 @@ User Function BPOLVL01()
 	Local aAreaB1 := SB1->(GetArea())
 	Local lRet := .F.
 	//Parametro para filtrar empresas que nao usam o sistema comercial/reserva
-	Local _cEmpNRes := GetNewPar("FA_EMNRES","14")
+	Local _cEmpNRes := GetNewPar("FA_EMNRES","")
 	//Produto
 	Local _cProd 	:= aCols[N][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_PRODUTO"})]
 

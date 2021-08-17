@@ -776,8 +776,8 @@ Method DevolucaoNF(_cDocOri,_cSerieOri,_cForOri,_cLojaOri,_cItemOri,_cDoc,_cSeri
 		If _nSaldo < ::_nQuant
 			_cHtml	:=	fHHtmlDev("DEVOLUCAO DE NF DE ENTRADA - ITEM SEM SALDO MD")
 			_cHtml	+=	'<tr>																												'
-			_cHtml	+=	'	<td><div align="left">'+	Alltrim(::_cDocOri)+"/"+Alltrim(::_cSerieOri)			+ '</div></td>'
-			_cHtml	+=	'	<td><div align="left">'+	Alltrim(::_cForOri) + "/" + Alltrim(::_cLojaOri)																+ '</div></td>'
+			_cHtml	+=	'	<td><div align="left">'+	Alltrim(_cDocOri)+"/"+Alltrim(_cSerieOri)			+ '</div></td>'
+			_cHtml	+=	'	<td><div align="left">'+	Alltrim(_cForOri) + "/" + Alltrim(_cLojaOri)																+ '</div></td>'
 			_cHtml	+=	'	<td><div align="left">'+	Alltrim(::_cDoc)+"/"+Alltrim(::_cSerie)			+ '</div></td>'
 			_cHtml	+=	'	<td><div align="left">'	+	Alltrim(::_cSolic) + "-" + Alltrim(POSICIONE("ZZY",3,xFilial("ZZY")+::_cSolic,"ZZY_NOME"))															+ '</div></td>'
 			_cHtml	+=	'	<td><div align="center">'+	Alltrim(::_cItem)							+ '</div></td>'
@@ -824,7 +824,7 @@ Method DevolucaoNF(_cDocOri,_cSerieOri,_cForOri,_cLojaOri,_cItemOri,_cDoc,_cSeri
 
 Return
 
-Method EstornoNFS(_cDocOri,_cSerieOri,_cForOri,_cLojaOri,_cItemOri,_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cLocal,_nQuant,_cUser,_cRotina,;
+Method EstornoNFS(_cDocOri,_cSerieOri,_cForOri,_cLojaOri,_cItemOri,_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cCod,_cLocal,_nQuant,_cUser,_cRotina,;
 	_dDtDig,_cTbOrig,_nRecId) Class TbiaControleMD
 
 	Local _aArea	:=	GetArea()

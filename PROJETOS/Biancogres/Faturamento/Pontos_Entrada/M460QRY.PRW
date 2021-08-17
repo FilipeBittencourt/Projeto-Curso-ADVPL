@@ -115,6 +115,8 @@ Static Function fGetPdOr(cEmp,cAgreIni,cAgreFim,cPedIni,cPedFim)
 	Local cRecProc	:= ""
 	Local lFilPed	:= Empty(cAgreIni) .Or. Empty(cAgreFim)
 	Local cPedOri	:= ""
+	Local cQrySC9	:= ""
+	Local cQryLIB	:= ""
 
 	If lFilPed
 
@@ -130,12 +132,12 @@ Static Function fGetPdOr(cEmp,cAgreIni,cAgreFim,cPedIni,cPedFim)
 	EndIf
 
 	//Pesquisa pedidos liberados na LM
+	cQrySC9	:= GetNextAlias()
 	cSql := "SELECT C5_NUM, C9_AGREG, RTRIM(C9_PRODUTO)+C9_ITEM AS C9_PRODUTO, C9_SEQUEN, ROUND(CAST(C9_QTDLIB AS DECIMAL (10,2)),2) C9_QTDLIB, C9_PEDIDO AS PEDORI, C9_ITEM AS ITORI, C9_PRODUTO AS PRODORI, C9_NFISCAL, C9_SERIENF, SC9.R_E_C_N_O_ AS RECNO "
 	cSql += "FROM "+nTable+" SC9 INNER JOIN SC5070 SC5 ON "
 	cSql += "	C9_PEDIDO = C5_YPEDORI " 
 	cSql += "WHERE C9_FILIAL	= '01' "
 	cSql += "	AND C5_FILIAL	= '"+XFILIAL("SC5")+"' " 
-
 	If !lFilPed
 		cSql += "	AND C9_AGREG 	>= '"+cAgreIni+"' "  
 		cSql += "	AND C9_AGREG 	<= '"+cAgreFim+"' "
@@ -143,44 +145,33 @@ Static Function fGetPdOr(cEmp,cAgreIni,cAgreFim,cPedIni,cPedFim)
 		cSql += "	AND C9_PEDIDO 	>= '"+cPedOri+"' "  
 		cSql += "	AND C9_PEDIDO 	<= '"+cPedOri+"' "
 	EndIf
-
 	cSql += "	AND C5_YEMPPED 	= '"+cEmp+"' " 
 	cSql += "	AND C9_NFISCAL <> '' " 
 	cSql += "	AND SC5.D_E_L_E_T_ = '' " 
 	cSql += "	AND SC9.D_E_L_E_T_ = '' "	
-	If chkfile("RAC")
-		DbSelectArea("RAC")
-		DbCloseArea()
-	EndIf
-	TcQuery cSql New Alias "RAC"
+	TcQuery cSQL New Alias (cQrySC9)
 
-	RAC->(DbGoTop())
-	While .Not. RAC->(Eof())          	
+	(cQrySC9)->(DbGoTop())
+	While .Not. (cQrySC9)->(Eof())         	
 
 		//Fernando/Facile - 16/09/2016 - Pesquisar a Sequencia liberada na LM para vincular com a origem
+		cQryLIB	:= GetNextAlias()
 		cSql2 := " SELECT REC = R_E_C_N_O_, C9_SEQUEN FROM SC9070 "		 
 		cSql2 += " WHERE C9_FILIAL	= '"+XFilial("SC9")+"' "
 		cSql2 += " AND C9_NFISCAL	= '' "
-		cSql2 += " AND C9_PEDIDO 	= '"+RAC->C5_NUM+"' "
-		cSql2 += " AND C9_ITEM 		= '"+RAC->ITORI+"' "		 
-		cSql2 += " AND C9_PRODUTO 	= '"+RAC->PRODORI+"' "
-		cSql2 += " AND ROUND(CAST (C9_QTDLIB AS DECIMAL (10,2)),2) = "+AllTrim(Str(RAC->C9_QTDLIB))+" "
-
+		cSql2 += " AND C9_PEDIDO 	= '"+(cQrySC9)->C5_NUM+"' "
+		cSql2 += " AND C9_ITEM 		= '"+(cQrySC9)->ITORI+"' "		 
+		cSql2 += " AND C9_PRODUTO 	= '"+(cQrySC9)->PRODORI+"' "
+		cSql2 += " AND ROUND(CAST (C9_QTDLIB AS DECIMAL (10,2)),2) = "+AllTrim(Str((cQrySC9)->C9_QTDLIB))+" "
 		If !Empty(cRecProc)
 			cSql2 += " AND R_E_C_N_O_ NOT IN "+FormatIn(cRecProc,"/")+" "
 		EndIf
-
 		cSql2 += " AND D_E_L_E_T_='' "
 		cSql2 += " ORDER BY REC " 
-
-		If chkfile("LIBLM")
-			DbSelectArea("LIBLM")
-			DbCloseArea()
-		EndIf
-		TcQuery cSql2 New Alias "LIBLM"
+		TcQuery cSql2 New Alias (cQryLIB)
 
 		//Se achou a sequencia na LM
-		If !LIBLM->(Eof())
+		If !(cQryLIB)->(Eof())
 
 			If !Empty(nPed)
 				nPed	+= "/"	  	
@@ -189,18 +180,18 @@ Static Function fGetPdOr(cEmp,cAgreIni,cAgreFim,cPedIni,cPedFim)
 			EndIf
 
 			//Associa pedido e sequencia para o filtro do SC9
-			nPed	+= Alltrim(RAC->C5_NUM)
-			nProd	+= Alltrim(RAC->C9_PRODUTO)+Alltrim(LIBLM->C9_SEQUEN)  //sempre a sequencia localizada na LM
-			nQtd	+= Alltrim(Str(Round(RAC->C9_QTDLIB,2)))	
+			nPed	+= Alltrim((cQrySC9)->C5_NUM)
+			nProd	+= Alltrim((cQrySC9)->C9_PRODUTO)+Alltrim((cQryLIB)->C9_SEQUEN)  //sempre a sequencia localizada na LM
+			nQtd	+= Alltrim(Str(Round((cQrySC9)->C9_QTDLIB,2)))	
 
 			//Gravar a chave de vinculacao no campo C9_BLINF
 			SC9->(DbSetOrder(0)) 
-			SC9->(DbGoto(LIBLM->REC))
+			SC9->(DbGoto((cQryLIB)->REC))
 			If !SC9->(Eof())
 				SC9->(RecLock("SC9",.F.))
 
-				SC9->C9_BLINF	:= AllTrim(cEmp)+RAC->(C9_NFISCAL+C9_SERIENF+PEDORI+ITORI+C9_SEQUEN)
-				SC9->C9_AGREG	:= RAC->C9_AGREG
+				SC9->C9_BLINF	:= AllTrim(cEmp)+(cQrySC9)->(C9_NFISCAL+C9_SERIENF+PEDORI+ITORI+C9_SEQUEN)
+				SC9->C9_AGREG	:= (cQrySC9)->C9_AGREG
 				SC9->C9_YEMPORI	:= cEmp
 
 				SC9->(MsUnLock())
@@ -210,15 +201,15 @@ Static Function fGetPdOr(cEmp,cAgreIni,cAgreFim,cPedIni,cPedFim)
 				cRecProc += "/"
 			EndIf
 
-			cRecProc += AllTrim(Str(LIBLM->REC))
+			cRecProc += AllTrim(Str((cQryLIB)->REC))
 
 		EndIf
-		LIBLM->(DbCloseArea())
+		(cQryLIB)->(DbCloseArea())
 
 
-		RAC->(DbSkip())
+		(cQrySC9)->(DbSkip())
 	EndDo
-	RAC->(DbCloseArea())
+	(cQrySC9)->(DbCloseArea())
 
 	AADD(aRet,nPed)     //01
 	AADD(aRet,nProd)    //02
@@ -254,6 +245,8 @@ User Function fCalcPeso()
 	Local oGroup2
 	Local oSay1
 	Local oSay2
+	Local cQryTMP	:= ""
+
 	Static oDlg  
 
 	If cEmpAnt == "07" .And. !Empty(aPedOri[8])
@@ -263,12 +256,15 @@ User Function fCalcPeso()
 			nEmp := "INCESA    "
 		ElseIf MV_PAR19 == "13"
 			nEmp := "MUNDI     "
+		ElseIf MV_PAR19 == "14"
+			nEmp := "VINILICO  "
 		Else
 			nEmp := "          "
 		EndIf		
 	EndIf  
 
 	//Selecina os Pedidos Liberados na Empresa Atual
+	cQryTMP	:= GetNextAlias()
 	cSql := " SELECT SUM(ROUND((C9_QTDLIB*ISNULL(ZZ9_PESO,B1_PESO))+(C9_QTDLIB2*ISNULL(ZZ9_PESEMB,B1_YPESEMB)),2)) PESOBR "
 	cSql += " FROM "+RetSqlName("SC9")+" SC9 INNER JOIN SB1010 SB1 ON "
 	cSql += " 	C9_PRODUTO = B1_COD "  
@@ -284,22 +280,17 @@ User Function fCalcPeso()
 	cSql += "		SC9.C9_PEDIDO	<= '"+aPedOri[06]+"'	AND	"  //Numero Pedido
 	cSql += "		SC9.D_E_L_E_T_	=	''					AND	" 
 	cSql += "		SB1.D_E_L_E_T_	=	''						" 
-
 	If Len(aPedOri) > 0
 		cSql += cFilM460QRY									  
 	EndIf
+	TcQuery cSQL New Alias (cQryTMP)
 
-	If chkfile("R01")
-		dbSelectArea("R01")
-		dbCloseArea()
-	EndIf
-
-	TcQuery cSql ALIAS "R01" NEW
-
-	nPesoAtu := Transform(R01->PESOBR,		"@E 999,999,999.99")
-	R01->(DbCloseArea())
+	nPesoAtu := Transform((cQryPED)->PESOBR,		"@E 999,999,999.99")
+	
+	(cQryTMP)->(DbCloseArea())
 
 	//Selecina os Pedidos Liberados na Empresa Origem
+	cQryTMP	:= GetNextAlias()
 	cSql := " SELECT SUM(ROUND((C9_QTDLIB*ISNULL(ZZ9_PESO,B1_PESO))+(C9_QTDLIB2*ISNULL(ZZ9_PESEMB,B1_YPESEMB)),2)) PESOBR "
 	cSql += " FROM "+aPedOri[7]+" SC9 INNER JOIN SB1010 SB1 ON "
 	cSql += " 	C9_PRODUTO = B1_COD "  
@@ -312,16 +303,11 @@ User Function fCalcPeso()
 	cSql += "	AND SC9.C9_AGREG  <= '"+aPedOri[10]+"' "
 	cSql += " 	AND SC9.D_E_L_E_T_ = ''	"
 	cSql += " 	AND SB1.D_E_L_E_T_ = ''	"
+	TcQuery cSQL New Alias (cQryTMP)
 
-	If chkfile("R02")
-		dbSelectArea("R02")
-		dbCloseArea()
-	EndIf
-
-	TcQuery cSql ALIAS "R02" NEW
-
-	nPesoOri := Transform(R02->PESOBR,		"@E 999,999,999.99")
-	R02->(DbCloseArea())
+	nPesoOri := Transform((cQryPED)->PESOBR,		"@E 999,999,999.99")
+	
+	(cQryTMP)->(DbCloseArea())
 
 	//Monta Tela para exibir os pesos.
 	DEFINE MSDIALOG oDlg TITLE "Conferencia de Peso entre Cargas" FROM 000, 000  TO 100, 345 COLORS 0, 16777215 PIXEL

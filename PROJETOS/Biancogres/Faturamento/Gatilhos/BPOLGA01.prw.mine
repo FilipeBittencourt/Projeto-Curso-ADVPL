@@ -14,7 +14,7 @@ User Function BPOLGA01()
 
 	Local aArea 	:= GetArea()
 	Local aAreaA1 	:= SA1->(GetArea())
-	Local cEmpNPOL 	:= AllTrim(GetNewPar("FA_EMPNPOL",""))
+	Local cEmpNPOL 	:= AllTrim(GetNewPar("FA_EMPNPOL","14#"))
 	Local cTpDVER	:= AllTrim(GetNewPar("FA_TPEDVDA","N #E #IM#R1#R2#"))
 	Local nMaxDAI 	:= GetNewPar("BF_MAXDAI", 30)  //maximo de desconto de outras AI
 
@@ -563,7 +563,7 @@ Static Function CheckAO(_NUMSI, _NPDACO)
 
 
 	If (!(cQrySZO)->(Eof()) .And.  AllTrim((cQrySZO)->ZO_FPAGTO) != '2' )
-		If (Alltrim((cQrySZO)->ZO_FPAGTO) != "")
+		If ((cQrySZO)->ZO_FPAGTO != "")
 			MsgAlert("AI informada não é do 'Tipo de Pagamento:Desconto em Pedido'.","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
 			lRet := .F.
 		EndIf
@@ -731,13 +731,7 @@ Static Function CheckAOValid(_NUMSI)
 		lRet := .F.
 	Else
 		If (AllTrim((cQrySZO)->ZO_FPAGTO) != '2')
-<<<<<<< .mine
 			If ((cQrySZO)->ZO_FPAGTO != "")
-||||||| .r11542
-			If ((cQrySZO)->ZO_FPAGTO != "") 
-=======
-			If (Alltrim((cQrySZO)->ZO_FPAGTO) != "") 
->>>>>>> .r11590
 				MsgAlert("AI informada não é do 'Tipo de Pagamento:Desconto em Pedido'.","ATENÇÃO! POLITICA DE DESCONTO -> BPOLGA01")
 				lRet := .F.
 			EndIf

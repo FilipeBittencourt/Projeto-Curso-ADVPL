@@ -34,7 +34,7 @@ User Function VRESPEDI(_aCols, _aHeader, cPed)
 			
 			If SB1->(DbSeek(XFilial("SB1")+__cProd)) .And. AllTrim(SB1->B1_TIPO) ==  "PA"
 
-				If AllTrim(cEmpAnt+cFilAnt) == "0701" .Or. AllTrim(cEmpAnt+cFilAnt) == "1401"
+				If AllTrim(cEmpAnt+cFilAnt) == "0701" 
 					__cEmpPed	:= _aCols[__nI][aScan(_aHeader,{|x| AllTrim(x[2]) == "C6_YEMPPED"})]
 					
 					//Alert(__cEmpPed)

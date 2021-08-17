@@ -43,7 +43,7 @@ User Function FROPRT02(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 	SB1->(DbSetOrder(1))
 	SB1->(DbSeek(XFilial("SB1")+_cProduto))
 
-	If !( AllTrim(CEMPANT) $ "07#14" ) .OR. (SB1->B1_TIPO == "PR")
+	If !( AllTrim(CEMPANT) $ "07" ) .OR. (SB1->B1_TIPO == "PR")
 
 		aRet := U_FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed, _cLoteSel,,_cUserName, _lNoTemp, _cMotExc, _cSubTp, _cNumRes)
 
@@ -129,7 +129,7 @@ User Function FRRT02IR(_cPedido, _cItem, _cProduto, _cLocal, _nQuant, _cVendPed,
 	//Indice 9 personalido -> C0_YEMPORI+C0_YPITORI   nick  'EMPPEDORI'
 	//Apagar reservas anteriores
 
-	If _cEmpOri == "0701" .Or. _cEmpOri == "1401"
+	If _cEmpOri == "0701"
 		_cChaveC0 := XFilial("SC0")+_cEmpOri+_cPedido+_cItem
 		_cIndexC0 := 'EMPPEDORI'
 		_cFieldsC0 := "C0_FILIAL+C0_YEMPORI+C0_YPITORI"
@@ -441,13 +441,13 @@ User Function FRRT02EX(_cPedido, _cItem, _cProduto, _cMotExc, _cEmpOri, _cUserOr
 	If Type("_FROPCHVTEMPRES") <> "U" .And. !Empty(_FROPCHVTEMPRES)
 		_cUserName 	:= _FROPCHVTEMPRES
 		_lDelTemp	:= .T.
-	ElseIf AllTrim(_cEmpOri) == "0701" .Or. AllTrim(_cEmpOri) == "1401"  //esta digitando pedido via conexao RPC com a empresa origem
+	ElseIf AllTrim(_cEmpOri) == "0701"  //esta digitando pedido via conexao RPC com a empresa origem
 		_cUserName 	:= _cUserOri
 		_lDelTemp	:= .T.
 	EndIf
 
 	//Apagar reservas do Item para gerar novamente
-	If !( AllTrim(CEMPANT) $ "07#14" )
+	If !( AllTrim(CEMPANT) $ "07" )
 
 		ConOut("FRRT02EX => thread: "+AllTrim(Str(ThreadId()))+", PEDIDO: "+_cPedido+", Data: "+DTOC(dDataBase)+" Hora: "+Time()+" - Excluindo Reserva - NOT LM.")
 		U_FRRT02XR(_cPedido, _cItem, _cEmpOri, _cUserName, _cMotExc, _lDelTemp, _lDelOP)

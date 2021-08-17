@@ -2586,12 +2586,6 @@ User Function fBuscaDesconto(nVend,nSegm,nCli,nGrpCli,nProd,nLote,dtEmis,nLinha)
 
 	nDesconto := Round(100 - ((1 - nDesc1/100) * (1 - nDesc2/100) * 100),2)
 
-	//Inserido dia 25/10/13 a pedido do Sr. Wanisay, até definição das Regras de Desconto Vitcer
-	If cEmpAnt == "14"
-		nDesconto	:= 0
-		cRegraSC6 	:= ""
-	EndIf
-
 Return(nDesconto)
 
 
@@ -5987,40 +5981,17 @@ Return(lRet)
 ##############################################################################################################     
 */
 User Function fSegCliente(_nLinha, _cCliente, _cLoja)
-	Local nTable
-	Local cAliasTmp
-	Local nTpSeg
+Local nTpSeg	:= ""
+Local aArea		:= GetArea()
 
-	//Define o Tipo de Segmento do Cliente de acordo com a Linha do Pedido
-	If cEmpAnt  == "07"
-		If _nLinha == "1"						//BIANCOGRES
-			nTable	:= "%SA1010%"
-		ElseIf _nLinha $ "2_3" 			//INCESA E BELLACASA
-			nTable	:= "%SA1050%"
-		Else												//OUTRAS EMPRESAS
-			//nTable	:= "%A1"+cEmpAnt+"0%"
-			nTable	:= "%"+RetSqlName("SA1")+"%"
-		EndIf
-	Else
-		//nTable	:= "%SA1"+cEmpAnt+"0%"
-		nTable	:= "%"+RetSqlName("SA1")+"%"
-	EndIf
+SA1->(DbSetOrder(1))
+If SA1->(DbSeek(xFilial("SA1")+_cCliente+_cLoja))
+	nTpSeg := SA1->A1_YTPSEG
+EndIf
 
-	cAliasTmp := GetNextAlias()
-	BeginSql Alias cAliasTmp
-		SELECT A1_YTPSEG FROM %EXP:nTable% WHERE A1_COD = %EXP:_cCliente% AND A1_LOJA = %EXP:_cLoja% AND %NotDel%
-	EndSql
+RestArea(aArea)	
 
-	If !(cAliasTmp)->(Eof())
-		nTpSeg := (cAliasTmp)->A1_YTPSEG
-	Else
-		nTpSeg := ""
-	EndIf
-
-	(cAliasTmp)->(dbCloseArea())
-
-Return( nTpSeg )
-
+Return(nTpSeg)
 
 /*
 ##############################################################################################################
@@ -6028,6 +5999,7 @@ Return( nTpSeg )
 # AUTOR......: Fernando - Facile
 # DATA.......: 29/10/2015  
 # DESCRICAO..: Funcao para retornar campos do cliente conforme empresa da Linha
+# OBS........: Retirado de uso por Ranisses em 10/08/2021
 ##############################################################################################################     
 */
 User Function fInfCliente(_nLinha, _cCliente, _cLoja)
@@ -6057,21 +6029,10 @@ User Function fInfCliente(_nLinha, _cCliente, _cLoja)
 		nTable	:= "%"+RetSqlName("SA1")+"%"
 	EndIf
 
-	IF SA1->(FieldPos("A1_YLOTRES")) > 0   //RETIRAR APOS CAMPOS CRIADOS NA PRODUCAO
-
-		cAliasTmp := GetNextAlias()
-		BeginSql Alias cAliasTmp
-			SELECT A1_YTRTESP, A1_YCAT, A1_YTPSEG, A1_YLOTRES FROM %EXP:nTable% WHERE A1_COD = %EXP:_cCliente% AND A1_LOJA = %EXP:_cLoja% AND %NotDel%
-		EndSql
-
-	ELSE
-
-		cAliasTmp := GetNextAlias()
-		BeginSql Alias cAliasTmp
-			SELECT A1_YTRTESP, A1_YCAT, A1_YTPSEG, A1_YLOTRES = ' ' FROM %EXP:nTable% WHERE A1_COD = %EXP:_cCliente% AND A1_LOJA = %EXP:_cLoja% AND %NotDel%
-		EndSql
-
-	ENDIF
+	cAliasTmp := GetNextAlias()
+	BeginSql Alias cAliasTmp
+		SELECT A1_YTRTESP, A1_YCAT, A1_YTPSEG, A1_YLOTRES FROM %EXP:nTable% WHERE A1_COD = %EXP:_cCliente% AND A1_LOJA = %EXP:_cLoja% AND %NotDel%
+	EndSql
 
 	If !(cAliasTmp)->(Eof())
 
@@ -6342,7 +6303,7 @@ User Function fDifICM3(cLinha,cSubTp,nCli,nLj,nProd,nIcmsOri,nIcmsDes,nFECP,cDIF
 	ElseIf cEmpAnt == "13"
 		cMarca := "1301"
 	ElseIf cEmpAnt == "14"
-		cMarca := "1401"
+		cMarca := "1302"
 	EndIf
 
 	//Definicao de Produto Outsourcing para o Ticket 15088 - Fernando em 20/05/2019

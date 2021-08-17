@@ -80,19 +80,27 @@ Static Function fMSNewGetDados1()
 
 	cQUERY := "SELECT X5_CHAVE, X5_DESCRI FROM "+RetSqlName("SX5")+" WHERE X5_TABELA = 'DJ' AND D_E_L_E_T_=''  " 
 
-	If(!Empty(cRepAtu)) 
+	
+    
+    If (!Empty(cRepAtu)) 
 
 		aTipoPedido := StrTokArr (GetNewPar("MV_YSUBTP",''), '/')
 
-		cQUERY += " AND X5_CHAVE IN ("
-
-		For nI := 1 to Len(aTipoPedido)
-			cQUERY += "'"+aTipoPedido[nI]+ "'"
-			If (Len(aTipoPedido) != nI)
-				cQUERY += ","		
-			EndIf
-		Next nI                               
-		cQUERY += ")"
+        If M->C5_YLINHA == "6"
+            cQUERY += " AND X5_CHAVE IN ('A','B','G','IM','N')  " // Ticket 33962 Liberar acesso dos representantes a inserir pedido tipo de venda "A"
+        Else
+        cQUERY += " AND X5_CHAVE IN ("
+        For nI := 1 to Len(aTipoPedido)
+			if AllTrim(aTipoPedido[nI]) != "A"
+                cQUERY += "'"+aTipoPedido[nI]+ "'"
+                If (Len(aTipoPedido) != nI)
+                    cQUERY += ","		
+                EndIf
+            EndIf
+		Next nI 
+        cQUERY += ")"
+        EndIf                              
+		
 		//	cQUERY += " AND X5_CHAVE IN ('A','B','G','IM','N')  "	
 	EndIf
 

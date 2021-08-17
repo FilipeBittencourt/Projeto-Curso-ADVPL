@@ -217,7 +217,7 @@ static method ProcessaDevolucao(cCodigosCli) class TAutDevIntQry
 	cSQL+=" WHERE SF1.F1_FILIAL=" + ValToSql(xFilial("SF1"))+cCRLF
 	cSQL+="   AND F1_TIPO='D'"+cCRLF
 	cSQL+="   AND C5_YEMPPED<>'' "+cCRLF
-	cSQL+="   AND D1_EMISSAO>='"+DtoS(getNewPar("BIA_DTIICP",CToD("03/08/2021")))+"' "+cCRLF // TO DO: COLOCAR DATA PARA SUBIDA.
+	cSQL+="   AND D1_EMISSAO>='"+DtoS(getNewPar("BIA_DTIICP",CToD("01/01/2021")))+"' "+cCRLF // TO DO: COLOCAR DATA PARA SUBIDA.
 	cSQL+="   AND D1_FORNECE NOT IN " + FormatIn(cCodigosCli, "/")+cCRLF
 
 	cSQL+=" AND NOT EXISTS"+cCRLF

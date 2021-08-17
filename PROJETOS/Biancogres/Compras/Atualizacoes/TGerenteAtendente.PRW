@@ -36,7 +36,6 @@ Method GetCliente(_cMarca, _Cliente, _cLoja, _cVend) Class TGerenteAtendente
 	SA1->(DbSetOrder(1))
 	
 	If SA1->(DbSeek(xFilial("SA1") + _Cliente + _cLoja))
-	//TODO Verificar ZKM 
 	oTGAResult := ::Get(_cMarca, SA1->A1_YTPSEG, SA1->A1_EST, _cVend, SA1->A1_GRPVEN, SA1->A1_YCAT)
 	EndIf
 	

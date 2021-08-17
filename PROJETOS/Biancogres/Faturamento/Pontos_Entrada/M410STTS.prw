@@ -494,7 +494,7 @@ User Function M410STTS()
 	If (Inclui .Or. Altera) .And.;
 			SC5->(DbSeek(XFilial("SC5")+M->C5_NUM)) .And.;
 			SC5->C5_TIPO == 'N' .And.;
-			!(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES","14"))) .And.;
+			!(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES",""))) .And.;
 			SC5->C5_YLINHA <> "4"
 
 		ConOut("M410STTS => POS06, thread: "+AllTrim(Str(ThreadId()))+"  data: "+DTOC(dDataBase)+" hora: "+Time())
@@ -641,7 +641,7 @@ User Function M410STTS()
 	//---------------------------------------------------------------------------------------------------------------------------
 	__lBloq1 := .F.
 	__lBloq2 := .F.
-	If !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES","14"))) .And. M->C5_YLINHA <> "4" .And. !U_FROPVLPV(M->C5_NUM, .F., .F., @__lBloq1, @__lBloq2)
+	If !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES",""))) .And. M->C5_YLINHA <> "4" .And. !U_FROPVLPV(M->C5_NUM, .F., .F., @__lBloq1, @__lBloq2)
 
 		If __lBloq1
 			U_FROPMSG("SISTEMA - RESERVA DE ESTOQUE/OP","Solicite liberação para "+U_FRGERADM(M->C5_NUM)+".",,2,"PEDIDO BLOQUEADO POR REJEIÇÃO DE SUGESTÃO")
@@ -664,7 +664,7 @@ User Function M410STTS()
 		_aCabWF := {}
 		_aItensWF := {}
 
-		_cA1TpSeg := U_fSegCliente(SC5->C5_YLINHA, SC5->C5_CLIENTE, SC5->C5_LOJACLI)
+		_cA1TpSeg := SA1->A1_YTPSEG
 
 		SC6->(DbSetOrder(1))
 		If SC6->(DbSeek(XFilial("SC6")+SC5->C5_NUM))

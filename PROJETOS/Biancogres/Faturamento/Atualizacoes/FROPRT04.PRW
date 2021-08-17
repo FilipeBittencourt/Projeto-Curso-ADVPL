@@ -35,7 +35,7 @@ User Function FROPRT04(_cPedido, _cItem, _cProduto, _nQuant, _cSegmento, _dDataN
 		_cUserName := _FROPCHVTEMPRES
 	EndIf
 
-	If !(AllTrim(CEMPANT) $ "07#14") .OR. (SB1->B1_TIPO == "PR")
+	If !(AllTrim(CEMPANT) $ "07") .OR. (SB1->B1_TIPO == "PR")
 
 		aRet := U_FRT04PRC(_cPedido, _cItem, _cProduto, _nQuant, _cSegmento, _dDataNece, _cUserName, _cOPDoc)
 

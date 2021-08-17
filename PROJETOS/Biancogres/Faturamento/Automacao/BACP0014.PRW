@@ -17,7 +17,7 @@ User Function BACP0014()
 
 	RpcSetEnv('01','01')
 
-	xv_Emps := U_BAGtEmpr("01_05_13")
+	xv_Emps := U_BAGtEmpr("01_05_13_14")
 
 	RpcClearEnv()
 
@@ -82,6 +82,13 @@ Static Function fProcessa(_cEmp,_cFil)
 		_cZZW		:=	"ZZW130"
 		_cSC9		:=  "%SC9130%"
 		_cSD2		:=  "%SD2130%"
+
+		Case (_cEmp == '14')
+		
+		_cZZV		:=	"ZZV140"
+		_cZZW		:=	"ZZW140"
+		_cSC9		:=  "%SC9140%"
+		_cSD2		:=  "%SD2140%"
 
 		OtherWise
 		

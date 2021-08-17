@@ -45,7 +45,7 @@ For i := 1 to Len(aCols)
 	Acols[i,aScan(aHeader,{|x| Alltrim(x[2])=="C6_YDTNECE" .Or. Alltrim(x[2])=="C6_YDTNERE"})] := U_FROPAD3U(dDataBase)
 	
 	//tipos de pedido que fazem reserva de estoque
-	If M->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES","14"))) .And. M->C5_YLINHA <> "4"
+	If M->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES",""))) .And. M->C5_YLINHA <> "4"
 	
 		For j := 1 To Len(aSC6Clear)
 		
