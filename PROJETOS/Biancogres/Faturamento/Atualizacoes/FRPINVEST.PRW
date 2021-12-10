@@ -38,7 +38,7 @@ User Function FRINVEST()
 	private cMatAte	   := space(TamSX3("RA_MAT")[1])
 
 	private cQEmp	   := "XX"
-	private	aEmps	   := {"XX=Todas","01=Biancogres","05=Incesa","14=Vinilico"}
+	private	aEmps	   := {"XX=Ambas","01=Biancogres","05=Incesa","14=Vinilico"}
 
 	private lEmail     := .F.
 
@@ -54,6 +54,7 @@ User Function FRINVEST()
 	private aTabRel	   := {}
 	private np		   := 0
 	private oProcess   := nil
+	PRIVATE _cCLVL 		:= ""
 
 	aAdd( aPergs ,{1,"DT Movimento de: " 		, dDtMovDe  ,"","NAOVAZIO()",'','.T.',50,.F.})
 	aAdd( aPergs ,{1,"DT Movimento Ate:" 		, dDtMovAte ,"","NAOVAZIO()",'','.T.',50,.F.})
@@ -690,6 +691,30 @@ Static Function fGeraPromo()
 			cQuery += " where D_E_L_E_T_='' and RA_MAT in ("+ U_MontaSQLIN(_cCoord01, '#', 6)+") "+CRLF
 		EndIf
 
+		// Empresa 14 - Atenção na Z31 
+		cQuery := ""
+		cQuery += " select distinct "+CRLF
+		cQuery += " CODEMP = '14', "+CRLF
+		cQuery += " P_MAT = RD_MAT, "+CRLF
+		cQuery += " P_NOME = RA_NOME "+CRLF
+		cQuery += " from SRD140 SRD "+CRLF
+		cQuery += " join SRA140 SRA on RA_FILIAL = RD_FILIAL and RA_MAT = RD_MAT "+CRLF
+		cQuery += " where "+CRLF
+		cQuery += " RD_FILIAL = '01' "+CRLF
+		cQuery += " and RD_DATARQ = '"+cAno+cMes+"' "+CRLF
+		cQuery += " and RA_MAT in (select distinct Z31_CODFUN from Z31010 where Z31_CODEMP = '14' and D_E_L_E_T_='') "+CRLF
+		cQuery += " and RA_MAT between '"+cMatDe+"' and '"+cMatAte+"' "+CRLF
+		cQuery += " and SRD.D_E_L_E_T_='' "+CRLF
+		cQuery += " and SRA.D_E_L_E_T_='' "+CRLF
+
+		//Adicionando as matriculas de coordenador para calculo do custo
+		If !Empty(_cCoord01)
+			cQuery += " union "+CRLF
+			cQuery += " select CODEMP = '14', P_MAT = RA_MAT, P_NOME = RA_NOME from SRA140 "+CRLF
+			cQuery += " where D_E_L_E_T_='' and RA_MAT in ("+ U_MontaSQLIN(_cCoord01, '#', 6)+") "+CRLF
+		EndIf
+
+
 		cQuery += " UNION ALL"
 		cQuery += " select distinct "+CRLF
 		cQuery += " CODEMP = '05', "+CRLF
@@ -830,7 +855,8 @@ Static Function fGeraPromo()
 			Z31_LOJCLI, 
 			Z31_NOMCLI, 
 			Z31_RATEIO
-			,IIF(SUBSTRING(Z31_CLVL,1,2)='21','01','05') AS CTH_YUN
+			//,IIF(SUBSTRING(Z31_CLVL,1,2) = '21','01','05') AS CTH_YUN
+			,IIF(SUBSTRING(Z31_CLVL,1,2) = '21','01',IIF(SUBSTRING(Z31_CLVL,1,2) = '23' or SUBSTRING(Z31_CLVL,1,2) = '25','14','05')) AS CTH_YUN
 			from Z31010 Z31
 			where Z31_DTFIM >= %Exp:DTOS(dDtMovAte)%
 			and Z31_DTINIC <= %Exp:DTOS(dDtMovAte)% 
@@ -875,11 +901,14 @@ Static Function fGeraPromo()
 			ElseIf cQEmp == "05" .And. ( SubStr((cAliasTmp)->CTH_YUN,1,2) <> "05" )
 				(cAliasTmp)->(DbSkip())
 				loop
+			ElseIf cQEmp == "14" .And. ( SubStr((cAliasTmp)->CTH_YUN,1,2) <> "14" )
+				(cAliasTmp)->(DbSkip())
+				loop
 			EndIf
 
 			aAux := {}
 			AADD(aAux, cTitulo ) 								//Titulo
-			AADD(aAux, SubStr((cAliasTmp)->CTH_YUN,1,2) )	//Empresa da classe de valor para gerar o SZO
+			AADD(aAux,  "01")      //SubStr((cAliasTmp)->CTH_YUN,1,2) )	    //Empresa da classe de valor para gerar o SZO
 			AADD(aAux, DTOS(dDtMovDe) )							//Data do Lcto
 			AADD(aAux, (cTabTemp)->P_MAT)						//Chave de busca da origem
 			AADD(aAux, "" )						//Conta LC
@@ -899,9 +928,9 @@ Static Function fGeraPromo()
 			AADD(aAux, "" )							//Item origem
 
 			AADD(aAux, (cAliasTmp)->Z31_CODCLI+(cAliasTmp)->Z31_LOJCLI ) //Codigo+Loja do cliente para SI
-			AADD(aAux, (cAliasTmp)->CTH_YUN ) 	//Empresa SI
-			AADD(aAux, _cVend )						//Vendedor SI
-			AADD(aAux, "3" )						//F Pgto SI
+			AADD(aAux, xMarcaCTH((cAliasTmp)->Z31_CLVL)) //_cEmpSI ) // Marca com 4 posicões
+			AADD(aAux, _cVend )						    //Vendedor SI
+			AADD(aAux, "3" )						    //F Pgto SI
 
 			AADD(aTabRel,aAux)
 
@@ -941,18 +970,7 @@ Static Function AddLinRes(cAliasTmp, cTitulo, nSeqCab, cFPgto)
 
 	_cDVend := GetVend(@_cVend, AllTrim((cTabTemp)->CLISI), (cTabTemp)->CLVL)
 
-	CTH->(DbSetOrder(1))
-	If CTH->(DbSeek(XFilial("CTH")+(cTabTemp)->CLVL)) .And. !Empty(CTH->CTH_YUN)
-		If Substr(Alltrim(CTH->CTH_CLVL),1,2) == "21"
-			_cEmpSI := "01"
-		Else
-			_cEmpSI := "05"
-		EndIf
-	EndIf
-
-	//If (cTabTemp)->EMP == "07" .And. Empty(_cEmpSI)
-	//	MsgAlert("CLASSE DE VALOR: "+(cTabTemp)->CLVL+" NAO CONFIGURADA PARA LM.","ATENÇÃO!!! (FRINVEST)")
-	//EndIF
+	_cEmpSI := xMarcaCTH((cTabTemp)->CLVL)
 
 	If cQEmp == "01"
 		If .Not. ( (cTabTemp)->EMP == "01" .Or. ( (cTabTemp)->EMP == "07" .And. _cEmpSI == "01" )  )
@@ -960,6 +978,10 @@ Static Function AddLinRes(cAliasTmp, cTitulo, nSeqCab, cFPgto)
 		EndIf
 	ElseIf cQEmp == "05"
 		If .Not. ( (cTabTemp)->EMP == "05" .Or. ( (cTabTemp)->EMP == "07" .And. _cEmpSI == "05" )  )
+			return
+		EndIf
+	ElseIf cQEmp == "14"
+		If .Not. ( (cTabTemp)->EMP == "14" .Or. ( (cTabTemp)->EMP == "07" .And. _cEmpSI == "14" )  )
 			return
 		EndIf
 	EndIf
@@ -1005,7 +1027,7 @@ Static Function AddLinRes(cAliasTmp, cTitulo, nSeqCab, cFPgto)
 		//Campos adicionais de controle
 		//AADD(aAux, (cAliasTmp)->CODLOJSI )  //codi+loja cliente si
 		AADD(aAux, AllTrim((cTabTemp)->CLISI) + IIF(!Empty((cTabTemp)->CLISI),Posicione("SA1",1,Xfilial("SA1")+AllTrim((cTabTemp)->CLISI),"A1_LOJA"),"")  )  //codi+loja cliente si
-		AADD(aAux, _cEmpSI ) //empresa si
+		AADD(aAux, _cEmpSI ) // MARCA si
 		AADD(aAux, _cVend )  //vendedor si
 		AADD(aAux, cFPgto )  //fpgto si
 
@@ -1023,7 +1045,7 @@ Static Function AddLinRes(cAliasTmp, cTitulo, nSeqCab, cFPgto)
 
 		//Campos adicionais de controle  (lancamento manual)
 		AADD(aAux, AllTrim((cTabTemp)->CLISI) + IIF(!Empty((cTabTemp)->CLISI),Posicione("SA1",1,Xfilial("SA1")+AllTrim((cTabTemp)->CLISI),"A1_LOJA"),"")  )  //codi+loja cliente si
-		AADD(aAux, _cEmpSI ) //empresa si
+		AADD(aAux, _cEmpSI ) //MARCA si
 		AADD(aAux, _cVend )  //vendedor si
 		AADD(aAux, cFPgto )  //fpgto s
 
@@ -1038,30 +1060,27 @@ Static Function GetVend(_cVend, _cCodLoj, _cCLVL)
 
 	Local _cDVend := ""
 	Local _cEmpSI := ""
-	Local cClVlBella := AllTrim(GetNewPar("MV_YCLVLBC","2210#2251#"))  //Classes de Valor BellaCasa - Ticket 7537
 
 	If !Empty(_cCodLoj)
 		SA1->(DbSetOrder(1))
 		If SA1->(DbSeek(XFilial("SA1")+_cCodLoj))
 
-			CTH->(DbSetOrder(1))
-			If CTH->(DbSeek(XFilial("CTH")+_cCLVL)) .And. !Empty(CTH->CTH_YUN)
-				If Substr(Alltrim(CTH->CTH_CLVL),1,2) == "21"
-					_cEmpSI := "01"
-				Else
-					_cEmpSI := "05"
-				EndIf
-			EndIf
+			_cEmpSI := xMarcaCTH(_cCLVL)
 
-			If Empty(_cEmpSI) .Or. (_cEmpSI == "01")
+			If _cEmpSI == '0101' // BIANCOGRES
 				_cVend := SA1->A1_VEND
-			ElseIf (_cEmpSI == "05")
+			ElseIf (_cEmpSI == "0501") // INCESA
 				_cVend := SA1->A1_YVENDI
-			ElseIf ( AllTrim(_cCLVL) $ cClVlBella)
+			ElseIf (_cEmpSI == '0599') // BELLACASA
 				_cVend := SA1->A1_YVENBE1
+			ElseIf (_cEmpSI == '1302') // VINILICO
+				_cVend := SA1->A1_YVENVI1
+			ElseIf (_cEmpSI == '0199') // PEGASUS
+				_cVend := SA1->A1_YVENPEG
 			Else
 				_cVend := SA1->A1_VEND
 			EndIf
+
 		EndIf
 
 		SA3->(DbSetOrder(1))
@@ -1312,11 +1331,8 @@ Static Function fGerarSI()
 
 	LjMsgRun("Aguarde... Gerando SI's da BIANCOGRES",,{|| fGSI01(@cLogTxt,@nSI01) })
 
-	LjMsgRun("Aguarde... Gerando SI's da INCESA",,{|| fGSI05(@cLogTxt,@nSI05) })
-
 	U_FROPMSG("Geração de AI",;
 		"Foram geradas "+AllTrim(Str(nSI01))+" na empresa BIANCOGRES."+CRLF+;
-		"Foram geradas "+AllTrim(Str(nSI05))+" na empresa INCESA."+CRLF+;
 		IIF(!Empty(cLogTxt),CRLF+"Erros na geração de AI's:"+CRLF+cLogTxt,""))
 
 Return
@@ -1334,26 +1350,13 @@ Static Function fGSI01(cLogTxt,nSI01)
 
 Return
 
-Static Function fGSI05(cLogTxt,nSI05)
-
-	Local aRet
-
-	aRet := U_FROPCPRO("05","01","U_fGSIInvPrc", aTabRel, cUserName)
-
-	If ValType(aRet) == "A"
-		nSI05 := aRet[1]
-		cLogTxt += aRet[2]
-	EndIf
-
-Return
-
 Static Function ValidLin(aTabRel, np, cLogRet)
 
 	Local _cTxt
-	Local _CCLVLALL   := GetNewPar("FA_CVLMALL","01#05#14")  //Parametro para Empresas permitidas para classe de valor LM de investimentos
+	Local _CCLVLALL   := GetNewPar("FA_CVLMALL","0101#0501#0599#1302#0199")  //Parametro para MARCAS permitidas para classe de valor LM de investimentos
 
 	Default cLogRet := ""
-
+	/*
 	If Alltrim(aTabRel[np][2]) == "07" .And. !(AllTrim(aTabRel[np][21]) $ _CCLVLALL)
 
 		_cTxt := "LINHA: "+AllTrim(Str(np))+" => SI LM COM CLASSE DE VALOR NÃO CONFIGURADA / EMPRESA INVÁLIDA (campo CTH_YUN) => VALOR: "+AllTrim(Str(aTabRel[np][9]))+" - CT2 HIST: "+aTabRel[np][10]
@@ -1362,7 +1365,7 @@ Static Function ValidLin(aTabRel, np, cLogRet)
 
 	EndIf
 
-
+	*/
 	If ( Empty(aTabRel[np][20]) .Or. Empty(aTabRel[np][7]) .Or. Empty(aTabRel[np][2]) .Or. Empty(aTabRel[np][22]) )
 
 		If Empty(aTabRel[np][20])
@@ -1394,6 +1397,53 @@ Static Function ValidLin(aTabRel, np, cLogRet)
 
 Return(.T.)
 
+Static Function xMarcaCTH(xcClValor)
+Local xcMarca := ""
+Local xMCTHx := {}
+
+aadd(xMCTHx,{"2100","0101","BIANCOGRES"})
+aadd(xMCTHx,{"2105","0101","BIANCOGRES"})
+aadd(xMCTHx,{"2106","0101","BIANCOGRES"})
+aadd(xMCTHx,{"2113","0101","BIANCOGRES"})
+aadd(xMCTHx,{"2115","0101","BIANCOGRES"})
+aadd(xMCTHx,{"2116","0101","BIANCOGRES"})
+aadd(xMCTHx,{"2118","0101","BIANCOGRES"})
+aadd(xMCTHx,{"2150","0101","BIANCOGRES"})
+aadd(xMCTHx,{"2153","0101","BIANCOGRES"})
+aadd(xMCTHx,{"2155","0101","BIANCOGRES"})
+aadd(xMCTHx,{"2156","0101","BIANCOGRES"})
+aadd(xMCTHx,{"2158","0101","BIANCOGRES"})
+aadd(xMCTHx,{"2160","0101","BIANCOGRES"})
+aadd(xMCTHx,{"2106","0199","PEGASUS"})
+aadd(xMCTHx,{"2170","0199","PEGASUS"})
+aadd(xMCTHx,{"2200","0501","INCESA"})
+aadd(xMCTHx,{"2205","0501","INCESA"})
+aadd(xMCTHx,{"2215","0501","INCESA"})
+aadd(xMCTHx,{"2218","0501","INCESA"})
+aadd(xMCTHx,{"2250","0501","INCESA"})
+aadd(xMCTHx,{"2255","0501","INCESA"})
+aadd(xMCTHx,{"2210","0599","BELLACASA"})
+aadd(xMCTHx,{"2251","0599","BELLACASA"})
+aadd(xMCTHx,{"2301","1302","VINILICO"})
+aadd(xMCTHx,{"2302","1302","VINILICO"})
+aadd(xMCTHx,{"2305","1302","VINILICO"})
+aadd(xMCTHx,{"2501","1302","VINILICO"})
+aadd(xMCTHx,{"2502","1302","VINILICO"})
+aadd(xMCTHx,{"2503","1302","VINILICO"})
+aadd(xMCTHx,{"2504","1302","VINILICO"})
+aadd(xMCTHx,{"2505","1302","VINILICO"})
+aadd(xMCTHx,{"2506","1302","VINILICO"})
+aadd(xMCTHx,{"2507","1302","VINILICO"})
+aadd(xMCTHx,{"2508","1302","VINILICO"})
+aadd(xMCTHx,{"2509","1302","VINILICO"})
+aadd(xMCTHx,{"2510","1302","VINILICO"})
+aadd(xMCTHx,{"2511","1302","VINILICO"})
+
+// Localiza a Classe Valor e retorna a Marca 
+nPosField := AScan(xMCTHx, {|x| AllTrim(x[1]) == alltrim(xcClValor) })
+
+Return(xMCTHx[nPosField][2])
+
 User Function fGSIInvPrc(aTabRel, _cUser)
 
 	Local np
@@ -1401,7 +1451,6 @@ User Function fGSIInvPrc(aTabRel, _cUser)
 	Local _NTOT := 0
 	Local cLogRet := ""
 	Local nCont := 0
-	Local cClVlBella := AllTrim(GetNewPar("MV_YCLVLBC","2210#2251#"))  //Classes de Valor BellaCasa - Ticket 7537
 
 
 	//aTabRel[np][1]	Titulo
@@ -1436,21 +1485,6 @@ User Function fGSIInvPrc(aTabRel, _cUser)
 			loop
 		EndIf
 
-		//Skipar linhas de outras empresas
-		If Alltrim(aTabRel[np][2]) <> AllTrim(CEMPANT)
-			If !(Alltrim(aTabRel[np][2]) == "07" .And. AllTrim(aTabRel[np][21]) == AllTrim(CEMPANT))
-				loop
-			EndIf
-		EndIf
-
-		If aTabRel[np][21] == "01"
-			cSerie := "S1"
-		ElseIf aTabRel[np][21] == "05"
-			cSerie := "S2"
-		Else
-			cSerie := ""
-		EndIf
-
 		RecLock("SZO",.T.)
 
 		SZO->ZO_FILIAL  := xFilial("SZO")
@@ -1467,12 +1501,7 @@ User Function fGSIInvPrc(aTabRel, _cUser)
 		SZO->ZO_FPAGTO  := aTabRel[np][23]
 		SZO->ZO_SERIE 	:= cSerie
 		SZO->ZO_REPRE 	:= aTabRel[np][22]
-
-		If ( aTabRel[np][21] == "05" .And. AllTrim(aTabRel[np][6]) $ cClVlBella )
-			SZO->ZO_EMP   	:= "0599"
-		Else
-			SZO->ZO_EMP   	:= aTabRel[np][21]+"01"
-		EndIf
+		SZO->ZO_EMP   	:= aTabRel[np][21]
 
 		SZO->ZO_USUDIR	:= _cUser
 		SZO->ZO_DATADIR := dDataBase

@@ -448,7 +448,7 @@ Method ProcessaEntrada(aFiliais) Class TFaturamentoemPartes
 				cSQL += " 	AND SC6.D_E_L_E_T_	= '' "
 				cSQL += " ) "
 
-				cSQL += " JOIN SPED050 SPED (NOLOCK) ON "
+				cSQL += " JOIN [DADOSADV].dbo.SPED050 SPED (NOLOCK) ON "
 				cSQL += " ( "
 				cSQL += " 	SPED.ID_ENT 		= " + ValToSql(oEmpFilVen:cIdEnt)
 				cSQL += " 	AND SPED.NFE_ID 	= SF2.F2_SERIE + SF2.F2_DOC "

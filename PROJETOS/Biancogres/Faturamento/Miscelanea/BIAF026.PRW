@@ -1589,6 +1589,7 @@ Static Function fAcertaSF6()
 	Local nIndSC5	:= SC5->(IndexOrd())
 	Local nRegSC5 	:= SC5->(Recno())
 	Local dDias		:= 7 //Dias de incremento para o vencimento da ST
+	Local aParam := {}
 
 	SC5->(DbSetOrder(1))
 	SC5->(DbSeek(xFilial("SC5")+SD2->D2_PEDIDO))
@@ -1607,12 +1608,199 @@ Static Function fAcertaSF6()
 	//Grava informações na Guia 
 	DbSelectArea('SF6')
 	DbSetOrder(3)
-	If DbSeek(xFilial('SF6')+'2'+'N '+SF2->F2_DOC+SF2->F2_SERIE+SF2->F2_CLIENTE+SF2->F2_LOJA,.T.)
+	If DbSeek(xFilial('SF6')+'2'+'N '+SF2->F2_DOC+SF2->F2_SERIE+SF2->F2_CLIENTE+SF2->F2_LOJA,.T.)		
+
+
+		
 		RecLock('SF6',.F.)
 
 		//Grava o protocolo para os estados do MG e BA
 		If Alltrim(SF6->F6_EST) $ "MG_BA"
 			SF6->F6_NUMCONV	:= "26/2010"
+		EndIf
+
+		
+		aParam := {24, '2', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e STE de acordo com o código de receita e sigla da UF da guia atual.
+	
+		If Alltrim(SF6->F6_CODREC) $ '1260' .And.  Alltrim(SF6->F6_EST) $ 'ES' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {24, '2', '',0, '5'}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		//pzzn 
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'CE' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100102' .And. Alltrim(SF6->F6_EST) $ 'CE' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		//Validar informações da NF
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'RS' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {22, '2', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100102' .And. Alltrim(SF6->F6_EST) $ 'RS' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {22, '2', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+		
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'TO' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100102' .And. Alltrim(SF6->F6_EST) $ 'TO' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'AM' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {22, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100102' .And. Alltrim(SF6->F6_EST) $ 'AM' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {22, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'AP' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100102' .And. Alltrim(SF6->F6_EST) $ 'AP' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'BA' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'AL' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100102' .And. Alltrim(SF6->F6_EST) $ 'AC' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'AC' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'GO' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100102' .And. Alltrim(SF6->F6_EST) $ 'GO' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+		
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'MA' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '2', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100102' .And. Alltrim(SF6->F6_EST) $ 'MA' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '2', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'MG' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100102' .And. Alltrim(SF6->F6_EST) $ 'MG' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'MS' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'MT' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100102' .And. Alltrim(SF6->F6_EST) $ 'MT' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'PA' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100102' .And. Alltrim(SF6->F6_EST) $ 'PA' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'PI' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100102' .And. Alltrim(SF6->F6_EST) $ 'PI' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'PR' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100102' .And. Alltrim(SF6->F6_EST) $ 'PR' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'RO' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '2', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100102' .And. Alltrim(SF6->F6_EST) $ 'RO' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '2', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'RR' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100102' .And. Alltrim(SF6->F6_EST) $ 'RR' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'SE' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100102' .And. Alltrim(SF6->F6_EST) $ 'SE' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100102' .And. Alltrim(SF6->F6_EST) $ 'PE' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {24, '2', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+	
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'PE' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {22, '2', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100102' .And. Alltrim(SF6->F6_EST) $ 'SC' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {24, '2', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+	
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'SC' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {22, '2', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		If Alltrim(SF6->F6_CODREC) $ '100102' .And. Alltrim(SF6->F6_EST) $ 'DF' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+	
+		If Alltrim(SF6->F6_CODREC) $ '100099' .And. Alltrim(SF6->F6_EST) $ 'DF' //Valida o Código de Receita e sigla da UF da guia atual
+			aParam := {10, '1', '',0, ''}          //Retorna os campos F6_TIPOGNU, F6_DOCORIG, F6_DETRECE, F6_CODPROD e F6_CODAREA de acordo com o código de receita e sigla da UF da guia atual.
+		EndIf
+
+		SF6->F6_TIPOGNU	:= aParam[1]
+		SF6->F6_DOCORIG	:= aParam[2]
+		SF6->F6_DETRECE	:= aParam[3]
+		SF6->F6_CODPROD	:= aParam[4]
+		
+		If SF6->( FieldPos("F6_CODAREA") ) > 0
+			SF6->F6_CODAREA	:= aParam[5]
 		EndIf
 
 		SF6->(MsUnLock())

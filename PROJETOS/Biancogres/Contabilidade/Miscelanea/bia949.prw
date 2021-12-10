@@ -18,11 +18,9 @@ User Function BIA949()
 	Local oProcess
 	Local oPrcZera
 
-
 	Private msrhEnter := CHR(13) + CHR(10)
 	Private msEmpAtu  := cEmpAnt
 	Private msFilAtu  := cFilAnt
-
 
 	fPerg := "BIA949"
 	fTamX1 := IIF(Alltrim(oApp:cVersion) == "MP8.11", 6, 10)
@@ -78,12 +76,11 @@ User Function BIA949()
 			RpcClearEnv()
 
 			RpcSetEnv( msEmpAtu, msFilAtu )
-		
+
 			If Type("__cInternet") == "C"
 				__cInternet := Nil
 			EndIf
 
-			
 		Next nW
 
 		Aviso("Desmontagem de Versão - BIA949", "Fim do processamento..." + msrhEnter + msrhEnter + " Necessário abrir a versão correspondente!!!", {'Ok'}, 3)
@@ -91,8 +88,6 @@ User Function BIA949()
 	Else
 		Aviso("Desmontagem de Versão - BIA949", "Não foram selecionadas empresas! Processamento não realizado" , {'Ok'}, 3)
 	EndIf
-
-
 
 	RestArea( _cAreaAtu )
 
@@ -106,24 +101,20 @@ Static Function fProcessa(oProcess,_cEmp,_cFil)
 	oProcess:IncRegua1(smMsnPrc)
 	oProcess:IncRegua2("Verificando Tabelas...")
 
-//	StartJob("U_BIA949P",GetEnvServer(),.T.,_cEmp,_cFil,_cVersao,_cRevisa,_cAnoRef,_cNewRev,oProcess)
+	//	StartJob("U_BIA949P",GetEnvServer(),.T.,_cEmp,_cFil,_cVersao,_cRevisa,_cAnoRef,_cNewRev,oProcess)
 
 	U_BIA949P(_cEmp,_cFil,_cVersao,_cRevisa,_cAnoRef,_cNewRev,oProcess)
-	
-
 
 Return
-
 
 User Function BIA949P(_cEmp,_cFil,_cVersao,_cRevisa,_cAnoRef,_cNewRev,oProcess)
 
 	Private msrhEnter := CHR(13) + CHR(10)
 
-
 	// ,'Z96'
 	// ,'ZOY' eu criei a tabela na familia errada e com o nome do campo _VERSAO errado.
-	// Tabelas Avulsas                                 Família de Tabelas usadas desde 2017                                                                                                                                                                                    Família de tabelas passas a serem usada a partir do orçamento 2021
-	_cVetTabl  := {'Z42','Z45','Z46','Z47','Z50','Z98','ZB0','ZB1','ZB2','ZB3','ZB4','ZB5','ZB6','ZB7','ZB8','ZB9','ZBA','ZBB','ZBC','ZBD','ZBE','ZBF','ZBG','ZBH','ZBI','ZBJ','ZBK','ZBL','ZBM','ZBN','ZBO','ZBP','ZBQ','ZBR','ZBS','ZBT','ZBU','ZBV','ZBW','ZBX','ZBY','ZBZ','ZO0','ZO1','ZO2','ZO3','ZO4','ZO5','ZO6','ZO7','ZO8','ZO9','ZOA','ZOB','ZOC','ZOD','ZOE','ZOF','ZOG','ZOH','ZOI','ZOJ','ZOK','ZOL','ZOM','ZON','ZOO','ZOP','ZOQ','ZOR','ZOS','ZOT','ZOU','ZOV','ZOW','ZOX','ZOZ'}
+	//             Tabelas Avulsas                           Família de Tabelas usadas desde 2017                                                                                                                                                                                    Família de tabelas passas a serem usada a partir do orçamento 2021
+	_cVetTabl  := {'ZCH','Z42','Z45','Z46','Z47','Z50','Z98','ZB0','ZB1','ZB2','ZB3','ZB4','ZB5','ZB6','ZB7','ZB8','ZB9','ZBA','ZBB','ZBC','ZBD','ZBE','ZBF','ZBG','ZBH','ZBI','ZBJ','ZBK','ZBL','ZBM','ZBN','ZBO','ZBP','ZBQ','ZBR','ZBS','ZBT','ZBU','ZBV','ZBW','ZBX','ZBY','ZBZ','ZO0','ZO1','ZO2','ZO3','ZO4','ZO5','ZO6','ZO7','ZO8','ZO9','ZOA','ZOB','ZOC','ZOD','ZOE','ZOF','ZOG','ZOH','ZOI','ZOJ','ZOK','ZOL','ZOM','ZON','ZOO','ZOP','ZOQ','ZOR','ZOS','ZOT','ZOU','ZOV','ZOW','ZOX','ZOZ'}
 
 	For _ms := 1 to Len(_cVetTabl)
 
@@ -179,7 +170,7 @@ User Function BIA949P(_cEmp,_cFil,_cVersao,_cRevisa,_cAnoRef,_cNewRev,oProcess)
 		EndIf
 
 	Next _ms
-	
+
 Return
 
 /*___________________________________________________________________________

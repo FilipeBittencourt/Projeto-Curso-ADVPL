@@ -10,7 +10,7 @@ User Function RETP0001()
 	Local cEmp			:= "01"
 	Local cFil			:= "01"
 	Local cUser			:= "FACILE"
-	Local cSenhaUser	:= "TESTE04"
+	Local cSenhaUser	:= "TESTE06"
 	
 	Local oAbstract 	:=	Nil
 	Local lLog			:= .F.
@@ -18,7 +18,9 @@ User Function RETP0001()
 	Local cErro		:= ""
 	Local bErro 	:= ErrorBlock( { |oErr| cErro := oErr:Description })
 	
-	RPCSetEnv(cEmp, cFil, cUser, cSenhaUser)	
+	If Select("SX6") <= 0
+		RPCSetEnv(cEmp, cFil, cUser, cSenhaUser)	
+	EndIf
 	
 	oIntAE		:= TBizagiIntegracaoAE():New()
 	oList		:= oIntAE:Get()//retorna lista de AE não integrada

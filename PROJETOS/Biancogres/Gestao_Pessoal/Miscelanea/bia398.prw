@@ -110,8 +110,6 @@ Return
 
 Static Function BIA398A()
 
-	Local mxFx
-
 	UJ007 := " SELECT *, "
 	UJ007 += "        (SELECT COUNT(*) "
 	UJ007 += "           FROM " + RetSqlName("ZBC") + " ZBC "
@@ -149,6 +147,7 @@ Static Function BIA398A()
 			TS003 += "                            WHEN CTH.CTH_YATRIB = 'C' THEN ZBC.ZBC_CTACST "
 			TS003 += "                            ELSE 'ERRO' "
 			TS003 += "                          END CONTA, "
+			TS003 += "                          ZBE.ZBE_DRIVER DRIVER, "
 			TS003 += "                          ZBA." + UJ07->ZBC_RUBRIC + " VALOR "
 			TS003 += "                     FROM " + RetSqlName("ZBA") + " ZBA "
 			TS003 += "                    INNER JOIN " + RetSqlName("CTH") + " CTH ON CTH.CTH_CLVL = ZBA.ZBA_CLVL "
@@ -159,6 +158,12 @@ Static Function BIA398A()
 			TS003 += "                                         AND ZBC.ZBC_ANOREF = ZBA.ZBA_ANOREF "
 			TS003 += "                                         AND ZBC.ZBC_RUBRIC = '" + UJ07->ZBC_RUBRIC + "' "
 			TS003 += "                                         AND ZBC.D_E_L_E_T_ = ' ' "
+			TS003 += "                    LEFT JOIN " + RetSqlName("ZBE") + " ZBE ON ZBE.ZBE_FILIAL = '" + xFilial("ZBE") + "' "
+			TS003 += "                                        AND ZBE.ZBE_VERSAO = ZBA.ZBA_VERSAO "
+			TS003 += "                                        AND ZBE.ZBE_REVISA = ZBA.ZBA_REVISA "
+			TS003 += "                                        AND ZBE.ZBE_ANOREF = ZBA.ZBA_ANOREF "
+			TS003 += "                                        AND ZBE.ZBE_APLDEF = 'RH' "
+			TS003 += "                                        AND ZBE.D_E_L_E_T_ = ' ' "
 			TS003 += "                    WHERE ZBA.ZBA_FILIAL = '" + xFilial("ZBA") + "' "
 			TS003 += "                      AND ZBA.ZBA_VERSAO = '" + _cVersao + "' "
 			TS003 += "                      AND ZBA.ZBA_REVISA = '" + _cRevisa + "' "
@@ -170,12 +175,14 @@ Static Function BIA398A()
 			TS003 += "        CLVL, "
 			TS003 += "        ATRIB, "
 			TS003 += "        CONTA, "
+			TS003 += "        DRIVER, "
 			TS003 += "        SUM(VALOR) VALOR "
 			TS003 += "   FROM RHTODESP "
 			TS003 += "  GROUP BY PERIODO, "
 			TS003 += "           CLVL, "
 			TS003 += "           ATRIB, "
-			TS003 += "           CONTA "
+			TS003 += "           CONTA, "
+			TS003 += "           DRIVER "
 			TSIndex := CriaTrab(Nil,.f.)
 			dbUseArea(.T.,"TOPCONN",TcGenQry(,,TS003),'TS03',.T.,.T.)
 			dbSelectArea("TS03")
@@ -211,6 +218,8 @@ Static Function BIA398A()
 					ZBZ->ZBZ_YHIST  := "ORCAMENTO RH"
 					ZBZ->ZBZ_SI     := ""
 					ZBZ->ZBZ_YDELTA := ctod("  /  /  ")
+					ZBZ->ZBZ_DRVDB  := TS03->DRIVER
+					ZBZ->ZBZ_DRVCR  := ""
 					ZBZ->(MsUnlock())
 
 					TS03->(dbSkip())

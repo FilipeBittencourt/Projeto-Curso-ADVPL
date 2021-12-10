@@ -52,6 +52,16 @@ User Function MT260TOK()
 		Return .F.
 	EndIf
 
+	If _oMd:CheckMd(CCODORIG,CLOCORIG) .And. !_oMd:CheckMd(CCODDEST,CLOCDEST)
+		If (IsBlind())
+			Conout("Impossível prosseguir, Para transferir produtos do tipo MD utilize a rotina de Transferência Multipla  => MT260TOK")
+		Else	
+			MsgSTOP("Impossível prosseguir, Para transferir produtos do tipo MD utilize a rotina de Transferência Multipla  => MT260TOK")
+		EndIf
+		Return .F.
+	EndIf
+
+
 		
 	DbSelectArea("SB1")
 	cArqSB1 := Alias()

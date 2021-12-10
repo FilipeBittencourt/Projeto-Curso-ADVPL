@@ -106,6 +106,8 @@ Static Function fQryDados()
 	
 	Local _dDtDiff
 
+	Local _cDtCheg	:= ""
+
 	BeginSql Alias _cAlias
 		%NoParser%
 		SELECT * 
@@ -132,10 +134,13 @@ Static Function fQryDados()
 					ELSE ZCZ_QUANT * - 1
 					END) AS NUMERIC(18,8)) SALDO
 			,ZCZ_DOCSEQ
+			,MAX(ZCZ_DATPRF) DATPRF
+			,MAX(ZCZ_DTCHEG) DTCHEG
 		FROM %TABLE:ZCZ% ZCZ (NOLOCK)
 		JOIN %TABLE:SB1% SB1 (NOLOCK) ON ZCZ.ZCZ_COD = SB1.B1_COD
 			AND SB1.%NotDel%
-		LEFT JOIN %TABLE:ZZY% ZZY (NOLOCK) ON ZCZ.ZCZ_SOLICI = ZZY.ZZY_MATRIC
+		LEFT JOIN %TABLE:ZZY% ZZY (NOLOCK) ON ZZY.ZZY_FILIAL = ZCZ.ZCZ_FILIAL
+			AND ZCZ.ZCZ_SOLICI = ZZY.ZZY_MATRIC
 			AND ZZY.%NotDel%
 		WHERE ZCZ.ZCZ_FILIAL = %XFILIAL:ZCZ%
 			AND ZCZ.ZCZ_DOCSEQ <> 'XXXXXX'
@@ -206,10 +211,14 @@ Static Function fQryDados()
 	While (_cAlias)->(!EOF())
 
 		_nCusMed	:=	fRetCm((_cAlias)->ZCZ_COD,(_cAlias)->ZCZ_LOCAL)
+		_cDtCheg	:=	If(!Empty((_cAlias)->DTCHEG),(_cAlias)->DTCHEG,(_cAlias)->DTDIG)
 
-		_dDtNec		:=	fGetDtNec((_cAlias)->ZCZ_DOCSEQ)
-
-		_dDtDiff	:=	Iif((_cAlias)->DTDIG > Dtos(_dDtNec),StoD((_cAlias)->DTDIG),_dDtNec)
+		If !Empty((_cAlias)->DATPRF)
+			_dDtNec	:=	StoD((_cAlias)->DATPRF)
+		Else
+			_dDtNec		:=	fGetDtNec((_cAlias)->ZCZ_DOCSEQ)
+		EndIf
+		_dDtDiff	:=	Iif(_cDtCheg > Dtos(_dDtNec),StoD(_cDtCheg),_dDtNec)
 
 		nRegAtu++
 	
@@ -226,9 +235,9 @@ Static Function fQryDados()
 		oExcel:AddCelula( (_cAlias)->B1_UM		,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
 		oExcel:AddCelula( (_cAlias)->SALDO			,0		 				,'R',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
 		oExcel:AddCelula( (_cAlias)->SALDO * _nCusMed			,8		 				,'R',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( Stod((_cAlias)->DTDIG)			,0		 				,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( Stod(_cDtCheg)			,0		 				,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
 		oExcel:AddCelula( _dDtNec		,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
-		oExcel:AddCelula( If(!Empty((_cAlias)->DTDIG),DateDiffDay(_dDtDiff,Date()),0)			,0		 				,'R',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+		oExcel:AddCelula( If(!Empty(Dtos(_dDtDiff)),DateDiffDay(_dDtDiff,Date()),0)			,0		 				,'R',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
 		oExcel:AddCelula( (_cAlias)->ZCZ_DOCSEQ		,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
 
 

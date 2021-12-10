@@ -48,6 +48,8 @@ Class TCompensacaoReceber From TAFAbstractClass
 	Method LoadRecAnt()
 	Method RecebAntecipado()
 
+	Method RecompraFidc()
+
 EndClass
 
 
@@ -106,6 +108,10 @@ Method Compensar(aTitReceber, aTitCredito, nValorComp, nValorTit, lComisNCC, cMe
 
 			::oLog:Insert()
 
+			If cMensagem == "DEVOLUCAO"
+				::RecompraFidc(aTitReceber)
+			EndIf
+			
 		Else
 
 			lRet := .F.
@@ -219,11 +225,12 @@ Method LoadDevolucao() Class TCompensacaoReceber
 
 		While !SE1->(EOF()) .And. SE1->(E1_FILIAL + E1_CLIENTE + E1_LOJA + E1_PREFIXO + E1_NUM) == xFilial("SE1") + cA100For + cLoja + cSerie + cNfiscal
 
-			__cID		:= SE1->(Recno())
-			__oBlqCR	:= TBloqueioContaReceber():New()
-			__lRet		:= __oBlqCR:CheckPorRecno(__cID)
+			//|Desativado bloqueio para titulo FIDC - Projeto Recompra FIDC |
+			// __cID		:= SE1->(Recno())
+			// __oBlqCR	:= TBloqueioContaReceber():New()
+			// __lRet		:= __oBlqCR:CheckPorRecno(__cID)
 
-			If(!__lRet)//não e FDIC
+			If .T. //(!__lRet) //não e FDIC
 
 				If SE1->E1_SALDO > 0 .And. SE1->E1_TIPO == "NCC"
 
@@ -247,11 +254,12 @@ Method LoadDevolucao() Class TCompensacaoReceber
 
 			While !SE1->(EOF()) .And. SE1->(E1_FILIAL + E1_CLIENTE + E1_LOJA + E1_PREFIXO + E1_NUM) == xFilial("SE1") + cA100For + cLoja + ::aNfDevol[nW][NPOSSERIE] + ::aNfDevol[nW][NPOSNOTA]
 
-				__cID		:= SE1->(Recno())
-				__oBlqCR	:= TBloqueioContaReceber():New()
-				__lRet		:= __oBlqCR:CheckPorRecno(__cID)
+				//|Desativado bloqueio para titulo FIDC - Projeto Recompra FIDC |
+				// __cID		:= SE1->(Recno())
+				// __oBlqCR	:= TBloqueioContaReceber():New()
+				// __lRet		:= __oBlqCR:CheckPorRecno(__cID)
 
-				If(!__lRet)//não e FDIC
+				If .T. //(!__lRet)//não e FDIC
 
 					If SE1->E1_SALDO > 0
 
@@ -464,3 +472,44 @@ Method RecebAntecipado() Class TCompensacaoReceber
 	dDataBase := dDataBkp
 
 Return()
+
+
+Method RecompraFidc(aTitReceber) Class TCompensacaoReceber
+
+	Local nI as Numeric
+	Local aArea as Array
+	Local aAreaSE1 as Array
+	Local oRecompra as Object
+
+	aArea    := GetArea()
+	aAreaSE1 := SE1->( GetArea() )
+
+	For nI := 1 To Len(aTitReceber)
+
+		SE1->( dbGoTo( aTitReceber[nI] ) )
+
+		If SE1->( Recno() ) == aTitReceber[nI] .And. !SE1->( Deleted() )
+
+			//|Projeto FIDC Recompra |
+			oRecompra	:= TFPFidcRecompraReceber():New()
+
+			oRecompra:cPrefixo          := SE1->E1_PREFIXO
+			oRecompra:cNumero           := SE1->E1_NUM
+			oRecompra:cParcela          := SE1->E1_PARCELA
+			oRecompra:cTipo             := SE1->E1_TIPO
+			oRecompra:cCodigoCliente    := SE1->E1_CLIENTE
+			oRecompra:cLojaCliente      := SE1->E1_LOJA
+			oRecompra:nValorDesconto    := SE1->E1_VALOR - SE1->E1_SALDO
+
+			oRecompra:AdicionaTituloRecompra()
+
+			FreeObj(oRecompra)
+	
+		EndIf
+
+	Next nI
+
+	RestArea(aAreaSE1)
+	RestArea(aArea)
+
+Return

@@ -408,6 +408,8 @@ Local cDrive := ""
 Local cDir := ""
 Local cTargetPath := "\p10\vistoria_obra\comprovante\"
 
+	U_ChkDirVistoriaObra()
+
 	cSourceFile := AllTrim(::oBrw:aCols[::oBrw:oBrowse:nAt, nColPos])
 	
 	cFile := GetTempPath() + cSourceFile
@@ -447,6 +449,8 @@ Local cParam := ""
 Local cDrive := ""
 Local cDir := ""
 Local cTargetPath := "\p10\vistoria_obra\termo\"
+
+	U_ChkDirVistoriaObra()
 
 	If Len(::oBrw:aCols) > 0
 	

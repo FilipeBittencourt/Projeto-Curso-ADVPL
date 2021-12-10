@@ -18,6 +18,7 @@ Class TConciliacaoContabilCliente From LongClassName
 	Method New() Constructor
 	Method Export()
 	Method GetSalFin(dData, cConta)
+	Method GetSalFinAju(dData, cConta)
 	Method GetSalCon(dData, cConta)
 	
 EndClass
@@ -54,15 +55,16 @@ Local cQry := GetNextAlias()
 	oFWExcel:AddTable(cWork01, cTable01)
 	oFWExcel:AddColumn(cWork01, cTable01, "Conta", 1, 1)
 	oFWExcel:AddColumn(cWork01, cTable01, "Saldo Financeiro", 3, 2, .F.)
-	oFWExcel:AddColumn(cWork01, cTable01, "Saldo Contabil", 3, 2, .F.)	
+	oFWExcel:AddColumn(cWork01, cTable01, "Saldo Contabil", 3, 2, .F.)
 	oFWExcel:AddColumn(cWork01, cTable01, "Diferenca", 3, 2, .F.)
 
   dData := DaySub(::oParam:dDataDe, 1)
   nSalFAnt := ::GetSalFin(dData, ::oParam:cConta)
+  nSalFAju := ::GetSalFinAju(dData, ::oParam:cConta)
   nSalCAnt := ::GetSalCon(dData, ::oParam:cConta)
-  nDif := nSalCAnt - nSalFAnt
+  nDif := nSalCAnt - (nSalFAnt - nSalFAju)
    
-  oFWExcel:AddRow(cWork01, cTable01, {::oParam:cConta, nSalFAnt, nSalCAnt, nDif})
+  oFWExcel:AddRow(cWork01, cTable01, {::oParam:cConta, (nSalFAnt - nSalFAju), nSalCAnt, nDif})
 
 	oFWExcel:AddWorkSheet(cWork02) 
 	oFWExcel:AddTable(cWork02, cTable02)
@@ -75,9 +77,9 @@ Local cQry := GetNextAlias()
   dData := ::oParam:dDataAte
   nSalFAtu := ::GetSalFin(dData, ::oParam:cConta)
   nSalCAtu := ::GetSalCon(dData, ::oParam:cConta)
-  nDif := nSalCAtu - nSalFAtu  
+  nDif := nSalCAtu - (nSalFAtu - nSalFAju)
   
-  oFWExcel:AddRow(cWork02, cTable02, {dToC(dData), ::oParam:cConta, nSalFAtu, nSalCAtu, nDif})
+  oFWExcel:AddRow(cWork02, cTable02, {dToC(dData), ::oParam:cConta, (nSalFAtu - nSalFAju), nSalCAtu, nDif})
 
 	oFWExcel:AddWorkSheet(cWork03) 
 	oFWExcel:AddTable(cWork03, cTable03)
@@ -105,7 +107,7 @@ Local cQry := GetNextAlias()
 
 	TcQuery cSQL New Alias (cQry)
 	
-	nSalFin := nSalFAnt
+	nSalFin := nSalFAnt - nSalFAju
 	nSalCon := nSalCAnt
 
 	While !(cQry)->(Eof())
@@ -223,6 +225,27 @@ Local cQry := GetNextAlias()
 	TcQuery cSQL New Alias (cQry)
 
 	nRet := (cQry)->SALDO
+
+	(cQry)->(DbCloseArea())
+		
+Return(nRet)
+
+
+Method GetSalFinAju(dData, cConta) Class TConciliacaoContabilCliente
+Local nRet := 0
+Local cSQL := ""
+Local cQry := GetNextAlias()
+
+	DbSelectArea("ZKU")
+	
+	cSQL := " SELECT ZKU_SALDO " 
+	cSQL += " FROM " + RetSQLName("ZKU")
+	cSQL += " WHERE ZKU_CONTA = " + ValToSQL(cConta)
+	cSQL += " AND D_E_L_E_T_ = ''
+
+	TcQuery cSQL New Alias (cQry)
+
+	nRet := (cQry)->ZKU_SALDO
 
 	(cQry)->(DbCloseArea())
 		

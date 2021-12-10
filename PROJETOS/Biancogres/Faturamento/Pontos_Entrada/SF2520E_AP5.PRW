@@ -60,23 +60,23 @@ User Function SF2520E()
 
 		//Ticket 24250 - Pablo S. Nascimento: solicitação do Claudeir para remover emails e adicionar um.
 		//Ticket 24618 - Pablo S. Nascimento: solicitação do Breno Barbieri para removê-lo da listagem do email.
-		CASE cEmpAnt == '01'
+	CASE cEmpAnt == '01'
 		cEmail   := 'tatiane.perpetua@biancogres.com.br;dalvina.ferreira@biancogres.com.br'
-		CASE cEmpAnt == '05'
+	CASE cEmpAnt == '05'
 		cEmail   := 'william.pernes@biancogres.com.br;tatiane.perpetua@biancogres.com.br'
-		CASE cEmpAnt == '07'
+	CASE cEmpAnt == '07'
 		IF ALLTRIM(SF2->F2_SERIE) == '1'
 			cEmail := 'dalvina.ferreira@biancogres.com.br'
 		ELSE
 			cEmail := 'william.pernes@biancogres.com.br;tatiane.perpetua@biancogres.com.br'
 		ENDIF
-		CASE cEmpAnt == '12'
+	CASE cEmpAnt == '12'
 		cEmail   := 'tatiane.perpetua@biancogres.com.br'
-		CASE cEmpAnt == '13'
+	CASE cEmpAnt == '13'
 		cEmail   := 'rodolfo.stanke@.mundi@biancogres.com.br;dalvina.ferreira@biancogres.com.br;tatiane.perpetua@biancogres.com.br;william.pernes@biancogres.com.br'
-		CASE cEmpAnt == '14'
-		cEmail   := 'tatiane.perpetua@biancogres.com.br;ingrid.balista@vitcer.com.br;joan.mareto@vitcer.com.br;wagner.bolzan@vitcer.com.br'
-		OTHERWISE
+	CASE cEmpAnt == '14'
+		cEmail   := 'tatiane.perpetua@biancogres.com.br'
+	OTHERWISE
 		cEmail   := 'tatiane.perpetua@biancogres.com.br'
 
 	ENDCASE
@@ -106,6 +106,10 @@ User Function SF2520E()
 		dbSetOrder(cIndANT)
 		dbGoTo(cRegANT)
 	EndIf
+
+	// Emerson (Facile) em 01/09/2021 - Tela Rateio RPV (BIAFG106) - Exclui os registros na tabela ZNC pertinentes aos titulos que foram rateados SE1 - Origem 3 E1_FILIAL+E1_PREFIXO+E1_NUM
+	U_FGT106EF("3", SF2->(F2_FILIAL+F2_SERIE+F2_NUM), "N")
+
 	RestArea(aAreaGer)
 
 Return
@@ -116,12 +120,12 @@ Static Function Envioemail()
 	cMensag  := ''
 	cMensag := cMensag+'<HTML>'
 	cMensag := cMensag+'<script language="JavaScript"><!--'+;
-	'function MM_reloadPage(init) {  //reloads the window if Nav4 resized'+;
-	'if (init==true) with (navigator) {if ((appName=="Netscape")&&(parseInt(appVersion)==4)) {'+;
-	'document.MM_pgW=innerWidth; document.MM_pgH=innerHeight; onresize=MM_reloadPage; }}'+;
-	'else if (innerWidth!=document.MM_pgW || innerHeight!=document.MM_pgH) location.reload();'+;
-	'}'+;
-	'MM_reloadPage(true);// -->'
+		'function MM_reloadPage(init) {  //reloads the window if Nav4 resized'+;
+		'if (init==true) with (navigator) {if ((appName=="Netscape")&&(parseInt(appVersion)==4)) {'+;
+		'document.MM_pgW=innerWidth; document.MM_pgH=innerHeight; onresize=MM_reloadPage; }}'+;
+		'else if (innerWidth!=document.MM_pgW || innerHeight!=document.MM_pgH) location.reload();'+;
+		'}'+;
+		'MM_reloadPage(true);// -->'
 
 	cMensag := cMensag+'</script> '
 	cMensag := cMensag+'<TITLE> Nota Fiscal Cancelada.</TITLE> '
@@ -173,14 +177,14 @@ Return
 Static Function fExcFunc()
 
 	Local cRKSql := ''
-	
+
 	// Marcelo - Facile - 30/01/2019 - OS 12107
 	// Tratamento para forçar posicionamento da SA1 do cliente antes da deleção.
 	Local aGetArea := SA1->(GetArea())
-		
+
 	DBSELECTAREA("SA1")
 	SA1->(DBSEEK(XFILIAL("SA1")+SF2->F2_CLIENTE))
-			
+
 	If SA1->A1_TIPO == "F" .And. ((!SF2->F2_COND $ "000/169" .And. cEmpAnt == "01") .Or. (!SF2->F2_COND $ "900/976" .And. cEmpAnt == "05"))
 
 		cRKSql := GetSqlDeb()
@@ -227,7 +231,7 @@ Static Function fExcFunc()
 				SRK->(dbGoto(AX07->REGSRK))
 				SRK->(Reclock("SRK",.F.))
 				SRK->(DbDelete())
-				SRK->(MsUnlock())			
+				SRK->(MsUnlock())
 				AX07->(dbSkip())
 			End
 			AX07->(dbCloseArea())
@@ -239,7 +243,7 @@ Static Function fExcFunc()
 
 		AL05->(dbCloseArea())
 		Ferase(ALIndex+GetDBExtension())     //arquivo de trabalho
-		Ferase(ALIndex+OrdBagExt())          //indice gerado	
+		Ferase(ALIndex+OrdBagExt())          //indice gerado
 
 	EndIf
 

@@ -691,6 +691,9 @@ static method writeSQLFile(cSQLQuery,cEmp,cFil,cProcName,cSeq,cSQLName,cSQLPath,
     local cFileTCSQLError   as character
     
     local lWriteOK          as logical
+    Local lGeraArquivo      as logical
+
+    lGeraArquivo    := SuperGetMV("MV_YARQLOG", .F., .F.)
 
     if (empty(cSQLQuery))
         cSQLQuery:=getLastQuery()[2]
@@ -721,17 +724,21 @@ static method writeSQLFile(cSQLQuery,cEmp,cFil,cProcName,cSeq,cSQLName,cSQLPath,
         if (empty(cSQLFile))
             cSQLFile:=A35():getSQLFile(@cEmp,@cFil,@cSQLPath,@cProcName,@cSeq,@cSQLName)
 		endif
-        lWriteOK:=memoWrite(cSQLFile,cSQLQuery)
+        lWriteOK := IIf( lGeraArquivo, memoWrite(cSQLFile,cSQLQuery), .T. )
 		cTCSQLError:=TCSQLError()
 		if (!empty(cTCSQLError))
 			cFileTCSQLError:=strTran(cSQLFile,".sql",".error.log")
-            memoWrite(cFileTCSQLError,cTCSQLError)
+            
+            If lGeraArquivo
+                memoWrite(cFileTCSQLError,cTCSQLError)
+            EndIf
+
 		endif
 	endif
     
     DEFAULT lWriteOK:=.F.
     
-    return(lWriteOK) 
+return(lWriteOK) 
 
 static method getXMLFile(cEmp,cFil,cXMLPath,cProcName,cSeq,cXMLName) class A35
     local cXMLFile as character

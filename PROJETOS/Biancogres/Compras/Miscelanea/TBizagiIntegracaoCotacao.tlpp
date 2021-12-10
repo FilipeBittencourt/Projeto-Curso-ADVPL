@@ -12,19 +12,21 @@
 Static _cFret_
 User Function BIPROCCT()
 
-    Local oObj := Nil
+  Local oObj := Nil
 
-    //RpcSetEnv("01", "01",,,"COM")
+  //RpcSetEnv("01", "01",,,"COM")
 
-    oObj := TBizagiIntegracaoCotacao():New()
+  oObj := TBizagiIntegracaoCotacao():New()
 
-    oObj:Processa()
+  oObj:CancelarCotacaoNoBizagi() // Processo para evitar erros de cotações já excluidas no protheus.
 
-    //RpcClearEnv()
+  oObj:Processa()
+
+  //RpcClearEnv()
 
 Return()
 
-Class TBizagiIntegracaoCotacao From LongClassName
+  Class TBizagiIntegracaoCotacao From LongClassName
 
     Data aErro
     Data cEmail
@@ -40,496 +42,625 @@ Class TBizagiIntegracaoCotacao From LongClassName
     Public Method GetErrorLog()
     Public Method Ordem()
     Public Method LogMail()
+    Public Method CancelarCotacaoNoBizagi() // faz uma varredura na tabela SC8 pelos registros deletados e com STATUS = A  na  BZINTEGRACAO_COTACAO
+    Public Method CancelarCotacaoNoBizagiId(cBZNUMPROC)
 
-EndClass
+  EndClass
 
 Method New(lJob) Class TBizagiIntegracaoCotacao
 
-    ::aErro:= {}
-    ::cEmail := U_GetBiaPar("MV_EMAILINTBIZCOT", "sistemas.ti@biancogres.com.br")
+  ::aErro:= {}
+  ::cEmail := U_GetBiaPar("MV_EMAILINTBIZCOT", "sistemas.ti@biancogres.com.br")
+
 
 Return(Self)
 
 Method Processa() Class TBizagiIntegracaoCotacao
 
-    Local cCotacao := ""
+  Local cCotacao := ""
 
-    Local lAchou := .T.
-    Local aID := {}
-    Local aCabec := {}
-    Local aItens := {}
-    Local aLinha := {}
+  Local lAchou := .T.
+  Local aID := {}
+  Local aCabec := {}
+  Local aItens := {}
+  Local aLinha := {}
 
-    Local cQry := GetNextAlias()
-    Local cSQL := ""
+  Local cQry := GetNextAlias()
+  Local cSQL := ""
+  Local cMsgLog := ""
 
-    cSQL := " SELECT * "
-    cSQL += " FROM dbo.BZINTEGRACAO_COTACAO A "
-    cSQL += " WHERE A.COT_EMPRESA  = " + ValToSql(cEmpAnt)
-    // cSQL += " AND A.COT_FILIAL     = " + ValToSql(cFilAnt)
-    cSQL += " AND A.STATUS        = 'A' " // E=Erro; P=Processado; A=Aguard. Processamento
+  cSQL := " SELECT * " + CRLF
+  cSQL += " FROM dbo.BZINTEGRACAO_COTACAO A " + CRLF
+  cSQL += " WHERE A.COT_EMPRESA  = " + ValToSql(cEmpAnt) + CRLF
+  // cSQL += " AND A.COT_FILIAL     = " + ValToSql(cFilAnt)
+  cSQL += " AND A.STATUS        = 'A' " + CRLF // E=Erro; P=Processado; A=Aguard. Processamento
 
-    // Tratamento para caso seja alterado algum STATUS de apenas um item do pedido
-    // Nao pode processar apenas um item, e sim o pedido com todos os itens.
-    cSQL += " AND NOT EXISTS  "
-    cSQL += " ( "
-    cSQL += "     SELECT * "
-    cSQL += "     FROM dbo.BZINTEGRACAO_COTACAO B "
-    cSQL += "     WHERE B.COT_EMPRESA  = A.COT_EMPRESA "
-    cSQL += "     AND B.COT_FILIAL     = A.COT_FILIAL "
-    cSQL += "     AND B.COT_NUM        = A.COT_NUM "
-    cSQL += "     AND B.COT_FORNECE    = A.COT_FORNECE "
-    cSQL += "     AND B.COT_LOJA       = A.COT_LOJA "
-    cSQL += "     AND B.STATUS        <> 'A' "
-    cSQL += " ) "
+  // Tratamento para caso seja alterado algum STATUS de apenas um item do pedido
+  // Nao pode processar apenas um item, e sim o pedido com todos os itens.
+  cSQL += " AND NOT EXISTS  " + CRLF
+  cSQL += " ( "      + CRLF
+  cSQL += "     SELECT * "      + CRLF
+  cSQL += "     FROM dbo.BZINTEGRACAO_COTACAO B "      + CRLF
+  cSQL += "     WHERE B.COT_EMPRESA  = A.COT_EMPRESA "      + CRLF
+  cSQL += "     AND B.COT_FILIAL     = A.COT_FILIAL "      + CRLF
+  cSQL += "     AND B.COT_NUM        = A.COT_NUM "      + CRLF
+  cSQL += "     AND B.COT_FORNECE    = A.COT_FORNECE "      + CRLF
+  cSQL += "     AND B.COT_LOJA       = A.COT_LOJA "      + CRLF
+  cSQL += "     AND B.STATUS        <> 'A' "       + CRLF // E=Erro; P=Processado; A=Aguard. Processamento; C=Cancelado
+  cSQL += " ) "
 
-    cSQL += " ORDER BY COT_EMPRESA, COT_FILIAL, BZNUMPROC, COT_NUM, COT_FORNECE, COT_LOJA, COT_NUMPRO, COT_ITEM, ID "
+  cSQL += " ORDER BY COT_EMPRESA, COT_FILIAL, BZNUMPROC, COT_NUM, COT_FORNECE, COT_LOJA, COT_NUMPRO, COT_ITEM, ID "
 
-    TcQuery cSQL New Alias (cQry)
+  TcQuery cSQL New Alias (cQry)
 
-    DBSelectArea("SC8")
-    SC8->(dbSetOrder(1)) // CC8_FILIAL, C8_NUM, C8_FORNECE, C8_LOJA, C8_ITEM, C8_NUMPRO, C8_ITEMGRD, R_E_C_N_O_, D_E_L_E_T_
-    SC8->(DBGoTop())
+  DBSelectArea("SC8")
+  SC8->(dbSetOrder(1)) // CC8_FILIAL, C8_NUM, C8_FORNECE, C8_LOJA, C8_ITEM, C8_NUMPRO, C8_ITEMGRD, R_E_C_N_O_, D_E_L_E_T_
+  SC8->(DBGoTop())
 
-    While !(cQry)->(EOF())
+  While !(cQry)->(EOF())
 
-        lAchou := .T.
+    lAchou := .T.
 
-        aID := {}
-        aCabec := {}
-        aItens := {}
-        aLinha := {}
+    aID := {}
+    aCabec := {}
+    aItens := {}
+    aLinha := {}
 
-        cCotacao 	:= PadR( (cQry)->COT_NUM 	 , TamSX3( "C8_NUM"      )[1] , "" )
-        cProduto 	:= PadR( (cQry)->COT_PRODUTO , TamSX3( "C8_PRODUTO"  )[1] , "" )
-        cFornece 	:= PadR( (cQry)->COT_FORNECE , TamSX3( "C8_FORNECE"  )[1] , "" )
-        cLojaForn 	:= PadR( (cQry)->COT_LOJA  	 , TamSX3( "C8_LOJA"     )[1] , "" )
-        cNumProp 	:= PadR( (cQry)->COT_NUMPRO  , TamSX3( "C8_NUMPRO"   )[1] , "" )
+    cCotacao 	:= PadR( (cQry)->COT_NUM 	 , TamSX3( "C8_NUM"      )[1] , "" )
+    cProduto 	:= PadR( (cQry)->COT_PRODUTO , TamSX3( "C8_PRODUTO"  )[1] , "" )
+    cFornece 	:= PadR( (cQry)->COT_FORNECE , TamSX3( "C8_FORNECE"  )[1] , "" )
+    cLojaForn 	:= PadR( (cQry)->COT_LOJA  	 , TamSX3( "C8_LOJA"     )[1] , "" )
+    cNumProp 	:= PadR( (cQry)->COT_NUMPRO  , TamSX3( "C8_NUMPRO"   )[1] , "" )
 
-        cNumBizagi 	:= (cQry)->BZNUMPROC
+    cNumBizagi 	:= (cQry)->BZNUMPROC
 
-        aAdd(aCabec,{ "C8_FILIAL"   , cFilAnt                })
-        aAdd(aCabec,{ "C8_NUM"      , cCotacao               })
-        aAdd(aCabec,{ "C8_FORNECE"  , cFornece               })
-        aAdd(aCabec,{ "C8_LOJA"     , cLojaForn              })
-        aAdd(aCabec,{ "C8_COND"     , (cQry)->COT_COND       })
-        aAdd(aCabec,{ "C8_CONTATO"  , (cQry)->COT_CONTATO    })
-        //aAdd(aCabec,{ "C8_FILENT"   , cFilAnt                })
-        aAdd(aCabec,{ "C8_MOEDA"    , (cQry)->COT_MOEDA      })
-        aadd(aCabec,{ "C8_EMISSAO"  , dDataBase              })
+    aAdd(aCabec,{ "C8_FILIAL"   , cFilAnt                })
+    aAdd(aCabec,{ "C8_NUM"      , cCotacao               })
+    aAdd(aCabec,{ "C8_FORNECE"  , cFornece               })
+    aAdd(aCabec,{ "C8_LOJA"     , cLojaForn              })
+    aAdd(aCabec,{ "C8_COND"     , (cQry)->COT_COND       })
+    aAdd(aCabec,{ "C8_CONTATO"  , (cQry)->COT_CONTATO    })
+    //aAdd(aCabec,{ "C8_FILENT"   , cFilAnt                })
+    aAdd(aCabec,{ "C8_MOEDA"    , (cQry)->COT_MOEDA      })
+    aadd(aCabec,{ "C8_EMISSAO"  , dDataBase              })
 
-        _cFret_ := Iif(Empty(Alltrim((cQry)->COT_TPFRETE)), "S", Alltrim((cQry)->COT_TPFRETE) )
+    _cFret_ := Iif(Empty(Alltrim((cQry)->COT_TPFRETE)), "S", Alltrim((cQry)->COT_TPFRETE) )
 
-        aadd(aCabec,{"C8_TOTFRE" ,0})
-        aadd(aCabec,{"C8_VALDESC" ,0})
-        aadd(aCabec,{"C8_DESPESA" ,0})
-        aadd(aCabec,{"C8_SEGURO" ,0})
-        aadd(aCabec,{"C8_DESC1" ,0})
-        aadd(aCabec,{"C8_DESC2" ,0})
-        aadd(aCabec,{"C8_DESC3" ,0})
+    aadd(aCabec,{"C8_TOTFRE" ,0})
+    aadd(aCabec,{"C8_VALDESC" ,0})
+    aadd(aCabec,{"C8_DESPESA" ,0})
+    aadd(aCabec,{"C8_SEGURO" ,0})
+    aadd(aCabec,{"C8_DESC1" ,0})
+    aadd(aCabec,{"C8_DESC2" ,0})
+    aadd(aCabec,{"C8_DESC3" ,0})
 
-        aCabec := aClone(::Ordem(aCabec))
+    aCabec := aClone(::Ordem(aCabec))
 
-        While !(cQry)->(EOF()) .And. (cQry)->(BZNUMPROC + COT_NUM + COT_FORNECE + COT_LOJA + COT_NUMPRO) == cNumBizagi + cCotacao + cFornece + cLojaForn + cNumProp
+    While !(cQry)->(EOF()) .And. (cQry)->(BZNUMPROC + COT_NUM + COT_FORNECE + COT_LOJA + COT_NUMPRO) == cNumBizagi + cCotacao + cFornece + cLojaForn + cNumProp
 
-            SC8->(DBGoTop())
+      SC8->(DBGoTop())
 
-            If SC8->(DBSeek(xFilial("SC8") + (cQry)->(COT_NUM + COT_FORNECE + COT_LOJA + COT_ITEM + COT_NUMPRO))) .And. AllTrim(SC8->C8_YPRCBIZ) == AllTrim((cQry)->BZNUMPROC)
+      If SC8->(DBSeek(xFilial("SC8") + (cQry)->(COT_NUM + COT_FORNECE + COT_LOJA + COT_ITEM + COT_NUMPRO))) .And. AllTrim(SC8->C8_YPRCBIZ) == AllTrim((cQry)->BZNUMPROC)
 
-                If Empty(SC8->C8_NUMPED)
-                
-                    aLinha := {}
+        If Empty(SC8->C8_NUMPED)
 
-                    aAdd(aID, (cQry)->ID)
+          aLinha := {}
 
-                    aAdd(aLinha, { "C8_NUMPRO"  , SC8->C8_NUMPRO , Nil })
-                    aAdd(aLinha, { "C8_PRODUTO" , SC8->C8_PRODUTO , Nil })
-                    aAdd(aLinha, { "C8_ITEM"    , SC8->C8_ITEM   , Nil })
-                    aAdd(aLinha, { "C8_UM"      , SC8->C8_UM   , Nil })
-                    aAdd(aLinha, { "C8_SEGUM"   , SC8->C8_SEGUM   , Nil })
-                    aAdd(aLinha, { "C8_QTSEGUM" , SC8->C8_QTSEGUM   , Nil })
+          aAdd(aID, (cQry)->ID)
 
-                    aAdd(aLinha,{ "C8_FILENT"   , cFilAnt            , Nil     })
+          aAdd(aLinha, { "C8_NUMPRO"  , SC8->C8_NUMPRO , Nil })
+          aAdd(aLinha, { "C8_PRODUTO" , SC8->C8_PRODUTO , Nil })
+          aAdd(aLinha, { "C8_ITEM"    , SC8->C8_ITEM   , Nil })
+          aAdd(aLinha, { "C8_UM"      , SC8->C8_UM   , Nil })
+          aAdd(aLinha, { "C8_SEGUM"   , SC8->C8_SEGUM   , Nil })
+          aAdd(aLinha, { "C8_QTSEGUM" , SC8->C8_QTSEGUM   , Nil })
 
-                    aAdd(aLinha, { "C8_QUANT"   , SC8->C8_QUANT      , Nil })
-                    aAdd(aLinha, { "C8_PRECO"   , (cQry)->COT_PRECO  , Nil })
-                    aAdd(aLinha, { "C8_TOTAL"   , (cQry)->COT_TOTAL  , Nil })
-                    aAdd(aLinha, { "C8_DESC"    , (cQry)->COT_DESC   , Nil })
-                    aAdd(aLinha, { "C8_TES"     , SC8->C8_TES        , Nil })
+          aAdd(aLinha,{ "C8_FILENT"   , cFilAnt            , Nil     })
 
-                    aAdd(aLinha, { "C8_YMARCA"  , (cQry)->COT_YMARCA , Nil })
-                    aAdd(aLinha, { "C8_ALIIPI"  , (cQry)->COT_ALIIPI , Nil })
+          aAdd(aLinha, { "C8_QUANT"   , SC8->C8_QUANT      , Nil })
+          aAdd(aLinha, { "C8_PRECO"   , (cQry)->COT_PRECO  , Nil })
+          aAdd(aLinha, { "C8_TOTAL"   , (cQry)->COT_TOTAL  , Nil })
+          aAdd(aLinha, { "C8_DESC"    , (cQry)->COT_DESC   , Nil })
+          aAdd(aLinha, { "C8_TES"     , SC8->C8_TES        , Nil })
 
-                    aAdd(aLinha, { "C8_YOBS"    , (cQry)->COT_YOBS   , Nil })
+          aAdd(aLinha, { "C8_YMARCA"  , (cQry)->COT_YMARCA , Nil })
+          aAdd(aLinha, { "C8_ALIIPI"  , (cQry)->COT_ALIIPI , Nil })
 
-                    aAdd(aLinha, { "C8_PRAZO"   , (cQry)->COT_PRAZO  , Nil })
-                    aAdd(aLinha, { "C8_TPFRETE" , _cFret_			 , Nil })
-                    aAdd(aLinha, { "C8_ORCFOR"  , (cQry)->COT_ORCFOR , Nil })
-                    aAdd(aLinha, { "C8_VALIDA"  , STOD((cQry)->COT_VALIDA), Nil })
-                    aAdd(aLinha, { "C8_YCOND"   , (cQry)->COT_YCOND  , Nil })
+          aAdd(aLinha, { "C8_YOBS"    , (cQry)->COT_YOBS   , Nil })
 
-                    aAdd(aLinha, { "C8_YFLAG"   , (cQry)->COT_YFLAG  , Nil })
-                    
-                    aAdd(aLinha, { "C8_YVLSUB"  , (cQry)->COT_YVLSUB , Nil })
+          aAdd(aLinha, { "C8_PRAZO"   , (cQry)->COT_PRAZO  , Nil })
+          aAdd(aLinha, { "C8_TPFRETE" , _cFret_			 , Nil })
+          aAdd(aLinha, { "C8_ORCFOR"  , (cQry)->COT_ORCFOR , Nil })
+          aAdd(aLinha, { "C8_VALIDA"  , STOD((cQry)->COT_VALIDA), Nil })
+          aAdd(aLinha, { "C8_YCOND"   , (cQry)->COT_YCOND  , Nil })
 
-                    aAdd(aLinha, { "C8_YPRCBIZ" , (cQry)->BZNUMPROC , Nil })
-                    aAdd(aLinha, { "C8_YEMAIL"  , SC8->C8_YEMAIL	, Nil })
-                    aAdd(aLinha, { "C8_FORMAIL"	, SC8->C8_FORMAIL	, Nil })
-                    aAdd(aLinha, { "C8_YDATCHE"	, CTOD("  /  /    ")	, Nil })
-                    
-                    If (cQry)->COT_ALIIPI > 0
+          aAdd(aLinha, { "C8_YFLAG"   , (cQry)->COT_YFLAG  , Nil })
 
-                        aAdd(aLinha, { "C8_VALIPI" , ( (cQry)->COT_ALIIPI / 100 ) * (cQry)->COT_TOTAL , Nil })
+          aAdd(aLinha, { "C8_YVLSUB"  , (cQry)->COT_YVLSUB , Nil })
 
-                    EndIf
+          aAdd(aLinha, { "C8_YPRCBIZ" , (cQry)->BZNUMPROC , Nil })
+          aAdd(aLinha, { "C8_YEMAIL"  , SC8->C8_YEMAIL	, Nil })
+          aAdd(aLinha, { "C8_FORMAIL"	, SC8->C8_FORMAIL	, Nil })
+          aAdd(aLinha, { "C8_YDATCHE"	, CTOD("  /  /    ")	, Nil })
 
-                    aAdd(aLinha, { "C8_YFINAL"  , "S" , Nil })
+          If (cQry)->COT_ALIIPI > 0
 
-                    If Empty(SC8->C8_YPRDFOR)
+            aAdd(aLinha, { "C8_VALIPI" , ( (cQry)->COT_ALIIPI / 100 ) * (cQry)->COT_TOTAL , Nil })
 
-                        aAdd(aLinha, { "C8_YPRDFOR" , (cQry)->COT_YPRDFOR , Nil })
+          EndIf
 
-                    EndIf
+          aAdd(aLinha, { "C8_YFINAL"  , "S" , Nil })
 
-                    aLinha := aClone(::Ordem(aLinha))
+          If Empty(SC8->C8_YPRDFOR)
 
-                    aAdd(aItens, aLinha)
+            aAdd(aLinha, { "C8_YPRDFOR" , (cQry)->COT_YPRDFOR , Nil })
 
-                Else
+          EndIf
 
-                    ::Status("P", (cQry)->ID, "Item " + AllTrim((cQry)->COT_ITEM) + " C8_NUMPED: " + AllTrim(SC8->C8_NUMPED) + " - ja foi encerrado", (cQry)->COT_NUM)
+          aLinha := aClone(::Ordem(aLinha))
 
-                    lAchou := .F.
+          aAdd(aItens, aLinha)
 
-                EndIf
+        Else
 
-            Else
+          cMsgLog += "<br><br>"
+          cMsgLog += "Processo Bizagi: "+(cQry)->BZNUMPROC+ " <br> "
+          cMsgLog += "Motivo: Já foi encerrado <br/> "
+          cMsgLog += "Cotação: "+ AllTrim((cQry)->COT_NUM)+" <br/> "
+          cMsgLog += "Fornecedor: "+(cQry)->COT_FORNECE+"  <br/> "
+          cMsgLog += "Loja: "+(cQry)->COT_LOJA+" <br/> "
+          cMsgLog += "Produto: "+ AllTrim((cQry)->COT_PRODUTO)+" <br/> "
+          cMsgLog += "Item: "+ AllTrim((cQry)->COT_ITEM)+" <br/> "
+          cMsgLog += "Num. PROPOSTA: "+(cQry)->COT_NUMPRO+" <br/> "
+          cMsgLog += "<br><br>"
 
-                lAchou := .F.
+          ::Status("P", (cQry)->ID, cMsgLog , (cQry)->COT_NUM)
 
-                ::Status("E", (cQry)->ID, "Item " + AllTrim((cQry)->COT_PRODUTO) + " - não encontrado na cotação do protheus", (cQry)->COT_NUM)
-
-            EndIf
-
-            (cQry)->(DbSkip())
-
-        EndDo
-
-        If lAchou
-
-            ::ExecCotacao(aCabec, aItens, aID)
+          lAchou := .F.
 
         EndIf
 
+      Else
+
+        lAchou := .F.
+
+        cMsgLog += "<br><br>"
+        cMsgLog += "Processo Bizagi: "+(cQry)->BZNUMPROC+ " <br> "
+        cMsgLog += "Motivo: Não encontrado na cotação do protheus <br/> "
+        cMsgLog += "Cotação: "+ AllTrim((cQry)->COT_NUM)+" <br/> "
+        cMsgLog += "Fornecedor: "+(cQry)->COT_FORNECE+"  <br/> "
+        cMsgLog += "Loja: "+(cQry)->COT_LOJA+" <br/> "
+        cMsgLog += "Produto: "+ AllTrim((cQry)->COT_PRODUTO)+" <br/> "
+        cMsgLog += "Item: "+ AllTrim((cQry)->COT_ITEM)+" <br/> "
+        cMsgLog += "Num. PROPOSTA: "+(cQry)->COT_NUMPRO+" <br/> "
+        cMsgLog += "<br><br>"
+
+        ::Status("E", (cQry)->ID, cMsgLog, (cQry)->COT_NUM)
+
+      EndIf
+
+      (cQry)->(DbSkip())
+
     EndDo
 
-    (cQry)->(DbCloseArea())
+    If lAchou
 
-    ::LogMail()
+      ::ExecCotacao(aCabec, aItens, aID)
+
+    EndIf
+
+  EndDo
+
+  (cQry)->(DbCloseArea())
+
+  ::LogMail()
 
 Return()
 
 Method ExecCotacao(aCabec, aItens, aID) Class TBizagiIntegracaoCotacao
 
-    Local aRet := .F.
-    Local nW := 0
+  Local aRet := .F.
+  Local nW := 0
 
-    Local nPosNum := 0
-    Local nPosForn := 0
-    Local nPosLoja := 0
-    Local nPosItem := 0
-    Local nPosNumPro := 0
+  Local nPosNum := 0
+  Local nPosForn := 0
+  Local nPosLoja := 0
+  Local nPosItem := 0
+  Local nPosNumPro := 0
 
-    Default aCabec := {}
-    Default aItens := {}
+  Default aCabec := {}
+  Default aItens := {}
 
-    Private INCLUI          := .F.
-    Private lMsErroAuto 	:= .F.
-    Private lMsHelpAuto		:= .T.
-    Private lAutoErrNoFile 	:= .T.
+  Private INCLUI          := .F.
+  Private lMsErroAuto 	:= .F.
+  Private lMsHelpAuto		:= .T.
+  Private lAutoErrNoFile 	:= .T.
 
-    aRet := ::ValidateCotacao(aCabec, aItens)
+  aRet := ::ValidateCotacao(aCabec, aItens)
 
-    nPosNum     := aScan(aCabec, { |x| AllTrim(x[1]) == "C8_NUM"     })
-    nPosForn    := aScan(aCabec, { |x| AllTrim(x[1]) == "C8_FORNECE" })
-    nPosLoja    := aScan(aCabec, { |x| AllTrim(x[1]) == "C8_LOJA"    })
+  nPosNum     := aScan(aCabec, { |x| AllTrim(x[1]) == "C8_NUM"     })
+  nPosForn    := aScan(aCabec, { |x| AllTrim(x[1]) == "C8_FORNECE" })
+  nPosLoja    := aScan(aCabec, { |x| AllTrim(x[1]) == "C8_LOJA"    })
 
-    nPosItem    := aScan(aItens[1], { |x| AllTrim(x[1]) == "C8_ITEM"    })
-    nPosNumPro  := aScan(aItens[1], { |x| AllTrim(x[1]) == "C8_NUMPRO"  })
+  nPosItem    := aScan(aItens[1], { |x| AllTrim(x[1]) == "C8_ITEM"    })
+  nPosNumPro  := aScan(aItens[1], { |x| AllTrim(x[1]) == "C8_NUMPRO"  })
 
-    Begin Transaction
+  Begin Transaction
 
-        If aRet[1]
+    If aRet[1]
 
-            DBSelectArea("SC8")
-            SC8->(dbSetOrder(1)) // C8_FILIAL, C8_NUM, C8_FORNECE, C8_LOJA, C8_ITEM, C8_NUMPRO, C8_ITEMGRD, R_E_C_N_O_, D_E_L_E_T_        
-            
-            If SC8->(DBSeek(xFilial("SC8") + aCabec[nPosNum][2] + aCabec[nPosForn][2] + aCabec[nPosLoja][2] + aItens[1][nPosItem][2] + aItens[1][nPosNumPro][2]))
+      DBSelectArea("SC8")
+      SC8->(dbSetOrder(1)) // C8_FILIAL, C8_NUM, C8_FORNECE, C8_LOJA, C8_ITEM, C8_NUMPRO, C8_ITEMGRD, R_E_C_N_O_, D_E_L_E_T_
 
-                SetModulo("SIGACOM", "COM")
+      If SC8->(DBSeek(xFilial("SC8") + aCabec[nPosNum][2] + aCabec[nPosForn][2] + aCabec[nPosLoja][2] + aItens[1][nPosItem][2] + aItens[1][nPosNumPro][2]))
 
-                SetFunName("MATA150")
+        SetModulo("SIGACOM", "COM")
 
-                lMsErroAuto := .F.
+        SetFunName("MATA150")
 
-                MSExecAuto({|x,y,z| MATA150(x,y,z)}, aCabec, aItens, 3)
+        lMsErroAuto := .F.
 
-                If lMsErroAuto
+        MSExecAuto({|x,y,z| MATA150(x,y,z)}, aCabec, aItens, 3)
 
-                    DisarmTransaction() // Deixar antes do metodo ::Status!
+        If lMsErroAuto
 
-                    For nW := 1 To Len(aID)
+          DisarmTransaction() // Deixar antes do metodo ::Status!
 
-                        ::Status("E", aID[nW], Varinfo( "", GETAUTOGRLOG() ), aCabec[nPosNum][2])
+          For nW := 1 To Len(aID)
 
-                    Next nW
+            ::Status("E", aID[nW], Varinfo( "", GETAUTOGRLOG() ), aCabec[nPosNum][2])
 
-                Else
-
-                    For nW := 1 To Len(aID)
-
-                        ::Status("P", aID[nW])
-
-                    Next nW
-
-                EndIf
-
-            Else
-
-                ::Status("E", aID[nW], "Não encontrou a cotação", aCabec[nPosNum][2])
-
-            EndIf
+          Next nW
 
         Else
 
-            For nW := 1 To Len(aID)
+          For nW := 1 To Len(aID)
 
-                ::Status("E", aID[nW], aRet[2], aCabec[nPosNum][2])
+            ::Status("P", aID[nW])
 
-            Next nW
+          Next nW
 
         EndIf
 
-    End Transaction
+      Else
+
+        ::Status("E", aID[nW], "Não encontrou a cotação", aCabec[nPosNum][2])
+
+      EndIf
+
+    Else
+
+      For nW := 1 To Len(aID)
+
+        ::Status("E", aID[nW], aRet[2], aCabec[nPosNum][2])
+
+      Next nW
+
+    EndIf
+
+  End Transaction
 
 Return(lMsErroAuto)
 
 Method ValidateCotacao(aCabec, aItens) Class TBizagiIntegracaoCotacao
 
-    Local aRet       := {.T., ""}
-    Local nPosNum    := 0
-    Local nPosFornec := 0
-    Local nPosLoja   := 0
+  Local aRet       := {.T., ""}
+  Local nPosNum    := 0
+  Local nPosFornec := 0
+  Local nPosLoja   := 0
 
-    DBSelectArea("SC8")
-    SC8->(dbSetOrder(1)) // C8_FILIAL, C8_NUM, C8_FORNECE, C8_LOJA, C8_ITEM, C8_NUMPRO, C8_ITEMGRD, R_E_C_N_O_, D_E_L_E_T_
+  DBSelectArea("SC8")
+  SC8->(dbSetOrder(1)) // C8_FILIAL, C8_NUM, C8_FORNECE, C8_LOJA, C8_ITEM, C8_NUMPRO, C8_ITEMGRD, R_E_C_N_O_, D_E_L_E_T_
 
-    nPosNum     := aScan(aCabec, { |x| AllTrim(x[1]) == "C8_NUM" })
-    nPosFornec  := aScan(aCabec, { |x| AllTrim(x[1]) == "C8_FORNECE" })
-    nPosLoja    := aScan(aCabec, { |x| AllTrim(x[1]) == "C8_LOJA" })
+  nPosNum     := aScan(aCabec, { |x| AllTrim(x[1]) == "C8_NUM" })
+  nPosFornec  := aScan(aCabec, { |x| AllTrim(x[1]) == "C8_FORNECE" })
+  nPosLoja    := aScan(aCabec, { |x| AllTrim(x[1]) == "C8_LOJA" })
 
-    If !SC8->(DBSeek(xFilial("SC8") + aCabec[nPosNum][2] + aCabec[nPosFornec][2] + aCabec[nPosLoja][2]))
+  If !SC8->(DBSeek(xFilial("SC8") + aCabec[nPosNum][2] + aCabec[nPosFornec][2] + aCabec[nPosLoja][2]))
 
-        aRet[1] := .F.
+    aRet[1] := .F.
 
-        aRet[2] += "Cotação: " + aCabec[nPosNum][2] + " não existe na base!" + CRLF
+    aRet[2] += "Cotação: " + aCabec[nPosNum][2] + " não existe na base!" + CRLF
 
-    EndIf
+  EndIf
 
 Return(aRet)
 
 Method Status(cStatus, nId, cLog, cPedido) Class TBizagiIntegracaoCotacao
 
-    Local lRet := .T.
-    Local cSql := ""
+  Local lRet := .T.
+  Local cSql := ""
 
-    Default cStatus := "" // E=Erro; P=Processado; A=Aguard. Processamento
-    Default cLog    := ""
-    Default nId     := 0
-    Default cPedido := ""
+  Default cStatus := "" // E=Erro; P=Processado; A=Aguard. Processamento
+  Default cLog    := ""
+  Default nId     := 0
+  Default cPedido := ""
 
-    If cStatus == "E"
+  If cStatus == "E"
 
-        aAdd(::aErro, {cPedido, cLog})
+    aAdd(::aErro, {cPedido, cLog})
 
-    EndIf
+  EndIf
 
-    cSql := " UPDATE dbo.BZINTEGRACAO_COTACAO SET "
+  cSql := " UPDATE dbo.BZINTEGRACAO_COTACAO SET "
 
-    cSql += " STATUS   = " + ValToSql(cStatus)
-    cSql += " , LOG    = " + ValToSql(cLog)
-    cSql += " , DTINTEGRA = " + ValToSql(DTOS(dDataBase))
-    cSql += " , HRINTEGRA = CONVERT(VARCHAR(8), GETDATE(), 114) "
+  cSql += " STATUS   = " + ValToSql(cStatus)
+  cSql += " , LOG    = " + ValToSql(cLog)
+  cSql += " , DTINTEGRA = " + ValToSql(DTOS(dDataBase))
+  cSql += " , HRINTEGRA = CONVERT(VARCHAR(8), GETDATE(), 114) "
 
-    cSql += " WHERE ID = " + cValToChar(nId)
+  cSql += " WHERE ID = " + cValToChar(nId)
 
-    lRet := TcSQLExec(cSql) == 0
+  lRet := TcSQLExec(cSql) == 0
 
-    If !lRet
+  If !lRet
 
-        ConOut("TBizagiIntegracaoCotacao: TCSQLError() -> " + TCSQLError())
+    ConOut("TBizagiIntegracaoCotacao: TCSQLError() -> " + TCSQLError())
 
-    EndIf
+  EndIf
 
 Return(lRet)
 
 Method GetErrorLog() Class TBizagiIntegracaoCotacao
 
-    Local cRet := ""
-    Local nX := 1
-    Local aError := GETAUTOGRLOG()
+  Local cRet := ""
+  Local nX := 1
+  Local aError := GETAUTOGRLOG()
 
-    For nX := 1 To Len(aError)
+  For nX := 1 To Len(aError)
 
-        cRet += aError[nX] + CRLF
+    cRet += aError[nX] + CRLF
 
-    Next nX
+  Next nX
 
 Return(cRet)
 
 Method Ordem(aLinha) Class TBizagiIntegracaoCotacao
 
-    Local nW := 0
-    Local nX := 0
-    Local lRet := .T.
-    Local aLinhaNew := {}
-    Local aObrigat := {}
-    Local aAreaSX3 := SX3->(GetArea())
+  Local nW := 0
+  Local nX := 0
+  Local lRet := .T.
+  Local aLinhaNew := {}
+  Local aObrigat := {}
+  Local aAreaSX3 := SX3->(GetArea())
 
-    DBSelectArea("SX3")
-    SX3->(DBSetOrder(1))
-    SX3->(DBGoTop())
+  DBSelectArea("SX3")
+  SX3->(DBSetOrder(1))
+  SX3->(DBGoTop())
 
-    If SX3->(DBSeek("SC8"))
+  If SX3->(DBSeek("SC8"))
 
-        While !SX3->(EOF()) .And. SX3->X3_ARQUIVO == "SC8"
+    While !SX3->(EOF()) .And. SX3->X3_ARQUIVO == "SC8"
 
-            If Subs(Bin2Str(SX3->X3_OBRIGAT),1,1) == "x"
+      If Subs(Bin2Str(SX3->X3_OBRIGAT),1,1) == "x"
 
-                aAdd(aObrigat, SX3->X3_CAMPO)
+        aAdd(aObrigat, SX3->X3_CAMPO)
 
-            EndIf
+      EndIf
 
-            For nW := 1 To Len(aLinha)
+      For nW := 1 To Len(aLinha)
 
-                If AllTrim(SX3->X3_CAMPO) == AllTrim(aLinha[nW][1])
+        If AllTrim(SX3->X3_CAMPO) == AllTrim(aLinha[nW][1])
 
-                    aAdd(aLinhaNew, aLinha[nW])
+          aAdd(aLinhaNew, aLinha[nW])
 
-                    If Subs(Bin2Str(SX3->X3_OBRIGAT),1,1) == "x" .And. Empty(aLinha[nW][2])
+          If Subs(Bin2Str(SX3->X3_OBRIGAT),1,1) == "x" .And. Empty(aLinha[nW][2])
 
-                        ConOut("TBizagiIntegracaoCotacao: Campo " + SX3->X3_CAMPO + " é obrigatório e seu conteúdo está vazio!")
+            ConOut("TBizagiIntegracaoCotacao: Campo " + SX3->X3_CAMPO + " é obrigatório e seu conteúdo está vazio!")
 
-                    EndIf
-
-                EndIf
-
-            Next nW
-
-            SX3->(DBSkip())
-
-        EndDo
-
-    EndIf
-
-    For nW := 1 To Len(aObrigat)
-
-        lRet := .F.
-
-        For nX := 1 To Len(aLinha)
-
-            If AllTrim(aObrigat[nW]) == AllTrim(aLinha[nX][1])
-
-                lRet := .T.
-
-            EndIf
-
-        Next nX
-
-        If !lRet
-
-            ConOut("TBizagiIntegracaoCotacao: Campo " +aObrigat[nW] + " é obrigatório e não esta no ExecAuto!")
+          EndIf
 
         EndIf
 
-    Next nW
+      Next nW
 
-    RestArea(aAreaSX3)
+      SX3->(DBSkip())
+
+    EndDo
+
+  EndIf
+
+  For nW := 1 To Len(aObrigat)
+
+    lRet := .F.
+
+    For nX := 1 To Len(aLinha)
+
+      If AllTrim(aObrigat[nW]) == AllTrim(aLinha[nX][1])
+
+        lRet := .T.
+
+      EndIf
+
+    Next nX
+
+    If !lRet
+
+      ConOut("TBizagiIntegracaoCotacao: Campo " +aObrigat[nW] + " é obrigatório e não esta no ExecAuto!")
+
+    EndIf
+
+  Next nW
+
+  RestArea(aAreaSX3)
 
 Return(aLinhaNew)
 
 Method LogMail() Class TBizagiIntegracaoCotacao
 
-    Local nW    := 0
-    Local lFound := .F.
-    Local cNum := ""
-    Local cHtml := ""
-    Local oMail := TAFMail():New()
+  Local nW    := 0
+  Local lFound := .F.
+  Local cNum := ""
+  Local cHtml := ""
+  Local oMail := TAFMail():New()
 
-    For nW := 1 To Len(::aErro)
+  For nW := 1 To Len(::aErro)
 
-        If AllTrim(::aErro[nW][2]) <> AllTrim("<br><pre> -> ARRAY (    0) [...]<br></pre><br>")
+    If AllTrim(::aErro[nW][2]) <> AllTrim("<br><pre> -> ARRAY (    0) [...]<br></pre><br>")
 
-            If cNum <> ::aErro[nW][1]
+      If cNum <> ::aErro[nW][1]
 
-                If !Empty(cNum)
+        If !Empty(cNum)
 
-                    cHtml += '</tbody>'
-                    cHtml += '</table>'
-
-                EndIf
-
-                cNum := ::aErro[nW][1]
-
-                cHtml += '<style type="text/css">'
-                cHtml += '.tg  {border-collapse:collapse;border-color:#aaa;border-spacing:0;}'
-                cHtml += '.tg td{background-color:#fff;border-color:#aaa;border-style:solid;border-width:1px;color:#333;'
-                cHtml += '  font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;word-break:normal;}'
-                cHtml += '.tg th{background-color:#f38630;border-color:#aaa;border-style:solid;border-width:1px;color:#fff;'
-                cHtml += '  font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}'
-                cHtml += '.tg .tg-zw5y{border-color:inherit;text-align:center;text-decoration:underline;vertical-align:top}'
-                cHtml += '.tg .tg-0lax{text-align:left;vertical-align:top}'
-                cHtml += '</style>'
-
-                cHtml += '<table width="100%" class="tg">'
-                cHtml += '<thead>'
-                cHtml += '  <tr>'
-                cHtml += '    <th class="tg-zw5y">' + cEmpAnt + cFilAnt + ' - Cotacao: ' + ::aErro[nW][1] + '</th>'
-                cHtml += '  </tr>'
-                cHtml += '</thead>'
-                cHtml += '<tbody>'
-
-            EndIf
-
-            lFound := .T.
-
-            cHtml += '  <tr>'
-            cHtml += '    <td class="tg-0lax">' + ::aErro[nW][2] + '</td>'
-            cHtml += '  </tr>'
-
-            If nW == Len(::aErro)
-
-                cHtml += '</tbody>'
-                cHtml += '</table>'
-
-            EndIf
+          cHtml += '</tbody>'
+          cHtml += '</table>'
 
         EndIf
 
-    Next nW
+        cNum := ::aErro[nW][1]
 
-    If lFound
+        cHtml += '<style type="text/css">'
+        cHtml += '.tg  {border-collapse:collapse;border-color:#aaa;border-spacing:0;}'
+        cHtml += '.tg td{background-color:#fff;border-color:#aaa;border-style:solid;border-width:1px;color:#333;'
+        cHtml += '  font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;word-break:normal;}'
+        cHtml += '.tg th{background-color:#f38630;border-color:#aaa;border-style:solid;border-width:1px;color:#fff;'
+        cHtml += '  font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}'
+        cHtml += '.tg .tg-zw5y{border-color:inherit;text-align:center;text-decoration:underline;vertical-align:top}'
+        cHtml += '.tg .tg-0lax{text-align:left;vertical-align:top}'
+        cHtml += '</style>'
 
-        oMail:cTo := ::cEmail
-        oMail:cSubject := "TBizagiIntegracaoCotacao - Inconsistencias"
-        oMail:cBody := cHtml
+        cHtml += '<table width="100%" class="tg">'
+        cHtml += '<thead>'
+        cHtml += '  <tr>'
+        cHtml += '    <th class="tg-zw5y">' + cEmpAnt + cFilAnt + ' - Cotacao: ' + ::aErro[nW][1] + '</th>'
+        cHtml += '  </tr>'
+        cHtml += '</thead>'
+        cHtml += '<tbody>'
 
-        oMail:Send()
+      EndIf
+
+      lFound := .T.
+
+      cHtml += '  <tr>'
+      cHtml += '    <td class="tg-0lax">' + ::aErro[nW][2] + '</td>'
+      cHtml += '  </tr>'
+
+      If nW == Len(::aErro)
+
+        cHtml += '</tbody>'
+        cHtml += '</table>'
+
+      EndIf
 
     EndIf
+
+  Next nW
+
+  If lFound
+
+    oMail:cTo := ::cEmail
+    oMail:cSubject := "TBizagiIntegracaoCotacao - Inconsistencias"
+    oMail:cBody := cHtml
+
+    oMail:Send()
+
+  EndIf
 
 Return()
 
 //Utilizado em complemento no P.E. MT150OK
 User Function BIPRCTFR()
 Return(_cFret_)
+
+
+/*/{Protheus.doc} CancelarCotacaoNoBizagi
+@author Filipe Bittencourt (Facile)
+@since 10/11/2021   
+@version 1.0
+@description : Realiza o cancelamento no BIZAGI via consulta para os dados estarem iguais no protheus x bizagi
+/*/
+Method CancelarCotacaoNoBizagi() Class TBizagiIntegracaoCotacao
+
+  Local cXml := ""
+  Local cSQL := ""
+  Local lRet := .F.
+  Local oWS  := Nil
+  Local oResult := Nil
+  Local cXmlRet := Nil
+  Local cError := ""
+  Local cWarning := ""
+  LOCAL cCanBZ    	:= GetNextAlias()
+
+  cSql := " SELECT DISTINCT SC8.C8_YPRCBIZ  from BZINTEGRACAO_COTACAO BZ "
+  cSql += " INNER JOIN SC8010 SC8 ON SC8.C8_YPRCBIZ =  BZ.BZNUMPROC  AND  SC8.D_E_L_E_T_ = '*' "
+  cSql += " WHERE BZ.STATUS = 'A' "
+
+
+  TcQuery cSql New Alias (cCanBZ)
+
+  WHILE !(cCanBZ)->(EOF())
+
+    ::CancelarCotacaoNoBizagiId((cCanBZ)->C8_YPRCBIZ)
+
+    (cCanBZ)->(DbSkip())
+
+  EndDo
+
+Return lRet
+
+
+
+/*/{Protheus.doc} CancelarCotacaoNoBizagiId
+@author Filipe Bittencourt (Facile)
+@since 10/11/2021   
+@version 1.0
+@description : Realiza o cancelamento no BIZAGI via fonte  MT131WF.prw
+/*/
+Method CancelarCotacaoNoBizagiId(cBZNUMPROC) Class TBizagiIntegracaoCotacao
+
+  Local cXml := ""
+  Local cSQL := ""
+  Local lRet := .F.
+  Local oWS  := Nil
+  Local oResult := Nil
+  Local cXmlRet := Nil
+  Local cError := ""
+  Local cWarning := ""
+
+  If !EMPTY(cBZNUMPROC)
+
+    oWS := WSWorkflowEngineSOA():New()
+
+    If oWs != Nil
+
+      IncProc('Cancelando a cotação no Bizagi...'+cBZNUMPROC)
+
+      cXml := ""
+      cXml += "<BizAgiWSParam>"
+      cXml += "<domain>domain</domain>"
+      cXml += "<userName>admon</userName>"
+      cXml += "<cases>"
+      cXml += "<case>"
+      cXml += "<radNumber>"+AllTrim(cBZNUMPROC)+"</radNumber>"
+      cXml += "<abortReason>Reenvio para o fornecedor</abortReason>"
+      cXml += "</case>"
+      cXml += "</cases>"
+      cXml += "</BizAgiWSParam>"
+
+      oResult := oWS:abortCasesAsString(cXml)
+      cXmlRet 	:= EncodeUTF8(oWS:cabortCasesAsStringResult)
+
+      If !Empty(cXmlRet) .and. oResult != NIL
+        oXmlRetCot := XmlParser( cXmlRet, "_", @cError, @cWarning )
+        lRet := .T.
+      EndIf
+
+      If lRet
+
+        cSql := " UPDATE BZINTEGRACAO_COTACAO SET "
+        cSql += "   STATUS   =  'C' "
+        cSql += " , LOG    = 'Cancelamento após exclusão da cotação via BIZAGI-AbortCasesAsString' "
+        cSql += " , DTINTEGRA = " + ValToSql(DTOS(dDataBase))
+        cSql += " , HRINTEGRA = CONVERT(VARCHAR(8), GETDATE(), 114) "
+        cSql += "   WHERE BZNUMPROC = '"+AllTrim(cBZNUMPROC)+"'"
+        TcSQLExec(cSql)
+
+      EndIf
+
+    EndIf
+
+  EndIf
+
+
+Return lRet
+

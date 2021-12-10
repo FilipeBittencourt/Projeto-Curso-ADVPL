@@ -597,9 +597,11 @@ User Function B587FOK()
 					Return .F.
 				EndIf
 			EndIf
-			If !U_B587VdCl(isCLVLDB)
-				MsgINFO("A classe de valor informada não está associada a empresa orçamentária posicionada.")
-				Return .F.
+			If cEmpAnt <> "90"
+				If !U_B587VdCl(isCLVLDB)
+					MsgINFO("A classe de valor informada não está associada a empresa orçamentária posicionada.")
+					Return .F.
+				EndIf
 			EndIf
 			GdFieldPut("ZOZ_DCVDB"    , Posicione("CTH", 1, xFilial("CTH") + isCLVLDB, "CTH_DESC01") , _nAt)
 
@@ -616,9 +618,11 @@ User Function B587FOK()
 					Return .F.
 				EndIf
 			EndIf
-			If !U_B587VdCl(isCLVLCR)
-				MsgINFO("A classe de valor informada não está associada a empresa orçamentária posicionada.")
-				Return .F.
+			If cEmpAnt <> "90"
+				If !U_B587VdCl(isCLVLCR)
+					MsgINFO("A classe de valor informada não está associada a empresa orçamentária posicionada.")
+					Return .F.
+				EndIf
 			EndIf
 			GdFieldPut("ZOZ_DCVCR"    , Posicione("CTH", 1, xFilial("CTH") + isCLVLCR, "CTH_DESC01") , _nAt)
 

@@ -74,7 +74,9 @@ Static function BIAFG101Pr()
 					WHEN A.RECURSO = 'L4CF01' 
 						THEN	'Forno 04'
 					WHEN A.RECURSO = 'L5CF01' 
-						THEN	'Forno 05'	
+						THEN	'Forno 05'
+					WHEN A.RECURSO = 'L6CF01' 
+						THEN	'Forno 06'				
 					ELSE
 						A.RECURSO
 				END AS RECURSO
@@ -92,6 +94,7 @@ Static function BIAFG101Pr()
 					,'L3CF01'
 					,'L4CF01'
 					,'L5CF01'
+					,'L6CF01'
 					)
 				AND DtProd = Cast(%Exp:_cData% as DATETIME)
 				AND Turno = %Exp:_nTurno%

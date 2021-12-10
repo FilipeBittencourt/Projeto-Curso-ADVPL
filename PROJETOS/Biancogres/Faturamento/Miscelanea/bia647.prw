@@ -63,17 +63,24 @@ Static Function BIA647A()
 	ZL009 += "        ZBH_TOTAL, "
 	ZL009 += "        ZBH_PCOMIS, "
 	ZL009 += "        ZBH_VCOMIS, "
+	ZL009 += "        ZBH_BICMS, "
 	ZL009 += "        ZBH_PICMS, "
 	ZL009 += "        ZBH_VICMS, "
+	ZL009 += "        ZBH_BPIS, "
 	ZL009 += "        ZBH_PPIS, "
 	ZL009 += "        ZBH_VPIS, "
+	ZL009 += "        ZBH_BCOF, "
 	ZL009 += "        ZBH_PCOF, "
 	ZL009 += "        ZBH_VCOF, "
+	ZL009 += "        ZBH_BST, "
 	ZL009 += "        ZBH_PST, "
 	ZL009 += "        ZBH_VST, "
+	ZL009 += "        ZBH_BDIFAL, "
 	ZL009 += "        ZBH_PDIFAL, "
 	ZL009 += "        ZBH_VDIFAL, "
-	ZL009 += "        ZBH_VDIFAL, "
+	ZL009 += "        ZBH_BIPI, "
+	ZL009 += "        ZBH_PIPI, "
+	ZL009 += "        ZBH_VIPI, "
 	ZL009 += "        ZBH_PRZMET,	"
 	ZL009 += "        ZBH_PERVER,	"
 	ZL009 += "        ZBH_VALVER,	"
@@ -81,6 +88,7 @@ Static Function BIA647A()
 	ZL009 += "        ZBH_VALBON,	"
 	ZL009 += "        ZBH_PERCPV,	"
 	ZL009 += "        ZBH_VALCPV,	"
+	ZL009 += "        ZBH_BICMBO, "
 	ZL009 += "        ZBH_PICMBO,	"
 	ZL009 += "        ZBH_VICMBO	"
 	ZL009 += "   FROM " + RetSqlName("ZBH") + " ZBH "
@@ -154,16 +162,24 @@ Static Function BIA647A()
 			Transform( ZL09->ZBH_TOTAL  , "@E 999,999,999.9999") ,;
 			Transform( ZL09->ZBH_PCOMIS , "@E 999,999,999.9999") ,;
 			Transform( ZL09->ZBH_VCOMIS , "@E 999,999,999.9999") ,;
+			Transform( ZL09->ZBH_BICMS  , "@E 999,999,999.9999") ,;
 			Transform( ZL09->ZBH_PICMS  , "@E 999,999,999.9999") ,;
 			Transform( ZL09->ZBH_VICMS  , "@E 999,999,999.9999") ,;
+			Transform( ZL09->ZBH_BPIS   , "@E 999,999,999.9999") ,;
 			Transform( ZL09->ZBH_PPIS   , "@E 999,999,999.9999") ,;
 			Transform( ZL09->ZBH_VPIS   , "@E 999,999,999.9999") ,;
+			Transform( ZL09->ZBH_BCOF   , "@E 999,999,999.9999") ,;
 			Transform( ZL09->ZBH_PCOF   , "@E 999,999,999.9999") ,;
 			Transform( ZL09->ZBH_VCOF   , "@E 999,999,999.9999") ,;
+			Transform( ZL09->ZBH_BST    , "@E 999,999,999.9999") ,;
 			Transform( ZL09->ZBH_PST    , "@E 999,999,999.9999") ,;
 			Transform( ZL09->ZBH_VST    , "@E 999,999,999.9999") ,;
+			Transform( ZL09->ZBH_BDIFAL    , "@E 999,999,999.9999") ,;
 			Transform( ZL09->ZBH_PDIFAL , "@E 999,999,999.9999") ,;
 			Transform( ZL09->ZBH_VDIFAL , "@E 999,999,999.9999") ,;
+			Transform( ZL09->ZBH_BIPI    , "@E 999,999,999.9999") ,;
+			Transform( ZL09->ZBH_PIPI , "@E 999,999,999.9999") ,;
+			Transform( ZL09->ZBH_VIPI , "@E 999,999,999.9999") ,;
 			Transform( ZL09->ZBH_PRZMET , "@E 999,999,999.9999") ,;
 			Transform( ZL09->ZBH_PERVER , "@E 999,999,999.9999") ,;
 			Transform( ZL09->ZBH_VALVER , "@E 999,999,999.9999") ,;
@@ -171,6 +187,7 @@ Static Function BIA647A()
 			Transform( ZL09->ZBH_VALBON , "@E 999,999,999.9999") ,;
 			Transform( ZL09->ZBH_PERCPV , "@E 999,999,999.9999") ,;
 			Transform( ZL09->ZBH_VALCPV , "@E 999,999,999.9999") ,;
+			Transform( ZL09->ZBH_BICMBO , "@E 999,999,999.9999") ,;
 			Transform( ZL09->ZBH_PICMBO , "@E 999,999,999.9999") ,;
 			Transform( ZL09->ZBH_VICMBO , "@E 999,999,999.9999") })
 

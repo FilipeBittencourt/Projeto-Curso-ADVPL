@@ -394,7 +394,7 @@ Static Function fCalcPrd(cFormat, _cTurno, _cEquipe, _cInLinha)
 	AND Z75_TPMOV IN ('ETQ','RET')
 	AND Z75.Z75_TURNO = %EXP:_cTurno%
 	AND Z75.Z75_LINHA IN %EXP:_cInLinha%
-	AND ( ( B1_YFORMAT IN('BM', 'BF', 'BD', 'BE','BW','BV','CC','CD') AND Z75_TPPROD = 'PP') OR ( B1_YFORMAT NOT IN('BM', 'BF', 'BD', 'BE','BW','BV','CC','CD') AND Z75_TPPROD <> 'PP') )
+	AND ( ( Z75_LINHA IN ('L03','L06') AND Z75_TPPROD = 'PP' ) OR ( Z75_LINHA NOT IN ('L03','L06') AND Z75_TPPROD <> 'PP' ) )
 	AND ( ( SB1.B1_YFORMAT IN ( 'B9', 'BO', 'C6' )
 	AND Z75.Z75_EQUIPE = '1'
 	AND Z75.Z75_BKEQUI = %Exp:_cEquipe%
@@ -515,7 +515,7 @@ Static Function fCalcPes(cFormat, cTurno, cEquipe)
 	AND Z75_DATARF = %Exp:_cData%
 	AND Z75.Z75_TURNO = %EXP:cTurno%
 	AND Z75_TPMOV IN ('ETQ','RET')
-	AND ( ( B1_YFORMAT IN('BM', 'BF', 'BD', 'BE', 'BW','BV','CC','CD') AND Z75_TPPROD = 'PP') OR ( B1_YFORMAT NOT IN('BM', 'BF', 'BD', 'BE','BW','BV','CC','CD') AND Z75_TPPROD <> 'PP') )
+	AND ( ( Z75_LINHA IN ('L03','L06') AND Z75_TPPROD = 'PP' ) OR ( Z75_LINHA NOT IN ('L03','L06') AND Z75_TPPROD <> 'PP' ) )
 	AND ( ( SB1.B1_YFORMAT IN ( 'B9', 'BO', 'C6' )
 	AND Z75.Z75_EQUIPE = '1'
 	AND Z75.Z75_BKEQUI = %Exp:cEquipe%
@@ -531,6 +531,24 @@ Static Function fCalcPes(cFormat, cTurno, cEquipe)
 
 	_nPeso	:=	(_cAliasPes)->PESO
 
+	If _nPeso == 0
+
+		_cAliasPes	:= GetNextAlias()
+		
+		BeginSql Alias _cAliasPes
+			SELECT ISNULL(AVG(B1_PESO),0) PESO
+			FROM %TABLE:SB1%
+			WHERE B1_YFORMAT = %Exp:cFormat%
+				AND B1_YCLASSE = '1'
+				AND B1_TIPO = 'PA'
+				AND B1_YSTATUS = '1'
+				AND %NotDel%
+		EndSql
+	
+		_nPeso	:=	(_cAliasPes)->PESO
+
+	EndIf
+    
 	(_cAliasPes)->(DbCloseArea())
 
 	RestArea(_aArea)

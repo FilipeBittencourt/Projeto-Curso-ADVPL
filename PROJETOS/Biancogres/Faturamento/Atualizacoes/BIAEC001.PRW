@@ -130,7 +130,7 @@ User Function BIAELSB()
 		If (!Empty(MV_PAR01) .And. !Empty(MV_PAR02))
 
 			cQuery := " SELECT ZZV_CARGA						 											"
-			cQuery += " FROM " + RetSQLName("ZZV")+"														"
+			cQuery += " FROM " + RetSQLName("ZZV")+" WITH (NOLOCK)   										"
 			cQuery += " WHERE ZZV_CARGA BETWEEN  " + ValToSQL(MV_PAR01)+"	AND	" + ValToSQL(MV_PAR02)+"	"
 			cQuery += " AND	 D_E_L_E_T_	 = ''																"
 
@@ -185,7 +185,12 @@ User Function BIAECID()
 				Return
 		EndIf*/
 			Return
+
 	EndIf
+	If !Alltrim(ZZV->ZZV_SCONF) $ "8/9"
+		Alert("<font size='3' color='red'>Carga não conferida no Coletor.</font>")
+		Return
+	Endif
 EndIf
 	
 
@@ -243,9 +248,10 @@ If AllTrim(ZZV->ZZV_CONF) == 'S'
 
 Else
 
-	Alert("<font size='3' color='red'>Carga não conferida.</font>")
+	Alert("<font size='3' color='red'>Carga não conferida na Pesagem.</font>")
 
 EndIf
+
 
 RestArea(aArea)
 
@@ -391,11 +397,11 @@ User Function BEC01MAN(nOpc)
 
 	//BOTOES DA ENCHOICEBAR
 	IF (nOpca == 3 .OR. nOpca == 4)
-		aAdd(aButtons,	{"NOVACELULA",{|| GetPedidos()}	,"Ad.Pedido"})
+		aAdd(aButtons,	{"NOVACELULA",{|| GetPedidos()}		,"Ad.Pedido"})
 		aAdd(aButtons,	{"AVGARMAZEM",{|| EnvExped()}		,"Expedicao"})
 
 		If ( ALTERA )
-			aAdd(aButtons,{"AVGARMAZEM", {|| DestItem()},"Destrava ITEM"})
+			aAdd(aButtons,{"AVGARMAZEM", {|| DestItem()}	,"Destrava ITEM"})
 		EndIf
 
 		aAdd(aButtons,	{"TICKET",{|| VisuaTicket()}		,"Ticket"})
@@ -801,7 +807,7 @@ Static Function PC22001()
 
 	cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+" "+SubStr(cTime,9,2)+':'+SubStr(cTime,11,2)+':'+SubStr(cTime,13,2)
 	cQuery := " SELECT TOP 1 * " + CRLF
-	cQuery += " FROM  "+  RetSqlName("ZDJ") + " "  + CRLF
+	cQuery += " FROM  "+  RetSqlName("ZDJ") + " WITH (NOLOCK)  "  + CRLF
 	cQuery += " WHERE ZDJ_FILIAL = '"+FWxFilial("ZZV")+"' "  + CRLF
 	cQuery += " AND ZDJ_CARGA  = '"+M->ZZV_CARGA+"' "  + CRLF
 	cQuery += " AND D_E_L_E_T_ = '' " + CRLF
@@ -1331,12 +1337,12 @@ Static Function AtuGalpao(cCarga)
 
 		cQuery += "SELECT 																																		"
 		cQuery += "	DISTINCT GALPAO=T3.dsc_local 																												"
-		cQuery += "	FROM ["+cBanco+"].[dbo].[cep_etiqueta_pallet] T1																							"
-		cQuery += "	JOIN ["+cBanco+"].[dbo].[cep_etiqueta_endereco]			T2 ON T1.cod_endereco = T2.cod_endereco												"
-		cQuery += "	JOIN ["+cBanco+"].[dbo].[cep_cad_local]					T3 ON T2.end_local = T3.end_local	AND T2.cod_deposito	= T3.cod_deposito			"
+		cQuery += "	FROM ["+cBanco+"].[dbo].[cep_etiqueta_pallet] T1 WITH (NOLOCK) 																							"
+		cQuery += "	JOIN ["+cBanco+"].[dbo].[cep_etiqueta_endereco]			T2 WITH (NOLOCK) ON T1.cod_endereco = T2.cod_endereco												"
+		cQuery += "	JOIN ["+cBanco+"].[dbo].[cep_cad_local]					T3 WITH (NOLOCK) ON T2.end_local = T3.end_local	AND T2.cod_deposito	= T3.cod_deposito			"
 		cQuery += "	JOIN (																									"
-		cQuery += "		SELECT PRODUTO=C9_PRODUTO, LOTE=C9_LOTECTL FROM "+RetSQLName("ZZW")+" ZZW											"
-		cQuery += "		JOIN "+RetSQLName("SC9")+" SC9 ON  C9_PEDIDO = ZZW_PEDIDO AND C9_FILIAL = ZZW_FILIAL AND C9_ITEM = ZZW_ITEM AND C9_SEQUEN = ZZW.ZZW_SEQUEN AND  SC9.D_E_L_E_T_ = ''	"
+		cQuery += "		SELECT PRODUTO=C9_PRODUTO, LOTE=C9_LOTECTL FROM "+RetSQLName("ZZW")+" ZZW WITH (NOLOCK) 									"
+		cQuery += "		JOIN "+RetSQLName("SC9")+" SC9 WITH (NOLOCK)  ON  C9_PEDIDO = ZZW_PEDIDO AND C9_FILIAL = ZZW_FILIAL AND C9_ITEM = ZZW_ITEM AND C9_SEQUEN = ZZW.ZZW_SEQUEN AND  SC9.D_E_L_E_T_ = ''	"
 		cQuery += "		WHERE 																								"
 		cQuery += "		ZZW_CARGA = '"+AllTrim(cCarga)+"'																	"
 		cQuery += "		AND ZZW.D_E_L_E_T_ = ''																				"
@@ -2166,7 +2172,7 @@ Static Function lGetPedPrc(lDigCli)
 			onde a mesma exceção foi feita para entrada dos pedidos nesse formato com caixa aberta.
 			Para isso a function FNC_ROP_PESQUISA_LOTE_01 foi alterada na linhas 90, 91 e 169. 
 		*/
-		If Alltrim((cAliasTmp)->C9_GRUPO) == "PA" .AND. Alltrim((cAliasTmp)->B1_YFORMAT) != "RP" .AND. !(cAliasTmp)->C9_LOCAL == "05" .AND. (cAliasTmp)->DIF <> 0 .And. AllTrim(CEMPANT) <> "14"
+		If Alltrim((cAliasTmp)->C9_GRUPO) == "PA" .AND. Alltrim((cAliasTmp)->B1_YFORMAT) != "RP" .AND. !(cAliasTmp)->C9_LOCAL == "05" .AND. (cAliasTmp)->DIF <> 0
 
 			cLogRet += "PEDIDO "+(cAliasTmp)->C9_PEDIDO+" ->PRODUTO "+ALLTRIM((cAliasTmp)->C9_PRODUTO)+" ->ITEM/SEQ "+ALLTRIM((cAliasTmp)->C9_ITEM)+"/"+ALLTRIM((cAliasTmp)->C9_SEQUEN)+" ==> A QUANTIDADE DE CAIXAS PARA O ITEM "+(cAliasTmp)->C9_ITEM+" DESTE PEDIDO ESTA INCORRETA. FAVOR COMUNICAR A TI."+CRLF
 
@@ -2566,13 +2572,13 @@ Static Function ChkSalPed(_cPedido, _cItem, _nQtdLib)
 	Local _cSQL := ""
 
 	_cSQL +="	SELECT ROUND( "+CRLF
-	_cSQL +="					ISNULL((SELECT SUM(C6_QTDVEN) FROM "+RetSQLName("SC6")+" "+CRLF
+	_cSQL +="					ISNULL((SELECT SUM(C6_QTDVEN) FROM "+RetSQLName("SC6")+" WITH (NOLOCK) "+CRLF
 	_cSQL +="					WHERE C6_NUM = '"+_cPedido+"' AND C6_FILIAL = '"+xFilial('SC5')+"' AND C6_ITEM = '"+_cItem+"' AND D_E_L_E_T_= ' '),0) "+CRLF
 	_cSQL +="					- "+CRLF
-	_cSQL +="					ISNULL((SELECT SUM(D2_QUANT) FROM "+RetSQLName("SD2")+" "+CRLF
+	_cSQL +="					ISNULL((SELECT SUM(D2_QUANT) FROM "+RetSQLName("SD2")+" WITH (NOLOCK) "+CRLF
 	_cSQL +="					WHERE D2_PEDIDO = '"+_cPedido+"' AND D2_FILIAL = '"+xFilial('SD2')+"' AND D2_ITEMPV = '"+_cItem+"' AND D_E_L_E_T_= ' '),0) "+CRLF
 	_cSQL +="					- "+CRLF
-	_cSQL +="					ISNULL((SELECT SUM(C9_QTDLIB) FROM "+RetSQLName("SC9")+" "+CRLF
+	_cSQL +="					ISNULL((SELECT SUM(C9_QTDLIB) FROM "+RetSQLName("SC9")+" WITH (NOLOCK) "+CRLF
 	_cSQL +="					WHERE C9_PEDIDO = '"+_cPedido+"' AND C9_FILIAL = '"+xFilial('SC9')+"' AND C9_ITEM = '"+_cItem+"' AND C9_BLEST = ' ' AND C9_BLCRED = ' ' AND C9_NFISCAL = ' ' AND D_E_L_E_T_= ' '),0) "+CRLF
 	_cSQL +="					,2) as SALDO "+CRLF
 	TCQuery _cSQL Alias "QRYVAL" New
@@ -2676,7 +2682,7 @@ Static Function fGrvPDVc()
 	QP007 += "        ZZW_SEQUEN,
 	QP007 += "        ZZW_NUMOCE,
 	QP007 += "        ZZW_STATUS
-	QP007 += "   FROM " + RetSqlName("ZZW")
+	QP007 += "   FROM " + RetSqlName("ZZW") +" WITH (NOLOCK) "
 	QP007 += "  WHERE ZZW_FILIAL = '"+xFilial("ZZW")+"'
 	QP007 += "    AND ZZW_PEDIDO = '"+cGet1+"'
 	QP007 += "    AND D_E_L_E_T_ = ' '
@@ -2998,7 +3004,7 @@ Static Function fBlqCont(nPedido,nItem,nSeq,nProd)
 	EndIf
 
 	If SC9->C9_CLIENTE == "010064"
-		cSql := "UPDATE SZN070 SET ZN_BLQPDCT = 'S', ZN_MSEXP = '' WHERE ZN_PEDIDO IN (SELECT C5_NUM FROM SC5070 WHERE C5_YPEDORI = '"+SC9->C9_PEDIDO+"' AND D_E_L_E_T_ = '') AND D_E_L_E_T_ = '' "
+		cSql := "UPDATE SZN070 SET ZN_BLQPDCT = 'S', ZN_MSEXP = '' WHERE ZN_PEDIDO IN (SELECT C5_NUM FROM SC5070 WITH (NOLOCK) WHERE C5_YPEDORI = '"+SC9->C9_PEDIDO+"' AND D_E_L_E_T_ = '') AND D_E_L_E_T_ = '' "
 		If (TCSQLExec(cSql) < 0)
 			MsgStop("TCSQLError() " + TCSQLError())
 		EndIf

@@ -70,8 +70,7 @@ Return .T.
 ##############################################################################################################
 */
 Static Function fMSNewGetDados1()
-	Local _cTabSZO
-	Local _cEmp
+	Local _cEmp	:= "01"
 
 	Local nX
 
@@ -82,36 +81,17 @@ Static Function fMSNewGetDados1()
 	aAdd(aHeaderEx,{"Status"	,"ZO_STATUS", "@!"					, 20, 0	,,"€€€€€€€€€€€€€€","C",,})
 
 
-	If Alltrim(M->C5_YLINHA) $ "2#3" .And. AllTrim(CEMPANT) $ "05_07"  //ticket 10958 marreta provisoria AI Incesa na Bianco
-		_cTabSZO	:= "SZO050"
-		_cEmp		:= "05"	
-	Else                    
-		_cTabSZO	:= "SZO010"
-		_cEmp		:= "01"
-	EndIf
-
-
 	If (AllTrim(CEMPANT) == "07")
+
 		If ((ValType(aCols) <> "U" .And. Len(aCols) < 1) .Or. Empty(M->C5_YEMPPED))
 			Aviso("AUTORIZAÇÃO DE INVESTIMENTO","Atenção: Na Empresa - LM, é necessario preencher uma linha do pedido, para depois informado o código da AI.",{"OK"},2,"")
 		EndIf
-
-		If (!Empty(M->C5_YEMPPED))
-			_cEmp		:= AllTrim(M->C5_YEMPPED)
-			_cTabSZO 	:= "SZO"+_cEmp+"0"		
-		EndIf			
+		
 	EndIf
 
-
-	If SC5->(FieldPos("C5_YNOUTAI")) > 0
-		cAliasTmp := GetNextAlias()
-		cQUERY := "exec SP_AI_COM_SALDO_CLIENTE_"+_cEmp+" '"+SA1->A1_COD+"','"+SA1->A1_LOJA+"', "+IIF(lOutAI,"1","0")+"  "
-		TcQuery cQUERY New Alias (cAliasTmp)
-	Else
-		cAliasTmp := GetNextAlias()
-		cQUERY := "exec SP_AI_COM_SALDO_CLIENTE_"+_cEmp+" '"+SA1->A1_COD+"','"+SA1->A1_LOJA+"' "
-		TcQuery cQUERY New Alias (cAliasTmp)
-	EndIf
+	cAliasTmp := GetNextAlias()
+	cQUERY := "exec SP_AI_COM_SALDO_CLIENTE_"+_cEmp+" '"+SA1->A1_COD+"','"+SA1->A1_LOJA+"', "+IIF(lOutAI,"1","0")+"  "
+	TcQuery cQUERY New Alias (cAliasTmp)
 
 	(cAliasTmp)->(dbGoTop())
 	ProcRegua(RecCount())
@@ -197,32 +177,11 @@ Return
 
 // Visualiza dados da SI abrindo tabela em outra empresa
 Static Function fVisualizar()
-	Local aArea := GetArea()
-	Local cNumSI := oMSNewGetDados1:ACOLS[oMSNewGetDados1:oBrowse:nAt][1]
-	Local aAreaSZO := SZO->(GetArea()) 
-	Local cSvFilAnt := cFilAnt 
-	Local cSvEmpAnt := cEmpAnt 
-	Local cSvArqTab := cArqTab
-	Local cEmp := ""
-	Local cModo := ""
+	Local aArea		:= GetArea()
+	Local aAreaSZO 	:= SZO->(GetArea()) 	
+	Local cNumSI 	:= oMSNewGetDados1:ACOLS[oMSNewGetDados1:oBrowse:nAt][1]
 
 	If !Empty(cNumSI)
-
-		If Alltrim(M->C5_YLINHA) $ "2/3"
-
-			cEmp := "05"
-
-		Else                    
-
-			cEmp := "01"
-
-		EndIf	
-
-		If cEmp <> cEmpAnt
-
-			EmpOpenFile("SZO", "SZO", 1, .T., cEmp, @cModo)
-
-		EndIf
 
 		DbSelectArea("SZO")
 		DbSetOrder(5)
@@ -235,10 +194,6 @@ Static Function fVisualizar()
 	EndIf
 
 	SZO->(DbCloseArea())
-
-	cFilAnt := cSvFilAnt 
-	cEmpAnt := cSvEmpAnt 
-	cArqTab := cSvArqTab
 
 	ChkFile("SZO") 
 

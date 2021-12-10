@@ -36,6 +36,10 @@ If AllTrim(FunName()) $ "MATA261"
 	If SX3->(DbSeek('D3_YQTDPC'))
 		Aadd(aHeader, {AllTrim(X3Titulo()), SX3->X3_CAMPO, SX3->X3_PICTURE, SX3->X3_TAMANHO, SX3->X3_DECIMAL, SX3->X3_VALID, SX3->X3_USADO, SX3->X3_TIPO, SX3->X3_ARQUIVO, SX3->X3_CONTEXT})
 	EndIf
+
+	If SX3->(DbSeek('D3_YMATRIC'))
+		Aadd(aHeader, {AllTrim(X3Titulo()), SX3->X3_CAMPO, SX3->X3_PICTURE, SX3->X3_TAMANHO, SX3->X3_DECIMAL, SX3->X3_VALID, SX3->X3_USADO, SX3->X3_TIPO, SX3->X3_ARQUIVO, SX3->X3_CONTEXT})
+	EndIf
 	
 	if !INCLUI
 		SX3->(DbSetOrder(2))
@@ -62,12 +66,14 @@ User Function MA261D3()
 Local nPosAcols  := ParamIXB   //No. da linha do aCols que esta sendo processado
 Local nPosYIDECO := aScan(aHeader,{|x| Alltrim(x[2]) == "D3_YIDECO"})
 Local nPosYQTDPC := aScan(aHeader,{|x| Alltrim(x[2]) == "D3_YQTDPC"})
+Local nPosMatric := aScan(aHeader,{|x| Alltrim(x[2]) == "D3_YMATRIC"})
 Local nD3YIDECO  := 0
 Local nD3YQTDPC  := 0
 Local nRecno     := SD3->(RECNO())
 Local cChaveItem := SD3->D3_FILIAL + SD3->D3_DOC + SD3->D3_NUMSEQ  
 Local dEmissao	 := SD3->D3_EMISSAO
 Local cDataHora	:=	Substr(dTOS(Date()),1,4) + '-' + Substr(dTOS(Date()),5,2) + '-' + Substr(dTOS(Date()),7,2) + ' ' + Time() + ".000"
+Local _oMd		:=	tBiaControleMD():New()
 
 SD3->(DbSetOrder(8))
 SD3->(DbGoTop())
@@ -81,6 +87,30 @@ If SD3->(DbSeek(cChaveItem))
 		SD3->(DbSkip())
 	EndDo
 EndIF
+
+If AllTrim(FunName()) $ "MATA261" .and. nPosMatric > 0
+
+	SD3->(DbSetOrder(8))
+	SD3->(DbGoTop())
+	If SD3->(DbSeek(cChaveItem))
+		While !SD3->(Eof()) .And. cChaveItem == SD3->(D3_FILIAL+D3_DOC+D3_NUMSEQ)
+			if SD3->D3_EMISSAO == dEmissao .And. Empty(SD3->D3_ESTORNO) .And. SD3->D3_CF $ 'RE4/DE4'
+				SD3->(RecLock("SD3",.F.))
+				SD3->D3_YMATRIC := aCols[nPosAcols][nPosMatric]
+				SD3->(MsUnlock())
+				If SD3->D3_CF == "RE4" .And. _oMd:CheckMd(SD3->D3_COD,SD3->D3_LOCAL)
+					_oMd:InsereMovimentacao(SD3->D3_FILIAL,SD3->D3_DOC,"","","","",SD3->D3_COD,SD3->D3_QUANT,SD3->D3_LOCAL,;
+					 		"501",SD3->D3_YMATRIC,SD3->D3_YMATRIC,cUserName,Alltrim(funname()),SD3->D3_EMISSAO,"SD3",SD3->(RECNO())) //Insere Movimentação na Tabela	
+		
+				EndIf
+			endif	
+			SD3->(DbSkip())
+		EndDo
+	EndIf
+	SD3->(DbSetOrder(1))
+	SD3->(DbGoto(nRecno)) //Restaurar linha posicionada.
+
+EndIf 
 
 If AllTrim(FunName()) $ "MATA261" .and. nPosYQTDPC > 0 
 	nD3YQTDPC  := aCols[nPosAcols][nPosYQTDPC]

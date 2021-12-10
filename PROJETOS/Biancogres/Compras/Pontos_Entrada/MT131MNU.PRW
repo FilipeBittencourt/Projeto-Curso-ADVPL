@@ -3,7 +3,7 @@
 
                                            
 user function MT131MNU
-	aadd(aRotina, {"Portal WebSC","U_A130WEB",0,6,0,nil})
+	aadd(aRotina, {"Abrir anexo","U_A130WEB",0,6,0,nil})
 	//aadd(aRotina, {"Env.Mensagem","U_A130MSG",0,7,0,nil})
 return 
 

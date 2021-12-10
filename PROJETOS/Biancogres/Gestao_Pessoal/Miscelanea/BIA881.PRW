@@ -188,29 +188,41 @@ Static Function BIA881A()
 	CT001 += Alltrim("                 a.tipcol,                                                                                       ") + msrhEnter
 	CT001 += Alltrim("                 a.numcad,                                                                                       ") + msrhEnter
 	CT001 += Alltrim("                 a.codeve,                                                                                       ") + msrhEnter
-	CT001 += Alltrim("                 mesano = CONVERT(CHAR(10), EOMONTH(c.perref), 112),                                             ") + msrhEnter
+	CT001 += Alltrim("                 mesano = SUBSTRING(CONVERT(CHAR(08), EOMONTH(c.perref), 112), 1, 6) + '01',                     ") + msrhEnter
 	CT001 += Alltrim("                 valor = a.valeve                                                                                ") + msrhEnter
-	CT001 += Alltrim("          FROM "+_cAliasSr+".dbo.r046ver a(NOLOCK)                                                                      ") + msrhEnter
-	CT001 += Alltrim("               INNER JOIN "+_cAliasSr+".dbo.r008evc b(NOLOCK) ON b.codeve = a.codeve                                    ") + msrhEnter
+	CT001 += Alltrim("          FROM "+_cAliasSr+".dbo.r046ver a(NOLOCK)                                                               ") + msrhEnter
+	CT001 += Alltrim("               INNER JOIN "+_cAliasSr+".dbo.r008evc b(NOLOCK) ON b.codeve = a.codeve                             ") + msrhEnter
 	CT001 += Alltrim("                                                          AND b.codtab = a.tabeve                                ") + msrhEnter
-	CT001 += Alltrim("               INNER JOIN "+_cAliasSr+".dbo.r044cal c(NOLOCK) ON c.numemp = a.numemp                                    ") + msrhEnter
+	CT001 += Alltrim("               INNER JOIN "+_cAliasSr+".dbo.r044cal c(NOLOCK) ON c.numemp = a.numemp                             ") + msrhEnter
 	CT001 += Alltrim("                                                          AND c.codcal = a.codcal                                ") + msrhEnter
-	CT001 += Alltrim("               INNER JOIN "+_cAliasSr+".dbo.r038hfi e(NOLOCK) ON e.numemp = a.numemp                                    ") + msrhEnter
+	CT001 += Alltrim("               INNER JOIN "+_cAliasSr+".dbo.r038hfi e(NOLOCK) ON e.numemp = a.numemp                             ") + msrhEnter
 	CT001 += Alltrim("                                                          AND e.tipcol = a.tipcol                                ") + msrhEnter
 	CT001 += Alltrim("                                                          AND e.numcad = a.numcad                                ") + msrhEnter
 	CT001 += Alltrim("                                                          AND e.datalt =                                         ") + msrhEnter
 	CT001 += Alltrim("          (                                                                                                      ") + msrhEnter
 	CT001 += Alltrim("              SELECT MAX(qq.datalt)                                                                              ") + msrhEnter
-	CT001 += Alltrim("              FROM "+_cAliasSr+".dbo.r038hfi qq(NOLOCK)                                                                 ") + msrhEnter
+	CT001 += Alltrim("              FROM "+_cAliasSr+".dbo.r038hfi qq(NOLOCK)                                                          ") + msrhEnter
 	CT001 += Alltrim("              WHERE qq.datalt < EOMONTH(c.perref)                                                                ") + msrhEnter
 	CT001 += Alltrim("                    AND qq.numemp = a.numemp                                                                     ") + msrhEnter
 	CT001 += Alltrim("                    AND qq.tipcol = a.tipcol                                                                     ") + msrhEnter
 	CT001 += Alltrim("                    AND qq.numcad = a.numcad                                                                     ") + msrhEnter
 	CT001 += Alltrim("          )                                                                                                      ") + msrhEnter
 	CT001 += Alltrim("          WHERE a.tipcol = 1                                                                                     ") + msrhEnter
-	CT001 += Alltrim("                AND a.codeve IN(2306, 2380))                                                                     ") + msrhEnter
-	CT001 += Alltrim("      SELECT * INTO " + msNomeTMP + "                                                                            ") + msrhEnter
+	CT001 += Alltrim("                AND a.codeve IN(2306, 2380, 2490, 2491))                                                         ") + msrhEnter
+	CT001 += Alltrim("      SELECT numemp,                                                                                             ") + msrhEnter
+	CT001 += Alltrim("             codfil,                                                                                             ") + msrhEnter
+	CT001 += Alltrim("             tipcol,                                                                                             ") + msrhEnter
+	CT001 += Alltrim("             numcad,                                                                                             ") + msrhEnter
+	CT001 += Alltrim("             mesano,                                                                                             ") + msrhEnter
+	CT001 += Alltrim("             valor = SUM(valor)                                                                                  ") + msrhEnter
+	CT001 += Alltrim("      INTO " + msNomeTMP + "                                                                                     ") + msrhEnter
 	CT001 += Alltrim("      FROM VLRVLTRANS                                                                                            ") + msrhEnter
+	CT001 += Alltrim("      GROUP BY numemp,                                                                                           ") + msrhEnter
+	CT001 += Alltrim("               codfil,                                                                                           ") + msrhEnter
+	CT001 += Alltrim("               tipcol,                                                                                           ") + msrhEnter
+	CT001 += Alltrim("               numcad,                                                                                           ") + msrhEnter
+	CT001 += Alltrim("               mesano                                                                                            ") + msrhEnter
+
 	U_BIAMsgRun("Aguarde... Vale Transporte...",,{|| TcSQLExec(CT001)})
 
 	CT002 := Alltrim(" WITH PLNSAUDE                                                                                                   ") + msrhEnter
@@ -231,7 +243,7 @@ Static Function BIA881A()
 	CT002 += Alltrim("                 QTDDEP = ISNULL(                                                                                ") + msrhEnter
 	CT002 += Alltrim("          (                                                                                                      ") + msrhEnter
 	CT002 += Alltrim("              SELECT COUNT(*)                                                                                    ") + msrhEnter
-	CT002 += Alltrim("              FROM "+_cAliasSr+".dbo.r164dep dep(NOLOCK)                                                                ") + msrhEnter
+	CT002 += Alltrim("              FROM "+_cAliasSr+".dbo.r164dep dep(NOLOCK)                                                         ") + msrhEnter
 	CT002 += Alltrim("              WHERE dep.numemp = ass.numemp                                                                      ") + msrhEnter
 	CT002 += Alltrim("                    AND dep.tipcol = ass.tipcol                                                                  ") + msrhEnter
 	CT002 += Alltrim("                    AND dep.numcad = ass.numcad                                                                  ") + msrhEnter
@@ -245,7 +257,7 @@ Static Function BIA881A()
 	CT002 += Alltrim("                 QTDAGR = 0,                                                                                     ") + msrhEnter
 	CT002 += Alltrim("                 VLRAGR = ISNULL(ZB1.ZB1_VLRAGR, 0),                                                             ") + msrhEnter
 	CT002 += Alltrim("                 PRCAGR = ISNULL(ZB1.ZB1_DSCAGR, 0)                                                              ") + msrhEnter
-	CT002 += Alltrim("          FROM "+_cAliasSr+".dbo.r164ass ass(NOLOCK)                                                                    ") + msrhEnter
+	CT002 += Alltrim("          FROM "+_cAliasSr+".dbo.r164ass ass(NOLOCK)                                                             ") + msrhEnter
 	CT002 += Alltrim("               INNER JOIN " + RetSqlName("ZO0") + " ZO0(NOLOCK) ON ZO0.ZO0_FILIAL = '" + xFilial("ZO0") + "'     ") + msrhEnter
 	CT002 += Alltrim("                                        AND ZO0.ZO0_VERSAO = '" + _cVersao + "'                                  ") + msrhEnter
 	CT002 += Alltrim("                                        AND ZO0.ZO0_REVISA = '" + _cRevisa + "'                                  ") + msrhEnter
@@ -275,8 +287,8 @@ Static Function BIA881A()
 	CT003 := Alltrim(" WITH CTRLASO                                                                                                    ") + msrhEnter
 	CT003 += Alltrim("      AS (SELECT NUMCAD = numcad,                                                                                ") + msrhEnter
 	CT003 += Alltrim("                 DATARF = CONVERT(VARCHAR, MAX(datate), 112)                                                     ") + msrhEnter
-	CT003 += Alltrim("          FROM "+_cAliasSr+".dbo.r110fic a                                                                              ") + msrhEnter
-	CT003 += Alltrim("               INNER JOIN "+_cAliasSr+".dbo.r110mam b ON b.numemp = a.numemp                                            ") + msrhEnter
+	CT003 += Alltrim("          FROM "+_cAliasSr+".dbo.r110fic a                                                                       ") + msrhEnter
+	CT003 += Alltrim("               INNER JOIN "+_cAliasSr+".dbo.r110mam b ON b.numemp = a.numemp                                     ") + msrhEnter
 	CT003 += Alltrim("                                                  AND b.codfic = a.codfic                                        ") + msrhEnter
 	CT003 += Alltrim("                                                  AND b.tipaso <> 0                                              ") + msrhEnter
 	CT003 += Alltrim("          WHERE a.numemp = " + cEmpAnt + "                                                                       ") + msrhEnter
@@ -291,7 +303,7 @@ Static Function BIA881A()
 	CT004 += Alltrim("      AS (SELECT NUMEMP = numemp,                                                                                          ") + msrhEnter
 	CT004 += Alltrim("                 NUMCAD = numcad,                                                                                          ") + msrhEnter
 	CT004 += Alltrim("                 DATFER = CONVERT(VARCHAR, MIN(prgdat), 112)                                                               ") + msrhEnter
-	CT004 += Alltrim("          FROM "+_cAliasSr+".dbo.r040prg a(NOLOCK)                                                                                ") + msrhEnter
+	CT004 += Alltrim("          FROM "+_cAliasSr+".dbo.r040prg a(NOLOCK)                                                                         ") + msrhEnter
 	CT004 += Alltrim("          WHERE numemp = " + cEmpAnt + "                                                                                   ") + msrhEnter
 	CT004 += Alltrim("                AND tipcol = 1                                                                                             ") + msrhEnter
 	CT004 += Alltrim("                AND prgdat BETWEEN '" + _cAnoRef + "-01-01 00:00:00.000' AND '" + _cAnoRef + "-12-31 00:00:00.000'         ") + msrhEnter
@@ -304,7 +316,7 @@ Static Function BIA881A()
 	CT004 += Alltrim("                          THEN b.DATFER                                                                                    ") + msrhEnter
 	CT004 += Alltrim("                          ELSE ''                                                                                          ") + msrhEnter
 	CT004 += Alltrim("                      END INTO " + msNmTMP04 + "                                                                           ") + msrhEnter
-	CT004 += Alltrim("      FROM "+_cAliasSr+".dbo.r034fun a(NOLOCK)                                                                                    ") + msrhEnter
+	CT004 += Alltrim("      FROM "+_cAliasSr+".dbo.r034fun a(NOLOCK)                                                                             ") + msrhEnter
 	CT004 += Alltrim("           LEFT JOIN PRGFER1 b ON b.NUMEMP = a.numemp                                                                      ") + msrhEnter
 	CT004 += Alltrim("                                  AND b.NUMCAD = a.numcad                                                                  ") + msrhEnter
 	CT004 += Alltrim("      WHERE a.numemp = " + cEmpAnt + "                                                                                     ") + msrhEnter
@@ -397,12 +409,7 @@ Static Function BIA881A()
 	HR007 += Alltrim("                   WHEN ZO0.ZO0_ADCINS = '3' THEN zmSalMin * 0.2                                                     ") + msrhEnter
 	HR007 += Alltrim("                   ELSE 0                                                                                            ") + msrhEnter
 	HR007 += Alltrim("                 END,                                                                                                ") + msrhEnter
-	HR007 += Alltrim("       QTHEPRG = CASE                                                                                                ") + msrhEnter
-	HR007 += Alltrim("                   WHEN ZO0.ZO0_CODESC = 246 THEN 7.3333                                                             ") + msrhEnter
-	HR007 += Alltrim("                   WHEN ZO0.ZO0_CODESC = 247 THEN 7.3333                                                             ") + msrhEnter
-	HR007 += Alltrim("                   WHEN ZO0.ZO0_CODESC = 248 THEN 7.3333                                                             ") + msrhEnter
-	HR007 += Alltrim("                   ELSE 0                                                                                            ") + msrhEnter
-	HR007 += Alltrim("                 END,                                                                                                ") + msrhEnter
+	HR007 += Alltrim("       QTHEPRG = 0,                                                                                                  ") + msrhEnter
 	HR007 += Alltrim("       HEPROG  = (ZO0.ZO0_SALREF + CASE                                                                              ") + msrhEnter
 	HR007 += Alltrim("                                     WHEN ZO0.ZO0_ADCPER = '1' THEN ZO0.ZO0_SALREF * 0.3                             ") + msrhEnter
 	HR007 += Alltrim("                                     ELSE 0                                                                          ") + msrhEnter
@@ -410,12 +417,7 @@ Static Function BIA881A()
 	HR007 += Alltrim("                                           WHEN ZO0.ZO0_ADCINS = '4' THEN zmSalMin * 0.4                             ") + msrhEnter
 	HR007 += Alltrim("                                           WHEN ZO0.ZO0_ADCINS = '3' THEN zmSalMin * 0.2                             ") + msrhEnter
 	HR007 += Alltrim("                                           ELSE 0                                                                    ") + msrhEnter
-	HR007 += Alltrim("                                         END) / 220 * 2.0 * CASE                                                     ") + msrhEnter
-	HR007 += Alltrim("                                                              WHEN ZO0.ZO0_CODESC = 246 THEN 7.3333                  ") + msrhEnter
-	HR007 += Alltrim("                                                              WHEN ZO0.ZO0_CODESC = 247 THEN 7.3333                  ") + msrhEnter
-	HR007 += Alltrim("                                                              WHEN ZO0.ZO0_CODESC = 248 THEN 7.3333                  ") + msrhEnter
-	HR007 += Alltrim("                                                              ELSE 0                                                 ") + msrhEnter
-	HR007 += Alltrim("                                                            END,                                                     ") + msrhEnter
+	HR007 += Alltrim("                                         END) / 220 * 2.0 * 0,                                                       ") + msrhEnter
 	HR007 += Alltrim("       DSRPRG  = (ZO0.ZO0_SALREF + CASE                                                                              ") + msrhEnter
 	HR007 += Alltrim("                                     WHEN ZO0.ZO0_ADCPER = '1' THEN ZO0.ZO0_SALREF * 0.3                             ") + msrhEnter
 	HR007 += Alltrim("                                     ELSE 0                                                                          ") + msrhEnter
@@ -423,17 +425,8 @@ Static Function BIA881A()
 	HR007 += Alltrim("                                           WHEN ZO0.ZO0_ADCINS = '4' THEN zmSalMin * 0.4                             ") + msrhEnter
 	HR007 += Alltrim("                                           WHEN ZO0.ZO0_ADCINS = '3' THEN zmSalMin * 0.2                             ") + msrhEnter
 	HR007 += Alltrim("                                           ELSE 0                                                                    ") + msrhEnter
-	HR007 += Alltrim("                                         END) / 220 * 2.0 * CASE                                                     ") + msrhEnter
-	HR007 += Alltrim("                                                              WHEN ZO0.ZO0_CODESC = 246 THEN 7.3333                  ") + msrhEnter
-	HR007 += Alltrim("                                                              WHEN ZO0.ZO0_CODESC = 247 THEN 7.3333                  ") + msrhEnter
-	HR007 += Alltrim("                                                              WHEN ZO0.ZO0_CODESC = 248 THEN 7.3333                  ") + msrhEnter
-	HR007 += Alltrim("                                                              ELSE 0                                                 ") + msrhEnter
-	HR007 += Alltrim("                                                            END / 25 * 5,                                            ") + msrhEnter
-	HR007 += Alltrim("       QTADNOT = CASE                                                                                                ") + msrhEnter
-	HR007 += Alltrim("                   WHEN ZO0.ZO0_CODESC = 247 THEN 4                                                                  ") + msrhEnter
-	HR007 += Alltrim("                   WHEN ZO0.ZO0_CODESC = 248 THEN 192                                                                ") + msrhEnter
-	HR007 += Alltrim("                   ELSE 0                                                                                            ") + msrhEnter
-	HR007 += Alltrim("                 END,                                                                                                ") + msrhEnter
+	HR007 += Alltrim("                                         END) / 220 * 2.0 * 0 / 25 * 5,                                              ") + msrhEnter
+	HR007 += Alltrim("       QTADNOT = ZOK.ZOK_HORAS,                                                                                      ") + msrhEnter
 	HR007 += Alltrim("       ADCNOTU = (ZO0.ZO0_SALREF + CASE                                                                              ") + msrhEnter
 	HR007 += Alltrim("                                     WHEN ZO0.ZO0_ADCPER = '1' THEN ZO0.ZO0_SALREF * 0.3                             ") + msrhEnter
 	HR007 += Alltrim("                                     ELSE 0                                                                          ") + msrhEnter
@@ -441,11 +434,7 @@ Static Function BIA881A()
 	HR007 += Alltrim("                                           WHEN ZO0.ZO0_ADCINS = '4' THEN zmSalMin * 0.4                             ") + msrhEnter
 	HR007 += Alltrim("                                           WHEN ZO0.ZO0_ADCINS = '3' THEN zmSalMin * 0.2                             ") + msrhEnter
 	HR007 += Alltrim("                                           ELSE 0                                                                    ") + msrhEnter
-	HR007 += Alltrim("                                         END) / 220 * 0.2 * CASE                                                     ") + msrhEnter
-	HR007 += Alltrim("                                                              WHEN ZO0.ZO0_CODESC = 247 THEN 4                       ") + msrhEnter
-	HR007 += Alltrim("                                                              WHEN ZO0.ZO0_CODESC = 248 THEN 192                     ") + msrhEnter
-	HR007 += Alltrim("                                                              ELSE 0                                                 ") + msrhEnter
-	HR007 += Alltrim("                                                            END,                                                     ") + msrhEnter
+	HR007 += Alltrim("                                         END) / 220 * 0.2 * ZOK.ZOK_HORAS,                                           ") + msrhEnter
 	HR007 += Alltrim("       PREMPROD = CASE                                                                                               ") + msrhEnter
 	HR007 += Alltrim("                    WHEN ZO0.ZO0_BNADC LIKE '%002%' THEN zmPrmPrd                                                    ") + msrhEnter
 	HR007 += Alltrim("                    ELSE 0                                                                                           ") + msrhEnter
@@ -526,18 +515,18 @@ Static Function BIA881A()
 	HR007 += Alltrim("  LEFT JOIN " + RetSqlName("ZB4") + " ZB4 ON ZB4.ZB4_FILIAL = '" + xFilial("ZB4") + "'                               ") + msrhEnter
 	HR007 += Alltrim("                      AND ZB4.ZB4_CATEGF = ZO0.ZO0_CTGFUN                                                            ") + msrhEnter
 	HR007 += Alltrim("                      AND ZB4.D_E_L_E_T_ = ' '                                                                       ") + msrhEnter
-	HR007 += Alltrim("  LEFT JOIN "+_cAliasSr+".dbo.r024car CAR ON CAR.codcar = CONVERT(NUMERIC, ZO0.ZO0_CARGO)                                   ") + msrhEnter
+	HR007 += Alltrim("  LEFT JOIN "+_cAliasSr+".dbo.r024car CAR(NOLOCK) ON CAR.codcar = CONVERT(NUMERIC, ZO0.ZO0_CARGO)                    ") + msrhEnter
 	HR007 += Alltrim("  LEFT JOIN XVARIAVS XVS ON XVS.CHVVRS = '1'                                                                         ") + msrhEnter
 	HR007 += Alltrim("  LEFT JOIN MNTVIDAX RHK ON RHK.NUMCAD = ZO0.ZO0_MAT                                                                 ") + msrhEnter
 	HR007 += Alltrim("  LEFT JOIN VLRSESMT ZB0 ON ZB0.ZB0_MATR = ZO0.ZO0_MAT                                                               ") + msrhEnter
 	HR007 += Alltrim("  LEFT JOIN ENCTRABA ZB2 ON ZB2.CATGFU = ZO0.ZO0_CTGFUN                                                              ") + msrhEnter
 	HR007 += Alltrim("  LEFT JOIN DTEXAMES DTE ON DTE.NUMCAD = ZO0.ZO0_MAT                                                                 ") + msrhEnter
-	HR007 += Alltrim("  LEFT JOIN " + RetSqlName("ZOK") + " ZOK ON ZOK.ZOK_FILIAL = '" + xFilial("ZOK") + "'                               ") + msrhEnter
-	HR007 += Alltrim("       AND ZOK.ZOK_CODESC = ZO0.ZO0_CODESC       			                                                           ") + msrhEnter
-	HR007 += Alltrim("       AND ZOK.ZOK_VERSAO = ZO0.ZO0_VERSAO                                                                           ") + msrhEnter
-	HR007 += Alltrim("       AND ZOK.ZOK_REVISA = ZO0.ZO0_REVISA                                                                       ") + msrhEnter
-	HR007 += Alltrim("       AND ZOK.ZOK_ANOREF = ZO0.ZO0_ANOREF                                                                       ") + msrhEnter
-	HR007 += Alltrim("       AND ZOK.D_E_L_E_T_ = ' '                                                                       ") + msrhEnter
+	HR007 += Alltrim("  LEFT JOIN " + RetSqlName("ZOK") + " ZOK(NOLOCK) ON ZOK.ZOK_FILIAL = '" + xFilial("ZOK") + "'                       ") + msrhEnter
+	HR007 += Alltrim("                      AND ZOK.ZOK_VERSAO = ZO0.ZO0_VERSAO                                                            ") + msrhEnter
+	HR007 += Alltrim("                      AND ZOK.ZOK_REVISA = ZO0.ZO0_REVISA                                                            ") + msrhEnter
+	HR007 += Alltrim("                      AND ZOK.ZOK_ANOREF = ZO0.ZO0_ANOREF                                                            ") + msrhEnter
+	HR007 += Alltrim("                      AND ZOK.ZOK_CODESC = ZO0.ZO0_CODESC       			                                           ") + msrhEnter
+	HR007 += Alltrim("                      AND ZOK.D_E_L_E_T_ = ' '                                                                       ") + msrhEnter
 	HR007 += Alltrim(" WHERE ZO0.ZO0_FILIAL = '" + xFilial("ZO0") + "'                                                                     ") + msrhEnter
 	HR007 += Alltrim("       AND ZO0.ZO0_VERSAO = '" + _cVersao + "'                                                                       ") + msrhEnter
 	HR007 += Alltrim("       AND ZO0.ZO0_REVISA = '" + _cRevisa + "'                                                                       ") + msrhEnter

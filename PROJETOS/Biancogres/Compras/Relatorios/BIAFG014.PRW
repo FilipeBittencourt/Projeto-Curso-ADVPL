@@ -101,6 +101,8 @@ Static Function fQryDados(_aEmps)
 	oExcel:AddCelula()
 	oExcel:AddCelula("Empresa"					,0,'C',cCab1Fon,cCab1TamF,cCab1CorF,.T.,.T.,cCab1Fun ,.T.,.T.,.T.,.T.)
 	oExcel:AddCelula("Documento"					,0,'C',cCab1Fon,cCab1TamF,cCab1CorF,.T.,.T.,cCab1Fun ,.T.,.T.,.T.,.T.)
+	oExcel:AddCelula("Serie"             , 0, "C", cCab1Fon, cCab1TamF, cCab1CorF, .T., .T., cCab1Fun, .T., .T., .T., .T.)
+	oExcel:AddCelula("Item"             , 0, "C", cCab1Fon, cCab1TamF, cCab1CorF, .T., .T., cCab1Fun, .T., .T., .T., .T.)
 	oExcel:AddCelula("Espécie"			 		,0,'C',cCab1Fon,cCab1TamF,cCab1CorF,.T.,.T.,cCab1Fun ,.T.,.T.,.T.,.T.)
 	oExcel:AddCelula("Emissão"				,0,'C',cCab1Fon,cCab1TamF,cCab1CorF,.T.,.T.,cCab1Fun ,.T.,.T.,.T.,.T.)
 	oExcel:AddCelula("Digitação"			,0,'C',cCab1Fon,cCab1TamF,cCab1CorF,.T.,.T.,cCab1Fun ,.T.,.T.,.T.,.T.)
@@ -126,6 +128,8 @@ Static Function fQryDados(_aEmps)
 			%NoParser%
 			SELECT  %Exp:_aEmps[_nI] % EMPR ,
 			        D1_DOC ,
+					D1_SERIE,
+					D1_ITEM,
 			        F1_ESPECIE,
 			        D1_EMISSAO ,
 			        D1_DTDIGIT ,
@@ -177,6 +181,8 @@ Static Function fQryDados(_aEmps)
 		
 				oExcel:AddCelula( (_cAlias)->EMPR											,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
 				oExcel:AddCelula( (_cAlias)->D1_DOC							,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+				oExcel:AddCelula( (_cAlias)->D1_SERIE							,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
+				oExcel:AddCelula( (_cAlias)->D1_ITEM							,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
 				oExcel:AddCelula( (_cAlias)->F1_ESPECIE					,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
 				oExcel:AddCelula( DToC(StoD((_cAlias)->D1_EMISSAO))							,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)
 				oExcel:AddCelula( DToC(StoD((_cAlias)->D1_DTDIGIT))														,0		 					,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.)

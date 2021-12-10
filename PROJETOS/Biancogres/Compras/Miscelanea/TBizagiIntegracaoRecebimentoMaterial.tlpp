@@ -1,0 +1,467 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "TOPCONN.CH"
+
+/*/{Protheus.doc} TBizagiIntegracaoRecebimentoMaterial
+@author Filipe Bittencourt (Facile)
+@since 13/10/2021
+@project 28966
+@version 1.0
+@description Job para Integração das Recebimento de Material vindas do BIZAGI, substituindo o fonte XXXXXX
+@observation O fonte corresponde ao JOB da tela XXXXXX.PRW
+@type function
+/*/
+
+//U_BIAFF092
+User Function BIAFF092()
+
+    Local oObj := Nil
+    Local cMSG := ""
+
+   /*
+    cMSG:= "TBizagiIntegracaoRecebimentoMaterial:BIAFF091() => Inicio empresa "+cEmpAnt+"/01 em "+cValToChar(dDataBase)+" - "+Time()+" "
+    ConOut(cMSG)
+    oObj := TBizagiIntegracaoRecebimentoMaterial():New()
+    oObj:Processa()
+    cMSG:= "TBizagiIntegracaoRecebimentoMaterial:BIAFF091() => Fim  empresa "+cEmpAnt+"/01 em "+cValToChar(dDataBase)+" - "+Time()+" "
+    ConOut(cMSG)
+
+    */
+
+
+
+    // Para testes, apagar depois..
+    Local aSM0 := {"01"} //{"01","05","06","07","13","14"}
+    Local nI   := 1
+    For nI := 1 To Len(aSM0)
+
+        If Select("SX6") <= 0
+            RPCSetEnv(aSM0[nI], "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+        EndIf
+
+        cMSG:= "TBizagiIntegracaoPreRequisicao:BIAFF091() => Inicio empresa "+aSM0[nI]+"/01 em "+cValToChar(dDataBase)+" - "+Time()+" "
+        ConOut(cMSG)
+
+        oObj := TBizagiIntegracaoPreRequisicao():New()
+        oObj:Processa()
+
+        cMSG:= "TBizagiIntegracaoPreRequisicao:BIAFF091() => Fim  empresa "+aSM0[nI]+"/01 em "+cValToChar(dDataBase)+" - "+Time()+" "
+        ConOut(cMSG)
+
+        RpcClearEnv()
+
+    Next nI
+  */
+
+
+Return()
+
+
+    Class TBizagiIntegracaoRecebimentoMaterial From LongClassName
+
+        Data aErro
+        Data cEmail
+        Data cProcessoBizagi
+
+
+        Public  Method New() Constructor
+        Public  Method Processa()
+        Private Method ValidaPreRequisicao(cQry)
+        Private Method InsertPreRequisicao(cQry)
+        Private Method Status(cStatus, nId, cLog, cNewCod)
+        Private Method GetNewCodigo()
+        Private Method LogMail()
+        Private Method CustoUnitarioProduto(cCod,cLocal)
+
+
+    EndClass
+
+Method New(lJob) Class TBizagiIntegracaoRecebimentoMaterial
+
+    ::aErro   := {}
+    ::cProcessoBizagi := ""
+    ::cEmail := U_GetBiaPar("MV_EMAILINTBIZCLI", "sistemas.ti@biancogres.com.br")
+
+
+Return(Self)
+
+Method Processa() Class TBizagiIntegracaoRecebimentoMaterial
+
+    Local  cQry     := GetNextAlias()
+    Local _cSQL     := ""
+
+    _cSql += "  SELECT "  + CRLF
+    _cSql += "  ID " + CRLF
+    _cSql += " ,CODIGO_PRODUTO AS  PRODUTO "  + CRLF
+    _cSql += " ,QUANTIDADE AS QTD "  + CRLF
+    _cSql += " ,LOCAL LOCALIZA"  + CRLF
+    _cSql += " ,CONTA "  + CRLF
+    _cSql += " ,TAG "  + CRLF
+    _cSql += " ,APLICACAO "  + CRLF
+    _cSql += " ,MELHORIA "  + CRLF
+    _cSql += " ,DRIVER "  + CRLF
+    _cSql += " ,JUSTIFICATIVA_DRIVER as OBSDRIVE "  + CRLF
+    _cSql += " ,PARADA "  + CRLF
+    _cSql += " ,ISNULL(EMPRESA,'01') AS EMPRESA "  + CRLF
+    _cSql += " ,BZNUMPROC  "  + CRLF
+    _cSql += " ,CLASSE_VALOR AS CLVLR  "  + CRLF
+    _cSql += " ,MATRICULA AS  MATRIC  "  + CRLF
+    _cSql += " ,TIPO  "  + CRLF
+    _cSql += " ,CLIENTE_AI as CLIYSI"  + CRLF
+    _cSql += " ,SUBITEM_PROJ AS YSUBITE"  + CRLF
+    _cSql += " ,ITEM_CONTA AS ITEMCTA"  + CRLF
+    _cSql += " FROM BZINTEGRACAO_PRE_REQUISICAO  "  + CRLF
+
+	/*
+	  STATUS ANTIGO              |   STATUS NOVO
+		IB = INCLUIDO PELO BIZAGI  |   A = AGUARDADNDO PROCESSAMENTO e INCLUIDO PELO BIZAGI
+		AP = ATUALIZADO PROTHEIS   |   P = PROCESSADO PELO PROTHEUS
+		ER = ERRO'                 |   E = ERRO
+	*/
+
+    _cSql += " WHERE  STATUS = 'A' "  + CRLF
+    _cSql += " AND ISNULL(EMPRESA,'01') = '"+cEmpAnt+"'"  + CRLF
+
+
+    _cSql += "  AND NOT EXISTS (SELECT 1  "  + CRLF
+    _cSql += "  FROM " + RETSQLNAME("SZI") + " (NOLOCK) " +  CRLF
+    _cSql += " 	WHERE ZI_YBIZAGI = BZNUMPROC "  + CRLF
+    _cSql += "  AND D_E_L_E_T_ = '' ) "  + CRLF
+
+
+    // ORDENAR SEMPRE PELO BZNUMPROC, POIS A LÓGICA DE INSERT na tabela SZI PRECISA ESTAR ORDENADO.
+    _cSql += " ORDER BY  BZNUMPROC"  + CRLF
+
+    TcQuery _cSQL New Alias (cQry)
+
+    If (cQry)->(!EOF())
+
+        ::InsertPreRequisicao(cQry)
+
+    EndIf
+
+    (cQry)->(DbCloseArea())
+
+    if Len(::aErro) > 0
+        ::LogMail()
+    EndiF
+
+Return()
+
+
+Method ValidaPreRequisicao(cQry) Class TBizagiIntegracaoRecebimentoMaterial
+
+    Local lRet         := .T.
+    Local cMsgErr      := "<br>"
+
+    // validando produto
+    If !Empty((cQry)->PRODUTO)
+
+        DBSelectArea("SB1")
+        SB1->(DBSetOrder(1)) // B1_FILIAL, B1_COD, R_E_C_N_O_, D_E_L_E_T_
+
+        If SB1->(DBseek(xFilial("SB1") + (cQry)->PRODUTO))
+            lRet := .T.
+        Else
+
+            lRet    := .F.
+            cMsgErr += "Processo Bizagi: "+(cQry)->BZNUMPROC+ " <br>  "
+            cMsgErr += "Motivo: Produto não existe no protheus  <br/> "
+            cMsgErr += "Produto: "+ Alltrim((cQry)->PRODUTO)+"  <br/> "
+            ::Status("E", (cQry)->ID, cMsgErr, (cQry)->BZNUMPROC)
+
+        EndIf
+
+    EndIf
+
+Return(lRet)
+
+Method InsertPreRequisicao(cQry) Class TBizagiIntegracaoRecebimentoMaterial
+
+
+    Local _cErro	  :=	""
+    Local cMsgErr	  :=	""
+    Local cAuxBIZ   := ""
+    ::cProcessoBizagi := ""
+
+    DbSelectArea("ZZY")
+    DbSetOrder(3)
+    DbSeek(xFilial("ZZY")+(cQry)->LOCALIZA)
+
+    While (cQry)->(!EOF())
+
+        If ::ValidaPreRequisicao(cQry)
+
+            BEGIN TRANSACTION
+
+                if (cQry)->BZNUMPROC != cAuxBIZ
+
+                    ::cProcessoBizagi := ::GetNewCodigo()
+
+                    //Cabeçalho
+                    RecLock("SZI",.T.)
+                    SZI->ZI_FILIAL	  :=	xFilial("SZI")
+                    SZI->ZI_DOC		  :=	::cProcessoBizagi
+                    SZI->ZI_TIPO	  :=	(cQry)->TIPO
+                    SZI->ZI_EMISSAO	  :=	Date()
+                    SZI->ZI_CLVL  	  :=	 (cQry)->CLVLR
+                    SZI->ZI_CC		  :=	U_B902BCC(SZI->ZI_CLVL)
+                    SZI->ZI_MATRIC	  :=	(cQry)->MATRIC
+                    //	ZZY_FILIAL, ZZY_MATRIC, R_E_C_N_O_, D_E_L_E_T_
+                    SZI->ZI_NOME	  :=     Posicione("ZZY",3,xFilial("ZZY")+(cQry)->MATRIC,"ZZY_NOME")
+                    SZI->ZI_BAIXA	  :=	"N"
+                    SZI->ZI_EMPRESA	  :=	cEmpAnt
+                    SZI->ZI_YLOCAL	  :=	(cQry)->LOCALIZA
+                    SZI->ZI_YSI		  :=	(cQry)->CLIYSI
+                    SZI->ZI_ITEMCTA	  :=	(cQry)->ITEMCTA
+                    SZI->ZI_YSUBITE	  :=	(cQry)->YSUBITE
+
+                    If FIELDPOS("ZI_YBIZAGI") > 0
+                        SZI->ZI_YBIZAGI	:=	(cQry)->BZNUMPROC
+                    EndIf
+
+                    SZI->(MsUnlock())
+
+                EndIf
+
+
+                Reclock("SZJ",.T.)
+                SZJ->ZJ_FILIAL	:=	xFilial("SZJ")
+                SZJ->ZJ_DOC		  :=	::cProcessoBizagi
+                SZJ->ZJ_COD	   	:=	(cQry)->PRODUTO
+                SZJ->ZJ_DESCRI	:=	POSICIONE("SB1",1,xFilial("SB1")+(cQry)->PRODUTO,"B1_DESC")
+                SZJ->ZJ_LOCAL	  :=	(cQry)->LOCALIZA
+                SZJ->ZJ_UM		  :=	POSICIONE("SB1",1,xFilial("SB1")+(cQry)->PRODUTO,"B1_UM")
+                SZJ->ZJ_QUANT	  :=	(cQry)->QTD
+                SZJ->ZJ_VLRTOT	:=	Iif(SZI->ZI_TIPO == "DU",0.01,::CustoUnitarioProduto(SZJ->ZJ_COD,SZJ->ZJ_LOCAL) * SZJ->ZJ_QUANT)
+                SZJ->ZJ_APLIC	  :=	Iif(Empty((cQry)->APLICACAO),'0',(cQry)->APLICACAO)
+                SZJ->ZJ_TAG		  :=	(cQry)->TAG
+                SZJ->ZJ_YLOCALI	:=	Posicione("ZCN",2,xFilial("ZCN")+SZJ->ZJ_COD+SZJ->ZJ_LOCAL,"ZCN_LOCALI")
+                SZJ->ZJ_YMELHOR	:=	Iif((cQry)->MELHORIA == "000000", "", (cQry)->MELHORIA) //Verificar Melhoria
+                SZJ->ZJ_EMPRESA	:=	cEmpAnt
+                SZJ->ZJ_EMPDEST	:=	cEmpAnt
+                SZJ->ZJ_CONTA 	:=	(cQry)->CONTA
+                SZJ->ZJ_CLVL  	:=	SZI->ZI_CLVL
+                SZJ->ZJ_YPARADA	:=	Iif(UPPER((cQry)->PARADA) == 'TRUE','S','N')
+                SZJ->ZJ_QTAPROV	:=	SZJ->ZJ_QUANT
+                SZJ->ZJ_YDRIVER	:=	Iif((cQry)->DRIVER == "-1","",(cQry)->DRIVER)
+                SZJ->ZJ_YJTDRV	:=	(cQry)->OBSDRIVE
+
+
+                If len(AllTrim((cQry)->MATRIC)) >= 11
+                    SZJ->ZJ_YMATORI :=  AllTrim((cQry)->MATRIC)
+                EndIf
+
+                SZJ->(MsUnlock())
+
+
+                SB2->(DbSetOrder(1))
+                If !SB2->(DbSeek(xFilial("SB2")+SZJ->ZJ_COD+SZJ->ZJ_LOCAL))
+                    CriaSb2(SZJ->ZJ_COD,SZJ->ZJ_LOCAL)
+                    If !(cQry)->TIPO  $ "DU_DN"
+
+                        _cErro += "Processo Bizagi: "+(cQry)->BZNUMPROC+ " <br> "
+                        _cErro += "Motivo: Estoque Insuficiente  <br/> "
+                        _cErro += "Produto: "+ Alltrim(SZJ->ZJ_COD)+" <br/> "
+                        _cErro += "Quantidade requerida: " + Alltrim(Str(SZJ->ZJ_QUANT)) + "  <br/> "
+                        _cErro += "Quantidade em  Estoque: " + Alltrim(Str(0))  + "  <br/> "
+
+
+                    EndIf
+
+                Else
+
+                    If !(cQry)->TIPO $ "DU_DN"
+                        If SZJ->ZJ_QUANT > (SB2->B2_QATU - SB2->B2_RESERVA)
+
+                            _cErro += "Processo Bizagi: "+(cQry)->BZNUMPROC+ " <br> "
+                            _cErro += "Motivo: Estoque Insuficiente <br/> "
+                            _cErro += "Produto: "+ Alltrim(SZJ->ZJ_COD)+" <br/> "
+                            _cErro += "Quantidade requerida: " + Alltrim(Str(SZJ->ZJ_QUANT)) + "  <br/> "
+                            _cErro += "Quantidade em  Estoque: " +  Alltrim(Str(SB2->B2_QATU - SB2->B2_RESERVA))  + "  <br/> "
+
+                        EndIf
+                    EndIf
+
+                EndIf
+
+                If SZI->ZI_TIPO == 'RE'
+
+                    _cSql := " UPDATE "+RetSqlName("SB2")+" SET " + CRLF
+                    _cSql += " B2_RESERVA = B2_RESERVA + "+Alltrim(Str(SZJ->ZJ_QTAPROV))+" "+ CRLF
+                    _cSql += " WHERE B2_COD = '"+SZJ->ZJ_COD+"'  "+ CRLF
+                    _cSql += " AND B2_LOCAL = '"+SZJ->ZJ_LOCAL+"'  "+ CRLF
+                    _cSql += " AND D_E_L_E_T_ = '' "+ CRLF
+
+                    TcSQLExec(_cSql)
+
+                EndIf
+
+
+                If !Empty(_cErro)
+
+                    DisarmTransaction()
+
+                Else
+
+                    _cSql	:= "  UPDATE BZINTEGRACAO_PRE_REQUISICAO SET "+ CRLF
+                    _cSql	+= "  STATUS = 'P' "+ CRLF
+                    _cSql	+= " ,DOCUMENTO = '"+SZI->ZI_DOC+"' "+ CRLF
+                    _cSql	+= " ,DTINTEGRA = '"+DTOS(dDataBase)+"' "+ CRLF
+                    _cSql	+= " ,HRINTEGRA = '"+Time()+"' "+ CRLF
+                    _cSql	+= "  WHERE ID  = '"+CValTochar((cQry)->ID)+"' "+ CRLF
+
+                    TcSqlExec(_cSql)
+
+                EndIf
+
+            END TRANSACTION
+
+        EndIf
+
+
+        If !Empty(_cErro)
+
+            cMsgErr := "<br><br>"
+            cMsgErr += _cErro
+
+            ::Status("E", (cQry)->ID, cMsgErr, (cQry)->BZNUMPROC)
+
+        EndIf
+
+        cAuxBIZ := (cQry)->BZNUMPROC
+        (cQry)->(DbSkip())
+
+    EndDo
+
+Return()
+
+Method GetNewCodigo() Class TBizagiIntegracaoRecebimentoMaterial
+
+    Local _msDocSZI := ""
+
+    _msDocSZI := GetSxENum("SZI","ZI_DOC")
+    SZI->(dbSetOrder(1))
+    If SZI->(dbSeek(xFilial("SZI") + _msDocSZI))
+        While .T.
+            _msDocSZI := GetSxENum("SZI","ZI_DOC")
+            SZI->(dbSetOrder(1))
+            If !SZI->(dbSeek(xFilial("SZI") + _msDocSZI))
+                Exit
+            EndIf
+        End
+    EndIf
+
+Return _msDocSZI
+
+Method Status(cStatus, nId, cLog, cNewCod) Class TBizagiIntegracaoRecebimentoMaterial
+
+    Local lRet := .T.
+    Local cSql := ""
+
+    Default cStatus := "" // E=Erro; P=Processado; A=Aguard. Processamento
+    Default cLog := ""
+    Default nId := 0
+    Default cNewCod := ""
+
+    cSql := " UPDATE dbo.BZINTEGRACAO_PRE_REQUISICAO SET "
+
+    cSql += "   STATUS   = '"+cStatus+"' "+CRLF
+    cSql += " , LOG      = '"+StrTran(cLog,"'"," ")+"'  "+CRLF
+
+    cSql += " , DTINTEGRA = '"+DTOS(dDataBase)+"'  "+CRLF
+    cSql += " , HRINTEGRA = '"+TIME()+"' "+CRLF
+
+    cSql += " WHERE ID = "+cValToChar(nId)+" "+CRLF
+
+    lRet := TcSQLExec(cSql) == 0
+
+    If !lRet
+
+        ConOut("TBizagiIntegracaoRecebimentoMaterial: TCSQLError() -> " + TCSQLError())
+
+    EndIf
+
+    If cStatus == "E"
+        aAdd(::aErro, {cNewCod, cLog})
+    EndIf
+
+Return(lRet)
+
+Method LogMail() Class TBizagiIntegracaoRecebimentoMaterial
+
+    Local nW    := 0
+    Local cHtml := ""
+    Local oMail := TAFMail():New()
+
+    If Len(::aErro) > 0
+
+        cHtml += '<style type="text/css">'
+        cHtml += '.tg  {border-collapse:collapse;border-color:#aaa;border-spacing:0;}'
+        cHtml += '.tg td{background-color:#fff;border-color:#aaa;border-style:solid;border-width:1px;color:#333;'
+        cHtml += '  font-family:Arial, sans-serIf;font-size:14px;overflow:hidden;padding:10px 5px;word-break:normal;}'
+        cHtml += '.tg th{background-color:#f38630;border-color:#aaa;border-style:solid;border-width:1px;color:#fff;'
+        cHtml += '  font-family:Arial, sans-serIf;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}'
+        cHtml += '.tg .tg-zw5y{border-color:inherit;text-align:center;text-decoration:underline;vertical-align:top}'
+        cHtml += '.tg .tg-0lax{text-align:left;vertical-align:top}'
+        cHtml += '</style>'
+        cHtml += '<table width="100%" class="tg">'
+        cHtml += '<thead>'
+        cHtml += '  <tr>'
+        cHtml += '    <th class="tg-zw5y">' + cEmpAnt + cFilAnt + ' - Pré-Requisição</th>'
+        cHtml += '  </tr>'
+        cHtml += '</thead>'
+        cHtml += '<tbody>'
+
+        For nW := 1 To Len(::aErro)
+
+            cHtml += '  <tr>'
+            cHtml += '    <td class="tg-0lax">' + ::aErro[nW][2] + '</td>'
+            cHtml += '  </tr>'
+
+        Next nW
+
+        cHtml += '</tbody>'
+        cHtml += '</table>'
+
+        oMail:cTo := ::cEmail
+        oMail:cSubject := "TBizagiIntegracaoRecebimentoMaterial - Inconsistencias"
+        oMail:cBody := cHtml
+        oMail:Send()
+
+    EndIf
+
+Return()
+
+Method CustoUnitarioProduto(_cCod,_cLocal) Class TBizagiIntegracaoRecebimentoMaterial
+
+    Local _nCm		:=	0
+    Local _cAlias	:=	GetNextAlias()
+
+    BeginSql Alias _cAlias
+		%NoParser%
+		SELECT ISNULL(B2_CM1,0) B2_CM1
+		FROM %TABLE:SB2% (NOLOCK)
+		WHERE B2_FILIAL = %XFILIAL:SB2%
+		AND B2_COD = %Exp:_cCod%
+		AND B2_LOCAL = %Exp:_cLocal%
+		AND %NotDel%
+    EndSql
+
+    _nCm	:=	(_cAlias)->B2_CM1
+
+    (_cAlias)->(DbCloseArea())
+
+Return _nCm
+
+
+/*
+
+SELECT BZNUMPROC, * FROM  BZINTEGRACAO_PRE_REQUISICAO  WHERE  BZNUMPROC IN ('PRQ-037809','PRQ-000093','PRQ-000094')
+SELECT * FROM SZI010 WHERE ZI_YBIZAGI IN ('PRQ-037809','PRQ-000093','PRQ-000094')
+SELECT * FROM SZJ010 WHERE ZJ_DOC IN ( SELECT ZI_DOC FROM SZI010 WHERE ZI_YBIZAGI IN ('PRQ-037809','PRQ-000093','PRQ-000094'))
+
+--delete from SZJ010 WHERE ZJ_DOC IN ( SELECT ZI_DOC FROM SZI010 WHERE ZI_YBIZAGI IN ('PRQ-037809','PRQ-000093','PRQ-000094'))
+--delete from SZI010 WHERE ZI_YBIZAGI IN ('PRQ-037809','PRQ-000093','PRQ-000094')
+--UPDATE BZINTEGRACAO_PRE_REQUISICAO SET STATUS = 'A', DOCUMENTO = '' WHERE  BZNUMPROC IN ('PRQ-037809','PRQ-000093','PRQ-000094')
+
+*/

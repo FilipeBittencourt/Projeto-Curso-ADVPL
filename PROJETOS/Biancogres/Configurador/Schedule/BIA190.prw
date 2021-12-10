@@ -26,7 +26,7 @@ User Function BIA190()
 	Private xViaSched 	:= (Select("SX6")== 0)
 	Private xv_Emps 	:= {} 
 
-	xv_Emps := U_BAGtEmpr("01_05")
+	xv_Emps := U_BAGtEmpr("01_05_13_14")
 
 
 	For nI := 1 to Len(xv_Emps)
@@ -248,10 +248,12 @@ Static Function GeraCab()
 		C_HTML += '    <th width="900" scope="col"><div align="left"> CLIENTE: '+Alltrim(QRY->A1_COD)+ " - " + ALLTRIM(Posicione("SA1",1,xFilial("SA1")+QRY->A1_COD+QRY->A1_LOJA,"A1_NOME"))+' '
 	EndIf    
 
-	If CEmpAnt = "05"                                                                                                
+	If cEmpAnt = "05"                                                                                                
 		C_HTML += '<br><br>  EMPRESA: INCESA REVESTIMENTO CERÂMICO LTDA </th> '
-	ElseIf CEmpAnt = "13"
+	ElseIf cEmpAnt = "13"
 		C_HTML += '<br><br>  EMPRESA: MUNDIALLI  </th> '
+	ElseIf cEmpAnt = "14"
+		C_HTML += '<br><br>  EMPRESA: BIANCOGRES VINILICO LTDA </th> '		
 	Else                                                                   
 		C_HTML += '<br><br>  EMPRESA: BIANCOGRES CERÂMICA S/A </th> '
 	EndIf

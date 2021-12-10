@@ -22,7 +22,7 @@
 @author Tiago Rossini Coradini
 @since 09/01/2020
 @version 1.0
-@description Compatibilizador - Projeto D-01 
+@description  - Projeto D-01 
 @obs Projeto: D-01 - Custos dos Projetos
 @type Function
 /*/

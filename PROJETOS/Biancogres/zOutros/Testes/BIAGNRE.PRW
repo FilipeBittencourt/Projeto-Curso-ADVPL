@@ -1,21 +1,11 @@
-#include "protheus.ch"
-#include "tbiconn.ch"
+#include "PROTHEUS.CH"
+#include "TOPCONN.CH"
 
 
-//-----------------------------------------------------------------------
-/*/{Protheus.doc} gnreXMLEnv
-Função que monta o XML único de envio para GNRE ao TSS.
 
-@author Simone dos Santos de Oliveira
-@since 24.06.2015
-@version 11.80
+user function ZGnreXMLEnv( cAliasSF6 )
 
-@return	cString		Tag montada em forma de string.
-/*/
-//-----------------------------------------------------------------------
-user function GnreXMLEnv( cAliasSF6 )
-
-  local	aDestinat	:= {}
+  local	aDestinat	  := {}
   local 	aTelEmi		:= {}
   local 	aInfAdic	:= {}
 

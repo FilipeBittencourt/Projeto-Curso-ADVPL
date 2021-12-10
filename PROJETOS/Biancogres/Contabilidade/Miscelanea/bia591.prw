@@ -115,18 +115,18 @@ Static Function fBIA591C()
 	xfMensCompl += "Data Encerramento igual branco"
 
 	BeginSql Alias M001
-	SELECT COUNT(*) CONTAD
-	FROM %TABLE:ZB5% ZB5
-	WHERE ZB5_FILIAL = %xFilial:ZB5%
-	AND ZB5.ZB5_VERSAO = %Exp:_cVersao%
-	AND ZB5.ZB5_REVISA = %Exp:_cRevisa%
-	AND ZB5.ZB5_ANOREF = %Exp:_cAnoRef%
-	AND RTRIM(ZB5.ZB5_TPORCT) = 'CAPEX'
-	AND ZB5.ZB5_STATUS = 'A'
-	AND ZB5.ZB5_DTDIGT = ''
-	AND ZB5.ZB5_DTCONS = ''
-	AND ZB5.ZB5_DTENCR = ''
-	AND ZB5.%NotDel%
+		SELECT COUNT(*) CONTAD
+		FROM %TABLE:ZB5% ZB5
+		WHERE ZB5_FILIAL = %xFilial:ZB5%
+		AND ZB5.ZB5_VERSAO = %Exp:_cVersao%
+		AND ZB5.ZB5_REVISA = %Exp:_cRevisa%
+		AND ZB5.ZB5_ANOREF = %Exp:_cAnoRef%
+		AND RTRIM(ZB5.ZB5_TPORCT) = 'CAPEX'
+		AND ZB5.ZB5_STATUS = 'A'
+		AND ZB5.ZB5_DTDIGT = ''
+		AND ZB5.ZB5_DTCONS = ''
+		AND ZB5.ZB5_DTENCR = ''
+		AND ZB5.%NotDel%
 	EndSql
 	(M001)->(dbGoTop())
 	If (M001)->CONTAD <> 1
@@ -147,14 +147,14 @@ Static Function fBIA591C()
 
 	BeginSql Alias _cAlias
 
-	SELECT *
-	FROM %TABLE:ZBX% ZBX
-	WHERE ZBX_FILIAL = %xFilial:ZBX%
-	AND ZBX_VERSAO = %Exp:_cVersao%
-	AND ZBX_REVISA = %Exp:_cRevisa%
-	AND ZBX_ANOREF = %Exp:_cAnoRef%
-	AND ZBX.%NotDel%
-	ORDER BY ZBX.ZBX_CTAATV, ZBX.ZBX_CHVCV, ZBX.ZBX_CTADPR
+		SELECT *
+		FROM %TABLE:ZBX% ZBX
+		WHERE ZBX_FILIAL = %xFilial:ZBX%
+		AND ZBX_VERSAO = %Exp:_cVersao%
+		AND ZBX_REVISA = %Exp:_cRevisa%
+		AND ZBX_ANOREF = %Exp:_cAnoRef%
+		AND ZBX.%NotDel%
+		ORDER BY ZBX.ZBX_CTAATV, ZBX.ZBX_CHVCV, ZBX.ZBX_CTADPR
 	EndSql
 
 	ProcRegua(0)
@@ -272,8 +272,6 @@ Return
 User Function B591FOK()
 
 	Local cMenVar   := ReadVar()
-	Local vfArea    := GetArea()
-	Local _cAlias
 	Local _nAt		:=	_oGetDados:nAt
 	Local _nI
 	Local _zpCTAATV   := ""

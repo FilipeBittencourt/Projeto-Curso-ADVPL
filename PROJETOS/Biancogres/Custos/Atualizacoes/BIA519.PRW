@@ -32,8 +32,8 @@ User Function BIA519()
 	aRotina   := { {"Pesquisar"        ,"AxPesqui"	      				,0,1},;
 	{               "Visualizar"       ,"AxVisual"	      				,0,2},;
 	{               "Incluir"          ,"EVAL(bOpcao3)"   				,0,3},;
-	{               "Cálculo"          ,'EVAL(bOpcao4)'   				,0,4},;
-	{               "Verificar"        ,'ExecBlock("BIA519V",.F.,.F.)'  ,0,5} }
+	{               "Cálculo"          ,'EVAL(bOpcao4)'   				,0,3},;
+	{               "Verificar"        ,'ExecBlock("BIA519V",.F.,.F.)'  ,0,3} }
 
 	dbSelectArea(SX2->X2_CHAVE)
 	dbSetOrder(1)

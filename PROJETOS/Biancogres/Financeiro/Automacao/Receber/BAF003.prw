@@ -28,7 +28,8 @@ Local nCount := 0
 	
 	// Reenvio caso aconteca queda de sistema e etc
 	oObj := TAFRemessaReceber():New()
-	oObj:oMrr:lReproc := .T.
+	oObj:oMrr:lReproc	:= .T.
+	oObj:oMrr:lFIDC		:= .F.	
 	oObj:oMrr:dEmissaoAte := dDataBase
 	oObj:Send()
 							

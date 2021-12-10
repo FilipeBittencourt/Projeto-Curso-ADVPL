@@ -14,7 +14,7 @@ User Function BIAFR009()
 Local oReport
 Local oParam := TParBIAFR009():New()
 
-	If cEmpAnt $ '01_05'
+	If cEmpAnt $ '01_05_14'
 	
 		If oParam:Box()
 	

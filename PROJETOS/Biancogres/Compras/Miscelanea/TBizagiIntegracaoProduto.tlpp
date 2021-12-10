@@ -6,7 +6,6 @@
 @since 05/02/2020  
 @project 24427
 @version 1.0
-@description 
 @type function
 /*/
 
@@ -16,19 +15,20 @@ User Function BIJBPPRD
 
 Return
 
+
 User Function BIPROCPR()
+Local oObj := Nil
 
-    Local oObj := Nil
-
-//   RpcSetEnv("01", "01")
-
-    oObj := TBizagiIntegracaoProduto():New()
+	//RpcSetEnv("01", "01")
+		
+		oObj := TBizagiIntegracaoProduto():New()
 
     oObj:Processa()
 
-//    RpcClearEnv()
+  //RpcClearEnv()
 
 Return()
+
 
 Class TBizagiIntegracaoProduto From LongClassName
 
@@ -51,12 +51,14 @@ Class TBizagiIntegracaoProduto From LongClassName
 
 EndClass
 
+
 Method New(lJob) Class TBizagiIntegracaoProduto
 
     ::aErro:= {}
     ::cEmail := U_GetBiaPar("MV_EMAILINTBIZPRO", "sistemas.ti@biancogres.com.br")
     
 Return(Self)
+
 
 Method Processa() Class TBizagiIntegracaoProduto
 
@@ -92,93 +94,19 @@ Method Processa() Class TBizagiIntegracaoProduto
 
 Return()
 
-Method InputProduto(cQry) Class TBizagiIntegracaoProduto
-
-    Local cNewCod   := ""
-    Local cAplicDir := ""
-    Local cComum	:= ""
-    Local lRet      := .T.
-
-    DbSelectArea("SB1")
-
-    cNewCod := U_ProxCod(Left((cQry)->PROD_GRUPO, 3), Left((cQry)->PROD_GRUPO, 3), .T., "WS")
-
-    RecLock("SB1", .T.)
-
-    SB1->B1_COD     := cNewCod
-    SB1->B1_GRUPO   := (cQry)->PROD_GRUPO
-    SB1->B1_TIPO    := (cQry)->PROD_TIPO
-    SB1->B1_YTIPO   := Alltrim((cQry)->PROD_YTIPO)
-    SB1->B1_TIPCONV := "M"
-    SB1->B1_ORIGEM  := "0"
-    SB1->B1_CLASFIS := "00"
-    SB1->B1_DESC    := AllTrim(StrTran(Upper(Alltrim((cQry)->PROD_DESC)),CHR(10), ' '))
-    SB1->B1_YPOLIT  := (cQry)->PROD_YPOLIT
-    SB1->B1_UM      := (cQry)->PROD_UM
-    SB1->B1_LOCPAD  := (cQry)->PROD_LOCPAD
-    SB1->B1_YLOCALI := (cQry)->PROD_YLOCALI
-    SB1->B1_YLOCINC := (cQry)->PROD_YLOCINC
-
-    If((cQry)->PROD_SEGUM != "*" .And. (cQry)->PROD_SEGUM != Nil)
-        SB1->B1_SEGUM := (cQry)->PROD_SEGUM
-    Else
-        SB1->B1_SEGUM := (cQry)->PROD_UM
-    EndIf
-
-    IF SB1->B1_UM == SB1->B1_SEGUM
-        SB1->B1_CONV := 1.00
-    ELSE
-        SB1->B1_CONV := VAL(STRTRAN((cQry)->PROD_CONV,",","."))
-    ENDIF
-
-    SB1->B1_YUSER   := Substr(Alltrim((cQry)->PROD_YUSER),1,TamSX3("B1_YUSER")[1])
-    SB1->B1_YDIVPA  := (cQry)->PROD_YDIVPA
-    SB1->B1_YPECA   := (cQry)->PROD_YPECA
-
-    If (cQry)->PROD_POSIPI != "*"
-
-        SB1->B1_POSIPI := (cQry)->PROD_POSIPI
-
-    EndIf
-
-    SB1->B1_CONTA   := (cQry)->PROD_CONTA
-    SB1->B1_YCTARES := (cQry)->PROD_YCTARES
-    SB1->B1_YCTRIND := (cQry)->PROD_YCTRIND
-    SB1->B1_YCTRADM := (cQry)->PROD_YCTRADM
-    SB1->B1_LOCALIZ	:= 'N'
-    SB1->B1_RASTRO  := 'N'
-    SB1->B1_GARANT  := '2'
-    SB1->B1_ATIVO   := 'S' 
-    SB1->B1_IMPORT  := IIF(!Empty((cQry)->PROD_IMPORT), IIF((cQry)->PROD_IMPORT == '1' .Or. (cQry)->PROD_IMPORT == 'S' .Or. UPPER((cQry)->PROD_IMPORT) == 'TRUE', 'S', 'N' ), 'N' )
-    SB1->B1_ANUENTE := IIF(!Empty((cQry)->PROD_ANUENTE) , IIF((cQry)->PROD_ANUENTE == '1' .Or. (cQry)->PROD_ANUENTE == 'S' .Or. UPPER((cQry)->PROD_ANUENTE) == 'TRUE', '1', '2' ), '2'  ) //1 - SIM //2 - NÃO
-
-    SB1->(MsUnLock())
-
-    cAplicDir := IIF(!Empty((cQry)->PROD_APLICDIRETA), IIF((cQry)->PROD_APLICDIRETA == '1' .Or. (cQry)->PROD_APLICDIRETA == 'S' .Or. UPPER((cQry)->PROD_APLICDIRETA) == 'TRUE', 'S', 'N' ), 'S'  )
-    cComum := IIF(!Empty((cQry)->PROD_EHCOMUN) , IIF((cQry)->PROD_EHCOMUN == '1' .Or. (cQry)->PROD_EHCOMUN == 'S' .Or. UPPER((cQry)->PROD_EHCOMUN) == 'TRUE', 'S', 'N' ), 'N'  )
-
-    U_WS_INCSBZ(cNewCod, cAplicDir, cComum) // Inclui o indicador - Tabela SBZ
-
-    lRet := ::Status('P', (cQry)->ID)
-
-Return(lRet)
 
 Method ExecProduto(cQry) Class TBizagiIntegracaoProduto
-
-    Local cNewCod := ""
-    Local aVetor := {}
-
-    Local cAplicDir := ""
-    Local cComum	:= ""
- 
-    Local _cErro	:=	""
-    
-    Local _cGarant	:=	""
-    Local _cAnuent	:=	""
- 
-    Private lMsErroAuto := .F.
-    Private lMsHelpAuto := .T.
-    Private lAutoErrNoFile := .T.
+Local cNewCod := ""
+Local aVetor := {}
+Local cAplicDir := ""
+Local cComum	:= "" 
+Local _cErro	:=	""
+Local _cGarant	:=	""
+Local _cAnuent	:=	""
+Local oEmb := Nil
+Private lMsErroAuto := .F.
+Private lMsHelpAuto := .T.
+Private lAutoErrNoFile := .T.
 
     If Empty((cQry)->PROD_COD)
 
@@ -309,16 +237,102 @@ Method ExecProduto(cQry) Class TBizagiIntegracaoProduto
         U_WS_INCSBZ(cNewCod, cAplicDir, cComum) // Inclui o indicador - Tabela SBZ
 
         ::Status("P", (cQry)->ID, "", cNewCod)
+        
+        // Tratamento para desbloqueio de Embalagem
+        If !Empty((cQry)->PROD_COD) .And. !Empty((cQry)->PROD_YCODCOM) .And. (cQry)->PROD_YBLSCPC == "1"
+        	
+        	oEmb := TAtualizaEmbalagem():New()
+        	
+        	oEmb:cProdA := (cQry)->PROD_COD
+        	oEmb:cProdN := (cQry)->PROD_YCODCOM
+        	
+        	oEmb:Update()
+        	
+        EndIf
 
     EndIf
 
 Return(lMsErroAuto)
+
+
+Method InputProduto(cQry) Class TBizagiIntegracaoProduto
+
+    Local cNewCod   := ""
+    Local cAplicDir := ""
+    Local cComum	:= ""
+    Local lRet      := .T.
+
+    DbSelectArea("SB1")
+
+    cNewCod := U_ProxCod(Left((cQry)->PROD_GRUPO, 3), Left((cQry)->PROD_GRUPO, 3), .T., "WS")
+
+    RecLock("SB1", .T.)
+
+    SB1->B1_COD     := cNewCod
+    SB1->B1_GRUPO   := (cQry)->PROD_GRUPO
+    SB1->B1_TIPO    := (cQry)->PROD_TIPO
+    SB1->B1_YTIPO   := Alltrim((cQry)->PROD_YTIPO)
+    SB1->B1_TIPCONV := "M"
+    SB1->B1_ORIGEM  := "0"
+    SB1->B1_CLASFIS := "00"
+    SB1->B1_DESC    := AllTrim(StrTran(Upper(Alltrim((cQry)->PROD_DESC)),CHR(10), ' '))
+    SB1->B1_YPOLIT  := (cQry)->PROD_YPOLIT
+    SB1->B1_UM      := (cQry)->PROD_UM
+    SB1->B1_LOCPAD  := (cQry)->PROD_LOCPAD
+    SB1->B1_YLOCALI := (cQry)->PROD_YLOCALI
+    SB1->B1_YLOCINC := (cQry)->PROD_YLOCINC
+
+    If((cQry)->PROD_SEGUM != "*" .And. (cQry)->PROD_SEGUM != Nil)
+        SB1->B1_SEGUM := (cQry)->PROD_SEGUM
+    Else
+        SB1->B1_SEGUM := (cQry)->PROD_UM
+    EndIf
+
+    IF SB1->B1_UM == SB1->B1_SEGUM
+        SB1->B1_CONV := 1.00
+    ELSE
+        SB1->B1_CONV := VAL(STRTRAN((cQry)->PROD_CONV,",","."))
+    ENDIF
+
+    SB1->B1_YUSER   := Substr(Alltrim((cQry)->PROD_YUSER),1,TamSX3("B1_YUSER")[1])
+    SB1->B1_YDIVPA  := (cQry)->PROD_YDIVPA
+    SB1->B1_YPECA   := (cQry)->PROD_YPECA
+
+    If (cQry)->PROD_POSIPI != "*"
+
+        SB1->B1_POSIPI := (cQry)->PROD_POSIPI
+
+    EndIf
+
+    SB1->B1_CONTA   := (cQry)->PROD_CONTA
+    SB1->B1_YCTARES := (cQry)->PROD_YCTARES
+    SB1->B1_YCTRIND := (cQry)->PROD_YCTRIND
+    SB1->B1_YCTRADM := (cQry)->PROD_YCTRADM
+    SB1->B1_LOCALIZ	:= 'N'
+    SB1->B1_RASTRO  := 'N'
+    SB1->B1_GARANT  := '2'
+    SB1->B1_ATIVO   := 'S' 
+    SB1->B1_IMPORT  := IIF(!Empty((cQry)->PROD_IMPORT), IIF((cQry)->PROD_IMPORT == '1' .Or. (cQry)->PROD_IMPORT == 'S' .Or. UPPER((cQry)->PROD_IMPORT) == 'TRUE', 'S', 'N' ), 'N' )
+    SB1->B1_ANUENTE := IIF(!Empty((cQry)->PROD_ANUENTE) , IIF((cQry)->PROD_ANUENTE == '1' .Or. (cQry)->PROD_ANUENTE == 'S' .Or. UPPER((cQry)->PROD_ANUENTE) == 'TRUE', '1', '2' ), '2'  ) //1 - SIM //2 - NÃO
+
+    SB1->(MsUnLock())
+
+    cAplicDir := IIF(!Empty((cQry)->PROD_APLICDIRETA), IIF((cQry)->PROD_APLICDIRETA == '1' .Or. (cQry)->PROD_APLICDIRETA == 'S' .Or. UPPER((cQry)->PROD_APLICDIRETA) == 'TRUE', 'S', 'N' ), 'S'  )
+    cComum := IIF(!Empty((cQry)->PROD_EHCOMUN) , IIF((cQry)->PROD_EHCOMUN == '1' .Or. (cQry)->PROD_EHCOMUN == 'S' .Or. UPPER((cQry)->PROD_EHCOMUN) == 'TRUE', 'S', 'N' ), 'N'  )
+
+    U_WS_INCSBZ(cNewCod, cAplicDir, cComum) // Inclui o indicador - Tabela SBZ
+
+    lRet := ::Status('P', (cQry)->ID)
+
+Return(lRet)
+
 
 Method ValidateProd() Class TBizagiIntegracaoProduto
 
     Local lRet := .T.
 
 Return(lRet)
+
 
 Method Status(cStatus, nId, cLog, cNewCod) Class TBizagiIntegracaoProduto
 
@@ -362,6 +376,7 @@ Method Status(cStatus, nId, cLog, cNewCod) Class TBizagiIntegracaoProduto
 
 Return(lRet)
 
+
 Method GetErrorLog() Class TBizagiIntegracaoProduto
 
     Local cRet := ""
@@ -375,6 +390,7 @@ Method GetErrorLog() Class TBizagiIntegracaoProduto
     Next nX
 
 Return(cRet)
+
 
 Method LogMail() Class TBizagiIntegracaoProduto
 

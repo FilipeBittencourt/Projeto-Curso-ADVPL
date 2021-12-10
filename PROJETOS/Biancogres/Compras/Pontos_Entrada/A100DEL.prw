@@ -17,20 +17,27 @@ Local gtRetur := .T.
 
 //  Implementado em 20/02/13 por Marcos Alberto Soprani para auxilio do fechamento de estoque vs movimentações retroativas que poderiam
 // acontecer pelo fato de o parâmtro MV_ULMES necessitar permanecer em aberto até que o fechamento de estoque esteja concluído
-If SF1->F1_DTDIGIT <= GetMv("MV_YULMES")
+	If SF1->F1_DTDIGIT <= GetMv("MV_YULMES")
 	MsgBox("Impossível prosseguir, pois este movimento interfere no fechamento de custo!!! Favor verificar com a contabilidade!!!", "A100DEL", "STOP")
 	gtRetur := .F.
-EndIf
+	EndIf
 
-If GetNewPar("MV_YFATGRP",.F.)
+	If GetNewPar("MV_YFATGRP",.F.)
 	gtRetur := fVerifOP() //VErifica se a nota possui op's com apontamento
-EndIf
+	EndIf
 
-If gtRetur .And. !U_BIAFG127(SF1->(RECNO()))
+	If gtRetur .And. !U_BIAFG127(SF1->(RECNO()))
 
 	gtRetur	:=	.F.
 
-EndIF
+	EndIF
+
+// Emerson (Facile) em 30/08/2021 - Tela Rateio RPV (BIAFG106) - Exclui os registros na tabela ZNC caso tenha sido rateado RPV
+	If gtRetur
+
+	U_FGT106EF("1", SF1->(F1_FILIAL+F1_DOC+F1_SERIE+F1_FORNECE+F1_LOJA+F1_TIPO), "N")
+
+	Endif
 
 Return ( gtRetur )
 
@@ -66,7 +73,7 @@ Static Function fVerifOP()
 			AND SF1.%NOTDEL%
 	EndSql
 
-	_lRet := (_cALias)->QTD == 0 
+	_lRet := (_cALias)->QTD == 0
 
 	(_cALias)->(DbCloseArea())
 

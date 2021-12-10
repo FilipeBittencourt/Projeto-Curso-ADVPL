@@ -660,7 +660,7 @@ User Function FRRT02C9(_cPedido)
 					loop
 				EndIf
 
-				If Empty(SC9->C9_YARELOT) .And. ( AllTrim(cEmpAnt) $ "01_05_13" )
+				If Empty(SC9->C9_YARELOT) .And. ( AllTrim(cEmpAnt) $ "01_05_13_14" )
 					U_FR2C9LOT()
 				EndIf
 
@@ -855,11 +855,6 @@ User Function FR2C9LOT()
 	Local cAliasAux
 	Local _aRet
 
-	//Empresas - Vitcer nao usa
-	If AllTrim(CEMPANT) == "14"
-		Return
-	EndIf
-
 	RecLock("SC9",.F.)
 
 	IF !(AllTrim(FunName()) == "BIAEC001")
@@ -892,10 +887,12 @@ Return
 
 //Checkar se pedido e ponta ou arremate e retornar os dados
 User Function FR2CHKPT(_cProduto, _cLote, _nQtde, _lReserva, _cPedido, _cItemPV, _cSeqSC9, _CodEmp, _CodFil)
-
-	Local cSQL   := ""
-	Local _marca := ""
-	Local aRet := {}
+	Local cAliasAux
+	Local _nQtPalete := 0
+	Local _nSaldo := 0
+	Local cSQL
+	Local cSQL2
+	Local aRet
 
 	Default _lReserva	:= .F.
 	Default _cPedido	:= ""
@@ -906,21 +903,16 @@ User Function FR2CHKPT(_cProduto, _cLote, _nQtde, _lReserva, _cPedido, _cItemPV,
 
 	aRet := { "N", 0 }
 
-	//produtos da marca Vinílico não devem ser retidos por esta trava.
-	_marca := U_CHECKMAR(_cProduto)
-
-	If ( _CodEmp == "07" .Or. _CodEmp == "06" .Or. _marca == "1302")
+	If ( _CodEmp+_CodFil == "0701" .Or. _CodEmp == "06" )
 		Return aRet
 	EndIf
 
-
+	//Retorto {  Tipo: S = Arremate, P = Ponta, N = Normal;  Saldo do Lote }
+	cSQL  := "select * from dbo.FNC_ROP_CONSULTA_PONTA_ARREMATE_"+AllTrim(_CodEmp)+"('"+AllTrim(_CodFil)+"','"+_cProduto+"','"+_cLote+"',"+AllTrim(Str(_nQtde))+",'"+_cPedido+"','"+_cItemPV+"','"+_cSeqSC9+"')"
 
 	If Select("QRYFR2") > 0
 		QRYFR2->(DbCloseArea())
 	EndIf
-
-	//Retorto {  Tipo: S = Arremate, P = Ponta, N = Normal;  Saldo do Lote }
-	cSQL := "select * from dbo.FNC_ROP_CONSULTA_PONTA_ARREMATE_"+AllTrim(_CodEmp)+"('"+AllTrim(_CodFil)+"','"+_cProduto+"','"+_cLote+"',"+AllTrim(Str(_nQtde))+",'"+_cPedido+"','"+_cItemPV+"','"+_cSeqSC9+"')"
 
 	TCQUERY CSQL ALIAS "QRYFR2" NEW
 
@@ -928,6 +920,24 @@ User Function FR2CHKPT(_cProduto, _cLote, _nQtde, _lReserva, _cPedido, _cItemPV,
 		aRet := { QRYFR2->TIPO , QRYFR2->SALDO_RES }
 	EndIf
 	QRYFR2->(DbCloseArea())
+
+	// INICIO TICKET:29349 - Erro ao empenhar itens do pedido ---> TRATIVA PARA PONTA DE ESTOQUE PARA ERRO DO EMPENHO
+	IF Len(aRet) > 0 .and. aRet[1] == "P"
+
+		cSQL2 := "select * from dbo.FNC_ROP_CONSULTA_PONTA_ARREMATE_AUX_"+AllTrim(_CodEmp)+"('"+AllTrim(_CodFil)+"','"+_cProduto+"','"+_cLote+"',"+AllTrim(Str(_nQtde))+",'"+_cPedido+"','"+_cItemPV+"','"+_cSeqSC9+"')"
+
+		If Select("QRYFR2") > 0
+			QRYFR2->(DbCloseArea())
+		EndIf
+
+		TCQUERY cSQL2 ALIAS "QRYFR2" NEW
+
+		If !QRYFR2->(Eof())
+			aRet := { QRYFR2->TIPO , QRYFR2->SALDO_RES }
+		EndIf
+		QRYFR2->(DbCloseArea())
+	EndIf
+	//FIM - TICKET:29349 - Erro ao empenhar itens do pedido ---> TRATIVA PARA PONTA DE ESTOQUE PARA ERRO DO EMPENHO
 
 Return aRet
 
@@ -1009,7 +1019,7 @@ User Function FRCHKSDC(_ChaveDC1, _cUserName)
 	SDC->(DbSetOrder(1))
 	If SDC->(DbSeek(_ChaveDC1))
 		U_GravaPZ2(SDC->(RecNo()),"SDC",AllTrim(ProcName()),"SDC_ERRO",AllTrim(FunName()),"SDC", _cUserName)
-		U_BIAEnvMail(, "fernando@facilesistemas.com.br;suporte.ti@biancogres.com.br", "ERRO - SDC NAO EXCLUIDO", "SDC - RECNO: "+AllTrim(Str(SDC->(RecNo())))+" não excluido apos exclusao da reserva.")
+		U_BIAEnvMail(, "sistemas.ti@biancogres.com.br", "ERRO - SDC NAO EXCLUIDO", "SDC - RECNO: "+AllTrim(Str(SDC->(RecNo())))+" não excluido apos exclusao da reserva.")
 	EndIf
 
 Return

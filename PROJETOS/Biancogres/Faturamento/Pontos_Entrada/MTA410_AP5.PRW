@@ -63,7 +63,9 @@ Static Function MTA410()
 	Private nParcMin			:= GetMv("MV_YVRPARM", .F., 4000)
 	Private nDescInc            := 0 // Por Marcos Alberto Soprani para auxiliar na integração com a validação da CLVL - BIA555
 
-	//MSGALERT("MTA410")
+	
+	// Calcula o valor do impostos para TODOS os Itens do Pedido
+	M->C5_YVLTOTP	:= U_fValPed(.F.,.F.)
 
 	IF  !u_VALIDQTDPC()
 		Return .F.
@@ -246,7 +248,6 @@ Static Function MTA410()
 	//M->C5_YVLTPIS	:= xVlrPIS							//Este campo e utilizado no calculo da Margem na funcao de liberacao BIA660
 	//M->C5_YVLTCOF	:= xVlrCOF							//Este campo e utilizado no calculo da Margem na funcao de liberacao BIA660
 	//M->C5_YVLTICM	:= xVlrICMS							//Este campo e utilizado no calculo da Margem na funcao de liberacao BIA660
-	M->C5_YVLTOTP	:= U_fValPed(.F.,.F.)					//Considera Saldo Pedido / Atualiza Impostos
 
 	//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 	//Se o Tipo de Pedido Diferente de Normal, nao executa a Rotina
@@ -345,6 +346,18 @@ Static Function MTA410()
 			MsgBox("Atenção, o campo Pedido Pai não foi preenchido. Favor verificar!","MTA410","STOP")
 			Return(.F.)
 		END IF
+	END IF
+
+	//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+	//Ticket 34680
+	//VERIFICA SE O PEDIDO DE AMOSTRA ESTA COM OS CAMPOS CENTRO DE CUSTO< CLASSE DE VALOR E ITEM CONTABIL PREENCHIDOS.
+	//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+	If ALTERA .And. AllTrim(M->C5_YCONF) == 'S' .And. !Empty(M->C5_YSUBTP) .And. AllTrim(M->C5_YSUBTP) $ "A#M"
+		If Empty(M->C5_YITEMCT) .Or. Empty(M->C5_YCC) .Or. Empty(M->C5_YCLVL)
+			IF(!MsgYesNo("Atenção, os campos classe de valor, centro de custo ou item contábil não foram informados. Deseja prosseguir?", "Campos Vazios"))
+				Return(.F.)
+			ENDIF
+		ENDIF
 	END IF
 
 	//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
@@ -1059,13 +1072,9 @@ User Function fValPed(lSaldo,lAtuImp)
 				nQtdVen	:= Gdfieldget("C6_QTDVEN",I)
 
 				If Alltrim(cBlqRes) <> "R" .And. nQtdVen-nQtdEnt > 0
-					//Ticket 29806
-					If(AllTrim(M->C5_CLIENTE) == "017151" .And. Alltrim(M->C5_YSUBTP) == 'FE')
-						nValPed += Round((nQtdVen-nQtdEnt)/nQtdVen*IIF(Gdfieldget("C6_YVLIMP",I) != 0, Gdfieldget("C6_YVLIMP",I), 1),2)
-					else
-						nValPed += Round((nQtdVen-nQtdEnt)/nQtdVen*Gdfieldget("C6_YVLIMP",I),2)
-					EndIf
+					nValPed += Round((nQtdVen-nQtdEnt)/nQtdVen*Gdfieldget("C6_YVLIMP",I),2)
 				EndIf
+				
 			EndIf
 		EndIf
 	Next

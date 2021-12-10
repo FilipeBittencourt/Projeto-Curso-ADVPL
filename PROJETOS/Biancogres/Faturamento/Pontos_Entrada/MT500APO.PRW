@@ -1,6 +1,6 @@
 #include "rwMake.ch"
 #include "Topconn.ch"
-#Include "PROTHEUS.CH"                         
+#Include "PROTHEUS.CH"
 
 /*
 ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
@@ -21,8 +21,8 @@ User Function MT500APO()
 	Local nQuant := 0
 	Local nEmail := Posicione("SA3",1,xFilial("SA3")+SC5->C5_VEND1,"A3_EMAIL")
 	Local nVend	:= Posicione("SA3",1,xFilial("SA3")+SC5->C5_VEND1,"A3_NOME")
-	Local lFlag	:= .T. 
-	Local cMotivo	:= "" 	         
+	Local lFlag	:= .T.
+	Local cMotivo	:= ""
 	Local aAreaAnt := GetArea()
 	Local cCodVend := SC5->C5_VEND1
 	Local cPedNUm	:= SC5->C5_NUM
@@ -49,14 +49,14 @@ User Function MT500APO()
 			If chkfile("TLC5")
 				dbSelectArea("TLC5")
 				dbCloseArea()
-			EndIf			
+			EndIf
 
 			dbUseArea(.T.,"TOPCONN", TcGenQry(,,cLC5),'TLC5',.T.,.T.)
 
 			DBSelectArea('TLC5')
 			dbGoTop()
 
-			If !TLC5->(Eof()) 
+			If !TLC5->(Eof())
 
 				nEmail := Posicione("SA3",1,xFilial("SA3")+TLC5->C5_VEND1,"A3_EMAIL")
 				nVend := Posicione("SA3",1,xFilial("SA3")+TLC5->C5_VEND1,"A3_NOME")
@@ -67,24 +67,24 @@ User Function MT500APO()
 
 			dbCloseArea('TLC5')
 
-		EndIf	
+		EndIf
 
-		// Busca descrição do motivo de cancelamento				
+		// Busca descrição do motivo de cancelamento
 		cMotivo := U_BIAF097(SC6->C6_YMOTIVO)
-		
+
 		If Empty(cMotivo)
 			cMotivo := "NÃO INFORMADO"
 		EndIf
-		
+
 		dbSelectArea("SA1")                // * Cadastro de Clientes
 		dbSetOrder(1)
 		If !Empty(SC5->C5_YCLIORI)
-			dbSeek(xFilial('SA1')+SC5->C5_YCLIORI+SC5->C5_YLOJORI)		 	
-		Else	
+			dbSeek(xFilial('SA1')+SC5->C5_YCLIORI+SC5->C5_YLOJORI)
+		Else
 			dbSeek(xFilial('SA1')+SC5->C5_CLIENTE+SC5->C5_LOJACLI)
 		EndIF
-		
-		//SELECONANDO EMPRESA MARCA, PARA ENVIAR O E-MAIL PRO ATENDENTE DA EMPRESA CORRETA 
+
+		//SELECONANDO EMPRESA MARCA, PARA ENVIAR O E-MAIL PRO ATENDENTE DA EMPRESA CORRETA
 		cSql := " SELECT SUBSTRING(ZZ7.ZZ7_EMP,1,2) AS ZZ7_EMP"
 		cSql += " FROM SB1010 SB1"
 		cSql += " 	INNER JOIN ZZ7010 ZZ7 ON SB1.B1_YLINHA = ZZ7.ZZ7_COD"
@@ -104,7 +104,7 @@ User Function MT500APO()
 
 		//cMailAnted := U_MailAtendente(cEmpAnt,SC6->C6_NUM,cCodVend,SA1->A1_COD,SA1->A1_LOJA)
 		cMailAnted := U_MailAtendente(Iif(AllTrim(_EMP->ZZ7_EMP) = "" .Or. ValType(_EMP->ZZ7_EMP) == "U", cEmpAnt, _EMP->ZZ7_EMP),SC6->C6_NUM,cCodVend,SA1->A1_COD,SA1->A1_LOJA)
-		
+
 
 		// Selecionando a quantidade de itens a serem eliminados
 		cSql := " SELECT COUNT(*) AS QUANT "
@@ -135,7 +135,7 @@ User Function MT500APO()
 
 
 		// Selecionando todos os itens
-		cSql := " SELECT C6_YEMP, C6_PRODUTO, C6_DESCRI, C6_QTDVEN-C6_QTDENT SALDO "		
+		cSql := " SELECT C6_YEMP, C6_PRODUTO, C6_DESCRI, C6_QTDVEN-C6_QTDENT SALDO "
 		cSql += " FROM "+ RetSqlName("SC6")
 		cSql += " WHERE C6_FILIAL	= "+ ValToSQL(xFilial("SC6"))
 		cSql += " AND C6_NUM = "+ ValToSQL(SC6->C6_NUM)
@@ -154,7 +154,7 @@ User Function MT500APO()
 			DBCLOSEAREA()
 		ENDIF
 
-		TCQUERY cSql ALIAS "_PED" NEW  
+		TCQUERY cSql ALIAS "_PED" NEW
 
 
 		//Armazenando o HTML
@@ -216,21 +216,21 @@ User Function MT500APO()
 		C_HTML += '  </tr> '
 		C_HTML += '  <tr> '
 
-		Do Case 
-			Case Alltrim(SC6->C6_YEMP) = "0101"
+		Do Case
+		Case Alltrim(SC6->C6_YEMP) = "0101"
 			C_HTML += '    <td><div align="center" class="style41"> BIANCOGRES CERÂMICA SA </div></td> '
-			Case Alltrim(SC6->C6_YEMP) $ "0501/1399"
+		Case Alltrim(SC6->C6_YEMP) $ "0501/1399"
 			C_HTML += '    <td><div align="center" class="style41"> INCESA CERAMICA LTDA   </div></td> '
-			Case Alltrim(SC6->C6_YEMP) = "0599"
+		Case Alltrim(SC6->C6_YEMP) = "0599"
 			C_HTML += '    <td><div align="center" class="style41"> BELLACASA CERAMICA     </div></td> '
-			Case Alltrim(SC6->C6_YEMP) = "1301"
+		Case Alltrim(SC6->C6_YEMP) = "1301"
 			C_HTML += '    <td><div align="center" class="style41"> MUNDI                  </div></td> '
-			Case Alltrim(SC6->C6_YEMP) = "1302"
-			C_HTML += '    <td><div align="center" class="style41"> BIANCOGRES VINILICO    </div></td> '			
-			Case Alltrim(SC6->C6_YEMP) = "1401"
+		Case Alltrim(SC6->C6_YEMP) = "1302"
+			C_HTML += '    <td><div align="center" class="style41"> BIANCOGRES VINILICO    </div></td> '
+		Case Alltrim(SC6->C6_YEMP) = "1401"
 			C_HTML += '    <td><div align="center" class="style41"> VITCER                 </div></td> '
-			Otherwise
-			C_HTML += '    <td><div align="center" class="style41"> EMPRESA NÃO CADASTRADA </div></td> '	   
+		Otherwise
+			C_HTML += '    <td><div align="center" class="style41"> EMPRESA NÃO CADASTRADA </div></td> '
 		EndCase
 
 		C_HTML += '  </tr> '
@@ -263,7 +263,7 @@ User Function MT500APO()
 				C_HTML += '    <td class="style12"><div align="left">'+_PED->C6_PRODUTO+' </div></td> '
 				C_HTML += '    <td class="style12">'+_PED->C6_DESCRI+' </td> '
 				//C_HTML += '    <td class="style12"><div align="right">'+Alltrim(Str(_PED->SALDO))+'</div></td> '
-				C_HTML += '    <td class="style12"><div align="right">'+Transform(_PED->SALDO,"@E 999,999.99")+'</div></td> '														
+				C_HTML += '    <td class="style12"><div align="right">'+Transform(_PED->SALDO,"@E 999,999.99")+'</div></td> '
 				C_HTML += '  </tr> '
 				lFlag  := .F.
 			Else
@@ -271,7 +271,7 @@ User Function MT500APO()
 				C_HTML += '    <td class="style12"><div align="left">'+_PED->C6_PRODUTO+' </div></td> '
 				C_HTML += '    <td class="style12">'+_PED->C6_DESCRI+' </td> '
 				//C_HTML += '    <td class="style12"><div align="right">'+Alltrim(Str(_PED->SALDO))+'</div></td> '
-				C_HTML += '    <td class="style12"><div align="right">'+Transform(_PED->SALDO,"@E 999,999.99")+'</div></td> '														
+				C_HTML += '    <td class="style12"><div align="right">'+Transform(_PED->SALDO,"@E 999,999.99")+'</div></td> '
 				C_HTML += '  </tr> '
 			EndIf
 
@@ -297,35 +297,35 @@ User Function MT500APO()
 		WPELIMRES1301 - WORKFLOW DE PEDIDOS ELIMINADOS POR RESÍDUO - EMPRESA 1301
 		WPELIMRES1401 - WORKFLOW DE PEDIDOS ELIMINADOS POR RESÍDUO - EMPRESA 1401
 		*/
-		Do Case 
-			Case Alltrim(SC6->C6_YEMP) == "0101"
-			aDestinatario	:= nEmail+"; " + U_EmailWF("WPELIMRES0101","","","D") //"dalvina.ferreira@biancogres.com.br" 
+		Do Case
+		Case Alltrim(SC6->C6_YEMP) == "0101"
+			aDestinatario	:= nEmail+"; " + U_EmailWF("WPELIMRES0101","","","D") //"dalvina.ferreira@biancogres.com.br"
 			aCC := cMailAnted+"; " + U_EmailWF("WPELIMRES0101","","","C") //" cancelamento.biancogres@biancogres.com.br"
 			aCCO := "" 																					//"ranisses.corona@biancogres.com.br"
-			Case Alltrim(SC6->C6_YEMP) $ "0501/1399"		
+		Case Alltrim(SC6->C6_YEMP) $ "0501/1399"
 			aDestinatario	:= nEmail+"; " + U_EmailWF("WPELIMRES0501","","","D") //"william.pernes@biancogres.com.br"
-			aCC	:= cMailAnted+"; " + U_EmailWF("WPELIMRES0501","","","C") //"cancelamento.incesa@incesa.ind.br"					
+			aCC	:= cMailAnted+"; " + U_EmailWF("WPELIMRES0501","","","C") //"cancelamento.incesa@incesa.ind.br"
 			aCCO:= "" 																					//"ranisses.corona@biancogres.com.br"
-			Case Alltrim(SC6->C6_YEMP) == "0599"
+		Case Alltrim(SC6->C6_YEMP) == "0599"
 			aDestinatario	:= nEmail+"; " + U_EmailWF("WPELIMRES0599","","","D") //"william.pernes@biancogres.com.br"
 			aCC := cMailAnted+"; " + U_EmailWF("WPELIMRES0599","","","C") //"cancelamento.bellacasa@bellacasaceramica.com.br"
 			aCCO := "" 																								//"ranisses.corona@biancogres.com.br"
-			Case Alltrim(SC6->C6_YEMP) == "1301"
+		Case Alltrim(SC6->C6_YEMP) == "1301"
 			aDestinatario	:= nEmail+"; " + U_EmailWF("WPELIMRES1301","","","D") //"rodolfo.stanke.mundi@biancogres.com.br"
-			aCC	:= cMailAnted+"; " + U_EmailWF("WPELIMRES1301","","","C") //"cancelamento.biancogres@biancogres.com.br"	
+			aCC	:= cMailAnted+"; " + U_EmailWF("WPELIMRES1301","","","C") //"cancelamento.biancogres@biancogres.com.br"
 			aCCO := "" 																								//"ranisses.corona@biancogres.com.br"
-			Case Alltrim(SC6->C6_YEMP) == "1302"
-			aDestinatario	:= nEmail+"; " + U_EmailWF("WPELIMRES0101","","","D")  
-			aCC := cMailAnted+"; " + U_EmailWF("WPELIMRES0101","","","C") 
-			aCCO := "" 																						
-			Case Alltrim(SC6->C6_YEMP) == "1401"
-			aDestinatario	:= nEmail+"; " + U_EmailWF("WPELIMRES1401","","","D") //"joan.mareto@vitcer.com.br"
-			aCC	:= cMailAnted+"; " + U_EmailWF("WPELIMRES1401","","","C") //"cancelamento.biancogres@biancogres.com.br"	
+		Case Alltrim(SC6->C6_YEMP) == "1302"
+			aDestinatario	:= nEmail+"; " + U_EmailWF("WPELIMRES0101","","","D")
+			aCC := cMailAnted+"; " + U_EmailWF("WPELIMRES0101","","","C")
+			aCCO := ""
+		Case Alltrim(SC6->C6_YEMP) == "1401"
+			aDestinatario	:= nEmail+"; " + U_EmailWF("WPELIMRES1401","","","D")
+			aCC	:= cMailAnted+"; " + U_EmailWF("WPELIMRES1401","","","C") //"cancelamento.biancogres@biancogres.com.br"
 			aCCO := "" 																								//"ranisses.corona@biancogres.com.br"
-			Otherwise
-			aDestinatario	:= cMailAnted+"; suporte.ti@biancogres.com.br"
+		Otherwise
+			aDestinatario	:= cMailAnted+"; sistemas.ti@biancogres.com.br"
 			aCC := ""
-			aCCO := ""			
+			aCCO := ""
 		EndCase
 
 		cTitulo	:= "PEDIDO ELIMINADO POR RESÍDUO"
@@ -338,7 +338,7 @@ User Function MT500APO()
 
 	EndIf
 
-	// Acumula no Contador	
+	// Acumula no Contador
 	cContador ++
 
 	RestArea(aAreaAnt)
@@ -348,19 +348,19 @@ Return
 
 User Function fPedCan()
 	Local := cNumPEd := "D33511"
-	
+
 	DbSelectArea("SC5")
 	DbSetOrder(1)
 	If SC5->(DbSeek(xFilial("SC5") + cNumPed))
-	
+
 		DbSelectArea("SC6")
 		DbSetOrder(1)
 		If SC6->(DbSeek(xFilial("SC6") + cNumPed))
-	
+
 			U_MT500APO()
-		
+
 		EndIf
-		
+
 	EndIf
 
 Return()

@@ -167,17 +167,21 @@ User Function M410AGRV()
 
 			ElseIf cEmpAnt == "13"							//MUNDI
 
-				If 	(M->C5_CLIENTE) $ "010064"
+				If 	Alltrim(M->C5_CLIENTE) == "010064"
+					M->C5_YRESULT := "N"
 					M->C5_YRESUL2 := "N"
 				Else
+					M->C5_YRESULT := "S"
 					M->C5_YRESUL2 := "S"
 				EndIF
 
 			ElseIf cEmpAnt == "14"							//BIANCOGRES VINILICO
 
-				If 	(M->C5_CLIENTE) $ "010064"
+				If 	Alltrim(M->C5_CLIENTE) == "010064"
+					M->C5_YRESULT := "N"
 					M->C5_YRESUL2 := "N"
 				Else
+					M->C5_YRESULT := "S"				
 					M->C5_YRESUL2 := "S"
 				EndIF
 
@@ -188,8 +192,10 @@ User Function M410AGRV()
 
 			EndIf
 		Else
+		
 			M->C5_YRESULT := "N"
 			M->C5_YRESUL2 := "N"
+
 		EndIf
 
 		//±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
@@ -750,9 +756,8 @@ User Function M410AGRV()
 						nDesp	:= Gdfieldget('C6_YDESP',i) 
 					EndIf
 					
-					//Ticket 23754
-					//grupo Leroy Merlin 001486
-					If(AllTrim(SA1->A1_GRPVEN) == "001486" .And. !Empty(M->C5_YPC))
+					//Ticket 23754 e 35052
+					If(!Empty(M->C5_YPC) .And. (Alltrim(cempant) $ "07" .Or. AllTrim(SA1->A1_GRPVEN) == "001486"))
 						Gdfieldput("C6_NUMPCOM",M->C5_YPC,i)
 						Gdfieldput("C6_ITEMPC",AllTrim(STR(i)),i)
 					EndIf

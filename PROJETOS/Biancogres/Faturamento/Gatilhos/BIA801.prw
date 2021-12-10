@@ -79,7 +79,8 @@ EndIf
 
 //Se o Cliente for de Engenharia, altera o Tipo de Credito
 If !Alltrim(M->C5_YSUBTP) $ "A_B_G_O_C_M_" .And. Alltrim(SA1->A1_YTPSEG) == "E" .And. Alltrim(wForma) <> "4"
-	M->C5_YTPCRED := "5" //Eng.
+	//M->C5_YTPCRED := "5" //Eng.
+	M->C5_YTPCRED := "0" //Rotina de Crédito - ticket 30659
 EndIf
 
 RestArea(aArea)

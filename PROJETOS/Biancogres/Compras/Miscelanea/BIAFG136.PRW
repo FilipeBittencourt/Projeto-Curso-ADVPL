@@ -56,8 +56,9 @@ Return _cCateg
 
 // Preencher a categoria dos demais clientes do grupo ao alterar a categoria de um cliente
 User function BFG136B()
-Local _cSql	:=	""
-Local replic := .T.
+Local _aArea	:= GetArea()
+Local _cSql		:=	""
+Local replic 	:= .T.
 	
 	If(!IsBlind())
 		If(!MsgYesNo("Deseja replicar a nova categoria para todos os clientes do atual grupo de vendas?"))
@@ -74,8 +75,12 @@ Local replic := .T.
 		TcSqlExec(_cSql)
 	
 	EndIf
+
+	RestArea(_aArea)
 	
 Return()
+
+
 
 
 #DEFINE SIMPLES Char( 39 )
@@ -215,6 +220,32 @@ If lOk
 EndIf
 
 Return NIL
+
+// Preencher a galeria dos demais clientes do grupo ao alterar a galeria de um cliente
+User function BFG136D()
+Local _aArea	:= GetArea()
+Local _cSql	:=	""
+Local replic := .T.
+	
+	If(!IsBlind())
+		If(!MsgYesNo("Deseja replicar a nova galeria para todos os clientes do atual grupo de vendas?"))
+			replic := .F.
+		EndIf
+	EndIf
+
+	If !Empty(M->A1_GRPVEN) .And. !Empty(M->A1_YGALERI) .And. replic
+	
+		_cSql	:= " UPDATE " + RetSqlName("SA1") + CRLF
+		_cSql	+= " SET A1_YGALERI = " + ValtoSql(M->A1_YGALERI) + CRLF
+		_cSql	+= " WHERE A1_GRPVEN = " + ValtoSql(M->A1_GRPVEN)
+	
+		TcSqlExec(_cSql)
+	
+	EndIf
+	
+	RestArea(_aArea)
+	
+Return()
 
 
 //--------------------------------------------------------------------

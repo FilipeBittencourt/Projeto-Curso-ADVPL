@@ -174,7 +174,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,XY001),'XY01',.F.,.T.)
 	dbSelectArea("XY01")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento1")
@@ -243,7 +243,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,XY002),'XY02',.F.,.T.)
 	dbSelectArea("XY02")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento2")
@@ -295,7 +295,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,XY003),'XY03',.F.,.T.)
 	dbSelectArea("XY03")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento3")
@@ -353,6 +353,45 @@ Static Function RptDetail()
 	UL007 += "      WHERE C2_FILIAL = '" + xFilial("SC2") + "' "
 	UL007 += "            AND SC2.D_E_L_E_T_ = ' ' "
 	TCSQLExec(UL007)
+
+	// Regra incluída em 01/12/21 por ocasição do fechamento de custo de mês 11/2021.
+	// Motivo: nova linha de produção (06) e rateiro do custos de MASSA entre linha 5 e 6
+	UP009 := " UPDATE SC2 SET "
+	UP009 += "        C2_CLVL = '3700' "
+	UP009 += " FROM " + RetSqlName("SD3") + " SD3(NOLOCK) "
+	UP009 += "      INNER JOIN " + RetSqlName("SC2") + " SC2(NOLOCK) ON SC2.C2_FILIAL = '" + xFilial("SC2") + "' "
+	UP009 += "                                       AND SC2.C2_NUM = SUBSTRING(D3_OP, 1, 6) "
+	UP009 += "                                       AND SC2.C2_ITEM = SUBSTRING(D3_OP, 7, 2) "
+	UP009 += "                                       AND SC2.C2_SEQUEN = SUBSTRING(D3_OP, 9, 3) "
+	UP009 += "                                       AND SC2.C2_LINHA = 'L05' "
+	UP009 += "                                       AND SC2.D_E_L_E_T_ = ' ' "
+	UP009 += "      INNER JOIN " + RetSqlName("SB1") + " XB1(NOLOCK) ON XB1.B1_FILIAL = '" + xFilial("SB1") + "' "
+	UP009 += "                                       AND XB1.B1_COD = SC2.C2_PRODUTO "
+	UP009 += "                                       AND XB1.B1_GRUPO = 'PI01' "
+	UP009 += "                                       AND XB1.D_E_L_E_T_ = ' ' "
+	UP009 += " WHERE SD3.D3_FILIAL = '" + xFilial("SD3") + "' "
+	UP009 += "       AND SD3.D3_EMISSAO BETWEEN '" + dtos(MV_PAR01) + "' AND '" + dtos(MV_PAR02) + "' "
+	UP009 += "       AND SD3.D3_TM = '010' "
+	UP009 += "       AND SD3.D_E_L_E_T_ = ' ' "
+	TCSQLExec(UP009)
+
+	UP010 := " UPDATE SD3 SET "
+	UP010 += "        D3_CLVL = '3700' "
+	UP010 += " FROM " + RetSqlName("SD3") + " SD3(NOLOCK) "
+	UP010 += "      INNER JOIN " + RetSqlName("SC2") + " SC2(NOLOCK) ON SC2.C2_FILIAL = '" + xFilial("SC2") + "' "
+	UP010 += "                                       AND SC2.C2_NUM = SUBSTRING(D3_OP, 1, 6) "
+	UP010 += "                                       AND SC2.C2_ITEM = SUBSTRING(D3_OP, 7, 2) "
+	UP010 += "                                       AND SC2.C2_SEQUEN = SUBSTRING(D3_OP, 9, 3) "
+	UP010 += "                                       AND SC2.C2_LINHA = 'L05' "
+	UP010 += "                                       AND SC2.D_E_L_E_T_ = ' ' "
+	UP010 += "      INNER JOIN " + RetSqlName("SB1") + " XB1(NOLOCK) ON XB1.B1_FILIAL = '" + xFilial("SB1") + "' "
+	UP010 += "                                       AND XB1.B1_COD = SC2.C2_PRODUTO "
+	UP010 += "                                       AND XB1.B1_GRUPO = 'PI01' "
+	UP010 += "                                       AND XB1.D_E_L_E_T_ = ' ' "
+	UP010 += " WHERE SD3.D3_FILIAL = '" + xFilial("SD3") + "' "
+	UP010 += "       AND SD3.D3_EMISSAO BETWEEN '" + dtos(MV_PAR01) + "' AND '" + dtos(MV_PAR02) + "' "
+	UP010 += "       AND SD3.D_E_L_E_T_ = ' ' "
+	TCSQLExec(UP010)
 
 	// Atualiza a CLVL da SD3 TM 010 e 711 a partir do roteiro de Fabricação para Custo
 	XY003 := " UPDATE SD3 SET "
@@ -474,7 +513,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,XY004),'XY04',.F.,.T.)
 	dbSelectArea("XY04")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento4")
@@ -530,7 +569,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,XY005),'XY05',.F.,.T.)
 	dbSelectArea("XY05")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento5")
@@ -572,7 +611,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,XY006),'XY06',.F.,.T.)
 	dbSelectArea("XY06")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento6")
@@ -642,7 +681,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,XY007),'XY07',.F.,.T.)
 	dbSelectArea("XY07")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento7")
@@ -697,7 +736,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,XY008),'XY08',.F.,.T.)
 	dbSelectArea("XY08")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento8")
@@ -754,7 +793,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,XY009),'XY09',.F.,.T.)
 	dbSelectArea("XY09")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento9")
@@ -814,7 +853,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,XY010),'XY10',.F.,.T.)
 	dbSelectArea("XY10")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento10")
@@ -860,7 +899,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,ZS005),'ZS05',.F.,.T.)
 	dbSelectArea("ZS05")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento11")
@@ -911,7 +950,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,SW003),'SW03',.F.,.T.)
 	dbSelectArea("SW03")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento12")
@@ -973,7 +1012,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,XY027),'XY27',.F.,.T.)
 	dbSelectArea("XY27")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento13")
@@ -1045,7 +1084,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,KH004),'KH04',.F.,.T.)
 	dbSelectArea("KH04")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento14")
@@ -1111,7 +1150,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,HG003),'HG03',.F.,.T.)
 	dbSelectArea("HG03")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento15")
@@ -1166,7 +1205,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,RT003),'RT03',.F.,.T.)
 	dbSelectArea("RT03")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento16")
@@ -1263,7 +1302,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,QP002),'QP02',.F.,.T.)
 	dbSelectArea("QP02")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento17")
@@ -1360,7 +1399,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,RV001),'RV01',.F.,.T.)
 	dbSelectArea("RV01")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento11")
@@ -1424,7 +1463,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,WQ004),'WQ04',.F.,.T.)
 	dbSelectArea("WQ04")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento16")
@@ -1524,7 +1563,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,KD003),'KD03',.F.,.T.)
 	dbSelectArea("KD03")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento21")
@@ -1641,7 +1680,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,QR005),'QR05',.F.,.T.)
 	dbSelectArea("QR05")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento22")
@@ -1715,7 +1754,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,ZP002),'ZP02',.F.,.T.)
 	dbSelectArea("ZP02")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento23")
@@ -1821,7 +1860,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,ZP024),'ZP24',.F.,.T.)
 	dbSelectArea("ZP24")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento24")
@@ -1863,7 +1902,7 @@ Static Function RptDetail()
 		dbUseArea(.T.,"TOPCONN",TcGenQry(,,ZP025),'ZP25',.F.,.T.)
 		dbSelectArea("ZP25")
 		dbGoTop()
-		ProcRegua(RecCount())
+		ProcRegua(0)
 		While !Eof()
 
 			IncProc("Processamento25")
@@ -1939,6 +1978,7 @@ Static Function RptDetail()
 	KN004 += "                  THEN 'POL' "
 	KN004 += "                  WHEN SD3.D3_YAPLIC = '4' "
 	KN004 += "                       AND SD3.D3_YMELHOR <> '' "
+	KN004 += "                       AND SD3.D3_YMELHOR <> '000000' "
 	KN004 += "                       AND SUBSTRING(SD3.D3_CLVL, 1, 1) = '3' "
 	KN004 += "                       AND D3_CONTA = '61301010' "
 	KN004 += "                  THEN 'MELHORIA' "
@@ -1968,6 +2008,7 @@ Static Function RptDetail()
 	KN004 += "                       THEN '61110001' "
 	KN004 += "                       WHEN SD3.D3_YAPLIC = '4' "
 	KN004 += "                            AND SD3.D3_YMELHOR <> '' "
+	KN004 += "                            AND SD3.D3_YMELHOR <> '000000' "
 	KN004 += "                            AND SUBSTRING(SD3.D3_CLVL, 1, 1) = '3' "
 	KN004 += "                       THEN '61301010' "
 	KN004 += "                       WHEN CTH_YATRIB = 'C' "
@@ -1992,6 +2033,7 @@ Static Function RptDetail()
 	KN004 += "                                       AND D3_CONTA = '61110001') "
 	KN004 += "                               AND NOT(SD3.D3_YAPLIC = '4' "
 	KN004 += "                                       AND SD3.D3_YMELHOR <> '' "
+	KN004 += "                                       AND SD3.D3_YMELHOR <> '000000' "
 	KN004 += "                                       AND SUBSTRING(SD3.D3_CLVL, 1, 1) = '3' "
 	KN004 += "                                       AND D3_CONTA = '61301010') "
 	KN004 += "                               AND SB1.D_E_L_E_T_ = ' ' "
@@ -2008,7 +2050,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,KN004),'KN04',.F.,.T.)
 	dbSelectArea("KN04")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento26")
@@ -2073,7 +2115,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,ZP002),'ZP02',.F.,.T.)
 	dbSelectArea("ZP02")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento27")
@@ -2665,7 +2707,7 @@ Static Function RptDetail()
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,CT007),'CT07',.F.,.T.)
 	dbSelectArea("CT07")
 	dbGoTop()
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
 		IncProc("Processamento28")

@@ -318,6 +318,8 @@ Local cFile := ""
 
 	cFile := Lower("\p10\vistoria_obra\termo\termo_" + cEmpAnt + "_" + cDtVis + "_" + cCliente + cIdName + ".html")
 
+	U_ChkDirVistoriaObra()
+
 	If File(cFile)
 
 		FErase(cFile)

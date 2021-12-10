@@ -88,15 +88,15 @@ Local cQry := GetNextAlias()
 
 	While !(cQry)->(Eof())
 	
-		::cCodPro := (cQry)->ZM0_CODIGO
-		::dData := sToD((cQry)->ZM0_DATINI)
-		::cCliente := (cQry)->ZM0_CLIENT
-		::cLoja := (cQry)->ZM0_LOJA
-		::cGrpVen := (cQry)->ZM0_GRUPO
-		::cCnpj := (cQry)->ZM0_CNPJ
+		::cCodPro	:= (cQry)->ZM0_CODIGO
+		::dData		:= sToD((cQry)->ZM0_DATINI)
+		::cCliente	:= (cQry)->ZM0_CLIENT
+		::cLoja		:= (cQry)->ZM0_LOJA
+		::cGrpVen	:= (cQry)->ZM0_GRUPO
+		::cCnpj		:= (cQry)->ZM0_CNPJ
 		::nLimCreSol := (cQry)->ZM0_VLSOL
-		::nVlrObr := (cQry)->ZM0_VLOBRA
-		::cOrigem := (cQry)->ZM0_ORIGEM
+		::nVlrObr	:= (cQry)->ZM0_VLOBRA
+		::cOrigem	:= (cQry)->ZM0_ORIGEM
 			
 		Begin Transaction
 			
@@ -210,18 +210,18 @@ Method AddProcess() Class TPoliticaCredito
 	
 	RecLock("ZM0", .T.)
 
-		ZM0->ZM0_FILIAL := xFilial("ZM0")
+		ZM0->ZM0_FILIAL	:= xFilial("ZM0")
 		ZM0->ZM0_CODIGO := ::cCodPro
 		ZM0->ZM0_CLIENT := ::cCliente
-		ZM0->ZM0_LOJA := ::cLoja
-		ZM0->ZM0_GRUPO := ::cGrpVen
-		ZM0->ZM0_CNPJ := ::cCnpj
-		ZM0->ZM0_VLSOL := ::nLimCreSol
-		ZM0->ZM0_VLOBRA := ::nVlrObr			
-		ZM0->ZM0_DATINI := ::dData
-		ZM0->ZM0_HORINI := Time()
-		ZM0->ZM0_STATUS := "1"
-		ZM0->ZM0_ORIGEM := ::cOrigem
+		ZM0->ZM0_LOJA	:= ::cLoja
+		ZM0->ZM0_GRUPO	:= ::cGrpVen
+		ZM0->ZM0_CNPJ	:= ::cCnpj
+		ZM0->ZM0_VLSOL	:= ::nLimCreSol
+		ZM0->ZM0_VLOBRA	:= ::nVlrObr			
+		ZM0->ZM0_DATINI	:= ::dData
+		ZM0->ZM0_HORINI	:= Time()
+		ZM0->ZM0_STATUS	:= "1"
+		ZM0->ZM0_ORIGEM	:= ::cOrigem
 	
 	ZM0->(MsUnLock())
 		
@@ -231,14 +231,14 @@ Return()
 Method AddVariable() Class TPoliticaCredito
 
 	// Adiciona variaves do cliente
-	::oVariavel:cCodPro := ::cCodPro
-	::oVariavel:dData := ::dData
-	::oVariavel:cCliente := ::cCliente
-	::oVariavel:cLoja := ::cLoja
-	::oVariavel:cGrpVen := ::cGrpVen
-	::oVariavel:cCnpj := ::cCnpj
-	::oVariavel:nLimCreSol := ::nLimCreSol
-	::oVariavel:nVlrObr := ::nVlrObr
+	::oVariavel:cCodPro		:= ::cCodPro
+	::oVariavel:dData		:= ::dData
+	::oVariavel:cCliente	:= ::cCliente
+	::oVariavel:cLoja		:= ::cLoja
+	::oVariavel:cGrpVen		:= ::cGrpVen
+	::oVariavel:cCnpj		:= ::cCnpj
+	::oVariavel:nLimCreSol	:= ::nLimCreSol
+	::oVariavel:nVlrObr		:= ::nVlrObr
 	
 	::oVariavel:Add()
 
@@ -319,7 +319,7 @@ Method UpdStatus(cStatus) Class TPoliticaCredito
 		
 			If cStatus $ "3/4"
 		
-				ZM0->ZM0_DATFIM := ::dData
+				ZM0->ZM0_DATFIM := dDataBase
 				ZM0->ZM0_HORFIN := Time()
 				
 			EndIf

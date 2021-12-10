@@ -21,10 +21,7 @@ User Function BIA643()
 	Local cSeek	        := xFilial("ZBH") + SPACE(TAMSX3("ZBH_VERSAO")[1]) + SPACE(TAMSX3("ZBH_REVISA")[1]) + SPACE(TAMSX3("ZBH_ANOREF")[1]) + SPACE(TAMSX3("ZBH_MARCA")[1]) + SPACE(TAMSX3("ZBH_CANALD")[1])
 	Local bWhile	    := {|| ZBH_FILIAL + ZBH_VERSAO + ZBH_REVISA + ZBH_ANOREF + ZBH_MARCA + ZBH_CANALD }   
 
-	Local aNoFields     := {"ZBH_VERSAO", "ZBH_REVISA", "ZBH_ANOREF", "ZBH_PERIOD", "ZBH_MARCA", "ZBH_CANALD", "ZBH_VEND", "ZBH_NOMEVE", "ZBH_GRPCLI", "ZBH_DGRPCI",;
-	"ZBH_FORMAT", "ZBH_DFORMT", "ZBH_CATEG", "ZBH_QUANT", "ZBH_VALOR", "ZBH_TOTAL", "ZBH_USER", "ZBH_DTPROC", "ZBH_HRPROC", "ZBH_PCOMIS", "ZBH_VCOMIS", "ZBH_VICMS", "ZBH_VPIS",;
-	"ZBH_VCOF", "ZBH_VST", "ZBH_VDIFAL", "ZBH_ORIGF", "ZBH_FILEIN", "ZBH_LINHAA",;
-	"ZBH_CLASSE","ZBH_PRZMET","ZBH_METVER","ZBH_PERVER","ZBH_PERBON","ZBH_VALVER","ZBH_VALBON","ZBH_PERCPV","ZBH_VALCPV","ZBH_PICMBO","ZBH_VICMBO"}
+	Local aYesFields	:=	{"ZBH_TPSEG","ZBH_ESTADO","ZBH_PCTGMR","ZBH_DPCTGM","ZBH_PICMS","ZBH_PPIS","ZBH_PCOF","ZBH_PST","ZBH_PDIFAL","ZBH_PIPI"}
 
 	Local oFont         := TFont():New("Arial",9,14,.T.,.T.,5,.T.,5,.T.,.F.)
 	Local _nOpcA	    := 0
@@ -60,7 +57,7 @@ User Function BIA643()
 
 	_aPosObj := MsObjSize(_aInfo, _aObjects, .T. )
 
-	FillGetDados(4,"ZBH",1,cSeek,bWhile,,aNoFields,,,,,,@_aHeader,@_aCols)
+	FillGetDados(4,"ZBH",1,cSeek,bWhile,,,aYesFields,.T.,,,,@_aHeader,@_aCols)
 	_aColsBkp	:=	aClone(_aCols)
 
 	Define MsDialog _oDlg Title "Impostos para Orçamento de Receita" From _aSize[7],0 To _aSize[6],_aSize[5] Of oMainWnd Pixel

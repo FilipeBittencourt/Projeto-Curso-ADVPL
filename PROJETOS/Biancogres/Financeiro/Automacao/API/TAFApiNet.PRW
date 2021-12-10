@@ -27,13 +27,13 @@ Method New() Class TAFApiNet
 
 	//If Upper(AllTrim(GetEnvServer())) == "PRODUCAO" .Or. Upper(AllTrim(GetEnvServer())) == "AUTOJOB-FIN" .Or. Upper(AllTrim(GetEnvServer())) == "COMP-FERNANDO"
 	If(Upper(AllTrim(GetSrvProfString("DbAlias", ""))) == "PRODUCAO")
-		
+
 		::cURLBase := GETNEWPAR("FA_FAPIPH","http://iris:4909/api")
-		
+
 	Else
-		
+
 		::cURLBase := GETNEWPAR("FA_FAPIPH","http://iris:4901/api")
-				
+
 	EndIf
 
 	::aHeadStr := {"Content-Type: application/json"}
@@ -47,7 +47,7 @@ Method GetAcessToken() Class TAFApiNet
 
 	Local cRespJSON
 	Local oRetorno
-	Local cHeaderRet 
+	Local cHeaderRet
 	Local cPOSTParms:= ""
 	Local cURLTMP	:= "/Access/Authenticate"
 
@@ -56,7 +56,7 @@ Method GetAcessToken() Class TAFApiNet
 	Local cRet		:= ""
 	Local cJSon		:= ""
 
-	Local oJson := TAFApiJson():New()	
+	Local oJson := TAFApiJson():New()
 	Local oRet
 	Local cErro
 
@@ -74,7 +74,7 @@ Method GetAcessToken() Class TAFApiNet
 
 	Begin Sequence
 
-		cJSon := oJson:GerarJson(::oAuth)	
+		cJSon := oJson:GerarJson(::oAuth)
 
 		oRet:RequestJson := cJSon
 
@@ -95,7 +95,7 @@ Method GetAcessToken() Class TAFApiNet
 			oRet:Token		:= ::cAcessToken
 			oRet:oRetorno	:= oRetorno
 
-			aadd(::aHeadStr, "Authorization: Bearer " + ::cAcessToken)	
+			aadd(::aHeadStr, "Authorization: Bearer " + ::cAcessToken)
 
 			//todo:  verificar vencimento de Token e Renew
 
@@ -126,7 +126,7 @@ Method PostObj(cUrlApi, oObject) Class TAFApiNet
 
 	Local cRespJSON
 	Local oRetorno
-	Local cHeaderRet 
+	Local cHeaderRet
 	Local cPOSTParms:= ""
 	Local cURLTMP	:= cUrlApi
 
@@ -135,7 +135,7 @@ Method PostObj(cUrlApi, oObject) Class TAFApiNet
 	Local cRet		:= ""
 	Local cJSon		:= ""
 
-	Local oJson := TAFApiJson():New()	
+	Local oJson := TAFApiJson():New()
 	Local oRet
 
 	Local cErro
@@ -145,9 +145,9 @@ Method PostObj(cUrlApi, oObject) Class TAFApiNet
 
 	Begin Sequence
 
-		cJSon := oJson:GerarJson(oObject)	
+		cJSon := oJson:GerarJson(oObject)
 
-		oRet:RequestJson := cJSon 	
+		oRet:RequestJson := cJSon
 
 		cRespJSON := HTTPPost(cUrl,,cJSon,1200,::aHeadStr,@cHeaderRet)
 
@@ -177,11 +177,23 @@ Method PostObj(cUrlApi, oObject) Class TAFApiNet
 	End Sequence
 	ErrorBlock( bErro )
 
-	If (!oRet:Ok) .And. ValType(cErro) <> "U"
+
+	If  ValType(oRet:Ok) == "L"
+
+		If (!oRet:Ok) .And. ValType(cErro) <> "U"
+
+			oRet:Ok 		:= .F.
+			oRet:Mensagem	:= cErro
+
+		EndIf
+
+	ElseIf  ValType(oRet:Ok) <> "U" .And. ValType(cErro) <> "U"
 
 		oRet:Ok 		:= .F.
-		oRet:Mensagem	:= cErro
+		oRet:Mensagem	:= cErro +" - "+oRetorno
+		oRet:oRetorno	:= Nil
 
 	EndIf
+
 
 Return(oRet)

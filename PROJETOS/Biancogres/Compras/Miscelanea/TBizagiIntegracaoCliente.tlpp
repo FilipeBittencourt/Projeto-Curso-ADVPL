@@ -207,7 +207,7 @@ Method ExecCliente(cQry) Class TBizagiIntegracaoCliente
         EndIf
 
         //Projeto C-17
-        aAdd(aVetor,{"A1_YREGESP"		, IIf( Alltrim((cQry)->CLI_REGESP) == "S" .Or. Alltrim((cQry)->CLI_ACORCOMST) == "S", "EXCECAO",""), Nil})
+        aAdd(aVetor,{"A1_YREGESP"		, IIf( Alltrim((cQry)->CLI_REGESP) == "S" .And. Alltrim((cQry)->CLI_ACORCOMST) == "N", "EXCECAO",""), Nil})
         If !Empty(Alltrim((cQry)->CLI_VENCREGESP))
             aAdd(aVetor,{"A1_YDTVENC"		, StoD((cQry)->CLI_VENCREGESP) , Nil})
         EndIf 

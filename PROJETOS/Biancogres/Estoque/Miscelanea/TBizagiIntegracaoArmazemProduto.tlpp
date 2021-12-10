@@ -49,6 +49,8 @@ Method Processa() Class TBizagiIntegracaoArmazemProduto
     Local _cAlias := GetNextAlias()
     Local _cSql	:=	""
     Local _cClsAnt	:=	""
+    Local _cPolAnt	:=	""
+    Local _oMd	:=	TBiaControleMD():New()
   
     BeginSql Alias _cALias
     	%NoParser%
@@ -66,6 +68,7 @@ Method Processa() Class TBizagiIntegracaoArmazemProduto
    		Begin Transaction
 	    	If ZCN->(DbSeek(xFilial("ZCN")+(_cAlias)->(PRODUTO+ALMOX)))
 	    		_cClsAnt	:=	ZCN->ZCN_CLASSI
+	    		_cPolAnt	:=	ZCN->ZCN_POLIT
 	    		Reclock("ZCN",.F.)
 	    		ZCN->ZCN_POLIT	:=	(_cAlias)->POLITICA
 	    		ZCN->ZCN_PONPED	:=	(_cAlias)->PONTOPEDIDO
@@ -78,7 +81,9 @@ Method Processa() Class TBizagiIntegracaoArmazemProduto
 	    		EndIf
 	    		ZCN->(MsUnlock())
 	    		
-	    		
+	    		If Alltrim(_cPolAnt) == "4" .And. Alltrim(ZCN->ZCN_POLIT) <> '4'
+	    			_oMd:ZeraMd(ZCN->ZCN_COD, ZCN->ZCN_LOCAL)
+	    		EndIf
 	    		
 	    		If Alltrim(ZCN->ZCN_CLASSI) == '3'
 	    			_cSql	:=	" UPDATE " + RetSqlName("ZCN")

@@ -169,6 +169,11 @@ User Function BIA154()
 
 		EndIf
 
+		// Emerson Salvador - 01/09/2021 - Ticket 34058								
+		If Alltrim(cCLVL) == "6212"
+			cConta := "16503104"
+		EndIf
+
 		If UPPER(ALLTRIM(FUNNAME())) <> "MATA240" .and. UPPER(ALLTRIM(FUNNAME())) <> "BIA294"
 
 			For xxn := 1 to Len(aHeader)

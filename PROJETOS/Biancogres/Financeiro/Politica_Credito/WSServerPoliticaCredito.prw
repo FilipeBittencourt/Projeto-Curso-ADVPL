@@ -96,10 +96,13 @@ WsService WSServerPoliticaCredito Description "Consulta de Informacoes de Politi
 	WsData oRequest As WsSRequest_CustomerVariables
 	WsData oResponse As Array Of WsSResponse_CustomerVariables	
 	WsData oRequestCNPJ As WsSRequest_JoinCustomerVariables
-	WsData oResponseCNPJ As WsSResponse_CustomerVariables	
-	
+	WsData oResponseCNPJ As WsSResponse_CustomerVariables
+	WsData oRequestCPF As WsSRequest_CPFBloqueados //Request
+	WsData oResponseCPF As WsSReponse_CPFBloqueados //Response
+
 	WsMethod CustomerVariables
 	WsMethod CNPJCustomerVariables
+	WsMethod CPFBloqueados
 	
 EndWsService
 
@@ -310,3 +313,139 @@ Local oVariavel := Nil
 	RpcClearEnv()
 
 Return(lRet)
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} WsSRequest_CPFBloqueados
+//Request do serviço de analise de CPF - CPFBloqueados
+@author Wellington Coelho - Facile
+@type function
+@since 20/09/2021
+@version 1.0
+@obs Rotina especifica para a BIANCOGRES
+@return Nil
+/*/
+//-------------------------------------------------------------------
+WsStruct WsSRequest_CPFBloqueados
+
+WsData cCPFs 	As String
+WsData oAuth 	As WsSAuthentication
+
+EndWsStruct
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} WsSReponse_CPFBloqueados
+//Reponse do serviço de analise de CPF - CPFBloqueados
+@author Wellington Coelho - Facile
+@type function
+@since 20/09/2021
+@version 1.0
+@obs Rotina especifica para a BIANCOGRES
+@return Nil
+/*/
+//-------------------------------------------------------------------
+WsStruct WsSReponse_CPFBloqueados
+
+WsData cSituac As String
+//WsData cCPFs As String
+
+EndWsStruct
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} CPFBloqueados
+//Regras do serviço CPFBloqueados
+@author Wellington Coelho - Facile
+@type function
+@since 20/09/2021
+@version 1.0
+@obs Rotina especifica para a BIANCOGRES
+@return Nil
+/*/
+//-------------------------------------------------------------------
+WsMethod CPFBloqueados WsReceive oRequestCPF WsSend oResponseCPF WsService WSServerPoliticaCredito
+Local lRet := .T.
+
+If (::oRequestCPF:oAuth:cKey == _KEY)
+	If (::oRequestCPF:oAuth:cUser == _USER .And. ::oRequestCPF:oAuth:cPass == _PASS)
+		::oResponseCPF:cSituac := SituCPF( ::oRequestCPF:cCPFs )
+		//::oResponseCPF:cCPFs   :=  ::oRequestCPF:cCPFs
+	Else
+		lRet := .F.
+		SetSoapFault("CPFBloqueados", "Usuário ou senha inválidos.")
+	EndIf
+Else
+	lRet := .F.
+	SetSoapFault("CPFBloqueados", "Chave de acesso ao Web Service inválida.")
+EndIf
+
+Return(lRet)
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} SituCPF(cCPF)
+//Verifica a situação do CPF, idenpendente do CNPJ que esteja vinculado
+@author Wellington Coelho - Facile
+@type function
+@since 20/09/2021
+@version 1.0
+@obs Rotina especifica para a BIANCOGRES
+@return Nil
+/*/
+//-------------------------------------------------------------------
+Static Function SituCPF(cCPF)
+Local aCPFs   :={}
+Local nI      := 0
+Local lBlq    := .F.
+Local cSituac := ""
+
+Default cCPF := ""
+
+RpcSetType(3)
+RpcSetEnv("01",'01')
+
+If ! Empty(cCPF)
+
+	//Recebe 1 ou mais CPFs separados por ponto e virgula
+	aCPFs := StrTokArr(cCPF, ";")
+	If Len(aCPFs) > 0
+		For nI := 1 To Len(aCPFs)
+			//Se nenhum CPF estiver bloqueado verifica o proximo
+			If ! lBlq
+
+				//Verifica a quantidade de digitos do CPF
+				If Len(aCPFs[nI]) < 11
+					aCPFs[nI] := StrZero( Val(aCPFs[nI]), 11 )
+				EndIf
+
+				//Verifica se o CPF tem vinculo com algum CNPJ
+				ZRZ->(DbSetOrder(2))
+				If ZRZ->(DbSeek( xFilial("ZRZ") + aCPFs[nI] ))
+
+					//Verifica todos os vinculos CPF x CNPJ
+					While ZRZ->(!EoF()) .AND. aCPFs[nI] == ZRZ->ZRZ_CPF
+
+						//Verifica a situação dos CNPJs vinculados
+						ZRY->(DbSetOrder(1))
+						If ZRY->(DbSeek( xFilial("ZRZ") + ZRZ->ZRZ_CNPJ ))
+							If ZRY->ZRY_SITUAC == "1" //Normal = Liberado
+								cSituac := "LIBERADO"
+							Else //2=Perda;3=Perda/Cobrança Terceirizada;4=Perda/Jurídico;5=Cobrança Terceirizada = Bloqueado
+								cSituac := "BLOQUEADO"
+								lBlq    := .T.
+								Exit
+							EndIf
+						EndIf
+
+					ZRZ->(dbSkip())
+					EndDo
+				EndIf
+			EndIf
+		Next nI
+	EndIf
+EndIf
+
+If Empty(cSituac)
+	cSituac := "NAOCONSTA"
+EndIf
+
+RpcClearEnv()
+
+Return cSituac

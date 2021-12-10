@@ -41,9 +41,9 @@ Return()
 
 
 Method Set() Class TAFRegraComunicacaoBancariaPagar
-Local nCount := 0
-Local aAreaSA2 := SA2->(GetArea())
-Local aAreaSF6 := SF6->(GetArea())
+	Local nCount := 0
+	Local aAreaSA2 := SA2->(GetArea())
+	Local aAreaSF6 := SF6->(GetArea())
 
 	::oLog:cIDProc := ::cIDProc
 	::oLog:cOperac := "P"
@@ -241,11 +241,12 @@ Local aAreaSF6 := SF6->(GetArea())
 
 										If SF6->F6_EST $ GetNewPar("MV_UFGNRE", "") // Feito pela rotina FISA095
 
+											// AJUSTES NA VALIDAÇÃO DO CODIGO DE BARRAS ,
+											// REMOVENDO COMPARAÇÕES FEITAS PELA VERSÃO ANTERIOR(1.0  da GNRE) - 34256 | GNRE/DIFAL com erros
 											If ( !Empty(SE2->E2_CODBAR) .And. AllTrim(SF6->F6_CDBARRA) <> AllTrim(SE2->E2_CODBAR) ) .Or.;
-											   ( !Empty(SE2->E2_LINDIG) .And. AllTrim(SF6->F6_CDBARRA) <> AllTrim(SE2->E2_LINDIG) ) .Or.;
-											   ( Empty(SE2->E2_LINDIG) .And. Empty(SE2->E2_CODBAR) ) .Or.;
-											   ( Replicate("0", 10) $ SubStr(SE2->E2_CODBAR, 1, 10) ) .Or.;
-											   ( Replicate("0", 10) $ SubStr(SE2->E2_LINDIG, 1, 10) )
+													( Empty(SE2->E2_LINDIG) .And. Empty(SE2->E2_CODBAR) ) .Or.;
+													( Replicate("0", 10) $ SubStr(SE2->E2_CODBAR, 1, 10) ) .Or.;
+													( Replicate("0", 10) $ SubStr(SE2->E2_LINDIG, 1, 10) )
 
 												::oLst:GetItem(nCount):lValid := .F.
 
@@ -265,8 +266,8 @@ Local aAreaSF6 := SF6->(GetArea())
 										Else // Feito manual
 
 											If ( Empty(SE2->E2_CODBAR) .Or. Replicate("0", 10) $ SubStr(SE2->E2_CODBAR, 1, 10) ) .And.;
-											   ( Empty(SE2->E2_LINDIG) .Or. Replicate("0", 10) $ SubStr(SE2->E2_LINDIG, 1, 10) ) .And.;
-											   ( Empty(SE2->E2_YLINDIG) .Or. Replicate("0", 10) $ SubStr(SE2->E2_YLINDIG, 1, 10) )
+													( Empty(SE2->E2_LINDIG) .Or. Replicate("0", 10) $ SubStr(SE2->E2_LINDIG, 1, 10) ) .And.;
+													( Empty(SE2->E2_YLINDIG) .Or. Replicate("0", 10) $ SubStr(SE2->E2_YLINDIG, 1, 10) )
 
 												::oLst:GetItem(nCount):lValid := .F.
 
@@ -413,8 +414,8 @@ Return()
 
 
 Method Get() Class TAFRegraComunicacaoBancariaPagar
-Local cSQL := ""
-Local cQry := GetNextAlias()
+	Local cSQL := ""
+	Local cQry := GetNextAlias()
 
 	::oLst := ArrayList():New()
 
@@ -454,10 +455,10 @@ Return(::oLst)
 
 
 Method GetRuleBorManu(oLst) Class TAFRegraComunicacaoBancariaPagar
-Local cSQL := ""
-Local cQry := GetNextAlias()
-Local aGrupo := {}
-Local cGrupo := ""
+	Local cSQL := ""
+	Local cQry := GetNextAlias()
+	Local aGrupo := {}
+	Local cGrupo := ""
 
 	DbSelectArea("SE2")
 	SE2->(DbGoTo(oLst:nRecNo))
@@ -491,11 +492,11 @@ Local cGrupo := ""
 		// portanto busca uma regra com desconto
 		//If SE2->E2_SALDO < SE2->E2_VALOR .And. Empty(SE2->E2_CODBAR)
 
-			//cSQL += " AND ZK1_VLRTAR > 0 "
+		//cSQL += " AND ZK1_VLRTAR > 0 "
 
 		//Else
 
-			cSQL += " AND ZK1_VLRTAR = 0 "
+		cSQL += " AND ZK1_VLRTAR = 0 "
 
 		//EndIf
 
@@ -541,7 +542,7 @@ Return(cGrupo)
 
 
 Method GetRule(cGroup) Class TAFRegraComunicacaoBancariaPagar
-Local cRet := ""
+	Local cRet := ""
 
 	DBSelectArea("ZK0")
 	ZK0->(DbSetOrder(1))
@@ -575,9 +576,9 @@ Return(cRet)
 
 
 Method IsMultiple(cGroup) Class TAFRegraComunicacaoBancariaPagar
-Local lRet := .T.
-Local cSQL := ""
-Local cQry := GetNextAlias()
+	Local lRet := .T.
+	Local cSQL := ""
+	Local cQry := GetNextAlias()
 
 	cSQL := " SELECT COUNT(ZK0_CODGRU) AS COUNT "
 	cSQL += " FROM " + RetSQLName("ZK0") + " ZK0 "
@@ -606,8 +607,8 @@ Return(lRet)
 
 
 Method ValidGroup(cGroup, nRecno) Class TAFRegraComunicacaoBancariaPagar
-Local lRet := .F.
-Local oLog := TAFLog():New()
+	Local lRet := .F.
+	Local oLog := TAFLog():New()
 
 	Default cGroup := ""
 	Default nRecno := 0
@@ -659,7 +660,7 @@ Local oLog := TAFLog():New()
 
 		EndIf
 
-	// Cliente/Fornecedor sem grupo de regra definido, envia workflow informativo
+		// Cliente/Fornecedor sem grupo de regra definido, envia workflow informativo
 	Else
 
 		lRet := .F.
@@ -681,14 +682,14 @@ Return(lRet)
 
 
 Method ValidRule(cRule, lMultiple) Class TAFRegraComunicacaoBancariaPagar
-Local lRet := .T.
+	Local lRet := .T.
 
 	// Titulo sem regra definida, envia workflow informativo
 	If lMultiple
 
 		lRet := .F.
 
-	// Cliente/Fornecedor sem regra definida, envia workflow informativo
+		// Cliente/Fornecedor sem regra definida, envia workflow informativo
 	ElseIf Empty(cRule)
 
 		lRet := .F.
@@ -711,8 +712,8 @@ Return(lRet)
 
 
 Method Validate() Class TAFRegraComunicacaoBancariaPagar
-Local lRet := .F.
-Local nCount := 1
+	Local lRet := .F.
+	Local nCount := 1
 
 	lRet := aScan(::oLst:ToArray(), {|x| !Empty(x:cBanco) }) > 0
 

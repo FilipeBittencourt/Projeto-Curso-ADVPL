@@ -149,7 +149,7 @@ Static Function fProcBia573()
 		msUPDT += "       CTQ_MSBLQL, "
 		msUPDT += "       CTQ_STATUS "
 		msUPDT += "      ) "
-		msUPDT += "             SELECT '  ' CTQ_FILIAL, "
+		msUPDT += "             SELECT '" + xFilial("CTQ") + "' CTQ_FILIAL, "
 		msUPDT += "                    RATEIO CTQ_RATEIO, "
 		msUPDT += "                    'APROPRIACAO ' + RTRIM(CLVLORI) CTQ_DESC, "
 		msUPDT += "                    '1' CTQ_TIPO, "
@@ -187,7 +187,8 @@ Static Function fProcBia573()
 		msUPDT += "             ( "
 		msUPDT += "                  SELECT * "
 		msUPDT += "                  FROM " + RetSqlName("CTQ") + " XXX "
-		msUPDT += "                  WHERE XXX.CTQ_RATEIO + XXX.CTQ_SEQUEN = RTG.RATEIO + RTG.SEQUENC "
+		msUPDT += "                  WHERE CTQ_FILIAL = '" + xFilial("CTQ") + "' "
+		msUPDT += "                        AND XXX.CTQ_RATEIO + XXX.CTQ_SEQUEN = RTG.RATEIO + RTG.SEQUENC "
 		msUPDT += "                        AND XXX.D_E_L_E_T_ = ' ' "
 		msUPDT += "             ) "
 		U_BIAMsgRun("Gravando Apropriação de Custo...",,{|| msStaExcQy := TcSQLExec(msUPDT)})

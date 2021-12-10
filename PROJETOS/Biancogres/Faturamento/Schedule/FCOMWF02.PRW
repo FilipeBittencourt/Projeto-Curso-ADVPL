@@ -11,7 +11,7 @@
 /*/
 User Function FCOMWF02()
 
-Local xv_Emps    := U_BAGtEmpr("01_05")
+Local xv_Emps    := U_BAGtEmpr("01_05_14")
 Local nI
 
 For nI := 1 to Len(xv_Emps)

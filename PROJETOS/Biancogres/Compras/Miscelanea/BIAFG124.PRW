@@ -24,6 +24,7 @@ User Function BIAFG124(_cCod,_nQtd,_cPedido,_cCodImp,_cSufix,_cAlmox)
 	Local _cArquivo	:=	""
 	Local _cCaminho	:=	""
 	Local _cLocali	:=	""
+	Local _cArmazem	:=	""  // MARCOS AURELIO 17/11/2021
 
 	Local _cBat
 	Local _cPathbat
@@ -165,8 +166,11 @@ User Function BIAFG124(_cCod,_nQtd,_cPedido,_cCodImp,_cSufix,_cAlmox)
 
 	_cLocali	:=	POSICIONE("ZCN",2,xFilial("ZCN")+PADR(_cCod,TamSx3("B1_COD")[1])+_cAlmox, "ZCN_LOCALI")
 
-	_cDescPrd	:=	fRetCEsp(Alltrim(SB1->B1_DESC))
+    _cArmazem	:=	POSICIONE("ZCN",2,xFilial("ZCN")+PADR(_cCod,TamSx3("B1_COD")[1])+_cAlmox, "ZCN_LOCAL") // MARCOS AURELIO 17/11/2021
 
+	_cDescPrd	:=	fRetCEsp(Alltrim(SB1->B1_DESC))
+    
+	_cPrint	+=	'A573,189,2,1,2,2,N,"ARMAZ.: '+Alltrim(_cArmazem)+'"' + CHR(13) + CHR(10) // MARCOS AURELIO 17/11/2021
 	_cPrint	+=	'A573,157,2,1,2,2,N,"LOC.: '+Alltrim(_cLocali)+'"' + CHR(13) + CHR(10)
 	_cPrint	+=	'A572,116,2,2,1,1,N,"'+SUBSTR(_cDescPrd,1,42)+'"' + CHR(13) + CHR(10)
 	_cPrint	+=	'A572,35,2,2,1,1,N,"PC: '+_cNumPc+'"' + CHR(13) + CHR(10)

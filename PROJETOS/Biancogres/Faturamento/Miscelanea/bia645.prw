@@ -136,7 +136,6 @@ Return
 
 Static Function fBIA645F()
 
-	Local _cAlias   := GetNextAlias()
 	Local M001      := GetNextAlias()
 	Local _msc
 	Private msrhEnter := CHR(13) + CHR(10)
@@ -418,8 +417,6 @@ Return
 User Function B645FOK()
 
 	Local cMenVar     := ReadVar()
-	Local vfArea      := GetArea()
-	Local _cAlias
 	Local _nAt		  := _oGetDados:nAt
 	Local _nI
 	Local _msVEND     := ""
@@ -714,8 +711,6 @@ Static Function fProcImport()
 	Local cTabImp			:= 'ZBK'
 	Local aItem 			:= {}
 	Local aLinha			:= {}
-	Local aErro				:= {}
-	Local cErro 			:= ''
 	Local nImport			:= 0
 	Local cConteudo			:= ''
 	Local nTotLin			:= 0
@@ -869,12 +864,15 @@ Return
 User Function B645TOREV(xxCanalTO)
 
 	Local xgDesagio := 0
+	Local xgPctGMR  := ""
 
 	If xxCanalTO == "010"
-		xgDesagio := 0.915 //Ticket 10368
+		xgDesagio := 0.88
+		xgPctGMR  := "    AND ZBH.ZBH_PCTGMR <> 'J' "
 
 	ElseIf xxCanalTO == "035"
-		xgDesagio := 0.800 //Ticket 19467
+		xgDesagio := 0.95
+		xgPctGMR  := "    AND ZBH.ZBH_PCTGMR = 'J' "
 
 	EndIf
 
@@ -894,6 +892,7 @@ User Function B645TOREV(xxCanalTO)
 	KJ001 += "    AND ZBH.ZBH_PERIOD = '00' "
 	KJ001 += "    AND ZBH.ZBH_ORIGF = '1' "
 	KJ001 += "    AND ZBH.ZBH_TIPO2 = 'C' "
+	KJ001 += xgPctGMR
 	KJ001 += "    AND ZBH.D_E_L_E_T_ = ' ' "	
 	KJIndex := CriaTrab(Nil,.f.)
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,KJ001),'KJ01',.T.,.T.)
@@ -916,6 +915,7 @@ User Function B645TOREV(xxCanalTO)
 				KJ001 += "    AND ZBH.ZBH_PERIOD = '00' "
 				KJ001 += "    AND ZBH.ZBH_ORIGF = '1' "
 				KJ001 += "    AND ZBH.ZBH_TIPO2 = 'C' "
+				KJ001 += xgPctGMR
 				KJ001 += "    AND ZBH.D_E_L_E_T_ = ' ' "
 				U_BIAMsgRun("Aguarde... Apagando registros ZBA... ",,{|| TcSQLExec(KJ001) })
 
@@ -959,6 +959,7 @@ User Function B645TOREV(xxCanalTO)
 	BH004 += "                      AND ZBH_MARCA = '" + _cCodMarc + "' "
 	BH004 += "                      AND ZBH_PERIOD = '00' "
 	BH004 += "                      AND ZBH_ORIGF = '1' "
+	BH004 += xgPctGMR
 	BH004 += "                      AND EXISTS (SELECT * "
 	BH004 += "                                    FROM " + RetSqlName("ZBK") + " XZBK "
 	BH004 += "                                   WHERE XZBK.ZBK_FILIAL = ZBH.ZBH_FILIAL "

@@ -42,6 +42,9 @@ User Function MA410MNU()
 		// Ticket: 25655 - Tela para monitoramento do processo automatico de devolucao.
 		//aadd(arotina, {"Monitor Devolucao", 'U_BIA702()',0,4,0,NIL})
 
+		// Emerson (Facile) em 27/08/2021 - Tela Rateio RPV (BIAFG106)
+		aadd(arotina, {"Rateio RPV",'U_BIAFG106("2",0)',0,4,0,NIL})
+
 	EndIf
 
 Return()

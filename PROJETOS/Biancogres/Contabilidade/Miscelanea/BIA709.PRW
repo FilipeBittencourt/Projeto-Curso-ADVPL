@@ -66,6 +66,8 @@ User Function BIA709P()
 	Local oPrcFctC
 	Local mCtrFimJob := .F. 
 
+	Local nSrvDB := Iif( !U_fValDEV() , "HERMES" , "HIMEROS" ) //TRATAMENTO PARA DIFERENCIAR AMBIENTE DE PRD E DEV
+
 	MS004 := " EXEC " + nSrvDB + ".msdb.dbo.sp_help_job "
 	MS004 += "    @job_name = N'DW -> DRE Contabil', "
 	MS004 += "    @job_aspect = N'JOB', "

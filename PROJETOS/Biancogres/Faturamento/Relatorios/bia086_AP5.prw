@@ -396,6 +396,23 @@ ElseIf cEmpAnt == "07"
 	Case MV_PAR27 == 7	//TODAS
 			nEmp	:= "XXXX"
 	EndCase
+ElseIf cEmpAnt == "14"
+	Do Case
+	Case MV_PAR27 == 1 	//BIANCOGRES
+			nEmp	:= "0101"
+	Case MV_PAR27 == 2 	//INCESA
+			nEmp	:= "0501"
+	Case MV_PAR27 == 3 	//BELLACASA
+			nEmp	:= "0599"
+	Case MV_PAR27 == 4	//INCESA/BELLACASA
+			nEmp	:= "05"
+	Case MV_PAR27 == 5	//Pegaus
+			nEmp	:= "0199"
+	Case MV_PAR27 == 6	//VINILICO
+			nEmp	:= "1302"
+	Case MV_PAR27 == 7	//TODAS
+			nEmp	:= "XXXX"
+	EndCase
 ElseIf cEmpAnt == "13"
 	Do Case
 	Case MV_PAR27 == 6	//VINILICO
@@ -633,28 +650,36 @@ Static FUNCTION fCriaArq()
 RETURN
 
 Static FUNCTION fMapAtePed()
-	Local cSql		:= ""
+Local cQrySF2  := ""
+Local cQrySD2  := ""
+Local cQryPED  := ""
+Local cDropSf2 := ""
+Local cDropSd2 := ""
 
 	nNomeSF2	:= "##BIA086SF2"+cEmpAnt+__cUserID+strzero(seconds()*3500,10) //strzero(seconds()*3500,10)
 	nNomeSD2	:= "##BIA086SD2"+cEmpAnt+__cUserID+strzero(seconds()*3500,10) //Alltrim(Str(randomize(1,34000)))
 
+	//Monta as querys para excluir as tabelas temporarias
+	cDropSf2 := "DROP TABLE IF EXISTS " + nNomeSF2
+	cDropSd2 := "DROP TABLE IF EXISTS " + nNomeSD2
+
 	//Gerando tabela temporaria SF2
-	cSql := GetSqlSF2()   
-	U_BIAMsgRun("Aguarde... Gerando Base... Cabeçalho da NF",,{|| TcSQLExec(cSql)})
+	cQrySF2 := GetSqlSF2()
+	U_BIAMsgRun("Aguarde... Gerando Base... Cabeçalho da NF",,{|| TcSQLExec(cQrySF2)})
 
 	//Gerando tabela temporaria SD2
-	cSql := GetSqlSD2()   
-	U_BIAMsgRun("Aguarde... Gerando Base... Itens da NF",,{|| TcSQLExec(cSql)})
+	cQrySD2 := GetSqlSD2()	
+	U_BIAMsgRun("Aguarde... Gerando Base... Itens da NF",,{|| TcSQLExec(cQrySD2)})
 
 	// Carrega o sql dos pedidos..
-	cQuery := GetSqlPed()
+	cQryPED := GetSqlPed()
 
 	IF chkfile("cPed")
 		dbSelectArea("cPed")
 		dbCloseArea()
 	ENDIF
-	cQuery := ChangeQuery(cQuery)
-	TCQUERY cQuery ALIAS "cPed" NEW
+	cQryPED := ChangeQuery(cQryPED)
+	TCQUERY cQryPED ALIAS "cPed" NEW
 	cPed->(dbGoTop())
 
 	DBSELECTAREA("cPed")
@@ -716,6 +741,10 @@ Static FUNCTION fMapAtePed()
 END
 
 	fImprime()
+
+//Exclui as tabelas temporárias
+U_BIAMsgRun("Aguarde... Gerando Base...",,{|| TcSQLExec(cDropSf2)})
+U_BIAMsgRun("Aguarde... Gerando Base...",,{|| TcSQLExec(cDropSd2)})
 
 RETURN( NIL )
 
@@ -1095,42 +1124,33 @@ RETURN
 // BLOCO DE CONSULTAS SQLs
 //----------------------------------------------------------------------------------
 Static Function GetSqlSF2()
-	Local cSqlRet := ''
-	
+Local cSqlRet := ''
 
-	cSqlRet := ""
-	cSqlRet += "SELECT * INTO "+nNomeSF2+" FROM (													" + Enter
-	cSqlRet += "	SELECT VW_SF2.* 																		" + Enter
-	cSqlRet += "	FROM VW_SF2																		" + Enter	
-	
-	
-	If (oAceTela:UserTelemaketing())
-		
-		cSqlRet +=" INNER JOIN SA1010 A1                                                           	" + Enter
-		cSqlRet +=" ON		A1_FILIAL		= '"+xFilial('SA1')+"'                              	" + Enter
-		cSqlRet +=" AND		F2_CLIENTE   = A1.A1_COD		                                     	" + Enter
-		cSqlRet +=" AND		F2_LOJA      = A1.A1_LOJA	                                       	" + Enter
-		cSqlRet +=" AND		A1.D_E_L_E_T_	= ''                                                   	" + Enter
-				
-	EndIf
-	
-	
-	cSqlRet += "	WHERE 	F2_FILIAL 	= '"+xFilial("SF2")+"' AND 									" + Enter
-	cSqlRet += "			F2_EMISSAO  BETWEEN '"+DTOS(wEntrDe)+"' AND '" +DTOS(wEntrAte)+"'   	" + Enter
-	If Len(Alltrim(nEmp)) == 4 .And. ( Alltrim(nEmp) <> "XXXX" )
-		cSqlRet += "	AND F2_YEMP	= '"+nEmp+"' 													" + Enter
-	ElseIf Len(Alltrim(nEmp)) == 2
-		cSqlRet += "	AND SUBSTRING(F2_YEMP,1,2) = '"+nEmp+"' 									" + Enter
-	EndIf
-	
-	If (oAceTela:UserTelemaketing())
-	
-		cSqlRet += " AND ( "+oAceTela:FiltroSA1('S')+" ) 											" + Enter	
-	
-	EndIf
-	
-	                 
-	cSqlRet += " ) AS TMP 																			" + Enter
+cSqlRet := ""
+cSqlRet += " SELECT ( " + Enter
+cSqlRet += "	SELECT ATENDE FROM dbo.[GET_ZKP] (A1_YTPSEG, F2_YEMP, F2_EST, F2_VEND1, A1_YCAT, A1_GRPVEN) ) ATENDE, * " + Enter 
+cSqlRet += "  INTO "+nNomeSF2+" FROM (                                                          " + Enter
+cSqlRet += "    SELECT VW_SF2.*, A1_YTPSEG, A1_YCAT, A1_GRPVEN                                  " + Enter
+cSqlRet += "     FROM VW_SF2                                                                    " + Enter   
+cSqlRet += "      INNER JOIN SA1010 A1                                                          " + Enter
+cSqlRet += "       ON      A1_FILIAL       = '"+xFilial('SA1')+"'                               " + Enter
+cSqlRet += "       AND     F2_CLIENTE   = A1.A1_COD                                             " + Enter
+cSqlRet += "       AND     F2_LOJA      = A1.A1_LOJA                                            " + Enter
+cSqlRet += "       AND     A1.D_E_L_E_T_   = ''                                                 " + Enter
+cSqlRet += "	 WHERE 	F2_FILIAL 	= '"+xFilial("SF2")+"' AND 									" + Enter
+cSqlRet += "			F2_EMISSAO  BETWEEN '"+DTOS(wEntrDe)+"' AND '" +DTOS(wEntrAte)+"'   	" + Enter
+
+If Len(Alltrim(nEmp)) == 4 .And. ( Alltrim(nEmp) <> "XXXX" )
+	cSqlRet += "	AND F2_YEMP	= '"+nEmp+"' 													" + Enter
+ElseIf Len(Alltrim(nEmp)) == 2
+	cSqlRet += "	AND SUBSTRING(F2_YEMP,1,2) = '"+nEmp+"' 									" + Enter
+EndIf
+
+If (oAceTela:UserTelemaketing())
+	cSqlRet += " AND ( "+oAceTela:FiltroSA1('S')+" ) 											" + Enter	
+EndIf
+					
+cSqlRet += " ) AS TMP 																			" + Enter
 
 Return cSqlRet
 //----------------------------------------------------------------------------------
@@ -1164,7 +1184,7 @@ Static Function GetSqlPed(lpOrdena)
 	Local cSqlRet := ''
 
 	cSqlRet +=" SELECT F2_FILIAL, F2_EMISSAO, F2_CLIENTE, F2_LOJA, F2_DOC, F2_SERIE, F2_VEND1, F2_YSUBTP,D2_VALBRUT, D2_PEDIDO, F2_YDES, 						" + Enter
-	cSqlRet +=" 			A1_YVENDB2, A1_YVENDB3, A1_YVENDB3, A1_YVENDI3, A1_SATIV1, A1_YRECR, A1_GRPVEN, A1_YRECR, A1_COD, A1_NOME, A1_ENDENT,	" + Enter
+	cSqlRet +=" 			A1_YVENDB2, A1_YVENDB3, A1_YVENDB3, A1_YVENDI3, A1_SATIV1, A1_YRECR, A1.A1_GRPVEN, A1_YRECR, A1_COD, A1_NOME, A1_ENDENT,	" + Enter
 	cSqlRet +=" 			C5_NUM, C5_YPC, C5_CLIENTE, C5_LOJACLI, C5_TRANSP, C5_CONDPAG, C5_EMISSAO, E4_DESCRI, 						            " + Enter
 	cSqlRet +=" 			D2_TIPO, D2_COD, D2_ITEMPV, D2_LOTECTL, D2_PRCVEN, D2_QUANT, D2_TOTAL, D2_PESO, D2_CF, D2_TES, 		             " + Enter
 	cSqlRet +=" 			B1_TIPO, B1_YREF, A4_NREDUZ, B1_YCLASSE, F4_DUPLIC, A3_NOME, F2_YEMP, C5_YPEDORI, D2_DESCON, C6_YDTNERE , 					" + Enter
@@ -1255,12 +1275,18 @@ Static Function GetSqlPed(lpOrdena)
 		cSqlRet += "	AND		F2.F2_VEND1 BETWEEN '"+wVendDe+"' AND '"+wVendAte+"'  " + Enter
 		//Filtra Vendedor por Atendente
 		If Alltrim(cAtend) <> ""
+            cSqlRet += "    AND F2.ATENDE = '"+cAtend+"'  " + Enter
+        EndIf
+
+		/*
+		If Alltrim(cAtend) <> ""
 			If cEmpAnt == '01'
 				cSqlRet += "	AND	F2.F2_VEND1 IN (SELECT ZZI_VEND FROM "+RetSqlName("ZZI")+" WHERE ZZI_FILIAL = '"+xFilial("ZZI")+"'	AND ZZI_ATENDE = '"+cAtend+"'	AND D_E_L_E_T_ = '')  " + Enter
 			Else
 				cSqlRet += "	AND	F2.F2_VEND1 IN (SELECT ZZI_VEND FROM ZZI050 WHERE ZZI_FILIAL = '"+xFilial("ZZI")+"'	AND ZZI_ATENDE = '"+cAtend+"'	AND D_E_L_E_T_ = '')  " + Enter
 			EndIf
 		EndIf
+		*/
 	EndIf
 
 	If !Empty(MV_PAR19) .AND. MV_PAR19 <> 5
@@ -1304,34 +1330,46 @@ Return cSqlRet
 // Versão do reltório em TReport.
 //----------------------------------------------------------------------------------
 Static Function BIA086TR()
-	Local oReport
-	Local cSql := ''
+Local oReport
+Local cQrySF2  := ''
+Local cQrySD2  := ''
+Local cQryPED  := ''
+Local cDropSf2 := ""
+Local cDropSd2 := ""
 
-	nNomeSF2	:= "##BIA086SF2"+cEmpAnt+__cUserID+strzero(seconds()*3500,10) //strzero(seconds()*3500,10)
-	nNomeSD2	:= "##BIA086SD2"+cEmpAnt+__cUserID+strzero(seconds()*3500,10) //Alltrim(Str(randomize(1,34000)))
+//Define o nome das tabelas temporarias
+nNomeSF2	:= "##BIA086SF2"+cEmpAnt+__cUserID+strzero(seconds()*3500,10) //strzero(seconds()*3500,10)
+nNomeSD2	:= "##BIA086SD2"+cEmpAnt+__cUserID+strzero(seconds()*3500,10) //Alltrim(Str(randomize(1,34000)))
 
-	//Gerando tabela temporaria SF2
-	cSql := GetSqlSF2()
-	U_BIAMsgRun("Aguarde... Gerando Base... Cabeçalho da NF",,{|| TcSQLExec(cSql)})
+//Monta querys para dropar as tabelas temporárias
+cDropSf2 := "DROP TABLE IF EXISTS " + nNomeSF2
+cDropSd2 := "DROP TABLE IF EXISTS " + nNomeSD2
 
-	//Gerando tabela temporaria SD2
-	cSql := GetSqlSD2()
-	U_BIAMsgRun("Aguarde... Gerando Base... Itens da NF",,{|| TcSQLExec(cSql)})
+//Gerando tabela temporaria SF2
+cQrySF2 := GetSqlSF2()
+U_BIAMsgRun("Aguarde... Gerando Base... Cabeçalho da NF",,{|| TcSQLExec(cQrySF2)})
 
-	cSql := GetSqlPed(.T.)
+//Gerando tabela temporaria SD2
+cQrySD2 := GetSqlSD2()
+U_BIAMsgRun("Aguarde... Gerando Base... Itens da NF",,{|| TcSQLExec(cQrySD2)})
 
-	If chkfile("BIA086TR")
-		dbSelectArea("BIA086TR")
-		dbCloseArea()
-	EndIf
-	TcQuery cSql New Alias "BIA086TR"
-	DbSelectArea("BIA086TR")
+cQryPED := GetSqlPed(.T.)
 
-	oReport:= ReportDef()
-	oReport:PrintDialog()
+If chkfile("BIA086TR")
+	dbSelectArea("BIA086TR")
+	dbCloseArea()
+EndIf
+TcQuery cQryPED New Alias "BIA086TR"
+DbSelectArea("BIA086TR")
 
-	BIA086TR->(DbCloseArea())
+oReport:= ReportDef()
+oReport:PrintDialog()
 
+BIA086TR->(DbCloseArea())
+
+//Exclui as tabelas temporárias
+U_BIAMsgRun("Aguarde... ",,{|| TcSQLExec(cDropSf2)})
+U_BIAMsgRun("Aguarde... ",,{|| TcSQLExec(cDropSd2)})
 Return
 //----------------------------------------------------------------------------------
 Static Function ReportDef()

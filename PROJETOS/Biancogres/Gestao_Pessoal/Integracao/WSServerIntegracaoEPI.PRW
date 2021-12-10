@@ -20,6 +20,7 @@ WsStruct WSIEPI_PRODUTO
 EndWsStruct
 
 WsStruct WSIEPI_REQUISICAO_REQUEST
+	WsData cEmpresa As String
 	WsData cMatricula As String
 	WsData aProdutos As Array Of WSIEPI_PRODUTO
 
@@ -51,7 +52,7 @@ If Len(oReqPrq:aProdutos) > 0
 	For _nI	:= 1 to Len(oReqPrq:Aprodutos)
 		aAdd(_aProds,{oReqPrq:Aprodutos[_nI]:cProduto,oReqPrq:Aprodutos[_nI]:nQuantidade,oReqPrq:Aprodutos[_nI]:cAlmox})
 	Next
-	U_BIAFG122(_aProds,oReqPrq:cMatricula,.T.)
+	U_BIAFG122(oReqPrq:cEmpresa,_aProds,oReqPrq:cMatricula,.T.)
 Else
 	oRespPrq:lOk	:=	.F.
 	oRespPrq:cErro	:=	"Não Foram Selecionados Produtos"

@@ -22,13 +22,13 @@ User Function BIA944()
 	Local nW	:= 0
 	Local oProcess
 	Local oPrcZera
-		
+
 	Private msEmpAtu  := cEmpAnt
 	Private msFilAtu  := cFilAnt
 	Private msrhEnter := CHR(13) + CHR(10)
 	Private xfMensCompl := ""
 	Private _cTlbAfetad := ""
-	
+
 
 	fPerg := "BIA944"
 	fTamX1 := IIF(Alltrim(oApp:cVersion) == "MP8.11", 6, 10)
@@ -80,7 +80,7 @@ User Function BIA944()
 		For nW := 1 To Len(oEmp:aEmpSel)
 
 			RpcSetEnv( oEmp:aEmpSel[nW][1], Substr(oEmp:aEmpSel[nW][2], 1, 2) )
-		
+
 			smMsnPrc := oEmp:aEmpSel[nW][1] + "/" + Substr(oEmp:aEmpSel[nW][2], 1, 2) + " - " + Alltrim(oEmp:aEmpSel[nW][4])
 
 			oProcess := MsNewProcess():New({|lEnd| fProcessa(@oProcess,oEmp:aEmpSel[nW][1], Substr(oEmp:aEmpSel[nW][2], 1, 2)) }, "Gravando...", smMsnPrc, .T.)
@@ -93,7 +93,7 @@ User Function BIA944()
 		Aviso("Réplica de Versão - BIA944", "Fim do processamento..." + msrhEnter + msrhEnter + _cTlbAfetad + msrhEnter + msrhEnter + " Necessário abrir a versão correspondente!!!", {'Ok'}, 3)
 
 		RpcSetEnv( msEmpAtu, msFilAtu )
-	
+
 		If Type("__cInternet") == "C"
 			__cInternet := Nil
 		EndIf
@@ -115,7 +115,7 @@ Static Function fProcessa(oProcess,_cEmp,_cFil)
 	oProcess:IncRegua1(smMsnPrc)
 	oProcess:IncRegua2("Verificando Tabelas...")
 
-//	StartJob("U_BIA944P",GetEnvServer(),.T.,_cEmp,_cFil,_cVersao,_cRevisa,_cAnoRef,_cNewRev)
+	//	StartJob("U_BIA944P",GetEnvServer(),.T.,_cEmp,_cFil,_cVersao,_cRevisa,_cAnoRef,_cNewRev)
 	U_BIA944P(_cEmp,_cFil,_cVersao,_cRevisa,_cAnoRef,_cNewRev,oProcess)
 
 Return
@@ -126,13 +126,13 @@ User Function BIA944P(_cEmp,_cFil,_cVersao,_cRevisa,_cAnoRef,_cNewRev,oProcess)
 
 	Local M002        
 	Private msrhEnter := CHR(13) + CHR(10)
-	
+
 	M002 := GetNextAlias()
 
 	// ,'Z96'
 	// ,'ZOY' eu criei a tabela na familia errada e com o nome do campo _VERSAO errado.
-	// Tabelas Avulsas                                 Família de Tabelas usadas desde 2017                                                                                                                                                                                    Família de tabelas passas a serem usada a partir do orçamento 2021
-	_cVetTabl  := {'Z42','Z45','Z46','Z47','Z50','Z98','ZB0','ZB1','ZB2','ZB3','ZB4','ZB5','ZB6','ZB7','ZB8','ZB9','ZBA','ZBB','ZBC','ZBD','ZBE','ZBF','ZBG','ZBH','ZBI','ZBJ','ZBK','ZBL','ZBM','ZBN','ZBO','ZBP','ZBQ','ZBR','ZBS','ZBT','ZBU','ZBV','ZBW','ZBX','ZBY','ZBZ','ZO0','ZO1','ZO2','ZO3','ZO4','ZO5','ZO6','ZO7','ZO8','ZO9','ZOA','ZOB','ZOC','ZOD','ZOE','ZOF','ZOG','ZOH','ZOI','ZOJ','ZOK','ZOL','ZOM','ZON','ZOO','ZOP','ZOQ','ZOR','ZOS','ZOT','ZOU','ZOV','ZOW','ZOX','ZOZ'}
+	//             Tabelas Avulsas                           Família de Tabelas usadas desde 2017                                                                                                                                                                                    Família de tabelas passas a serem usada a partir do orçamento 2021
+	_cVetTabl  := {'ZCH','Z42','Z45','Z46','Z47','Z50','Z98','ZB0','ZB1','ZB2','ZB3','ZB4','ZB5','ZB6','ZB7','ZB8','ZB9','ZBA','ZBB','ZBC','ZBD','ZBE','ZBF','ZBG','ZBH','ZBI','ZBJ','ZBK','ZBL','ZBM','ZBN','ZBO','ZBP','ZBQ','ZBR','ZBS','ZBT','ZBU','ZBV','ZBW','ZBX','ZBY','ZBZ','ZO0','ZO1','ZO2','ZO3','ZO4','ZO5','ZO6','ZO7','ZO8','ZO9','ZOA','ZOB','ZOC','ZOD','ZOE','ZOF','ZOG','ZOH','ZOI','ZOJ','ZOK','ZOL','ZOM','ZON','ZOO','ZOP','ZOQ','ZOR','ZOS','ZOT','ZOU','ZOV','ZOW','ZOX','ZOZ'}
 	_cTlbAfetad := ""
 
 	For _ms := 1 to Len(_cVetTabl)
@@ -257,7 +257,7 @@ User Function BIA944P(_cEmp,_cFil,_cVersao,_cRevisa,_cAnoRef,_cNewRev,oProcess)
 							cQuery += "    AND ZBM_REVISA = '" + _cRevisa + "' "
 							cQuery += "    AND ZBM_ANOREF = '" + _cAnoRef + "' "
 							cQuery += "    AND D_E_L_E_T_ = ' ' "
-//							U_BIAMsgRun("Aguarde... Encerrando Sequencia GMR anterior: " + SX2->X2_CHAVE ,,{|| TcSQLExec(cQuery) })
+							//							U_BIAMsgRun("Aguarde... Encerrando Sequencia GMR anterior: " + SX2->X2_CHAVE ,,{|| TcSQLExec(cQuery) })
 							oProcess:IncRegua2("Encerrando Sequencia GMR anterior: " + SX2->X2_CHAVE)
 							TcSQLExec(cQuery)
 						EndIf						
@@ -272,7 +272,7 @@ User Function BIA944P(_cEmp,_cFil,_cVersao,_cRevisa,_cAnoRef,_cNewRev,oProcess)
 
 	Next _ms
 
-//	Aviso("Réplica de Versão - BIA944", "Fim do processamento..." + msrhEnter + msrhEnter + _cTlbAfetad + msrhEnter + msrhEnter + " Necessário abrir a versão correspondente!!!", {'Ok'}, 3)
+	//	Aviso("Réplica de Versão - BIA944", "Fim do processamento..." + msrhEnter + msrhEnter + _cTlbAfetad + msrhEnter + msrhEnter + " Necessário abrir a versão correspondente!!!", {'Ok'}, 3)
 
 Return 
 

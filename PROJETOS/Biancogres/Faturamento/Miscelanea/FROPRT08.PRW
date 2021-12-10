@@ -44,7 +44,7 @@ User Function FROPRT08()
 	Next nI
 
 	//EFETIVAR RESERVAS PENDENTES NA ORIGEM
-	xv_Emps    := U_BAGtEmpr("01_05_13")
+	xv_Emps    := U_BAGtEmpr("01_05_13_14")
 
 	For nI := 1 to Len(xv_Emps)
 		//Inicializa o ambiente
@@ -75,7 +75,7 @@ User Function FROPRT08()
 	//--------------------------------------------------------------//
 
 	//Conferencia Automatica
-	xv_Emps    := U_BAGtEmpr("01_05_07")
+	xv_Emps    := U_BAGtEmpr("01_05_07_14")
 
 	For nI := 1 to Len(xv_Emps)
 

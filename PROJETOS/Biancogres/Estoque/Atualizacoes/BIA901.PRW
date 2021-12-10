@@ -3,7 +3,7 @@
 
 /*/{Protheus.doc} BIA739
 @author Ranisses A. Corona
-@since 21/01/04
+@since 21/01/04 
 @version 1.0
 @description Cadastro da Pre-Requisicao - Menu
 @obs RDMAKE
@@ -17,35 +17,35 @@ User Function BIA901()
 	cCadastro := "Cadastro da Pre Requisicao"
 
 	aCores    := {	{  'ZI_BAIXA = "N"'	 , 'BR_VERDE'   } ,;
-	{                  'ZI_BAIXA = "S"'  , 'BR_VERMELHO'},;
-	{  					'ZI_BAIXA = "X"'	 , 'BR_CINZA'   }  }
+		{                  'ZI_BAIXA = "S"'  , 'BR_VERMELHO'},;
+		{  					'ZI_BAIXA = "X"'	 , 'BR_CINZA'   }  }
 
 	aRotina   := { {"Pesquisar"      ,"AxPesqui"                       ,0,1},;
-	{               "Visualizar"     ,'ExecBlock("BIA902",.F.,.F.,"V")',0,2},;
-	{				"Incluir"        ,'ExecBlock("BIA902",.F.,.F.,"I")',0,3},;
-	{               "Imprimir"       ,'ExecBlock("BIA902",.F.,.F.,"L")',0,4},;
-	{               "Ctrl. Erros"    ,'U_BIAFG118()'                   ,0,5},;
-	{               "Int.Bzg.Direto" ,'U_B901IBD()'                    ,0,6};
-	}
+		{               "Visualizar"     ,'ExecBlock("BIA902",.F.,.F.,"V")',0,2},;
+		{				"Incluir"        ,'ExecBlock("BIA902",.F.,.F.,"I")',0,3},;
+		{               "Imprimir"       ,'ExecBlock("BIA902",.F.,.F.,"L")',0,4},;
+		{               "Ctrl. Erros"    ,'U_BIAFG118()'                   ,0,5},;
+		{               "Int.Bzg.Direto" ,'U_B901IBD()'                    ,0,6};
+		}
 
 
 	If U_VALOPER("057",.F.) // Relatório Pré-requisições
 
-		AADD(aRotina,{"Relatório"    ,'ExecBlock("BIAV011",.F.,.F.,"B")',0,5} ) 
+		AADD(aRotina,{"Relatório"    ,'ExecBlock("BIAV011",.F.,.F.,"B")',0,5} )
 
 	EndIf
 
 	If U_VALOPER("058",.F.) // Relatório Pré-requisições
 
-		AADD(aRotina,{"Baixar"       ,'ExecBlock("BIA902",.F.,.F.,"B")',0,5} ) 
-		AADD(aRotina,{"Excluir"      ,'ExecBlock("BIA902",.F.,.F.,"E")',0,2} ) 
-		AADD(aRotina,{"Aprovadores"  ,'ExecBlock("B901Aprv",.F.,.F.)'  ,0,7} ) 
+		AADD(aRotina,{"Baixar"       ,'ExecBlock("BIA902",.F.,.F.,"B")',0,5} )
+		AADD(aRotina,{"Excluir"      ,'ExecBlock("BIA902",.F.,.F.,"E")',0,2} )
+		AADD(aRotina,{"Aprovadores"  ,'ExecBlock("B901Aprv",.F.,.F.)'  ,0,7} )
 
 	EndIf
 
 
-	AADD(aRotina,{"Cancelar"     ,'U_BIA901C()'                    ,0,8} ) 
-	AADD(aRotina,{"Relatório Pré-requisições "  ,'U_REPR0001()'    ,0,9} ) 
+	AADD(aRotina,{"Cancelar"     ,'U_BIA901C()'                    ,0,8} )
+	AADD(aRotina,{"Relatório Pré-requisições "  ,'U_REPR0001()'    ,0,9} )
 
 	mBrowse(6,1,22,75,"SZI",,,,,,aCores)
 
@@ -67,15 +67,15 @@ User Function B901Aprv()
 
 	ACTIVATE MSDIALOG oDlgAprv1 CENTERED
 
-Return	
+Return
 
 Static Function fMSNewGe1()
 
 	Local aHeaderEx := {}
 	Local aColsEx := {}
 	Local aFieldFill := {}
-	Local cBizagi	:= U_fGetBase("2") 
-	
+	Local cBizagi	:= U_fGetBase("2")
+
 	Private oMSNewGe1
 
 	aAdd(aHeaderEx,{"Tipo"              ,"TIPO"   ,""    , 10   , 0,,, "C",, })      	// 1
@@ -161,7 +161,7 @@ Static Function ValidPerg()
 	If ParamBox(aPergs ,"Aprovadores",,,,,,,,cLoad,.T.,.T.)
 
 		lRet := .T.
-		MV_PAR01 := ParamLoad(cFileName,,1,MV_PAR01) 
+		MV_PAR01 := ParamLoad(cFileName,,1,MV_PAR01)
 		MV_PAR02 := ParamLoad(cFileName,,2,MV_PAR02)
 		MV_PAR03 := ParamLoad(cFileName,,3,MV_PAR03)
 		MV_PAR04 := ParamLoad(cFileName,,4,MV_PAR04)
@@ -186,7 +186,7 @@ User Function BIA901C()
 		DEFINE DIALOG oDlg TITLE "Motivo do Cancelamento" FROM 180,180 TO 280, 600 PIXEL
 
 		oTMultiget1	:= TMultiGet():new( 01, 01, {| u | if( pCount() > 0, cMsg := u, cMsg ) }, oDlg, 210, 30, , , , , , .T. )
-		oTButton1 	:= TButton():New(35, 170, "Confirmar", oDlg,{|| lOk:=.T. ,oDlg:End()}, 40,10,,,.F.,.T.,.F.,,.F.,,,.F. )   
+		oTButton1 	:= TButton():New(35, 170, "Confirmar", oDlg,{|| lOk:=.T. ,oDlg:End()}, 40,10,,,.F.,.T.,.F.,,.F.,,,.F. )
 
 		ACTIVATE DIALOG oDlg CENTERED
 
@@ -203,21 +203,21 @@ User Function BIA901C()
 
 						RecLock('SZI', .F.)
 						SZI->ZI_BAIXA	:= 'X'
-						SZI->ZI_ERROLOG	:= cMsg 	 
+						SZI->ZI_ERROLOG	:= cMsg
 						SZI->(MsUnlock())
 
 
 						DbSelectArea("SZJ")
 						SZJ->(DbSetOrder(1))
 
-						SZJ->(DbSeek(xFilial("SZJ")+SZI->ZI_DOC+SZI->ZI_EMPRESA)) 
+						SZJ->(DbSeek(xFilial("SZJ")+SZI->ZI_DOC+SZI->ZI_EMPRESA))
 
-						While !SZJ->(Eof()) 													;	
-						.And. SZJ->ZJ_FILIAL			== xFilial("SZJ")				;
-						.And. ALLTRIM(SZJ->ZJ_DOC)     	== ALLTRIM(SZI->ZI_DOC)			;
-						.And. ALLTRIM(SZJ->ZJ_EMPRESA)	== ALLTRIM(SZI->ZI_EMPRESA) 
+						While !SZJ->(Eof()) 													;
+								.And. SZJ->ZJ_FILIAL			== xFilial("SZJ")				;
+								.And. ALLTRIM(SZJ->ZJ_DOC)     	== ALLTRIM(SZI->ZI_DOC)			;
+								.And. ALLTRIM(SZJ->ZJ_EMPRESA)	== ALLTRIM(SZI->ZI_EMPRESA)
 
-							//Deleta o Empenho    
+							//Deleta o Empenho
 							If Alltrim(SZI->ZI_TIPO) == "RE"
 
 								//Apaga o empenho de acordo com a Empresa
@@ -265,13 +265,13 @@ User Function B901IBD()
 
 	Local _cAlias
 	Local _cSql
-	Local cBizagi	:= U_fGetBase("2") 
+	Local cBizagi	:= U_fGetBase("2")
 	Local TbReqNIn	:= "% "+cBizagi+".dbo.VW_BZ_PRQNAOINTG %"
 
 	Private _cErro	:=	""
 
 	MsgINFO("Opção usada somente mediante alinhamento com a TI", "Atenção!!!")
-	Return
+Return
 
 	_cAlias	:=	GetNextAlias()
 
@@ -351,7 +351,7 @@ User Function B901IBD()
 			RecLock("SZI",.T.)
 			SZI->ZI_FILIAL	:=	xFilial("SZI")
 			SZI->ZI_DOC		:=	_msDocSZI
-			SZI->ZI_TIPO	:=  _msTpPRQ	
+			SZI->ZI_TIPO	:=  _msTpPRQ
 			SZI->ZI_EMISSAO	:=	Date() //ctod((_cAlias)->EMISSAO)  //Date()
 			SZI->ZI_CLVL	:=	(_cAlias)->CLVL
 			SZI->ZI_CC		:=	U_B902BCC(SZI->ZI_CLVL)
@@ -365,7 +365,7 @@ User Function B901IBD()
 			SZI->ZI_YBIZAGI	:=	_msNumProc
 			SZI->(MsUnlock())
 
-			While (_cAlias)->(!EOF()) .and. (_cAlias)->PROCESSO == _msNumProc 
+			While (_cAlias)->(!EOF()) .and. (_cAlias)->PROCESSO == _msNumProc
 
 				_msAplic := Alltrim(Str((_cAlias)->APLICACAO))
 				Reclock("SZJ",.T.)

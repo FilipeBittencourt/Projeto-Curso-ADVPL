@@ -106,11 +106,11 @@ END IF
 //±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 //Obriga digitacao dos campos Cliente/Loja Origem para vendas LM
 //±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-If cEmpAnt $ ("01_05") .And. Alltrim(M->C5_CLIENTE) == "010064" .And. Alltrim(M->C5_TIPO) == "N" .And. (Empty(Alltrim(M->C5_YCLIORI)) .Or. Empty(Alltrim(M->C5_YLOJORI)))
+If cEmpAnt $ ("01_05_14") .And. Alltrim(M->C5_CLIENTE) == "010064" .And. Alltrim(M->C5_TIPO) == "N" .And. (Empty(Alltrim(M->C5_YCLIORI)) .Or. Empty(Alltrim(M->C5_YLOJORI)))
 	Msgbox("Vendas para empresa LM, é necessário informar os campos Cliente/Loja Origem!","MTA410","STOP")
 	Return(.F.)
 EndIf
-If cEmpAnt $ ("01_05") .And. Alltrim(M->C5_CLIENTE) <> "010064" .And. Alltrim(M->C5_TIPO) == "N" .And. (!Empty(Alltrim(M->C5_YCLIORI)) .Or. !Empty(Alltrim(M->C5_YLOJORI)))
+If cEmpAnt $ ("01_05_14") .And. Alltrim(M->C5_CLIENTE) <> "010064" .And. Alltrim(M->C5_TIPO) == "N" .And. (!Empty(Alltrim(M->C5_YCLIORI)) .Or. !Empty(Alltrim(M->C5_YLOJORI)))
 	Msgbox("Os campos Cliente/Loja Origem devem ser preenchidos apenas para vendas para a empresa LM!","MTA410","STOP")
 	Return(.F.)
 EndIf

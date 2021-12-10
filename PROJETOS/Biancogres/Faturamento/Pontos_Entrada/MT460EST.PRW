@@ -38,11 +38,6 @@ User Function MT460EST()
 
 		If SC5->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES",""))) .And. SC5->C5_YLINHA <> "4" .And. !(SC5->C5_YSUBTP $ _cTpNRes) .And. !(AllTrim(FunName()) == "BIAEC001") .And. AllTrim(CEMPANT) <> "07" .And. !(AllTrim(SC5->C5_YSUBTP) $ "A#M")
 
-			If (AllTrim(CEMPANT) == "14")
-				RestArea(_aArea)
-				Return(_lRet)
-			EndIf
-
 			_aRet := U_FR2CPTEX(SC9->C9_PRODUTO, SC9->C9_LOTECTL, SC9->C9_QTDLIB, SC9->C9_PEDIDO, SC9->C9_ITEM, SC9->C9_SEQUEN)
 			//Ponta
 			If (_aRet[1] == "P")

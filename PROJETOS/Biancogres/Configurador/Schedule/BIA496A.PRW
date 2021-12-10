@@ -42,11 +42,8 @@ User Function BIA496A()
 	Local aSizes := {} // O array receberá os tamanhos dos arquivos e do diretorio
 
 
+	aEmp := {"01","05","07","13","14"}
 
-	aAdd(aEmp, "01")
-	aAdd(aEmp, "05")
-	aAdd(aEmp, "07")
-	aAdd(aEmp, "13")
 
 	RpcSetType(3)
 	RPCSetEnv("01", "01", NIL, NIL, "COM", NIL, {"SA3","SF1", "SF2"})
@@ -60,12 +57,12 @@ User Function BIA496A()
 	aArea := SA3->(GetArea())
 	DbSelectArea("SA3")
 
-	cSql :=" select  SA3.A3_YEMP, SA3.A3_COD, SA3.A3_EST FROM SA3010 as SA3 " +CRLF
-	cSql +=" WHERE 0=0 " +CRLF
+	cSql :="  select  SA3.A3_YEMP, SA3.A3_COD, SA3.A3_EST FROM SA3010 as SA3 " +CRLF
+	cSql +="  WHERE 0=0 " +CRLF
 	cSql +="  AND SA3.A3_EMAIL <> '' " +CRLF
 	cSql +="  AND SA3.A3_YATIVO = 'S' " +CRLF
 	cSql +="  AND SA3.A3_YEMP  NOT LIKE '%XX%' " +CRLF
-	//cSql +="  AND SA3.A3_COD   in ('000082', '000717', '999999') " +CRLF //000082, 000717, 999999
+	//cSql +="  AND SA3.A3_COD   in ('000666', '000728','000025','000082') " +CRLF //000082, 000717, 999999
 	cSql +="  AND SA3.D_E_L_E_T_ = '' " +CRLF
 	cSql +="  ORDER BY SA3.A3_COD " +CRLF
 

@@ -3,7 +3,7 @@
 #INCLUDE "TOPCONN.CH"
 
 
-/*/{Protheus.doc} BIAFC29
+/*/{Protheus.doc}   
 @description Percentual de Venda Galleria - PROJETO C29
 @author FILIPE BITTENCOURT -  FACILE
 @since 11/08/2021
@@ -236,8 +236,9 @@ Static Function fTdOk(oModel)
     cQuery += " select * , R_E_C_N_O_ as RECNO from "+RetSqlName("ZNB")+ " "+  CRLF
     cQuery += " WHERE D_E_L_E_T_ = '' "  + CRLF  
     cQuery += " AND "+ValToSql(dDTINI)+" BETWEEN  ZNB_DTINI AND ZNB_DTFIM " + CRLF
-
-    if !Empty(cClient)
+    cQuery += " AND ZNB_MARCA = "+ValToSql(cMARCA)+ " "+ CRLF 
+    
+    If !Empty(cClient)
       cQuery += " AND ZNB_CLIENT = "+ValToSql(cClient)+ " "+ CRLF
       cQuery += " AND ZNB_LOJA   = "+ValToSql(cLoja)+ " "+ CRLF
     ElseIf !Empty(cGRupo)

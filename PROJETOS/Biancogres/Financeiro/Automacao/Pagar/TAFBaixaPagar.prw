@@ -286,7 +286,7 @@ Local lRet := .F.
 					
 		EndIf
 	
-	ElseIf oObj:cBanco == "237"
+	ElseIf oObj:cBanco $ "237/021"
 			
 		// 00=CREDITO OU DEBITO EFETUADO 
 				

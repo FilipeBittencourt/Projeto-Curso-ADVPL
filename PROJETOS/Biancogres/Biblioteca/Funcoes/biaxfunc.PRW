@@ -184,6 +184,12 @@ User Function BIAEnvMail(xk_Orig,xk_Dest,xk_Assunt,xk_Mensag,xk_Erro,xk_Anexo,lO
 		TO 'retorno@biancogres.com.br';
 		SUBJECT xk_Assunt;
 		BODY 'Ocorreu erro ao enviar o e-mail...   '+xk_Erro
+
+		If(Empty(xk_Dest))
+			xk_Dest := " "
+		EndIf
+		
+		CONOUT('Ocorreu erro ao enviar o e-mail para '+ xk_Dest + '. Erro: '+xk_Erro)
 	EndIf
 	DISCONNECT SMTP SERVER
 

@@ -61,9 +61,9 @@ User Function BFATRE03
 	Private cDirDest	:= Space(200)
 	
 	
-	Private aMarca		:= {Space(11), 'Biancogres','Incesa','Bellacasa','Mundi', 'ZZZZZZZZZZZ'}
+	Private aMarca		:= {Space(11), 'Biancogres','Incesa','Bellacasa','Mundi','Vinilico', 'ZZZZZZZZZZZ'}
 
-	Private aCodMarca	:= {Space(4), '0101','0501','0599','1399', 'ZZZZ'}                                      
+	Private aCodMarca	:= {Space(4), '0101','0501','0599','1399','1302', 'ZZZZ'}                                      
 		
 	aAdd( aPergs ,{1,"Date de:"					, cDataIni  ,"",,"",'.T.',50,.F.})
 	aAdd( aPergs ,{1,"Date até:"				, cDataFim  ,"",,"",'.T.',50,.F.})
@@ -232,6 +232,16 @@ Static Function MontaQuery()
 	cQuery += " SELECT '05' EMP, C6_NUM, C6_PRODUTO, C6_ITEM, C6_ENTREG, C6_YDTNECE, C6_YEMISSA, ISNULL(C9_PEDIDO,'') AS C9_PEDIDO, ISNULL(C9_ITEM,'') AS C9_ITEM, ISNULL(C9_SEQUEN,'') AS C9_SEQUEN, ISNULL(C9_DATALIB,'') AS C9_DATALIB, ISNULL(C9_NFISCAL,'') AS C9_NFISCAL, ISNULL(C9_SERIENF,'') AS C9_SERIENF"+ Enter 
 	cQuery += " FROM SC6050 SC6 WITH (NOLOCK)"+ Enter 
 	cQuery += " 	LEFT JOIN SC9050 SC9 WITH (NOLOCK) ON"+ Enter 
+	cQuery += " 		C9_PEDIDO	= C6_NUM AND"+ Enter 
+	cQuery += " 		C9_CLIENTE	= C6_CLI AND "+ Enter 
+	cQuery += " 		C9_PRODUTO	= C6_PRODUTO AND"+ Enter 
+	cQuery += " 		C9_ITEM		= C6_ITEM AND "+ Enter 
+	cQuery += " 		SC9.D_E_L_E_T_ = ''"+ Enter 
+	cQuery += " WHERE SC6.C6_YEMISSA >= '20150101' AND SC6.D_E_L_E_T_ = '' "+ Enter 
+	cQuery += " UNION ALL"+ Enter 
+	cQuery += " SELECT '14' EMP, C6_NUM, C6_PRODUTO, C6_ITEM, C6_ENTREG, C6_YDTNECE, C6_YEMISSA, ISNULL(C9_PEDIDO,'') AS C9_PEDIDO, ISNULL(C9_ITEM,'') AS C9_ITEM, ISNULL(C9_SEQUEN,'') AS C9_SEQUEN, ISNULL(C9_DATALIB,'') AS C9_DATALIB, ISNULL(C9_NFISCAL,'') AS C9_NFISCAL, ISNULL(C9_SERIENF,'') AS C9_SERIENF"+ Enter 
+	cQuery += " FROM SC6140 SC6 WITH (NOLOCK)"+ Enter 
+	cQuery += " 	LEFT JOIN SC9140 SC9 WITH (NOLOCK) ON"+ Enter 
 	cQuery += " 		C9_PEDIDO	= C6_NUM AND"+ Enter 
 	cQuery += " 		C9_CLIENTE	= C6_CLI AND "+ Enter 
 	cQuery += " 		C9_PRODUTO	= C6_PRODUTO AND"+ Enter 
@@ -422,6 +432,91 @@ Static Function MontaQuery()
 		cQuery += "	AND D2_YEMP BETWEEN  '"+cMarcaIni+"' AND '"+cMarcaIni+"'					"+ Enter
 	EndIf
 	
+	cQuery += " "+ Enter 
+	
+	cQuery += " UNION ALL "+ Enter 
+	
+	cQuery += " "+ Enter 
+	cQuery += " SELECT '14' AS EMP, D2_YEMP AS MARCA, 	"+ Enter 
+	cQuery += " 	   D2_CLIENTE AS CLIENTE, "+ Enter 
+	cQuery += "        A1_NOME AS NOMECLIENTE, "+ Enter 
+	cQuery += " 	   F2_VEND1 AS VENDEDOR, "+ Enter 
+	cQuery += " 	   A3_NOME AS NOMEVENDEDOR, "+ Enter 
+	cQuery += " 	   D2_DOC AS NF, "+ Enter 
+	cQuery += " 	   D2_ITEM AS ITEMNF,"+ Enter 
+	cQuery += " 	   D2_COD AS PRODUTO,"+ Enter 
+	cQuery += " 	   B1_DESC AS NOMEPRODUTO, "+ Enter 
+	cQuery += " 	   D2_QUANT AS QUANTNF, "+ Enter 
+	cQuery += " 	   D2_PEDIDO AS PEDIDO,"+ Enter 
+	cQuery += " 	   D2_ITEMPV AS ITEMPV,"+ Enter 
+	cQuery += " 	   'EMISSAONF'	= CASE WHEN D2_EMISSAO	<> '' THEN CONVERT(VARCHAR(10),CONVERT(DATETIME,D2_EMISSAO),103) ELSE '' END,"+ Enter 
+	cQuery += " 	   'DTPEDIDO'	= CASE WHEN C6_YEMISSA	<> '' THEN CONVERT(VARCHAR(10),CONVERT(DATETIME,C6_YEMISSA),103) ELSE '' END,"+ Enter 
+	cQuery += " 	   'DTENTREGA'	= CASE WHEN C6_ENTREG	<> '' THEN CONVERT(VARCHAR(10),CONVERT(DATETIME,C6_ENTREG),103) ELSE '' END,"+ Enter 
+	cQuery += " 	   'DTNECESENG'	= CASE WHEN C6_YDTNECE	<> '' THEN CONVERT(VARCHAR(10),CONVERT(DATETIME,C6_YDTNECE),103) ELSE '' END,"+ Enter 
+	cQuery += " 	   'DTEMPENHO'	= CASE WHEN C9_DATALIB	<> '' THEN CONVERT(VARCHAR(10),CONVERT(DATETIME,C9_DATALIB),103) ELSE '' END, "+ Enter 
+	cQuery += " 	   (SELECT dbo.FN_PRAZODISP('14',D2_SERIE,D2_DOC,D2_NUMSEQ,D2_PEDIDO,D2_ITEMPV)) DENTROPRAZO,"+ Enter 
+	cQuery += " 	   B1_YFORMAT AS FORMATO,"+ Enter 
+	cQuery += " 	   A1_YTPSEG  AS TPSEG,"+ Enter 
+	cQuery += " 	   A1_YCAT    AS CATEGORIA,"+ Enter 
+	cQuery += " 	   ZZ6_FORNOP AS FORNO,"+ Enter 
+	cQuery += " 	   B1_YCLASSE AS CLASSE,"+ Enter 
+	cQuery += " 	   D2_EMISSAO AS EMISSAO "+ Enter 
+	cQuery += " "+ Enter 
+	cQuery += " FROM SD2140 SD2 WITH (NOLOCK)"+ Enter 
+	cQuery += " 	INNER JOIN SF4140 SF4 ON"+ Enter 
+	cQuery += " 		D2_TES = F4_CODIGO AND "+ Enter 
+	cQuery += " 		SF4.D_E_L_E_T_ = '' "+ Enter 
+	cQuery += " 	"+ Enter 
+	cQuery += " 	INNER JOIN SC9140 SC9 WITH (NOLOCK) ON		"+ Enter 
+	cQuery += " 		D2_DOC		= C9_NFISCAL AND "+ Enter 
+	cQuery += " 		D2_SERIE	= C9_SERIENF AND  "+ Enter 
+	cQuery += " 		D2_CLIENTE	= C9_CLIENTE AND "+ Enter 
+	cQuery += " 		D2_PEDIDO	= C9_PEDIDO AND"+ Enter 
+	cQuery += " 		D2_COD		= C9_PRODUTO AND "+ Enter 
+	cQuery += " 		D2_ITEMPV	= C9_ITEM AND "+ Enter 
+	cQuery += " 		D2_NUMSEQ	= C9_NUMSEQ AND "+ Enter 
+	cQuery += " 		SC9.D_E_L_E_T_ = ''"+ Enter 
+	cQuery += " 	"+ Enter 
+	cQuery += " 	INNER JOIN SC6140 SC6 WITH (NOLOCK) ON"+ Enter 
+	cQuery += " 		C9_PEDIDO	= C6_NUM AND"+ Enter 
+	cQuery += " 		C9_PRODUTO	= C6_PRODUTO AND"+ Enter 
+	cQuery += " 		C9_ITEM		= C6_ITEM AND "+ Enter 
+	cQuery += " 		SC6.D_E_L_E_T_ = ''"+ Enter 
+	cQuery += " "+ Enter 
+	cQuery += " 	INNER JOIN SF2140 WITH (NOLOCK) ON D2_SERIE   = F2_SERIE AND D2_DOC  = F2_DOC  AND D2_CLIENTE = F2_CLIENTE AND D2_LOJA = F2_LOJA AND SF2140.D_E_L_E_T_ = ''"+ Enter 
+	cQuery += " 	INNER JOIN SA1010 ON D2_CLIENTE = A1_COD   AND D2_LOJA = A1_LOJA AND SA1010.D_E_L_E_T_ = ''"+ Enter 
+	cQuery += " 	INNER JOIN SA3010 ON F2_VEND1   = A3_COD   AND SA3010.D_E_L_E_T_ = ''"+ Enter 
+	cQuery += " 	INNER JOIN SB1010 ON D2_COD     = B1_COD   AND SB1010.D_E_L_E_T_ = ''"+ Enter 
+	cQuery += " 	INNER JOIN ZZ6010 ON B1_YFORMAT = ZZ6_COD  AND ZZ6010.D_E_L_E_T_ = ''"+ Enter 
+	cQuery += " "+ Enter 
+	cQuery += " WHERE D2_FILIAL = '01' 				"+ Enter 
+	cQuery += " 	AND SF4.F4_DUPLIC = 'S' 		"+ Enter 
+	cQuery += " 	AND SD2.D2_YRESULT = 'S'		"+ Enter 
+	cQuery += " 	AND SD2.D2_YRESUL2 = 'S'		"+ Enter 
+	cQuery += " 	AND D2_CLIENTE <> '010064'		"+ Enter 
+	cQuery += " 	AND SD2.D2_COD >= 'A' 			"+ Enter 
+	cQuery += " 	AND SD2.D_E_L_E_T_ = ''			"+ Enter 
+	
+	
+	If (!Empty(cDataIni) .And. !Empty(cDataFim))
+		cQuery += "	AND D2_EMISSAO BETWEEN  '"+cDataIni+"' AND '"+cDataFim+"' 					"+ Enter
+	EndIf
+	
+	If (!Empty(cProdIni) .And. !Empty(cProdFim))
+		cQuery += "	AND D2_COD BETWEEN  '"+cProdIni+"' AND '"+cProdIni+"' 						"+ Enter
+	EndIf
+	
+	If (!Empty(cCliIni) .And. !Empty(cCliFim))
+		cQuery += "	AND D2_CLIENTE BETWEEN  '"+cCliIni+"' AND '"+cCliFim+"'						"+ Enter
+	EndIf
+	
+	If (!Empty(cPedIni) .And. !Empty(cPedFim))
+		cQuery += "	AND D2_PEDIDO BETWEEN  '"+cPedIni+"' AND '"+cPedFim+"' 						"+ Enter
+	EndIf
+	
+	If (!Empty(cMarcaIni) .And. !Empty(cMarcaFim))
+		cQuery += "	AND D2_YEMP BETWEEN  '"+cMarcaIni+"' AND '"+cMarcaIni+"'					"+ Enter
+	EndIf
 
 	cQuery += " "+ Enter 
 	
@@ -488,8 +583,9 @@ Static Function MontaQuery()
 	cQuery += " "+ Enter 
 	cQuery += " 	INNER JOIN SF2070 WITH (NOLOCK) ON D2_SERIE   = F2_SERIE AND D2_DOC  = F2_DOC  AND D2_CLIENTE = F2_CLIENTE AND D2_LOJA = F2_LOJA AND SF2070.D_E_L_E_T_ = ''"+ Enter 
 	cQuery += " 	INNER JOIN (SELECT '01' EMP, A1_COD, A1_LOJA, A1_YCAT, A1_YTPSEG, A1_NOME FROM SA1010 WHERE D_E_L_E_T_ = '' UNION ALL "+ Enter 
-	cQuery += " 				SELECT '05' EMP, A1_COD, A1_LOJA, A1_YCAT, A1_YTPSEG, A1_NOME FROM SA1050 WHERE D_E_L_E_T_ = '' UNION ALL "+ Enter 
-	cQuery += " 				SELECT '13' EMP, A1_COD, A1_LOJA, A1_YCAT, A1_YTPSEG, A1_NOME FROM SA1010 WHERE D_E_L_E_T_ = '' ) SA1 ON SA1.EMP = PED.EMP AND SA1.A1_COD = D2_CLIENTE AND SA1.A1_LOJA = D2_LOJA"+ Enter 
+	cQuery += " 				SELECT '05' EMP, A1_COD, A1_LOJA, A1_YCAT, A1_YTPSEG, A1_NOME FROM SA1010 WHERE D_E_L_E_T_ = '' UNION ALL "+ Enter 
+	cQuery += " 				SELECT '13' EMP, A1_COD, A1_LOJA, A1_YCAT, A1_YTPSEG, A1_NOME FROM SA1010 WHERE D_E_L_E_T_ = '' UNION ALL "+ Enter 	
+	cQuery += " 				SELECT '14' EMP, A1_COD, A1_LOJA, A1_YCAT, A1_YTPSEG, A1_NOME FROM SA1010 WHERE D_E_L_E_T_ = '' ) SA1 ON SA1.EMP = PED.EMP AND SA1.A1_COD = D2_CLIENTE AND SA1.A1_LOJA = D2_LOJA"+ Enter 
 	cQuery += " "+ Enter 
 	cQuery += " 	INNER JOIN SA3010 ON F2_VEND1   = A3_COD   AND SA3010.D_E_L_E_T_ = ''"+ Enter 
 	cQuery += " 	INNER JOIN SB1010 ON D2_COD     = B1_COD   AND SB1010.D_E_L_E_T_ = ''"+ Enter 
@@ -523,8 +619,7 @@ Static Function MontaQuery()
 	If (!Empty(cMarcaIni) .And. !Empty(cMarcaFim))
 		cQuery += "	AND D2_YEMP BETWEEN  '"+cMarcaIni+"' AND '"+cMarcaIni+"'					"+ Enter
 	EndIf
-	
-	
+
 	cQuery += " ) TMP"+ Enter 
 	cQuery += " "+ Enter 
 	cQuery += " WHERE DTENTREGA IS NOT NULL"+ Enter 

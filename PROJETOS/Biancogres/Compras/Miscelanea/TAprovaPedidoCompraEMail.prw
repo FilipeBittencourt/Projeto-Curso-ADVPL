@@ -705,8 +705,8 @@ Local solDif := 0
 	cSQL += " WHERE C7_FILIAL = " + ValToSQL(xFilial("SC7"))
 	cSQL += " AND C7_NUM = " + ValToSQL(::cNumPed)
 	cSQL += "	AND C7_RESIDUO = '' "
-	cSQL += "	AND C7_ENCER = '' "
-	cSQL += "	AND (C7_QUANT-C7_QUJE) > 0 "
+	//cSQL += "	AND C7_ENCER = '' "
+	//cSQL += "	AND (C7_QUANT-C7_QUJE) > 0 "
 	cSQL += " and SC7.D_E_L_E_T_='' "
 
 	TcQuery cSQL New Alias (cQry)
@@ -795,10 +795,12 @@ Local solDif := 0
 			cSolicitIt := ::RetSol((cQry)->C7_YMAT, cEmpAnt)
 			
 			//se os solicitantes nao sao os mesmos para todos os itens, nao imprimir o solicitante ao final da tabela
+
+      //                 01002947_c7              01002947_c7  <>   01002947_c1
 			if(!Empty(AllTrim(cSolicitIt)) .And. AllTrim(cSolicitIt) != AllTrim(cSolicit))
 				solDif := 1
 			endif
-		
+					
 			cHtml += '							 <tr>
 			cHtml += '								<td class="tblItensPedido-border-left">'+ Alltrim((cQry)->C7_PRODUTO) +'</td>
 			cHtml += '								<td class="tblItensPedido-border-left">'+ Alltrim((cQry)->C7_DESCRI) +'</td>
@@ -1256,11 +1258,17 @@ Return
 
 
 Method RetSol(cMat, cSolEmp) Class TAprovaPedidoCompraEMail
-Local cRet := ""
-Local cSQL := ""
-Local cQry := GetNextAlias()
 
-	If !Empty(cMat)
+	Local cRet   := ""
+	Local cSQL   := ""
+	Local cQry   := GetNextAlias()
+
+
+	If !Empty(cMat)				
+
+		if Len(cMat) > 6
+			cMat := SUBSTR(cMat,3,6)
+		EndIf
 	
 		If !Empty(cSolEmp) .And. cSolEmp <> cEmpAnt
 	

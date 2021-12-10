@@ -87,10 +87,11 @@ Return aCabec
 
 Method GetItens(cChaveFornece) Class TCotacaoCompra
 	
-	Local aItens	:= {}
-	Local aItem 	:= {}
-	Local oItem		:= Nil
-	Local nI		:= 0
+	Local aItens   := {}
+	Local aItem    := {}
+	Local oItem    := Nil
+	Local nI       := 0
+	Local lSeekSC8 := .F.
 	
 	For nI := 1 To ::oObj:oItens:GetCount()
 	
@@ -111,13 +112,39 @@ Method GetItens(cChaveFornece) Class TCotacaoCompra
 			
 			DBSelectArea("SC8")
 			SC8->(dbSetOrder(1)) // C8_FILIAL, C8_NUM, C8_FORNECE, C8_LOJA, C8_ITEM, C8_NUMPRO, C8_ITEMGRD, R_E_C_N_O_, D_E_L_E_T_	
-		    If(SC8->(DbSeek(cChave))) 
+
+			lSeekSC8	:= SC8->( dbSeek(cChave) )
+
+			//|Tratamento para quando a cotação começa com a proposta 02 ou maior |
+			If !lSeekSC8 .And. AllTrim( oItem:cNumPro ) != "01"
+
+				cChave	:= ""
+				cChave	+= xFilial('SC8')
+				cChave	+= PADR(::oObj:cNumero		, TamSx3("C8_NUM")[1])
+				cChave	+= PADR(oItem:cFornece		, TamSx3("C8_FORNECE")[1])
+				cChave	+= PADR(oItem:cLoja				, TamSx3("C8_LOJA")[1])	
+				cChave	+= PADR(oItem:cItem				, TamSx3("C8_ITEM")[1])	
+				cChave	+= PADR("01"							, TamSx3("C8_NUMPRO")[1])	
+
+				If SC8->( dbSeek(cChave) )
+
+					lSeekSC8	:= .T.
+
+					RecLock("SC8", .F.)
+					SC8->C8_NUMPRO	:= oItem:cNumPro
+					SC8->( MsUnLock() )
+
+				EndIf
+
+			EndIf
+
+		  If lSeekSC8
 		    	
-		    	_cTpFreteA	:= oItem:cTipoFrete
+		    _cTpFreteA	:= oItem:cTipoFrete
 			
 				aAdd(aItem, 	{ "C8_ITEM"    		, SC8->C8_ITEM   			, Nil })
 				aAdd(aItem, 	{ "C8_NUMPRO"  		, SC8->C8_NUMPRO 			, Nil })
-		    	aAdd(aItem, 	{ "C8_PRODUTO" 		, SC8->C8_PRODUTO 			, Nil })
+		    aAdd(aItem, 	{ "C8_PRODUTO" 		, SC8->C8_PRODUTO 			, Nil })
 				
 				aAdd(aItem, 	{ "C8_UM"      		, SC8->C8_UM   				, Nil })
 				aAdd(aItem, 	{ "C8_SEGUM"   		, SC8->C8_SEGUM   			, Nil })
@@ -190,25 +217,25 @@ Return
 //ExecAuto MVC, diferente dos outros
 Method Incluir() Class TCotacaoCompra
 	
-	Local lOk			:= .T.
-	Local cMsgLog		:= ""
+	Local lOk          := .T.
+	Local cMsgLog      := ""
 	
-	Local oModel  		:= Nil	
-	Local oModGrp		:= Nil
-	Local oModCot		:= Nil
-	Local oModPrd		:= Nil
-	Local lBloq			:= .F.
+	Local oModel       := Nil
+	Local oModGrp      := Nil
+	Local oModCot      := Nil
+	Local oModPrd      := Nil
+	Local lBloq        := .F.
 	
-	Local cAliasTemp	:= Nil
-	Local cQuery		:= ""
+	Local cAliasTemp   := Nil
+	Local cQuery       := ""
 	
-	Local nSBM			:= 0
-	Local nSC1			:= 0
-	Local nSC8			:= 0
-	Local aErros		:= {}
+	Local nSBM         := 0
+	Local nSC1         := 0
+	Local nSC8         := 0
+	Local aErros       := {}
 	
-	Local aListFornece	:= {} // A2_COD+A2_LOJA
-	Local cNumSC		:= ''
+	Local aListFornece := {} // A2_COD+A2_LOJA
+	Local cNumSC       := ''
 	
 	Private l150Propost	:= .F. 
 		
@@ -236,17 +263,17 @@ Method Incluir() Class TCotacaoCompra
 		cAliasTemp	:= GetNextAlias()
 		
 		cQuery := " SELECT GRUPO=C1_YGRUPO											"
-	    cQuery += " FROM "+RetSqlName("SC1")+"	SC1									"
-	    cQuery += " WHERE SC1.C1_FILIAL			= '" + xFilial('SC1') +"'			"
-	    cQuery += " AND SC1.C1_NUM				= '" + cNumSC +"'					"
-	    cQuery += " AND SC1.D_E_L_E_T_			= ''								"
-	    cQuery += " GROUP BY SC1.C1_YGRUPO											"
+		cQuery += " FROM "+RetSqlName("SC1")+"	SC1									"
+		cQuery += " WHERE SC1.C1_FILIAL			= '" + xFilial('SC1') +"'			"
+		cQuery += " AND SC1.C1_NUM				= '" + cNumSC +"'					"
+		cQuery += " AND SC1.D_E_L_E_T_			= ''								"
+		cQuery += " GROUP BY SC1.C1_YGRUPO											"
 	     
 	     
-	    TcQuery cQuery New Alias (cAliasTemp)
-	    While !(cAliasTemp)->(Eof())
+		TcQuery cQuery New Alias (cAliasTemp)
+		While !(cAliasTemp)->( EoF() )
 	    	
-	    	oModGrp		:= oModel:GetModel('SBMDETAIL')
+	    oModGrp		:= oModel:GetModel('SBMDETAIL')
 			If (nSBM != 1)//primeira item não precisa adicionar linha no grid
 				oModGrp:AddLine()
 			EndIf
@@ -321,8 +348,8 @@ Method Incluir() Class TCotacaoCompra
 			EndDo
 			
 			nSBM := nSBM + 1
-	    	(cAliasTemp)->(DbSkip())
-	    EndDo
+	    (cAliasTemp)->(DbSkip())
+	  EndDo
 	    
 		(cAliasTemp)->(DbCloseArea())
 		
@@ -388,22 +415,22 @@ Return aListFornece
 
 Method Atualizar() Class TCotacaoCompra
 
-	Local aCabec			:= {}
-	Local aItens			:= {}
+	Local aCabec           := {}
+	Local aItens           := {}
 	
-	Local lOk				:= .F.
-	Local cMsgLog			:= ""
-	Local nI				:= 0
-	Local nJ				:= 0
-	Local aListFornece		:= {}
+	Local lOk              := .F.
+	Local cMsgLog          := ""
+	Local nI               := 0
+	Local nJ               := 0
+	Local aListFornece     := {}
 	
-	Local aErroAuto			:= {}
+	Local aErroAuto        := {}
 	
-	Private lMsErroAuto 	:= .F.
-	Private lMsHelpAuto 	:= .T.
-	Private lAutoErrNoFile	:= .T.
+	Private lMsErroAuto    := .F.
+	Private lMsHelpAuto    := .T.
+	Private lAutoErrNoFile := .T.
 	
-	Private l150Propost 	:= .F. 
+	Private l150Propost    := .F.
 	
 	If (!Empty(::oObj:cNumero))	
 		
@@ -416,18 +443,18 @@ Method Atualizar() Class TCotacaoCompra
 			cChaveFornece := aListFornece[nI]
 			
 			aCabec 	:= ::GetCabecalho(cChaveFornece)
-        	aItens	:= ::GetItens(cChaveFornece)
+      aItens	:= ::GetItens(cChaveFornece)
         	
-        	If (Len(aCabec) > 0 .And. Len(aItens))
+      If (Len(aCabec) > 0 .And. Len(aItens))
         		
-        		lMsErroAuto 	:= .F.
-				lMsHelpAuto 	:= .T.
-				lAutoErrNoFile	:= .T.
+        lMsErroAuto    := .F.
+				lMsHelpAuto    := .T.
+				lAutoErrNoFile := .T.
 				
 				SetModulo("SIGACOM", "COM")
 				SetFunName("MATA150")
         	
-				MSExecAuto({|v,x,y| MATA150(v, x, y)},aCabec, aItens, 3)
+				MSExecAuto({|v,x,y| MATA150(v, x, y)}, aCabec, aItens, 3)
 		
 				If (!lMsErroAuto)
 				
@@ -447,13 +474,13 @@ Method Atualizar() Class TCotacaoCompra
 					
 				EndIf
 				
-        	Else
+      Else
         		
 				lOk			:= .F.
 				cMsgLog 	:= "[Cotação de Compra Numero: "+::oObj:cNumero+"] Erro => "+ CRLF
 				cMsgLog 	:= " item não encontrados "
 				
-        	EndIf
+      EndIf
         	
 		Next nI
 			

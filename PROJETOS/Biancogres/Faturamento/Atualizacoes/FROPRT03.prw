@@ -224,10 +224,14 @@ User Function FMAATEMP(_cEmp)
 	Local _cRet := ""
 	Local cAliasTmp
 
+
 	cAliasTmp := GetNextAlias()
 	BeginSql Alias cAliasTmp
 		%NOPARSER%
-		SELECT DISTINCT ZZI_ATENDE FROM VW_SAP_ZZI WHERE MARCA = %EXP:AllTrim(_cEmp)+'01'%
+		SELECT DISTINCT ZZI_ATENDE FROM VW_SAP_ZZI
+		jOIN SA3010 ON (ZZI_VEND=A3_COD)
+		WHERE A3_MSBLQL = '2'
+		AND MARCA = %EXP:AllTrim(_cEmp)+'01'%
 	EndSql
 
 	(cAliasTmp)->(DbGoTop())

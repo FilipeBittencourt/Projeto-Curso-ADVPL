@@ -260,19 +260,22 @@ Static Function CheckZLL()
 	Local cQuery 		:= ""
 	Local cAliasTemp 	:= GetNextAlias()
 	Local cChave		:= SF1->F1_DOC+'#'+SF1->F1_FORNECE+'#'+SF1->F1_LOJA+'%'
+	Local tabela		:= RetSQLName("ZLL")
 
-	cQuery := " SELECT *						 															"
-	cQuery += " FROM "+ RetSQLName("ZLL")+"																	"			
-	cQuery += " WHERE ZLL_FILIAL = "+ ValToSQL(xFilial("ZLL"))+"											"
-	cQuery += " AND cast(ZLL_NFSERV as varchar(max)) LIKE '"+cChave+"'										"	
-	cQuery += " AND D_E_L_E_T_ = '' 																		"
-	
-	TcQuery cQuery New Alias (cAliasTemp)
-	
-	If (!(cAliasTemp)->(Eof()))
-		lRet := .T.
-	EndIf
-	(cAliasTemp)->(DbCloseArea())
+	IF(!Empty(tabela))
+		cQuery := " SELECT *						 															"
+		cQuery += " FROM "+ RetSQLName("ZLL")+"																	"			
+		cQuery += " WHERE ZLL_FILIAL = "+ ValToSQL(xFilial("ZLL"))+"											"
+		cQuery += " AND cast(ZLL_NFSERV as varchar(max)) LIKE '"+cChave+"'										"	
+		cQuery += " AND D_E_L_E_T_ = '' 																		"
+		
+		TcQuery cQuery New Alias (cAliasTemp)
+		
+		If (!(cAliasTemp)->(Eof()))
+			lRet := .T.
+		EndIf
+		(cAliasTemp)->(DbCloseArea())
+	ENDIF
 		
 Return(lRet)
 

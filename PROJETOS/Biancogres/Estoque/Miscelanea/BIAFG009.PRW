@@ -40,7 +40,7 @@ Static Function ValidPerg()
 	local cLoad	    := "BIAFG009" + cEmpAnt
 	local cFileName := RetCodUsr() +"_"+ cLoad
 	local lRet		:= .F.
-	Local _nPeso	:=	0
+	//Local _nPeso	:=	0
 
 	MV_PAR01 := STOD('')
 	MV_PAR02 := STOD('')
@@ -75,7 +75,7 @@ Static Function fQryDados()
 	Local _cDataDe	:=	DtoS(MV_PAR01)
 	Local _cDataAte	:=	DtoS(MV_PAR02)
 	local nRegAtu   := 0
-	Local _cBaia	:=	""
+	//Local _cBaia	:=	""
 
 	local cCab1Fon	:= 'Calibri' 
 	local cCab1TamF	:= 8   
@@ -91,7 +91,7 @@ Static Function fQryDados()
 	local nTamFont2	 := 8   
 	local cCorFont2  := '#000000'
 	local cCorFun2	 := '#B8CCE4'
-	Local nConsumo	 :=	0
+	//Local nConsumo	 :=	0
 
 	local cEmpresa  := CapitalAce(SM0->M0_NOMECOM)
 
@@ -156,7 +156,7 @@ Static Function fQryDados()
 	oExcel:AddCelula("Equipe"				,0,'C',cCab1Fon,cCab1TamF,cCab1CorF,.T.,.T.,cCab1Fun ,.T.,.T.,.T.,.T.)
 	oExcel:AddCelula("Turno"				,0,'C',cCab1Fon,cCab1TamF,cCab1CorF,.T.,.T.,cCab1Fun ,.T.,.T.,.T.,.T.)	
 	oExcel:AddCelula("Caco"			 		,0,'C',cCab1Fon,cCab1TamF,cCab1CorF,.T.,.T.,cCab1Fun ,.T.,.T.,.T.,.T.)
-	oExcel:AddCelula("Procução"				,0,'C',cCab1Fon,cCab1TamF,cCab1CorF,.T.,.T.,cCab1Fun ,.T.,.T.,.T.,.T.)
+	oExcel:AddCelula("Produção"				,0,'C',cCab1Fon,cCab1TamF,cCab1CorF,.T.,.T.,cCab1Fun ,.T.,.T.,.T.,.T.)
 	oExcel:AddCelula("Peso Formato"			,0,'C',cCab1Fon,cCab1TamF,cCab1CorF,.T.,.T.,cCab1Fun ,.T.,.T.,.T.,.T.)
 	oExcel:AddCelula("Produção TON"			,0,'C',cCab1Fon,cCab1TamF,cCab1CorF,.T.,.T.,cCab1Fun ,.T.,.T.,.T.,.T.)
 	oExcel:AddCelula("Caco Ajust."			,0,'C',cCab1Fon,cCab1TamF,cCab1CorF,.T.,.T.,cCab1Fun ,.T.,.T.,.T.,.T.)
@@ -228,7 +228,6 @@ Static Function fGeraParametros()
 	local nTamFont2  := 9
 	local cCorFont2  := '#000000'
 
-	local cCorFundo  := ''
 
 	aPergs[1,3] := DtoC(MV_PAR01) 
 	aPergs[2,3] := DtoC(MV_PAR02)  
@@ -272,42 +271,60 @@ Static Function fCalcPes(cFormat, cTurno, cEquipe, cData)
 	Local _aArea		:=	GetArea()
 	BeginSql Alias _cAliasPes
 
-	SELECT  
-	CASE
-	WHEN SB1.B1_YFORMAT NOT IN ( 'B9', 'BO', 'C6' ) THEN ( CASE 
-	WHEN ISNULL(SUM(Z75_QUANT),0) > 0 THEN ISNULL(SUM(Z75_QUANT * B1_PESO), 0)/ ISNULL(SUM(Z75_QUANT),0) 
-	ELSE 0
-	END)
-	WHEN SB1.B1_YFORMAT IN ( 'B9', 'BO', 'C6' ) THEN ( CASE 
-	WHEN ISNULL(SUM(Z75_BKQTD),0) > 0 THEN ISNULL(SUM(Z75_BKQTD * B1_PESO), 0)/ ISNULL(SUM(Z75_BKQTD),0) 
-	ELSE 0
-	END)
-	ELSE 0 
-	END PESO
-	FROM    %TABLE:Z75% Z75
-	INNER JOIN %TABLE:SB1% SB1 ON B1_COD = Z75_PRODUT
-	AND B1_YFORMAT = %Exp:cFormat%
-	AND SB1.D_E_L_E_T_ = ' '
-	WHERE   Z75_FILIAL = %XFILIAL:Z75%
-	AND Z75_DATARF = %Exp:_cData%
-	AND Z75_TPMOV IN ('ETQ','RET')
-	AND ( ( B1_YFORMAT IN('BM', 'BF', 'BD', 'BE') AND Z75_TPPROD = 'PP') OR ( B1_YFORMAT NOT IN('BM', 'BF', 'BD', 'BE') AND Z75_TPPROD <> 'PP') )
-	AND ( ( SB1.B1_YFORMAT IN ( 'B9', 'BO', 'C6' )
-	AND Z75.Z75_EQUIPE = '1'
-	AND Z75.Z75_BKEQUI = %Exp:cEquipe%
-	)
-	OR ( SB1.B1_YFORMAT NOT IN ( 'B9', 'BO', 'C6' )
-	AND Z75.Z75_EQUIPE = %Exp:cEquipe%
-	)
-	)
-	AND Z75.%NotDel%
-	GROUP BY SB1.B1_YFORMAT
-
+		SELECT 	
+			CASE
+			WHEN SB1.B1_YFORMAT NOT IN ( 'B9', 'BO', 'C6' ) THEN ( CASE 
+			WHEN ISNULL(SUM(Z75_QUANT),0) > 0 THEN ISNULL(SUM(Z75_QUANT * B1_PESO), 0)/ ISNULL(SUM(Z75_QUANT),0) 
+			ELSE 0
+		END)
+		WHEN SB1.B1_YFORMAT IN ( 'B9', 'BO', 'C6' ) THEN ( CASE 
+		WHEN ISNULL(SUM(Z75_BKQTD),0) > 0 THEN ISNULL(SUM(Z75_BKQTD * B1_PESO), 0)/ ISNULL(SUM(Z75_BKQTD),0) 
+		ELSE 0
+		END)
+		ELSE 0 
+		END PESO
+		FROM    %TABLE:Z75% Z75
+		INNER JOIN %TABLE:SB1% SB1 ON B1_COD = Z75_PRODUT
+		AND B1_YFORMAT = %Exp:cFormat%
+		AND SB1.D_E_L_E_T_ = ' '
+		WHERE   Z75_FILIAL = %XFILIAL:Z75%
+		AND Z75_DATARF = %Exp:_cData%
+		AND Z75.Z75_TURNO = %EXP:cTurno%
+		AND Z75_TPMOV IN ('ETQ','RET')
+		AND ( ( Z75_LINHA IN ('L03','L06') AND Z75_TPPROD = 'PP' ) OR ( Z75_LINHA NOT IN ('L03','L06') AND Z75_TPPROD <> 'PP' ) )
+		AND ( ( SB1.B1_YFORMAT IN ( 'B9', 'BO', 'C6' )
+		AND Z75.Z75_EQUIPE = '1'
+		AND Z75.Z75_BKEQUI = %Exp:cEquipe%
+		)
+		OR ( SB1.B1_YFORMAT NOT IN ( 'B9', 'BO', 'C6' )
+		AND Z75.Z75_EQUIPE = %Exp:cEquipe%
+		)
+		)
+		AND Z75.%NotDel%
+		GROUP BY SB1.B1_YFORMAT
 	EndSql
 
 	_nPeso	:=	(_cAliasPes)->PESO
 
 	(_cAliasPes)->(DbCloseArea())
+
+	If _nPeso == 0
+
+		_cAliasPes	:= GetNextAlias()
+		
+		BeginSql Alias _cAliasPes
+			SELECT ISNULL(AVG(B1_PESO),0) PESO
+			FROM %TABLE:SB1%
+			WHERE B1_YFORMAT = %Exp:cFormat%
+				AND B1_YCLASSE = '1'
+				AND B1_TIPO = 'PA'
+				AND B1_YSTATUS = '1'
+				AND %NotDel%
+		EndSql
+	
+		_nPeso	:=	(_cAliasPes)->PESO
+	EndIf
+
 
 	RestArea(_aArea)
 

@@ -5,6 +5,7 @@ Class TCParceria from LongClassName
 
 	Public Data oObj
 	Public Data oResult	
+	Public Data cNumSC	
 	
 	Method GatCab()
 	Method GatItem()
@@ -20,6 +21,8 @@ EndClass
 
 Method New() Class TCParceria
 	::oResult 	:= TCPResultStruct():New()
+
+	::cNumSC	:= ""
 Return
 
 Method GatCab() Class TCParceria
@@ -134,7 +137,11 @@ Method GetItens() Class TCParceria
 		
 		aAdd(aItem,			{"C3_MSBLQL"		, "2"												, Nil})	
 		
-		//
+		aAdd(aItem,			{"C3_YNUMSC"		, PADR(oItem:cNumSC, TamSx3("C3_YNUMSC")[1])												, Nil})	
+
+		If !Empty(oItem:cNumSC)
+			::cNumSC	:= oItem:cNumSC
+		EndIf
 				
 		oCVT := TValidarCampoTabela():New()
         oCVT:Validar('SC3', aItem)
@@ -185,6 +192,22 @@ Method Execute(_oObj) Class TCParceria
 			
 				lOk			:= .T.
 				cMsgLog 	:= "[Contrato Parceria Numero: "+::oObj:cNumero+", Fornecedor: "+::oObj:cFornece+"] => incluido com sucesso."
+
+				If !Empty(::cNumSC)
+
+					dbSelectArea("SC3")
+					SC3->( dbSetOrder(1) )
+		
+					If SC3->( dbSeek( xFilial('SC3') + PADR(::oObj:cNumero, TamSx3("C3_NUM")[1] ) ) ) .And. Empty(SC3->C3_YNUMSC)
+						
+						If RecLock("SC3", .F.)
+							SC3->C3_YNUMSC	:= ::cNumSC
+							SC3->( MsUnLock() )
+						EndIf
+
+					EndIf 
+				
+				EndIf
 			
 			Else
 				
@@ -210,8 +233,8 @@ Method Execute(_oObj) Class TCParceria
 		EndIf
 	
 	
-	End Transaction 
-	
+	End Transaction
+
 	SetFunName(cBkpFunName)
 	::oResult:Add(lOk, cMsgLog)
 	
@@ -269,6 +292,7 @@ Class TCPItemStruct From LongClassName
 	Public Data cDriver
 	Public Data cObs
 	Public Data cObsInterna
+	Public Data cNumSC
 	
 	
 	Public Method New() Constructor
@@ -294,6 +318,7 @@ Method New() Class TCPItemStruct
 	::cDriver		:= ""
 	::cObs			:= ""
 	::cObsInterna	:= ""
+	::cNumSC	:= ""
 	
 Return()
 

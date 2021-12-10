@@ -59,8 +59,8 @@ User Function RETP0004(_cNum)
 				If (SC1->(DbSeek(xFilial('SC1')+oItem:cNumSc+oItem:cItemSc)))
 					oCPItemStruct:cObsInterna		:= SC1->C1_YOBS
 				EndIf
-				
-				
+
+				oCPItemStruct:cNumSC		:= oItem:cNumSc
 					
 				oCPStruct:oItens:Add(oCPItemStruct)
 	

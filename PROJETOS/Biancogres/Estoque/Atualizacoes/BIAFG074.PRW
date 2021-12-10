@@ -84,6 +84,7 @@ Static Function fProcessa()
 			AND ZCP.ZCP_LOCAL = ZCN.ZCN_LOCAL
 			AND ZCN.ZCN_LOCAL = %Exp:MV_PAR05%
 			AND ZCN.ZCN_POLIT = %EXP:MV_PAR03%
+			AND NOT (ZCN.ZCN_POLIT = '4' AND SUBSTRING(ZCN.ZCN_COD,1,2) IN ('2','4'))
 			AND ZCN.%NotDel%
 		EndSql	
 

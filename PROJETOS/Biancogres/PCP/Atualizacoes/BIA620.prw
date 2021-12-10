@@ -141,6 +141,11 @@ Static Function RptPDetail()
 		Return
 	EndIf
 
+	IF EMPTY(MV_PAR01) .Or. EMPTY(MV_PAR02)
+		MsgStop("Favor verificar os parâmetros de data, pois apresentam inconsitência", "BIA620")
+		RETURN
+	EndIf	
+
 	//                               Zera Valores para que não ocorra erros em caso se reprocessamento
 	//************************************************************************************************
 	ZP003 := " DELETE "+RetSqlName("Z75")+" "
@@ -178,6 +183,8 @@ Static Function RptPDetail()
 		ET001 += "                              WHEN A.CE_FORNO IN('11') THEN 'L05' "		
 		ET001 += "                              WHEN A.CE_FORNO IN('3') THEN 'E03' "
 		ET001 += "                              WHEN A.CE_FORNO IN('4') THEN 'E04' "
+		ET001 += "                              WHEN A.CE_FORNO IN('12') THEN 'E6A' "
+		ET001 += "                              WHEN A.CE_FORNO IN('13') THEN 'E6B' "
 		ET001 += "                              ELSE 'VRF' "
 		ET001 += "                            END LINHA, "
 		ET001 += "                            B.ETIQ_DATA, "
@@ -273,7 +280,7 @@ Static Function RptPDetail()
 				MsUnlock()
 
 				// Grava Registro para PP
-				If !ET01->LINHA $ "E03/E04"
+				If !ET01->LINHA $ "E03/E04/E6A/E6B"
 
 					hCodPP := Substr(ET01->PRODUT,1,7) + Space(8)
 					dbSelectArea("Z75")
@@ -323,6 +330,8 @@ Static Function RptPDetail()
 		LB001 += "                            WHEN A.CE_FORNO IN('11') THEN 'L05' "	
 		LB001 += "                            WHEN A.CE_FORNO IN('3') THEN 'E03' "
 		LB001 += "                            WHEN A.CE_FORNO IN('4') THEN 'E04' "
+		LB001 += "                            WHEN A.CE_FORNO IN('12') THEN 'E6A' "
+		LB001 += "                            WHEN A.CE_FORNO IN('13') THEN 'E6B' "
 		LB001 += "                            ELSE 'VRF' "
 		LB001 += "                          END LINHA, "
 		LB001 += "                          Z18_DATA DATREF, "
@@ -449,6 +458,8 @@ Static Function RptPDetail()
 		RT001 += "                              WHEN A.etiq_forno IN('11') THEN 'L05' "	
 		RT001 += "                              WHEN A.etiq_forno IN('3') THEN 'E03' "
 		RT001 += "                              WHEN A.etiq_forno IN('4') THEN 'E04' "
+		RT001 += "                              WHEN A.etiq_forno IN('12') THEN 'E6A' "
+		RT001 += "                              WHEN A.etiq_forno IN('13') THEN 'E6B' "
 		RT001 += "                              ELSE 'VRF' "
 		RT001 += "                            END LINHA, "
 		RT001 += " 						      A.ETIQ_DATA, "
@@ -880,7 +891,7 @@ Static Function RptPDetail()
 		Ferase(WUcIndex+GetDBExtension())     //arquivo de trabalho
 		Ferase(WUcIndex+OrdBagExt())          //indice gerado
 
-		If JQ08->METAPA <> JQ08->Z74_METAQT .and. !JQ08->Z74_LINHA $ "L03" .and. !(JQ08->Z74_FORMAT == "CE" .and. JQ08->Z74_LINHA == "L02")
+		If JQ08->METAPA <> JQ08->Z74_METAQT .and. !JQ08->Z74_LINHA $ "L03/L06" .and. !(JQ08->Z74_FORMAT == "CE" .and. JQ08->Z74_LINHA == "L02")
 
 			xfProdut := JQ08->Z74_FORMAT + "000001       "
 

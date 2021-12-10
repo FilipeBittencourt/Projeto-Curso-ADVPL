@@ -58,7 +58,7 @@ USER FUNCTION MA440VLD()
 			//RUBENS JUNIOR (FACILE SISTEMAS) IMPEDIR QUE SEJA LIBERADO PEDIDO NA BIANCOGRES OU INCESA, COM O PEDIDO DA LM BLOQUEADO
 			//OS:0694-14
 			//Fernando/Facile em 29/12/2014 - adicionado regra para o campo C6_YBLQLOT - bloqueio de lote
-			If (cEmpAnt $ "01_05") .And. (SC5->C5_CLIENTE == '010064')
+			If (cEmpAnt $ "01_05_14") .And. (SC5->C5_CLIENTE == '010064')
 
 				CSQL := " SELECT C5_NUM,C6_BLQ,C6_BLOQUEI,C6_YBLQLOT FROM SC5070 SC5 "  +CRLF
 				CSQL += " INNER JOIN SC6070 SC6 ON C6_PRODUTO = '"+Gdfieldget("C6_PRODUTO",I)+"' AND C6_NUM = C5_NUM AND C5_FILIAL = C6_FILIAL AND SC6.D_E_L_E_T_ = '' " +CRLF
@@ -94,7 +94,7 @@ USER FUNCTION MA440VLD()
 		ENDIF
 
 		//Ticket 17090 - Colocar mais uma validacao de ponta para tentar mitigar os riscos de passar algum pedido com esta condicao
-		IF ( AllTrim(cEmpAnt) $ "01_05_13" ) .And. Gdfieldget("C6_QTDLIB",I) > 0 .And. M->C5_TIPO == 'N'  .And. M->C5_YLINHA <> "4" .And. !(Gdfieldget("C6_LOCAL",I) == AllTrim(GetNewPar("FA_LOCAMO","05")))
+		IF ( AllTrim(cEmpAnt) $ "01_05_13_14" ) .And. Gdfieldget("C6_QTDLIB",I) > 0 .And. M->C5_TIPO == 'N'  .And. M->C5_YLINHA <> "4" .And. !(Gdfieldget("C6_LOCAL",I) == AllTrim(GetNewPar("FA_LOCAMO","05")))
 
 			//Acumulando Produtos/Lotes - pois a geracao de ponta pode ocorrer no total do pedido com o mesmo produto em varias linhas
 			_nPL := aScan(_aLotes,{|x| x[1] == SB1->B1_COD .And. x[2] == Gdfieldget("C6_LOTECTL",I)})
@@ -142,7 +142,7 @@ USER FUNCTION MA440VLD()
 	NEXT I
 
 	//Validar pontas do total de produto/lote
-	IF ( AllTrim(cEmpAnt) $ "01_05_13" ) .And. M->C5_TIPO == 'N'  .And. M->C5_YLINHA <> "4"
+	IF ( AllTrim(cEmpAnt) $ "01_05_13_14" ) .And. M->C5_TIPO == 'N'  .And. M->C5_YLINHA <> "4"
 
 		FOR nX := 1 To Len(_aLotes)
 

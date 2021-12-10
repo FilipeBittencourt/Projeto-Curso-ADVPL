@@ -44,12 +44,16 @@ Class TProcessoRocket From LongClassName
 	Data cPorte // Porte do cliente
 	Data cCredit // Decisão Analista - Identifica o retorno da plataforma Rocket - APROVADO; REPROVADO; APROVADO_AUTOMATICO; REPROVADO_AUTOMATICO	 
 	Data lEnvProd // Ambiente de Producao
+	Data cCPFSocio	//CPF dos Socios
+	Data cNomSocio	//Nome dos Socios
+	Data idProcess	//Id Processo Rocket
 	
 	Method New() Constructor
 	Method Add()
 	Method AddReturn()
 	Method UpdCustomer()
 	Method UpdCreditRequest()
+	Method AddCPFSocio()
 	Method GetSeq()
 	Method Load()
 	Method Request()
@@ -66,39 +70,42 @@ EndClass
 
 Method New() Class TProcessoRocket
 
-	::cCodPro := ""
-	::cEmpresa := "02077546000176"
-	::cUsuario := "teste_ws"
-	::cSenha := "teste_ws"
-	::cHash := ""
-	::cTicket := ""
-	::cStatus := ""
-	::cTipo := ""
-	::cFluxo := "WS_BIANCOGRES_CREDITO_PJ_PRD"
-	::cFluxoGrp := "WS_BIANCOGRES_GRUPO_PRD"
+	::cCodPro	:= ""
+	::cEmpresa	:= "02077546000176"
+	::cUsuario	:= "teste_ws"
+	::cSenha	:= "teste_ws"
+	::cHash		:= ""
+	::cTicket	:= ""
+	::cStatus	:= ""
+	::cTipo 	:= ""
+	::cFluxo 	:= "WS_BIANCOGRES_CREDITO_PJ_PRD"
+	::cFluxoGrp	:= "WS_BIANCOGRES_GRUPO_PRD"
 	::cFluxoDev := "WS_BIANCOGRES_CREDITO_PJ_HOMOLOG"
 	::cFluxoDevGrp := "WS_BIANCOGRES_GRUPO_HOMOLOG"
-	::cIDFluxo := "PJ"
-	::cURLPost := "https://wsrocket.cmsw.com/Rocket_02077546000176/services"
-	::cXMLSend := ""
-	::cXMLReceive := ""
-	::oXMLReceive := Nil
-	::oLst := ArrayList():New()
-	::nLimAtu := 0
-	::nLimSol := 0
-	::nLimApr := 0
-	::nLimSug := 0
-	::nRisSug := 0
-	::nRisDef := 0
-	::nRatCal := 0
-	::nRatDef  := 0
-	::nMaiAcu := 0
-	::nVarAum := 0
-	::nValLim := 0
-	::cParCli := ""
-	::cPorte := ""
-	::cCredit := ""
-	::lEnvProd := If (Upper(AllTrim(GetEnvserver())) $ "PRODUCAO/SCHEDULE/REMOTO/COMP-TIAGO", .T., .F.)
+	::cIDFluxo	:= "PJ"
+	::cURLPost	:= "https://wsrocket.cmsw.com/Rocket_02077546000176/services"
+	::cXMLSend	:= ""
+	::cXMLReceive	:= ""
+	::oXMLReceive	:= Nil
+	::oLst		:= ArrayList():New()
+	::nLimAtu	:= 0
+	::nLimSol	:= 0
+	::nLimApr	:= 0
+	::nLimSug	:= 0
+	::nRisSug	:= 0
+	::nRisDef	:= 0
+	::nRatCal	:= 0
+	::nRatDef	:= 0
+	::nMaiAcu	:= 0
+	::nVarAum	:= 0
+	::nValLim	:= 0
+	::cParCli	:= ""
+	::cPorte	:= ""
+	::cCredit	:= ""
+	::lEnvProd	:= If (Upper(AllTrim(GetEnvserver())) $ "PRODUCAO/SCHEDULE/REMOTO/COMP-TIAGO", .T., .F.)
+	::cCPFSocio	:= {}
+	::cNomSocio	:= {}
+	::idProcess	:= 0
 
 Return()
 
@@ -107,15 +114,15 @@ Method Add() Class TProcessoRocket
 
 	RecLock("ZM3", .T.)
 
-		ZM3->ZM3_FILIAL := xFilial("ZM3")
-		ZM3->ZM3_CODPRO := ::cCodPro
-		ZM3->ZM3_SEQ := ::GetSeq()
-		ZM3->ZM3_DATA := dDataBase
-		ZM3->ZM3_HORA := Time()
-		ZM3->ZM3_HASH := ::cHash
-		ZM3->ZM3_TICKET := ::cTicket
-		ZM3->ZM3_STATUS := ::cStatus
-		ZM3->ZM3_TIPO := ::cTipo
+		ZM3->ZM3_FILIAL	:= xFilial("ZM3")
+		ZM3->ZM3_CODPRO	:= ::cCodPro
+		ZM3->ZM3_SEQ	:= ::GetSeq()
+		ZM3->ZM3_DATA	:= dDataBase
+		ZM3->ZM3_HORA	:= Time()
+		ZM3->ZM3_HASH	:= ::cHash
+		ZM3->ZM3_TICKET	:= ::cTicket
+		ZM3->ZM3_STATUS	:= ::cStatus
+		ZM3->ZM3_TIPO	:= ::cTipo
 		
 	ZM3->(MsUnLock())
 	
@@ -158,9 +165,9 @@ Local cQry := GetNextAlias()
 
 	lRet := !(cQry)->(Eof())
 	
-	::cHash := (cQry)->ZM3_HASH
-	::cTicket := (cQry)->ZM3_TICKET
-	::cStatus := (cQry)->ZM3_STATUS
+	::cHash		:= (cQry)->ZM3_HASH
+	::cTicket	:= (cQry)->ZM3_TICKET
+	::cStatus	:= (cQry)->ZM3_STATUS
 
 	(cQry)->(DbCloseArea())
 
@@ -171,24 +178,25 @@ Method AddReturn() Class TProcessoRocket
 
 	RecLock("ZM4", .T.)
 
-		ZM4->ZM4_FILIAL := xFilial("ZM4")
-		ZM4->ZM4_CODPRO := ::cCodPro
-		ZM4->ZM4_DATA := dDataBase
-		ZM4->ZM4_HORA := Time()
-		ZM4->ZM4_VLLCA := ::nLimAtu
-		ZM4->ZM4_VLLCS := ::nLimSol
-		ZM4->ZM4_VLLCAA := ::nLimApr
-		ZM4->ZM4_VLLCSA := ::nLimSug
-		ZM4->ZM4_VLRIS := ::nRisSug
-		ZM4->ZM4_VLRIA := ::nRisDef
-		ZM4->ZM4_VLRAC := ::nRatCal
-		ZM4->ZM4_VLRAA := ::nRatDef
-		ZM4->ZM4_VLMC := ::nMaiAcu
-		ZM4->ZM4_VLVA := ::nVarAum
-		ZM4->ZM4_DTVLC := MonthSum(dDataBase, ::nValLim)
-		ZM4->ZM4_PAC := ::cParCli
-		ZM4->ZM4_PORTE := ::cPorte
-		ZM4->ZM4_CREDIT := ::cCredit
+		ZM4->ZM4_FILIAL	:= xFilial("ZM4")
+		ZM4->ZM4_CODPRO	:= ::cCodPro
+		ZM4->ZM4_DATA	:= dDataBase
+		ZM4->ZM4_HORA	:= Time()
+		ZM4->ZM4_VLLCA	:= ::nLimAtu
+		ZM4->ZM4_VLLCS	:= ::nLimSol
+		ZM4->ZM4_VLLCAA	:= ::nLimApr
+		ZM4->ZM4_VLLCSA	:= ::nLimSug
+		ZM4->ZM4_VLRIS	:= ::nRisSug
+		ZM4->ZM4_VLRIA	:= ::nRisDef
+		ZM4->ZM4_VLRAC	:= ::nRatCal
+		ZM4->ZM4_VLRAA	:= ::nRatDef
+		ZM4->ZM4_VLMC	:= ::nMaiAcu
+		ZM4->ZM4_VLVA	:= ::nVarAum
+		ZM4->ZM4_DTVLC	:= MonthSum(dDataBase, ::nValLim)
+		ZM4->ZM4_PAC	:= ::cParCli
+		ZM4->ZM4_PORTE	:= ::cPorte
+		ZM4->ZM4_CREDIT	:= ::cCredit
+		ZM4->ZM4_IDPROC := ::idProcess
 
 	ZM4->(MsUnLock())
 	
@@ -200,6 +208,7 @@ Method AddReturn() Class TProcessoRocket
 		RecLock("ZM0", .F.)
 					
 			ZM0->ZM0_CREDIT := ::cCredit
+			ZM0->ZM0_IDPROC := ::idProcess
 		
 		ZM0->(MsUnLock())
 	
@@ -271,6 +280,62 @@ Local cSQL := ""
 	cSQL += " AND D_E_L_E_T_ = '' "
 
 	TcSQLExec(cSQL)
+
+Return()
+
+
+Method AddCPFSocio() Class TProcessoRocket
+Local nCount := 1
+
+	If Len(::cCPFSocio) > 0
+
+		DbSelectArea("ZM0")
+		DbSetOrder(1)
+		ZM0->(DbSeek(xFilial("ZM0") + ::cCodPro))
+
+		DbSelectArea("SA1")
+		DbSetOrder(3)
+		SA1->(DbSeek(xFilial("SA1") + ZM0->ZM0_CNPJ))
+
+		DbSelectArea("ZRY")
+		DbSetOrder(1)
+		If !ZRY->(DbSeek(xFilial("ZRY") + ZM0->ZM0_CNPJ))
+		
+			RecLock("ZRY", .T.)
+			ZRY->ZRY_FILIAL	:= xFilial("ZRY")
+			ZRY->ZRY_CNPJ	:= ZM0->ZM0_CNPJ
+			ZRY->ZRY_A1COD	:= SA1->A1_COD
+			ZRY->ZRY_A1LOJA	:= SA1->A1_LOJA
+			ZRY->ZRY_NOME	:= SA1->A1_NOME
+			ZRY->ZRY_PESSOA	:= SA1->A1_PESSOA
+			ZRY->ZRY_NREDUZ	:= SA1->A1_NREDUZ
+			ZRY->ZRY_EST	:= SA1->A1_EST
+			ZRY->ZRY_MUN	:= SA1->A1_MUN
+			ZRY->ZRY_BAIRRO	:= SA1->A1_BAIRRO
+			ZRY->ZRY_CEP	:= SA1->A1_CEP
+			ZRY->ZRY_GRPVEN	:= SA1->A1_GRPVEN 
+			ZRY->ZRY_DDD	:= SA1->A1_DDD
+			ZRY->ZRY_TEL	:= SA1->A1_TEL
+			ZRY->ZRY_SITUAC := "1"
+			ZRY->ZRY_DTCAD	:= dDataBase
+			ZRY->ZRY_YTPSEG	:= SA1->A1_YTPSEG
+			ZRY->(MsUnLock())
+
+			While nCount <= Len(::cCPFSocio) 
+
+				RecLock("ZRZ", .T.)
+				ZRZ->ZRZ_FILIAL	:= xFilial("ZRZ")
+				ZRZ->ZRZ_CNPJ	:= ZM0->ZM0_CNPJ
+				ZRZ->ZRZ_CPF	:= ::cCPFSocio[nCount]
+				ZRZ->ZRZ_NOME	:= ::cNomSocio[nCount]
+				ZRZ->(MsUnLock())
+
+				nCount++
+			EndDo()
+
+		EndIf
+
+	EndIf
 
 Return()
 
@@ -371,7 +436,11 @@ Local nCount := 1
 			ElseIf oXml[nCount]:_NOME:TEXT == "LIMITE_SUGERIDO"
 				
 				::nLimSug := Round(Val(oXml[nCount]:_VALOR:TEXT), 2)
-			
+
+			ElseIf oXml[nCount]:_NOME:TEXT == "ID_WORK_PROCESSO"
+				
+				::idProcess := Alltrim(oXml[nCount]:_VALOR:TEXT)
+
 			ElseIf oXml[nCount]:_NOME:TEXT == "RISCO_SUGERIDO"
 			
 				::nRisSug := Round(Val(oXml[nCount]:_VALOR:TEXT), 2)
@@ -407,7 +476,15 @@ Local nCount := 1
 			ElseIf oXml[nCount]:_NOME:TEXT == "PORTE_CLIENTE"
 			
 				::cPorte := oXml[nCount]:_VALOR:TEXT
-			
+
+			ElseIf oXml[nCount]:_NOME:TEXT == "SERASA_DOC_SOCIO_PF"	
+
+				::cCPFSocio	:= StrTokArr(oXml[nCount]:_VALOR:TEXT, ";")
+
+			ElseIf oXml[nCount]:_NOME:TEXT == "SERASA_NOME_SOCIO_PF"	
+
+				::cNomSocio	:= StrTokArr(oXml[nCount]:_VALOR:TEXT , ";")
+
 			ElseIf oXml[nCount]:_NOME:TEXT == "DECISAO_ANALISTA"
 			
 				If Upper(oXml[nCount]:_VALOR:TEXT) == "APROVADO"
@@ -440,6 +517,8 @@ Local nCount := 1
 			
 		::AddReturn()
 		
+		::AddCPFSocio()
+
 		If ::cCredit == "AM" .Or. ::cCredit == "AA"
 			
 			::UpdCustomer()
@@ -538,9 +617,9 @@ Method FlowStatus() Class TProcessoRocket
 	::cXMLSend += '<soap:Header/>'
 	::cXMLSend += '<soap:Body>'
 	::cXMLSend += '<int:statusProcess>'
-  ::cXMLSend += '<int:hash>'+ ::cHash +'</int:hash>'
-  ::cXMLSend += '<int:ticket>'+ ::cTicket +'</int:ticket>'
-  ::cXMLSend += '</int:statusProcess>'
+  	::cXMLSend += '<int:hash>'+ ::cHash +'</int:hash>'
+  	::cXMLSend += '<int:ticket>'+ ::cTicket +'</int:ticket>'
+  	::cXMLSend += '</int:statusProcess>'
 	::cXMLSend += '</soap:Body>'
 	::cXMLSend += '</soap:Envelope>'
 

@@ -51,13 +51,13 @@ User Function SF1140I()
 		aAdd( aPergs ,{2, "Enviar para Conferencia" , "1"         , aSelOpc, 50,".T.",.F.})
 	EndIf
 
-	aAdd( aPergs ,{1, "Entregador" , space(100) ,"@!" ,".T.",,".T.",100,.F.})
+	aAdd( aPergs ,{1, "Entregador" , space(100) ,"@N!" ,".T.",,".T.",100,.F.})
 
 	If lServico
-		aAdd( aPergs ,{1, "Codigo NFS" ,space(44)   ,"@!" ,".T.",,".T.", 80,.F.})
+		aAdd( aPergs ,{1, "Codigo NFS" ,space(44)   ,"@N!" ,".T.",,".T.", 80,.F.})
 	else
 		If lLancMan
-			aAdd( aPergs ,{1, "Chave NFE",space(44),"@!","U_VLDCHVNFE(mv_par02)",,".T.", 120,.F.})
+			aAdd( aPergs ,{1, "Chave NFE",space(44),"@N!","U_VLDCHVNFE(mv_par02)",,".T.", 120,.F.})
 		EndIf
 	EndIf
 

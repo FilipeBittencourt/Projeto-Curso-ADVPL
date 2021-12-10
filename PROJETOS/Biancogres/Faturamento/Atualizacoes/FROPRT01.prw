@@ -246,7 +246,7 @@ User Function FRSLDAMO(_cProd, _cLocal, _nQtdDig, lRodape)
 
 	Default lRodape := .F.
 
-	If AllTrim(CEMPANT) <> "07"
+	If AllTrim(cEmpAnt+cFilAnt) <> "0701"
 
 		_nSaldo := U_FRSAMOPR(_cProd, _cLocal, _nQtdDig, lRodape)
 

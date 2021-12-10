@@ -15,10 +15,6 @@ User Function M410STTS()
 
 	Local cSql		:= ""
 
-	Local cArq    	:= ""
-	Local cInd    	:= 0
-	Local cReg	    := 0
-
 	Local cArqSC6	:= ""
 	Local cIndSC6	:= 0
 	Local cRegSC6	:= 0
@@ -32,6 +28,8 @@ User Function M410STTS()
 	Local cRegSA1	:= 0
 
 	Local nBloq		:= .F.
+	lOCAL cPedVenda := ""
+	lOCAL cItempedv := ""
 
 	ConOut("M410STTS => INICIO, thread: "+AllTrim(Str(ThreadId()))+"  data: "+DTOC(dDataBase)+" hora: "+Time())
 
@@ -265,9 +263,9 @@ User Function M410STTS()
 			If(SB1->(DbSeek(XFilial("SB1")+SC6->C6_PRODUTO)))
 
 				//If AllTrim(SB1->B1_TIPO) == "PA" .Or. (ALLTRIM(SC5->C5_YSUBTP) $ "A_G_B_M" //Ticket 30911 - Adicionado o tipo 'O'
-				If(	AllTrim(SB1->B1_TIPO) == "PA" ;
-						.Or. ALLTRIM(SC5->C5_YSUBTP) $ "A_G_B_M" ;
-						.Or. (SC5->C5_YSUBTP == 'O' .And. AllTrim(SB1->B1_TIPO) == "PA") ;//Ticket 30911 - Adicionado o tipo 'O' //Ticket 31528 - Complemento da regra para tipos diferenets de PA
+				If(	AllTrim(SB1->B1_TIPO) == "PA" ;	
+    				.Or. ALLTRIM(SC5->C5_YSUBTP) $ "A_G_B_M" ;
+    				.Or. (SC5->C5_YSUBTP == 'O' .And. AllTrim(SB1->B1_TIPO) == "PA") ;//Ticket 30911 - Adicionado o tipo 'O' //Ticket 31528 - Complemento da regra para tipos diferenets de PA
 					)
 					If (Alltrim(SC5->C5_TIPO) == 'N')
 						oBloqPedVenda := TBloqueioPedidoVenda():New(M->C5_NUM)
@@ -345,8 +343,9 @@ User Function M410STTS()
 
 				If 	Upper(AllTrim(getenvserver())) == "PRODUCAO" .OR.;
 						Upper(AllTrim(getenvserver())) == "REMOTO" .OR.;
+						Upper(AllTrim(getenvserver())) == "DEV-IPI" .OR.;
 						Upper(AllTrim(getenvserver())) == "FACILE-PROD-FERNANDO" .OR.;
-						Upper(AllTrim(getenvserver())) == "DEV-FILIPE-FIDC"
+						Upper(AllTrim(getenvserver())) == "COMP-FERNANDO-TESTE-FIN"
 
 					U_Env_Pedido(SC5->C5_NUM,,,cEmpPed)
 
@@ -919,44 +918,83 @@ User Function M410STTS()
 
 	EndIf
 
+    
+    // Gabriel Pinheiro Leite da Silva(G3) - 26/05/2021 - OS:32367 - Configurar para que ao alterar os campos de data do pedido na empresa origem, eles repliquem para o pedido da LM.
+    If (Altera) .And. cEmpAnt == '01' //barba
 
-	// Gabriel Pinheiro Leite da Silva(G3) - 26/05/2021 - OS:32367 - Configurar para que ao alterar os campos de data do pedido na empresa origem, eles repliquem para o pedido da LM.
-	If (Altera) .And. cEmpAnt != '07' //barba
+        begincontent var cSql
 
-		begincontent var cSql
+            UPDATE SC67 
+            SET  SC67.C6_ENTREG=SC61.C6_ENTREG
+                ,SC67.C6_YDTNERE=SC61.C6_YDTNERE
+                ,SC67.C6_YDTNECE=SC61.C6_YDTNECE
+            FROM SC6070 SC67
+            JOIN SC5070 SC57 ON (SC57.C5_FILIAL=SC67.C6_FILIAL AND SC57.C5_NUM=SC67.C6_NUM)
+            JOIN SC5010 SC51 ON (SC57.C5_YPEDORI=SC51.C5_NUM)
+            JOIN SC6010 SC61 ON (SC51.C5_FILIAL=SC61.C6_FILIAL AND SC51.C5_NUM=SC61.C6_NUM)
+            WHERE   SC57.D_E_L_E_T_=''
+                AND SC67.D_E_L_E_T_=''
+                AND SC51.D_E_L_E_T_=''
+                AND SC61.D_E_L_E_T_=''
+                AND SC51.C5_NUM='@C5_NUM'
+                AND SC57.C5_YEMP='@C5_YEMP'
+                AND SC67.C6_PRODUTO=SC61.C6_PRODUTO
+                AND SC67.C6_ITEM=SC61.C6_ITEM
+                AND SC51.C5_FILIAL='@C5_FILIAL'
 
-		UPDATE SC67
-		SET  SC67.C6_ENTREG=SC61.C6_ENTREG
-		,SC67.C6_YDTNERE=SC61.C6_YDTNERE
-		,SC67.C6_YDTNECE=SC61.C6_YDTNECE
-		FROM SC6070 SC67
-		JOIN SC5070 SC57 ON (SC57.C5_FILIAL=SC67.C6_FILIAL AND SC57.C5_NUM=SC67.C6_NUM)
-		JOIN SC5010 SC51 ON (SC57.C5_YPEDORI=SC51.C5_NUM)
-		JOIN SC6010 SC61 ON (SC51.C5_FILIAL=SC61.C6_FILIAL AND SC51.C5_NUM=SC61.C6_NUM)
-		WHERE   SC57.D_E_L_E_T_=''
-		AND SC67.D_E_L_E_T_=''
-		AND SC51.D_E_L_E_T_=''
-		AND SC61.D_E_L_E_T_=''
-		AND SC51.C5_NUM='@C5_NUM'
-		AND SC57.C5_YEMP='@C5_YEMP'
-		AND SC67.C6_PRODUTO=SC61.C6_PRODUTO
-		AND SC67.C6_ITEM=SC61.C6_ITEM
-		AND SC51.C5_FILIAL='@C5_FILIAL'
+        endcontent
 
-	endcontent
+        cSql:=strTran(cSql,"SC5010",retSQLName("SC5"))
+        cSql:=strTran(cSql,"SC6010",retSQLName("SC6"))
+        cSql:=strTran(cSql,"@C5_NUM",M->C5_NUM)
+        cSql:=strTran(cSql,"@C5_YEMP",M->C5_YEMP)
+        cSql:=strTran(cSql,"@C5_FILIAL",xFilial("SC5"))
 
-	cSql:=strTran(cSql,"SC5010",retSQLName("SC5"))
-	cSql:=strTran(cSql,"SC6010",retSQLName("SC6"))
-	cSql:=strTran(cSql,"@C5_NUM",M->C5_NUM)
-	cSql:=strTran(cSql,"@C5_YEMP",M->C5_YEMP)
-	cSql:=strTran(cSql,"@C5_FILIAL",xFilial("SC5"))
+        TCSQLExec(cSql)
 
-	TCSQLExec(cSql)
+    EndIf
 
-EndIf
+	
+	//Ticket 36494 - Replicar informação do pedido de compra da LM para Mundi e Biancogres Vinílico
+		If (Altera) .And. cEmpAnt == '07' .And. M->C5_YLINHA=='6' //Vinilico
+			if M->C5_YLINHA == '6' .AND. AllTrim(M->C5_YSUBTP) == 'E'
+				cPedVenda:='SC5140'
+				cItempedv:='SC6140'
+			Elseif M->C5_YLINHA == '6' .AND. AllTrim(M->C5_YSUBTP) == 'IM'
+				cPedVenda:='SC5130'
+				cItempedv:='SC6130'
+			EndIf
 
-// Tiago Rossini Coradini - 26/09/2016 - OS: 3229-16 - Ranisses Corona - Desativa controle de semaforo ao final da rotina
-Leave1Code("SC5" + cEmpAnt + cFilAnt + SC5->C5_NUM)
+			begincontent var cSql
+
+				UPDATE SC51 
+				SET  SC51.C5_YPC = SC57.C5_YPC
+				FROM @SC5010 SC51
+				JOIN SC5070 SC57 ON (SC57.C5_YPEDORI=SC51.C5_NUM)
+				JOIN @SC6010 SC61 ON (SC51.C5_FILIAL=SC61.C6_FILIAL AND SC51.C5_NUM=SC61.C6_NUM)
+				WHERE   SC57.D_E_L_E_T_=''
+					AND SC51.D_E_L_E_T_=''
+					AND SC61.D_E_L_E_T_=''
+					AND SC57.C5_NUM='@C5_NUM'
+					AND SC57.C5_YEMP='@C5_YEMP'
+					AND SC51.C5_FILIAL='@C5_FILIAL'
+			endcontent
+
+		// cSql:=strTran(cSql,"SC5010",retSQLName("SC5"))
+			cSql:=StrTran(cSql,"@SC5010",cPedVenda)
+			cSql:=StrTran(cSql,"@SC6010",cItempedv)
+			cSql:=strTran(cSql,"@C5_NUM",M->C5_NUM)
+			cSql:=strTran(cSql,"@C5_YEMP",M->C5_YEMP)
+			cSql:=strTran(cSql,"@C5_FILIAL",xFilial("SC5"))
+
+			TCSQLExec(cSql)
+
+   		EndIf 
+
+	// Tiago Rossini Coradini - 26/09/2016 - OS: 3229-16 - Ranisses Corona - Desativa controle de semaforo ao final da rotina
+	Leave1Code("SC5" + cEmpAnt + cFilAnt + SC5->C5_NUM)
+
+
 
 Return()
 
@@ -1090,16 +1128,6 @@ User Function fBloqPV()
 		aAprov	:= fAprov(M->C5_YEMP,"",0,0,M->C5_CLIENTE,M->C5_LOJACLI,M->C5_VEND1)
 
 	EndIf
-
-
-
-
-
-
-
-
-
-
 
 	//Verifica se o pedido será Bloqueado ou Liberado
 	If aAprov[1]
@@ -1417,6 +1445,7 @@ Static Function EnvMailCli()
 
 					If 	Upper(AllTrim(getenvserver())) == "PRODUCAO" .OR.;
 							Upper(AllTrim(getenvserver())) == "REMOTO" .OR.;
+							Upper(AllTrim(getenvserver())) == "DEV-IPI" .OR.;							
 							Upper(AllTrim(getenvserver())) == "FACILE-PROD-FERNANDO" .OR.;
 							Upper(AllTrim(getenvserver())) == "COMP-FERNANDO-TESTE-FIN"
 
@@ -1447,9 +1476,9 @@ Return
 
 
 Static Function fRetCatBia(cCodCli, cLojCli, cMarca)
-	Local cRet := ""
-	Local cSQL := ""
-	Local cQry := GetNextAlias()
+Local cRet := ""
+Local cSQL := ""
+Local cQry := GetNextAlias()
 
 	cSQL := "SELECT CAT=[dbo].[GET_CATEGORIA_CLIENTE] ('"+cMarca+"','"+cCodCli+"','"+cLojCli+"')"
 

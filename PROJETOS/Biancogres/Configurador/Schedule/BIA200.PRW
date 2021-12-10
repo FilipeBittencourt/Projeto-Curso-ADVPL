@@ -27,7 +27,7 @@ Private nItemPrd   := 0
 Private cEmail     := ''
 Private Enter      := CHR(13)+CHR(10)
 
-xv_Emps    := U_BAGtEmpr("01_05_13")
+xv_Emps    := U_BAGtEmpr("01_05_13_14")
 
 For nI := 1 to Len(xv_Emps)
 	//Inicializa o ambiente

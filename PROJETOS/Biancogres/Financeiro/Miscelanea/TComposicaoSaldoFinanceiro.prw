@@ -519,10 +519,10 @@ Method GetPagFun() Class TComposicaoSaldoFinanceiro
 
 	// Controle de pagamento de funcionarios
 	If (cEmpAnt == "01" .And. cBankData == "00134312550973") .Or. ; // Folha de pagamento da Biancogress somente sera executado para o banco do brasil na agencia: 34312 e conta: 55.097-3
-		(cEmpAnt == "05" .And. cBankData == "0013431256669") .Or. ; // Folha de pagamento da Incesa somente sera executado para o banco do brasil na agencia: 34312 e conta: 5.666-9
+		(cEmpAnt == "05" .And. cBankData == "02155210532885") .Or. ; // Folha de pagamento da Incesa somente sera executado para o banco Banestes na agencia: 552 e conta: 10532885
 		(cEmpAnt == "06" .And. cBankData == "00134312550981") .Or. ; // Folha de pagamento da JK somente sera executado para o banco do brasil na agencia: 34312 e conta: 55.098-1
 		(cEmpAnt == "07" .And. cBankData == "0013431252868") .Or. ; // Folha de pagamento da LM somente sera executado para o banco do brasil na agencia: 34312 e conta: 52868
-		(cEmpAnt == "11" .And. cBankData == "0013431253295") .Or. ; // Folha de pagamento da SP300 somente sera executado para o banco do brasil na agencia: 34312 e conta: 53295
+		(cEmpAnt == "11" .And. cBankData == "021055231457237") .Or. ; // Folha de pagamento da SP300 somente sera executado para o banco do Banestes na agencia: 0552 e conta: 31457237
 		(cEmpAnt == "12" .And. cBankData == "0013431254968") .Or. ; // Folha de pagamento da ST Gestão somente sera executado para o banco do brasil na agencia: 34312 e conta: 54968
 		(cEmpAnt == "13" .And. cBankData == "0013431254666") .Or. ; // Folha de pagamento da Mundi somente sera executado para o banco do brasil na agencia: 34312 e conta: 54666
 		(cEmpAnt == "14" .And. cBankData == "001343148755") // Folha de pagamento da Vitcer somente sera executado para o banco do brasil na agencia: 3431 e conta: 48755

@@ -1,4 +1,6 @@
 #INCLUDE "PROTHEUS.CH"
+#INCLUDE "TOTVS.CH"
+#INCLUDE "TOPCONN.CH"
 
 /*/{Protheus.doc} BIA882
 @author Marcos Alberto Soprani
@@ -80,44 +82,13 @@ Static Function BIA882A()
 
 	Local msCustFun := ""
 	Local qyCustFun := ""
-	Local _cClVlIn	:=	""
+	Local _cClVlIn	:= ""
 	Local _nI
 	Local _oFerias	:=	tBiaControleFerias():NEW()
 
 	Local _cAliasSr	:=	U_fGetDbSr()
 
-
 	Local msNmTMPII := "##TBIA882II" + cEmpAnt + cFilAnt + __cUserID + strzero(seconds() * 3500,10)
-
-	//                                                 Acerta campo de benefícios 
-	//***************************************************************************
-	UP006 := Alltrim(" WITH SEMELHANTE                                                                                                ") + msrhEnter
-	UP006 += Alltrim("      AS (SELECT ZBA.ZBA_MATR, ZBA.ZBA_BNADC                                                                    ") + msrhEnter
-	UP006 += Alltrim("          FROM " + RetSqlName("ZBA") + " ZBA                                                                    ") + msrhEnter
-	UP006 += Alltrim("          WHERE ZBA.ZBA_FILIAL = '" + xFilial("ZBA") + "'                                                       ") + msrhEnter
-	UP006 += Alltrim("                AND ZBA_VERSAO = '" + _cVersao + "'                                                             ") + msrhEnter
-	UP006 += Alltrim("                AND ZBA_REVISA = '" + _cRevisa + "'                                                             ") + msrhEnter
-	UP006 += Alltrim("                AND ZBA_ANOREF = '" + _cAnoRef + "'                                                             ") + msrhEnter
-	UP006 += Alltrim("                AND ZBA_MATR IN (SELECT ZBA_SEMELH                                                              ") + msrhEnter
-	UP006 += Alltrim("                                   FROM " + RetSqlName("ZBA") + " ZBA                                           ") + msrhEnter
-	UP006 += Alltrim("                                  WHERE ZBA.ZBA_FILIAL = '" + xFilial("ZBA") + "'                               ") + msrhEnter
-	UP006 += Alltrim("                                    AND ZBA_VERSAO = '" + _cVersao + "'                                         ") + msrhEnter
-	UP006 += Alltrim("                                    AND ZBA_REVISA = '" + _cRevisa + "'                                         ") + msrhEnter
-	UP006 += Alltrim("                                    AND ZBA_ANOREF = '" + _cAnoRef + "'                                         ") + msrhEnter
-	UP006 += Alltrim("                                    AND ZBA_SEMELH <> ''                                                        ") + msrhEnter
-	UP006 += Alltrim("                                    AND ZBA.D_E_L_E_T_ = ' ' )                                                  ") + msrhEnter
-	UP006 += Alltrim("                AND ZBA.D_E_L_E_T_ = ' ')                                                                       ") + msrhEnter
-	UP006 += Alltrim("      UPDATE ZBA SET                                                                                            ") + msrhEnter
-	UP006 += Alltrim("             ZBA_BNADC  = SMT.ZBA_BNADC                                                                         ") + msrhEnter
-	UP006 += Alltrim("      FROM " + RetSqlName("ZBA") + " ZBA                                                                        ") + msrhEnter
-	UP006 += Alltrim("           INNER JOIN SEMELHANTE SMT ON SMT.ZBA_MATR = ZBA.ZBA_SEMELH                                           ") + msrhEnter
-	UP006 += Alltrim("      WHERE ZBA.ZBA_FILIAL = '" + xFilial("ZBA") + "'                                                           ") + msrhEnter
-	UP006 += Alltrim("            AND ZBA.ZBA_VERSAO = '" + _cVersao + "'                                                             ") + msrhEnter
-	UP006 += Alltrim("            AND ZBA.ZBA_REVISA = '" + _cRevisa + "'                                                             ") + msrhEnter
-	UP006 += Alltrim("            AND ZBA.ZBA_ANOREF = '" + _cAnoRef + "'                                                             ") + msrhEnter
-	UP006 += Alltrim("            AND SUBSTRING(ZBA.ZBA_MATR, 1, 4) = 'NOVO'                                                          ") + msrhEnter
-	UP006 += Alltrim("            AND ZBA.D_E_L_E_T_ = ' '                                                                            ") + msrhEnter
-	U_BIAMsgRun("Aguarde... Atualizando dados do Semelhante ... ",,{|| TcSQLExec(UP006)  })
 
 	//                                                    Apura campos para pivot 
 	//***************************************************************************
@@ -163,14 +134,14 @@ Static Function BIA882A()
 	Ferase(R9Index+OrdBagExt())
 
 	For _nI := 1 to Len(_oAcessos:aAcessos)
-		If _oAcessos:aAcessos[_nI,3]
-			_cClvlIn	+= "'" + _oAcessos:aAcessos[_nI,1] + "'" + Iif(_nI <> Len(_oAcessos:aAcessos),",","")
-		EndIf	
-	Next
-	If Empty(_cClVlIn)
-		_cClVlIn	:=	"''"
-	EndIf
 
+		If _oAcessos:aAcessos[_nI,3]
+			_cClvlIn	+= "'" + _oAcessos:aAcessos[_nI,1] + "',"
+		EndIf	
+
+	Next
+
+	_cClVlIn += "''"
 	_cClvlIn := "(" + _cClvlIn + ")"	
 
 	//                                                               Orçamento RH 
@@ -217,80 +188,127 @@ Static Function BIA882A()
 
 		While MQ07->(!Eof())
 
+			xxBNADC := MQ07->ZBA_BNADC
+			If Substr(MQ07->ZBA_MATR,1,4) == "NOVO"
+
+				//                                                 Acerta campo de benefícios 
+				//***************************************************************************
+				UP006 := Alltrim(" WITH SEMELHANTE                                                                                                ") + msrhEnter
+				UP006 += Alltrim("      AS (SELECT ZBA.ZBA_MATR, ZBA.ZBA_BNADC                                                                    ") + msrhEnter
+				UP006 += Alltrim("          FROM ZBA" + MQ07->ZBA_EMPORI + "0 ZBA                                                                 ") + msrhEnter
+				UP006 += Alltrim("          WHERE ZBA_VERSAO = '" + _cVersao + "'                                                                 ") + msrhEnter
+				UP006 += Alltrim("                AND ZBA_REVISA = '" + _cRevisa + "'                                                             ") + msrhEnter
+				UP006 += Alltrim("                AND ZBA_ANOREF = '" + _cAnoRef + "'                                                             ") + msrhEnter
+				UP006 += Alltrim("                AND ZBA_MATR = '" + MQ07->ZBA_SEMELH + "'                                                       ") + msrhEnter
+				UP006 += Alltrim("                AND ZBA.D_E_L_E_T_ = ' ')                                                                       ") + msrhEnter
+				UP006 += Alltrim("      UPDATE ZBA SET ZBA_BNADC  = SMT.ZBA_BNADC                                                                 ") + msrhEnter
+				UP006 += Alltrim("      FROM " + RetSqlName("ZBA") + " ZBA                                                                        ") + msrhEnter
+				UP006 += Alltrim("           INNER JOIN SEMELHANTE SMT ON SMT.ZBA_MATR = ZBA.ZBA_SEMELH                                           ") + msrhEnter
+				UP006 += Alltrim("      WHERE ZBA.ZBA_FILIAL = '" + xFilial("ZBA") + "'                                                           ") + msrhEnter
+				UP006 += Alltrim("            AND ZBA.ZBA_VERSAO = '" + _cVersao + "'                                                             ") + msrhEnter
+				UP006 += Alltrim("            AND ZBA.ZBA_REVISA = '" + _cRevisa + "'                                                             ") + msrhEnter
+				UP006 += Alltrim("            AND ZBA.ZBA_ANOREF = '" + _cAnoRef + "'                                                             ") + msrhEnter
+				UP006 += Alltrim("            AND ZBA.ZBA_MATR = '" + MQ07->ZBA_MATR + "'                                                         ") + msrhEnter
+				UP006 += Alltrim("            AND ZBA.ZBA_CLVL = '" + MQ07->ZBA_CLVL + "'                                                         ") + msrhEnter
+				UP006 += Alltrim("            AND SUBSTRING(ZBA.ZBA_MATR, 1, 4) = 'NOVO'                                                          ") + msrhEnter
+				UP006 += Alltrim("            AND ZBA.D_E_L_E_T_ = ' '                                                                            ") + msrhEnter
+				U_BIAMsgRun("Aguarde... Atualizando dados do Semelhante ... ",,{|| TcSQLExec(UP006)  })
+
+				//                                               Apanha o campo de benefícios
+				//***************************************************************************
+				XX002 := " SELECT ZBA_BNADC "
+				XX002 += "   FROM " + RetSqlName("ZBA") + " ZBA "
+				XX002 += "  WHERE ZBA.ZBA_FILIAL = '" + xFilial("ZBA") + "' "
+				XX002 += "    AND ZBA.ZBA_VERSAO = '" + _cVersao + "' "
+				XX002 += "    AND ZBA.ZBA_REVISA = '" + _cRevisa + "' "
+				XX002 += "    AND ZBA.ZBA_ANOREF = '" + _cAnoRef + "' "
+				XX002 += "    AND ZBA.ZBA_MATR = '" + MQ07->ZBA_MATR + "' "
+				XX002 += "    AND ZBA.ZBA_CLVL = '" + MQ07->ZBA_CLVL + "' "
+				XX002 += "    AND ZBA.D_E_L_E_T_ = ' ' "
+				XXIndex := CriaTrab(Nil,.f.)
+				dbUseArea(.T.,"TOPCONN",TcGenQry(,,XX002),'XX02',.T.,.T.)
+				dbSelectArea("XX02")
+				XX02->(dbGoTop())
+				xxBNADC := XX02->ZBA_BNADC
+				XX02->(dbCloseArea())
+				Ferase(XXIndex+GetDBExtension())
+				Ferase(XXIndex+OrdBagExt())
+
+			EndIf
 
 			//Captura feriados para a matrícula em questão
-			RF004 := "	SELECT SUM(CASE																" 
-			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '01'	"
-			RF004 += "					THEN 1														"
-			RF004 += "				ELSE 0															"
-			RF004 += "				END) AS M01														"
-			RF004 += "		,SUM(CASE 																"
-			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '02'	"
-			RF004 += "					THEN 1														"
-			RF004 += "				ELSE 0															"
-			RF004 += "				END) AS M02														"
-			RF004 += "		,SUM(CASE 																"
-			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '03'	"
-			RF004 += "					THEN 1														"
-			RF004 += "				ELSE 0															"
-			RF004 += "				END) AS M03														"
-			RF004 += "		,SUM(CASE 																"
-			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '04'	"
-			RF004 += "					THEN 1														"
-			RF004 += "				ELSE 0															"
-			RF004 += "				END) AS M04														"
-			RF004 += "		,SUM(CASE 																"
-			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '05'	"
-			RF004 += "					THEN 1														"
-			RF004 += "				ELSE 0															"
-			RF004 += "				END) AS M05														"
-			RF004 += "		,SUM(CASE 																"
-			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '06'	"
-			RF004 += "					THEN 1														"
-			RF004 += "				ELSE 0															"
-			RF004 += "				END) AS M06														"
-			RF004 += "		,SUM(CASE 																"
-			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '07'	"
-			RF004 += "					THEN 1														"
-			RF004 += "				ELSE 0															"
-			RF004 += "				END) AS M07														"
-			RF004 += "		,SUM(CASE 																"
-			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '08'	"
-			RF004 += "					THEN 1														"
-			RF004 += "				ELSE 0															"
-			RF004 += "				END) AS M08														"
-			RF004 += "		,SUM(CASE 																"
-			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '09'	"
-			RF004 += "					THEN 1														"
-			RF004 += "				ELSE 0															"
-			RF004 += "				END) AS M09														"
-			RF004 += "		,SUM(CASE 																"
-			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '10'	"
-			RF004 += "					THEN 1														"
-			RF004 += "				ELSE 0															"
-			RF004 += "				END) AS M10														"
-			RF004 += "		,SUM(CASE 																"
-			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '11'	"
-			RF004 += "					THEN 1														"
-			RF004 += "				ELSE 0															"
-			RF004 += "				END) AS M11														"
-			RF004 += "		,SUM(CASE 																"
-			RF004 += "				WHEN SUBSTRING(CONVERT(VARCHAR, usu_datfer, 112), 5, 2) = '12'	"
-			RF004 += "					THEN 1														"
-			RF004 += "				ELSE 0															"
-			RF004 += "				END) AS M12														"
-			RF004 += "	FROM "+_cAliasSr+"..USU_TR002TRA												"
-			RF004 += "	WHERE usu_numemp = 1														"
-			RF004 += "		AND usu_tipcol = 1														"
-			RF004 += "		AND CONVERT(VARCHAR, usu_datfer, 112) BETWEEN '" + _cAnoRef + "0101' 				"
-			RF004 += "			AND '" + _cAnoRef +  "1231' 														"
-			RF004 += "		AND usu_numcad = '" + MQ07->ZBA_MATR + "'												"
-			RF004 += "	GROUP BY usu_numcad															"
+			bnMatRef := IIf( Substr(MQ07->ZBA_MATR,1,4) == "NOVO", MQ07->ZBA_SEMELH, MQ07->ZBA_MATR )
+			bnEmpRef := IIf( Substr(MQ07->ZBA_MATR,1,4) == "NOVO" .and. !Empty(MQ07->ZBA_EMPORI), MQ07->ZBA_EMPORI, cEmpAnt )
+			RF004 := " SELECT SUM(CASE                                                                                                                                                                                                                                                                           "
+			RF004 += "                WHEN CONVERT(VARCHAR, usu_datfer, 112) BETWEEN SUBSTRING(CONVERT(VARCHAR, DATEADD(day, -1, CONVERT(DATE, '" + _cAnoRef + "' + '01' + '01')), 112), 1, 6) + '21' AND CONVERT(VARCHAR, DATEADD(day, 19, CONVERT(DATE, '" + _cAnoRef + "' + '01' + '01')), 112)               "
+			RF004 += "                THEN 1                                                                                                                                                                                                                                                                     "
+			RF004 += "                ELSE 0                                                                                                                                                                                                                                                                     "
+			RF004 += "            END) AS M01,                                                                                                                                                                                                                                                                   "
+			RF004 += "        SUM(CASE                                                                                                                                                                                                                                                                           "
+			RF004 += "                WHEN CONVERT(VARCHAR, usu_datfer, 112) BETWEEN SUBSTRING(CONVERT(VARCHAR, DATEADD(day, -1, CONVERT(DATE, '" + _cAnoRef + "' + '02' + '01')), 112), 1, 6) + '21' AND CONVERT(VARCHAR, DATEADD(day, 19, CONVERT(DATE, '" + _cAnoRef + "' + '02' + '01')), 112)               "
+			RF004 += "                THEN 1                                                                                                                                                                                                                                                                     "
+			RF004 += "                ELSE 0                                                                                                                                                                                                                                                                     "
+			RF004 += "            END) AS M02,                                                                                                                                                                                                                                                                   "
+			RF004 += "        SUM(CASE                                                                                                                                                                                                                                                                           "
+			RF004 += "                WHEN CONVERT(VARCHAR, usu_datfer, 112) BETWEEN SUBSTRING(CONVERT(VARCHAR, DATEADD(day, -1, CONVERT(DATE, '" + _cAnoRef + "' + '03' + '01')), 112), 1, 6) + '21' AND CONVERT(VARCHAR, DATEADD(day, 19, CONVERT(DATE, '" + _cAnoRef + "' + '03' + '01')), 112)               "
+			RF004 += "                THEN 1                                                                                                                                                                                                                                                                     "
+			RF004 += "                ELSE 0                                                                                                                                                                                                                                                                     "
+			RF004 += "            END) AS M03,                                                                                                                                                                                                                                                                   "
+			RF004 += "        SUM(CASE                                                                                                                                                                                                                                                                           "
+			RF004 += "                WHEN CONVERT(VARCHAR, usu_datfer, 112) BETWEEN SUBSTRING(CONVERT(VARCHAR, DATEADD(day, -1, CONVERT(DATE, '" + _cAnoRef + "' + '04' + '01')), 112), 1, 6) + '21' AND CONVERT(VARCHAR, DATEADD(day, 19, CONVERT(DATE, '" + _cAnoRef + "' + '04' + '01')), 112)               "
+			RF004 += "                THEN 1                                                                                                                                                                                                                                                                     "
+			RF004 += "                ELSE 0                                                                                                                                                                                                                                                                     "
+			RF004 += "            END) AS M04,                                                                                                                                                                                                                                                                   "
+			RF004 += "        SUM(CASE                                                                                                                                                                                                                                                                           "
+			RF004 += "                WHEN CONVERT(VARCHAR, usu_datfer, 112) BETWEEN SUBSTRING(CONVERT(VARCHAR, DATEADD(day, -1, CONVERT(DATE, '" + _cAnoRef + "' + '05' + '01')), 112), 1, 6) + '21' AND CONVERT(VARCHAR, DATEADD(day, 19, CONVERT(DATE, '" + _cAnoRef + "' + '05' + '01')), 112)               "
+			RF004 += "                THEN 1                                                                                                                                                                                                                                                                     "
+			RF004 += "                ELSE 0                                                                                                                                                                                                                                                                     "
+			RF004 += "            END) AS M05,                                                                                                                                                                                                                                                                   "
+			RF004 += "        SUM(CASE                                                                                                                                                                                                                                                                           "
+			RF004 += "                WHEN CONVERT(VARCHAR, usu_datfer, 112) BETWEEN SUBSTRING(CONVERT(VARCHAR, DATEADD(day, -1, CONVERT(DATE, '" + _cAnoRef + "' + '06' + '01')), 112), 1, 6) + '21' AND CONVERT(VARCHAR, DATEADD(day, 19, CONVERT(DATE, '" + _cAnoRef + "' + '06' + '01')), 112)               "
+			RF004 += "                THEN 1                                                                                                                                                                                                                                                                     "
+			RF004 += "                ELSE 0                                                                                                                                                                                                                                                                     "
+			RF004 += "            END) AS M06,                                                                                                                                                                                                                                                                   "
+			RF004 += "        SUM(CASE                                                                                                                                                                                                                                                                           "
+			RF004 += "                WHEN CONVERT(VARCHAR, usu_datfer, 112) BETWEEN SUBSTRING(CONVERT(VARCHAR, DATEADD(day, -1, CONVERT(DATE, '" + _cAnoRef + "' + '07' + '01')), 112), 1, 6) + '21' AND CONVERT(VARCHAR, DATEADD(day, 19, CONVERT(DATE, '" + _cAnoRef + "' + '07' + '01')), 112)               "
+			RF004 += "                THEN 1                                                                                                                                                                                                                                                                     "
+			RF004 += "                ELSE 0                                                                                                                                                                                                                                                                     "
+			RF004 += "            END) AS M07,                                                                                                                                                                                                                                                                   "
+			RF004 += "        SUM(CASE                                                                                                                                                                                                                                                                           "
+			RF004 += "                WHEN CONVERT(VARCHAR, usu_datfer, 112) BETWEEN SUBSTRING(CONVERT(VARCHAR, DATEADD(day, -1, CONVERT(DATE, '" + _cAnoRef + "' + '08' + '01')), 112), 1, 6) + '21' AND CONVERT(VARCHAR, DATEADD(day, 19, CONVERT(DATE, '" + _cAnoRef + "' + '08' + '01')), 112)               "
+			RF004 += "                THEN 1                                                                                                                                                                                                                                                                     "
+			RF004 += "                ELSE 0                                                                                                                                                                                                                                                                     "
+			RF004 += "            END) AS M08,                                                                                                                                                                                                                                                                   "
+			RF004 += "        SUM(CASE                                                                                                                                                                                                                                                                           "
+			RF004 += "                WHEN CONVERT(VARCHAR, usu_datfer, 112) BETWEEN SUBSTRING(CONVERT(VARCHAR, DATEADD(day, -1, CONVERT(DATE, '" + _cAnoRef + "' + '09' + '01')), 112), 1, 6) + '21' AND CONVERT(VARCHAR, DATEADD(day, 19, CONVERT(DATE, '" + _cAnoRef + "' + '09' + '01')), 112)               "
+			RF004 += "                THEN 1                                                                                                                                                                                                                                                                     "
+			RF004 += "                ELSE 0                                                                                                                                                                                                                                                                     "
+			RF004 += "            END) AS M09,                                                                                                                                                                                                                                                                   "
+			RF004 += "        SUM(CASE                                                                                                                                                                                                                                                                           "
+			RF004 += "                WHEN CONVERT(VARCHAR, usu_datfer, 112) BETWEEN SUBSTRING(CONVERT(VARCHAR, DATEADD(day, -1, CONVERT(DATE, '" + _cAnoRef + "' + '10' + '01')), 112), 1, 6) + '21' AND CONVERT(VARCHAR, DATEADD(day, 19, CONVERT(DATE, '" + _cAnoRef + "' + '10' + '01')), 112)               "
+			RF004 += "                THEN 1                                                                                                                                                                                                                                                                     "
+			RF004 += "                ELSE 0                                                                                                                                                                                                                                                                     "
+			RF004 += "            END) AS M10,                                                                                                                                                                                                                                                                   "
+			RF004 += "        SUM(CASE                                                                                                                                                                                                                                                                           "
+			RF004 += "                WHEN CONVERT(VARCHAR, usu_datfer, 112) BETWEEN SUBSTRING(CONVERT(VARCHAR, DATEADD(day, -1, CONVERT(DATE, '" + _cAnoRef + "' + '11' + '01')), 112), 1, 6) + '21' AND CONVERT(VARCHAR, DATEADD(day, 19, CONVERT(DATE, '" + _cAnoRef + "' + '11' + '01')), 112)               "
+			RF004 += "                THEN 1                                                                                                                                                                                                                                                                     "
+			RF004 += "                ELSE 0                                                                                                                                                                                                                                                                     "
+			RF004 += "            END) AS M11,                                                                                                                                                                                                                                                                   "
+			RF004 += "        SUM(CASE                                                                                                                                                                                                                                                                           "
+			RF004 += "                WHEN CONVERT(VARCHAR, usu_datfer, 112) BETWEEN SUBSTRING(CONVERT(VARCHAR, DATEADD(day, -1, CONVERT(DATE, '" + _cAnoRef + "' + '12' + '01')), 112), 1, 6) + '21' AND CONVERT(VARCHAR, DATEADD(day, 19, CONVERT(DATE, '" + _cAnoRef + "' + '12' + '01')), 112)               "
+			RF004 += "                THEN 1                                                                                                                                                                                                                                                                     "
+			RF004 += "                ELSE 0                                                                                                                                                                                                                                                                     "
+			RF004 += "            END) AS M12                                                                                                                                                                                                                                                                    "
+			RF004 += " FROM " + _cAliasSr + ".dbo.USU_TR002TRA                                                                                                                                                                                                                                                   "
+			RF004 += " WHERE usu_tipcol = 1                                                                                                                                                                                                                                                                      "
+			RF004 += "       AND usu_numemp = "  + Alltrim(Str(Val(bnEmpRef))) + "                                                                                                                                                                                                                                "
+			RF004 += "       AND CONVERT(VARCHAR, usu_datfer, 112) BETWEEN SUBSTRING(CONVERT(VARCHAR, DATEADD(day, -1, CONVERT(DATE, '" + _cAnoRef + "' + '01' + '01')), 112), 1, 6) + '21' AND CONVERT(VARCHAR, DATEADD(day, 19, CONVERT(DATE, '" + _cAnoRef + "' + '12' + '01')), 112)                         "
+			RF004 += "       AND usu_numcad = '" + bnMatRef + "'                                                                                                                                                                                                                                           "
+			RF004 += " GROUP BY usu_numcad                                                                                                                                                                                                                                                                       "
 			RFIndex := CriaTrab(Nil,.f.)
 			dbUseArea(.T.,"TOPCONN",TcGenQry(,,RF004),'RF04',.T.,.T.)
 			dbSelectArea("RF04")
 			RF04->(dbGoTop())
-
 
 			//                                                        Reajustes Eventuais
 			//***************************************************************************
@@ -313,9 +331,8 @@ Static Function BIA882A()
 			msGravouCfccCh  := .F.
 			For mxFx := 1 to 12
 
-
 				_oFerias:GetDiasTrabalhados(_cVersao,_cRevisa,_cAnoRef,MQ07->ZBA_MATR,StrZero(mxFx,2))
-				
+
 				//                                                        Reajustes Previstos
 				//***************************************************************************
 				PV004 := " WITH REAJUST AS (SELECT REPLACE(ZBB_RUBRIC,'ZBA_','ZBG_') ZBB_RUBRIC, ZBB_M" + StrZero(mxFx,2) + " REAJMES "
@@ -369,7 +386,6 @@ Static Function BIA882A()
 				//***********************************************************************************************
 				bnMEDICA := 0
 				bnODONTO := 0
-				bnMatRef := IIf( Substr(MQ07->ZBA_MATR,1,4) == "NOVO", MQ07->ZBA_SEMELH, MQ07->ZBA_MATR )
 
 				CT002 := Alltrim(" WITH PLNSAUDE                                                                                                   ") + msrhEnter
 				CT002 += Alltrim("      AS (SELECT NUMEMP = ass.numemp,                                                                            ") + msrhEnter
@@ -456,20 +472,20 @@ Static Function BIA882A()
 				Ferase(P5Index+OrdBagExt())
 
 				DT001 := Alltrim(" DROP TABLE " + msNmTMPII + "                                                                            ") + msrhEnter
-				U_BIAMsgRun("Aguarde... Limpa ##TEMP...",,{|| TcSQLExec(DT001)})				
+				U_BIAMsgRun("Aguarde... Limpa ##TEMP...",,{|| TcSQLExec(DT001)})
 
 				//        Os índices seguintes, em sua maioria, são dependentes do salário para serem calculados
 				//***********************************************************************************************
 				msPericul := msSalario * MQ07->ZBA_PPERIC
 				msInsalub := MQ07->ZBA_INSALU
+				msQtHrPrg := 7.3333 * &("RF04->M" + StrZero(mxFx,2))
 				msHorProg := 0
 				msDSRProg := 0
 				msAdcNotr := 0
-				If MQ07->ZBA_MESFER <> StrZero(mxFx,2)
-					msHorProg := ( msSalario + msPericul + msInsalub ) / 220 * 2.0 * MQ07->ZBA_QTHEPR * &("RF04->M" + StrZero(mxFx,2)) 
-					msDSRProg := msHorProg / 25 * 5
-					msAdcNotr := ( msSalario + msPericul + msInsalub ) / 220 * 0.2 * MQ07->ZBA_QHADNO
-				EndIf
+
+				msHorProg := ( msSalario + msPericul + msInsalub ) / 220 * 2.0 * msQtHrPrg
+				msDSRProg := msHorProg / 25 * 5
+				msAdcNotr := ( msSalario + msPericul + msInsalub ) / 220 * 0.2 * MQ07->ZBA_QHADNO
 				msPremPrd := MQ07->ZBA_PREMPR
 
 				//                                                                              Remuneração Total
@@ -477,7 +493,6 @@ Static Function BIA882A()
 				msRemunerTot := msSalario + msPericul + msInsalub
 				msRemunerTot += msHorProg + msDSRProg + msAdcNotr + msPremPrd
 
-				//msSalarioAdc := msSalario + msPericul + msInsalub + msPremPrd
 				msSalarioAdc := msSalario + msPremPrd
 
 				//                                                                Tratamento para Vale Transporte
@@ -583,7 +598,7 @@ Static Function BIA882A()
 					ZBG->ZBG_PERICU  := msPericul * _oFerias:nPerDiasTrabalhados/100
 					ZBG->ZBG_PINSAL  := MQ07->ZBA_PINSAL * _oFerias:nPerDiasTrabalhados/100
 					ZBG->ZBG_INSALU  := msInsalub * _oFerias:nPerDiasTrabalhados/100
-					ZBG->ZBG_QTHEPR  := MQ07->ZBA_QTHEPR* &("RF04->M" + StrZero(mxFx,2)) * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_QTHEPR  := msQtHrPrg
 					ZBG->ZBG_VHEPRG  := msHorProg * _oFerias:nPerDiasTrabalhados/100
 					ZBG->ZBG_DSRPRG  := msDSRProg * _oFerias:nPerDiasTrabalhados/100
 					ZBG->ZBG_QHADNO  := MQ07->ZBA_QHADNO * _oFerias:nPerDiasTrabalhados/100
@@ -595,11 +610,11 @@ Static Function BIA882A()
 					ZBG->ZBG_QVLTRT  := MQ07->ZBA_QVLTRT
 					ZBG->ZBG_VVTUNI  := MQ07->ZBA_VVTUNI
 					ZBG->ZBG_PRCAVT  := MQ07->ZBA_PRCAVT
-					
+
 					ZBG->ZBG_VVLTRT  := msVlrVT * _oFerias:nPerDiasTrabalhados/100
 					ZBG->ZBG_REFEIC  := MQ07->ZBA_REFEIC * _oFerias:nPerDiasTrabalhados/100
 					ZBG->ZBG_DESEJU  := MQ07->ZBA_DESEJU * _oFerias:nPerDiasTrabalhados/100
-					
+
 					ZBG->ZBG_CALIME  := MQ07->ZBA_CALIME + ( MQ07->ZBA_CALIME * PV04->ZBG_CALIME / 100 )
 					ZBG->ZBG_CJTURN  := MQ07->ZBA_CJTURN + ( MQ07->ZBA_CJTURN * PV04->ZBG_CJTURN / 100 ) * _oFerias:nPerDiasTrabalhados/100
 					ZBG->ZBG_CJNOIT  := MQ07->ZBA_CJNOIT + ( MQ07->ZBA_CJNOIT * PV04->ZBG_CJNOIT / 100 ) * _oFerias:nPerDiasTrabalhados/100
@@ -627,30 +642,28 @@ Static Function BIA882A()
 					If ( Substr(MQ07->ZBA_MATR,1,4) == "NOVO" .and. StrZero(mxFx,2) == MQ07->ZBA_MADMNW ) .or. ( Substr(MQ07->ZBA_MATR,1,4) <> "NOVO" .and. StrZero(mxFx,2) == MQ07->ZBA_MESANI ) .or. ( MQ07->ZBA_MESDEM == StrZero(mxFx,2 ) )
 						ZBG->ZBG_VLREXA  := MQ07->ZBA_VLREXA
 					EndIf
-					//If MQ07->ZBA_RTUNIF == "1" // Corrigido em 19/10/18 conforme alinhado com Claudia e Diego
+
 					If StrZero(mxFx,2) == MQ07->ZBA_MESADM .or. StrZero(mxFx,2) == MQ07->ZBA_MADMNW
 						ZBG->ZBG_VLRUNI  := MQ07->ZBA_VLRUNI
 					EndIf
-					//Else
-					//	ZBG->ZBG_VLRUNI  := MQ07->ZBA_VLRUNI
-					//EndIf
-					ZBG->ZBG_VLREPI  := MQ07->ZBA_VLREPI / 12 // Corrigido em 19/10/18 conforme alinhado com Claudia e Diego 
 
-					ZBG->ZBG_PRCINS  := MQ07->ZBA_PRCINS * _oFerias:nPerDiasTrabalhados/100
-					ZBG->ZBG_PRCFGT  := MQ07->ZBA_PRCFGT * _oFerias:nPerDiasTrabalhados/100
-					ZBG->ZBG_PRCSEN  := MQ07->ZBA_PRCSEN * _oFerias:nPerDiasTrabalhados/100
-					ZBG->ZBG_PRCSES  := MQ07->ZBA_PRCSES * _oFerias:nPerDiasTrabalhados/100
+					ZBG->ZBG_VLREPI  := MQ07->ZBA_VLREPI / 12 
+
+					ZBG->ZBG_PRCINS  := MQ07->ZBA_PRCINS
+					ZBG->ZBG_PRCFGT  := MQ07->ZBA_PRCFGT
+					ZBG->ZBG_PRCSEN  := MQ07->ZBA_PRCSEN
+					ZBG->ZBG_PRCSES  := MQ07->ZBA_PRCSES
 					ZBG->ZBG_VRINSF  := msFolINSS * _oFerias:nPerDiasTrabalhados/100
 					ZBG->ZBG_VRFGTF  := msFolFGTS * _oFerias:nPerDiasTrabalhados/100
 					ZBG->ZBG_VRSENF  := msFolSenai * _oFerias:nPerDiasTrabalhados/100
 					ZBG->ZBG_VRSESF  := msFolSesi * _oFerias:nPerDiasTrabalhados/100
 
-					ZBG->ZBG_FERIAS  := msProvFerias * _oFerias:nPerDiasFerias/100
-					ZBG->ZBG_ABONOF  := msAbonoFerias * _oFerias:nPerDiasFerias/100
-					ZBG->ZBG_INSFER  := msPrvFerINSS * _oFerias:nPerDiasFerias/100
-					ZBG->ZBG_FGTFER  := msPrvFerFGTS * _oFerias:nPerDiasFerias/100
-					ZBG->ZBG_SENFER  := msPrvFerSENAI * _oFerias:nPerDiasFerias/100
-					ZBG->ZBG_SESFER  := msPrvFerSESI * _oFerias:nPerDiasFerias/100
+					ZBG->ZBG_FERIAS  := msProvFerias
+					ZBG->ZBG_ABONOF  := msAbonoFerias
+					ZBG->ZBG_INSFER  := msPrvFerINSS
+					ZBG->ZBG_FGTFER  := msPrvFerFGTS
+					ZBG->ZBG_SENFER  := msPrvFerSENAI
+					ZBG->ZBG_SESFER  := msPrvFerSESI
 					ZBG->ZBG_13OSAL  := msPrv13
 					ZBG->ZBG_INS13O  := msPrv13INSS
 					ZBG->ZBG_FGT13O  := msPrv13FGTS
@@ -658,10 +671,10 @@ Static Function BIA882A()
 					ZBG->ZBG_SES13O  := msPrvFerSESI
 
 					ZBG->ZBG_QSLPPR  := MQ07->ZBA_QSLPPR
-					ZBG->ZBG_VLRPPR  := MQ07->ZBA_QSLPPR * msSalarioAdc * 80 / 100
+					ZBG->ZBG_VLRPPR  := 0
 					ZBG->ZBG_FMULTF  := MQ07->ZBA_FMULTF
 					ZBG->ZBG_FMUL13  := MQ07->ZBA_FMUL13
-					ZBG->ZBG_BNADC   := MQ07->ZBA_BNADC
+					ZBG->ZBG_BNADC   := xxBNADC
 					ZBG->ZBG_TMPCAS  := MQ07->ZBA_TMPCAS
 
 					ZBG->ZBG_SALFER  := msSalFerPAnt 
@@ -676,7 +689,7 @@ Static Function BIA882A()
 					ZBG->ZBG_13SESA  := ms13oSsA
 					ZBG->ZBG_MULTAF  := msVrMult
 
-				// Diferenciação necessária para direcionamento da contabilização
+					// Diferenciação necessária para direcionamento da contabilização
 					If MQ07->ZBA_CATGFU == "005"
 						ZBG->ZBG_HONORA  := msSalario * _oFerias:nPerDiasTrabalhados/100
 					ElseIf MQ07->ZBA_CATGFU == "020"
@@ -689,6 +702,9 @@ Static Function BIA882A()
 					ZBG->ZBG_MESFER  := MQ07->ZBA_MESFER
 					ZBG->ZBG_DPTOSR  := MQ07->ZBA_DPTOSR
 					ZBG->ZBG_CSTFUN  := &(msCustFun)
+
+					ZBG->ZBG_SALADC  := msSalarioAdc
+					ZBG->ZBG_EMPORI  := MQ07->ZBA_EMPORI
 
 					ZBG->(MsUnlock())
 
@@ -734,7 +750,6 @@ Static Function BIA882A()
 			Ferase(RFIndex+GetDBExtension())
 			Ferase(RFIndex+OrdBagExt())
 
-
 			MQ07->(dbSkip())
 
 		End
@@ -744,7 +759,6 @@ Static Function BIA882A()
 	MQ07->(dbCloseArea())
 	Ferase(MQIndex+GetDBExtension())
 	Ferase(MQIndex+OrdBagExt())
-
 
 	UL017 := " UPDATE " + RetSqlName("ZBG") + " SET ZBG_CSTFUN = " + qyCustFun
 	UL017 += "   FROM " + RetSqlName("ZBG") + " ZBG "
@@ -802,7 +816,6 @@ Static Function fGetSeq()
 	Local _cAlias	:=	GetNextAlias()
 	Local _cSeq
 
-
 	BeginSql Alias _cAlias
 
 		SELECT ISNULL(MAX(ZBG_SEQUEN),'000000') SEQ
@@ -812,6 +825,7 @@ Static Function fGetSeq()
 		AND ZBG.ZBG_REVISA = %Exp:_cRevisa%
 		AND ZBG.ZBG_ANOREF = %Exp:_cAnoRef%
 		AND ZBG.%NotDel%
+
 	EndSql
 
 	_cSeq	:=	Soma1((_cAlias)->SEQ)

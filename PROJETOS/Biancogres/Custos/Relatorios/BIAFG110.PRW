@@ -83,7 +83,7 @@ Static Function RptDetail()
 			POSICIONE("SB1",1,xFilial("SB1")+Z46_COMP,"B1_UM"),;
 			Z46_TRT,;
 			Transform(Z46_QUANT,"@E 999,999.99999999"),;
-			Transform(Z46_CUNIT,"@E 9,999,999.9999"),;
+			Transform(Z46_CUNIT,"@E 999,999.99999999"),;
 			Transform(Z46_CTOTAL,"@E 9,999,999.9999"),;
 			Z46_RF,;
 			Z46_DTCSTO,;

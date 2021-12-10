@@ -16,7 +16,7 @@ Class TConciliacaoExtratoContabilidade From LongClassName
 	Data cVwTypeMov // Tipo de visualização de movimentos bancarios: E=Exclusivo; C=Compartilhado
 	
 	Method New() Constructor
-	Method BankBalance()
+	Method BankBalance(nVlSIni, dDatSalAnt)
 	Method AccountingBalance(cAccont, dDate, cType)
 	Method Export()
 	
@@ -34,27 +34,29 @@ Method New(oParam) Class TConciliacaoExtratoContabilidade
 Return()
 
 
-Method BankBalance() Class TConciliacaoExtratoContabilidade
-Local nRet := 0
+Method BankBalance(nVlSIni, dDatSalAnt) Class TConciliacaoExtratoContabilidade
 Local cSQL := ""
 Local cQry := GetNextAlias()
 
-	cSQL := " SELECT ISNULL(ROUND(E8_SALATUA, 2), 0) AS E8_SALATUA "
+	cSQL := " SELECT TOP 1 ISNULL(ROUND(E8_SALATUA, 2), 0) AS E8_SALATUA, E8_DTSALAT "
 	cSQL += " FROM " + RetSQLName("SE8")
 	cSQL += " WHERE E8_FILIAL = " + ValToSQL(xFilial("SE8"))	
 	cSQL += " AND E8_BANCO = " + ValToSQL(::oParam:cBanco)
 	cSQL += " AND E8_AGENCIA = " + ValToSQL(::oParam:cAgencia)
 	cSQL += " AND E8_CONTA = " + ValToSQL(::oParam:cConta)
-	cSQL += " AND E8_DTSALAT = " + ValToSQL(DataValida(DaySub(::oParam:dDataDe, 1), .F.))
+	cSQL += " AND E8_DTSALAT < " + ValToSQL(::oParam:dDataDe)
 	cSQL += " AND D_E_L_E_T_ = '' "
+	cSQL += " ORDER BY E8_DTSALAT DESC "
 
 	TcQuery cSQL New Alias (cQry)
 
-	nRet := (cQry)->E8_SALATUA
+	nVlSIni := (cQry)->E8_SALATUA
+	
+	dDatSalAnt := sToD((cQry)->E8_DTSALAT)
 
 	(cQry)->(DbCloseArea())
 
-Return(nRet)
+Return()
 
 
 Method AccountingBalance(cAccont, dDate, cType) Class TConciliacaoExtratoContabilidade
@@ -112,7 +114,10 @@ Local nDif := 0
 Local nDifDeb := 0
 Local nDifCre := 0
 Local cConta := Posicione("SA6", 1, xFilial("SA6") + ::oParam:cBanco + ::oParam:cAgencia + ::oParam:cConta, "A6_CONTA")
-Local nVlSIni := ::BankBalance()
+Local nVlSIni := 0
+Local dDatSalAnt := dDataBase
+
+	::BankBalance(@nVlSIni, @dDatSalAnt)
 
   oFWExcel := FWMsExcel():New()
 
@@ -134,7 +139,7 @@ Local nVlSIni := ::BankBalance()
 	oFWExcel:AddColumn(cWork02, cTable02, "Data", 1, 1)
 	oFWExcel:AddColumn(cWork02, cTable02, "Saldo", 3, 2, .F.)
 
-	oFWExcel:AddRow(cWork02, cTable02, {::oParam:cBanco, ::oParam:cAgencia, ::oParam:cConta, DataValida(DaySub(::oParam:dDataDe, 1)), nVlSIni})
+	oFWExcel:AddRow(cWork02, cTable02, {::oParam:cBanco, ::oParam:cAgencia, ::oParam:cConta, dDatSalAnt, nVlSIni})
 
 	oFWExcel:AddWorkSheet(cWork03)
 	oFWExcel:AddTable(cWork03, cTable03)

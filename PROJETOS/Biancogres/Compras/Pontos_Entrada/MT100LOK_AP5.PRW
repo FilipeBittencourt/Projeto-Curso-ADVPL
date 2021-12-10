@@ -93,7 +93,6 @@ User Function MT100LOK()
 	Private xftFornec := ""
 	Private xftLoja := ""
 
-
 	If FwIsInCallStack('U_GATI001')
 		U_GTPE004()
 		If FwIsInCallStack('MATA103')
@@ -130,7 +129,8 @@ User Function MT100LOK()
 	cItemCta	:= aCols[n,cPItemCta]
 	cConta		:= aCols[n,cPConta]
 	cSI     	:= aCols[n,cPSI]
-	cSubItem := aCols[n,cPSubItem]	
+	cSubItem    := aCols[n,cPSubItem]
+	cLoteCTL    := aCols[n,cPLoteCTL]		
 
 	// Por Marcos Alberto Soprani para resolver problema de classificação de nota pelo projeto Portaria Fiscal - em 25/09/19.
 	If FwIsInCallStack('U_TACLNFJB')
@@ -216,9 +216,9 @@ User Function MT100LOK()
 	DbSetOrder(1)
 	DbSeek(xFilial("SB1")+cCod,.F.)
 
-	DbSelectArea("ZCN")
-	ZCN->(DbSetOrder(2))
-	ZCN->(DbSeek(xFilial("ZCN")+cCod+cAlmox))
+	// DbSelectArea("ZCN")
+	// ZCN->(DbSetOrder(2))
+	// ZCN->(DbSeek(xFilial("ZCN")+cCod+cAlmox))
 
 	DbSelectArea("SF4")
 	cArqSF4 := Alias()
@@ -286,26 +286,34 @@ User Function MT100LOK()
 		ELSE
 			//Verifica se o Produto e do Tipo MD
 			IF cREGRA = "N"
-				If Alltrim(ZCN->ZCN_MD) == "S"
-					IF SBM->BM_YCON_MD = "N"
-						//Para Produto MD so pode utilizar TES que nao atualiza Estoque
-						If Alltrim(SF4->F4_ESTOQUE) == "S"
-							MsgBox("TES Usada Invalida - Este material e do tipo MD e nao devera atualizar estoque!","MT100LOK(x7)","ALERT")
-							AutoGrLog("MT100LOK ==> TES Usada Invalida - Este material e do tipo MD e nao devera atualizar estoque!")
-							lRetorno := .F.
-						EndIf
-						//Verifica se a Classe de Valor esta em branco
-						If Empty(cCLVL)
-							MsgBox("Classe de Valor em branco para produto MD, favor preencher a mesma para continuar!","MT100LOK(x8)","ALERT")
-							AutoGrLog("MT100LOK ==> Classe de Valor em branco para produto MD, favor preencher a mesma para continuar!")
-							lRetorno := .F.
-						EndIf
-					ELSE
-						If cempant == "01"
-							If Alltrim(SF4->F4_ESTOQUE) == "N"
-								MsgBox("TES Usada Invalida - Este material e do tipo MD e devera atualizar estoque!","MT100LOK(x9)","ALERT")
+
+				//se a tabela ZCN existir, valida as questoes relacionadas.
+				IF(TCCanOpen(RetFullName("ZCN")))
+					DbSelectArea("ZCN")
+					ZCN->(DbSetOrder(2))
+					ZCN->(DbSeek(xFilial("ZCN")+cCod+cAlmox))
+
+					If Alltrim(ZCN->ZCN_MD) == "S"
+						IF SBM->BM_YCON_MD = "N"
+							//Para Produto MD so pode utilizar TES que nao atualiza Estoque
+							If Alltrim(SF4->F4_ESTOQUE) == "S"
+								MsgBox("TES Usada Invalida - Este material e do tipo MD e nao devera atualizar estoque!","MT100LOK(x7)","ALERT")
 								AutoGrLog("MT100LOK ==> TES Usada Invalida - Este material e do tipo MD e nao devera atualizar estoque!")
 								lRetorno := .F.
+							EndIf
+							//Verifica se a Classe de Valor esta em branco
+							If Empty(cCLVL)
+								MsgBox("Classe de Valor em branco para produto MD, favor preencher a mesma para continuar!","MT100LOK(x8)","ALERT")
+								AutoGrLog("MT100LOK ==> Classe de Valor em branco para produto MD, favor preencher a mesma para continuar!")
+								lRetorno := .F.
+							EndIf
+						ELSE
+							If cempant == "01"
+								If Alltrim(SF4->F4_ESTOQUE) == "N"
+									MsgBox("TES Usada Invalida - Este material e do tipo MD e devera atualizar estoque!","MT100LOK(x9)","ALERT")
+									AutoGrLog("MT100LOK ==> TES Usada Invalida - Este material e do tipo MD e nao devera atualizar estoque!")
+									lRetorno := .F.
+								ENDIF
 							ENDIF
 						ENDIF
 					ENDIF
@@ -955,7 +963,7 @@ User Function MT100LOK()
 		A0001 += "                       AND Z25_APRADM <> ' '
 		A0001 += "                       AND Z25.D_E_L_E_T_ = ' '
 		A0001 += "  WHERE Z26_FILIAL = '"+xFilial("Z26")+"'
-		A0001 += "    AND Z26_NFISC = '"+aCols[n,cPNFOri]+"'
+		A0001 += "    AND Z26_NFISC = '"+aCols[n,cPNFOri]+"' 
 		A0001 += "    AND Z26_SERIE = '"+aCols[n,cPSeriOri]+"'
 		A0001 += "    AND Z26_ITEMNF = '  '
 		A0001 += "    AND Z26_OBS = ' '
@@ -967,7 +975,7 @@ User Function MT100LOK()
 			MsgBox("Não existe um processo de Devolução cadastrado para esta Nota Fiscal de Vendas!!!"+CHR(13)+CHR(13)+" Ou, não foi apresentado o parecer COMERCIAL!!!", "MT100LOK(xX)", "STOP")
 			AutoGrLog("MT100LOK ==> Não existe um processo de Devolução cadastrado para esta Nota Fiscal de Vendas!!!"+CHR(13)+CHR(13)+" Ou, não foi apresentado o parecer COMERCIAL!!!")
 			lretorno := .F.
-		EndIf
+		EndIf 
 		A001->(dbCloseArea())
 	EndIf
 
@@ -1156,7 +1164,16 @@ User Function MT100LOK()
 	If lRetorno .And. !GdDeleted(N) .And. (Inclui .Or. Altera)
 
 		msMovEst := Posicione("SF4", 1, xFilial("SF4") + cTes, "F4_ESTOQUE")
-		msAtrbCt := Posicione("CTH", 1, xFilial("CTH") + cCLVL, "CTH_YATRIB")
+
+		//msAtrbCt := Posicione("CTH", 1, xFilial("CTH") + cCLVL, "CTH_YATRIB")
+		msAtrbCt := ""
+
+		//verificar existência, pois campo não existe para todas empresas
+		DbSelectArea("CTH")     
+		If FieldPos("CTH_YATRIB") > 0
+			msAtrbCt := Posicione("CTH", 1, xFilial("CTH") + cCLVL, "CTH_YATRIB")
+		EndIf
+
 		msCtaAtv := Posicione("SB1", 1, xFilial("SB1") + cCod, "B1_CONTA")
 		msCtaIND := Posicione("SB1", 1, xFilial("SB1") + cCod, "B1_YCTRIND")
 		msCtaADM := Posicione("SB1", 1, xFilial("SB1") + cCod, "B1_YCTRADM")
@@ -1218,6 +1235,24 @@ User Function MT100LOK()
 
 	EndIf
 
+	// Em 22/11/21 - por Marcos Alberto Soprani em atendimento ao ticket 36212
+	If lRetorno .and. !GdDeleted(N) .and. (Inclui .or. Altera)
+
+		If Alltrim(GetMv("MV_RASTRO")) == "S"
+
+			msRASTRO := Posicione("SB1", 1, xFilial("SB1") + cCod, "B1_RASTRO")
+			If msRASTRO == "L" .and. (Substr(cLoteCTL, 1, 4) == "AUTO" .or. Empty(cLoteCTL))
+
+				MsgBox("Lote nao informado ou informado incorretamente: " + cLoteCTL, "MT100LOK(y8)", "STOP")
+				AutoGrLog("MT100LOK ==> Lote nao informado ou informado incorretamente: " + cLoteCTL)
+				lretorno := .F.
+
+			EndIf
+
+		EndIf
+
+	EndIf
+
 	If cArqSB1 <> ""
 		dbSelectArea(cArqSB1)
 		dbSetOrder(cIndSB1)
@@ -1256,6 +1291,8 @@ User Function MT100LOK()
 	DbSelectArea(cArq)
 	DbSetOrder(cInd)
 	DbGoTo(cReg)
+
+	lRetorno := VldCHVCTE()
 
 Return(lRetorno)
 
@@ -1440,3 +1477,24 @@ Static Function fTolerancia(cProd)
 	(cQry)->(dbCloseArea())
 
 Return(lRet)
+
+Static Function VldCHVCTE() // Em 19/11/21 Alterado por: Gabriel Paolini/FACILE -  Validação de Chave do CTE Ticket 34689.
+	Local lRet := .T.
+	Local cMsg := ""
+
+	Local cNFiscalVal := SUBSTRING(F1_CHVNFE, 26,9) // Número da NF da Chave NFE
+	Local  lNFEValid := .F.
+
+	If (AllTrim(cEspecie) == "CTE")
+
+		lNFEValid := AllTrim(CNFISCAL) == cNFiscalVal
+
+		If !(lNFEValid)
+				cMsg := "O Número da NF "+cNFiscalVal+" da Chave NFE, não corresponde "
+				cMsg += "com o Número da NF "+CNFISCAL+" digitado! Deseja continuar mesmo assim?"
+				lRet :=	MSGYESNO(cMsg, "Alerta - MT100LOK_AP5.PRW")
+		EndIf
+
+	EndIf
+
+Return lRet

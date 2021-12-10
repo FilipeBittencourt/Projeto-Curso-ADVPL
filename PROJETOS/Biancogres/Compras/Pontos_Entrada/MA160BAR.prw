@@ -16,6 +16,6 @@
 User Function MA160BAR()
 Local aButton := {}
 	
-	aAdd(aButton, {"EDITABLE", {|| U_BIAF002("MATA160")}, "Hist. Preço"})
+	aAdd(aButton, {"EDITABLE", {|| U_BIAF002("MATA161")}, "Hist. Preço"})
 	
 Return(aButton)

@@ -17,27 +17,19 @@
 
 User Function FROPGA03()
 Local aArea := GetArea()
-Local cAliasAux
 Local _lPswOk := .T.
                                                                                  
-Local _cItem 	:= aCols[N][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_ITEM"})]
-Local _cProd 	:= aCols[N][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_PRODUTO"})]
-Local _cLocal 	:= aCols[N][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_LOCAL"})]
-Local _nQtdDig 	:= Round(aCols[N][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_QTDLIB"})],2)
-Local _cLote	:= aCols[N][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_LOTECTL"})]
-Local _cMotFra	:= aCols[N][aScan(aHeader,{|x| AllTrim(x[2]) == "C6_YMOTFRA"})]
+Local _cItem 	:= Gdfieldget("C6_ITEM",n)
+Local _cProd 	:= Gdfieldget("C6_PRODUTO",n)
+Local _cLocal 	:= Gdfieldget("C6_LOCAL",n)
+Local _nQtdDig 	:= Round( Gdfieldget("C6_QTDLIB",n) ,2)
+Local _cLote	:= Gdfieldget("C6_LOTECTL",n)
 
 Local _cPedido := M->C5_NUM
 Local _cGerente := U_FRGERADM(_cPedido)                 
 
-If M->C5_TIPO == 'N' .And. ( AllTrim(cEmpAnt) $ "01_05_13" ) .And. M->C5_YLINHA <> "4" .And. !(_cLocal == AllTrim(GetNewPar("FA_LOCAMO","05")))
+If M->C5_TIPO == 'N' .And. ( AllTrim(cEmpAnt) $ "01_05_13_14" ) .And. M->C5_YLINHA <> "4" .And. !(_cLocal == AllTrim(GetNewPar("FA_LOCAMO","05")))
 
-	//Empresas - Vitcer nao usa
-	// If AllTrim(CEMPANT) == "14"
-	// 	RestArea(aArea)
-	// 	return(_nQtdDig)
-	// EndIf
-		
 	_aRet := U_FR2CHKPT(_cProd, _cLote, _nQtdDig,,_cPedido,_cItem)  
 	
 	//se vai gerar ponta - aciona autorizacao de superior

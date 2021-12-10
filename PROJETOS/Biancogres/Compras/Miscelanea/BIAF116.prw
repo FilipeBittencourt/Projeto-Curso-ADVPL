@@ -28,7 +28,6 @@
 #DEFINE _DtDigit 15
 #DEFINE _MD 16
 
-
 User Function BIAF116(nOpc, nConfirm)
 Local cSQL := ""
 Local cQry := GetNextAlias()
@@ -40,7 +39,7 @@ Local nCount := 1
 Local aArea := GetArea()
 Local cBizagi := U_fGetBase("2") 
 
-	If cEmpAnt $ "01/05" .And. SF1->F1_TIPO == "N" .And. nConfirm == 1 .And. (nOpc >= 3 .And. nOpc <= 4)
+	If cEmpAnt $ "01/05/14" .And. SF1->F1_TIPO == "N" .And. nConfirm == 1 .And. (nOpc >= 3 .And. nOpc <= 4)
 	
 		cSQL := " SELECT ISNULL(EMAIL, '') AS EMAIL, C1_USER, "+ ValToSQL(Capital(FWEmpName(cEmpAnt))) +" AS EMP, C1_YBIZAGI, C1_NUM, C1_PEDIDO, "
 		cSQL += " C1_PRODUTO, C1_DESCRI, D1_QUANT, D1_UM, D1_VUNIT, D1_YTAG, D1_CLVL, D1_DTDIGIT, D1_LOCAL, ZCN_MD "

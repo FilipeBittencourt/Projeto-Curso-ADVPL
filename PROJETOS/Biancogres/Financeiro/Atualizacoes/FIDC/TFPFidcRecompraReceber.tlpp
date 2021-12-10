@@ -1,0 +1,551 @@
+#include 'totvs.ch'
+#include 'topconn.ch'
+
+/*/{Protheus.doc} TFPFidcRecompraReceber
+Classe para tratamento do processo do FIDC de recompra a receber
+@type class
+@version 1.0
+@author Pontin - Facile Sistemas
+@since 16/08/2021
+/*/
+Class TFPFidcRecompraReceber From LongClassName
+
+  Public Data cSituacao as Character
+  Public Data cPrefixo as Character
+  Public Data cNumero as Character
+  Public Data cParcela as Character
+  Public Data cTipo as Character
+  Public Data cCodigoCliente as Character
+  Public Data cLojaCliente as Character
+  Public Data cCnpjCliente as Character
+  Public Data cNomeCliente as Character
+  Public Data cTipoRecompra as Character
+  Public Data cNossoNumero as Character
+
+  Public Data nValorOriginal as Numeric
+  Public Data nValorDesconto as Numeric
+  Public Data nSaldoTitulo as Numeric
+  Public Data nRecnoSE1 as Numeric
+
+  Public Data dVencimento as Date
+  Public Data dDataInclusao as Date
+  Public Data dDataEnvioWorflow as Date
+  Public Data dDataRetornoFidc as Date
+
+  Public Method New() Constructor
+
+  Public Method AdicionaTituloRecompra() 
+  Public Method EnviaWorkflow( nRecno as Numeric ) 
+  Public Method GeraContasPagar( nRecno as Numeric )
+  Public Method ValidaRetornoFIDC( nRecno as Numeric )
+  Public Method ExisteTituloZKO(nRecnoSE1 as Numeric)
+
+  Public Method BuscaDadosCliente() 
+  Public Method ComplementaDadosTitulo() 
+  Public Method TituloFIDC() 
+  Public Method MontaDadosZKO()
+
+EndClass
+
+
+Static Method New() Class TFPFidcRecompraReceber
+
+  ::cSituacao         := "A"
+  ::cPrefixo          := ""
+  ::cNumero           := ""
+  ::cParcela          := ""
+  ::cTipo             := ""
+  ::cCodigoCliente    := ""
+  ::cLojaCliente      := ""
+  ::cCnpjCliente      := ""
+  ::cNomeCliente      := ""
+  ::cTipoRecompra     := ""
+  ::cNossoNumero      := ""
+
+  ::nValorOriginal    := 0
+  ::nValorDesconto    := 0
+  ::nSaldoTitulo      := 0
+  ::nRecnoSE1         := 0
+
+  ::dVencimento       := CtoD("")
+  ::dDataInclusao     := Date()
+  ::dDataEnvioWorflow := CtoD("")
+  ::dDataRetornoFidc  := CtoD("")
+
+
+Return .T.
+
+
+/*/{Protheus.doc} TFPFidcRecompraReceber::AdicionaTituloRecompra
+Adiciona um novo registro na tabela de Recompra
+@type method
+@version 1.0
+@author Pontin - Facile Sistemas
+@since 16/08/2021
+/*/
+Static Method AdicionaTituloRecompra() Class TFPFidcRecompraReceber
+
+  Local cError as Character
+  Local bError as Block
+
+  cError        := ""
+  bError        := ErrorBlock({|oError| cError := oError:Description})
+
+  Begin Sequence
+
+    If !Empty( ::cNumero ) .And. ::nValorDesconto > 0
+
+      dbSelectArea("ZKO")
+      ZKO->( dbSetOrder(1) )  //ZKO_FILIAL, ZKO_SITUAC, ZKO_PREFIX, ZKO_NUM, ZKO_PARCEL, ZKO_TIPO, ZKO_CLIENT, ZKO_LOJA
+
+      ::BuscaDadosCliente()
+
+      ::ComplementaDadosTitulo()
+
+      If ::nRecnoSE1 > 0 .And. ::TituloFIDC()
+
+        If ::nSaldoTitulo > 0
+          ::cTipoRecompra := "P"
+        Else
+          ::cTipoRecompra := "T"
+        EndIf
+
+        If ZKO->( dbSeek( xFilial("ZKO") + ::cSituacao + ::cPrefixo + ::cNumero + PadR(::cParcela, TamSX3("ZKO_PARCEL")[1]) +;
+                 ::cTipo + ::cCodigoCliente + ::cLojaCliente ) )
+
+          RecLock("ZKO", .F.)
+
+          ZKO->ZKO_SALDO  := ::nSaldoTitulo
+          ZKO->ZKO_TIPORE := ::cTipoRecompra
+
+        Else
+
+          RecLock("ZKO", .T.)
+
+          ZKO->ZKO_FILIAL := xFilial("ZKO")
+          ZKO->ZKO_SITUAC := ::cSituacao
+          ZKO->ZKO_PREFIX := ::cPrefixo
+          ZKO->ZKO_NUM    := ::cNumero
+          ZKO->ZKO_PARCEL := ::cParcela
+          ZKO->ZKO_TIPO   := ::cTipo
+          ZKO->ZKO_CLIENT := ::cCodigoCliente
+          ZKO->ZKO_LOJA   := ::cLojaCliente
+          ZKO->ZKO_CGCCLI := ::cCnpjCliente
+          ZKO->ZKO_VLRORI := ::nValorOriginal
+          ZKO->ZKO_DESCON := ::nValorDesconto
+          ZKO->ZKO_SALDO  := ::nSaldoTitulo
+          ZKO->ZKO_VENCRE := ::dVencimento
+          ZKO->ZKO_DTINCL := ::dDataInclusao
+          ZKO->ZKO_DTENVI := ::dDataEnvioWorflow
+          ZKO->ZKO_DTRETO := ::dDataRetornoFidc
+          ZKO->ZKO_RECSE1 := ::nRecnoSE1
+          ZKO->ZKO_TIPORE := ::cTipoRecompra
+          ZKO->ZKO_NSSNUM := ::cNossoNumero
+        
+        EndIf
+
+        ZKO->( MsUnLock() )
+      
+      EndIf
+    
+    EndIf
+
+  End Sequence
+
+  ErrorBlock(bError)
+
+  If !Empty(cError)
+    MsgAlert( "Houve um erro no processamento: " + CRLF + CRLF + cError, "TFPFidcRecompraReceber" )
+  EndIf
+
+Return
+
+
+/*/{Protheus.doc} TFPFidcRecompraReceber::BuscaDadosCliente
+Método para buscar dados adicionais no cadastro do cliente
+@type method
+@version 1.0
+@author Pontin - Facile Sistemas
+@since 16/08/2021
+/*/
+Method BuscaDadosCliente() Class TFPFidcRecompraReceber
+  
+  Local aArea as Array
+  Local aAreaSA1 as Array
+
+  If Empty( ::cCnpjCliente ) .Or. Empty(::cNomeCliente)
+
+    aArea       := GetArea()
+    aAreaSA1    := SA1->( GetArea() )
+
+    dbSelectArea("SA1")
+    SA1->( dbSetOrder(1) )
+    If SA1->( dbSeek( xFilial("SA1") + ::cCodigoCliente + ::cLojaCliente ) )
+
+      ::cCnpjCliente  := SA1->A1_CGC
+      ::cNomeCliente  := AllTrim( Capital(SA1->A1_NOME) )
+
+    EndIf
+
+    RestArea( aAreaSA1 )
+    RestArea( aArea )
+
+  EndIf
+
+Return
+
+
+Method ComplementaDadosTitulo() Class TFPFidcRecompraReceber
+
+  Local aArea as Array
+  Local aAreaSE1 as Array
+
+  If Empty( ::nRecnoSE1 )
+
+    aArea       := GetArea()
+    aAreaSE1    := SE1->( GetArea() )
+
+    dbSelectArea("SE1")
+    SE1->( dbSetOrder(2) )  //E1_FILIAL+E1_CLIENTE+E1_LOJA+E1_PREFIXO+E1_NUM+E1_PARCELA+E1_TIPO
+    If SE1->( dbSeek( xFilial("SE1") + ::cCodigoCliente + ::cLojaCliente + ::cPrefixo + ::cNumero + ::cParcela + ::cTipo) )
+
+      ::nValorOriginal := SE1->E1_VALOR
+      ::nSaldoTitulo   := SE1->E1_SALDO
+      ::dVencimento    := SE1->E1_VENCREA
+      ::cNossoNumero   := SE1->E1_NUMBCO
+      ::nRecnoSE1      := SE1->( Recno() )
+
+    EndIf
+
+    RestArea( aAreaSE1 )
+    RestArea( aArea )
+
+  EndIf
+
+Return
+
+
+Method TituloFIDC() Class TFPFidcRecompraReceber
+
+  Local _lRet as Logical
+  Local oBlqCR as Object
+
+  Default _lRet := .F.
+
+  oBlqCR	:= TBloqueioContaReceber():New()
+  _lRet	:= oBlqCR:CheckPorRecno( ::nRecnoSE1 )
+
+  FreeObj(oBlqCR)
+
+Return _lRet
+
+
+Method EnviaWorkflow( nRecno ) Class TFPFidcRecompraReceber
+
+  Local aArea as Array
+  Local aAreaZKO as Array
+  Local oMail as Object
+  Local cEmpresa as Character
+  Local cDestino as Character
+  Local cCopia as Character
+  Local cTitulo as Character
+  Local cMensagem as Character
+  Local cCnpjFormatado as Character
+  Local lMensagemEnviada as Logical
+
+  Default lMensagemEnviada  := .F.
+
+  aArea       := GetArea()
+  aAreaZKO    := ZKO->( GetArea() )
+
+  dbSelectArea("ZKO")
+  ZKO->( dbSetOrder(1) )
+
+  ZKO->( dbGoTo( nRecno ) )
+
+  If ZKO->( Recno() ) == nRecno .And. !ZKO->( Deleted() )
+
+    //|Busca dados na ZKO |
+    ::MontaDadosZKO()
+
+    ::BuscaDadosCliente()
+
+    oMail		  := TAFMail():New()
+
+    cEmpresa  := Capital( FWEmpName(cEmpAnt) )
+    cDestino  := SuperGetMV("MV_YDSFIDC", .F., "marcela.marques@fundowfr.com.br;nayanna.martins@fundowfr.com.br")
+    cCopia    := "nadine.araujo@biancogres.com.br;wellison.toras@biancogres.com.br;gardenia.stelzer@biancogres.com.br;rylayne.eleuterio@biancogres.com.br;gierlisson.furtado@biancogres.com.br;welida.ferreira@biancogres.com.br"
+
+    If Len( AllTrim(::cCnpjCliente) ) == 11
+      cCnpjFormatado  := Transform( AllTrim(::cCnpjCliente), "@R 999.999.999-99" )
+    Else
+      cCnpjFormatado  := Transform( AllTrim(::cCnpjCliente), "@R 99.999.999/9999-99" )
+    EndIf
+
+    cMensagem := '<html>'
+    cMensagem += '<head>'
+    cMensagem += '</head>'
+    cMensagem += '<body>'
+
+    cMensagem += " <p>Prezados,</p>"
+
+    If ::cTipoRecompra == "P"
+
+      cTitulo   := "[" + cEmpresa + "] Desconto em Título"
+      
+      cMensagem += " <p>Informamos que o título abaixo será recomprado parcialmente junto ao fundo. "
+      cMensagem += " Favor conceder o desconto informado abaixo no título no banco.</p>"
+
+    Else
+
+      cTitulo   := "[" + cEmpresa + "] Recompra de título"
+
+      cMensagem += " <p>Informamos que o título abaixo será recomprado junto ao fundo. "
+      cMensagem += " Favor baixá-lo no banco.</p>"
+
+    EndIf
+
+    cMensagem += " <p><b>Cliente:</b> " + ::cNomeCliente + "<p>"
+    cMensagem += " <p><b>CNPJ:</b> " + cCnpjFormatado + "<p>"
+    cMensagem += " <p><b>Nº do título:</b> " + AllTrim(::cNumero) + "-" + ::cParcela + "<p>"
+    cMensagem += " <p><b>Nosso Número: </b> " + ::cNossoNumero + "<p>" 
+    cMensagem += " <p><b>Valor original: </b> R$ " + Transform(::nValorOriginal, "@E 999,999,999.99") + "<p>" 
+    cMensagem += " <p><b>Valor do desconto: </b> R$ " + Transform(::nValorDesconto, "@E 999,999,999.99") + "<p>" 
+    cMensagem += " <p><b>Vencimento: </b> " + DtoC( ::dVencimento ) + "<p>" 
+
+    //|Assinatura |
+    cMensagem += " </br>" 
+    cMensagem += " <p>À disposição.<p>" 
+    cMensagem += " </br>" 
+
+    cMensagem += ' <div class="wrapper" style="display: flex;flex-direction: row;"> '
+    cMensagem += '   <div> '
+    cMensagem += '     <p class="MsoNormal"><img width="80" height="90" id="Imagem_x0020_1" '
+    cMensagem += '         src="https://uploaddeimagens.com.br/images/001/779/152/full/LOGO_GRUPO_BIANCOGRES.PNG" '
+    cMensagem += '         alt="Imagem1 - FUNDO TRANSPARENTE.png"> '
+    cMensagem += '     </p> '
+    cMensagem += '   </div> '
+    cMensagem += '   <div> '
+    cMensagem += '     <p '
+    cMensagem += '       style="margin-left: 20px; margin-top: 5px; margin-bottom: 5px; font-size: 14.0pt; font-family: Arial, Helvetica, sans-serif; font-weight: bold; color: #7f7f7f;"> '
+    cMensagem += '       Cobrança</p> '
+    cMensagem += '     <p '
+    cMensagem += '       style="margin-left: 20px; margin-top: 5px; margin-bottom: 5px; font-size: 9.0pt; font-family: Arial, Helvetica, sans-serif; color: #7f7f7f;"> '
+    cMensagem += '       Grupo Biancogres</p> '
+    cMensagem += '     <p '
+    cMensagem += '       style="margin-left: 20px; margin-top: 0px; margin-bottom: 5px; font-size: 9.0pt; font-family: Arial, Helvetica, sans-serif; color: #7f7f7f;"> '
+    cMensagem += '       (27) 3421-9014</p> '
+    cMensagem += '     <a href="https://www.biancogres.com.br" '
+    cMensagem += '       style="margin-left: 20px; margin-top: 0px; font-size: 9.0pt; font-family: Arial, Helvetica, sans-serif; color: #7f7f7f;"> '
+    cMensagem += '       www.biancogres.com.br</a> '
+    cMensagem += '   </div> '
+    cMensagem += ' </div> '
+    
+    cMensagem += '</body>'
+    cMensagem += '</html>'
+
+    oMail:cTo      := cDestino
+    oMail:cCc      := cCopia
+    oMail:cSubject := cTitulo
+    oMail:cBody    := cMensagem
+
+    lMensagemEnviada  := oMail:Send()
+
+    If lMensagemEnviada
+      
+      RecLock("ZKO", .F.)
+      ZKO->ZKO_SITUAC := "P"
+      ZKO->ZKO_DTENVI := dDataBase
+      ZKO->( MsUnLock() )
+
+    EndIf
+
+  Else
+    MsgInfo("Não foi possível encontrar os dados na ZKO!", "TFPFidcRecompraReceber")
+  EndIf
+
+  RestArea( aAreaZKO )
+  RestArea( aArea )
+
+Return
+
+
+Method MontaDadosZKO() Class TFPFidcRecompraReceber
+
+    ::cSituacao         := ZKO->ZKO_SITUAC
+    ::cPrefixo          := ZKO->ZKO_PREFIX
+    ::cNumero           := ZKO->ZKO_NUM
+    ::cParcela          := ZKO->ZKO_PARCEL
+    ::cTipo             := ZKO->ZKO_TIPO
+    ::cCodigoCliente    := ZKO->ZKO_CLIENT
+    ::cLojaCliente      := ZKO->ZKO_LOJA
+    ::cCnpjCliente      := ZKO->ZKO_CGCCLI
+    ::nValorOriginal    := ZKO->ZKO_VLRORI
+    ::nValorDesconto    := ZKO->ZKO_DESCON
+    ::nSaldoTitulo      := ZKO->ZKO_SALDO 
+    ::dVencimento       := ZKO->ZKO_VENCRE
+    ::dDataInclusao     := ZKO->ZKO_DTINCL
+    ::dDataEnvioWorflow := ZKO->ZKO_DTENVI
+    ::dDataRetornoFidc  := ZKO->ZKO_DTRETO
+    ::nRecnoSE1         := ZKO->ZKO_RECSE1
+    ::cTipoRecompra     := ZKO->ZKO_TIPORE
+    ::cNossoNumero      := ZKO->ZKO_NSSNUM
+
+Return
+
+
+
+Method GeraContasPagar( nRecno ) Class TFPFidcRecompraReceber
+
+  Local aArea as Array
+  Local aAreaZKO as Array
+  Local oContaPagarStruct as Object
+  Local oContaPagar as Object
+  Local oResult as Object
+
+  aArea       := GetArea()
+  aAreaZKO    := ZKO->( GetArea() )
+
+  dbSelectArea("ZKO")
+  ZKO->( dbSetOrder(1) )
+
+  ZKO->( dbGoTo( nRecno ) )
+  
+  If ZKO->( Recno() ) == nRecno .And. !ZKO->( Deleted() )
+
+    If ZKO->ZKO_SITUAC == "P"
+
+      oContaPagarStruct      := TContaPagarStruct():New()
+      oContaPagar            := TContaPagar():New()
+      oContaPagar:lNewNumber := .F.
+
+      oContaPagarStruct:cPrefixo    := ZKO->ZKO_PREFIX
+      oContaPagarStruct:cNumero     := ZKO->ZKO_NUM
+      oContaPagarStruct:cParcela    := ZKO->ZKO_PARCEL
+      oContaPagarStruct:cTipo       := "DP "
+      oContaPagarStruct:cNatureza   := "2991"
+      oContaPagarStruct:cFornecedor := "015050"
+      oContaPagarStruct:cLoja       := "01"
+      oContaPagarStruct:dEmissao    := dDataBase
+      oContaPagarStruct:dVencto     := ZKO->ZKO_VENCRE
+      oContaPagarStruct:nValor      := ZKO->ZKO_DESCON
+
+      oResult := oContaPagar:Incluir(oContaPagarStruct)
+
+      If oResult:lOk
+
+        RecLock("ZKO", .F.)
+        ZKO->ZKO_SITUAC := "F"
+        ZKO->ZKO_DTRETO := dDataBase
+        ZKO->( MsUnLock() )
+
+      EndIf
+				
+    Else
+      MsgAlert("O processo de recompra não está apto para gerar contas a pagar.", "TFPFidcRecompraReceber")
+    EndIf
+
+  EndIf
+
+  RestArea( aAreaZKO )
+  RestArea( aArea )
+
+Return oResult
+
+
+Method ValidaRetornoFIDC( nRecno as Numeric ) Class TFPFidcRecompraReceber
+
+  Local lRetornoValido as Logical
+  Local aArea as Array
+  Local aAreaZKO as Array
+  Local cQuery as Character
+
+  Default lRetornoValido  := .F.
+
+  aArea       := GetArea()
+  aAreaZKO    := ZKO->( GetArea() )
+
+  dbSelectArea("ZKO")
+  ZKO->( dbSetOrder(1) )
+
+  ZKO->( dbGoTo( nRecno ) )
+  
+  If ZKO->( Recno() ) == nRecno .And. !ZKO->( Deleted() )
+
+    If ZKO->ZKO_SITUAC == "P"
+
+      cQuery := " SELECT * "
+      cQuery += " FROM " + RetSqlName("ZK4") + " Z "
+      cQuery += " WHERE Z.ZK4_FILIAL = " + ValToSql( xFilial("ZK4") )
+      cQuery += "       AND Z.ZK4_DATA >= " + ValToSql( ZKO->ZKO_DTINCL )
+      cQuery += "       AND Z.ZK4_EMP = " + ValToSql( cEmpAnt )
+      cQuery += "       AND Z.ZK4_FIL = " + ValToSql( cFilAnt )
+      cQuery += "       AND Z.ZK4_TIPO = 'R' "
+      cQuery += "       AND Z.ZK4_BANCO = '237' "
+      cQuery += "       AND Z.ZK4_AGENCI = '3511' "
+      cQuery += "       AND Z.ZK4_CONTA = '1422      ' "
+      cQuery += "       AND Z.ZK4_CODOCO IN ( '09', '10', '12' ) "
+      cQuery += "       AND Z.ZK4_NOSNUM LIKE '" + AllTrim( ZKO->ZKO_NSSNUM ) + "%' "
+      cQuery += "       AND Z.D_E_L_E_T_ = '' "
+
+      If Select("__ZKO1") > 0
+        __ZKO1->( dbCloseArea() )
+      EndIf
+
+      TcQuery cQuery New Alias "__ZKO1"
+
+      __ZKO1->( dbGoTop() )
+
+      If !__ZKO1->( EoF() )
+
+        lRetornoValido  := .T.
+
+      EndIf
+
+    Else
+      MsgAlert("O processo de recompra não está apto para obter retorno do FIDC.", "TFPFidcRecompraReceber")
+    EndIf
+
+  EndIf
+
+  RestArea( aAreaZKO )
+  RestArea( aArea )
+
+Return lRetornoValido
+
+
+
+Method ExisteTituloZKO(nRecnoSE1) Class TFPFidcRecompraReceber
+
+  Local nRecnoZKO as Numeric
+  Local aArea as Array
+  Local cQuery as Character
+
+  Default nRecnoZKO  := 0
+
+  aArea       := GetArea()
+
+  cQuery := " SELECT ZKO.R_E_C_N_O_ AS RECZKO "
+  cQuery += " FROM " + RetSqlName("ZKO") + " ZKO "
+  cQuery += " WHERE ZKO.ZKO_FILIAL = " + ValToSql( xFilial("ZKO") )
+  cQuery += "       AND ZKO.ZKO_SITUAC = 'P' "
+  cQuery += "       AND ZKO.ZKO_RECSE1 = " + ValToSql( nRecnoSE1 )
+  cQuery += "       AND ZKO.D_E_L_E_T_ = '' "
+
+  If Select("__ZKO2") > 0
+    __ZKO2->( dbCloseArea() )
+  EndIf
+
+  TcQuery cQuery New Alias "__ZKO2"
+
+  __ZKO2->( dbGoTop() )
+
+  If !__ZKO2->( EoF() )
+
+    nRecnoZKO  := __ZKO2->RECZKO
+
+  EndIf
+
+  RestArea( aArea )
+
+Return nRecnoZKO

@@ -73,7 +73,7 @@ Private cwTxMoed := 0
 		cQuery0 += "	AND C7_FILIAL = '" + xFilial("SC7") + "'" + ENTER1
 		cQuery0 += "	AND C1_FILIAL = '" + xFilial("SC1") + "'" + ENTER1
 		
-		IF UPPER(ALLTRIM(FUNNAME())) == "MATA160"
+		IF UPPER(ALLTRIM(FUNNAME())) == "MATA161"
 			cQuery0 += "	AND SC1.C1_NUM = '" + SC8->C8_NUMSC + "'" + ENTER1
 			cQuery0 += "	AND SC1.C1_ITEM = '" + SC8->C8_ITEMSC + "'" + ENTER1
 			cQuery0 += "	AND SC7.C7_NUM = '" + SC7->C7_NUM + "'" + ENTER1

@@ -38,7 +38,7 @@ Local cItemSC := ""
 	
 	Else
 		
-		cSQL := " SELECT DISTINCT C7_YMAT, C7_YSOLEMP, C7_NUMSC, '' C7_ITEMSC "
+		cSQL := " SELECT DISTINCT C7_YMAT, C7_YSOLEMP, C7_NUMSC, C7_ITEMSC "
 		cSQL += " FROM " + RetSQLName("SC7")
 		cSQL += " WHERE C7_FILIAL = "+ ValToSQL(xFilial("SC7"))
 		cSQL += " AND C7_NUM = "+ ValToSQL(cA120Num)
@@ -69,7 +69,7 @@ Local cItemSC := ""
 
 		If !Empty(cMat)
 
-			If !Empty(cSolEmp) .And. cSolEmp <> cEmpAnt
+			If !Empty(cSolEmp) //.And. cSolEmp <> cEmpAnt Ticket 34671 - Rotina MATA094 não está aparecendo o nome do solicitante.
 
 				cSQL := " SELECT RA_NOME "
 				cSQL += " FROM "+ RetFullName("SRA", cSolEmp)
@@ -90,7 +90,26 @@ Local cItemSC := ""
 				EndIf
 
 				(cQrySRA)->(DbCloseArea())
+				
+				if Empty(cNomSol)
+					cSQL := " SELECT RA_NOME "
+					cSQL += " FROM "+ RetFullName("SRA", cSolEmp)
+					cSQL += " WHERE RA_FILIAL +
+					cSQL += " RA_MAT = "+ ValToSQL(cMat)
+					cSQL += " AND D_E_L_E_T_ = '' "
 
+					TcQuery cSQL New Alias (cQrySRA)
+						If !(cQrySRA)->(Eof()) 
+				
+							If !AllTrim(SRA->RA_NOME) $ cNomSol
+					
+								cNomSol += AllTrim((cQrySRA)->RA_NOME) + vgCrLf
+						
+							EndIf
+
+						EndIf
+					(cQrySRA)->(DbCloseArea())
+				ENDIF
 			Else
 
 				DbSelectArea("SRA")

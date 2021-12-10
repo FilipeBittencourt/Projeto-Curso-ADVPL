@@ -18,33 +18,26 @@ User Function F3_SA1REP()
 	
 	If(!Empty(cRepAtu))	
 		If AllTrim(FunName()) == "MATA410"
-			If cEmpAnt == "14"
-				If Alltrim(M->C5_YLINHA) == "1" 	//VITCER
-					cSQL := "@(A1_YVENVT1 = "+ValToSQL(cRepAtu)+" OR A1_YVENVT2 = "+ValToSQL(cRepAtu)+" OR A1_YVENVT3 = "+ValToSQL(cRepAtu)+")"
-				EndIf
+			If Alltrim(M->C5_YLINHA) == "1" 	//BIANCOGRES
+				cSQL := "@(A1_VEND    = "+ValToSQL(cRepAtu)+" OR A1_YVENDB2 = "+ValToSQL(cRepAtu)+" OR A1_YVENDB3 = "+ValToSQL(cRepAtu)+")"
+			ElseIf Alltrim(M->C5_YLINHA) == "2" //INCESA
+				cSQL := "@(A1_YVENDI  = "+ValToSQL(cRepAtu)+" OR A1_YVENDI2 = "+ValToSQL(cRepAtu)+" OR A1_YVENDI3 = "+ValToSQL(cRepAtu)+")"
+			ElseIf Alltrim(M->C5_YLINHA) == "3" //BELLACASA
+				cSQL := "@(A1_YVENBE1 = "+ValToSQL(cRepAtu)+" OR A1_YVENBE2 = "+ValToSQL(cRepAtu)+" OR A1_YVENBE3 = "+ValToSQL(cRepAtu)+")"
+			ElseIf Alltrim(M->C5_YLINHA) == "4" //MUNDIALLI
+				cSQL := "@(A1_YVENML1 = "+ValToSQL(cRepAtu)+" OR A1_YVENML2 = "+ValToSQL(cRepAtu)+" OR A1_YVENML3 = "+ValToSQL(cRepAtu)+")"
+			ElseIf Alltrim(M->C5_YLINHA) == "5" //PEGASUS
+				cSQL := "@(A1_YVENPEG = "+ValToSQL(cRepAtu)+" )"
+			ElseIf Alltrim(M->C5_YLINHA) == "6" //VINILICO
+				cSQL := "@(A1_YVENVI1 = "+ValToSQL(cRepAtu)+" )"
 			Else
-				If Alltrim(M->C5_YLINHA) == "1" 	//BIANCOGRES
-					cSQL := "@(A1_VEND    = "+ValToSQL(cRepAtu)+" OR A1_YVENDB2 = "+ValToSQL(cRepAtu)+" OR A1_YVENDB3 = "+ValToSQL(cRepAtu)+")"
-				ElseIf Alltrim(M->C5_YLINHA) == "2" //INCESA
-					cSQL := "@(A1_YVENDI  = "+ValToSQL(cRepAtu)+" OR A1_YVENDI2 = "+ValToSQL(cRepAtu)+" OR A1_YVENDI3 = "+ValToSQL(cRepAtu)+")"
-				ElseIf Alltrim(M->C5_YLINHA) == "3" //BELLACASA
-					cSQL := "@(A1_YVENBE1 = "+ValToSQL(cRepAtu)+" OR A1_YVENBE2 = "+ValToSQL(cRepAtu)+" OR A1_YVENBE3 = "+ValToSQL(cRepAtu)+")"
-				ElseIf Alltrim(M->C5_YLINHA) == "4" //MUNDIALLI
-					cSQL := "@(A1_YVENML1 = "+ValToSQL(cRepAtu)+" OR A1_YVENML2 = "+ValToSQL(cRepAtu)+" OR A1_YVENML3 = "+ValToSQL(cRepAtu)+")"
-				ElseIf Alltrim(M->C5_YLINHA) == "5" //PEGASUS
-					cSQL := "@(A1_YVENPEG = "+ValToSQL(cRepAtu)+" )"
-				ElseIf Alltrim(M->C5_YLINHA) == "6" //VINILICO
-					cSQL := "@(A1_YVENVI1 = "+ValToSQL(cRepAtu)+" )"
-				
-				Else
-					cQUERY += " AND (A1_VEND    = '"+cRepAtu+"' OR A1_YVENDB2 = '"+cRepAtu+"' OR A1_YVENDB3 = '"+cRepAtu+"' OR  "
-					cQUERY += "      A1_YVENDI  = '"+cRepAtu+"' OR A1_YVENDI2 = '"+cRepAtu+"' OR A1_YVENDI3 = '"+cRepAtu+"' OR  "
-					cQUERY += "      A1_YVENBE1 = '"+cRepAtu+"' OR A1_YVENBE2 = '"+cRepAtu+"' OR A1_YVENBE3 = '"+cRepAtu+"' OR  "
-					cQUERY += "      A1_YVENVT1 = '"+cRepAtu+"' OR A1_YVENVT2 = '"+cRepAtu+"' OR A1_YVENVT3 = '"+cRepAtu+"' OR  "
-					cQUERY += "      A1_YVENML1 = '"+cRepAtu+"' OR A1_YVENML2 = '"+cRepAtu+"' OR A1_YVENML3 = '"+cRepAtu+"' OR  "
-					cQUERY += "      A1_YVENPEG = '"+cRepAtu+"' OR A1_YVENVI1 = '"+cRepAtu+"' )    "
-				EndIf
-			EndIf		
+				cQUERY += " AND (A1_VEND    = '"+cRepAtu+"' OR A1_YVENDB2 = '"+cRepAtu+"' OR A1_YVENDB3 = '"+cRepAtu+"' OR  "
+				cQUERY += "      A1_YVENDI  = '"+cRepAtu+"' OR A1_YVENDI2 = '"+cRepAtu+"' OR A1_YVENDI3 = '"+cRepAtu+"' OR  "
+				cQUERY += "      A1_YVENBE1 = '"+cRepAtu+"' OR A1_YVENBE2 = '"+cRepAtu+"' OR A1_YVENBE3 = '"+cRepAtu+"' OR  "
+				cQUERY += "      A1_YVENVT1 = '"+cRepAtu+"' OR A1_YVENVT2 = '"+cRepAtu+"' OR A1_YVENVT3 = '"+cRepAtu+"' OR  "
+				cQUERY += "      A1_YVENML1 = '"+cRepAtu+"' OR A1_YVENML2 = '"+cRepAtu+"' OR A1_YVENML3 = '"+cRepAtu+"' OR  "
+				cQUERY += "      A1_YVENPEG = '"+cRepAtu+"' OR A1_YVENVI1 = '"+cRepAtu+"' )    "
+			EndIf
 		Else
 			cSQL := "@(A1_VEND   = "+ValToSQL(cRepAtu)+" OR A1_YVENDB2 = "+ValToSQL(cRepAtu)+" OR A1_YVENDB3 = "+ValToSQL(cRepAtu)+" OR  "
 			cSQL += " A1_YVENDI  = "+ValToSQL(cRepAtu)+" OR A1_YVENDI2 = "+ValToSQL(cRepAtu)+" OR A1_YVENDI3 = "+ValToSQL(cRepAtu)+" OR  "

@@ -41,4 +41,9 @@ User Function BIA477()
 
 	EndIf
 
+	// Emerson Salvador - 01/09/2021 - Ticket 34058								
+	If Alltrim(msCLVL) == "6212"
+		msCtaCon := "16503104"
+	EndIf
+
 Return ( msCtaCon )

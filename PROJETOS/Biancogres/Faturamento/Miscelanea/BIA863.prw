@@ -1,4 +1,4 @@
-#include "rwmake.ch" 
+#include "rwmake.ch"
 #Include "TopConn.ch"
 
 /*/{Protheus.doc} BIA863
@@ -28,6 +28,8 @@ User Function BIA863()
 	Private cIndSIX	:= 0
 	Private cRegSIX	:= 0
 
+	Private cCdRgFin := ""
+
 	DbSelectArea("CT1")
 	cArqCT1 := Alias()
 	cIndCT1 := IndexOrd()
@@ -43,8 +45,8 @@ User Function BIA863()
 	M->A1_NREDUZ	:= U_fDelTab(M->A1_NREDUZ)
 	M->A1_END		:= U_fDelTab(M->A1_END)
 	M->A1_ENDCOB	:= U_fDelTab(M->A1_ENDCOB)
-	M->A1_ENDREC	:= U_fDelTab(M->A1_ENDREC) 
-	M->A1_BAIRRO	:= U_fDelTab(M->A1_BAIRRO) 
+	M->A1_ENDREC	:= U_fDelTab(M->A1_ENDREC)
+	M->A1_BAIRRO	:= U_fDelTab(M->A1_BAIRRO)
 	M->A1_COMPLEM	:= U_fDelTab(M->A1_COMPLEM)
 	M->A1_TEL		:= U_fDelTab(M->A1_TEL)
 	M->A1_FAX		:= U_fDelTab(M->A1_FAX)
@@ -55,12 +57,26 @@ User Function BIA863()
 	//Define o Grupo de Tributacao
 	M->A1_GRPTRIB	:= U_fGetGrTr(M->A1_SUFRAMA,M->A1_CALCSUF,M->A1_TIPO,M->A1_CONTRIB,M->A1_INSCR,M->A1_SATIV1,M->A1_TPJ)
 
+	//Definie Regra Cobranca
+	If Empty(Alltrim(M->A1_YCDGREG)) 
+		cCdRgFin	:= U_fRegCobr(Alltrim(M->A1_EST), Alltrim(M->A1_CGC), Alltrim(M->A1_GRPVEN), Alltrim(M->A1_COD))
+		If cCdRgFin <> Alltrim(M->A1_YCDGREG)		
+			M->A1_YCDGREG := cCdRgFin
+		EndIf
+	Else
+		cCdRgFin := M->A1_YCDGREG
+	EndIf
+	
+	If !Empty(Alltrim(M->A1_GRPVEN)) .And. (M->A1_GRPVEN <> SA1->A1_GRPVEN)
+		cCdRgFin	:= U_fRegCobr(Alltrim(M->A1_EST), Alltrim(M->A1_CGC), Alltrim(M->A1_GRPVEN), Alltrim(M->A1_COD))
+	EndIf
+
 	//Solicitado pelo Vagner no dia 26/08/10
 	If cEmpAnt <> "02" .And. M->A1_SATIV1 == '000099'
 		M->A1_YDTPRO := 3
 	EndIf
 
-	//Fernando/Facile em 02/03/2017 - gravando valor default do campo NLOJA caso nao tenha sido preenchido 
+	//Fernando/Facile em 02/03/2017 - gravando valor default do campo NLOJA caso nao tenha sido preenchido
 	If Empty(AllTrim(M->A1_YNLOJA))
 		M->A1_YNLOJA := AllTrim(SUBSTR(M->A1_NREDUZ,1,15))+'/'+AllTrim(SUBSTR(M->A1_MUN,1,11))+'/'+M->A1_EST
 	EndIf
@@ -70,47 +86,47 @@ User Function BIA863()
 
 		//Cadastrar de Conta Contabil
 		Processa({|| fGravCT1() }, "Aguarde...", "Cadastrando Conta Contabil...",.F.)
-		
+
 		//Atualizar as informações de Rede de Compras
 		//TODO REMOVER
 		//Avaliação caso tenha atualizado o grupo, poderá impactar na rede de compras
-		IF M->A1_GRPVEN != SA1->A1_GRPVEN 
+		IF M->A1_GRPVEN != SA1->A1_GRPVEN
 
 			cQryRED	:= GetNextAlias()
-	
+
 			IF TRIM( M->A1_GRPVEN) != ""
 				sqlRed := "SELECT MAX(Z79_REDE) REDE from Z79010 where Z79_CODGRP = '"+ M->A1_GRPVEN +"' and D_E_L_E_T_ = ''"
 			Else
 				sqlRed := "SELECT MAX(Z79_REDE) REDE from Z79010 where Z79_CODCLI = '"+ M->A1_COD +"' and Z79_LOJCLI = '"+M->A1_LOJA+"' and D_E_L_E_T_ = ''"
 			EndIf
 			TcQuery sqlRed New Alias (cQryRED)
-				
+
 			If !(cQryRED)->(Eof())
 				M->A1_YREDCOM := (cQryRED)->REDE
-			EndIf	
+			EndIf
 
-			(cQryRED)->(DbCloseArea()) 
-		
+			(cQryRED)->(DbCloseArea())
+
 		END IF
-			
+
 		//Replicar Cadastro Cliente
 		Processa( {|| fReplCli() }, "Aguarde...", "Replicando Cadastro de Cliente...",.F.)
 
 		//Atualizar informações Crédito do Grupo de Cliente
-		If ALTERA .And. U_VALOPER("040",.F.) .And. Alltrim(M->A1_GRPVEN) <> "" .And. Alltrim(M->A1_YTIPOLC) == "G"    
-			Processa( {|| fGrpVen(M->A1_RISCO,M->A1_LC,M->A1_VENCLC,M->A1_GRPVEN) }, "Aguarde...", "Atualizando informações de Crédito...",.F.)		
-		EndIf     
-		
-		//Cadastrar Contatos	
+		If ALTERA .And. U_VALOPER("040",.F.) .And. Alltrim(M->A1_GRPVEN) <> "" .And. Alltrim(M->A1_YTIPOLC) == "G"
+			Processa( {|| fGrpVen(M->A1_RISCO,M->A1_LC,M->A1_VENCLC,M->A1_GRPVEN) }, "Aguarde...", "Atualizando informações de Crédito...",.F.)
+		EndIf
+
+		//Cadastrar Contatos
 		Processa({|| fGravSU5() }, "Aguarde...", "Cadastrando Contatos...",.F.)
 
 		//DESATIVADO EM 12/08/2021 - REPLICACAO NO CADASTRO DE CLIENTE / CORRIGIDO AS SPs EOS_VALID_EXP_OC_XXXX QUE GRAVA O CLIENTE NO ECOSIS
 		//Replica Cadastro de Clientes no Sistema Ecosis
-		//Processa({|| ImpCliECO() }, "Aguarde...", "Replicando Clientes para sistema Ecosis...",.F.)    									
+		//Processa({|| ImpCliECO() }, "Aguarde...", "Replicando Clientes para sistema Ecosis...",.F.)
 
 	EndIf
 
-	SA1->(MsUnLock())                     
+	SA1->(MsUnLock())
 	SA1->(dbcommitall())
 
 	If cArqCT1 <> ""
@@ -129,14 +145,14 @@ User Function BIA863()
 Return
 
 /*/
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
-±±³Funcao    ³ fGravCT1³ Autor ³                         ³ Data ³ 12/03/01 ³±±
-±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
-±±³Descri‡…o ³ Cria plano de Contas novo para cliente novo.                ³±±
-±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+	±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+	±±³Funcao    ³ fGravCT1³ Autor ³                         ³ Data ³ 12/03/01 ³±±
+	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+	±±³Descri‡…o ³ Cria plano de Contas novo para cliente novo.                ³±±
+	±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+	ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 /*/
 Static Function fGravCT1()
 
@@ -145,25 +161,25 @@ Static Function fGravCT1()
 	local cCVDFilial:=xFilial("CVD")
 
 	If Inclui .Or. Altera
-		IF SUBSTR(ALLTRIM(M->A1_CONTA),9,6) <> ALLTRIM(M->A1_COD) 
+		IF SUBSTR(ALLTRIM(M->A1_CONTA),9,6) <> ALLTRIM(M->A1_COD)
 			M->A1_CONTA := SUBSTR(M->A1_CONTA,1,8)+ALLTRIM(M->A1_COD)
-			MsgBox("Conta contabil informada incorretamente! O sistema realizara a correção automaticamente","BIA863","INFO")   
+			MsgBox("Conta contabil informada incorretamente! O sistema realizara a correção automaticamente","BIA863","INFO")
 			//Aviso("BIA863","Conta contabil informada incorretamente! O sistema realizara a correção automaticamente",{"OK"})
 		ENDIF
 
 		If !Empty(M->A1_CONTA) //.And. M->A1_EST <> "EX"
-			
+
 			DbSelectArea("CT1")
-			
+
 			CT1->(DbSetOrder(2))
 			CT1->(DbGoBottom())
 			xCodRe := Soma1(CT1->CT1_RES)
-			
+
 			DbSelectArea("CT1")
 			CT1->(DbSetOrder(1))
-			
+
 			If CT1->(!DbSeek(cCT1Filial+M->A1_CONTA,.F.))
-			
+
 				if CT1->(RecLock("CT1",.T.))
 					CT1->CT1_FILIAL		:= cCT1Filial
 					CT1->CT1_CONTA		:= M->A1_CONTA
@@ -206,61 +222,61 @@ Static Function fGravCT1()
 				endif
 
 			Endif
-            
-            if (FIDC():isFIDCEnabled())
-            
-                cCTAFIDC:="11201013"
-                cCTAFIDC+=subStr(M->A1_CONTA,9)
-            
-                xCodRe:=Soma1(xCodRe)
-            
-                If CT1->(!DbSeek(cCT1Filial+cCTAFIDC,.F.))
-            
-                    if CT1->(RecLock("CT1",.T.))
-                        CT1->CT1_FILIAL		:= cCT1Filial
-                        CT1->CT1_CONTA		:= cCTAFIDC
-                        CT1->CT1_DESC01		:= M->A1_NOME
-                        CT1->CT1_CLASSE		:= "2"
-                        CT1->CT1_NORMAL		:= "2"
-                        CT1->CT1_BLOQ 		:= "2"
-                        CT1->CT1_RES    	:= xCodRe
-                        CT1->CT1_CTASUP   	:= "11201013"
-                        CT1->CT1_GRUPO		:= "1"
-                        CT1->CT1_CVD02		:= "5"
-                        CT1->CT1_CVD03		:= "5"
-                        CT1->CT1_CVD04		:= "5"
-                        CT1->CT1_CVD05		:= "5"
-                        CT1->CT1_CVC02   	:= "5"
-                        CT1->CT1_CVC03   	:= "5"
-                        CT1->CT1_CVC04   	:= "5"
-                        CT1->CT1_CVC05   	:= "5"
-                        CT1->CT1_DC			:= CTBDIGCONT(cCTAFIDC)
-                        CT1->CT1_BOOK		:= "001"
-                        CT1->CT1_CCOBRG		:= "2"
-                        CT1->CT1_ITOBRG		:= "2"
-                        CT1->CT1_CLOBRG		:= "2"
-                        CT1->CT1_LALUR		:= "0"
-                        CT1->CT1_DTEXIS		:= dDataBase
-                        CT1->CT1_INDNAT		:= '1'
-                        CT1->CT1_NTSPED		:= "01"
-                        CT1->CT1_SPEDST		:= "2"
-                        CT1->(MsUnlock())
 
-                        if CVD->(RECLOCK("CVD",.T.))
-                            CVD->CVD_FILIAL	:= cCVDFilial
-                            CVD->CVD_ENTREF	:= "10"
-                            CVD->CVD_CODPLA	:= "002"
-                            CVD->CVD_CONTA	:=  cCTAFIDC
-                            CVD->CVD_CTAREF	:= "1.01.02.02.01"
-                            CVD->(MSUNLOCK())
-                        endif
+			if (FIDC():isFIDCEnabled())
 
-                    endif
+				cCTAFIDC:="11201013"
+				cCTAFIDC+=subStr(M->A1_CONTA,9)
 
-                endif
-            
-            endif
-            
+				xCodRe:=Soma1(xCodRe)
+
+				If CT1->(!DbSeek(cCT1Filial+cCTAFIDC,.F.))
+
+					if CT1->(RecLock("CT1",.T.))
+						CT1->CT1_FILIAL		:= cCT1Filial
+						CT1->CT1_CONTA		:= cCTAFIDC
+						CT1->CT1_DESC01		:= M->A1_NOME
+						CT1->CT1_CLASSE		:= "2"
+						CT1->CT1_NORMAL		:= "2"
+						CT1->CT1_BLOQ 		:= "2"
+						CT1->CT1_RES    	:= xCodRe
+						CT1->CT1_CTASUP   	:= "11201013"
+						CT1->CT1_GRUPO		:= "1"
+						CT1->CT1_CVD02		:= "5"
+						CT1->CT1_CVD03		:= "5"
+						CT1->CT1_CVD04		:= "5"
+						CT1->CT1_CVD05		:= "5"
+						CT1->CT1_CVC02   	:= "5"
+						CT1->CT1_CVC03   	:= "5"
+						CT1->CT1_CVC04   	:= "5"
+						CT1->CT1_CVC05   	:= "5"
+						CT1->CT1_DC			:= CTBDIGCONT(cCTAFIDC)
+						CT1->CT1_BOOK		:= "001"
+						CT1->CT1_CCOBRG		:= "2"
+						CT1->CT1_ITOBRG		:= "2"
+						CT1->CT1_CLOBRG		:= "2"
+						CT1->CT1_LALUR		:= "0"
+						CT1->CT1_DTEXIS		:= dDataBase
+						CT1->CT1_INDNAT		:= '1'
+						CT1->CT1_NTSPED		:= "01"
+						CT1->CT1_SPEDST		:= "2"
+						CT1->(MsUnlock())
+
+						if CVD->(RECLOCK("CVD",.T.))
+							CVD->CVD_FILIAL	:= cCVDFilial
+							CVD->CVD_ENTREF	:= "10"
+							CVD->CVD_CODPLA	:= "002"
+							CVD->CVD_CONTA	:=  cCTAFIDC
+							CVD->CVD_CTAREF	:= "1.01.02.02.01"
+							CVD->(MSUNLOCK())
+						endif
+
+					endif
+
+				endif
+
+			endif
+
 			DbCommitAll()
 
 		endif
@@ -270,14 +286,14 @@ Static Function fGravCT1()
 Return
 
 /*/
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
-±±³Funcao    ³         ³ Autor ³                         ³ Data ³          ³±±
-±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
-±±³Descri‡…o ³ Grava a Tabela SU5 - Contatos                               ³±±
-±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+	±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+	±±³Funcao    ³         ³ Autor ³                         ³ Data ³          ³±±
+	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+	±±³Descri‡…o ³ Grava a Tabela SU5 - Contatos                               ³±±
+	±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+	ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 /*/
 Static Function fGravSU5()
 
@@ -296,14 +312,14 @@ Static Function fGravSU5()
 Return
 
 /*/
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
-±±³Funcao    ³fReplCli ³ Autor ³                         ³ Data ³          ³±±
-±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
-±±³Descri‡…o ³ Replica o cadastro de Cliente para Biancogres/Incesa/LM     ³±±
-±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+	±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+	±±³Funcao    ³fReplCli ³ Autor ³                         ³ Data ³          ³±±
+	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+	±±³Descri‡…o ³ Replica o cadastro de Cliente para Biancogres/Incesa/LM     ³±±
+	±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+	ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 /*/
 Static Function fReplCli()
 
@@ -332,19 +348,19 @@ Static Function fReplCli()
 			DbSelectArea("SIX")
 			DbSetOrder(1)
 			DbSeek("SA1")
-			
+
 			Do while .not. eof() .and. INDICE=="SA1"
 				cIndex+=cArq+SIX->ORDEM
 				DbSkip()
 			EndDo
-			
+
 			If chkfile("_SA1")
 				DbSelectArea("_SA1")
 				DbCloseArea()
 			EndIf
-			
+
 			Use &cArq Alias "_SA1" Shared New Via "TopConn"
-			
+
 			For n:=1 to 15 step 7
 				cInd := Subs(cIndex,n,7)
 				DbSetIndex(cInd)
@@ -375,7 +391,7 @@ Static Function fReplCli()
 					dbSeek(xFilial("_SA1")+M->A1_COD+M->A1_LOJA)
 					RecLock("_SA1",.F.)
 				end if
-			Else                                                              
+			Else
 				dbSelectArea("_SA1")
 				dbSetOrder(1)
 				dbSeek(xFilial("_SA1")+M->A1_COD+M->A1_LOJA)
@@ -412,17 +428,17 @@ Static Function fReplCli()
 			_SA1->A1_ESTC    := M->A1_ESTC
 			_SA1->A1_BAIRROC := M->A1_BAIRROC
 			_SA1->A1_CEPC    := M->A1_CEPC
-			
+
 			If SA1->(FieldPos("A1_YCODMUN")) > 0
-			
-			_SA1->A1_YCODMUN := M->A1_YCODMUN
-			
+
+				_SA1->A1_YCODMUN := M->A1_YCODMUN
+
 			EndIf
-			
+
 			_SA1->A1_INSCR   := M->A1_INSCR
 			_SA1->A1_INSCRM  := M->A1_INSCRM
 
-			//Vendedor e Comissão Biancogres	
+			//Vendedor e Comissão Biancogres
 			_SA1->A1_VEND		:= M->A1_VEND
 			_SA1->A1_COMIS		:= M->A1_COMIS
 			_SA1->A1_YVENDB2	:= M->A1_YVENDB2
@@ -465,11 +481,11 @@ Static Function fReplCli()
 			//Vendedor e Comissão pegasus
 			_SA1->A1_YVENPEG	:= M->A1_YVENPEG
 			_SA1->A1_YCOMPEG	:= M->A1_YCOMPEG
-			
+
 			//Vendedor e Comissão Vinilico
 			_SA1->A1_YVENVI1	:= M->A1_YVENVI1
 			_SA1->A1_YCOMVI1	:= M->A1_YCOMVI1
-			
+
 
 			_SA1->A1_REGIAO  	:= M->A1_REGIAO
 			_SA1->A1_CONTA   	:= M->A1_CONTA
@@ -527,13 +543,13 @@ Static Function fReplCli()
 			_SA1->A1_SATIV7  	:= M->A1_SATIV7
 			_SA1->A1_SATIV8  	:= M->A1_SATIV8
 			_SA1->A1_EMAIL   	:= M->A1_EMAIL
-			
+
 			If INCLUI // Retirar esse trecho quando o campo for criado no Bizagi
-				
+
 				M->A1_YEMABOL	:= M->A1_EMAIL
-					
+
 			EndIf
-			
+
 			_SA1->A1_YEMABOL  	:= M->A1_YEMABOL
 			_SA1->A1_HPAGE   	:= M->A1_HPAGE
 			_SA1->A1_DPMATV  	:= M->A1_DPMATV
@@ -599,47 +615,47 @@ Static Function fReplCli()
 			_SA1->A1_YDTPRO  	:= M->A1_YDTPRO
 			_SA1->A1_YTFGNRE 	:= M->A1_YTFGNRE
 			_SA1->A1_MSBLQL		:= M->A1_MSBLQL
-			_SA1->A1_YAVALCL	:= M->A1_YAVALCL     
+			_SA1->A1_YAVALCL	:= M->A1_YAVALCL
 			_SA1->A1_YPALETE	:= M->A1_YPALETE
-			_SA1->A1_CONTRIB	:= M->A1_CONTRIB //O.S 4595-15 
-			_SA1->A1_IENCONT	:= M->A1_IENCONT //O.S 4595-15 
-			_SA1->A1_YBIZAGI	:= M->A1_YBIZAGI //O.S 4631-15		
+			_SA1->A1_CONTRIB	:= M->A1_CONTRIB //O.S 4595-15
+			_SA1->A1_IENCONT	:= M->A1_IENCONT //O.S 4595-15
+			_SA1->A1_YBIZAGI	:= M->A1_YBIZAGI //O.S 4631-15
 			_SA1->A1_YNLOJA		:= M->A1_YNLOJA //Fernando - projeto promotores
 			_SA1->A1_TPJ		:= M->A1_TPJ 	// TICKET 1765
 			_SA1->A1_MSEXP		:= ""			// Ticket 5373
 			_SA1->A1_YSITGRP    := M->A1_YSITGRP //Ticket 7369
 			_SA1->A1_YREDCOM	:= M->A1_YREDCOM
-			_SA1->A1_YTPSEG		:= M->A1_YTPSEG 	//Ticket 9042						
+			_SA1->A1_YTPSEG		:= M->A1_YTPSEG 	//Ticket 9042
 			_SA1->A1_YCAT		:= M->A1_YCAT		//Ticket 9042
 			_SA1->A1_YTRTESP	:= M->A1_YTRTESP	//Ticket 9042
-			_SA1->A1_YOBSROM	:= M->A1_YOBSROM	//Ticket 9335 
+			_SA1->A1_YOBSROM	:= M->A1_YOBSROM	//Ticket 9335
 			_SA1->A1_YLOTRES	:= M->A1_YLOTRES 	//Ticket 9335
 			_SA1->A1_YCDGREG	:= M->A1_YCDGREG
 			_SA1->A1_YSUMCE		:= M->A1_YSUMCE
 			_SA1->A1_YCTAADI	:= M->A1_YCTAADI	//Conta Adiantamento RA
-			
+
 			_SA1->A1_YFORMA 	:= U_valYFORMA(__EMPRESA, M->A1_YCDGREG)
 
-			MsUnlock()
+			_SA1->(MsUnlock())
 			dbcommitAll()
 			dbSelectArea("_SA1")
 			dbCloseArea()
 
-		EndIf 
+		EndIf
 	Next
 
 Return
 
 
 /*/
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
-±±³Funcao    ³ImpCliECO³ Autor ³Ranisss A. Corona        ³ Data ³ 26/08/11 ³±±
-±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
-±±³Descri‡…o ³Replica o Cadastro de Cliente para o Sistema Ecosis          ³±±
-±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+	±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+	±±³Funcao    ³ImpCliECO³ Autor ³Ranisss A. Corona        ³ Data ³ 26/08/11 ³±±
+	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+	±±³Descri‡…o ³Replica o Cadastro de Cliente para o Sistema Ecosis          ³±±
+	±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+	ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 /*/
 Static Function ImpCliECO()
 
@@ -657,11 +673,11 @@ Static Function ImpCliECO()
 			nTable	:= ""
 		Else
 			nTable	:= "_"+aEmp[x]+"_"
-		EndIf	
+		EndIf
 
 		cSql := "INSERT INTO DADOS"+nTable+"EOS..EMP_EMPRESA (cod_empresa, emp_razao_social, emp_endereco, emp_endereco_num, emp_cidade, emp_uf, emp_bairro, emp_cep) "
 		cSql += "SELECT A1_COD+A1_LOJA AS CODIGO_EMP, SUBSTRING(A1_NOME,1,60) AS RAZAO_SOCIAL, SUBSTRING(A1_END,1,60) AS ENDERECO, SUBSTRING(A1_COMPLEM,1,15) AS COMPLEMENTO, "
-		cSql += "       SUBSTRING(A1_MUN,1,60) AS CIDADE, A1_EST AS ESTADO, SUBSTRING(A1_BAIRRO,1,60) AS BAIRRO, A1_CEP AS CEP "      
+		cSql += "       SUBSTRING(A1_MUN,1,60) AS CIDADE, A1_EST AS ESTADO, SUBSTRING(A1_BAIRRO,1,60) AS BAIRRO, A1_CEP AS CEP "
 		cSql += "FROM "+nDB+"..SA1"+aEmp[x]+"0 WITH (NOLOCK) "
 		cSql += "LEFT JOIN DADOS"+nTable+"EOS..EMP_EMPRESA WITH (NOLOCK) ON A1_COD+A1_LOJA COLLATE Latin1_General_BIN = cod_empresa "
 		cSql += "WHERE A1_FILIAL = '  ' AND A1_MSBLQL <> '1' AND D_E_L_E_T_ = ''  AND cod_empresa is null"
@@ -672,22 +688,22 @@ Static Function ImpCliECO()
 Return
 
 /*/
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
-±±³Funcao    ³fGrpVen ³ Autor ³Ranisss A. Corona        ³ Data ³ 17/02/17 ³±±
-±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
-±±³Descri‡…o ³Atualiza informação do Credito no Grupo de Clientes          ³±±
-±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+	±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
+	±±³Funcao    ³fGrpVen ³ Autor ³Ranisss A. Corona        ³ Data ³ 17/02/17 ³±±
+	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
+	±±³Descri‡…o ³Atualiza informação do Credito no Grupo de Clientes          ³±±
+	±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+	ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 /*/
 Static Function fGrpVen(cRisco,nLC,dVencLC,cGrpVen)
 
-	Local aEmp	:= {"01","05","07","12","13","14","16","17"} 
-	Local x		:= 0
+	Local aEmp		:= {"01","05","07","12","13","14","16","17"}
+	Local x			:= 0
 
 	For x := 1 to Len(aEmp)
-		cSql := ("UPDATE SA1"+aEmp[x]+"0 SET A1_RISCO = '"+cRisco+"', A1_LC = '"+Alltrim(Str(nLC))+"', A1_VENCLC = '"+Dtos(dVencLC)+"', A1_MSEXP = '' WHERE A1_GRPVEN = '"+cGrpVen+"' AND A1_YTIPOLC = 'G' AND D_E_L_E_T_ = ''")
+		cSql := ("UPDATE SA1"+aEmp[x]+"0 SET A1_RISCO = '"+cRisco+"', A1_LC = '"+Alltrim(Str(nLC))+"', A1_VENCLC = '"+Dtos(dVencLC)+"', A1_MSEXP = '', A1_YCDGREG = '"+cCdRgFin+"' WHERE A1_GRPVEN = '"+cGrpVen+"' AND A1_YTIPOLC = 'G' AND D_E_L_E_T_ = ''")
 		TcSqlExec(cSql)
 	Next
 
@@ -697,30 +713,29 @@ Return
 
 /*INICIANDO NOVO PADRÃO*/
 User Function valYFORMA(__EMPRESA, __GRUPO)
-Local iYForma	:= ""
-Local Enter 	:= CHR(13)+CHR(10)
-Local cSQL 		:= ""
-Local cQryTMP	:= GetNextAlias()
+	Local iYForma	:= ""
+	Local Enter 	:= CHR(13)+CHR(10)
+	Local cSQL 		:= ""
+	Local cQryTMP	:= GetNextAlias()
 
-cSQL += "SELECT ZK1.ZK1_TPCOM" + Enter
-cSQL += "FROM ZK0010 ZK0 WITH(NOLOCK)" + Enter
-cSQL += "	INNER JOIN ZK1010 ZK1 WITH(NOLOCK)" + Enter
-cSQL += "		ON ZK0.ZK0_FILIAL = ZK1.ZK1_FILIAL" + Enter
-cSQL += "			AND ZK0.ZK0_CODREG = ZK1.ZK1_CODREG" + Enter
-cSQL += "			AND ZK1.ZK1_CODEMP = '" + Substr(__EMPRESA,1,2) + "'" + Enter
-cSQL += "			AND ZK1.D_E_L_E_T_ = ''" + Enter
-cSQL += "WHERE ZK0.ZK0_FILIAL = '" + xFilial("ZK0") + "'" + Enter
-cSQL += "	AND ZK0.ZK0_CODGRU = '" + __GRUPO + "'" + Enter
-cSQL += "	AND ZK0.D_E_L_E_T_ = ''" + Enter
-TcQuery cSQL New Alias (cQryTMP)	
+	cSQL += "SELECT ZK1.ZK1_TPCOM" + Enter
+	cSQL += "FROM ZK0010 ZK0 WITH(NOLOCK)" + Enter
+	cSQL += "	INNER JOIN ZK1010 ZK1 WITH(NOLOCK)" + Enter
+	cSQL += "		ON ZK0.ZK0_FILIAL = ZK1.ZK1_FILIAL" + Enter
+	cSQL += "			AND ZK0.ZK0_CODREG = ZK1.ZK1_CODREG" + Enter
+	cSQL += "			AND ZK1.ZK1_CODEMP = '" + Substr(__EMPRESA,1,2) + "'" + Enter
+	cSQL += "			AND ZK1.D_E_L_E_T_ = ''" + Enter
+	cSQL += "WHERE ZK0.ZK0_FILIAL = '" + xFilial("ZK0") + "'" + Enter
+	cSQL += "	AND ZK0.ZK0_CODGRU = '" + __GRUPO + "'" + Enter
+	cSQL += "	AND ZK0.D_E_L_E_T_ = ''" + Enter
+	TcQuery cSQL New Alias (cQryTMP)
 
-If (cQryTMP)->(Eof()) .Or. (cQryTMP)->ZK1_TPCOM == "0"
-	iYForma := "3"
-Else
-	iYForma := "1"
-EndIf
+	If (cQryTMP)->(Eof()) .Or. (cQryTMP)->ZK1_TPCOM == "0"
+		iYForma := "3"
+	Else
+		iYForma := "1"
+	EndIf
 
-(cQryTMP)->(DbCloseArea()) 
+	(cQryTMP)->(DbCloseArea())
 
 Return iYForma
-

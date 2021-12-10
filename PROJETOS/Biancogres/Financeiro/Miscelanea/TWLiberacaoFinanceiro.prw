@@ -15,83 +15,108 @@
 #DEFINE nP_CHECK	01
 #DEFINE nP_LEGENDA	02
 
-Class TWLiberacaoFinanceiro From TAFAbStractClass
 
-	Data oLiberacao
+User Function LIB_FINAN()
 
-	Data oWindow // Janela principal - FWDialogModal
-	Data oContainer	// Divisor de janelas - FWFormContainer
-	Data cHeaderBox // Identificador do cabecalho da janela
-	Data cItemBox // Identificador dos itens da janela
+	Local oObj := TWLiberacaoFinanceiro():New()
 
-	Data cChk // Imagem de marcacao
-	Data cUnChk // Imagem de marcacao
+	Private cCadastro := OemToAnsi("Liberacao Financeira")
 
-	Data oChkRec	// Objeto de marcacao
-	Data lMarkAllRec // Controla marcacao de todas as linhas
-	Data oGridRec // Grid - MsNewGetDados
-	Data oGridRecField // EStrutura dos campos do grid - TGDField
+	If ( oObj:oLiberacao:lReceber .Or. oObj:oLiberacao:lPagar ) .Or. ( FWIsAdmin(__cUserID) .And. ( oObj:oLiberacao:lReceber .Or. oObj:oLiberacao:lPagar ) )
 
-	Data oChkPag	// Objeto de marcacao
-	Data lMarkAllPag // Controla marcacao de todas as linhas
-	Data oGridPag // Grid - MsNewGetDados
-	Data oGridPagField // EStrutura dos campos do grid - TGDField
+		oObj:Pergunte()
 
-	Data oPanel
-	Data oFolder
-	Data lFolderReceber
-	Data lFolderPagar
+		oObj:Activate()
 
-	Data cBanco
-	Data cAgencia
-	Data cConta
+	Else
 
-	Data aParam
-	Data aParRet
-	Data bConfirm
+		Alert("Usuario nao habilitado para acessar a rotina!")
 
-	Data lFinalizados
-	Data cFinalizados
-	Data aAprovador
-	Data cCCObrItCt
+	EndIf
 
-	Method New() ConStructor
-	Method LoadInterface()
-	Method LoadWindow()
-	Method LoadContainer()
-	Method LoadFolder()
-	Method LoadBrowser(oWnd, lReceber, lPagar)
-	Method Activate()
+Return()
 
-	Method GDEditableField(lReceber, lPagar)
-	Method GDFieldProperty(lReceber, lPagar)
 
-	Method Mark(oGrid)
-	Method MarkAll(oGrid, lReceber, lPagar)
-	Method ExistMark(oGrid)
+	Class TWLiberacaoFinanceiro From TAFAbStractClass
 
-	Method ValidAcao(oGrid, lAprovar, lConfirma)
-	Method Valid(oGrid, lAprovar, lConfirma)
+		Data oLiberacao
 
-	Method Save(oGrid, lAprovar, lConfirma)
-	Method Confirm(lAprovar, lConfirma)
+		Data oWindow // Janela principal - FWDialogModal
+		Data oContainer	// Divisor de janelas - FWFormContainer
+		Data cHeaderBox // Identificador do cabecalho da janela
+		Data cItemBox // Identificador dos itens da janela
 
-	Method Pergunte()
-	Method PergBanco()
+		Data cChk // Imagem de marcacao
+		Data cUnChk // Imagem de marcacao
 
-	Method GetQueryReceber()
-	Method GetQueryPagar()
-	Method GdSeek()
-	Method Load(lPergunte)
-	Method OrdenarGrid(nCol, oGrid)
-	Method Legenda()
-	Method TrackerContabil()
-	Method DetalheTitulo()
-	Method WorkFlow(lAprovado)
-	Method SetParam()
-	Method SetFolder(nOption)
+		Data oChkRec	// Objeto de marcacao
+		Data lMarkAllRec // Controla marcacao de todas as linhas
+		Data oGridRec // Grid - MsNewGetDados
+		Data oGridRecField // EStrutura dos campos do grid - TGDField
 
-EndClass
+		Data oChkPag	// Objeto de marcacao
+		Data lMarkAllPag // Controla marcacao de todas as linhas
+		Data oGridPag // Grid - MsNewGetDados
+		Data oGridPagField // EStrutura dos campos do grid - TGDField
+
+		Data oPanel
+		Data oFolder
+		Data lFolderReceber
+		Data lFolderPagar
+
+		Data cBanco
+		Data cAgencia
+		Data cConta
+
+		Data aParam
+		Data aParRet
+		Data bConfirm
+
+		Data lFinalizados
+		Data cFinalizados
+		Data aAprovador
+		Data cCCObrItCt
+
+		Method New() ConStructor
+		Method LoadInterface()
+		Method LoadWindow()
+		Method LoadContainer()
+		Method LoadFolder()
+		Method LoadBrowser(oWnd, lReceber, lPagar)
+		Method Activate()
+
+		Method GDEditableField(lReceber, lPagar)
+		Method GDFieldProperty(lReceber, lPagar)
+
+		Method Mark(oGrid)
+		Method MarkAll(oGrid, lReceber, lPagar)
+		Method ExistMark(oGrid)
+
+		Method ValidAcao(oGrid, lAprovar, lConfirma)
+		Method Valid(oGrid, lAprovar, lConfirma)
+
+		Method Save(oGrid, lAprovar, lConfirma)
+		Method Confirm(lAprovar, lConfirma)
+
+		Method Pergunte()
+		Method PergBanco()
+
+		Method GetQueryReceber()
+		Method GetQueryPagar()
+		Method GdSeek()
+		Method Load(lPergunte)
+		Method OrdenarGrid(nCol, oGrid)
+		Method Legenda()
+		Method TrackerContabil()
+		Method DetalheTitulo()
+		Method WorkFlow(lAprovado)
+		Method SetParam()
+		Method SetFolder(nOption)
+		Method RateioRPV()
+
+
+
+	EndClass
 
 Method New() Class TWLiberacaoFinanceiro
 
@@ -139,9 +164,10 @@ Return()
 
 Method SetParam() Class TWLiberacaoFinanceiro
 
-	//R001280 - Ticket 23134 (Thiago Haagensen) / R000998|R001412 - Ticket 22205 (Pablo S. Nascimento) / R001454 - Ticket 26279 (Thiago Haagenen)
-	Local cSolicitante	:= U_GETBIAPAR("MV_YLBSOL", "R000615|R001323|R001154|R001206|R000064|R000998|R001412|R001280|R001454")
-	Local cFinanceiro	:= U_GETBIAPAR("MV_YLBFIN", "R000615|R001323|R001154")
+	//R001280 - Ticket 23134 (Thiago Haagensen) / R000998|R001412 - Ticket 22205 (Pablo S. Nascimento) /
+	//R001454 - Ticket 26279 (Thiago Haagenen)	/ R001625 - Ticket 35280 (Nataniel Junior)
+	Local cSolicitante	:= U_GETBIAPAR("MV_YLBSOL", "R000615|R001323|R001154|R001206|R000064|R000998|R001412|R001280|R001454|R001625")
+	Local cFinanceiro	:= U_GETBIAPAR("MV_YLBFIN", "R000615|R001323|R001154|R001625")
 	Local cAprovador	:= ""
 	Local nW 			:= 0
 	Local nTamCC		:= 0
@@ -306,6 +332,9 @@ Method LoadWindow() Class TWLiberacaoFinanceiro
 		::oWindow:AddButton("Recarregar", {|| U_BIAMsgRun("Carregando dados...", "Aguarde!", {|| ::Load() }) },,, .T., .F., .T.)
 
 	EndIf
+
+	// Emerson (Facile) em 27/08/2021 - Tela Rateio RPV (BIAFG106)
+	::oWindow:AddButton("Rateio RPV", {|| ::RateioRPV() },,, .T., .F., .T.)
 
 	::oWindow:AddButton("Legenda", {|| ::Legenda() },,, .T., .F., .T.)
 
@@ -979,6 +1008,7 @@ Method Save(oGrid, lAprovar, lConfirma) Class TWLiberacaoFinanceiro
 	Local nW := 0
 	Local lExist := .F.
 	Local lPergBanco := .F.
+	Local oRecompra		:= Nil
 
 	Local nPosPref := aScan(oGrid:aHeader, {|x| AllTrim(x[2]) == "ZL0_PREFIX"})
 	Local nPosNum  := aScan(oGrid:aHeader, {|x| AllTrim(x[2]) == "ZL0_NUM"})
@@ -1081,17 +1111,20 @@ Method Save(oGrid, lAprovar, lConfirma) Class TWLiberacaoFinanceiro
 						ZL0->ZL0_CCD 	  := oGrid:aCols[nW][nPosCCD]
 						ZL0->ZL0_CTRVER := oGrid:aCols[nW][nPosVerb]
 
+						//Filipe - Facile - 30/09/2021 | Ticket: 26221
 
-						/*
-						  //Filipe - Facile - 12/04/2021 | Ticket: 26221
-						CkDescFin(ZL0->ZL0_CODEMP,ZL0->ZL0_CODFIL,ZL0->ZL0_CLIFOR,ZL0->ZL0_LOJA,;
-							ZL0->ZL0_CLVLDB,ZL0->ZL0_DEBITO,;
-							ZL0->ZL0_NUM,ZL0->ZL0_PREFIX,ZL0->ZL0_TIPO,ZL0->ZL0_PARCEL,;
-							ZL0->ZL0_VALOR,ZL0->ZL0_DESCON,ZL0->ZL0_EMISSA, ZL0->(RecNo()))
-							
-							*/
+						If CkDescFin()
+							FwAlertWarning('Email de liberação de desconto não está respondendo.','Warning - TWLiberacaoFinanceiro.prw')
+							ZL0->(MsUnLock())
+							DisarmTransaction()
+							RETURN .F.
+						EndIf
+
+						//Filipe - Facile - 30/09/2021 | Ticket: 26221
 
 					EndIf
+
+					ZL0->(MsUnLock())
 
 					If oGrid:aCols[nW, nP_LEGENDA] == "BR_VERDE"
 
@@ -1100,9 +1133,10 @@ Method Save(oGrid, lAprovar, lConfirma) Class TWLiberacaoFinanceiro
 						SE1->E1_YVLDESC := oGrid:aCols[nW][nPosDesc]
 						SE1->(MsUnLock())
 
-					EndIf
+						// Emerson (Facile) em 30/08/2021 - Tela Rateio RPV (BIAFG106) - Efetiva a gravação na tabela ZNC (Deixa em branco o campo ZNC_FLGGRV), após clicar no
+						// U_FGT106EF("3", SE1->(E1_FILIAL+E1_PREFIXO+E1_NUM+E1_PARCELA+E1_TIPO), "S")
 
-					ZL0->(MsUnLock())
+					EndIf
 
 					//EndIf
 
@@ -1188,6 +1222,28 @@ Method Save(oGrid, lAprovar, lConfirma) Class TWLiberacaoFinanceiro
 								Alert("Ocorreu um erro no processamento!" + CRLF + CRLF + ::oLiberacao:cErro)
 
 								Exit
+
+							Else
+
+								//|Projeto FIDC Recompra |
+								oRecompra	:= TFPFidcRecompraReceber():New()
+
+								oRecompra:cPrefixo          := SE1->E1_PREFIXO
+								oRecompra:cNumero           := SE1->E1_NUM
+								oRecompra:cParcela          := SE1->E1_PARCELA
+								oRecompra:cTipo             := SE1->E1_TIPO
+								oRecompra:cCodigoCliente    := SE1->E1_CLIENTE
+								oRecompra:cLojaCliente      := SE1->E1_LOJA
+								oRecompra:cNossoNumero      := SE1->E1_NUMBCO
+								oRecompra:nValorOriginal    := SE1->E1_VALOR
+								oRecompra:nSaldoTitulo      := SE1->E1_SALDO
+								oRecompra:dVencimento       := SE1->E1_VENCREA
+								oRecompra:nValorDesconto    := oGrid:aCols[nW][nPosDesc]
+								oRecompra:nRecnoSE1    			:= SE1->( Recno() )
+
+								oRecompra:AdicionaTituloRecompra()
+
+								FreeObj(oRecompra)
 
 							EndIf
 
@@ -1414,11 +1470,11 @@ Method WorkFlow(lAprovado) Class TWLiberacaoFinanceiro
 
 		If lAprovado
 
-			cDestino	:= "nadine.araujo@biancogres.com.br"
+			cDestino	:= "nadine.araujo@biancogres.com.br;rylayne.eleuterio@biancogres.com.br"
 
 		Else
 
-			cDestino	:= "wellison.toras@biancogres.com.br;nadine.araujo@biancogres.com.br"
+			cDestino	:= "wellison.toras@biancogres.com.br;nadine.araujo@biancogres.com.br;rylayne.eleuterio@biancogres.com.br"
 
 		EndIf
 
@@ -1725,29 +1781,29 @@ Method TrackerContabil() Class TWLiberacaoFinanceiro
 
 Return()
 
-User Function LIB_FINAN()
 
-	Local oObj := TWLiberacaoFinanceiro():New()
 
-	Private cCadastro := OemToAnsi("Liberacao Financeira")
 
-	If ( oObj:oLiberacao:lReceber .Or. oObj:oLiberacao:lPagar ) .Or. ( FWIsAdmin(__cUserID) .And. ( oObj:oLiberacao:lReceber .Or. oObj:oLiberacao:lPagar ) )
+// Filipe - Facile - 30/09/2021 | Ticket: 26221
+Static FUNCTION CkDescFin()
 
-		oObj:Pergunte()
+	Local cCODEMP := ZL0->ZL0_CODEMP
+	Local cCODFIL := ZL0->ZL0_CODFIL
+	Local cCLIFOR := ZL0->ZL0_CLIFOR
+	Local cLOJA   := ZL0->ZL0_LOJA
+	Local cCLVLDB := ZL0->ZL0_CLVLDB
+	Local cCCONTA := ZL0->ZL0_DEBITO
+	Local cNUM    := ZL0->ZL0_NUM
+	Local cPREFIX := ZL0->ZL0_PREFIX
+	Local cTIPO   := ZL0->ZL0_TIPO
+	Local cPARCEL := ZL0->ZL0_PARCEL
+	Local nVALOR  := ZL0->ZL0_VALOR
+	Local nDESCON := ZL0->ZL0_DESCON
+	Local cEMISSA := ZL0->ZL0_EMISSA
+	Local cVENCTO := ZL0->ZL0_VENCTO
+	Local cObsLib := ZL0->ZL0_OBSLIB
 
-		oObj:Activate()
-
-	Else
-
-		Alert("Usuario nao habilitado para acessar a rotina!")
-
-	EndIf
-
-Return()
-
-// Filipe - Facile - 12/04/2021 | Ticket: 26221
-Static FUNCTION CkDescFin(cCODEMP,cCODFIL,cCLIFOR,cLOJA,cCLVLDB,cCCONTA,;
-		cNUM,cPREFIX,cTIPO,cPARCEL,nVALOR,nDESCON,cEMISSA, nRecno)
+	Local nRecno  := ZL0->(RecNo())
 
 	Local cEmail    := ""
 	Local cAprov    := ""
@@ -1755,29 +1811,35 @@ Static FUNCTION CkDescFin(cCODEMP,cCODFIL,cCLIFOR,cLOJA,cCLVLDB,cCCONTA,;
 	Local cQry2     := GetNextAlias()
 	Local cSQL      := ""
 	Local cChave    := ""
+	Local lRetErr   := .F.
+	Local oApProcss := Nil
+	Local cHtml := ""
+	Local cEFrom := ""
 
-	cSQL := " select * "+  CRLF
-	cSQL += " from ZDK010 "+  CRLF
-	cSQL += " where LTRIM(RTRIM(ZDK_CLVLR)) = " + ValToSQL(AllTrim(cCLVLDB))  + CRLF
-	cSQL += " AND LTRIM(RTRIM(ZDK_CCONTA))  = " + ValToSQL(AllTrim(cCCONTA))  + CRLF
-	cSQL += " AND   "+cValTochar(nDESCON)+"  BETWEEN  ZDK_VLAPIN AND ZDK_VLAPFI  "+  CRLF
-	cSQL += " AND   ZDK_STATUS =  'A' " + CRLF
-	cSQL += " AND   D_E_L_E_T_ =  '' " + CRLF
-	cSQL += " ORDER BY ZDK_VLAPIN, ZDK_VLAPFI "+  CRLF
+
+
+	cSQL := " select ZDK.* "+  CRLF
+	cSQL += " from "+RetSQLName("ZDK")+"  ZDK " + CRLF
+	cSQL += " where LTRIM(RTRIM(ZDK.ZDK_CLVLR)) = " + ValToSQL(AllTrim(cCLVLDB))  + CRLF
+	cSQL += " AND LTRIM(RTRIM(ZDK.ZDK_CCONTA))  = " + ValToSQL(AllTrim(cCCONTA))  + CRLF
+	cSQL += " AND   "+cValTochar(nDESCON)+"  BETWEEN  ZDK.ZDK_VLAPIN AND ZDK.ZDK_VLAPFI  "+  CRLF
+	cSQL += " AND   ZDK.ZDK_STATUS =  'A' " + CRLF
+	cSQL += " AND   ZDK.D_E_L_E_T_ =  '' " + CRLF
+	cSQL += " ORDER BY ZDK.ZDK_VLAPIN, ZDK.ZDK_VLAPFI "+  CRLF
 
 	TcQuery cSQL New Alias (cQry)
 
-	While (cQry)->(!Eof()) .and. nDESCON > 0
+	If (cQry)->(!Eof()) .and. nDESCON > 0
 
 
 		//Regra 1 - ATÉ 8000 DE desconte
 		If nDESCON <= 8000 .AND. !EMPTY(AllTrim(cCCONTA))
 
-			cEmail := UsrRetMail(AllTrim((cQry)->ZDK_APROV1)) //MANDA PARA O GESTOR PRINCIPAL
-			cAprov := (cQry)->ZDK_APROV1
+			cEmail := UsrRetMail(AllTrim((cQry)->ZDK_APROVA)) //MANDA PARA O GESTOR PRINCIPAL
+			cAprov := (cQry)->ZDK_APROVA
 
 
-			If !EMPTY((cQry)->ZDK_APROVT) .AND. !EMPTY((cQry)->ZDK_DTATIN) .AND. !EMPTY((cQry)->ZDK_VLAPFI)
+			If !EMPTY((cQry)->ZDK_APROVT) .AND. !EMPTY((cQry)->ZDK_DTAPTI) .AND. !EMPTY((cQry)->ZDK_VLAPFI)
 
 				IF (cQry)->ZDK_VLAPFI >= dDataBase
 
@@ -1792,10 +1854,10 @@ Static FUNCTION CkDescFin(cCODEMP,cCODFIL,cCLIFOR,cLOJA,cCLVLDB,cCCONTA,;
 			//Regra 2 - acima de 8000.01 e classe de valor começando com 2
 		ElseIf nDESCON >= 8000.01 .AND. SUBSTR(AllTrim((cQry)->ZDK_CLVLR), 0, 1) == "2" .AND. !EMPTY(AllTrim(cCCONTA))
 
-			cEmail := UsrRetMail(AllTrim((cQry)->ZDK_APROV1)) //MANDA PARA O GESTOR PRINCIPAL
-			cAprov := (cQry)->ZDK_APROV1
+			cEmail := UsrRetMail(AllTrim((cQry)->ZDK_APROVA)) //MANDA PARA O GESTOR PRINCIPAL
+			cAprov := (cQry)->ZDK_APROVA
 
-			If !EMPTY((cQry)->ZDK_APROVT) .AND. !EMPTY((cQry)->ZDK_DTATIN) .AND. !EMPTY((cQry)->ZDK_VLAPFI)
+			If !EMPTY((cQry)->ZDK_APROVT) .AND. !EMPTY((cQry)->ZDK_DTAPTI) .AND. !EMPTY((cQry)->ZDK_VLAPFI)
 
 				IF (cQry)->ZDK_VLAPFI >= dDataBase
 
@@ -1810,10 +1872,10 @@ Static FUNCTION CkDescFin(cCODEMP,cCODFIL,cCLIFOR,cLOJA,cCLVLDB,cCCONTA,;
 			//Regra 3 - acima de 8000.01 e classe de valor começando com 3
 		ElseIf nDESCON >= 8000.01 .AND. SUBSTR(AllTrim((cQry)->ZDK_CLVLR), 0, 1) == "3" .AND. !EMPTY(AllTrim(cCCONTA))
 
-			cEmail := UsrRetMail(AllTrim((cQry)->ZDK_APROV1)) //MANDA PARA O GESTOR PRINCIPAL
-			cAprov := (cQry)->ZDK_APROV1
+			cEmail := UsrRetMail(AllTrim((cQry)->ZDK_APROVA)) //MANDA PARA O GESTOR PRINCIPAL
+			cAprov := (cQry)->ZDK_APROVA
 
-			If !EMPTY((cQry)->ZDK_APROVT) .AND. !EMPTY((cQry)->ZDK_DTATIN) .AND. !EMPTY((cQry)->ZDK_VLAPFI)
+			If !EMPTY((cQry)->ZDK_APROVT) .AND. !EMPTY((cQry)->ZDK_DTAPTI) .AND. !EMPTY((cQry)->ZDK_VLAPFI)
 
 				IF (cQry)->ZDK_VLAPFI >= dDataBase
 
@@ -1828,10 +1890,10 @@ Static FUNCTION CkDescFin(cCODEMP,cCODFIL,cCLIFOR,cLOJA,cCLVLDB,cCCONTA,;
 			//Regra 4 - INDEPENDETE DO VALOR, POREM SEM CONTA CONTABIL
 		ELSE
 
-			cEmail := UsrRetMail(AllTrim((cQry)->ZDK_APROV1)) //MANDA PARA O GESTOR PRINCIPAL
-			cAprov := (cQry)->ZDK_APROV1
+			cEmail := UsrRetMail(AllTrim((cQry)->ZDK_APROVA)) //MANDA PARA O GESTOR PRINCIPAL
+			cAprov := (cQry)->ZDK_APROVA
 
-			If !EMPTY((cQry)->ZDK_APROVT) .AND. !EMPTY((cQry)->ZDK_DTATIN) .AND. !EMPTY((cQry)->ZDK_VLAPFI)
+			If !EMPTY((cQry)->ZDK_APROVT) .AND. !EMPTY((cQry)->ZDK_DTAPTI) .AND. !EMPTY((cQry)->ZDK_VLAPFI)
 
 				IF (cQry)->ZDK_VLAPFI >= dDataBase
 
@@ -1846,40 +1908,152 @@ Static FUNCTION CkDescFin(cCODEMP,cCODFIL,cCLIFOR,cLOJA,cCLVLDB,cCCONTA,;
 
 		(cQry)->(DbSkip())
 
-	EndDo
-	//Fim das regras
 
 
-	If !EMPTY(cEmail)
+		(cQry)->(DbCloseArea())
+		//Fim das regras
 
-		cSQL := " SELECT * FROM ZKH010   "+  CRLF
-		cSQL += " WHERE ZKH_ID =  "+cValToChar(nRecno)+" "+  CRLF
-		cSQL += " AND ZKH_EMP  = '"+cCODEMP+"' "+  CRLF
-		cSQL += " AND ZKH_FIL  = '"+cCODFIL+"' "+  CRLF
-		cSQL += " AND D_E_L_E_T_ = ''  "+  CRLF
 
-		TcQuery cSQL New Alias (cQry2)
+		If !EMPTY(cEmail)
 
-		if EMPTY( (cQry2)->ZKH_CHAVE )
+			cSQL := " SELECT * FROM ZKH010   "+  CRLF
+			cSQL += " WHERE ZKH_ID =  "+cValToChar(nRecno)+" "+  CRLF
+			cSQL += " AND ZKH_EMP  = '"+cCODEMP+"' "+  CRLF
+			cSQL += " AND ZKH_FIL  = '"+cCODFIL+"' "+  CRLF
+			cSQL += " AND ZKH_PROCES  = 'FIN00001' "+  CRLF //Liberação de descontos do financeiro
+			cSQL += " AND D_E_L_E_T_ = ''  "+  CRLF
 
-			cChave := Upper(HMAC(cCODEMP + cCODFIL + cNUM, "Bi@nCoGrEs", 1))
+			TcQuery cSQL New Alias (cQry2)
 
-			If	CkDescMail(cEmail,cCODEMP,cCODFIL,cCLIFOR,cLOJA,cCLVLDB,cCCONTA,;
-					cNUM, cPREFIX, cTIPO,cPARCEL,nVALOR,nDESCON,cEMISSA, cChave)
+			if EMPTY( (cQry2)->ZKH_CHAVE )
 
-				RecLock("ZKH", .T.)
-				ZKH->ZKH_FILIAL		:= xFilial("ZKH")
-				ZKH->ZKH_EMP 		  := cCODEMP
-				ZKH->ZKH_FIL 		  := cCODFIL
-				ZKH->ZKH_TABELA		:= "ZL0010"
-				ZKH->ZKH_PROCES		:= "DESCONTO-FINANCEIRO"
-				ZKH->ZKH_APROV 		:= cAprov
-				ZKH->ZKH_EMAIL 		:= cEmail
-				ZKH->ZKH_CHAVE 		:= cChave
-				ZKH->ZKH_DATAEN 	:= dDataBase
-				ZKH->ZKH_STATUS 	:= "E"
-				ZKH->ZKH_ID		 	  := cValToChar(nRecno)
-				ZKH->(MsUnlock())
+      /*Tratar email para aprovar diversos processos bianco*/
+
+				oApProcss := TAprovaProcessoPorEmail():New()
+				cEFrom := oApProcss:oMensagem:cFrom
+
+				cChave := Upper(HMAC(cCODEMP + cCODFIL + cNUM, "Bi@nCoGrEs", 1))
+
+				cHtml := " <html> "
+				cHtml += "    <body style='font-family: Courier, Arial, Helvetica, sans-serif;'> "
+				cHtml += "       <div style='margin:0;padding:0;background-color:#fff;height:100%; '> "
+				cHtml += "          <table align='center' border='0' cellpadding='0' cellspacing='0' style='overflow-x:hidden;margin:0px 20px 0px 20px;border:1px solid #ebebeb'> "
+				cHtml += "             <tbody> "
+				cHtml += "                <tr> "
+				cHtml += "                   <td align='center' bgcolor='#919191'  style='font-size:20px; color:#ffffff; font-family: Courier, Arial, Helvetica, sans-serif;'> "
+				cHtml += "                      <h1 style='margin:0px; padding:5px; letter-spacing:15px;'>BIANCOGRES</h1> "
+				cHtml += " 					 <h4 style='margin:0px; padding:5px;'>Liberação de descontos</h4> "
+				cHtml += "                   </td> "
+				cHtml += "                </tr> "
+				cHtml += "                <tr> "
+				cHtml += "                   <td align='left' bgcolor='#ffffff' style='padding:30px 30px 30px 30px;font-family: Courier, Arial, Helvetica, sans-serif;'>  "
+				cHtml += " 				  Olá, <b>"+cEmail+"!</b> <br> 	 "
+				cHtml += " 				  O titulo abaixo está pendende de liberação. "
+				cHtml += " 				  </td> "
+				cHtml += "                </tr>		 "
+				cHtml += " 			    <tr> "
+				cHtml += "                   <td align='left' bgcolor='#fff' style='padding:3px;'> "
+				cHtml += "                      <table align='center' style='width:100%; border-collapse: collapse;  border: 1px solid #e5e5e5;'> "
+				cHtml += "                         <tbody> "
+				cHtml += "                            <tr> "
+
+
+
+				cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Cliente/Loja</th> "
+				cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Nome</th> "
+				cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Titulo/Prefixo/Tipo</th> "
+				cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Parcela</th> "
+				cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Vencimento</th> "
+				cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Valor</th> "
+				cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Desconto</th> "
+				cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Cl. Valor</th> "
+				cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>C. Contabil</th> "
+				cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Obs</th> "
+				cHtml += "                            </tr> "
+				cHtml += " 						    <tr> "
+
+				cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>"+cCLIFOR+"/"+cLOJA+"</td> "
+				cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>"+Alltrim(Posicione("SA1", 1, xFilial("SA1") + cCLIFOR + cLOJA, "A1_NOME"))+"</td> "
+				cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>"+cNUM+"/"+cPREFIX+" "+cTIPO+"</td> "
+				cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>"+cPARCEL+"</td> "
+				cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>"+dtoc(cVENCTO)+"</td> "
+				cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>"+TRANSFORM(nVALOR,PesqPict("ZL0","ZL0_VALOR"))+"</td> "
+				cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>"+TRANSFORM(nDESCON,PesqPict("ZL0","ZL0_DESCON"))+"</td> "
+				cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>"+cCLVLDB+"</td> "
+				cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>"+cCCONTA+"</td> "
+				cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>"+cObsLib+"</td> "
+
+				cHtml += "                            </tr> "
+				cHtml += " 						  </tbody> "
+				cHtml += " 						</table> "
+				cHtml += " 					</td> "
+				cHtml += " 				</tr>		 "
+				cHtml += " 			    <tr> "
+				cHtml += "                 <td align='center' bgcolor='#ffffff' style='padding:20px;font-family: Courier, Arial, Helvetica, sans-serif;'> 				 						 "
+				cHtml += "          <br><br>"
+
+
+
+
+				cHtml += " 					 <a  href='mailto:"+cEFrom+"?subject=Aprovar desconto:"+cNUM+" - PROC:FIN00001 - ACTION:APROVAR - KEY:"+ cChave +"' style='letter-spacing: 30px; text-decoration:none; width:500px; color: #34a853;; MARGIN:0px;  font-weight: bold; text-align: center; cursor: pointer; display: inline-block; padding: 30px; border:10px solid #34a853; font-size:20px;'>  "
+				cHtml += "               APROVAR  "
+				cHtml += "            </a> "
+
+				cHtml += "          <br><br><br><br>  "
+
+
+				cHtml += " 				 	 <a  href='mailto:"+cEFrom+"?subject=Recusar desconto:"+cNUM+" - PROC:FIN00001 - ACTION:RECUSAR - KEY:"+ cChave +"' style='letter-spacing: 30px;   text-decoration:none; width:500px; color: #e94235; MARGIN:0px;   font-weight: bold; text-align: center; cursor: pointer; display: inline-block; padding: 30px; border:10px solid #e94235; font-size:20px;'> "
+				cHtml += "                 RECUSAR    "
+				cHtml += "           </a> "
+
+				cHtml += "          <br><br>"
+				cHtml += " 				  </td> "
+				cHtml += "              </tr>	 "
+				cHtml += "              <tr> "
+				cHtml += "                 <td align='center' bgcolor='#FAFAFA' style='padding:30px 30px 30px 30px;'> "
+				cHtml += "                      <p style='padding:0px;color:#333f4c;margin:0;font-size:11px;line-height:22px'>                         Esta notificação foi enviada por um email configurado para não receber resposta. 						Por favor, não responda esta mensagem.                       </p> "
+				cHtml += "                   </td> "
+				cHtml += "              </tr>		 "
+				cHtml += "             </tbody> "
+				cHtml += "          </table> "
+				cHtml += "       </div> "
+				cHtml += "    </body> "
+				cHtml += " </html> "
+
+
+
+
+				cEmail := "filipe.bittencourt@facilesistemas.com.br;gardenia.stelzer@biancogres.com.br;nadine.araujo@biancogres.com.br"
+				//cEmail := "filipe.bittencourt@facilesistemas.com.br"
+				oApProcss:oMensagem:cTo 		  := cEmail
+				oApProcss:oMensagem:cCc 		  := ""
+				oApProcss:oMensagem:cBcc 	  	:= ""
+				oApProcss:oMensagem:cSubject	:= "Liberação de Desconto - "+FWEmpName(cCODEMP)+ ""
+				oApProcss:oMensagem:cBody     := cHtml
+
+				oApProcss  := oApProcss:EnviarEmail()
+
+				lRetErr := oApProcss:lError
+
+				If	lRetErr == .F.
+
+					RecLock("ZKH", .T.)
+					ZKH->ZKH_FILIAL		:= xFilial("ZKH")
+					ZKH->ZKH_EMP 		  := cCODEMP
+					ZKH->ZKH_FIL 		  := cCODFIL
+					ZKH->ZKH_TABELA		:= "ZL0010"
+					ZKH->ZKH_PROCES		:= "FIN00001" //Liberação de descontos
+					ZKH->ZKH_APROV 		:= cAprov
+					ZKH->ZKH_EMAIL 		:= cEmail
+					ZKH->ZKH_CHAVE 		:= cChave
+					ZKH->ZKH_DATAEN 	:= dDataBase
+					ZKH->ZKH_STATUS 	:= "E"
+					ZKH->ZKH_ID		 	  := cValToChar(nRecno)
+					ZKH->(MsUnlock())
+
+
+
+				EndIf
 
 			EndIf
 
@@ -1887,132 +2061,65 @@ Static FUNCTION CkDescFin(cCODEMP,cCODFIL,cCLIFOR,cLOJA,cCLVLDB,cCCONTA,;
 
 	EndIf
 
-Return .T.
+	//CONOUT("TAprovaProcessoPorEmail:EnviarEmail() => ERRO ao enviar e-mail: " + oApProcss:cError )
+
+Return lRetErr
+// FIM  - Filipe - Facile - 30/09/2021 | Ticket: 26221
 
 
-Static Function CkDescMail(cEUser,cCODEMP,cCODFIL,cCLIFOR,cLOJA,cCLVLDB,cCCONTA,;
-		cNUM,cPREFIX,cTIPO,cPARCEL,nVALOR,nDESCON,cEMISSA, cChave)
 
-	Local oServidor := TMailManager():New()
-	Local oMensagem := TMailMessage():New()
-	Local nErro     := 0
-	Local cServidor := SubStr(GetMv("MV_RELSERV"),1,RAT(':',GetMv("MV_RELSERV"))-1)
-	Local cConta 	  := GetMv("MV_YPVCTAP")
-	Local cSenha   	:= GetMv("MV_YPVSNAP")
-	Local cEmail 	  := GetMv("MV_YPVCTAP")
-	Local lUseTLS 	:= GetMv("MV_RELTLS")
-	Local lUseSSL 	:= GetMv("MV_RELSSL")
-	Local lUseAUT 	:= GetMv("MV_RELAUTH")
-	Local cPtSMTP   := Val(SubStr(GetMv("MV_RELSERV"),RAT(':',GetMv("MV_RELSERV"))+1,Len(Alltrim(GetMv("MV_RELSERV")))))
+// Emerson (Facile) em 27/08/2021 - Tela Rateio RPV (BIAFG106)
+Method RateioRPV() Class TWLiberacaoFinanceiro
 
-	Local lRet      := .F.
+	Local oGrid		 := If(::lFolderReceber, @::oGridRec	, If(::lFolderPagar, @::oGridPag		, Nil))
+	Local aArea		 := If(::lFolderReceber, SE1->(GetArea()), If(::lFolderPagar, SE2->(GetArea())	, Nil))
+	Local nPosPref	 := aScan(oGrid:aHeader, {|x| AllTrim(x[2]) == "ZL0_PREFIX"})
+	Local nPosNum	 := aScan(oGrid:aHeader, {|x| AllTrim(x[2]) == "ZL0_NUM"})
+	Local nPosParc	 := aScan(oGrid:aHeader, {|x| AllTrim(x[2]) == "ZL0_PARCEL"})
+	Local nPosTipo	 := aScan(oGrid:aHeader, {|x| AllTrim(x[2]) == "ZL0_TIPO"})
+	Local nPosCliF	 := aScan(oGrid:aHeader, {|x| AllTrim(x[2]) == "ZL0_CLIFOR"})
+	Local nPosLoja	 := aScan(oGrid:aHeader, {|x| AllTrim(x[2]) == "ZL0_LOJA"})
+	Local nPosObs  	 := aScan(oGrid:aHeader, {|x| AllTrim(x[2]) == "ZL0_OBSLIB"})
+	Local nPosDesc	 := aScan(oGrid:aHeader, {|x| AllTrim(x[2]) == "ZL0_DESCON"})	
+	Local aNumRPV    := {}
+	Local cNumRPV	 := ""
+	Local x			 := 0
 
+	If ::lFolderReceber
 
-	oServidor:SetUseTLS(lUseTLS)
-	oServidor:SetUseSSL(lUseSSL)
-	oServidor:Init("",cServidor, cConta,cSenha, 0, cPtSMTP)
-	oServidor:SetSmtpTimeOut(60)
+		If oGrid:aCols[oGrid:oBrowse:nAT, nP_LEGENDA] == "BR_VERDE"
 
-	If oServidor:SmtpConnect() == 0
+			DBSelectArea("SE1")
+			SE1->(DBSetOrder(2)) // E1_FILIAL, E1_CLIENTE, E1_LOJA, E1_PREFIXO, E1_NUM, E1_PARCELA, E1_TIPO, R_E_C_N_O_, D_E_L_E_T_
 
-		If lUseAUT
-			nErro := oServidor:SmtpAuth(::cConta, ::cSenha)
-		EndIf
+			If SE1->(DBSeek(xFilial("SE1") + oGrid:aCols[oGrid:oBrowse:nAT][nPosCliF] + oGrid:aCols[oGrid:oBrowse:nAT][nPosLoja] + oGrid:aCols[oGrid:oBrowse:nAT][nPosPref] + oGrid:aCols[oGrid:oBrowse:nAT][nPosNum] + oGrid:aCols[oGrid:oBrowse:nAT][nPosParc] + oGrid:aCols[oGrid:oBrowse:nAT][nPosTipo]))
 
-		if nErro == 0
+				U_BIAFG106("3", oGrid:aCols[oGrid:oBrowse:nAT][nPosDesc]) //desconto
 
-			oMensagem:cFrom		  := cEmail
-			oMensagem:cTo 		  := "filipe.bittencourt@facilesistemas.com.br" //cEUser
-			oMensagem:cCc 		  := ""
-			oMensagem:cBcc 	  	:= ""
-			oMensagem:cSubject	:= "Solicitação de desconto para o titulo: " + cNUM + " da Empresa: "+cCODEMP+"/"+cCODFIL+""
-			oMensagem:cBody 		:= CkDescHTML(cEmail, cEUser,cCODEMP,cCODFIL,cCLIFOR,cLOJA,cCLVLDB,cCCONTA,;
-				cNUM,cPREFIX,cTIPO,cPARCEL,nVALOR,nDESCON,cEMISSA, cChave)
+				// Atualiza campo de Obs.Lib com os RPV´s que foram selecionados para rateio - Retorno do array [1]-Cod.RPV / [2]-Percentual Rat / [3]-Valor Rateado
+				aNumRPV := U_FGT106EB("3", SE1->(E1_FILIAL+E1_PREFIXO+E1_NUM+E1_PARCELA+E1_TIPO))
+				For x:=1 to Len(aNumRPV)
+					cNumRPV += aNumRPV[x][1]+IIF(x < Len(aNumRPV), "/", "")
+				Next
+				oGrid:aCols[oGrid:oBrowse:nAT, nPosObs] := "REFERENTE A " + cNumRPV
 
-			If oMensagem:Send(oServidor) == 0
-
-				oServidor:SmtpDisconnect()
-				lRet := .T.
-
-			EndIf
+			Else
+				MsgAlert("Atenção, título não encontrado no financeiro.")
+			Endif
 
 		Else
+			MsgAlert("Atenção, Rateio RPV somente é permitido para títulos que ainda não foram enviados para Aprovação.")
+		Endif
 
-			ConOut( "ERRO ao autenticar: " + str(nErro,6), oServidor:GetErrorString( nErro ) )
+	ElseIf ::lFolderPagar
 
-		EndIf
+		MsgInfo("Rotina de Rateio RPV, disponível somente para títulos a receber.")
 
-	EndIf
+	Endif
 
-Return lRet
+	RestArea(aArea)
 
-Static Function CkDescHTML(cEmail, cEUser,cCODEMP,cCODFIL,cCLIFOR,cLOJA,cCLVLDB,cCCONTA,;
-		cNUM,cPREFIX,cTIPO,cPARCEL,nVALOR,nDESCON,cEMISSA, cChave)
-
-	Local cHtml := ""
-	cHtml := " <html> "
-	cHtml += "    <body style='font-family: Courier, Arial, Helvetica, sans-serif;'> "
-	cHtml += "       <div style='margin:0;padding:0;background-color:#fff;height:100%; '> "
-	cHtml += "          <table align='center' border='0' cellpadding='0' cellspacing='0' style='overflow-x:hidden;margin:0px 20px 0px 20px;border:1px solid #ebebeb'> "
-	cHtml += "             <tbody> "
-	cHtml += "                <tr> "
-	cHtml += "                   <td align='center' bgcolor='#919191'  style='font-size:20px; color:#ffffff; font-family: Courier, Arial, Helvetica, sans-serif;'> "
-	cHtml += "                      <h1 style='margin:0px; padding:5px; letter-spacing:15px;'>BIANCOGRES</h1> "
-	cHtml += " 					 <h4 style='margin:0px; padding:5px;'>Liberação de descontos</h4> "
-	cHtml += "                   </td> "
-	cHtml += "                </tr> "
-	cHtml += "                <tr> "
-	cHtml += "                   <td align='left' bgcolor='#ffffff' style='padding:30px 30px 30px 30px;font-family: Courier, Arial, Helvetica, sans-serif;'>  "
-	cHtml += " 				  Olá, <b>"+cEUser+"!</b> <br> 	 "
-	cHtml += " 				  O titulo abaixo está pendende de liberação. "
-	cHtml += " 				  </td> "
-	cHtml += "                </tr>		 "
-	cHtml += " 			    <tr> "
-	cHtml += "                   <td align='left' bgcolor='#fff' style='padding:3px;'> "
-	cHtml += "                      <table align='center' style='width:100%; border-collapse: collapse;  border: 1px solid #e5e5e5;'> "
-	cHtml += "                         <tbody> "
-	cHtml += "                            <tr> "
-	cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Empresa/Filial</th> "
-	cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Cliente/Loja</th> "
-	cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Titulo/Prefixo/Tipo</th> "
-	cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Parcela</th> "
-	cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Valor</th> "
-	cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Desconto</th> "
-	cHtml += "                               <th bgcolor='#919191'   style='padding:5px; border: 1px solid #e5e5e5;color:#fff;'>Emissão</th> "
-	cHtml += "                            </tr> "
-	cHtml += " 						    <tr> "
-	cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>"+cCODEMP+"/"+cCODFIL+"</td> "
-	cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>"+cCLIFOR+"/"+cLOJA+"</td> "
-	cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>"+cNUM+"/"+cPREFIX+" "+cTIPO+"</td> "
-	cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>"+cPARCEL+"</td> "
-	cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>"+TRANSFORM(nVALOR,PesqPict("ZL0","ZL0_VALOR"))+"</td> "
-	cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>"+TRANSFORM(nDESCON,PesqPict("ZL0","ZL0_DESCON"))+"</td> "
-	//cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>"+SubStr(cEMISSA,7,2)+"/"+SubStr(cEMISSA,5,2)+"/"+SubStr(cEMISSA,1,4)+"</td> "
-	cHtml += "                               <td bgcolor='#ffffff' align='center' style='border: 1px solid #e5e5e5; padding:10px;'>"+cValToChar(cEMISSA)+"</td> "
-	cHtml += "                            </tr> "
-	cHtml += " 						  </tbody> "
-	cHtml += " 						</table> "
-	cHtml += " 					</td> "
-	cHtml += " 				</tr>		 "
-	cHtml += " 			    <tr> "
-	cHtml += "                 <td align='center' bgcolor='#ffffff' style='padding:20px;font-family: Courier, Arial, Helvetica, sans-serif;'> 				 						 "
-	cHtml += " 					<a  href='mailto:"+cEmail+"?subject=Aprovar desconto:"+cNUM+" - ACTION:APROVAR - KEY:"+ cChave +"' style= 'width:350px; text-decoration: none; color: #FFF; background-color: #34a853; border: solid #34a853; border-width: 15px; line-height: 2; font-weight: bold; text-align: center; cursor: pointer; display: inline-block; border-radius: 5px;'>&nbsp;&nbsp;&nbsp;&nbsp; APROVAR &nbsp;&nbsp;&nbsp;&nbsp; </a> "
-	cHtml += " 					<a  href='mailto:"+cEmail+"?subject=Recusar desconto:"+cNUM+" - ACTION:RECUSAR - KEY:"+ cChave +"' style= 'width:350px; text-decoration: none; color: #FFF; background-color: #e94235; border: solid #e94235; border-width: 15px; line-height: 2; font-weight: bold; text-align: center; cursor: pointer; display: inline-block; border-radius: 5px;'>&nbsp;&nbsp;&nbsp;&nbsp; RECUSAR &nbsp;&nbsp;&nbsp;&nbsp; </a> "
+Return()
 
 
-	cHtml += " 				  </td> "
-	cHtml += "              </tr>	 "
-	cHtml += "              <tr> "
-	cHtml += "                 <td align='center' bgcolor='#FAFAFA' style='padding:30px 30px 30px 30px;'> "
-	cHtml += "                      <p style='padding:0px;color:#333f4c;margin:0;font-size:11px;line-height:22px'>                         Esta notificação foi enviada por um email configurado para não receber resposta. 						Por favor, não responda esta mensagem.                       </p> "
-	cHtml += "                   </td> "
-	cHtml += "              </tr>		 "
-	cHtml += "             </tbody> "
-	cHtml += "          </table> "
-	cHtml += "       </div> "
-	cHtml += "    </body> "
-	cHtml += " </html> "
 
-Return cHtml
-
-// FIM  - Filipe - Facile - 12/04/2021 | Ticket: 26221

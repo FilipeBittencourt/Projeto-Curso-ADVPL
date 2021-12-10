@@ -661,6 +661,10 @@ Static Function CalcBase(_cAliasPed, _cLinha, _cTes, _cProduto, _nQuant, _cTipoP
 		_cTabela := Tabela("ZF","3E")
 	ElseIf _cLinha == "4"		//MUNDI
 		_cTabela := Tabela("ZF","4E")
+	ElseIf _cLinha == "5"		//PEGASUS
+		_cTabela := Tabela("ZF","5E")
+	ElseIf _cLinha == "6"		//BIANCOGRES VINILICO
+		_cTabela := Tabela("ZF","6E")
 	EndIf
 
 	If !Empty(_cTabela)

@@ -99,20 +99,20 @@ Static Function RptDetail()
 	cQuery += Alltrim("            WHEN RTRIM(CLVL) IN('3804','3805') THEN 'PA'                                                                       ") + xrEnter
 	cQuery += Alltrim("            WHEN CLVL IN ( '6112', '6208' ) THEN 'PP'                                                                          ") + xrEnter
 	cQuery += Alltrim("            WHEN CLVL IN ( '3180', '3181', '3183', '3184', '3280' ) THEN 'PP'                                                  ") + xrEnter
+	cQuery += Alltrim("            WHEN RTRIM(CLVL) IN('3500', '3501', '3502', '6500') THEN 'PA'                                                      ") + xrEnter
 	cQuery += Alltrim("            WHEN MODS <> 'DIRETA' AND (SELECT COUNT(*) CONTAD                                                                  ") + xrEnter
 	cQuery += Alltrim("                                         FROM " + RetSqlName("SB1") + " XB1 (NOLOCK)                                           ") + xrEnter
 	cQuery += Alltrim("                                         JOIN (SELECT '%E03%' AS Pattern                                                       ") + xrEnter
 	cQuery += Alltrim("                                                UNION ALL SELECT '%E04%'                                                       ") + xrEnter
+	cQuery += Alltrim("                                                UNION ALL SELECT '%E6A%'                                                       ") + xrEnter
+	cQuery += Alltrim("                                                UNION ALL SELECT '%E6B%'                                                       ") + xrEnter
 	cQuery += Alltrim("                                                UNION ALL SELECT '%R01%'                                                       ") + xrEnter
 	cQuery += Alltrim("                                                UNION ALL SELECT '%R02%'                                                       ") + xrEnter
 	cQuery += Alltrim("                                                UNION ALL SELECT '%R09%') AS Patterns ON B1_COD LIKE Patterns.Pattern          ") + xrEnter
 	cQuery += Alltrim("                                        WHERE B1_COD = MODS) = 1 THEN 'PA'                                                     ") + xrEnter
 	cQuery += Alltrim("            WHEN RTRIM(SUBSTRING(AGRUP, 1, 10)) NOT IN('615', '616', '617')                                                    ") + xrEnter
-	cQuery += Alltrim("                 AND SUBSTRING(AGRUP, 1, 3) IN('E03', 'E04', 'R01', 'R02', 'R09')                                              ") + xrEnter
+	cQuery += Alltrim("                 AND SUBSTRING(AGRUP, 1, 3) IN('E03', 'E04', 'R01', 'R02', 'R09', 'E6A', 'E6B')                                ") + xrEnter
 	cQuery += Alltrim("            THEN 'PA'                                                                                                          ") + xrEnter
-	//cQuery += Alltrim("            WHEN MODS = 'DIRETA' AND SUBSTRING(CTA, 1, 5) IN ( '61104', '61110' ) THEN 'PA'                                    ") + xrEnter
-	//cQuery += Alltrim("            WHEN MODS = 'DIRETA' AND SUBSTRING(CTA, 1, 5) NOT IN ( '61104', '61110' ) THEN 'PP'                                ") + xrEnter
-	//cQuery += Alltrim("            ELSE XZ29.Z29_APLIC                                                                                                ") + xrEnter
 	cQuery += Alltrim("            WHEN SUBSTRING(CTA, 1, 5) IN ( '61104', '61110' ) THEN 'PA'                                                        ") + xrEnter
 	cQuery += Alltrim("            WHEN SUBSTRING(CTA, 1, 5) NOT IN ( '61104', '61110' ) THEN 'PP'                                                    ") + xrEnter
 	cQuery += Alltrim("            ELSE 'PP'                                                                                                          ") + xrEnter
@@ -131,10 +131,10 @@ Static Function RptDetail()
 	TcQuery cQuery Alias (cTab) New
 	(cTab)->(DbGoTop())
 	Count To nTotReg 
-	if nTotReg < 1
+	If nTotReg < 1
 		MsgStop('Não existem registros para essa consulta, favor verificar os parâmetros!')
-		return
-	endif
+		Return
+	Endif
 	(cTab)->(dbGoTop())
 	ProcRegua(nTotReg + 2)
 
@@ -202,7 +202,11 @@ Static Function RptDetail()
 		zpAplic := (cTab)->APLIC
 		If Empty(zpAplic)
 			zpAplic := "PP"
-		EndIf 		
+		EndIf
+
+		If cEmpAnt == "14"
+			zpAplic := "PA"
+		EndIf
 
 		oExcel:AddCelula( cPeriodo			,0 ,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.) 
 		oExcel:AddCelula( (cTab)->APL		,0 ,'C',cFonte2,nTamFont2,cCorFont2,,,cCorFun2,.T.,.T.,.T.,.T.) 
@@ -224,7 +228,8 @@ Static Function RptDetail()
 
 		IncProc("Gerando Relatorio - Status: " + IIF((nRegAtu/nTotReg)*100 <= 99, StrZero((nRegAtu/nTotReg)*100,2), STRZERO(99,2)) + "%")	
 
-		(cTab)->(DbSkip())                
+		(cTab)->(DbSkip())
+
 	EndDo    
 
 	fGeraParametros()
@@ -268,7 +273,7 @@ Static Function fGeraParametros()
 	oExcel:AddCelula( "Pergunta"  ,0,'L',cFonte1,nTamFont1,cCorFont1,.T.,.T.,cCorFund1,.T.,.T.,.T.,.T.) 
 	oExcel:AddCelula( "Conteudo"  ,0,'L',cFonte1,nTamFont1,cCorFont1,.T.,.T.,cCorFund1,.T.,.T.,.T.,.T.) 
 
-	for nCont := 1 to Len(aPergs)	
+	For nCont := 1 to Len(aPergs)	
 
 		if MOD(nCont,2) > 0 
 			cCorFundo := '#DCE6F1'	
@@ -282,9 +287,9 @@ Static Function fGeraParametros()
 		oExcel:AddCelula( aPergs[nCont,2]  ,0,'L',cFonte2,nTamFont2,cCorFont2,,,cCorFundo,.T.,.T.,.T.,.T.)  
 		oExcel:AddCelula( aPergs[nCont,3]  ,0,'L',cFonte2,nTamFont2,cCorFont2,,,cCorFundo,.T.,.T.,.T.,.T.) // Conteudo 
 
-	next aPergs
+	Next aPergs
 
-return
+Return
 
 Static Function ValidPerg()
 
@@ -308,9 +313,10 @@ Static Function ValidPerg()
 		MV_PAR02 := ParamLoad(cFileName,,2 ,MV_PAR02) 
 		MV_PAR03 := ParamLoad(cFileName,,3 ,MV_PAR03) 
 
-		if empty(MV_PAR03) 
+		If Empty(MV_PAR03) 
 			MV_PAR03 := AllTrim(GetTempPath()) 	
-		endif  	
-	endif
+		Endif  	
 
-return lRet
+	Endif
+
+Return lRet

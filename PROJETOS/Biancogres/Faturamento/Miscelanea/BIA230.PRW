@@ -163,11 +163,10 @@ Static Function PrintReport(oReport, cQry)
 	Local nPos 			:= 0
 	Local aListQuant	:= {}
 
-
 	Local nJ		:= 0
 	Local aListEmp	:= {cEmpAnt} //{'01', '05'}
 	Local cEmp		:= ""
-
+	Local cDropTmp  := ""
 
 	Private cNomeTab	:= ""
 
@@ -176,7 +175,7 @@ Static Function PrintReport(oReport, cQry)
 		cEmp := aListEmp[nJ]
 
 		cNomeTab	:= "##BIA230"+cEmp+__cUserID+strzero(seconds()*3500,10)
-		//cQry 		:= GetNextAlias()
+		cDropTmp    := "DROP TABLE IF EXISTS " + cNomeTab
 
 		cSQL := GetSQL(1, cEmp)
 
@@ -252,6 +251,9 @@ Static Function PrintReport(oReport, cQry)
 		ImpTotal(oReport, cEmp)
 
 	Next nJ
+
+	//Exclui as tabelas temporárias
+	U_BIAMsgRun("Aguarde...",,{|| TcSQLExec(cDropTmp)})
 
 Return
 
@@ -522,8 +524,8 @@ Static function ImpTotal(oReport, cEmp)
 	Local cAliasInt		:= Nil
 	Local cMQuery		:= ""
 	Local nI			:= 0
-	Local aEmpresa		:= {"Baincogres", "Incesa"}
-	Local aListaFor		:= {"F01/F02/F03", "F04/F05"}
+	Local aEmpresa		:= {"Biancogres", "Incesa"}
+	Local aListaFor		:= {"F01/F02/F03", "F04/F05/F06"}
 	Local nSoma1		:= 0
 	Local nSoma2		:= 0
 	Local nSoma3		:= 0

@@ -31,7 +31,7 @@ Local aPlanilha := ParamIxb[nA_Planilha]
 		
 			// Verifica se o fornecedor atual foi selecionado para gerar pedido
 			If Upper(aPlanilha[nX][nY][nF_CHECK]) == "XX"
-							
+				/*			
 				If !fVldDatChe(SC8->C8_NUM, aPlanilha[nX][nY][nF_FORNECE], aPlanilha[nX][nY][nF_LOJA], aPlanilha[nX][nY][nF_ITEMCT], aPlanilha[nX][nY][nF_NUMPRO])									
 					
 					lRet := .F.
@@ -40,7 +40,7 @@ Local aPlanilha := ParamIxb[nA_Planilha]
 					  			+"-"+ aPlanilha[nX][nY][nF_LOJA] +"-"+ AllTrim(aPlanilha[nX][nY][nF_NOME]) + " não foi preenchido.", "Campo Obrigatório")
 					
 				EndIf
-				
+				*/
 			EndIf
 		
 		Next
@@ -49,7 +49,7 @@ Local aPlanilha := ParamIxb[nA_Planilha]
 		
 	EndDo()
 	
-	If (SUPERGETMV("MV_YRTPAY", .F., .F.))
+	If (SUPERGETMV("MV_YRTPAY", .F., .T.))
 		If (lRet)
 			lRet := CheckCotPortal()
 		EndIf

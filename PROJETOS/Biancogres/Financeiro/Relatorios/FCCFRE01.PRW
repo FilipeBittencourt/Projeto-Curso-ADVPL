@@ -48,6 +48,7 @@ Static Function ReportTxt()
     Local nTotAVenc := 0
     Local nTotSalC := 0
     Local nSaldoC := 0
+    Local nSalAju := 0
     Local nDif := 0
     Local nTotDif := 0
 
@@ -74,15 +75,17 @@ Static Function ReportTxt()
 
         If (MV_PAR05 == 1 .And. ((CQUERY)->SALDO > 0 .Or. (CQUERY)->TOTAL_VENCIDO > 0 .Or. (CQUERY)->TOTAL_A_VENCER > 0)) .Or. MV_PAR05 == 2
 
-            nTotSaldo += (CQUERY)->SALDO
+        		nSalAju := GetSalFinAju((CQUERY)->CODCLI)
+            
+            nTotSaldo += (CQUERY)->SALDO - nSalAju
             nTotVEnc  += (CQUERY)->TOTAL_VENCIDO
             nTotAVenc += (CQUERY)->TOTAL_A_VENCER
             
             nSaldoC := (SaldoConta((CQUERY)->CONTA, MV_PAR01, "01",,,,, cAllFil) * -1)
             
-            nTotSalC += nSaldoC
+            nTotSalC += nSaldoC         
             
-            nDif := nSaldoC - (CQUERY)->SALDO
+            nDif := nSaldoC - ((CQUERY)->SALDO - nSalAju)
             
             nTotDif += nDif
             
@@ -91,7 +94,7 @@ Static Function ReportTxt()
                         PADR((CQUERY)->CNPJ                     , 14) + "|" +;	                                   
                         PADL(Mascara((CQUERY)->TOTAL_VENCIDO)   , 14) + "|" +;
                         PADL(Mascara((CQUERY)->TOTAL_A_VENCER)  , 14) + "|" +;
-                        PADL(Mascara((CQUERY)->SALDO)           , 14) + "|" +;
+                        PADL(Mascara((CQUERY)->SALDO - nSalAju) , 14) + "|" +;
                         PADL(Mascara(nSaldoC), 14) + "|" +;
                         PADL(Mascara(nDif), 14) + "|" + CRLF
 
@@ -162,7 +165,7 @@ Static Function ReportDef()
     TRCell():New(oSection1	,"CNPJ"	            ,,"CNPJ         "	  	,"@!", 20,/*lPixel*/, {|| (cQUERY)->CNPJ } )
     TRCell():New(oSection1	,"TOTAL_VENCIDO"  	,,"Vencido"			    ,"@E 999,999,999.99", 10,/*lPixel*/, {|| (cQUERY)->TOTAL_VENCIDO  } )
     TRCell():New(oSection1	,"TOTAL_A_VENCER"  	,,"A Vencer"		    ,"@E 999,999,999.99", 10,/*lPixel*/, {|| (cQUERY)->TOTAL_A_VENCER  } )
-    TRCell():New(oSection1	,"SALDO_FINANC"  	  ,,"Saldo Financeiro"				,"@E 999,999,999.99", 10,/*lPixel*/, {|| (cQUERY)->SALDO  } )   
+    TRCell():New(oSection1	,"SALDO_FINANC"  	  ,,"Saldo Financeiro"				,"@E 999,999,999.99", 10,/*lPixel*/, {|| (cQUERY)->SALDO - GetSalFinAju((CQUERY)->CODCLI) } )   
     TRCell():New(oSection1	,"SALDO_CONTABIL"  	,,"Saldo Contabil"		    ,"@E 999,999,999.99", 10,/*lPixel*/, {|| nSaldoC := (SaldoConta((CQUERY)->CONTA, MV_PAR01, "01",,,,, cAllFil) * -1) } )
     TRCell():New(oSection1	,"DIFERENCA"  	,,"Diferenca"		    ,"@E 999,999,999.99", 10,/*lPixel*/, {|| nSaldoC - (CQUERY)->SALDO } )   
 
@@ -180,6 +183,7 @@ Static Function ReportPrint( oReport )
     Local nTotAVenc := 0
     Local nTotSalC := 0
     Local nSaldoC := 0
+    Local nSalAju := 0
     Local nDif := 0
     Local nTotDif := 0
         
@@ -199,7 +203,9 @@ Static Function ReportPrint( oReport )
 
         If (MV_PAR05 == 1 .And. ((CQUERY)->SALDO > 0 .Or. (CQUERY)->TOTAL_VENCIDO > 0 .Or. (CQUERY)->TOTAL_A_VENCER > 0)) .Or. MV_PAR05 == 2
 
-            nTotSaldo += (CQUERY)->SALDO
+        		nSalAju := GetSalFinAju((CQUERY)->CODCLI)
+
+            nTotSaldo += (CQUERY)->SALDO - nSalAju
             nTotVEnc  += (CQUERY)->TOTAL_VENCIDO
             nTotAVenc += (CQUERY)->TOTAL_A_VENCER
 
@@ -207,7 +213,7 @@ Static Function ReportPrint( oReport )
             
             nTotSalC += nSaldoC
             
-            nDif := nSaldoC - (CQUERY)->SALDO
+            nDif := nSaldoC - (CQUERY)->SALDO - nSalAju
             
             nTotDif += nDif
             
@@ -352,3 +358,24 @@ Local aFil := FWAllFilial()
 	Next
 	
 Return(cRet)
+
+
+Static Function GetSalFinAju(cCodCli)
+Local nRet := 0
+Local cSQL := ""
+Local cQry := GetNextAlias()
+
+	DbSelectArea("ZKU")
+	
+	cSQL := " SELECT ZKU_SALDO " 
+	cSQL += " FROM " + RetSQLName("ZKU")
+	cSQL += " WHERE SUBSTRING(ZKU_CONTA, 9, 6) = " + ValToSQL(cCodCli)
+	cSQL += " AND D_E_L_E_T_ = ''
+
+	TcQuery cSQL New Alias (cQry)
+
+	nRet := (cQry)->ZKU_SALDO
+
+	(cQry)->(DbCloseArea())
+		
+Return(nRet)

@@ -4,7 +4,7 @@
 @author Marcos Alberto Soprani
 @since 04/10/17
 @version 1.0
-@description Rotina de processamento e gravação do desdobramento do Orçamento de RECEITA em meses  
+@description Rotina de processamento e gravação do desdobramento do Orçamento de RECEITA em meses
 @type function
 /*/
 
@@ -20,7 +20,7 @@ User Function BIA646()
 		Return
 	EndIf
 
-	_cVersao   := MV_PAR01   
+	_cVersao   := MV_PAR01
 	_cRevisa   := MV_PAR02
 	_cAnoRef   := MV_PAR03
 	_cMarca    := MV_PAR04
@@ -57,7 +57,7 @@ User Function BIA646()
 		MsgALERT("A versão informada não está ativa para execução deste processo." + msrhEnter + msrhEnter + "Favor verificar o preenchimento dos campos no tabela de controle de versão conforme abaixo:" + msrhEnter + msrhEnter + xfMensCompl + msrhEnter + msrhEnter + "Favor verificar com o responsável pelo processo Orçamentário!!!")
 		(M001)->(dbCloseArea())
 		Return .F.
-	EndIf	
+	EndIf
 	(M001)->(dbCloseArea())
 
 	M0007 := " SELECT COUNT(*) CONTAD "
@@ -133,7 +133,7 @@ Static Function BIA646A()
 		ProcRegua(0)
 		While !(M002)->(Eof())
 
-			mtCanald := (M002)->ZBJ_CANALD 
+			mtCanald := (M002)->ZBJ_CANALD
 			While !(M002)->(Eof()) .and. (M002)->ZBJ_CANALD == mtCanald
 
 				For mxFx := 1 to 12
@@ -202,24 +202,22 @@ Static Function BIA646A()
 					YH007 += "                                     AND XZBK.ZBK_CAN" + mtCanald + " <> 0 "
 					YH007 += "                                     AND XZBK.D_E_L_E_T_ = ' ' ) "
 					YH007 += "                      AND ZBH.D_E_L_E_T_ = ' ') "
-					YH007 += " ,    PCOMISSAO AS(SELECT ZBH_FILIAL FILIAL, "
-					YH007 += "                          ZBH_VERSAO VERSAO, "
-					YH007 += "                          ZBH_REVISA REVISA, "
-					YH007 += "                          ZBH_ANOREF ANOREF, "
-					YH007 += "                          ZBH_PERIOD PERIODO, "
-					YH007 += "                          ZBH_MARCA MARCA, "
-					YH007 += "                          ZBH_VEND VEND, "
-					YH007 += "                          ZBH_PCTGMR PCTGMR, "
-					YH007 += "                          ZBH_CATEG CATEG, "
-					YH007 += "                          ZBH_PCOMIS / 100 PCOMIS "
-					YH007 += "                     FROM " + RetSqlName("ZBH") + " ZBH "
-					YH007 += "                    WHERE ZBH.ZBH_VERSAO = '" + _cVersao + "' "
-					YH007 += "                      AND ZBH.ZBH_REVISA = '" + _cRevisa + "' "
-					YH007 += "                      AND ZBH.ZBH_ANOREF = '" + _cAnoRef + "' "
-					YH007 += "                      AND ZBH.ZBH_MARCA = '" + _cMarca + "' "
-					YH007 += "                      AND ZBH.ZBH_PERIOD = '00' "
-					YH007 += "                      AND ZBH.ZBH_ORIGF = '2' "
-					YH007 += "                      AND ZBH.D_E_L_E_T_ = ' ') "
+					YH007 += " ,    PCOMISSAO AS(SELECT ZOM_FILIAL FILIAL, "
+					YH007 += "                          ZOM_VERSAO VERSAO, "
+					YH007 += "                          ZOM_REVISA REVISA, "
+					YH007 += "                          ZOM_ANOREF ANOREF, "
+					YH007 += "                          '00' PERIODO, "
+					YH007 += "                          ZOM_MARCA MARCA, "
+					YH007 += "                          ZOM_VEND VEND, "
+					YH007 += "                          ZOM_PCTGMR PCTGMR, "
+					YH007 += "                          ZOM_CATEGO CATEG, "
+					YH007 += "                          ISNULL(ZOM_PCM" + Alltrim(StrZero(mxFx,2)) + ", 0) / 100 PCOMIS "
+					YH007 += "                     FROM " + RetSqlName("ZOM") + " ZOM "
+					YH007 += "                    WHERE ZOM.ZOM_VERSAO = '" + _cVersao + "' "
+					YH007 += "                      AND ZOM.ZOM_REVISA = '" + _cRevisa + "' "
+					YH007 += "                      AND ZOM.ZOM_ANOREF = '" + _cAnoRef + "' "
+					YH007 += "                      AND ZOM.ZOM_MARCA = '" + _cMarca + "' "
+					YH007 += "                      AND ZOM.D_E_L_E_T_ = ' ') "
 					YH007 += " ,    PIMPOSTOS AS(SELECT ZBH_FILIAL FILIAL, "
 					YH007 += "                          ZBH_VERSAO VERSAO, "
 					YH007 += "                          ZBH_REVISA REVISA, "
@@ -234,6 +232,7 @@ Static Function BIA646A()
 					YH007 += "                          ZBH_PPIS / 100 PPIS, "
 					YH007 += "                          ZBH_PCOF / 100 PCOF, "
 					YH007 += "                          ZBH_PST / 100 PST, "
+					YH007 += "                          ZBH_PIPI / 100 PIPI, "
 					YH007 += "                          ZBH_PDIFAL / 100 PDIFAL "
 					YH007 += "                     FROM " + RetSqlName("ZBH") + " ZBH "
 					YH007 += "                    WHERE ZBH.ZBH_VERSAO = '" + _cVersao + "' "
@@ -252,7 +251,7 @@ Static Function BIA646A()
 					YH007 += "                          ZBH_GRPCLI GRPCLI, "
 					YH007 += "                          ZBH_TPSEG TPSEG, "
 					YH007 += "                          ZBH_PERVER PERVER, "
-					YH007 += "                          ZBH_PERBON PERBON, "															
+					YH007 += "                          ZBH_PERBON PERBON, "
 					YH007 += "                          ZBH_METVER METVER "
 					YH007 += "                     FROM " + RetSqlName("ZBH") + " ZBH "
 					YH007 += "                    WHERE ZBH.ZBH_VERSAO = '" + _cVersao + "' "
@@ -269,7 +268,7 @@ Static Function BIA646A()
 					YH007 += "                          ZBH_PERIOD PERIODO, "
 					YH007 += "                          ZBH_MARCA MARCA, "
 					YH007 += "                          ZBH_GRPCLI GRPCLI, "
-					YH007 += "                          ZBH_VEND VEND, "					
+					YH007 += "                          ZBH_VEND VEND, "
 					YH007 += "                          ZBH_PRZMET PRZMET "
 					YH007 += "                     FROM " + RetSqlName("ZBH") + " ZBH "
 					YH007 += "                    WHERE ZBH.ZBH_VERSAO = '" + _cVersao + "' "
@@ -278,7 +277,7 @@ Static Function BIA646A()
 					YH007 += "                      AND ZBH.ZBH_MARCA = '" + _cMarca + "' "
 					YH007 += "                      AND ZBH.ZBH_PERIOD = '00' "
 					YH007 += "                      AND ZBH.ZBH_ORIGF = '7' "
-					YH007 += "                      AND ZBH.D_E_L_E_T_ = ' ') "		
+					YH007 += "                      AND ZBH.D_E_L_E_T_ = ' ') "
 					YH007 += " ,    PCPV AS(SELECT ZBH_FILIAL FILIAL, "
 					YH007 += "                          ZBH_VERSAO VERSAO, "
 					YH007 += "                          ZBH_REVISA REVISA, "
@@ -293,18 +292,19 @@ Static Function BIA646A()
 					YH007 += "                      AND ZBH.ZBH_MARCA = '" + _cMarca + "' "
 					YH007 += "                      AND ZBH.ZBH_PERIOD = '00' "
 					YH007 += "                      AND ZBH.ZBH_ORIGF = '8' "
-					YH007 += "                      AND ZBH.D_E_L_E_T_ = ' ') "								
+					YH007 += "                      AND ZBH.D_E_L_E_T_ = ' ') "
 					YH007 += " SELECT RITG.*, "
 					YH007 += "        PCOMIS, "
 					YH007 += "        PICMS, "
 					YH007 += "        PPIS, "
 					YH007 += "        PCOF, "
 					YH007 += "        PST, "
+					YH007 += "        PIPI, "
 					YH007 += "        METVER, "
 					YH007 += "        PRZMET, "
-					YH007 += "        PERVER, "	
+					YH007 += "        PERVER, "
 					YH007 += "        PERBON, "
-					YH007 += "        PERCPV, "																						
+					YH007 += "        PERCPV, "
 					YH007 += "        PDIFAL "
 					YH007 += "   FROM RECINTEG RITG "
 					YH007 += "   LEFT JOIN PCOMISSAO PCM ON PCM.FILIAL = RITG.ZBH_FILIAL "
@@ -312,16 +312,16 @@ Static Function BIA646A()
 					YH007 += "                          AND PCM.REVISA = RITG.ZBH_REVISA "
 					YH007 += "                          AND PCM.ANOREF = RITG.ZBH_ANOREF "
 					YH007 += "                          AND PCM.PERIODO = RITG.ZBH_PERIOD "
-					YH007 += "                          AND PCM.MARCA =  RITG.ZBH_MARCA " 
+					YH007 += "                          AND PCM.MARCA =  RITG.ZBH_MARCA "
 					YH007 += "                          AND PCM.VEND = RITG.ZBH_VEND "
 					YH007 += "                          AND PCM.PCTGMR = RITG.ZBH_PCTGMR "
-					YH007 += "                          AND PCM.CATEG = RITG.ZBH_CATEG " 
+					YH007 += "                          AND PCM.CATEG = RITG.ZBH_CATEG "
 					YH007 += "   LEFT JOIN PIMPOSTOS PIM ON PIM.FILIAL = RITG.ZBH_FILIAL "
 					YH007 += "                          AND PIM.VERSAO = RITG.ZBH_VERSAO "
 					YH007 += "                          AND PIM.REVISA = RITG.ZBH_REVISA "
 					YH007 += "                          AND PIM.ANOREF = RITG.ZBH_ANOREF "
 					YH007 += "                          AND PIM.PERIODO = RITG.ZBH_PERIOD "
-					YH007 += "                          AND PIM.MARCA =  RITG.ZBH_MARCA " 
+					YH007 += "                          AND PIM.MARCA =  RITG.ZBH_MARCA "
 					YH007 += "                          AND PIM.CANALD = RITG.ZBH_CANALD "
 					YH007 += "                          AND PIM.TPSEG = RITG.ZBH_TPSEG "
 					YH007 += "                          AND PIM.ESTADO = RITG.ZBH_ESTADO "
@@ -331,7 +331,7 @@ Static Function BIA646A()
 					YH007 += "                          AND PMV.REVISA = RITG.ZBH_REVISA "
 					YH007 += "                          AND PMV.ANOREF = RITG.ZBH_ANOREF "
 					YH007 += "                          AND PMV.PERIODO = RITG.ZBH_PERIOD "
-					YH007 += "                          AND PMV.MARCA =  RITG.ZBH_MARCA " 
+					YH007 += "                          AND PMV.MARCA =  RITG.ZBH_MARCA "
 					YH007 += "                          AND PMV.GRPCLI = RITG.ZBH_GRPCLI "
 					YH007 += "                          AND PMV.TPSEG = RITG.ZBH_TPSEG "
 					YH007 += "   LEFT JOIN PPRZMET PPM ON PPM.FILIAL = RITG.ZBH_FILIAL "
@@ -339,7 +339,7 @@ Static Function BIA646A()
 					YH007 += "                          AND PPM.REVISA = RITG.ZBH_REVISA "
 					YH007 += "                          AND PPM.ANOREF = RITG.ZBH_ANOREF "
 					YH007 += "                          AND PPM.PERIODO = RITG.ZBH_PERIOD "
-					YH007 += "                          AND PPM.MARCA =  RITG.ZBH_MARCA " 
+					YH007 += "                          AND PPM.MARCA =  RITG.ZBH_MARCA "
 					YH007 += "                          AND PPM.GRPCLI = RITG.ZBH_GRPCLI "
 					YH007 += "                          AND PPM.VEND = RITG.ZBH_VEND "
 					YH007 += "   LEFT JOIN PCPV PCPV ON PCPV.FILIAL = RITG.ZBH_FILIAL "
@@ -347,7 +347,7 @@ Static Function BIA646A()
 					YH007 += "                          AND PCPV.REVISA = RITG.ZBH_REVISA "
 					YH007 += "                          AND PCPV.ANOREF = RITG.ZBH_ANOREF "
 					YH007 += "                          AND PCPV.PERIODO = RITG.ZBH_PERIOD "
-					YH007 += "                          AND PCPV.MARCA =  RITG.ZBH_MARCA " 
+					YH007 += "                          AND PCPV.MARCA =  RITG.ZBH_MARCA "
 
 					YHIndex := CriaTrab(Nil,.f.)
 					dbUseArea(.T.,"TOPCONN",TcGenQry(,,YH007),'YH07',.T.,.T.)
@@ -365,32 +365,49 @@ Static Function BIA646A()
 							ZBH->ZBH_VERSAO  := YH07->ZBH_VERSAO
 							ZBH->ZBH_REVISA  := YH07->ZBH_REVISA
 							ZBH->ZBH_ANOREF  := YH07->ZBH_ANOREF
-							ZBH->ZBH_PERIOD  := Alltrim(StrZero(mxFx,2)) 
-							ZBH->ZBH_MARCA   := YH07->ZBH_MARCA 
+							ZBH->ZBH_PERIOD  := Alltrim(StrZero(mxFx,2))
+							ZBH->ZBH_MARCA   := YH07->ZBH_MARCA
 							ZBH->ZBH_CANALD  := YH07->ZBH_CANALD
-							ZBH->ZBH_VEND    := YH07->ZBH_VEND  
+							ZBH->ZBH_VEND    := YH07->ZBH_VEND
 							ZBH->ZBH_GRPCLI  := YH07->ZBH_GRPCLI
-							ZBH->ZBH_TPSEG   := YH07->ZBH_TPSEG 
+							ZBH->ZBH_TPSEG   := YH07->ZBH_TPSEG
 							ZBH->ZBH_ESTADO  := YH07->ZBH_ESTADO
 							ZBH->ZBH_PCTGMR  := YH07->ZBH_PCTGMR
 							ZBH->ZBH_FORMAT  := YH07->ZBH_FORMAT
-							ZBH->ZBH_CATEG   := YH07->ZBH_CATEG 
-							ZBH->ZBH_CLASSE  := YH07->ZBH_CLASSE 
+							ZBH->ZBH_CATEG   := YH07->ZBH_CATEG
+							ZBH->ZBH_CLASSE  := YH07->ZBH_CLASSE
 							ZBH->ZBH_QUANT   := Round(msQtdRec, 2)
 							ZBH->ZBH_VALOR   := Round(msVlrRec, 2)
 							ZBH->ZBH_TOTAL   := Round(msQtdRec * msVlrRec, 2)
 							ZBH->ZBH_PCOMIS  := Round(YH07->PCOMIS, 2)
 							ZBH->ZBH_VCOMIS  := Round(msQtdRec * msVlrRec *  YH07->PCOMIS, 2)
+
+							If Alltrim(YH07->ZBH_CANALD) $ "005/010"
+								ZBH->ZBH_BIPI   := Round(msQtdRec * msVlrRec, 2)
+								ZBH->ZBH_PIPI   := Round(YH07->PIPI, 2)
+								ZBH->ZBH_VIPI   := Round(ZBH->ZBH_BIPI*ZBH->ZBH_PIPI, 2)
+							EndIf
+
+							ZBH->ZBH_BICMS   := Round((msQtdRec * msVlrRec) + Iif(Alltrim(YH07->ZBH_TPSEG)=="E",ZBH->ZBH_VIPI,0), 2)
 							ZBH->ZBH_PICMS   := Round(YH07->PICMS, 2)
-							ZBH->ZBH_VICMS   := Round(msQtdRec * msVlrRec * YH07->PICMS, 2)
+							ZBH->ZBH_VICMS   := Round(ZBH->ZBH_BICMS * YH07->PICMS, 2)
+
+							ZBH->ZBH_BPIS	 :=	Round(msQtdRec * msVlrRec, 2)
 							ZBH->ZBH_PPIS    := Round(YH07->PPIS, 2)
-							ZBH->ZBH_VPIS    := Round(msQtdRec * msVlrRec * YH07->PPIS, 2)
+							ZBH->ZBH_VPIS    := Round(ZBH->ZBH_BPIS * YH07->PPIS, 2)
+
+							ZBH->ZBH_BCOF	 :=	Round(msQtdRec * msVlrRec,2)
 							ZBH->ZBH_PCOF    := Round(YH07->PCOF, 2)
-							ZBH->ZBH_VCOF    := Round(msQtdRec * msVlrRec * YH07->PCOF, 2)
+							ZBH->ZBH_VCOF    := Round(ZBH->ZBH_BCOF * YH07->PCOF, 2)
+
+							ZBH->ZBH_BST  	 := Round((msQtdRec * msVlrRec) + Iif(Alltrim(YH07->ZBH_TPSEG)=="R",ZBH->ZBH_VIPI,0), 2)
 							ZBH->ZBH_PST     := Round(YH07->PST, 2)
-							ZBH->ZBH_VST     := Round(msQtdRec * msVlrRec * YH07->PST, 2)
+							ZBH->ZBH_VST     := Round(ZBH->ZBH_BST * YH07->PST, 2)
+
+							ZBH->ZBH_BDIFAL  := Round((msQtdRec * msVlrRec) + Iif(Alltrim(YH07->ZBH_TPSEG)=="E",ZBH->ZBH_VIPI,0), 2)
 							ZBH->ZBH_PDIFAL  := Round(YH07->PDIFAL, 2)
-							ZBH->ZBH_VDIFAL  := Round(msQtdRec * msVlrRec * YH07->PDIFAL, 2)
+							ZBH->ZBH_VDIFAL  := Round(ZBH->ZBH_BDIFAL * YH07->PDIFAL, 2)
+
 							ZBH->ZBH_ORIGF   := "5"
 							// ...novos
 							ZBH->ZBH_USER    := __cUserId
@@ -404,8 +421,10 @@ Static Function BIA646A()
 							ZBH->ZBH_VALBON  :=	Round(ZBH->ZBH_TOTAL * ZBH->ZBH_PERBON / 100,2)
 							ZBH->ZBH_PERCPV	 :=	Round(YH07->PERCPV,2)
 							ZBH->ZBH_VALCPV	 :=	Round(ZBH->ZBH_VALBON * ZBH->ZBH_PERCPV / 100,2)
-							ZBH->ZBH_PICMBO	 :=	Round(ZBH->ZBH_PICMS * 100,2) 
-							ZBH->ZBH_VICMBO	 :=	Round(ZBH->ZBH_PICMBO * ZBH->ZBH_VALBON / 100,2)
+
+							ZBH->ZBH_BICMBO	 :=	Round(ZBH->ZBH_VALBON + Iif(Alltrim(YH07->ZBH_TPSEG)=="E",ZBH->ZBH_PIPI * ZBH->ZBH_VALBON / 100,0), 2)
+							ZBH->ZBH_PICMBO	 :=	Round(ZBH->ZBH_PICMS * 100,2)
+							ZBH->ZBH_VICMBO	 :=	Round(ZBH->ZBH_PICMBO * ZBH->ZBH_BICMBO / 100,2)
 
 							MsUnlockAll()
 

@@ -221,7 +221,7 @@ Static Function uNOVO(nCli,nPed,nVlr,nVrObra,nCndPag,ChvTmp)
 
 	oTGetPed := TGet():New(080,100,{|u| If(PCount() >0,cNPEDIDO:=u,cNPEDIDO)},oDLG1,35,10,"@!R",,,,,,,.T.,"",,,.F.,.F.,,.F.,.F.,,"oTGetPed")
 
-	If cEmpAnt $ "01_05_07"
+	If cEmpAnt $ "01_05_07_14"
 		cCombo:= cEmpAnt
 	Else	
 		cCombo:= aItems[1]

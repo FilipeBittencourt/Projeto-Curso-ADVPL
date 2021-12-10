@@ -934,6 +934,15 @@ Method RetHtmlBody() Class TAprovaPedidoVendaEMail
 	EndIf
 
 
+	// Inicio - Ticket - 31051
+	If SC5->C5_YSEGFAB == "S"
+		cHTML += ' 									 <tr>                                                                                                                                                           '
+		cHTML += ' 										<td align="left" width="20%" class="pedido-detalhe"> SEGURO FÁBR.: </td>                                                                                    '
+		cHTML += ' 										<td colspan="3" align="left"> '+ TRANSFORM(SC5->C5_PSEGFAB, "@E 99.99") +' % </td>                                                                          '
+		cHTML += ' 									 </tr>                                                                                                                                                          '
+	EndIf
+	// Fim - Ticket - 31051
+
 	cHTML += ' 									                                                                                                                                                                '
 	cHTML += ' 								</table>                                                                                                                                                            '
 	cHTML += ' 							</td>                                                                                                                                                                   '

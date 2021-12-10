@@ -5781,10 +5781,12 @@ If FunName() <> "SPEDNFSE"
 		  cChvPag := SF1->F1_COND
 		EndIf
 
-		If	cTPNota $ '3-4'
+		If	cTPNota $ '3-4' .Or. Len(aDupl)==0
 			
 			cForma := "90"  //90=Sem Pagamento.
+			cIndPag := ""
 			aadd(aDetPag, {cForma, aTotal[2]+aTotal[03], 0.00, "", "", "", "", cIndPag})   
+
 		ElseIf lVLojaDir .And. cTipo == "1" .And. ( aRetPgLoj := GetPagLoja(aDupl, cChvPag, aTotal[2], cIndPag,cVerAmb) )[1]
 			//Montagem do AdetPag quando venda for advindo do Venda Direta ou SigaLoja e condição de pagamento for = "CN"(Condicao Negociada)
 			//Alem disso verifico se existem o registro na SL4, caso não, mantenho o legado anterior
@@ -10450,7 +10452,12 @@ IF len(aDetPag) > 0
 	cString +='<pagamento>'
 	For nX := 1 To Len(aDetPag)
 		cString +='<detPag>'
-		cString += '<indForma>'+aDetPag[nX][8]+'</indForma>'
+
+		//cString += '<indForma>'+aDetPag[nX][8]+'</indForma>'		
+		if aDetPag[nX][8] <> ""
+			cString += '<indForma>'+aDetPag[nX][8]+'</indForma>'
+		endIf
+
 		cString +='<forma>'+aDetPag[nX][1]+'</forma>' 
 		If aDetPag[nX][1] == "90" //SEM PAGAMENTO
 			cString +='<valor>'+ConvType(0,15,2)+'</valor>'

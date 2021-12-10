@@ -58,7 +58,7 @@ USER Function AcessoUser()
       cUserAte  := "999999",;
       cRotDe    := Space(12),;
       cRotAte   := "ZZZZZZZZZZZZ",;
-      aColPrint := {.T.,.T.,.T.,.T.,.T.,.T.,.T.,.T.}   // variáveis de filtro
+      aColPrint := {.T.,.T.,.T.,.T.,.T.,.T.,.T.,.T., .T., .T., .T.}   // variáveis de filtro
 
    If !Filtro()
       Return
@@ -142,30 +142,38 @@ Static Function Filtro()
    Local bCancel := {|| lOk := .F., oDlg:End()}
    Local nLin    := 15
    Local nCol    := 15
-   Local lChk1   := lChk2 := lChk3 := lChk4 := lChk5 := lChk6 := lChk7 := lChk8 := lChk9 := lChk10 := .T.
-   Local oDlg, oChkBox1, oChkBox2, oChkBox3, oChkBox4, oChkBox5, oChkBox6, oChkBox7, oChkBox8, oPanel,;
+   Local lChk1   := lChk2 := lChk3 := lChk4 := lChk5 := lChk6 := lChk7 := lChk8 := lChk9 := lChk10 := lChk11 := lChk12 := lChk13 := .T.
+   Local oDlg, oChkBox1, oChkBox2, oChkBox3, oChkBox4, oChkBox5, oChkBox6, oChkBox7, oChkBox8, oChkBox9, oChkBox10, oChkBox11, oChkBox12, oChkBox13, oPanel,;
       oModDe, oModAte, oUserDe, oUserAte, oRotDe, oRotAte
 
    oMainWnd:ReadClientCoords()
    Define MsDialog oDlg Title "Acesso de Usuários" From oMainWnd:nTop+125,oMainWnd:nLeft+5 To oMainWnd:nBottom-60,oMainWnd:nRight-10 Of oMainWnd Pixel
    *
-   oPanel = TPanel():New(nLin,nCol-5,"Colunas a serem impressas",oDlg,,.F.,,,,175,45,.F.,.T.)
+   oPanel = TPanel():New(nLin,nCol-5,"Colunas a serem impressas",oDlg,,.F.,,,,175,60,.F.,.T.)
    nLin += 15
-   @ nLin,nCol     CheckBox oChkBox1 Var lChk1 Prompt "Usuário"    On Click ( aColPrint[1] := !aColPrint[1] ) Size 130,9 Of oDlg Pixel
-   @ nLin,nCol+40  CheckBox oChkBox2 Var lChk2 Prompt "Módulo"     On Click ( aColPrint[2] := !aColPrint[2] ) Size 130,9 Of oDlg Pixel
-   @ nLin,nCol+80  CheckBox oChkBox3 Var lChk3 Prompt "Menu"       On Click ( aColPrint[3] := !aColPrint[3] ) Size 130,9 Of oDlg Pixel
-   @ nLin,nCol+120 CheckBox oChkBox4 Var lChk4 Prompt "Sub-Menu"   On Click ( aColPrint[4] := !aColPrint[4] ) Size 130,9 Of oDlg Pixel
+   @ nLin,nCol     CheckBox oChkBox1 Var lChk1 Prompt "Cod. Usuário"    On Click ( aColPrint[1] := !aColPrint[1] ) Size 130,9 Of oDlg Pixel
+   @ nLin,nCol+40  CheckBox oChkBox2 Var lChk2 Prompt "Login"           On Click ( aColPrint[2] := !aColPrint[2] ) Size 130,9 Of oDlg Pixel
+   @ nLin,nCol+80  CheckBox oChkBox3 Var lChk3 Prompt "N Acessos"       On Click ( aColPrint[3] := !aColPrint[3] ) Size 130,9 Of oDlg Pixel
    nLin += 15
-   @ nLin,nCol     CheckBox oChkBox5 Var lChk5 Prompt "Rotina"     On Click ( aColPrint[5] := !aColPrint[5] ) Size 130,9 Of oDlg Pixel
-   @ nLin,nCol+40  CheckBox oChkBox6 Var lChk6 Prompt "Acesso"     On Click ( aColPrint[6] := !aColPrint[6] ) Size 130,9 Of oDlg Pixel
-   @ nLin,nCol+80  CheckBox oChkBox7 Var lChk7 Prompt "Função"     On Click ( aColPrint[7] := !aColPrint[7] ) Size 130,9 Of oDlg Pixel
-   @ nLin,nCol+120 CheckBox oChkBox8 Var lChk8 Prompt "Menu(.xnu)" On Click ( aColPrint[8] := !aColPrint[8] ) Size 130,9 Of oDlg Pixel
+   @ nLin,nCol     CheckBox oChkBox4 Var lChk4 Prompt "Usuário"         On Click ( aColPrint[4] := !aColPrint[4] ) Size 130,9 Of oDlg Pixel
+   @ nLin,nCol+40  CheckBox oChkBox5 Var lChk5 Prompt "Módulo"          On Click ( aColPrint[5] := !aColPrint[5] ) Size 130,9 Of oDlg Pixel
+   @ nLin,nCol+80  CheckBox oChkBox6 Var lChk6 Prompt "Menu"            On Click ( aColPrint[6] := !aColPrint[6] ) Size 130,9 Of oDlg Pixel
+   @ nLin,nCol+120 CheckBox oChkBox7 Var lChk7 Prompt "Sub-Menu"        On Click ( aColPrint[7] := !aColPrint[7] ) Size 130,9 Of oDlg Pixel
+   nLin += 15
+   @ nLin,nCol     CheckBox oChkBox8 Var lChk8 Prompt "Rotina"          On Click ( aColPrint[8] := !aColPrint[8] ) Size 130,9 Of oDlg Pixel
+   @ nLin,nCol+40  CheckBox oChkBox9 Var lChk9 Prompt "Acesso"          On Click ( aColPrint[9] := !aColPrint[9] ) Size 130,9 Of oDlg Pixel
+   @ nLin,nCol+80  CheckBox oChkBox10 Var lChk10 Prompt "Função"        On Click ( aColPrint[10] := !aColPrint[10] ) Size 130,9 Of oDlg Pixel
+   @ nLin,nCol+120 CheckBox oChkBox11 Var lChk11 Prompt "Menu(.xnu)"    On Click ( aColPrint[11] := !aColPrint[11] ) Size 130,9 Of oDlg Pixel
+   
    *
    nLin += 30
    *
-   @ nLin,nCol     CheckBox oChkBox9 Var lChk9 Prompt "Marcado/Desmarcado?" On Click ( lMarca := !lMarca ) Size 130,9 Of oDlg Pixel
+   // @ nLin,nCol     CheckBox oChkBox9 Var lChk9 Prompt "Marcado/Desmarcado?" On Click ( lMarca := !lMarca ) Size 130,9 Of oDlg Pixel
+   // nLin += 15
+   // @ nLin,nCol     CheckBox oChkBox10 Var lChk10 Prompt "Retrato/Paisagem" On Click ( lRetrato := !lRetrato ) Size 130,9 Of oDlg Pixel
+   @ nLin,nCol     CheckBox oChkBox12 Var lChk12 Prompt "Marcado/Desmarcado?" On Click ( lMarca := !lMarca ) Size 130,9 Of oDlg Pixel
    nLin += 15
-   @ nLin,nCol     CheckBox oChkBox10 Var lChk10 Prompt "Retrato/Paisagem" On Click ( lRetrato := !lRetrato ) Size 130,9 Of oDlg Pixel
+   @ nLin,nCol     CheckBox oChkBox13 Var lChk13 Prompt "Retrato/Paisagem" On Click ( lRetrato := !lRetrato ) Size 130,9 Of oDlg Pixel
    *
    nLin += 30
    @ nLin,nCol    Say  'Módulo De: '                                                         Of oDlg Pixel
@@ -232,6 +240,9 @@ Static Function CriaWork()
 
    aAdd(aSemSx3,{"_WKMARCA"  ,"C",02,0})
    aAdd(aSemSx3,{"CODUSMOD" ,"C",08,0})
+   aAdd(aSemSx3,{"CODIGO" ,"C",30,0})
+   aAdd(aSemSx3,{"LOGIN" ,"C",30,0})
+   aAdd(aSemSx3,{"NACESSOS" ,"C",30,0})
    aAdd(aSemSx3,{"_USER"     ,"C",30,0})
    aAdd(aSemSx3,{"MODULO"   ,"C",30,0})
    aAdd(aSemSx3,{"MENU"     ,"C",12,0})
@@ -459,6 +470,9 @@ Static Function preencMenu(cFile, i, j)
                WKACESSO->(dbAppend())
                WKACESSO->_WKMARCA   := If(lMarca,cMarca,"")
                WKACESSO->CODUSMOD  := aUsers[i][1][1]+SubStr(aUsers[i][3][j],1,2)    // Código do _USER + Código do módulo
+               WKACESSO->CODIGO    := aUsers[i][01][01]    // Código do usuário
+               WKACESSO->LOGIN     := Alltrim(aUsers[i][01][02])    // Login
+               WKACESSO->NACESSOS  := AllTrim(Str(aUsers[i][01][15]))    // Nome do _USER
                WKACESSO->_USER      := aUsers[i][1][4]    // Nome do _USER
                WKACESSO->MODULO    := retModulo(Val(SubStr(aUsers[i][3][j],1,2)))    // Nome do Módulo
                WKACESSO->MENU      := cMenu
@@ -644,34 +658,46 @@ Static Function ReportDef()
    oSecao  := TRSection():New(oReport,"LOG","WKACESSO",{})
 //
    If aColPrint[1]
+      TRCell():New(oSecao,"CODIGO"   ,"WKACESSO","Cod. Usuário"         ,""            ,30,,,"LEFT")
+   EndIf
+
+   If aColPrint[2]
+      TRCell():New(oSecao,"LOGIN"   ,"WKACESSO","Login"         ,""            ,30,,,"LEFT")
+   EndIf
+
+   If aColPrint[3]
+      TRCell():New(oSecao,"NACESSOS"    ,"WKACESSO","N Acessos"             ,""            ,40,,,"LEFT")
+   EndIf
+
+   If aColPrint[4]
       TRCell():New(oSecao,"_USER"   ,"WKACESSO","Usuário"         ,""            ,30,,,"LEFT")
    EndIf
 //
-   If aColPrint[2]
+   If aColPrint[5]
       TRCell():New(oSecao,"MODULO" ,"WKACESSO","Módulo"          ,""            ,30,,,"LEFT")
    EndIf
 //
-   If aColPrint[3]
+   If aColPrint[6]
       TRCell():New(oSecao,"MENU"   ,"WKACESSO","Menu"            ,""            ,12,,,"LEFT")
    EndIf
 //
-   If aColPrint[4]
+   If aColPrint[7]
       TRCell():New(oSecao,"SUBMENU","WKACESSO","Sub-Menu"        ,""            ,25,,,"LEFT")
    EndIf
 //
-   If aColPrint[5]
+   If aColPrint[8]
       TRCell():New(oSecao,"ROTINA" ,"WKACESSO","Rotina"          ,""            ,25,,,"LEFT")
    EndIf
 //
-   If aColPrint[6]
+   If aColPrint[9]
       TRCell():New(oSecao,"ACESSO" ,"WKACESSO","Acesso"          ,""            ,10,,,"LEFT")
    EndIf
 //
-   If aColPrint[7]
+   If aColPrint[10]
       TRCell():New(oSecao,"FUNCAO" ,"WKACESSO","Função"          ,""            ,15,,,"LEFT")
    EndIf
 //
-   If aColPrint[8]
+   If aColPrint[11]
       TRCell():New(oSecao,"XNU"    ,"WKACESSO","XNU"             ,""            ,40,,,"LEFT")
    EndIf
 //

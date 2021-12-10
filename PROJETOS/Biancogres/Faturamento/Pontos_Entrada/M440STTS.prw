@@ -81,10 +81,8 @@ EndIf
 //Fernando em 07/01 - nao faz sentido fazer esse metodo para LM - nao deve ter reservas na LM nem alterar as reserva na origem
 If M->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES",""))) .And. (AllTrim(CEMPANT) <> "07") .And. M->C5_YLINHA <> "4"
 
-	//SC6->(DbSetOrder(1))
-	//If !((AllTrim(CEMPANT) == "14") .And. SC6->(DbSeek(XFilial("SC6")+M->C5_NUM)) .And. !U_CHKRODA(SC6->C6_PRODUTO))
 		U_FRRT02C9(M->C5_NUM)
-	//EndIf
+
 EndIf
 
 
@@ -132,5 +130,31 @@ EndIf
 
     EndIf 
 
+    // Ticket 35270 - Replicar informação do pedido de compra da LM para a Biancogres
+   If (Altera) .And. cEmpAnt == '07' 
+
+        begincontent var cSql
+
+            UPDATE SC51 
+            SET  SC51.C5_YPC = SC57.C5_YPC
+            FROM SC5010 SC51
+            JOIN SC5070 SC57 ON (SC57.C5_YPEDORI=SC51.C5_NUM)
+            JOIN SC6010 SC61 ON (SC51.C5_FILIAL=SC61.C6_FILIAL AND SC51.C5_NUM=SC61.C6_NUM)
+            WHERE   SC57.D_E_L_E_T_=''
+                AND SC51.D_E_L_E_T_=''
+                AND SC61.D_E_L_E_T_=''
+                AND SC57.C5_NUM='@C5_NUM'
+                AND SC57.C5_YEMP='@C5_YEMP'
+                AND SC51.C5_FILIAL='@C5_FILIAL'
+        endcontent
+
+       // cSql:=strTran(cSql,"SC5010",retSQLName("SC5"))
+        cSql:=strTran(cSql,"@C5_NUM",M->C5_NUM)
+        cSql:=strTran(cSql,"@C5_YEMP",M->C5_YEMP)
+        cSql:=strTran(cSql,"@C5_FILIAL",xFilial("SC5"))
+
+        TCSQLExec(cSql)
+
+    EndIf 
 
 Return

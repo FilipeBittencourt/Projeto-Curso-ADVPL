@@ -38,6 +38,8 @@ Class TAFBaixaReceber From TAFAbstractClass
 
 	Method Extend(oObj,cStatus)
 
+	Method RecompraFIDC()
+
 EndClass
 
 Method New() Class TAFBaixaReceber
@@ -266,11 +268,14 @@ Method Analyze() Class TAFBaixaReceber
 
 					Begin Transaction
 
-						if ((lBCoIsFIDC).and.(oObj:cCodOco=="14"))
+						If ((lBCoIsFIDC).and.(oObj:cCodOco=="14"))
 							::Extend(oObj,"F:P")
-						else
+
+						ElseIf lBCoIsFIDC .And. oObj:cCodOco $ "09/10/12"		//|Processo de Recompra FIDC |
+							::RecompraFIDC()
+						Else
 							::Confirm(oObj)
-						endif
+						EndIf
 
 						If (::lErro)
 
@@ -1252,10 +1257,13 @@ Method VldBankReceipt(oObj) Class TAFBaixaReceber
 	ElseIf oObj:cBanco == "237"
 
 		// 06=LIQUIDACAO NORMAL
+		// 09=BAIXADO AUTOMATICO VIA ARQUIVO
+		// 10=BAIXADO CONFORME INSTRUÇÃO DA AGENCIA
+		// 12=ABATIMENTO CONCEDIDO
 		// 14=VENCIMENTO ALTERADO
 		// 15=LIQUIDACAO EM CARTORIO
 
-		If oObj:cCodOco $ "06/14/15"
+		If oObj:cCodOco $ "06/09/10/12/14/15"
 
 			lRet := .T.
 
@@ -1691,7 +1699,7 @@ Method ExecMovFin(oObj, nValor, cNat, cHist) Class TAFBaixaReceber
 
 	aAdd(aMovBan, {"E5_FILIAL", xFilial("SE5"), Nil})
 	aAdd(aMovBan, {"E5_DATA", oObj:dDtLiq, Nil})
-	aAdd(aMovBan, {"E5_DTDIGIT", oObj:dDtLiq, Nil})
+	aAdd(aMovBan, {"E5_DTDIGIT", dDataDisp, Nil})
 	aAdd(aMovBan, {"E5_DTDISPO", dDataDisp, Nil})
 	aAdd(aMovBan, {"E5_VALOR", nValor, Nil})
 	aAdd(aMovBan, {"E5_NATUREZ", cNat, Nil})
@@ -1830,6 +1838,42 @@ Method ExecBaixaCR(oObj, cMotBx) Class TAFBaixaReceber
 
 	If ( cFilAnt <> SE1->E1_FILIAL )
 		cFilAnt := SE1->E1_FILIAL
+	EndIf
+
+	FIDC():setFIDCVar("cBanco",oObj:cBanco)
+	FIDC():setFIDCVar("cAgencia",oObj:cAgencia)
+	FIDC():setFIDCVar("cConta",oObj:cConta)
+	
+	//|Tratativa para não permitir baixar os títulos que estiverem com o valor diferente do enviado pelo FIDC |
+	If FIDC():BCOIsFIDC()
+
+		If oObj:nVlRec != (SE1->E1_SALDO + oObj:nVlJuro + oObj:nVlMult)
+
+			cLogTxt	:= "FIDC - Valor da liquidação é diferente do saldo em aberto do título."
+
+			::oLog:cIDProc := ::oPro:cIDProc
+			::oLog:cOperac := "R"
+			::oLog:cMetodo := "CR_BAI_TIT"
+			::oLog:cHrFin  := Time()
+			::oLog:cRetMen := cLogTxt
+			::oLog:cEnvWF  := "S"
+			::oLog:cTabela := RetSQLName("ZK4")
+			::oLog:nIDTab  := oObj:nID
+
+			::oLog:Insert()
+
+			::UpdStatus(oObj:nID, "1", cLogTxt)
+
+			If ( cFilAnt <> _cFilBkp )
+				cFilAnt := _cFilBkp
+			EndIf
+
+			&("dDataBase"):=dsvDataBase
+
+			Return .F.
+
+		EndIf
+
 	EndIf
 
 	FIDC():resetFIDCVars()
@@ -2240,3 +2284,48 @@ Method Extend(oObj,cStatus) Class TAFBaixaReceber
 	endif
 
 	return(lExtend)
+
+
+/*/{Protheus.doc} TAFBaixaReceber::RecompraFIDC
+Processo de recompra do FIDC
+@type method
+@version 1.0
+@author Pontin - Facile Sistemas
+@since 25/08/2021
+/*/
+Method RecompraFIDC() Class TAFBaixaReceber
+
+	Local oRecompra as Object
+	Local oResult as Object
+	Local nRecnoZKO as Numeric
+
+	//|Verifica se o título existe na ZKO |
+	oRecompra	:= TFPFidcRecompraReceber():New()
+	
+	nRecnoZKO	:= oRecompra:ExisteTituloZKO( SE1->( Recno() ) )
+
+	If nRecnoZKO > 0
+
+		//|Gera o título a pagar da Recompra |
+		oResult	:= oRecompra:GeraContasPagar( nRecnoZKO )
+
+		If oResult:lOk
+
+			::oLog:cIDProc := ::oPro:cIDProc
+			::oLog:cTabela := RetSQLName("ZK4")
+			::oLog:nIDTab := oObj:nID
+			::oLog:cHrFin := Time()
+			::oLog:cRetMen := ::GetDescOc(oObj)
+			::oLog:cOperac := "R"
+			::oLog:cMetodo := "CR_BAI_TIT"
+			::oLog:cEnvWF := "S"
+
+			::UpdStatus(oObj:nID, "2", ::oLog:cRetMen)
+
+			::oLog:Insert()
+		
+		EndIf
+
+	EndIf
+
+Return

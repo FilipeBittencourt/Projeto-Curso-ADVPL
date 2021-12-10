@@ -17,6 +17,11 @@ User Function BIA392()
 	Local entEnter  := CHR(13) + CHR(10)
 	Private msrhEnter := CHR(13) + CHR(10)
 
+	MsgSTOP("Rotina retirada de uso em 01/10/20 - foi substituído pelo programa BIA881", "Bia392 - Retirada de Uso")
+	Return
+
+
+
 	fPerg := "BIA392"
 	fTamX1 := IIF(Alltrim(oApp:cVersion) == "MP8.11", 6, 10)
 	fValidPerg()

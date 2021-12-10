@@ -25,8 +25,8 @@ User Function BIAFG123()
 		,SZJ.ZJ_COD
 		,SZJ.ZJ_QUANT
 		,SZJ.R_E_C_N_O_ RECZJ
-		FROM %TABLE:SZI% SZI
-		JOIN %TABLE:SZJ% SZJ ON SZI.ZI_FILIAL = SZJ.ZJ_FILIAL
+		FROM %TABLE:SZI% SZI(NOLOCK)
+		JOIN %TABLE:SZJ% SZJ (NOLOCK) ON SZI.ZI_FILIAL = SZJ.ZJ_FILIAL
 		AND SZI.ZI_DOC = SZJ.ZJ_DOC
 		AND SZJ.ZJ_INTSR <> 'S'
 		AND SZJ.ZJ_INTSR <> 'E'
@@ -59,6 +59,7 @@ User Function BIAFG123()
 		AND SZI.ZI_DTBAIXA >= '20200701'
 		AND SZI.ZI_STTSREQ = 'P'
 		AND SZI.ZI_BAIXA = 'S'
+		AND SZI.ZI_MATRIC NOT LIKE 'XX%'
 		AND SZI.ZI_INTSR <> '1'
 		AND SZI.%Notdel%
 
@@ -110,7 +111,7 @@ Static Function fIntSr(cDtBaixa,cMatric,cCod,nQuant)
 	_cSoap	+=	'         <encryption>0</encryption>                                                                                    '
 	_cSoap	+=	'         <parameters>                                                                                                  '
 	_cSoap	+=	'           <tipOpe>I</tipOpe>                                                                                          '
-	_cSoap	+=	'           <numEmp>1</numEmp>                                                                                          '
+	_cSoap	+=	'           <numEmp>'+Substr(cMatric,1,2)+'</numEmp>                                                                                          '
 	_cSoap	+=	'           <tipCol>1</tipCol>                                                                                          '
 	_cSoap	+=	'           <numCad>' + Substr(cMatric,3) + '</numCad>                                                                  '
 	_cSoap	+=	'           <codEpi>' + Alltrim(cCod) + '</codEpi>                                                                      '

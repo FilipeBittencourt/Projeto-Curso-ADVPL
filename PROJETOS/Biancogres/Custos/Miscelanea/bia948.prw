@@ -10,13 +10,12 @@
 
 User Function BIA948()
 
-	Processa({|| Rpt948Detail()})
+	Processa({|| Rpt948Det()})
 
 Return
 
-Static Function Rpt948Detail()
+Static Function Rpt948Det()
 
-	Local M001          := GetNextAlias()
 	Local aSays	   		:= {} 
 	Local aButtons 		:= {}  
 	Local lConfirm 		:= .F.
@@ -37,7 +36,6 @@ Static Function Rpt948Detail()
 	local nTamFont2	 := 8   
 	local cCorFont2  := '#000000'
 	local cCorFun2	 := '#B8CCE4'
-	Local nConsumo	 :=	0
 
 	local cEmpresa   := CapitalAce(SM0->M0_NOMECOM)
 
@@ -240,7 +238,7 @@ Static Function Rpt948Detail()
 			MY001 += Alltrim("          WHEN RTRIM(CLVL) IN('6112','6208') THEN 'MOD' + SUBSTRING(CLVL,2,1) + SUBSTRING(CTH_YCRIT,1,3) + SPACE(7) ") + msEnter
 			MY001 += Alltrim("          WHEN CONTA IN('61601022') THEN 'MOD' + SUBSTRING(CLVL,2,1) + RTRIM(SUBSTRING(CT1_YAGRUP, 1, 10)) + SUBSTRING(CTH_YCRIT, 1, 3) ") + msEnter
 			MY001 += Alltrim("          WHEN RTRIM(CLVL) IN ( '3180', '3181', '3183', '3184', '3280' ) THEN 'MOD' + SUBSTRING(CLVL,2,1) + SUBSTRING(CTH_YCRIT, 1, 3) ") + msEnter
-			MY001 += Alltrim("          WHEN RTRIM(CLVL) IN ( '3299' ) THEN 'MOD' + SUBSTRING(CLVL,2,1) + SUBSTRING(CTH_YCRIT, 1, 3) ") + msEnter
+			MY001 += Alltrim("          WHEN RTRIM(CLVL) IN ( '3299' ) AND DTREF <= '20210930' THEN 'MOD' + SUBSTRING(CLVL,2,1) + SUBSTRING(CTH_YCRIT, 1, 3) ") + msEnter
 			MY001 += Alltrim("          WHEN RTRIM(SUBSTRING(CT1_YAGRUP, 1, 10)) IN ( '612', '613', '614' ) THEN 'MOD' + SUBSTRING(CLVL,2,1) + RTRIM(SUBSTRING(CT1_YAGRUP, 1, 10)) + SUBSTRING(CTH_YCRIT, 1, 3) ") + msEnter
 			MY001 += Alltrim("          ELSE 'MOD' + SUBSTRING(CLVL,2,1) + RTRIM(SUBSTRING(CT1_YAGRUP, 1, 10)) ") + msEnter
 			MY001 += Alltrim("        END MODS , ") + msEnter

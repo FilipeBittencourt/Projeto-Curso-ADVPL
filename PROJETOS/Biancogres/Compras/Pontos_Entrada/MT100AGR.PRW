@@ -142,6 +142,9 @@ User Function MT100AGR()
 	//Fernando/Facile em 04/02/2015 - Gravar o campo D1_OP para entrada de NFs VITCER
 	If INCLUI .OR. ALTERA
 		U_FOPVCR02()
+
+		// Emerson (Facile) em 26/08/2021 - Tela Rateio RPV (BIAFG106) - Chama tela de Rateio RPV de acordo com a regra que estava no ponto de entrada MT100TOK, regra está no BIAFG106
+		U_BIAFG106("1",0)
 	EndIf
 
 Return()

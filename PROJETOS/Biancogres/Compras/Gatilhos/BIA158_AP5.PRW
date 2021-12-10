@@ -151,6 +151,11 @@ User Function bia158()
 
 	Endif
 
+	// Emerson Salvador - 01/09/2021 - Ticket 34058								
+	If Alltrim(cCLVL) == "6212"
+		cConta := "16503104"
+	EndIf
+
 	CT1->(dbSetOrder(1))
 	If CT1->(dbSeek(xFilial("CT1") + cConta))
 		If CT1->CT1_BLOQ == "1"

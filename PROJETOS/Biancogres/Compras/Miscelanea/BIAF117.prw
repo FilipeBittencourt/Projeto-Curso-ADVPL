@@ -11,6 +11,26 @@
 /*/
 
 User Function BIAF117()
+
+Local xFldValue := ""
+Local nX 		:= 1
+
+
+	If !Empty(oGetDad:aCols[1,6])
+		xFldValue := oGetDad:aCols[1,6]
+	
+		For nX := 2 To len(oGetDad:aCols)
+			oGetDad:aCols[nX,6] := xFldValue
+		Next
+	Else
+		Aviso("Preencha o motivo na primeia linha!")
+	EndIf
+
+oGetDad:Refresh()
+
+Return()
+
+/*
 Local nCount := 0
 Local cFldName := ""
 Local cFldDesc := ""
@@ -51,7 +71,7 @@ Return()
 
 
 Static Function fValid(nColPos)
-Local lRet := .F.
+Local lRet := .T.
 
 	If Type("aHeader") == "A"
 
@@ -103,3 +123,4 @@ Local lLoop := .T.
 	EndDo()
 			
 Return(nRet)
+*/

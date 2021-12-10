@@ -35,7 +35,6 @@ Method New(oParam) Class TWorkFlowComissaoRepresentante
 								
 Return()
 
-
 Method Process() Class TWorkFlowComissaoRepresentante	
 Local cSQL := ""
 Local cQry := GetNextAlias()
@@ -56,30 +55,36 @@ Local nVlrTotCom := 0
 	cSQL += " 	GROUP BY Z37_MARCA "
 	cSQL += " ) AS Z37 "
 	cSQL += " ON A3_YEMP LIKE '%' + Z37_MARCA + '%' "
-	cSQL += " INNER JOIN "
-	cSQL += " ( "
-	cSQL += " 	SELECT Z78_VEND "
-	cSQL += " 	FROM " + RetFullName("Z78", "01")
-	cSQL += " 	WHERE D_E_L_E_T_ = '' "
-	cSQL += "   GROUP BY Z78_VEND "
-	cSQL += " 	UNION ALL	"
-	cSQL += " 	SELECT Z78_VEND "
-	cSQL += " 	FROM " + RetFullName("Z78", "05")
-	cSQL += " 	WHERE D_E_L_E_T_ = '' "
-	cSQL += "   GROUP BY Z78_VEND "
-	cSQL += " 	UNION ALL "
-	cSQL += " 	SELECT Z78_VEND "
-	cSQL += " 	FROM " + RetFullName("Z78", "07")
-	cSQL += " 	WHERE D_E_L_E_T_ = '' "
-	cSQL += "   GROUP BY Z78_VEND "
-	cSQL += " 	UNION ALL "	
-	cSQL += " 	SELECT Z78_VEND "
-	cSQL += " 	FROM " + RetFullName("Z78", "14")
-	cSQL += " 	WHERE D_E_L_E_T_ = '' "
-	cSQL += "   GROUP BY Z78_VEND "
-	cSQL += " ) AS Z78
-	cSQL += " ON A3_COD <> Z78_VEND "
+	// cSQL += " INNER JOIN "
+	// cSQL += " ( "
+	// cSQL += " 	SELECT Z78_VEND "
+	// cSQL += " 	FROM " + RetFullName("Z78", "01")
+	// cSQL += " 	WHERE D_E_L_E_T_ = '' "
+	// cSQL += "   GROUP BY Z78_VEND "
+	// cSQL += " 	UNION ALL	"
+	// cSQL += " 	SELECT Z78_VEND "
+	// cSQL += " 	FROM " + RetFullName("Z78", "05")
+	// cSQL += " 	WHERE D_E_L_E_T_ = '' "
+	// cSQL += "   GROUP BY Z78_VEND "
+	// cSQL += " 	UNION ALL "
+	// cSQL += " 	SELECT Z78_VEND "
+	// cSQL += " 	FROM " + RetFullName("Z78", "07")
+	// cSQL += " 	WHERE D_E_L_E_T_ = '' "
+	// cSQL += "   GROUP BY Z78_VEND "
+	// cSQL += " 	UNION ALL "	
+	// cSQL += " 	SELECT Z78_VEND "
+	// cSQL += " 	FROM " + RetFullName("Z78", "14")
+	// cSQL += " 	WHERE D_E_L_E_T_ = '' "
+	// cSQL += "   GROUP BY Z78_VEND "
+	// cSQL += " ) AS Z78
+	// cSQL += " ON A3_COD <> Z78_VEND "
 	cSQL += " WHERE A3_FILIAL = '' "
+	
+	//Ticket 35010: o select  acima não estava filtrando os representantes que tiveram o contrato rescindido. O relatorio de comissão não deve ser enviado nesses casos.
+	If(TCCanOpen(RetSQLName("Z78")))
+		cSQL += " AND NOT EXISTS (select 1 from " + RetSQLName("Z78") + " where Z78_VEND = A3_COD AND D_E_L_E_T_ = '') " //representante sem rescisão na empresa
+	Endif
+
 	cSQL += " AND A3_COD BETWEEN " + ValToSQL(::oParam:cVendDe) + " AND " + ValToSQL(::oParam:cVendAte)
 	cSQL += " AND A3_CGC <> '' AND A3_CGC <> '00000000000000' "
 	cSQL += " AND (A3_EMAIL <> '' OR A3_YEMAIL <> '') "

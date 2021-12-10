@@ -97,12 +97,37 @@ USER FUNCTION BIA158A()
 			alert(cMsg)
 			cCLVL := Space(10)
 		Endif
-
+	//lkAplCta == "C" classe de valor de custo
 	Elseif SF4->F4_ESTOQUE == "N" .And. lkAplCta == "C"
 
 		If SB1->B1_TIPO <> "PI"
 			If !Empty(SB1->B1_YCTRIND)
-				cConta := SB1->B1_YCTRIND
+				//TICKET 34176
+				IF !Empty(cCLVL) .And. Substr(cCLVL, 1, 1) == '3' .And. Substr(SB1->B1_YCTRIND, 1, 3) == '316'
+					//classe de valor iniciadas com 3 são de custo. As demais são despesas ou imobilizado
+					//contas iniciadas com 316 são de despesa
+					cMsg := ""
+					cMsg += "AVISO!!"+chr(13)+Chr(10)
+					cMsg += "BIA158A - Este produto exige a Conta de Resultado Industrial que esta "+chr(13)+Chr(10)
+					cMsg += "no cadastro do produto seja " + Alltrim(SB1->B1_YCTRIND) +", porem, esta "+chr(13)+Chr(10)
+					cMsg += "conta é de despesa e a classe é de custo! Favor verificar antes de prosseguir."
+					alert(cMsg)
+					cCLVL := Space(10)
+
+				ELSEIF Substr(SB1->B1_YCTRIND, 1, 3) == '621' //conta redutora de custos
+					//Ticket 35779
+					//contas iniciadas com 621 são de redutoras de custo e não podem ser lançadas aqui
+					cMsg := ""
+					cMsg += "AVISO!!"+chr(13)+Chr(10)
+					cMsg += "BIA158A - Este produto exige a Conta de Resultado Industrial que esta "+chr(13)+Chr(10)
+					cMsg += "no cadastro do produto seja " + Alltrim(SB1->B1_YCTRIND) +", porem, esta "+chr(13)+Chr(10)
+					cMsg += "conta é redutora de custo! Favor corrigir no cadastro do produto antes de prosseguir."
+					alert(cMsg)
+					cCLVL := Space(10)
+					
+				ELSE
+					cConta := SB1->B1_YCTRIND	
+				EndIf
 			Else
 				cMsg := ""
 				cMsg += "AVISO!!"+chr(13)+Chr(10)
@@ -163,6 +188,11 @@ USER FUNCTION BIA158A()
 		cCLVL    := Space(10)
 
 	Endif
+
+	// Emerson Salvador - 01/09/2021 - Ticket 34058								
+	If Alltrim(cCLVL) == "6212"
+		cConta := "16503104"
+	EndIf
 
 	CT1->(dbSetOrder(1))
 	If CT1->(dbSeek(xFilial("CT1") + cConta))

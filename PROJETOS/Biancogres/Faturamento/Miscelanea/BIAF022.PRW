@@ -43,12 +43,9 @@ User Function BIAF022()
 		aAlterFields:= {"L4_VALOR","L4_DATA"}
 	EndIf
 
-	// Regra não utilzada pela Vitcer
-	If cEmpAnt <> "14"
-		If !VerQtdPed(aHeadAnt, aColsAnt)
-			Return()
-		EndIf		
-	EndIf
+	If !VerQtdPed(aHeadAnt, aColsAnt)
+		Return()
+	EndIf		
 
 	aHeader := {}
 	aCols := {}
@@ -165,7 +162,7 @@ Static Function fVldParcela(pNumParc)
 			If aColsParc[nCount][1] > 0
 
 				// Regra não utilzada pela Vitcer					
-				If cEmpAnt <> "14" .And. aColsParc[nCount][1] < nMinParc
+				If aColsParc[nCount][1] < nMinParc
 					MsgBox('O Valor da Parcela não pode ser menor que '+cValToChar(nMinParc)+'!','Valor da Parcela','STOP')
 					lRet := .F.
 				Else

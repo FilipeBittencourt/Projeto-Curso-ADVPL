@@ -38,6 +38,8 @@ User Function BIA496(AA_EMP, lEstAmo, cMarcaJob,cNomFile)
 			RPCSETENV("07","05",,,"FAT")
 		CASE ( AA_EMP == "13" )
 			RPCSETENV("13","01",,,"FAT")
+		CASE ( AA_EMP == "14" )
+			RPCSETENV("14","01",,,"FAT")
 		ENDCASE
 		CREPATU := ""
 		lWFlow  := .T.
@@ -123,6 +125,9 @@ User Function BIA496(AA_EMP, lEstAmo, cMarcaJob,cNomFile)
 			ElseIf (cEmpresa == '07')
 				cInMarca  := "('1302')"
 				lShowFil  := .T.
+			ElseIf (cEmpresa == '14')
+				cInMarca  := "('1302')"
+				lShowFil  := .T.				
 			EndIf
 		EndIf
 	Else
@@ -169,6 +174,8 @@ Static Function Calcula_EST()
 	Local cPath			:= ""
 	Local cTime			:= Replace(Time(),":","_")
 
+	Local cHora			:= Replace(Time(),":","_")
+
 	Private nTotalProd 	:= 0
 	Private nTotalEmp 	:= 0
 	Private nTotalDisp 	:= 0
@@ -193,11 +200,11 @@ Static Function Calcula_EST()
 
 	cTime := Replace(DTOC(Date()),"/","")
 	If IsBlind()
-		cArqHtml := "\P10\workflow\"+cNoArqJB+"_"+cMarcaJB+"_"+cTime+".html"
-		cArqCSV	 := "\P10\workflow\"+cNoArqJB+"_"+cMarcaJB+"_"+cTime+".csv"
+		cArqHtml := "\P10\workflow\"+cNoArqJB+"_"+cMarcaJB+"_"+cTime+"_"+cEmpresa+".html"
+		cArqCSV	 := "\P10\workflow\"+cNoArqJB+"_"+cMarcaJB+"_"+cTime+"_"+cEmpresa+".csv"
 	Else
-		cArqHtml := cPath + "Estoque_"+cTime+".html"
-		cArqCSV	 := cPath + "Estoque_"+cTime+".csv"
+		cArqHtml := cPath + "Estoque_"+cTime+"_"+cHora+".html"
+		cArqCSV	 := cPath + "Estoque_"+cTime+"_"+cHora+".csv"
 	EndIf
 
 
@@ -466,6 +473,8 @@ Static Function Envioemail(cEmail, cImpModel)
 		cNMarca := "INCESA"
 	ElseIf (cEmpAnt == '13')
 		cNMarca := "VINILICO"	//"MUNDI"
+	ElseIf (cEmpAnt == '14')
+		cNMarca := "VINILICO"	//"VINILICO"		
 	ElseIf (cEmpAnt == '07' .or. cFilAnt == '05')
 		cNMarca := "VINILICO NA LM SP"
 	EndIf
@@ -758,7 +767,7 @@ Static Function GeraSql()
 	Else
 		cSQL += "		SALDOOP = CASE WHEN (ROW_NUMBER() over (PARTITION BY B1_COD ORDER BY B1_COD DESC)) = 1  " + Enter
 		//Fernando em 15/12/2017 - substituido o bloco de calculo de saldo de OP para usar a funcao SQL
-		If cEmpresa $ "01_05"
+		If cEmpresa $ "01_05_14"
 			cSQL += "       THEN ISNULL((SELECT [dbo].[FNC_ROP_CALC_SALDO_OP_PRODUTO_01]('01',PROD.B1_COD ,'','',1)),0) ELSE 0 END, "  + Enter
 		ElseIf(cEmpresa $ "07")
 			//saldo empresa
@@ -893,6 +902,8 @@ Static Function GeraSql()
 		cSQL += "    SALDOOP = 0 , " + Enter
 	ElseIf cEmpresa $ "01_05"
 		cSQL += "    SALDOOP = ISNULL((select [dbo].[FNC_ROP_CALC_SALDO_OP_PRODUTO_01]('01',SB1.B1_COD ,'','',1)),0),  "+Enter
+	ElseIf cEmpresa $ "14"
+		cSQL += "    SALDOOP = ISNULL((select [dbo].[FNC_ROP_CALC_SALDO_OP_PRODUTO_14]('01',SB1.B1_COD ,'','',1)),0),  "+Enter		
 	ElseIf(cEmpresa $ "07")
 		cSQL += "    SALDOOP = ISNULL((select [dbo].[FNC_ROP_CALC_SALDO_OP_PRODUTO_13]('01',SB1.B1_COD ,'','',1)),0),  "+Enter
 	Else
@@ -916,6 +927,8 @@ Static Function GeraSql()
 		cSQL += "	ISNULL((SELECT [dbo].[FNC_ROP_CALC_SALDO_OP_PRODUTO_01]('01',SB1.B1_COD ,'','',1)),0) > 0	AND												 " + Enter
 	ElseIf(cEmpresa $ "07")
 		cSQL += "	ISNULL((SELECT [dbo].[FNC_ROP_CALC_SALDO_OP_PRODUTO_13]('01',SB1.B1_COD ,'','',1)),0) > 0	AND												 " + Enter
+	ElseIf(cEmpresa $ "14")
+		cSQL += "	ISNULL((SELECT [dbo].[FNC_ROP_CALC_SALDO_OP_PRODUTO_14]('01',SB1.B1_COD ,'','',1)),0) > 0	AND	
 	Else
 		cSQL += "	ISNULL((SELECT [dbo].[FNC_ROP_CALC_SALDO_OP_PRODUTO_"+AllTrim(CEMPANT)+"]('01',SB1.B1_COD ,'','',1)),0) > 0	AND												 " + Enter
 	EndIf
@@ -940,7 +953,7 @@ Static Function GeraSql()
 	cSQL += "	 		SBF.D_E_L_E_T_ = ''                                                                                                                      " + Enter
 	cSQL += "		GROUP BY BF_PRODUTO),0) <= 0	 AND  " + Enter
 
-	If cEmpresa $ "05_13"
+	If cEmpresa $ "05_13_14"
 		cSQL += "	ISNULL(( " + Enter
 		cSQL += "		SELECT SUM(BF_QUANT - BF_EMPENHO)                                                                                                  " + Enter
 		cSQL += "	 		FROM  " + RETSQLNAME("SBF") +"	SBF with(nolock)                                                                                                         " + Enter
@@ -985,7 +998,7 @@ Static Function GeraSql()
 
 	//(Thiago - 02/04/15) -> Trazer a data dos lotes
 	cSQL += " LEFT JOIN
-	If cEmpAnt $ "01_05"
+	If cEmpAnt $ "01_05_14"
 		cSQL += " ((SELECT '01' EMP, B8_PRODUTO, B8_LOTECTL, MIN(B8_DATA) AS DTPRILOTE ,MAX(B8_DATA) AS DTULTIMOLOTE 					"  + Enter
 		cSQL += "  FROM  SB8010 with(nolock)																							"  + Enter
 		cSQL += " WHERE D_E_L_E_T_ = ''																									"  + Enter
@@ -1040,6 +1053,8 @@ Static Function SqlOp(pProduto)
 
 	If cEmpresa == "07"
 		cSQL += "SELECT * FROM [FNC_ROP_PESQUISA_OP_EMP]('13','','','','', '"+ pProduto +"','',0,'S','','','')"
+	ElseIf cEmpresa == "14"
+		cSQL += "SELECT * FROM [FNC_ROP_PESQUISA_OP_EMP]('14','','','','', '"+ pProduto +"','',0,'S','','','')"		
 	Else
 		cSQL += "SELECT * FROM [FNC_ROP_PESQUISA_OP_EMP]('01','','','','', '"+ pProduto +"','',0,'S','','','')"
 	EndIf

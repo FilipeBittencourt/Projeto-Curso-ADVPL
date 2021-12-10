@@ -113,11 +113,16 @@ Method Set() Class TAFRegraComunicacaoBancariaReceber
 						DbSetOrder(1)
 						If ZK1->(DbSeek(xFilial("ZK1") + ::oLst:GetItem(nCount):cRCB))
 											
-							::oLst:GetItem(nCount):cBanco := ZK1->ZK1_BANCO
-							::oLst:GetItem(nCount):cAgencia := ZK1->ZK1_AGENCI
-							::oLst:GetItem(nCount):cConta := ZK1->ZK1_CONTA
-							::oLst:GetItem(nCount):cSubCta := ZK1->ZK1_SUBCTA
-							::oLst:GetItem(nCount):cTpCom := ZK1->ZK1_TPCOM
+							// NÃo atribui as informações bancarias na prorrogação de boletos 
+							If !(FunName() $ "BAF045" .Or. IsInCallsTack("U_BAF045"))
+							
+								::oLst:GetItem(nCount):cBanco := ZK1->ZK1_BANCO
+								::oLst:GetItem(nCount):cAgencia := ZK1->ZK1_AGENCI
+								::oLst:GetItem(nCount):cConta := ZK1->ZK1_CONTA
+								::oLst:GetItem(nCount):cSubCta := ZK1->ZK1_SUBCTA
+								::oLst:GetItem(nCount):cTpCom := ZK1->ZK1_TPCOM
+							
+							EndIf
 						
 							// Caso seja sem integracao, nao processa
 							If ::oLst:GetItem(nCount):cTpCom $ "0"

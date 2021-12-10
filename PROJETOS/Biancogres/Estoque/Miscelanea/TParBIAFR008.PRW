@@ -24,6 +24,7 @@ Class TParBIAFR008 From LongClassName
 	Data dDatDe // Data de
 	Data dDatAte // Data ate
 	Data cProd // Produto de
+    Data cProdAte //Produto Ate
 		
 	Method New() Constructor
 	Method Add() // Adiciona lista de parametros	
@@ -31,6 +32,7 @@ Class TParBIAFR008 From LongClassName
 	Method Load() // Carrega parametros
 	Method Update() // Atualiza variaveis e parametros
 	
+
 EndClass
 
 
@@ -52,6 +54,7 @@ Method Add() Class TParBIAFR008
 	aAdd(::aParam, {1, "Data De", ::dDatDe, "@D",".T.",,".T.",,.F.})	
 	aAdd(::aParam, {1, "Data Ate", ::dDatAte, "@D",".T.",,".T.",,.F.})
 	aAdd(::aParam, {1, "Produto De", ::cProd, "@!", ".T.", "SB1", ".T.",,.F.})
+    aAdd(::aParam, {1, "Produto Até", ::cProdAte, "@!", ".T.", "SB1", ".T.",,.F.})
 			
 Return()
 
@@ -77,7 +80,7 @@ Local cFileName := __cUserID +"_"+ ::cName
 	::dDatDe := ParamLoad(cFileName,,1, dDataBase)
 	::dDatAte := ParamLoad(cFileName,,2, dDataBase)
 	::cProd := ParamLoad(cFileName,,3, Space(15))
-
+    ::cProdAte := ParamLoad(cFileName,,4, Space(15))
 Return()
 
 

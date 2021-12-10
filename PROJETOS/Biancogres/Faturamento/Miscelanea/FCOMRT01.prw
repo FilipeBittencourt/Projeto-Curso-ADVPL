@@ -801,19 +801,19 @@ User Function FCOMXPED(cPedido, cEmpDest, _cRepAtu, _cUserName, cFilOri, lMatriz
 
 				SC6->(DbSetOrder(1))
 				If SC6->(DbSeek(XFilial("SC6")+SC5->C5_NUM))
-					While !SC6->(Eof()) .And. SC6->(C6_FILIAL+C6_NUM) == (XFilial("SC6")+SC5->C5_NUM)
-						RecLock("SC6",.F.)
-						SC6->C6_COMIS1 := 0
-						SC6->C6_COMIS2 := 0
-						SC6->C6_COMIS3 := 0
-						SC6->C6_COMIS4 := 0
-						SC6->C6_COMIS5 := 0
-						SC6->(MsUnlock())
-
-						SC6->(DbSkip())
+					While !SC6->(Eof()) .And. SC6->(C6_FILIAL+C6_NUM) == (XFilial("SC6")+SC5->C5_NUM)					
+							RecLock("SC6",.F.)
+							SC6->C6_COMIS1 := 0
+							SC6->C6_COMIS2 := 0
+							SC6->C6_COMIS3 := 0
+							SC6->C6_COMIS4 := 0
+							SC6->C6_COMIS5 := 0 
+							SC6->(MsUnlock())
+						
+					SC6->(DbSkip())
 					EndDo
 				EndIf
-
+				
 			EndIf
 
 			If !lMatriz

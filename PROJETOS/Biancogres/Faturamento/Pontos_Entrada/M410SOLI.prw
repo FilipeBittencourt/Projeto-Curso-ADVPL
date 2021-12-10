@@ -268,13 +268,17 @@ User Function fAtuImp(I,nBasePIS,nBaseCOF,nPIS,nCOFINS,nICMS,nIPI,nPercPIS,nPerc
 		Gdfieldput("C6_YDESCZF",nDescZF,I)	//Grava Desconto Suframa
 	EndIf
 
+	If (INCLUI .or. ALTERA) .And. nIPI <> 0
+		Gdfieldput("C6_YVLTIPI",nIPI,I)	//Grava IPI
+	EndIf
+
 	//GRAVA O VALOR DO ICMS/IPI/PIS/COFINS //ATIVADO EM 09/12/15
-	If (INCLUI .or. ALTERA) .And. (nBasePIS <> 0 .Or. nBaseCOF <> 0 .Or. nBaseICM <> 0 .Or. nBaseIPI <> 0)
-		Gdfieldput("C6_YVLIMP", Gdfieldget("C6_VALOR",I)+ nValST - nDescZF ,I) 	//Grava Total das Mercadorias + Imposto ST - Desconto Suframa
-		Gdfieldput("C6_YVLTICM",nICMS,I)										//Grava ICMS
-		Gdfieldput("C6_YVLTPIS",nPIS,I)											//Grava PIS
-		Gdfieldput("C6_YVLTCOF",nCOFINS,I)										//Grava COFINS
-		Gdfieldput("C6_YVLTIPI",nIPI,I)											//Grava IPI
+	If (INCLUI .or. ALTERA) .And. (nBasePIS <> 0 .Or. nBaseCOF <> 0 .Or. nBaseICM <> 0 .Or. nBaseIPI <> 0 .Or. nValMerc <> 0)
+		Gdfieldput("C6_YVLIMP", Gdfieldget("C6_VALOR",I) + nIPI + nValST - nDescZF ,I) 	//Grava Total das Mercadorias + IPI + Imposto ST - Desconto Suframa
+		Gdfieldput("C6_YVLTICM", nICMS, I) //Grava ICMS
+		Gdfieldput("C6_YVLTPIS", nPIS, I) //Grava PIS
+		Gdfieldput("C6_YVLTCOF", nCOFINS, I) //Grava COFINS
+		Gdfieldput("C6_YVLTIPI", nIPI, I) //Grava IPI
 	EndIf
 
 Return()

@@ -995,7 +995,7 @@ Static Function fProcessa()
 						nCusto := 0.01
 					EndIF
 
-					IF (cAliasTmp2)->ZJ_APLIC == '4' .AND. !EMPTY((cAliasTmp2)->ZJ_YMELHOR) .AND. Subs(M->ZI_CLVL,1,1) == "3"
+					IF (cAliasTmp2)->ZJ_APLIC == '4' .AND. !EMPTY((cAliasTmp2)->ZJ_YMELHOR) .and. (cAliasTmp2)->ZJ_YMELHOR <> "000000" .AND. Subs(M->ZI_CLVL,1,1) == "3"
 						nConta := '61301010'
 					ENDIF
 					/*
@@ -1015,6 +1015,11 @@ Static Function fProcessa()
 						ElseIf Alltrim(SZI->ZI_CLVL) == "3136" 
 							nConta	:=	"61110001"
 						EndIf
+					EndIf
+
+					// Emerson Salvador - 01/09/2021 - Ticket 34058								
+					If Alltrim(SZI->ZI_CLVL) == "6212"
+						nConta := "16503104"
 					EndIf
 
 					//Novo metodo de baixa por transferencia - Fernando/Facile em 24/10/2014 - projeto req. de produto comum
@@ -1038,6 +1043,7 @@ Static Function fProcessa()
 						aAdd(_aItem,{"D3_CC"		,M->ZI_CC  				    ,NIL})
 						aAdd(_aItem,{"D3_CLVL"		,M->ZI_CLVL					,NIL})
 						aAdd(_aItem,{"D3_YMATRIC"	,M->ZI_MATRIC				,NIL})
+						aAdd(_aItem,{"D3_YMATORI"	,(cAliasTmp2)->ZJ_YMATORI	,NIL})
 						aAdd(_aItem,{"D3_ITEMCTA"	,M->ZI_ITEMCTA		    	,NIL})
 						aAdd(_aItem,{"D3_SEGUM"  	,SB1->B1_SEGUM		    	,NIL})
 						aAdd(_aItem,{"D3_YTAG"  	,(cAliasTmp2)->ZJ_TAG		,NIL})
@@ -1085,6 +1091,7 @@ Static Function fProcessa()
 						aAdd(_aCustSD3,{"D3_ITEMCTA"	,M->ZI_ITEMCTA})
 
 						aAdd(_aCustSD3,{"D3_YMATRIC"	,M->ZI_MATRIC})
+						aAdd(_aCustSD3,{"D3_YMATORI"	,(cAliasTmp2)->ZJ_YMATORI})
 						aAdd(_aCustSD3,{"D3_YTAG"		,(cAliasTmp2)->ZJ_TAG})
 						aAdd(_aCustSD3,{"D3_YMELHOR"	,(cAliasTmp2)->ZJ_YMELHOR})
 						aAdd(_aCustSD3,{"D3_YAPLIC"		,(cAliasTmp2)->ZJ_APLIC})

@@ -1,4 +1,6 @@
 #INCLUDE "PROTHEUS.CH"
+#INCLUDE "TOTVS.CH"
+#INCLUDE "TOPCONN.CH"
 
 /*/{Protheus.doc} BIA391
 @author Marcos Alberto Soprani
@@ -38,11 +40,12 @@ User Function BIA391()
 	Private _msCtrlAlt := .T.  
 
 	If U_ValOper("OR1", .T.)
-		aAdd(_aButtons,{"PRODUTO" ,{|| U_BIA393("E")}, "Layout Integração"      , "Layout Integração"})
-		aAdd(_aButtons,{"PEDIDO"  ,{|| U_B391IEXC() }, "Importa Arquivo"        , "Importa Arquivo"})
+		aAdd(_aButtons,{"PRODUTO" ,{|| U_BIA393("E")}, "Layout Integração"       , "Layout Integração"})
+		aAdd(_aButtons,{"PEDIDO"  ,{|| U_B391IEXC() }, "Importa Arquivo"         , "Importa Arquivo"})
 	EndIf
-	aAdd(_aButtons,{"HISTORIC",{|| U_BIA393("A")}, "Exporta p/Excel"        , "Exporta p/Excel"})
-	aAdd(_aButtons,{"AUTOM"   ,{|| U_B391NEW1() }, "NOVO Func fora quadro"  , "NOVO Func fora quadro"})
+	aAdd(_aButtons,{"HISTORIC",{|| U_BIA393("A")}, "Exporta p/Excel"         , "Exporta p/Excel"})
+	aAdd(_aButtons,{"AUTOM"   ,{|| U_B391NEW1() }, "NOVO Func fora Quadro"   , "NOVO Func fora Quadro"})
+	aAdd(_aButtons,{"AUTOM"   ,{|| U_B391OUT1() }, "NOVO Func fora Empresa"  , "NOVO Func fora Empresa"})
 
 	_aSize := MsAdvSize(.T.)                      
 
@@ -172,9 +175,11 @@ Static Function fBIA391C()
 	M0007 += "            AND XZBA.ZBA_REVISA = '" + _cRevisa + "' "
 	M0007 += "            AND XZBA.ZBA_ANOREF = '" + _cAnoRef + "' "
 	M0007 += "            AND XZBA.ZBA_PERIOD = '00' "
-	M0007 += "            AND XZBA.D_E_L_E_T_ = ' ') NREGS "
+	M0007 += "            AND XZBA.D_E_L_E_T_ = ' ') NREGS, "
+	M0007 += "        TITCAR = a.titcar "
 	M0007 += "   FROM " + RetSqlName("ZBA") + " ZBA "
 	M0007 += "  INNER JOIN LIBCLVL ZB9 ON ZB9.ZB9_CLVL = ZBA.ZBA_CLVL "
+	M0007 += "  LEFT JOIN " + U_fGetDbSr() + ".dbo.r024car a(NOLOCK) ON a.codcar = ZBA.ZBA_FUNCAO COLLATE Latin1_General_BIN "
 	M0007 += "  WHERE ZBA.ZBA_FILIAL = '" + xFilial("ZBA") + "' "
 	M0007 += "    AND ZBA.ZBA_VERSAO = '" + _cVersao + "' "
 	M0007 += "    AND ZBA.ZBA_REVISA = '" + _cRevisa + "' "
@@ -206,7 +211,7 @@ Static Function fBIA391C()
 					_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := R_E_C_N_O_
 
 				ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) == "ZBA_DFUNC"
-					_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := Posicione("SRJ", 1, xFilial("SRJ") + M007->ZBA_FUNCAO, "RJ_DESC")
+					_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := M007->TITCAR
 
 				ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) == "ZBA_DCTGFU"
 					_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := Posicione("ZB4", 1, xFilial("ZB4") + M007->ZBA_CATGFU, "ZB4_DESCRI")
@@ -624,7 +629,7 @@ Return
 Static Function fPergunte()
 
 	Local aPergs 	:= {}
-	Local cLoad	    := 'B391IEXC' + cEmpAnt
+	Local cLoad	    := 'B391NEW1' + cEmpAnt
 	Local cFileName := RetCodUsr() +"_"+ cLoad
 	MV_PAR01 := Space(06)
 	MV_PAR02 := Space(06)
@@ -704,6 +709,9 @@ Static Function fProcImport()
 			ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) $ "ZBA_SEMELH"
 				_oGetDados:aCols[_nAt, _msc] := MV_PAR02
 
+			ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) $ "ZBA_EMPORI"
+				_oGetDados:aCols[_nAt, _msc] := cEmpAnt
+
 			ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) $ "ZBA_CLVL"
 				_oGetDados:aCols[_nAt, _msc] := MV_PAR04
 
@@ -736,6 +744,182 @@ Static Function fProcImport()
 
 	EndIf
 	MP07->(dbCloseArea())
+	Ferase(MPIndex+GetDBExtension())
+	Ferase(MPIndex+OrdBagExt())
+
+	_oGetDados:Refresh()
+	_oDlg:Refresh()
+
+Return
+
+/*___________________________________________________________________________
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦Funçao    ¦ B391OUT1 ¦ Autor ¦ Marcos Alberto S      ¦ Data ¦ 11/10/21 ¦¦¦
+¦¦+----------+------------------------------------------------------------¦¦¦
+¦¦¦Descriçào ¦ Atribui registro NOVO para func fora do Empresa            ¦¦¦
+¦¦+-----------------------------------------------------------------------+¦¦
+¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
+User Function B391OUT1()
+
+	Local aSays	   		:= {}
+	Local aButtons 		:= {}
+	Local lConfirm 		:= .F.
+	Private cArquivo	:= space(100)
+
+	If !_msCtrlAlt
+
+		MsgInfo("Não é permitido importar dados porque a Versão orçamentária está bloquada.")
+		Return
+
+	EndIf
+
+	fPergOUT1()
+
+	AADD(aSays, OemToAnsi("Rotina para atribuição de funcionário NOVO que não tenha semelhante presente."))   
+	AADD(aSays, OemToAnsi("Antes de continuar, verifique os parâmetros!"))   
+	AADD(aSays, OemToAnsi(""))   
+	AADD(aSays, OemToAnsi(""))   
+	AADD(aSays, OemToAnsi("Deseja Continuar?"))   
+
+	AADD(aButtons, { 5,.T.,{|| fPergOUT1() } } )
+	AADD(aButtons, { 1,.T.,{|o| lConfirm := .T. , o:oWnd:End()}} )
+	AADD(aButtons, { 2,.T.,{|o| o:oWnd:End() }} )
+
+	FormBatch( OemToAnsi('Integração do NOVO funcionário...'), aSays, aButtons ,,,500)
+
+	If lConfirm
+
+		Processa({ || fPrcImpOUT() },"Aguarde...","Carregando dados...",.F.)
+
+	EndIf
+
+Return
+
+//Parametros
+Static Function fPergOUT1()
+
+	Local aPergs 	:= {}
+	Local cLoad	    := 'B391OUT1' + cEmpAnt
+	Local cFileName := RetCodUsr() +"_"+ cLoad
+	MV_PAR01 := Space(06)
+	MV_PAR02 := Space(06)
+	MV_PAR03 := Space(06)
+	MV_PAR04 := Space(09)
+	MV_PAR05 := Space(09)
+
+	aAdd( aPergs ,{1,"Código NOVO:"         ,MV_PAR01 ,""  ,"NAOVAZIO()",''    ,'.T.',50,.T.})
+	aAdd( aPergs ,{1,"Semelhante:"          ,MV_PAR02 ,""  ,"NAOVAZIO()",''    ,'.T.',50,.T.})
+	aAdd( aPergs ,{1,"Função:"              ,MV_PAR03 ,""  ,"NAOVAZIO()",''    ,'.T.',50,.T.})
+	aAdd( aPergs ,{1,"Classe Valor:"        ,MV_PAR04 ,""  ,"NAOVAZIO()",'CTH' ,'.T.',50,.T.})
+	aAdd( aPergs ,{1,"Empresa:"             ,MV_PAR05 ,""  ,"NAOVAZIO()",'Z35' ,'.T.',50,.T.})
+
+	If ParamBox(aPergs ,"Alteração de Linha",,,,,,,,cLoad,.T.,.T.)
+
+		MV_PAR01 := ParamLoad(cFileName,,1,MV_PAR01) 
+		MV_PAR02 := ParamLoad(cFileName,,2,MV_PAR02)
+		MV_PAR03 := ParamLoad(cFileName,,3,MV_PAR03)
+		MV_PAR04 := ParamLoad(cFileName,,4,MV_PAR04)
+		MV_PAR05 := ParamLoad(cFileName,,5,MV_PAR05)
+
+	EndIf
+
+Return 
+
+//Processa importação
+Static Function fPrcImpOUT()
+
+	Local nPsMatr  := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZBA_MATR"})
+	Local _nAt     := _oGetDados:nAt
+	Local _msc
+
+	If !Empty(_oGetDados:aCols[_nAt, nPsMatr]) .and. Substr(_oGetDados:aCols[_nAt, nPsMatr],1,4) <> "NOVO"
+		MsgInfo("Necessário estar posicionado em um linha VAZIA para poder incluir um NOVO funcionário!!!")
+		Return .F.
+	EndIf
+	If _oGetDados:aCols[_nAt, nPsMatr] <> MV_PAR01
+
+		MsgInfo("A referência para NOVO funcionário está diferente daquela digitada na tela " + Alltrim(Str(_nAt)) + ". Favor informar outra referência!!!")
+		Return .F.
+
+	EndIf
+
+	MP008 := " WITH LIBCLVL AS (SELECT DISTINCT " 
+	MP008 += "                         ZB9.ZB9_CLVL, "
+	MP008 += "                         " + IIF(_msCtrlAlt, "ZB9.ZB9_DIGIT", "'2'") + " ZB9_DIGIT, "
+	MP008 += "                         " + IIF(_msCtrlAlt, "ZB9.ZB9_VISUAL", "'2'") + " ZB9_VISUAL "
+	MP008 += "                    FROM " + RetSqlName("ZB9") + " ZB9 "
+	MP008 += "                   WHERE ZB9.ZB9_FILIAL = '" + xFilial("ZB9") + "' "
+	MP008 += "                     AND ZB9.ZB9_VERSAO = '" + _cVersao + "' "
+	MP008 += "                     AND ZB9.ZB9_REVISA = '" + _cRevisa + "' "
+	MP008 += "                     AND ZB9.ZB9_ANOREF = '" + _cAnoRef + "' "
+	MP008 += "                     AND ZB9.ZB9_USER = '" + __cUserID + "' "
+	MP008 += "                     AND ZB9.ZB9_TPORCT = 'RH' "
+	MP008 += "                     AND ( ZB9.ZB9_DIGIT = '1' OR ZB9.ZB9_VISUAL = '1' ) "
+	MP008 += "                     AND ZB9.D_E_L_E_T_ = ' ') "
+	MP008 += " SELECT ZB9.ZB9_DIGIT ZBA_DIGIT, "
+	MP008 += "        ZB9.ZB9_VISUAL ZBA_VISUAL, "
+	MP008 += "        ZBA.* "
+	MP008 += "   FROM " + RetFullName("ZBA", Substr(MV_PAR05, 1, 2)) + " ZBA "
+	MP008 += "  INNER JOIN LIBCLVL ZB9 ON ZB9.ZB9_CLVL = '" + MV_PAR04 + "' "
+	MP008 += "  WHERE ZBA_VERSAO = '" + _cVersao + "' "
+	MP008 += "    AND ZBA_REVISA = '" + _cRevisa + "' "
+	MP008 += "    AND ZBA_ANOREF = '" + _cAnoRef + "' "
+	MP008 += "    AND ZBA_MATR = '" + MV_PAR02 + "' "
+	MP008 += "    AND ZBA.D_E_L_E_T_ = ' ' "
+	MPIndex := CriaTrab(Nil,.f.)
+	dbUseArea(.T.,"TOPCONN",TcGenQry(,,MP008),'MP08',.T.,.T.)
+	dbSelectArea("MP08")
+	MP08->(dbGoTop())
+	If MP08->(!Eof())
+
+		For _msc := 1 to Len(_oGetDados:aHeader)
+
+			If Alltrim(_oGetDados:aHeader[_msc][2]) == "ZBA_ALI_WT"
+				_oGetDados:aCols[_nAt, _msc] := "ZBA"
+
+			ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) $ "ZBA_MATR"
+				_oGetDados:aCols[_nAt, _msc] := MV_PAR01
+
+			ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) $ "ZBA_SEMELH"
+				_oGetDados:aCols[_nAt, _msc] := MV_PAR02
+
+			ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) $ "ZBA_EMPORI"
+				_oGetDados:aCols[_nAt, _msc] := MV_PAR05
+
+			ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) $ "ZBA_CLVL"
+				_oGetDados:aCols[_nAt, _msc] := MV_PAR04
+
+			ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) == "ZBA_DCLVL"
+				_oGetDados:aCols[_nAt, _msc] := Posicione("CTH", 1, xFilial("CTH") + MV_PAR04, "CTH_DESC01")
+
+			ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) $ "ZBA_FUNCAO"
+				_oGetDados:aCols[_nAt, _msc] := MV_PAR03
+
+			ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) == "ZBA_DFUNC"
+				_oGetDados:aCols[_nAt, _msc] := Posicione("SRJ", 1, xFilial("SRJ") + MV_PAR03, "RJ_DESC")
+
+			ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) == "ZBA_DCTGFU"
+				_oGetDados:aCols[_nAt, _msc] := Posicione("ZB4", 1, xFilial("ZB4") + MP08->ZBA_CATGFU, "ZB4_DESCRI")
+
+			ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) == "ZBA_DTINIF"
+				_oGetDados:aCols[_nAt, _msc] := stod(MP08->ZBA_DTINIF)
+
+			ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) == "ZBA_DMTDAA"
+				_oGetDados:aCols[_nAt, _msc] := " "
+
+			ElseIf !Alltrim(_oGetDados:aHeader[_msc][2]) $ "ZBA_MATR/ZBA_NOME/ZBA_SEMELH/ZBA_IDADET/ZBA_MESANI/ZBA_MESADM/ZBA_REC_WT/ZBA_MESDEM"
+				_oGetDados:aCols[_nAt, _msc] := &(_oGetDados:aHeader[_msc][2])
+
+			EndIf
+
+		Next _msc
+
+		MP08->(dbSkip())
+
+	EndIf
+	MP08->(dbCloseArea())
 	Ferase(MPIndex+GetDBExtension())
 	Ferase(MPIndex+OrdBagExt())
 

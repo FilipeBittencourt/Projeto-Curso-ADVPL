@@ -13,6 +13,7 @@ User Function SD3240I()
 	Local x
 	Local _oMd	:=	TBiaControleMD():New()
 	Local _cMatOri	:=	""
+	Local cCLVL	:= ""
 
 	SetPrvt("AAREA,X,WP_COD,")
 	Private cArqSB2	:= ""
@@ -104,13 +105,18 @@ User Function SD3240I()
 
 			If U_B478RTCC(SD3->D3_CLVL)[2] == "D"
 				dfConta := SB1->B1_YCTRADM
-
+				cCLVL   := SD3->D3_CLVL
 			ElseIf U_B478RTCC(SD3->D3_CLVL)[2] == "C"
 				dfConta := SB1->B1_YCTRIND
-
+				cCLVL   := SD3->D3_CLVL
 			ElseIf U_B478RTCC(SZI->ZI_CLVL)[2] $ "A/I"
 				dfConta  := "16503" + Substr(SZI->ZI_CLVL,2,8)				
+				cCLVL   := SZI->ZI_CLVL
+			EndIf
 
+			// Emerson Salvador - 01/09/2021 - Ticket 34058								
+			If Alltrim(cCLVL) == "6212"
+				dfConta := "16503104"
 			EndIf
 
 			Reclock("SD3",.f.)
@@ -130,4 +136,4 @@ User Function SD3240I()
 
 	RestArea(aArea)
 
-Returns
+Return

@@ -2,6 +2,7 @@
 #include "topconn.ch"
 #INCLUDE "TBICONN.CH"
 #include "TOTVS.CH"
+#include "rwmake.ch"
 
 /*/{Protheus.doc} BIA321
 @author Marcos Alberto Soprani
@@ -15,13 +16,19 @@
 User Function BIA321()
 
 	Private msrhEnter   := CHR(13) + CHR(10)
+	Private ret := {}
+	//fPerg := "BIA321"
+	// fTamX1 := IIF(Alltrim(oApp:cVersion) == "MP8.11", 6, 10)
+	// fValidPerg()
+	// If !Pergunte(fPerg,.T.)
+	// 	Return
+	// EndIf	
 
-	fPerg := "BIA321"
-	fTamX1 := IIF(Alltrim(oApp:cVersion) == "MP8.11", 6, 10)
-	fValidPerg()
-	If !Pergunte(fPerg,.T.)
+	ret := xParamBox()
+
+	If Len(ret) == 0 .Or. Empty(ret)
 		Return
-	EndIf	
+	ENDIF
 
 	Processa({|| Rpt321Det() }, "Processando...", , .F.)
 
@@ -37,8 +44,8 @@ Static Function Rpt321Det()
 	Local msVetTrans := {}
 
 	Local msQtdCamp  := 6 // número inicial para o formulário 4
-	Local msDtIni    := Substr(dtos(MV_PAR01), 1, 4) + "-" + Substr(dtos(MV_PAR01), 5, 2) + "-" + Substr(dtos(MV_PAR01), 7, 2)
-	Local msDtFim    := Substr(dtos(MV_PAR02), 1, 4) + "-" + Substr(dtos(MV_PAR02), 5, 2) + "-" + Substr(dtos(MV_PAR02), 7, 2)
+	Local msDtIni    := ''
+	Local msDtFim    := ''
 	Local form       := 4 //Prensa
 
 	Local msStaExcQy := 0
@@ -47,24 +54,39 @@ Static Function Rpt321Det()
 	Local msTmpQry   := "##TMPBIA321_" + __cUserID +"_"+ dtos(Date()) + StrTran(Time(), ":", "")
 	Local nxPlan	 := ""
 
-	//esses numeros são os identificadores dos formularios gerados na base EFORMS, tabela Form
-	if (MV_PAR03 == 1) 
-		form = 4
-		nxPlan := "Inspeção - Prensa"
-		
-	elseif (MV_PAR03 == 2) 
-		form = 14
-		nxPlan := "Inspeção - Laboratório"
-		
-	elseif (MV_PAR03 == 3) 
-		form = 10012
-		nxPlan := "Inspeção - CQPA"
+	msDtIni := Substr(dtos(ret[1]), 1, 4) + "-" + Substr(dtos(ret[1]), 5, 2) + "-" + Substr(dtos(ret[1]), 7, 2)
+	msDtFim := Substr(dtos(ret[2]), 1, 4) + "-" + Substr(dtos(ret[2]), 5, 2) + "-" + Substr(dtos(ret[2]), 7, 2)
+	nxPlan := Alltrim(ret[3])
+
+	//.Or. Empty(nxPlan) porque existe um bug no ParamBox quando selecionada o primeiro elemento
+	if (nxPlan == "Inspeção Prensa" .Or. Empty(nxPlan)) 
+		form := 4
+		nxPlan := "Inspeção Prensa"
+	elseif (nxPlan == "Inspeção Laboratório") 
+		form := 14
+	elseif (nxPlan == "Inspeção CQPA") 
+		form := 10012
+	elseif (nxPlan == "Inspeção Prensa 2") 
+		form := 10014
 	endif
+
+	//esses numeros são os identificadores dos formularios gerados na base EFORMS, tabela Form
+	// if (MV_PAR03 == 1) 
+	// 	form = 4
+	// 	nxPlan := "Inspeção - Prensa"
+		
+	// elseif (MV_PAR03 == 2) 
+	// 	form = 14
+	// 	nxPlan := "Inspeção - Laboratório"
+		
+	// elseif (MV_PAR03 == 3) 
+	// 	form = 10012
+	// 	nxPlan := "Inspeção - CQPA"
+	// endif
 
 	ProcRegua(0)
 
 	oExcel := FWMSEXCEL():New()
-
 	
 	nxTabl := "Registros"
 
@@ -98,9 +120,12 @@ Static Function Rpt321Det()
 		RT007 += "          ( "
 		RT007 += "              SELECT DISTINCT "
 		RT007 += "                     'C' + RIGHT('000000' + RTRIM(CONVERT(VARCHAR, CAMPO.[ID])), 6) CCAMPO, "
-		RT007 += "                     'C' + RIGHT('000000' + RTRIM(CONVERT(VARCHAR, CAMPO.[ID])), 6) + '-' + ISNULL(CAMPO.[Label], CAMPO.[Name]) DESCR, "
+		RT007 += "                     'C' + RIGHT('000000' + RTRIM(CONVERT(VARCHAR, CAMPO.[ID])), 6) + '-' + "
+		RT007 += "                     ISNULL(CAMPO.[Label], CASE WHEN CHARINDEX('::', CAMPO.[Name]) > 0 
+		RT007 += "                     		THEN  SUBSTRING(CAMPO.[Name], CHARINDEX('::', CAMPO.[Name])+2, LEN(CAMPO.[Name]))
+		RT007 += "                     		ELSE CAMPO.[Name] 
+		RT007 += "                     END) DESCR,
 		RT007 += "                     CAMPO.[Type] TIPO, "
-		
 		RT007 += "					 	RIGHT('00' + RTRIM(CONVERT(VARCHAR, BOX.[Order])), 2) + "
 		RT007 += "				 		(CASE WHEN F_TABELA.ID IS NOT NULL  "
 		RT007 += "					  			THEN RIGHT('00' + RTRIM(CONVERT(VARCHAR, F_TABELA.[RowNumber])), 2)  "
@@ -300,33 +325,70 @@ Return
 ¦¦+-----------------------------------------------------------------------+¦¦
 ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
-Static Function fValidPerg()
+// Static Function fValidPerg()
 
-	local i,j
-	_sAlias := Alias()
-	dbSelectArea("SX1")
-	dbSetOrder(1)
-	cPerg := PADR(fPerg,fTamX1)
-	aRegs:={}
+// 	local i,j
+// 	_sAlias := Alias()
+// 	dbSelectArea("SX1")
+// 	dbSetOrder(1)
+// 	cPerg := PADR(fPerg,fTamX1)
+// 	aRegs:={}
+	
 
-	MV_PAR03 := 1 
+// 	MV_PAR03 := 1 
 
-	// Grupo/Ordem/Pergunta/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid/Var01/Def01/Cnt01/Var02/Def02/Cnt02/Var03/Def03/Cnt03/Var04/Def04/Cnt04/Var05/Def05/Cnt05/F3
-	aAdd(aRegs,{cPerg,"01","De Data                  ?","","","mv_ch1","D",08,0,0,"G","","mv_par01","","","","","","","","","","","","","","","","","","","","","","","","",""})
-	aAdd(aRegs,{cPerg,"02","Até Data                 ?","","","mv_ch2","D",08,0,0,"G","","mv_par02","","","","","","","","","","","","","","","","","","","","","","","","",""})
-	aAdd(aRegs,{cPerg,"03","Formulário               ?","","","mv_ch3","N",01,0,0,"C","","mv_par03","Prensa","Prensa","Prensa","","","Laboratorio","Laboratorio","Laboratorio","","","CQPA","CQPA","CQPA","","","","","","","","","","","",""})
-	For i := 1 to Len(aRegs)
-		if !dbSeek(cPerg + aRegs[i,2])
-			RecLock("SX1",.t.)
-			For j:=1 to FCount()
-				If j <= Len(aRegs[i])
-					FieldPut(j,aRegs[i,j])
-				Endif
-			Next
-			MsUnlock()
-		Endif
-	Next
+// 	// Grupo/Ordem/Pergunta/Variavel/Tipo/Tamanho/Decimal/Presel/GSC/Valid/Var01/Def01/Cnt01/Var02/Def02/Cnt02/Var03/Def03/Cnt03/Var04/Def04/Cnt04/Var05/Def05/Cnt05/F3
+// 	aAdd(aRegs,{cPerg,"01","De Data                  ?","","","mv_ch1","D",08,0,0,"G","","mv_par01","","","","","","","","","","","","","","","","","","","","","","","","",""})
+// 	aAdd(aRegs,{cPerg,"02","Até Data                 ?","","","mv_ch2","D",08,0,0,"G","","mv_par02","","","","","","","","","","","","","","","","","","","","","","","","",""})
+// 	aAdd(aRegs,{cPerg,"03","Formulário               ?","","","mv_ch3","N",01,0,0,"C","","mv_par03","Prensa","Prensa","Prensa","","","Laboratorio","Laboratorio","Laboratorio","","","CQPA","CQPA","CQPA","","","","","","","","","","","",""})
+// 	For i := 1 to Len(aRegs)
+// 		if !dbSeek(cPerg + aRegs[i,2])
+// 			RecLock("SX1",.t.)
+// 			For j:=1 to FCount()
+// 				If j <= Len(aRegs[i])
+// 					FieldPut(j,aRegs[i,j])
+// 				Endif
+// 			Next
+// 			MsUnlock()
+// 		Endif
+// 	Next
 
-	dbSelectArea(_sAlias)
+// 	dbSelectArea(_sAlias)
 
-Return
+// Return
+
+Static Function xParamBox()
+	Local aRet := {}
+	Local aParamBox := {}
+	Local aForms := {"-", "Inspeção Prensa","Inspeção Laboratório","Inspeção CQPA","Inspeção Prensa 2"}
+
+	Private cCadastro := "Formulários"
+
+	// --------------------------------------------------------------
+	// Abaixo está a montagem do vetor que será passado para a função
+	// --------------------------------------------------------------
+	aAdd(aParamBox,{1,"Data inicial"  ,Ctod(Space(8)),"","","","",50,.T.}) // Tipo data
+	aAdd(aParamBox,{1,"Data final"  ,Ctod(Space(8)),"","","","",50,.T.}) // Tipo data
+	// Tipo 1 -> MsGet()
+	//           [2]-Descricao
+	//           [3]-String contendo o inicializador do campo
+	//           [4]-String contendo a Picture do campo
+	//           [5]-String contendo a validacao
+	//           [6]-Consulta F3
+	//           [7]-String contendo a validacao When
+	//           [8]-Tamanho do MsGet
+	//           [9]-Flag .T./.F. Parametro Obrigatorio ?
+
+	aAdd(aParamBox,{2,"Formulário",1,aForms,100,"",.T.})
+	// Tipo 2 -> Combo
+	//           [2]-Descricao
+	//           [3]-Numerico contendo a opcao inicial do combo
+	//           [4]-Array contendo as opcoes do Combo
+	//           [5]-Tamanho do Combo
+	//           [6]-Validacao
+	//           [7]-Flag .T./.F. Parametro Obrigatorio ?
+	// Cuidado, há um problema nesta opção quando selecionado a 1ª opção.
+
+	ParamBox(aParamBox,"Extração de dados de formulários",@aRet)
+	
+Return aRet

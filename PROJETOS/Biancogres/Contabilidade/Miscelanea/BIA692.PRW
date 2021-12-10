@@ -239,6 +239,7 @@ Static Function fProcessa(cEmp, cVersao, cRevisa, cAnoRef, cMesRef, cMsg)
 		UP002 += "                    AND A.ZOZ_ANOREF = ZBZ.ZBZ_ANOREF "
 		UP002 += "                    AND SUBSTRING(A.ZOZ_DATA, 1, 6) = SUBSTRING(ZBZ.ZBZ_DATA, 1, 6) "
 		UP002 += "                    AND A.ZOZ_VERCON = 'D" + cMesRef + "' "
+		UP002 += "                    AND A.ZOZ_ORIPRC <> 'FORECAST-M' "
 		UP002 += "                    AND A.D_E_L_E_T_ = ' ' "
 		UP002 += "          ) "
 		UP002 += "                AND ZBZ.D_E_L_E_T_ = ' ' "

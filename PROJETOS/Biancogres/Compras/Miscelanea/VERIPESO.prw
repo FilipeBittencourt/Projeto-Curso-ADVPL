@@ -513,7 +513,7 @@ C_HTML += ' '
 C_HTML += '</html> '
 
 
-cRecebe     := "suporte.ti@biancogres.com.br"  // ;"+cEmail	// Email do(s) receptor(es)
+cRecebe     := "sistemas.ti@biancogres.com.br"  // ;"+cEmail	// Email do(s) receptor(es)
 cRecebeCC	:= "" 	// Com Copia
 cRecebeCO	:= ""												// Copia Oculta
 cAssunto	:= "DIVERGENCIA NA BALANÇA - PLACA: " + CPLACA + "NA DATA " + DTOC(SSDATA)

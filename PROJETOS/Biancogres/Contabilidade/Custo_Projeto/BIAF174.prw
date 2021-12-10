@@ -11,6 +11,7 @@
 /*/
 
 User Function BIAF174()
+Private LALTFORN := .T.
 
 		AxCadastro("SWD", "Despesas de Importação")
 

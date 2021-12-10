@@ -120,7 +120,7 @@ IF IsInCallStack("U_BACP0010")  .OR. UPPER(ALLTRIM(FUNNAME())) == "MATA460A" .OR
 
 	
 	// tratamento para titulos de subistituicao tributaria
-	If SF2->F2_ICMSRET > 0 .And. Alltrim(SF2->F2_EST) $ GetMV("MV_YUFSTCD") .And. Alltrim(SE1->E1_PARCELA) == 'A' .And. Alltrim(cEmpAnt) $ '01_05_07'
+	If SF2->F2_ICMSRET > 0 .And. Alltrim(SF2->F2_EST) $ GetMV("MV_YUFSTCD") .And. Alltrim(SE1->E1_PARCELA) == 'A' .And. Alltrim(cEmpAnt) $ '01_05_07_14'
 		
 		//Se for RA e Titulos de ST, o Vencimento é sempre a DataBase
 		If U_fValidaRA(SF2->F2_COND)

@@ -18,7 +18,7 @@
 
 User Function FROPRT06()
 
-	Local xv_Emps    := U_BAGtEmpr("01_05_07_13")
+	Local xv_Emps    := U_BAGtEmpr("01_05_07_13_14")
 	Local nI
 
 	For nI := 1 to Len(xv_Emps)

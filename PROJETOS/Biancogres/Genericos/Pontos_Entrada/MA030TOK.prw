@@ -5,6 +5,7 @@
 ealiza validações no cadastro no de Clientes
 @type function
 @author Bruno Madaleno /  Ranisses A. Corona
+@obs A funcao BIA863 esta sendo chamada UMA UNICA VEZ ao final do fontes, caso a variavel LRET = .T. / PROIBIDO O USO DO RETURN(.T.) NO MEIO DO FONTE. 
 @since 02/08/2006
 /*/
 Static _cMCodCli_
@@ -451,10 +452,8 @@ User Function MA030TOK()
 			EndIf
 		EndIf
 
-		IF ALTERA
-			
-			U_BIA863() // GRAVA INFORMAÇÕES ADICIONAIS NO CLIENTE
-			
+		//IF ALTERA	
+			//U_BIA863() // GRAVA INFORMAÇÕES ADICIONAIS NO CLIENTE
 			/*
 			CONOUT('Get A1_COD=>'+M->A1_COD)
 			CONOUT('Get cCliBZ=>'+cCliBZ)
@@ -463,8 +462,7 @@ User Function MA030TOK()
 			cError := .F.
 			Return(lRET)
 			*/
-			
-		ENDIF
+		//ENDIF
 
 
 		If Alltrim(CMODULO) <> "FIN"
@@ -574,29 +572,33 @@ User Function MA030TOK()
 
 	If lRET
 		
-		// Preencher a categoria dos demais clientes do grupo ao alterar a categoria de um cliente
+		U_BIA863()
+
 		If Inclui 		
-			
+			// Preencher a categoria dos demais clientes do grupo ao alterar a categoria de um cliente	
 			U_BFG136B()	
+			// Preencher a GALERIA dos demais clientes do grupo ao alterar a GALERIA de um cliente	
+			U_BFG136D()	
 			
 		elseif Altera
 		
-			DbSelectArea("SA1")
-			SA1->(DbSetOrder(1))
-			SA1->(DbSeek(xFilial("SA1")+M->A1_COD+M->A1_LOJA))
-
 			//se o usuario alterou a categoria
 			if(!Empty(M->A1_YCAT) .And. Alltrim(M->A1_YCAT) <> Alltrim(SA1->A1_YCAT))
 				U_BFG136B()
 			ENDIF
+
+			//se o usuario alterou a galeria
+			if(!Empty(M->A1_YGALERI) .And. Alltrim(M->A1_YGALERI) <> Alltrim(SA1->A1_YGALERI))
+				U_BFG136D()
+			ENDIF
 	
 		EndIf
-
-		U_BIA863()
 		
 	EndIf
 
-	If lRET
+	//If lRET
+
+		//U_BIA863()
 
 		/*
 		CONOUT('Gravando Codigo variavel')
@@ -607,7 +609,7 @@ User Function MA030TOK()
 		CONOUT('Gravando 2 cCliBZ=>'+cCliBZ)
 		*/
 
-	EndIf
+	//EndIf
 
 Return(lRET)
 

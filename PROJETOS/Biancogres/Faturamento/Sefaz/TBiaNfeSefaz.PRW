@@ -82,9 +82,12 @@ Return()
 
 
 Method Validate() Class TBiaNfeSefaz
+
+	Local _oBiaEnv	:=	tBiaAmbiente():New()
+
 	
 	If SFT->FT_TIPOMOV == "S"
-		::lValidate := ::VldField() .And. ::VldTes()
+		::lValidate := ::VldField() .And. ::VldTes() .And. !_oBiaEnv:lErro
 	EndIf
   
 Return()

@@ -69,13 +69,14 @@ static method GetDocOri(cDoc,cSerie,cCliente,cLoja,cCodFor,cLojaFor) class TAutD
         SELECT DISTINCT SD1_O.R_E_C_N_O_ SD1RECNO
         FROM %exp:cSD2Table% SD2
         JOIN %exp:cSD1Table% SD1 ON (
-                                        SD1.D_E_L_E_T_=''
-                                    AND SD2.D_E_L_E_T_=''
+                                        SD1.D_E_L_E_T_<> '*'
+                                    AND SD2.D_E_L_E_T_<> '*'
                                     AND SD1.D1_FILIAL=SD2.D2_FILIAL
                                     AND SD1.D1_NFORI=SD2.D2_DOC
                                     AND SD1.D1_SERIORI=SD2.D2_SERIE
                                     AND SD1.D1_FORNECE=SD2.D2_CLIENTE
                                     AND SD1.D1_LOJA=SD2.D2_LOJA
+                                    AND SD1.D1_COD=SD2.D2_COD
         )
         JOIN %exp:cSC9Table% SC9 ON (
                                     SC9.D_E_L_E_T_=''
@@ -88,16 +89,17 @@ static method GetDocOri(cDoc,cSerie,cCliente,cLoja,cCodFor,cLojaFor) class TAutD
                                 AND SC9.C9_PEDIDO=SD2.D2_PEDIDO
         )
         JOIN %exp:cSD1Table% SD1_O ON (
-                                        SD1_O.D_E_L_E_T_=''
-                                    AND SC9.D_E_L_E_T_=''
+                                        SD1_O.D_E_L_E_T_<> '*'
+                                    AND SC9.D_E_L_E_T_<> '*'
                                     AND SC9.C9_FILIAL=SD1_O.D1_FILIAL
+                                    AND SC9.C9_PRODUTO = SD1_O.D1_COD
                                     AND SUBSTRING(C9_BLINF,3,%exp:cDSSize%)+%exp:cCodFor%+%exp:cLojaFor%=SD1_O.D1_DOC+SD1_O.D1_SERIE+SD1_O.D1_FORNECE+SD1_O.D1_LOJA
             )
         WHERE (1=1)
-        AND SC9.D_E_L_E_T_=''
-        AND SD1.D_E_L_E_T_=''
-        AND SD1_O.D_E_L_E_T_=''
-        AND SD2.D_E_L_E_T_=''
+        AND SC9.D_E_L_E_T_<> '*'
+        AND SD1.D_E_L_E_T_<> '*'
+        AND SD1_O.D_E_L_E_T_<> '*'
+        AND SD2.D_E_L_E_T_<> '*'
         AND SC9.C9_FILIAL=%exp:cSC9Filial%
         AND SD1.D1_FILIAL=%exp:cSD1Filial%
         AND SD1_O.D1_FILIAL=%exp:cSD1Filial%
@@ -110,7 +112,7 @@ static method GetDocOri(cDoc,cSerie,cCliente,cLoja,cCodFor,cLojaFor) class TAutD
                             SELECT 1
                             FROM %exp:cSD1Table% SD1_P
                             WHERE (1=1)
-                            AND SD1_P.D_E_L_E_T_=' '
+                            AND SD1_P.D_E_L_E_T_<> '*'
                             AND SD1_P.D1_FILIAL=SD2.D2_FILIAL
                             AND SD1_P.D1_NFORI=SD2.D2_DOC
                             AND SD1_P.D1_SERIORI=SD2.D2_SERIE
@@ -220,6 +222,27 @@ static method ProcessaDevolucao(cCodigosCli) class TAutDevIntQry
 	cSQL+="   AND D1_EMISSAO>='"+DtoS(getNewPar("BIA_DTIICP",CToD("01/01/2021")))+"' "+cCRLF // TO DO: COLOCAR DATA PARA SUBIDA.
 	cSQL+="   AND D1_FORNECE NOT IN " + FormatIn(cCodigosCli, "/")+cCRLF
 
+    //|TRATATIVA MOMENTANEA PARA NAO TRAZER REGISTRO QUE NAO DEVEM SER PROCESSADOS |
+    cSQL+=" AND SD1.R_E_C_N_O_ NOT IN  "+cCRLF
+    cSQL+=" ('693656','682746','702433','663076','679838','690532','692418','702458','674465','674466','683283','683282', "+cCRLF
+    cSQL+=" '683848','698966','694898','698829','665091','679845','688597','688598','670163','694371','698958','668657', "+cCRLF
+    cSQL+=" '690326','663099','698835','697226','681005','690325','692395','687580','694860','693112','698073','681698', "+cCRLF
+    cSQL+=" '690324','675580','664501','673568','682745','660351','660384','690328','689779','689780','660533','697225', "+cCRLF
+    cSQL+=" '693643','664265','688591','657351','657352','657353','657354','658139','658140','660025','660035','679848', "+cCRLF
+    cSQL+=" '664482','665086','665087','665088','667356','667357','667369','667404','667411','667420','667421','667422', "+cCRLF
+    cSQL+=" '668574','668658','670225','670739','670740','670741','671215','671216','672495','673549','673562','673565', "+cCRLF
+    cSQL+=" '673569','674451','674457','674619','674634','674810','679759','679776','679779','679849','679850','682725', "+cCRLF
+    cSQL+=" '682843','683890','684265','685245','685246','686594','686802','686804','686805','687572','687573','688623', "+cCRLF
+    cSQL+=" '688630','688631','688634','689757','675783','675738','676679','679848','673983','674450','697224','697219', "+cCRLF
+    cSQL+=" '689764','691183','692010','692411','694350','694361','694565','694566','697097','697237','700249','702807', "+cCRLF
+    cSQL+=" '703130','671226','677970','697217','674301','674812','689430','688599','702434','692409','700298','702435', "+cCRLF
+    cSQL+=" '685428','685432','685435','685436','685437','685508','685527','685532','685547','685533','688600','673987', "+cCRLF
+    cSQL+=" '697211','698072','700268','660527','703137','661711','668654','685244','670671','670677','670687','670673', "+cCRLF
+    cSQL+=" '698069','687578','682723','694868','690330','690329','689735','689736','665738','674300','674286','683555', "+cCRLF
+    cSQL+=" '674463','674464','693047','690327','673127','673128','673212','693662','687581','674302','675761','675775', "+cCRLF
+    cSQL+=" '693661','660232','661771','660534','668655','685241','667402','667403','694856','668656','670168','670705', "+cCRLF
+    cSQL+=" '670169','687579','673233','673232','716148','730856','730857','730859','731227','731228','735419') "+cCRLF
+
 	cSQL+=" AND NOT EXISTS"+cCRLF
 	cSQL+=" ( "+cCRLF
 	cSQL+="   SELECT NULL"+cCRLF
@@ -261,7 +284,7 @@ static method DocOriCmpAut(nZL9RecNo) class TAutDevIntQry
                     OR
                     ((SE2.E2_NUM=?) AND (SE2.E2_PREFIXO=?) AND (SE2.E2_TIPO='NDF') AND (SE2.E2_BAIXA=' '))
               )
-               AND (SE2.D_E_L_E_T_=' ')
+               AND (SE2.D_E_L_E_T_<> '*')
                AND (SE2.E2_FORNECE=?)
                AND (SE2.E2_LOJA=?)
                AND (SE2.E2_TIPO IN (?))
@@ -413,10 +436,10 @@ static method GetEndereco(cCodCli,cLojaCli,cDoc,cSerie,cItem,nZL9RecNo) class TA
                 AND ZL9.ZL9_LOJDEV=SF1.F1_LOJA
                 AND ZL9.ZL9_PRCDEV=Z25.Z25_NUM
             )
-            WHERE Z25.D_E_L_E_T_=' '
-              AND Z26.D_E_L_E_T_=' '
-              AND SF1.D_E_L_E_T_=' '
-              AND SD1.D_E_L_E_T_=' '
+            WHERE Z25.D_E_L_E_T_<> '*'
+              AND Z26.D_E_L_E_T_<> '*'
+              AND SF1.D_E_L_E_T_<> '*'
+              AND SD1.D_E_L_E_T_<> '*'
               AND Z25.Z25_CODCLI=?
               AND Z25.Z25_LOJCLI=?
               AND Z26.Z26_NFISC=?
@@ -424,7 +447,7 @@ static method GetEndereco(cCodCli,cLojaCli,cDoc,cSerie,cItem,nZL9RecNo) class TA
               AND Z26.Z26_ITEMNF=?
               AND ( 
                         ( 
-                                ZL9.D_E_L_E_T_=' ' 
+                                ZL9.D_E_L_E_T_<> '*'
                             AND ZL9.ZL9_PRCDEV=Z25.Z25_NUM 
                             AND ZL9.ZL9_CODEMP=?
                             AND ZL9.ZL9_CODFIL=?
@@ -432,8 +455,8 @@ static method GetEndereco(cCodCli,cLojaCli,cDoc,cSerie,cItem,nZL9RecNo) class TA
                         OR NOT EXISTS(
                                 SELECT DISTINCT 1 
                                   FROM [?] ZL9_t
-                                 WHERE ZL9_t.D_E_L_E_T_=' '
-                                   AND ZL9_t.ZL9_FILIAL=' '
+                                 WHERE ZL9_t.D_E_L_E_T_<> '*'
+                                   AND ZL9_t.ZL9_FILIAL=''
                                    AND ZL9_t.ZL9_CODEMP=?
                                    AND ZL9_t.ZL9_CODFIL=?
                                    AND ZL9_t.ZL9_PRCDEV=Z25.Z25_NUM
@@ -527,19 +550,19 @@ static method GetProcDev(nZL9RecNo) class TAutDevIntQry
                 AND ZL9.ZL9_LOJDEV=SF1.F1_LOJA
                 AND ZL9.R_E_C_N_O_=?
                 )
-                WHERE Z25.D_E_L_E_T_=' '
-                  AND Z26.D_E_L_E_T_=' '
-                  AND SF1.D_E_L_E_T_=' '
-                  AND SD1.D_E_L_E_T_=' '
-                  AND ZL9.D_E_L_E_T_=' '
+                WHERE Z25.D_E_L_E_T_<> '*'
+                  AND Z26.D_E_L_E_T_<> '*'
+                  AND SF1.D_E_L_E_T_<> '*'
+                  AND SD1.D_E_L_E_T_<> '*'
+                  AND ZL9.D_E_L_E_T_<> '*'
                   AND Z26.Z26_ITEMNF<>'XX'
                   AND ZL9.ZL9_CODEMP=?
                   AND ZL9.ZL9_CODFIL=?
                   AND NOT EXISTS(
                     SELECT DISTINCT 1 
                       FROM [?] ZL9_t
-                     WHERE ZL9_t.D_E_L_E_T_=' '
-                       AND ZL9_t.ZL9_FILIAL=' '
+                     WHERE ZL9_t.D_E_L_E_T_<> '*'
+                       AND ZL9_t.ZL9_FILIAL<> '*'
                        AND ZL9_t.ZL9_CODEMP=?
                        AND ZL9_t.ZL9_CODFIL=?
                        AND ZL9_t.ZL9_PRCDEV=Z25.Z25_NUM

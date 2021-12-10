@@ -73,19 +73,16 @@ Return()
 
 
 Method Get() Class TAFMovimentoRemessaReceber
-	Local cSQL := ""
-	Local cQry := GetNextAlias()
-	Local oObj := Nil
+
+	Local cSQL        := ""
+	Local cQry        := GetNextAlias()
+	Local oObj        := Nil
 
 	::oLog:cIDProc := ::cIDProc
 	::oLog:cOperac := "R"
 	::oLog:cMetodo := "I_SEL_TIT"
 
 	::oLog:Insert()
-
-	// Bloco comentado, pois a classe devera tratar liquidacao de titulos ao invez de faturas
-	//::oFat:dEmissao := ::dEmissao
-	//::oFat:Create()
 
 	// Utiliza a rotina customizada para geracao de faturas
 	If !::lReproc
@@ -113,14 +110,13 @@ Method Get() Class TAFMovimentoRemessaReceber
 		EndIf
 		
 	EndIf
-	
 
 	cSQL := " SELECT E1_PREFIXO, E1_NUM, E1_PARCELA, E1_TIPO, E1_CLIENTE, E1_LOJA, E1_VALOR, E1_SALDO, E1_DECRESC, E1_PORCJUR, E1_EMISSAO, E1_VENCTO, E1_VENCREA, "
 	cSQL += " E1_NUMBOR, E1_NUMBCO, E1_IDCNAB, E1_PEDIDO, E1_PORTADO, E1_AGEDEP, E1_CONTA, E1_SITUACA, E1_YCDGREG, E1_YCLASSE, E1_YEMP, E1_YUFCLI, SE1.R_E_C_N_O_ AS SE1_RECNO, "
 	cSQL += " A1_YCDGREG, A1_YDTPRO, A1_YTFGNRE, A1_YEMABOL, E1_NATUREZ "
 
 	//Inclui a Chave da NF
-	if (FIDC():isFIDCEnabled())
+	If ::lFIDC
 
 		cSQL += " ,IsNull((SELECT DISTINCT (CASE SE1.E1_TIPO WHEN 'FT' THEN ("
 		cSQL += "	SELECT  CAST("
@@ -165,12 +161,23 @@ Method Get() Class TAFMovimentoRemessaReceber
 
 	endif
 
-	
 	cSQL += " FROM "+ RetSQLName("SE1") + " SE1 (NOLOCK) "
 	cSQL += " INNER JOIN "+ RetSQLName("SA1") + " SA1 (NOLOCK) "
-	cSQL += " ON A1_FILIAL = "+ ValToSQL(xFilial("SA1"))
-	cSQL += " AND E1_CLIENTE = A1_COD "
-	cSQL += " AND E1_LOJA = A1_LOJA "
+	cSQL += " 	ON A1_FILIAL = "+ ValToSQL(xFilial("SA1"))
+	cSQL += " 		AND E1_CLIENTE = A1_COD "
+	cSQL += " 		AND E1_LOJA = A1_LOJA "
+
+	If cEmpAnt == "07"
+
+		cSQL += " INNER JOIN " + RetSQLName("SC5") + " SC5_LM (NOLOCK) "
+    cSQL += "     ON SC5_LM.C5_FILIAL = SE1.E1_FILIAL "
+    cSQL += "        AND SC5_LM.C5_NUM = SE1.E1_PEDIDO "
+    cSQL += "        AND SC5_LM.C5_CLIENTE = SE1.E1_CLIENTE "
+    cSQL += "        AND SC5_LM.C5_LOJACLI = SE1.E1_LOJA "
+    cSQL += "        AND SC5_LM.D_E_L_E_T_ = '' "
+
+	EndIf
+
 	cSQL += " WHERE E1_FILIAL = "+ ValToSQL(xFilial("SE1"))
 	cSQL += " AND E1_TIPO IN ('NF', 'FT', 'BOL', 'ST') "
 
@@ -230,16 +237,22 @@ Method Get() Class TAFMovimentoRemessaReceber
 		cSQL += " AND SA1.D_E_L_E_T_ = '' "
 	
 	Else
-		cSQL += " AND exists (select 1 from TBLSE1 T where T.R_E_C_N_O_ = SE1.R_E_C_N_O_ )  "
-		cSQL += " AND E1_YSITAPI NOT IN ('2', '') 											"
+		//cSQL += " AND exists (select 1 from TBLSE1 T where T.R_E_C_N_O_ = SE1.R_E_C_N_O_ )  "
+		//SQL += " AND exists (select 1 from TBLSE1_20210830 T where T.R_E_C_N_O_ = SE1.R_E_C_N_O_ )  "	
+		SQL += " AND exists (select 1 from TBLSE1_20211201 T where T.R_E_C_N_O_ = SE1.R_E_C_N_O_ )  "		
+		If ::lReproc
+			cSQL += " AND SE1.E1_YSITAPI NOT IN ('2', '') 										"
+		Else
+			cSQL += " AND SE1.E1_YSITAPI <> '4' 												"				
+		EndIf
 		cSQL += " AND SE1.E1_SALDO > 0 														"
 		cSQL += " AND SE1.D_E_L_E_T_ = '' 													"
 		cSQL += " AND SA1.D_E_L_E_T_ = '' 													"
+
 	Endif
 	
-	
 	cSQL += " AND											"
-	cSQL += " (												"
+	cSQL += " ((												"
 	cSQL += " select top 1 A6_YTPINTB from "+ RetSQLName("ZK0") + " ZK0				"
 	cSQL += " join "+ RetSQLName("ZK1") + " ZK1 on 							"
 	cSQL += " 	ZK0_FILIAL			= ZK1_FILIAL			"
@@ -255,30 +268,55 @@ Method Get() Class TAFMovimentoRemessaReceber
 	cSQL += " AND ZK0_FILIAL = ''							"
 	cSQL += " AND ZK0.D_E_L_E_T_ = ''						"
 	cSQL += " )	= "+IIf(::lFIDC, '1', "''")+"				"
-	
-	//cSQL += " AND NOT (E1_TIPO = 'FT' AND A1_YCDGREG = '000029')"
-	/*
-	cSQL += " AND											"
-	cSQL += " NOT ((										"
-	cSQL += " select top 1 A6_YTPINTB from "+ RetSQLName("ZK0") + " ZK0				"
-	cSQL += " join "+ RetSQLName("ZK1") + "  ZK1 on 							"
-	cSQL += " 	ZK0_FILIAL			= ZK1_FILIAL			"
-	cSQL += " 	AND  ZK0_CODREG		= ZK1_CODREG 			"
-	cSQL += " 	AND ZK1.D_E_L_E_T_	= ''					"
-	cSQL += " join "+ RetSQLName("SA6") + " SA6 on 			"
-	cSQL += " 	A6_FILIAL			= ZK1_FILIAL 			"
-	cSQL += " 	AND A6_COD			= ZK1_BANCO 			"
-	cSQL += " 	AND A6_AGENCIA		= ZK1_AGENCI 			"
-	cSQL += " 	AND A6_NUMCON		= ZK1_CONTA 			"
-	cSQL += " 	AND SA6.D_E_L_E_T_	= ''					"
-	cSQL += " where ZK0_CODGRU = A1_YCDGREG					"
-	cSQL += " AND ZK0_FILIAL = ''							"
-	cSQL += " AND ZK0.D_E_L_E_T_ = ''						"
-	cSQL += " )	= '1' AND E1_NATUREZ = '1230'	)			"	
-	*/
+
+	//|Tratamento para títulos em que o cliente não faz parte do FIDC, porém o pedido foi feito como FIDC |
+	If cEmpAnt == "07"
+
+		If ::lFIDC
+			cSQL += " OR  EXISTS "
+		Else
+			cSQL += " AND NOT EXISTS "
+		EndIf
+
+		cSQL += " 	( "
+		cSQL += " 			SELECT NULL "
+		cSQL += " 			FROM SC5010 SC5_ORI  "
+		cSQL += " 			WHERE SC5_ORI.C5_NUM = SC5_LM.C5_YPEDORI "
+		cSQL += " 						AND SC5_ORI.C5_YCLIORI = SC5_LM.C5_CLIENTE "
+		cSQL += " 						AND SC5_ORI.C5_CONDPAG = '505' "
+		cSQL += " 						AND SC5_ORI.C5_EMISSAO >= '20210720' "
+		cSQL += " 				AND SC5_LM.C5_YEMPPED = '01' "
+		cSQL += " 						AND SC5_ORI.D_E_L_E_T_ = '' "
+ 
+		cSQL += " 		UNION ALL "
+
+		cSQL += " 		SELECT NULL "
+		cSQL += " 			FROM SC5050 SC5_ORI "
+		cSQL += " 			WHERE SC5_ORI.C5_NUM = SC5_LM.C5_YPEDORI "
+		cSQL += " 						AND SC5_ORI.C5_YCLIORI = SC5_LM.C5_CLIENTE "
+		cSQL += " 						AND SC5_ORI.C5_CONDPAG = '505' "
+		cSQL += " 						AND SC5_ORI.C5_EMISSAO >= '20210720' "
+		cSQL += " 				AND SC5_LM.C5_YEMPPED = '05' "
+		cSQL += " 						AND SC5_ORI.D_E_L_E_T_ = '' "
+ 
+		cSQL += " 		
+		cSQL += " 		UNION ALL "
+
+		cSQL += " 		SELECT NULL "
+		cSQL += " 			FROM SC5140 SC5_ORI "
+		cSQL += " 			WHERE SC5_ORI.C5_NUM = SC5_LM.C5_YPEDORI "
+		cSQL += " 						AND SC5_ORI.C5_YCLIORI = SC5_LM.C5_CLIENTE "
+		cSQL += " 						AND SC5_ORI.C5_CONDPAG = '505' "
+		cSQL += " 						AND SC5_ORI.C5_EMISSAO >= '20210720' "
+		cSQL += " 				AND SC5_LM.C5_YEMPPED = '14' "
+		cSQL += " 						AND SC5_ORI.D_E_L_E_T_ = '' "
+		cSQL += " 	) "
+
+	EndIf
+
+	cSQL += " )	"
 	
 	cSQL += " ORDER BY E1_CLIENTE, A1_YCDGREG "
-	
 	
 	TcQuery cSQL New Alias (cQry)
 
@@ -286,42 +324,42 @@ Method Get() Class TAFMovimentoRemessaReceber
 
 		oObj := TIAFMovimentoFinanceiro():New()
 
-		oObj:cPrefixo := (cQry)->E1_PREFIXO
-		oObj:cNumero := (cQry)->E1_NUM
-		oObj:cParcela := (cQry)->E1_PARCELA
-		oObj:cTipo := (cQry)->E1_TIPO
-		oObj:cCliFor := (cQry)->E1_CLIENTE
-		oObj:cLoja := (cQry)->E1_LOJA
-		oObj:cEmail := (cQry)->A1_YEMABOL
-		oObj:nValor := (cQry)->E1_VALOR
-		oObj:nSaldo := (cQry)->E1_SALDO
-		oObj:nAbat := SomaAbat((cQry)->E1_PREFIXO, (cQry)->E1_NUM, (cQry)->E1_PARCELA, "R", 1,, (cQry)->E1_CLIENTE, (cQry)->E1_LOJA)
-		oObj:nDesc := (cQry)->E1_DECRESC
-		oObj:nAcre := ::GetAcre((cQry)->A1_YTFGNRE, (cQry)->E1_YCLASSE, AllTrim((cQry)->E1_YEMP), AllTrim((cQry)->E1_YUFCLI))
-		oObj:nPerJur := (cQry)->E1_PORCJUR
-		oObj:dEmissao := sToD((cQry)->E1_EMISSAO)
-		oObj:dVencto := If (sToD((cQry)->E1_VENCTO) < dDataBase, dDataBase, sToD((cQry)->E1_VENCTO))
-		oObj:dVencRea := sToD((cQry)->E1_VENCREA)
-		oObj:cNumBor := (cQry)->E1_NUMBOR
-		oObj:cNumBco := (cQry)->E1_NUMBCO
-		oObj:cIDCnab := (cQry)->E1_IDCNAB
-		oObj:cPedido := (cQry)->E1_PEDIDO
-		oObj:lRecAnt := If (oObj:cTipo == "BOL" .And. SubStr(oObj:cPrefixo, 1, 2) $ "PR/CT" .And. !Empty(oObj:cPedido), .T., .F.)
-		oObj:nRecNo := (cQry)->SE1_RECNO
+		oObj:cPrefixo  := (cQry)->E1_PREFIXO
+		oObj:cNumero   := (cQry)->E1_NUM
+		oObj:cParcela  := (cQry)->E1_PARCELA
+		oObj:cTipo     := (cQry)->E1_TIPO
+		oObj:cCliFor   := (cQry)->E1_CLIENTE
+		oObj:cLoja     := (cQry)->E1_LOJA
+		oObj:cEmail    := (cQry)->A1_YEMABOL
+		oObj:nValor    := (cQry)->E1_VALOR
+		oObj:nSaldo    := (cQry)->E1_SALDO
+		oObj:nAbat     := SomaAbat((cQry)->E1_PREFIXO, (cQry)->E1_NUM, (cQry)->E1_PARCELA, "R", 1,, (cQry)->E1_CLIENTE, (cQry)->E1_LOJA)
+		oObj:nDesc     := (cQry)->E1_DECRESC
+		oObj:nAcre     := ::GetAcre((cQry)->A1_YTFGNRE, (cQry)->E1_YCLASSE, AllTrim((cQry)->E1_YEMP), AllTrim((cQry)->E1_YUFCLI))
+		oObj:nPerJur   := (cQry)->E1_PORCJUR
+		oObj:dEmissao  := sToD((cQry)->E1_EMISSAO)
+		oObj:dVencto   := If (sToD((cQry)->E1_VENCTO) < dDataBase, dDataBase, sToD((cQry)->E1_VENCTO))
+		oObj:dVencRea  := sToD((cQry)->E1_VENCREA)
+		oObj:cNumBor   := (cQry)->E1_NUMBOR
+		oObj:cNumBco   := (cQry)->E1_NUMBCO
+		oObj:cIDCnab   := (cQry)->E1_IDCNAB
+		oObj:cPedido   := (cQry)->E1_PEDIDO
+		oObj:lRecAnt   := If (oObj:cTipo == "BOL" .And. SubStr(oObj:cPrefixo, 1, 2) $ "PR/CT" .And. !Empty(oObj:cPedido), .T., .F.)
+		oObj:nRecNo    := (cQry)->SE1_RECNO
 
-		oObj:cBanco := (cQry)->E1_PORTADO
-		oObj:cAgencia := (cQry)->E1_AGEDEP
-		oObj:cConta := (cQry)->E1_CONTA
-		oObj:cSubCta := ""
+		oObj:cBanco    := (cQry)->E1_PORTADO
+		oObj:cAgencia  := (cQry)->E1_AGEDEP
+		oObj:cConta    := (cQry)->E1_CONTA
+		oObj:cSubCta   := ""
 		oObj:cSituacao := "1"
-		oObj:cEspecie := ""
+		oObj:cEspecie  := ""
 
 		// Tratamento de juros diarios
 		oObj:nJurosDia := (oObj:nPerJur / 100) * oObj:nSaldo + oObj:nJuros - oObj:nAbat
 
 		// Tratamento de protesto
-		oObj:nCodProt := If ((cQry)->A1_YDTPRO >= 6, 1, 2)
-		oObj:nDiaProt := (cQry)->A1_YDTPRO
+		oObj:nCodProt  := If ((cQry)->A1_YDTPRO >= 6, 1, 2)
+		oObj:nDiaProt  := (cQry)->A1_YDTPRO
 
 		// Calculo do valor total do boleto
 		oObj:nValorBol := oObj:nSaldo + oObj:nJuros - oObj:nAbat //(oObj:nAbat + oObj:nDesc) + oObj:nAcre
@@ -378,12 +416,13 @@ Method Get() Class TAFMovimentoRemessaReceber
 		EndIf
 
 		oObj:cGRCB := (cQry)->A1_YCDGREG
-		oObj:cRCB := (cQry)->E1_YCDGREG
+		oObj:cRCB  := (cQry)->E1_YCDGREG
 		oObj:lMRCB := .F.
 
 		//Inclui a Chave da NF
-		if (FIDC():isFIDCEnabled())
-			oObj:cCHVNFE:=(cQry)->F2_CHVNFE
+		if ::lFIDC
+			oObj:cCHVNFE	:=(cQry)->F2_CHVNFE
+			oObj:cGRCB		:= "000029"
 		endif
 		
 		//TODO FIDC INICIO - Provisório
@@ -394,16 +433,33 @@ Method Get() Class TAFMovimentoRemessaReceber
 			oObj:cGRCB := '000001' //Regra do BB para antecipado
 		EndIf
 		
-		//FIDC - tratamento de fatura
-		If AllTrim(oObj:cTipo) == 'FT' .Or. ( Alltrim(cEmpAnt) == '07' .And. !U_fVlFIDCLM((cQry)->E1_PEDIDO) )
-			If AllTrim((cQry)->E1_YUFCLI) == 'MG' 
-				oObj:cGRCB := '000028' // Regra Banestes para Fatura
-			else
-				oObj:cGRCB := '000001' // Regra BB para Fatura
+		//FIDC - tratamento de FT
+		If AllTrim(oObj:cTipo) == 'FT'
+			If oObj:cGRCB == '000029' 
+				If AllTrim((cQry)->E1_YUFCLI) == 'MG' 
+					oObj:cGRCB := '000028' // Regra Banestes para Fatura
+				else
+					oObj:cGRCB := '000001' // Regra BB para Fatura
+				EndIf
 			EndIf
 		EndIf
 
-		// FIDC FIM - Provisório
+		//FIDC - tratamento para pedidos emitidos na LM anteior a 22/07/21
+    If !(AllTrim(oObj:cTipo) $ 'FT_BOL') .And. Alltrim(cEmpAnt) == '07' .And. !U_fVlFIDCLM((cQry)->E1_PEDIDO) 
+			If oObj:cGRCB == '000029' 
+				If AllTrim((cQry)->E1_YUFCLI) == 'MG' 
+					oObj:cGRCB := '000028' // Regra Banestes para Fatura
+				else
+					oObj:cGRCB := '000001' // Regra BB para Fatura
+				EndIf
+			EndIf
+		EndIf
+
+		//FIDC - tratamento para pedidos emitidos na LM posterior a 22/07/21 e sào FIDC (condição pagamento 505)
+		// If Alltrim(cEmpAnt) == '07' .And. U_fVlFIDCLM((cQry)->E1_PEDIDO) .And. (cQry)->A1_YCDGREG <> '000029' 
+		// 	oObj:cGRCB := '000029'
+		// EndIf
+
 
 		::oLst:Add(oObj)
 

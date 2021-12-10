@@ -12,8 +12,17 @@
 
 User Function BAF021()
 
-	Local aAreaSE2 := SE2->(GetArea())
-	Local aAreaSEA := SEA->(GetArea())
+	Local aAreaSE2 := {}
+	Local aAreaSEA := {}
+
+	/*
+	If Select("SX6") == 0
+		RPCSetEnv("07", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+	EndIf
+  */
+
+	aAreaSE2 := SE2->(GetArea())
+	aAreaSEA := SEA->(GetArea())
 
 	oObj := TAFRemessaPagar():New()
 	oObj:oMrr:lGnre := .T.
@@ -21,5 +30,5 @@ User Function BAF021()
 
 	RestArea(aAreaSE2)
 	RestArea(aAreaSEA)
-						
+
 Return()

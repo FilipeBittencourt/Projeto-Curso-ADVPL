@@ -197,7 +197,7 @@ Static Function RptiDetail()
 
 	oExcel:Activate()
 
-	LjMsgRun( "Gerando o arquivo, aguarde...", "BIAFJ001", {|| oExcel:GetXMLFile( cFile ) } )
+	LjMsgRun( "Gerando o arquivo, aguarde...", "BFG129I", {|| oExcel:GetXMLFile( cFile ) } )
 	oExcel:DeActivate()
 	cArqDest := ConvertXlsx(/*cDir*/, cFile)
 	If !Empty(cArqDest)

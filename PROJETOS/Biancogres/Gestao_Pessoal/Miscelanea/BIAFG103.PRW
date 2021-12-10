@@ -16,7 +16,7 @@ User Function BFG103T()
 	Private _cSequen	:=	""
 	Private _oAcessos	:=	tAcessosOrcamento():New()
 
-	
+
 	_cVersao   := "ORCA_21"   
 	_cRevisa   := "003"
 	_cAnoRef   := '2021'
@@ -26,8 +26,8 @@ User Function BFG103T()
 	If aScan(_oAcessos:aAcessos,{|x| x[3] }) > 0
 
 		_cSequen	:=	fGetSeq()
-	
-		
+
+
 		BFG103A()
 
 	Endif
@@ -42,6 +42,11 @@ User Function BIAFG103()
 	Private msrhEnter := CHR(13) + CHR(10)
 	Private _cSequen	:=	""
 	Private _oAcessos	:=	tAcessosOrcamento():New()
+
+	MsgSTOP("Rotina retirada de uso em 01/10/20 - foi substituído pelo programa BIA882", "BIAFG103 - Retirada de Uso")
+	Return
+
+
 
 	fPerg := "BIA396"
 	fTamX1 := IIF(Alltrim(oApp:cVersion) == "MP8.11", 6, 10)
@@ -247,7 +252,7 @@ Static Function BFG103A()
 			For mxFx := 1 to 12
 
 				_oFerias:GetDiasTrabalhados(_cVersao,_cRevisa,_cAnoRef,MQ07->ZBA_MATR,StrZero(mxFx,2))
-				
+
 
 				//                                                        Reajustes Previstos
 				//***************************************************************************
@@ -555,7 +560,7 @@ Static Function BFG103A()
 					ZBG->ZBG_FGTFER  := msPrvFerFGTS * _oFerias:nPerDiasFerias/100
 					ZBG->ZBG_SENFER  := msPrvFerSENAI * _oFerias:nPerDiasFerias/100
 					ZBG->ZBG_SESFER  := msPrvFerSESI * _oFerias:nPerDiasFerias/100
-					
+
 					ZBG->ZBG_13OSAL  := msPrv13
 					ZBG->ZBG_INS13O  := msPrv13INSS
 					ZBG->ZBG_FGT13O  := msPrv13FGTS

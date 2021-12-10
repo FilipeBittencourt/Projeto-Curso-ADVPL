@@ -587,11 +587,13 @@ Static Function BIA943A()
 		XH004 += "                           ZBS_ANOREF, "
 		XH004 += "                           '" + dtos(xhDatRef) + "' DATREF, "
 		XH004 += "                           ZBS_CONTA, "
+		XH004 += "                           ZBE.ZBE_DRIVER DRIVER, "
 		XH004 += "                           CASE "
 		If cEmpAnt == "14"
-			XH004 += "                             WHEN Z47.Z47_FORNOP IN('F01') THEN '3500' "
+			XH004 += "                             WHEN Z47.Z47_FORNOP IN('V01') THEN '3500' "
 		Else
 			XH004 += "                             WHEN Z47.Z47_FORNOP IN('F04','F05') THEN '3200' "
+			XH004 += "                             WHEN Z47.Z47_FORNOP IN('F06') THEN '3700' "
 			XH004 += "                             ELSE '3100' "
 		EndIf
 		XH004 += "                           END CLVL, "
@@ -602,6 +604,12 @@ Static Function BIA943A()
 		XH004 += "                                          AND Z47_ANOREF = ZBS_ANOREF "
 		XH004 += "                                          AND Z47_PRODUT = ZBS_COD "
 		XH004 += "                                          AND Z47.D_E_L_E_T_ = ' ' "
+		XH004 += "                    LEFT JOIN " + RetSqlName("ZBE") + " ZBE ON ZBE.ZBE_FILIAL = '" + xFilial("ZBE") + "' "
+		XH004 += "                                        AND ZBE.ZBE_VERSAO = ZBS.ZBS_VERSAO "
+		XH004 += "                                        AND ZBE.ZBE_REVISA = ZBS.ZBS_REVISA "
+		XH004 += "                                        AND ZBE.ZBE_ANOREF = ZBS.ZBS_ANOREF "
+		XH004 += "                                        AND ZBE.ZBE_APLDEF = 'C.VARIAVEL' "
+		XH004 += "                                        AND ZBE.D_E_L_E_T_ = ' ' "
 		XH004 += "                     WHERE ZBS_VERSAO = '" + _cVersao + "' "
 		XH004 += "                       AND ZBS_REVISA = '" + _cRevisa + "' "
 		XH004 += "                       AND ZBS_ANOREF = '" + _cAnoRef + "' "
@@ -611,12 +619,14 @@ Static Function BIA943A()
 		XH004 += "                              ZBS_REVISA, "
 		XH004 += "                              ZBS_ANOREF, "
 		XH004 += "                              ZBS_CONTA, "
+		XH004 += "                              ZBE_DRIVER, "
 		XH004 += "                              Z47_FORNOP) "
 		XH004 += " SELECT ZBS_VERSAO, "
 		XH004 += "        ZBS_REVISA, "
 		XH004 += "        ZBS_ANOREF, "
 		XH004 += "        DATREF, "
 		XH004 += "        ZBS_CONTA, "
+		XH004 += "        DRIVER, "
 		XH004 += "        CLVL, "
 		XH004 += "        SUM(MESREF) MESREF "
 		XH004 += "   FROM CVARIAVEL "
@@ -625,12 +635,14 @@ Static Function BIA943A()
 		XH004 += "           ZBS_ANOREF, "
 		XH004 += "           DATREF, "
 		XH004 += "           ZBS_CONTA, "
+		XH004 += "           DRIVER, "
 		XH004 += "           CLVL "
 		XH004 += "  ORDER BY ZBS_VERSAO, "
 		XH004 += "           ZBS_REVISA, "
 		XH004 += "           ZBS_ANOREF, "
 		XH004 += "           DATREF, "
 		XH004 += "           ZBS_CONTA, "
+		XH004 += "           DRIVER, "
 		XH004 += "           CLVL "
 		XHIndex := CriaTrab(Nil,.f.)
 		dbUseArea(.T.,"TOPCONN",TcGenQry(,,XH004),'XH04',.T.,.T.)
@@ -672,6 +684,8 @@ Static Function BIA943A()
 					ZBZ->ZBZ_YHIST  := "ORCAMENTO C.VARIAVEL"
 					ZBZ->ZBZ_SI     := ""
 					ZBZ->ZBZ_YDELTA := ctod("  /  /  ")
+					ZBZ->ZBZ_DRVDB  := XH04->DRIVER
+					ZBZ->ZBZ_DRVCR  := ""
 					ZBZ->(MsUnlock())
 
 				EndIf

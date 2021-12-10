@@ -20,7 +20,9 @@ User Function F290FIL()
 	Private oDlgMvAd
 	Private oButton1
 	Private oComboBox1
+	Private oComboBox2
 	Private nComboBox1 := "Não"
+	Private nComboBox2 := "Sim"
 	Private oGet1
 	Private cGet1 := dDataBase
 	Private oGet2
@@ -38,14 +40,16 @@ User Function F290FIL()
 			Return cSQL
 		EndIf
 
-		DEFINE MSDIALOG oDlgMvAd TITLE "Parametros adicionais" FROM 000, 000  TO 125, 350 COLORS 0, 16777215 PIXEL
+		DEFINE MSDIALOG oDlgMvAd TITLE "Parametros adicionais" FROM 000, 000  TO 180, 350 COLORS 0, 16777215 PIXEL
 
 		@ 010, 009 SAY oSay1 PROMPT "Considerar Tipo NDF:" SIZE 056, 007 OF oDlgMvAd COLORS 0, 16777215 PIXEL
 		@ 025, 009 SAY oSay2 PROMPT "De Vencimento Real:" SIZE 059, 007 OF oDlgMvAd COLORS 0, 16777215 PIXEL
 		@ 040, 009 SAY oSay3 PROMPT "Ate Vencimento Real:" SIZE 053, 007 OF oDlgMvAd COLORS 0, 16777215 PIXEL
+		@ 055, 009 SAY oSay3 PROMPT "Desconsidera DDA FIDC:" SIZE 65, 007 OF oDlgMvAd COLORS 0, 16777215 PIXEL
 		@ 009, 071 MSCOMBOBOX oComboBox1 VAR nComboBox1 ITEMS {"Sim","Não"} SIZE 061, 010 OF oDlgMvAd COLORS 0, 16777215 PIXEL
 		@ 025, 072 MSGET oGet1 VAR cGet1 SIZE 060, 010 OF oDlgMvAd COLORS 0, 16777215 PIXEL
 		@ 040, 072 MSGET oGet2 VAR cGet2 SIZE 060, 010 OF oDlgMvAd COLORS 0, 16777215 PIXEL
+		@ 055, 071 MSCOMBOBOX oComboBox2 VAR nComboBox2 ITEMS {"Sim","Não"} SIZE 061, 010 OF oDlgMvAd COLORS 0, 16777215 PIXEL
 		@ 008, 138 BUTTON oButton1 PROMPT "Ok" SIZE 025, 042 OF oDlgMvAd ACTION (fh_Esc := .T., oDlgMvAd:End()) PIXEL
 
 		ACTIVATE MSDIALOG oDlgMvAd VALID fh_Esc
@@ -63,6 +67,11 @@ User Function F290FIL()
 			cSQL := "E2_TIPO <> 'NDF' AND E2_VENCREA >= '"+dtos(cGet1)+"' AND E2_VENCREA <= '"+dtos(cGet2)+"' "+CRLF
 		Else
 			cSQL := "E2_VENCREA >= '"+dtos(cGet1)+"' AND E2_VENCREA <= '"+dtos(cGet2)+"' "+CRLF
+		EndIf
+
+		//|Desconsidera títulos em DDA do FIDC |
+		If nComboBox2 == "Sim" .And. cForn == "000534"
+			cSQL += " AND E2_CODBAR   = '' " + CRLF
 		EndIf
 
 		// Tiago Rossini Coradini - OS: 0239-15
@@ -109,32 +118,34 @@ User Function F290FIL()
 			cSQL += "			and X.E1_BAIXA <> '' "+CRLF
 			cSQL += "			and X.E1_FATURA = '' "+CRLF
 			cSQL += "			and X.D_E_L_E_T_='') "+CRLF
-			cSQL += "	or (
-			cSQL += "			exists (select 1 from SE1070 X2 "+CRLF
+			cSQL += "	or (						"+CRLF
+			cSQL += "			exists (select 1    "+CRLF
+			cSQL += "					from SE1070 X2 (NOLOCK) INNER JOIN "+CRLF
+			cSQL += "					    (select X.E1_FATPREF, X.E1_FATURA, X.E1_CLIENTE, X.E1_LOJA "+CRLF
+			cSQL += "						from SE1070 X (NOLOCK)                              "+CRLF
+			cSQL += "						where X.E1_FILIAL       = Substring(E2_YCHVSE1,1,2)    "+CRLF 
+			cSQL += "							and X.E1_PREFIXO    = Substring(E2_YCHVSE1,3,3)    "+CRLF
+			cSQL += "							and X.E1_NUM        = Substring(E2_YCHVSE1,6,9)    "+CRLF
+			cSQL += "							and X.E1_PARCELA    = Substring(E2_YCHVSE1,15,1)   "+CRLF
+			cSQL += "							and X.E1_TIPO       = Substring(E2_YCHVSE1,16,3)   "+CRLF
+			cSQL += "							and X.D_E_L_E_T_='') TTT ON X2.E1_PREFIXO = TTT.E1_FATPREF AND X2.E1_NUM = TTT.E1_FATURA AND X2.E1_CLIENTE = TTT.E1_CLIENTE AND X2.E1_LOJA = TTT.E1_LOJA  "+CRLF
 			cSQL += " 					where X2.E1_FILIAL = '"+XFilial("SE1")+"' "+CRLF
-			cSQL += " 					and X2.E1_PREFIXO in ('FAT','01','1','2','3','4','5') "+CRLF  //unica forma que o SQL ficou rapido - avaliar!?
-			cSQL += " 					and X2.E1_NUM = (select X.E1_FATURA from SE1070 X "+CRLF
-			cSQL += "		 								where X.E1_FILIAL = Substring(E2_YCHVSE1,1,2) "+CRLF
-			cSQL += "										and X.E1_PREFIXO = Substring(E2_YCHVSE1,3,3) "+CRLF
-			cSQL += "										and X.E1_NUM = Substring(E2_YCHVSE1,6,9) "+CRLF
-			cSQL += "										and X.E1_PARCELA = Substring(E2_YCHVSE1,15,1) "+CRLF
-			cSQL += "										and X.E1_TIPO = Substring(E2_YCHVSE1,16,3) "+CRLF
-			cSQL += "										and X.D_E_L_E_T_='') "+CRLF
 			cSQL += " 					and X2.E1_TIPO = 'FT'  "+CRLF
 			cSQL += "					and X2.E1_FATURA = 'NOTFAT   ' "+CRLF
 			cSQL += "					and X2.E1_BAIXA <> ''  "+CRLF
 			cSQL += "					and X2.D_E_L_E_T_='') "+CRLF
 			cSQL += "				and "+CRLF
-			cSQL += "				not exists (select 1 from SE1070 X2 "+CRLF
+        	cSQL += "				not exists (select 1        "+CRLF
+			cSQL += "							from SE1070 X2 (NOLOCK) INNER JOIN  "+CRLF 
+			cSQL += "								(select X.E1_FATPREF, X.E1_FATURA, X.E1_CLIENTE, X.E1_LOJA  "+CRLF
+			cSQL += "								from SE1070 X (NOLOCK)                                      "+CRLF 
+			cSQL += "								where X.E1_FILIAL       = Substring(E2_YCHVSE1,1,2)         "+CRLF
+			cSQL += "									and X.E1_PREFIXO    = Substring(E2_YCHVSE1,3,3)         "+CRLF
+			cSQL += "									and X.E1_NUM        = Substring(E2_YCHVSE1,6,9)         "+CRLF
+			cSQL += "									and X.E1_PARCELA    = Substring(E2_YCHVSE1,15,1)        "+CRLF
+			cSQL += "									and X.E1_TIPO       = Substring(E2_YCHVSE1,16,3)        "+CRLF
+			cSQL += "									and X.D_E_L_E_T_='') TTT ON  X2.E1_PREFIXO = TTT.E1_FATPREF AND X2.E1_NUM = TTT.E1_FATURA AND X2.E1_CLIENTE = TTT.E1_CLIENTE AND X2.E1_LOJA = TTT.E1_LOJA "+CRLF
 			cSQL += "					where X2.E1_FILIAL = '01'   "+CRLF
-			cSQL += "		 			and X2.E1_PREFIXO in ('FAT','01','1','2','3','4','5') "+CRLF
-			cSQL += "					and X2.E1_NUM = (select X.E1_FATURA from SE1070 X   "+CRLF
-			cSQL += "			 						where X.E1_FILIAL = Substring(E2_YCHVSE1,1,2) "+CRLF
-			cSQL += "									and X.E1_PREFIXO = Substring(E2_YCHVSE1,3,3)  "+CRLF
-			cSQL += "									and X.E1_NUM = Substring(E2_YCHVSE1,6,9)  "+CRLF
-			cSQL += "									and X.E1_PARCELA = Substring(E2_YCHVSE1,15,1)  "+CRLF
-			cSQL += "									and X.E1_TIPO = Substring(E2_YCHVSE1,16,3)  "+CRLF
-			cSQL += "									and X.D_E_L_E_T_='')   "+CRLF
 			cSQL += "					and X2.E1_TIPO = 'FT'  "+CRLF
 			cSQL += "					and X2.E1_FATURA = 'NOTFAT   ' "+CRLF
 			cSQL += "					and X2.E1_VENCREA < '"+DTOS(dDataBase-1)+"'  "+CRLF

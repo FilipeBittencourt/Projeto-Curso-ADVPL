@@ -85,9 +85,9 @@ If Alltrim(Upper(nDepart))=="REPRESENTANTE"
 	EndIf
 EndIf
 //Define o Almoxarifado do Representante
-If cempant $ "01_05"
+If cempant $ "01_05_14"
 	If Alltrim(Upper(nDepart))=="REPRESENTANTE"
-		If SA3->A3_COMIS > 0 .and. SA3->A3_YCOMISI == 0
+		If (SA3->A3_COMIS > 0 .and. SA3->A3_YCOMISI == 0) .Or. SA3->A3_YCOMVIN > 0
 			cLinhaAtu := "02"
 		ElseIf SA3->A3_COMIS == 0 .and. SA3->A3_YCOMISI > 0
 			cLinhaAtu := "04"

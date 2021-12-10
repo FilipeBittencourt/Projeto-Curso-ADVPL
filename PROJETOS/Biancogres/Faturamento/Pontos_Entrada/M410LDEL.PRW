@@ -21,13 +21,8 @@ Local __nProd	:= Gdfieldget("C6_PRODUTO",1)
      
 If M->C5_TIPO == 'N' .And. !(CEMPANT $ AllTrim(GetNewPar("FA_EMNRES",""))) .And. M->C5_YLINHA <> "4"
 
-	If (AllTrim(CEMPANT) == "14") .And. !U_CHKRODA(__nProd)
-		lRetorno := .T.
-		RestArea(aArea)
-		Return(lRetorno)
-	EndIf
-	
 	lRetorno := U_FRRT03VL()
+
 EndIf
 
 RestArea(aArea)

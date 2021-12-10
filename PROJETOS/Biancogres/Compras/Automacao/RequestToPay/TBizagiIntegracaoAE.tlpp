@@ -86,6 +86,8 @@ Method Get() Class TBizagiIntegracaoAE
     cQuery += "     WHERE B.Empresa  		= A.Empresa 								"
     cQuery += "     AND B.Filial     		= A.Filial 									"
     cQuery += "     AND B.Contrato			= A.Contrato 								"
+    cQuery += "     AND B.ContratoItem	= A.ContratoItem 						"
+    cQuery += "     AND B.ChaveUnica		= A.ChaveUnica 							"
     cQuery += "     AND B.Status        	<> 'A'										"
     cQuery += " ) 																		"
 	

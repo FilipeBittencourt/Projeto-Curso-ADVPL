@@ -14,6 +14,8 @@ Class TBiaArquivo from LongClassName
 	Method New() Constructor
 	Method ConverteArq(_cArquivo,_cFormDest,_lTemp)  // Converte arquivos compativeis com Excel              
 	Method GetArquivo(_cArquivo)		  			 // Retorna Arreio com a leitura do arquivo formato XML Excel
+	Method NewGetArq(_cArquivo)		  			 // Retorna Arreio com a leitura do arquivo formato XML Excel
+
 EndClass
 
 Method New() Class TBiaArquivo
@@ -259,6 +261,154 @@ Method GetArquivo(_cArquivo) Class TBiaArquivo
 			EndIf  
 
 		EndIf
+
+	EndIf
+
+Return aPlanilha
+
+Method NewGetArq(_cArquivo) Class TBiaArquivo
+
+	// _cArquivo  = Endereço completo do arquivo a ser lido
+	local aRetTemp	  := {}
+	local cArqDest	  := ''
+	local cBuffer	  := ''
+	local aLinha	  := {}
+	local aPlanilha	  := {}
+	local aTempLin	  := {}
+	local nc		  := 0
+	local nAvanCol	  := 0
+	local cTemp		  := ''
+	local cTemp2	  := ''
+	local cCelula	  := ''	
+	local nTamCab 	  := 0
+	Local _aLines	  := {}
+	Local _nI	:=	1
+	default _cArquivo := ''
+
+
+	aRetTemp  := ::ConverteArq(_cArquivo,.T.)
+
+	if aRetTemp[1]
+
+		cArqDest := aRetTemp[2]
+
+		if File(cArqDest)
+
+			oFile := FWFileReader():New(cArqDest)
+
+
+    		if (oFile:Open())
+    			_aLines	:=	oFile:GetAllLines()
+    			
+				msqContad := 0
+				While _nI <= Len(_aLines)
+
+					cBuffer := Alltrim(_aLines[_nI])
+					msqContad ++
+
+					// Por Marcos...
+					If msqContad == 4769
+						sdfsdf := 1
+					EndIf 
+
+					if UPPER('<Cell') $ UPPER(cBuffer)
+
+						cCelula += cBuffer
+
+						if UPPER('<Cell') $ UPPER(cCelula) //.and. UPPER('</Cell>') $ UPPER(cCelula)
+
+							// Por Marcos... 
+							If UPPER('</Cell>') $ UPPER(cCelula)
+								xfrFim := .T.
+								While _nI <= Len(_aLines) .and. xfrFim 
+									If UPPER('</Cell>') $ UPPER(cCelula)
+										xfrFim := .F.
+									Else
+										_nI++
+										cBuffer := Alltrim(_aLines[_nI])
+										msqContad ++
+										cCelula += cBuffer
+									EndIf
+								End
+							EndIf
+
+							If UPPER(':Index=') $ UPPER(cCelula)
+
+								cTemp2 := '' 
+								cTemp := SubStr(cCelula,AT(UPPER(':Index='),UPPER(cCelula))+7)
+								cTemp := SubStr(cTemp,1,5)
+								for nc := 1 to len(cTemp)
+									if SubStr(cTemp,nc,1) $ '0123456789'
+										cTemp2 += SubStr(cTemp,nc,1) 
+									endif
+								next nc
+								nAvanCol := val(cTemp2)
+								nAvanCol := nAvanCol - len(aLinha) - 1
+								for nc := 1 to nAvanCol
+									AADD(aLinha,'')
+								next nc
+
+							EndIf
+
+							// Por Marcos... 
+							If UPPER('<Data') $ UPPER(cCelula)
+								xfrFim := .T.
+								While _nI <= Len(_aLines) .and. xfrFim 
+									If UPPER('</Data') $ UPPER(cCelula)
+										xfrFim := .F.
+									Else
+										_nI++
+										cBuffer := Alltrim(_aLines[_nI])
+										msqContad ++
+										cCelula += " " + cBuffer
+									EndIf
+								End
+							EndIf
+
+							cCelula   := SubStr(cCelula,AT(UPPER('<Data'),UPPER(cCelula))+5)
+							cCelula   := SubStr(cCelula,1,RAT('</Data',cCelula)-1)
+							cCelula   := SubStr(cCelula,AT('>',cCelula)+1)
+
+							AADD(aLinha,cCelula)
+							cCelula := ''
+
+						endif
+
+					endif	
+
+					If UPPER('</Row') $ UPPER(cBuffer) .AND. Len(aLinha) > 0
+
+						If len(aTempLin) == 0
+							nTamCab := len(aLinha)
+						EndIf
+
+						If nTamCab > len(aLinha)
+							nAvanCol := nTamCab - len(aLinha)
+							for nc := 1 to nAvanCol
+								AADD(aLinha,'')
+							next nc    				
+						EndIf
+
+						AADD(aTempLin,aLinha)
+						aLinha  := {}
+
+					EndIf	
+
+					If UPPER("</Worksheet") $ UPPER(cBuffer) .AND. Len(aTempLin) > 0
+						AADD(aPlanilha,aTempLin)
+						aTempLin := {}
+					EndIf
+
+					_nI++
+
+				EndDo
+
+			EndIf  
+
+
+
+		EndIf
+	
 
 	EndIf
 

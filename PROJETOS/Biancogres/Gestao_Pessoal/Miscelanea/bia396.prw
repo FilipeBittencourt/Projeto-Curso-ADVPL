@@ -13,6 +13,11 @@ User Function BIA396()
 	Local M001        := GetNextAlias()
 	Private msrhEnter := CHR(13) + CHR(10)
 
+	MsgSTOP("Rotina retirada de uso em 01/10/20 - foi substituído pelo programa BIA883", "Bia396 - Retirada de Uso")
+	Return
+
+
+
 	fPerg := "BIA396"
 	fTamX1 := IIF(Alltrim(oApp:cVersion) == "MP8.11", 6, 10)
 	fValidPerg()

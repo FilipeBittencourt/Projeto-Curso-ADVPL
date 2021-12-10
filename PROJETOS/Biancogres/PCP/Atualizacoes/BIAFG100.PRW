@@ -311,8 +311,6 @@ Static Function fMontaCols(_aHeader,_nOpc)
 		AND Z98_CLVL IN %Exp:_cClvlIn%
 		AND Z98_CLVL BETWEEN %Exp:MV_PAR04% AND %Exp:MV_PAR05%
 		AND Z98_CONTA BETWEEN %Exp:MV_PAR06% AND %Exp:MV_PAR07%
-		AND Z98_EMPR = %Exp:cEmpAnt%
-		AND Z98_FIL = %Exp:cFilAnt%
 		AND Z98.%NotDel%
 		) NUMREG
 		FROM %TABLE:Z98% Z98
@@ -323,10 +321,9 @@ Static Function fMontaCols(_aHeader,_nOpc)
 		AND Z98_CLVL IN %Exp:_cClvlIn%
 		AND Z98_CLVL BETWEEN %Exp:MV_PAR04% AND %Exp:MV_PAR05%
 		AND Z98_CONTA BETWEEN %Exp:MV_PAR06% AND %Exp:MV_PAR07%
-		AND Z98_EMPR = %Exp:cEmpAnt%
-		AND Z98_FIL = %Exp:cFilAnt%
 		AND Z98.%NotDel%
 		ORDER BY Z98_VERSAO, Z98_REVISA, Z98_ANOREF
+
 	EndSql
 
 	_nTotReg :=  (_cAlias)->(NUMREG)
@@ -811,7 +808,7 @@ Static Function fProcImport()
 
 	msTmpINI := Time()
 	oArquivo := TBiaArquivo():New()
-	aArquivo := oArquivo:GetArquivo(cArquivo)
+	aArquivo := oArquivo:NewGetArq(cArquivo)
 
 	msDtProc  := Date()
 	msHrProc  := Time()

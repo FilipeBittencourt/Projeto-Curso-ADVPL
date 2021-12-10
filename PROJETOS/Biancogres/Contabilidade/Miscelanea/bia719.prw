@@ -39,7 +39,6 @@ Static Function MenuDef
 	Add Option aRotina Title "Importar Driver"  Action 'ExecBlock("BIA719IMP",.F.,.F.)' Operation 6 Access 0
 	Add Option aRotina Title "Limpar Driver"    Action 'ExecBlock("BIA719LMP",.F.,.F.)' Operation 7 Access 0
 	Add Option aRotina Title "Driver to OBZ"    Action 'ExecBlock("BIA719Z98",.F.,.F.)' Operation 8 Access 0
-	//Add Option aRotina Title 'Imprimir' 		Action 'VIEWDEF.BIA719' 	            Operation 9 Access 0
 
 Return(aRotina)
 
@@ -730,7 +729,7 @@ Static Function fProcImport()
 
 	msTmpINI := Time()
 	oArquivo := TBiaArquivo():New()
-	aArquivo := oArquivo:GetArquivo(cArquivo)
+	aArquivo := oArquivo:NewGetArq(cArquivo)
 
 	msDtProc  := Date()
 	msHrProc  := Time()
@@ -1134,7 +1133,7 @@ Static Function fPZ98Import()
 
 	msTmpINI := Time()
 	oArquivo := TBiaArquivo():New()
-	aArquivo := oArquivo:GetArquivo(cArquivo)
+	aArquivo := oArquivo:NewGetArq(cArquivo)
 
 	msDtProc  := Date()
 	msHrProc  := Time()

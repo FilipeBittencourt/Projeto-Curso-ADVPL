@@ -17,13 +17,14 @@ User Function BIA999()
 	Local oReport
 	Local cLoad				:= "BIA999" + cEmpAnt
 	Local cFileName			:= RetCodUsr() +"_"+ cLoad
-	
+	Local xxt               // colocado só para comitar
+
 	Private cPergunta := "BIA999"
 	Private lRepre := !EMPTY(CREPATU)
 	
 	
-	If !Alltrim(cEmpAnt) $ "01_05"
-		MsgAlert('Este relatório somente poderá ser emitido nas empresas Biancogres e Incesa')
+	If !Alltrim(cEmpAnt) $ "01_05_14"
+		MsgAlert('Este relatório somente poderá ser emitido nas empresas Biancogres , Incesa e Vinilico ')
 		Return
 	EndIf
 

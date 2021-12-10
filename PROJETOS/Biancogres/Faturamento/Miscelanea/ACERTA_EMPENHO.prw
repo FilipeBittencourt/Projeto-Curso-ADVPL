@@ -59,19 +59,21 @@ User Function ACEMPPRC(_lAuto, _cProdDe,_cProdAte)
 		BeginSql Alias cAliasTmp
 			SELECT B2_LOCAL
 			FROM  %Table:SB2%
-			WHERE B2_COD >= %Exp:_cProdDe% AND B2_COD <= %Exp:_cProdAte% AND B2_COD >= 'A' AND %NOTDEL%
+			WHERE B2_FILIAL = %xFilial:SB2% AND B2_COD >= %Exp:_cProdDe% AND B2_COD <= %Exp:_cProdAte% AND B2_COD >= 'A' AND %NOTDEL%
 			GROUP BY B2_LOCAL
 		EndSql
 
 		If !(cAliasTmp)->(EOF())
 			CSQL := " UPDATE "+RETSQLNAME("SDC")+" SET D_E_L_E_T_ = '*'												"+ ENTER
 			CSQL += " WHERE D_E_L_E_T_ 	= '' 																		"+ ENTER
+			CSQL += " AND DC_FILIAL 	= '"+ xFilial('SDC') +"' 													"+ ENTER
 			CSQL += " AND DC_ORIGEM 	= 'SC0'																		"+ ENTER
 			CSQL += " AND DC_PRODUTO BETWEEN '"+_cProdDe+"' AND '"+_cProdAte+"'										"+ ENTER
 			CSQL += " AND NOT EXISTS (																				"+ ENTER
 			CSQL += " 					SELECT * 																	"+ ENTER
 			CSQL += " 					FROM "+RETSQLNAME("SC0")+" 													"+ ENTER
-			CSQL += " 					WHERE C0_NUM 	= DC_PEDIDO 												"+ ENTER
+			CSQL += " 					WHERE C0_FILIAL = '"+ xFilial('SC0') +"' 									"+ ENTER
+			CSQL += " 					AND C0_NUM 		= DC_PEDIDO 												"+ ENTER
 			CSQL += "					AND C0_PRODUTO 	= DC_PRODUTO 												"+ ENTER
 			CSQL += " 					AND D_E_L_E_T_ 	= '')														"+ ENTER	
 			TCSQLEXEC(CSQL)
@@ -81,14 +83,14 @@ User Function ACEMPPRC(_lAuto, _cProdDe,_cProdAte)
 
 			//Antes de atualizar, zera todo o empenho do SB2 -- EXECUTA UMA UNICA VEZ, ANTES DA ATUALIZACAO
 			CSQL := "UPDATE "+RETSQLNAME("SB2")+" SET B2_RESERVA = 0 , B2_RESERV2 = 0 " + ENTER
-			CSQL += "WHERE	B2_COD  >= '"+_cProdDe+"' AND " + ENTER
+			CSQL += "WHERE	B2_FILIAL = '"+xFilial('SB2')+"' AND B2_COD  >= '"+_cProdDe+"' AND " + ENTER
 			CSQL += "				B2_COD  <= '"+_cProdAte+"' AND " + ENTER
 			CSQL += "				B2_LOCAL = '"+(cAliasTmp)->B2_LOCAL+"' AND 	D_E_L_E_T_ = '' " + ENTER
 			TCSQLEXEC(CSQL)
 
 			//Antes de atualizar, zera todo o empenho do SBF -- EXECUTA UMA UNICA VEZ, ANTES DA ATUALIZACAO
 			CSQL := "UPDATE "+RETSQLNAME("SBF")+" SET BF_EMPENHO = 0, BF_EMPEN2 = 0 " + ENTER
-			CSQL += "WHERE	BF_PRODUTO >= '"+_cProdDe+"'	AND " + ENTER
+			CSQL += "WHERE		BF_FILIAL = '"+xFilial('SBF')+"' AND BF_PRODUTO >= '"+_cProdDe+"'	AND " + ENTER
 			CSQL += "				BF_PRODUTO <= '"+_cProdAte+"'	AND " + ENTER
 			CSQL += "				BF_LOCAL	  = '"+(cAliasTmp)->B2_LOCAL+"'	AND " + ENTER
 			CSQL += "				D_E_L_E_T_ = ''										" + ENTER
@@ -96,7 +98,7 @@ User Function ACEMPPRC(_lAuto, _cProdDe,_cProdAte)
 
 			//Antes de atualizar, zera o empenho do SB8	-- EXECUTA UMA UNICA VEZ, ANTES DA ATUALIZACAO
 			CSQL := "UPDATE "+RETSQLNAME("SB8")+" SET B8_EMPENHO = 0, B8_EMPENH2 = 0 " + ENTER
-			CSQL += "WHERE	B8_PRODUTO >= '"+_cProdDe+"'	AND " + ENTER
+			CSQL += "WHERE		B8_FILIAL = '"+xFilial('SB8')+"' AND B8_PRODUTO >= '"+_cProdDe+"'	AND " + ENTER
 			CSQL += "				B8_PRODUTO <= '"+_cProdAte+"'	AND " + ENTER
 			CSQL += "				B8_LOCAL	  = '"+(cAliasTmp)->B2_LOCAL+"'	AND " + ENTER
 			CSQL += "				D_E_L_E_T_ = ''										" + ENTER
@@ -108,7 +110,7 @@ User Function ACEMPPRC(_lAuto, _cProdDe,_cProdAte)
 			//Seleciona o Total do Produto -- SB2
 			CSQL := "SELECT DC_PRODUTO, SUM(DC_QUANT) QUANT, SUM(DC_QTSEGUM) QUANT2 " + ENTER
 			CSQL += "FROM "+RETSQLNAME("SDC")+"		" + ENTER
-			CSQL += "WHERE 	DC_PRODUTO >= '"+_cProdDe+"'	AND " + ENTER
+			CSQL += "WHERE 		DC_FILIAL = '"+xFilial('SDC')+"' AND DC_PRODUTO >= '"+_cProdDe+"'	AND " + ENTER
 			CSQL += "				DC_PRODUTO <= '"+_cProdAte+"'	AND " + ENTER
 			CSQL += "				DC_LOCAL	  = '"+(cAliasTmp)->B2_LOCAL+"'	AND " + ENTER
 			CSQL += "				D_E_L_E_T_ = ''										" + ENTER
@@ -123,7 +125,7 @@ User Function ACEMPPRC(_lAuto, _cProdDe,_cProdAte)
 			CSQL := "SELECT COUNT(*) AS QUANT			" + ENTER
 			CSQL += "FROM	(SELECT DC_PRODUTO PRODUTO  " + ENTER
 			CSQL += "		FROM "+RETSQLNAME("SDC")+"	" + ENTER
-			CSQL += "		WHERE	DC_PRODUTO >= '"+_cProdDe+"'	AND " + ENTER
+			CSQL += "		WHERE		DC_FILIAL = '"+xFilial('SDC')+"' AND DC_PRODUTO >= '"+_cProdDe+"'	AND " + ENTER
 			CSQL += "					DC_PRODUTO <= '"+_cProdAte+"'	AND " + ENTER
 			CSQL += "				  DC_LOCAL	  = '"+(cAliasTmp)->B2_LOCAL+"'	AND " + ENTER
 			CSQL += "					D_E_L_E_T_ = ''										" + ENTER
@@ -141,7 +143,7 @@ User Function ACEMPPRC(_lAuto, _cProdDe,_cProdAte)
 				IncProc("Corrigindo Empenho SB2... "+(cAliasTmp)->B2_LOCAL+"/"+ALLTRIM(_EMP3->DC_PRODUTO))
 				//Atualiza SB2
 				CSQL := "UPDATE "+RETSQLNAME("SB2")+" SET B2_RESERVA = "+ALLTRIM(STR(_EMP3->QUANT))+" , B2_RESERV2 = "+ALLTRIM(STR(_EMP3->QUANT2))+" " + ENTER
-				CSQL += "WHERE	B2_COD = '"+_EMP3->DC_PRODUTO+"' AND B2_LOCAL = '"+(cAliasTmp)->B2_LOCAL+"' AND 	D_E_L_E_T_ = '' " + ENTER
+				CSQL += "WHERE		B2_FILIAL = '"+xFilial('SB2')+"' AND B2_COD = '"+_EMP3->DC_PRODUTO+"' AND B2_LOCAL = '"+(cAliasTmp)->B2_LOCAL+"' AND 	D_E_L_E_T_ = '' " + ENTER
 				TCSQLEXEC(CSQL)
 				_EMP3->(DBSKIP())
 			END DO
@@ -151,7 +153,7 @@ User Function ACEMPPRC(_lAuto, _cProdDe,_cProdAte)
 			//Seleciona o Total do Produto/Lote/Localizacao -- SBF
 			CSQL := "SELECT DC_PRODUTO, DC_LOTECTL, DC_LOCALIZ, SUM(DC_QUANT) QUANT, SUM(DC_QTSEGUM) QUANT2 " + ENTER
 			CSQL += "FROM "+RETSQLNAME("SDC")+"  " + ENTER
-			CSQL += "WHERE	DC_PRODUTO >= '"+_cProdDe+"'	AND " + ENTER
+			CSQL += "WHERE		DC_FILIAL = '"+xFilial('SDC')+"' AND DC_PRODUTO >= '"+_cProdDe+"'	AND " + ENTER
 			CSQL += "				DC_PRODUTO <= '"+_cProdAte+"'	AND " + ENTER
 			CSQL += "				DC_LOCAL		= '"+(cAliasTmp)->B2_LOCAL+"'	AND " + ENTER
 			CSQL += "				D_E_L_E_T_ = ''										" + ENTER
@@ -167,7 +169,7 @@ User Function ACEMPPRC(_lAuto, _cProdDe,_cProdAte)
 			CSQL := "SELECT COUNT(*) AS QUANT			" + ENTER
 			CSQL += "FROM	(SELECT DC_PRODUTO, DC_LOTECTL, DC_LOCALIZ, SUM(DC_QUANT) QUANT, SUM(DC_QTSEGUM) QUANT2 " + ENTER
 			CSQL += "		FROM "+RETSQLNAME("SDC")+"	" + ENTER
-			CSQL += "		WHERE	DC_PRODUTO >= '"+_cProdDe+"'	AND " + ENTER
+			CSQL += "		WHERE		DC_FILIAL = '"+xFilial('SDC')+"' AND DC_PRODUTO >= '"+_cProdDe+"'	AND " + ENTER
 			CSQL += "					DC_PRODUTO <= '"+_cProdAte+"'	AND " + ENTER
 			CSQL += "					DC_LOCAL		= '"+(cAliasTmp)->B2_LOCAL+"'	AND " + ENTER
 			CSQL += "					D_E_L_E_T_ = ''										" + ENTER
@@ -192,7 +194,7 @@ User Function ACEMPPRC(_lAuto, _cProdDe,_cProdAte)
 
 				CSQL := "SELECT BF_PRODUTO, BF_LOTECTL, BF_LOCALIZ, BF_QUANT, BF_EMPENHO, BF_EMPEN2 " + ENTER
 				CSQL += "FROM "+RETSQLNAME("SBF")+" " + ENTER
-				CSQL += "WHERE	BF_PRODUTO = '"+CPRODUTO+"' AND " + ENTER
+				CSQL += "WHERE		BF_FILIAL = '"+xFilial('SBF')+"' AND BF_PRODUTO = '"+CPRODUTO+"' AND " + ENTER
 				CSQL += "		BF_LOTECTL = '"+CLOTE+"' AND " + ENTER
 				CSQL += "		BF_LOCALIZ = '"+CLOCALIZACAO+"' AND " + ENTER
 				CSQL += "		BF_LOCAL	 = '"+(cAliasTmp)->B2_LOCAL+"' AND " + ENTER
@@ -211,7 +213,7 @@ User Function ACEMPPRC(_lAuto, _cProdDe,_cProdAte)
 					IF CQUANT <> _SBF->BF_EMPENHO //.AND. CQUANT2 <> _SBF->BF_EMPEN2
 						CSQL := "UPDATE "+RETSQLNAME("SBF")+" SET BF_EMPENHO = "+ALLTRIM(STR(CQUANT))+", BF_EMPEN2 = "+ALLTRIM(STR(CQUANT2))+" " + ENTER
 						CSQL += "FROM "+RETSQLNAME("SBF")+" " + ENTER
-						CSQL += "WHERE	BF_PRODUTO = '"+CPRODUTO+"' AND " + ENTER
+						CSQL += "WHERE		BF_FILIAL = '"+xFilial('SBF')+"' AND BF_PRODUTO = '"+CPRODUTO+"' AND " + ENTER
 						CSQL += "		BF_LOTECTL = '"+CLOTE+"' AND " + ENTER
 						CSQL += "		BF_LOCALIZ = '"+CLOCALIZACAO+"' AND " + ENTER
 						CSQL += "		BF_LOCAL	 = '"+(cAliasTmp)->B2_LOCAL+"' AND " + ENTER
@@ -225,7 +227,7 @@ User Function ACEMPPRC(_lAuto, _cProdDe,_cProdAte)
 			//VERIFICANDO O SALDO NA TABELA DE LOTE (SB8) PARA PODR ACERTA-LO
 			CSQL := "SELECT DC_PRODUTO, DC_LOTECTL, SUM(DC_QUANT) QUANT, SUM(DC_QTSEGUM) QUANT2 " + ENTER
 			CSQL += "FROM "+RETSQLNAME("SDC")+" " + ENTER
-			CSQL += "WHERE	DC_PRODUTO >= '"+_cProdDe+"'	AND " + ENTER
+			CSQL += "WHERE		DC_FILIAL = '"+xFilial('SDC')+"' AND DC_PRODUTO >= '"+_cProdDe+"'	AND " + ENTER
 			CSQL += "				DC_PRODUTO <= '"+_cProdAte+"'	AND " + ENTER
 			CSQL += "				DC_LOCAL	  = '"+(cAliasTmp)->B2_LOCAL+"'	AND " + ENTER
 			CSQL += "				D_E_L_E_T_ = ''										" + ENTER
@@ -241,7 +243,7 @@ User Function ACEMPPRC(_lAuto, _cProdDe,_cProdAte)
 			CSQL := "SELECT COUNT(*) AS QUANT			" + ENTER
 			CSQL += "FROM	(SELECT DC_PRODUTO, DC_LOTECTL, SUM(DC_QUANT) QUANT, SUM(DC_QTSEGUM) QUANT2 " + ENTER
 			CSQL += "		FROM "+RETSQLNAME("SDC")+"	" + ENTER
-			CSQL += "		WHERE	DC_PRODUTO >= '"+_cProdDe+"'	AND " + ENTER
+			CSQL += "		WHERE		DC_FILIAL = '"+xFilial('SDC')+"' AND DC_PRODUTO >= '"+_cProdDe+"'	AND " + ENTER
 			CSQL += "					DC_PRODUTO <= '"+_cProdAte+"'	AND " + ENTER
 			CSQL += "					DC_LOCAL	  = '"+(cAliasTmp)->B2_LOCAL+"'	AND " + ENTER
 			CSQL += "					D_E_L_E_T_ = ''										" + ENTER
@@ -265,7 +267,7 @@ User Function ACEMPPRC(_lAuto, _cProdDe,_cProdAte)
 
 				CSQL := "SELECT SUM(B8_SALDO) AS B8_SALDO, SUM(B8_SALDO2) AS B8_SALDO2, SUM(B8_EMPENHO) AS B8_EMPENHO, SUM(B8_EMPENH2) AS B8_EMPENH2 " + ENTER
 				CSQL += "FROM "+RETSQLNAME("SB8")+" " + ENTER
-				CSQL += "WHERE	B8_PRODUTO = '"+CPRODUTO+"' AND " + ENTER
+				CSQL += "WHERE		B8_FILIAL = '"+xFilial('SB8')+"' AND B8_PRODUTO = '"+CPRODUTO+"' AND " + ENTER
 				CSQL += "		B8_LOTECTL = '"+CLOTE+"' AND  " + ENTER
 				CSQL += "		B8_SALDO > 0 AND		 " + ENTER
 				CSQL += "		B8_LOCAL	 = '"+(cAliasTmp)->B2_LOCAL+"'	AND " + ENTER
@@ -281,7 +283,7 @@ User Function ACEMPPRC(_lAuto, _cProdDe,_cProdAte)
 
 					CSQL := "SELECT B8_SALDO, B8_SALDO2, B8_EMPENHO, B8_EMPENH2, R_E_C_N_O_ " + ENTER
 					CSQL += "FROM "+RETSQLNAME("SB8")+" 			" + ENTER
-					CSQL += "WHERE	B8_PRODUTO = '"+CPRODUTO+"' AND " + ENTER
+					CSQL += "WHERE		B8_FILIAL = '"+xFilial('SB8')+"' AND B8_PRODUTO = '"+CPRODUTO+"' AND " + ENTER
 					CSQL += "		B8_LOTECTL = '"+CLOTE+"'	AND " + ENTER
 					CSQL += "		B8_SALDO   > 0 						AND	" + ENTER
 					CSQL += "		B8_LOCAL	 = '"+(cAliasTmp)->B2_LOCAL+"'	AND " + ENTER
@@ -305,7 +307,7 @@ User Function ACEMPPRC(_lAuto, _cProdDe,_cProdAte)
 
 								IF QUANT_DIF >= CQUANT
 									CSQL := "UPDATE "+RETSQLNAME("SB8")+" SET B8_EMPENHO = "+ALLTRIM(STR(CQUANT))+", B8_EMPENH2 = "+ALLTRIM(STR(CQUANT2))+" " + ENTER
-									CSQL += "WHERE	B8_PRODUTO = '"+CPRODUTO+"' AND " + ENTER
+									CSQL += "WHERE		B8_FILIAL = '"+xFilial('SB8')+"' AND B8_PRODUTO = '"+CPRODUTO+"' AND " + ENTER
 									CSQL += "		B8_LOTECTL = '"+CLOTE+"' AND  " + ENTER
 									CSQL += "		B8_LOCAL	 = '"+(cAliasTmp)->B2_LOCAL+"'	AND " + ENTER
 									CSQL += "		D_E_L_E_T_ = '' " + ENTER
@@ -318,7 +320,7 @@ User Function ACEMPPRC(_lAuto, _cProdDe,_cProdAte)
 									CQUANT2 := CQUANT2 -QUANT_DIF2
 
 									CSQL := "UPDATE "+RETSQLNAME("SB8")+" SET B8_EMPENHO = "+ALLTRIM(STR(QUANT_DIF))+", B8_EMPENH2 = "+ALLTRIM(STR(QUANT_DIF2))+" " + ENTER
-									CSQL += "WHERE	B8_PRODUTO = '"+CPRODUTO+"' AND " + ENTER
+									CSQL += "WHERE		B8_FILIAL = '"+xFilial('SB8')+"' AND B8_PRODUTO = '"+CPRODUTO+"' AND " + ENTER
 									CSQL += "		B8_LOTECTL = '"+CLOTE+"' AND  " + ENTER
 									CSQL += "		B8_SALDO > 0 AND		 " + ENTER
 									CSQL += "		B8_LOCAL	 = '"+(cAliasTmp)->B2_LOCAL+"'	AND " + ENTER
@@ -396,7 +398,7 @@ User Function ACEMPPRC(_lAuto, _cProdDe,_cProdAte)
 /*/
 User Function FROPACEM() 
 
-	Local xv_Emps    := U_BAGtEmpr("01_05")
+	Local xv_Emps    := U_BAGtEmpr("01_05_14")
 	Local nI
 
 	For nI := 1 to Len(xv_Emps)
@@ -427,10 +429,10 @@ Static Function PrcAcerta()
 		(
 		SELECT
 		B1_COD
-		,E1 = (SELECT SUM(B2_RESERVA) FROM %TABLE:SB2% SB2 WHERE B2_COD = B1_COD and B2_LOCAL = BZ_LOCPAD and SB2.D_E_L_E_T_='')
-		,E2 = (SELECT SUM(BF_EMPENHO) FROM %TABLE:SBF% SBF WHERE BF_PRODUTO = B1_COD and BF_LOCAL = BZ_LOCPAD AND SBF.D_E_L_E_T_ ='')
-		,E3 = (SELECT SUM(B8_EMPENHO) FROM %TABLE:SB8% SB8 WHERE B8_PRODUTO = B1_COD and B8_LOCAL = BZ_LOCPAD AND SB8.D_E_L_E_T_ = '')
-		,E4 = (SELECT SUM(DC_QUANT) FROM %TABLE:SDC% SDC WHERE DC_PRODUTO = B1_COD and DC_LOCAL = BZ_LOCPAD AND SDC.D_E_L_E_T_ = '')
+		,E1 = (SELECT SUM(B2_RESERVA) FROM %TABLE:SB2% SB2 WHERE B2_FILIAL = %xFilial:SB2% AND B2_COD = B1_COD and B2_LOCAL = BZ_LOCPAD and SB2.D_E_L_E_T_='')
+		,E2 = (SELECT SUM(BF_EMPENHO) FROM %TABLE:SBF% SBF WHERE BF_FILIAL = %xFilial:SBF% AND BF_PRODUTO = B1_COD and BF_LOCAL = BZ_LOCPAD AND SBF.D_E_L_E_T_ ='')
+		,E3 = (SELECT SUM(B8_EMPENHO) FROM %TABLE:SB8% SB8 WHERE B8_FILIAL = %xFilial:SB8% AND B8_PRODUTO = B1_COD and B8_LOCAL = BZ_LOCPAD AND SB8.D_E_L_E_T_ = '')
+		,E4 = (SELECT SUM(DC_QUANT)   FROM %TABLE:SDC% SDC WHERE DC_FILIAL = %xFilial:SDC% AND DC_PRODUTO = B1_COD and DC_LOCAL = BZ_LOCPAD AND SDC.D_E_L_E_T_ = '')
 		from %TABLE:SB1% SB1 
 		join %TABLE:SBZ% SBZ on BZ_FILIAL = '  ' and BZ_COD = B1_COD
 		where B1_TIPO = 'PA'
@@ -469,9 +471,10 @@ Static Function PrcResSdc()
 		join %Table:SB1% SB1 on B1_FILIAL = '  ' and B1_COD = C0_PRODUTO 
 		where
 		B1_LOCALIZ = 'S'
+		and SC0.C0_FILIAL = %xFilial:SC0% 
 		and SC0.D_E_L_E_T_=''
 		and SB1.D_E_L_E_T_=''
-		and not exists (select 1 from %Table:SDC% SDC where DC_ORIGEM = 'SC0' and DC_PEDIDO = C0_NUM  and DC_PRODUTO = C0_PRODUTO and SDC.D_E_L_E_T_='')
+		and not exists (select 1 from %Table:SDC% SDC where DC_FILIAL = %xFilial:SDC% AND DC_ORIGEM = 'SC0' and DC_PEDIDO = C0_NUM  and DC_PRODUTO = C0_PRODUTO and SDC.D_E_L_E_T_='')
 
 	EndSql
 
@@ -496,7 +499,7 @@ Static Function PrcResSdc()
 			SC0->C0_LOCALIZ,;
 			SC0->C0_NUMSERI})
 
-			U_BIAEnvMail(, "micheli.zanoni@biancogres.com.br;suporte.ti@biancogres.com.br","RESERVA SEM EMPENHO EXCLUIDA", "ERRO - RESERVA: "+__CREST+" - Empresa: "+AllTrim(CEMPANT)+" Excluída por falta do arquivo SDC - Verificar.", '', '', , '')
+			U_BIAEnvMail(, "micheli.zanoni@biancogres.com.br;sistemas.ti@biancogres.com.br","RESERVA SEM EMPENHO EXCLUIDA", "ERRO - RESERVA: "+__CREST+" - Empresa: "+AllTrim(CEMPANT)+" Excluída por falta do arquivo SDC - Verificar.", '', '', , '')
 
 		EndIf
 

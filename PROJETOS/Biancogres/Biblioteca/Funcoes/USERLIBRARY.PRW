@@ -436,16 +436,16 @@ User function ImpPar(cNomeProg,cTitulo,cTamanho,nCrcControl,nCbCont,cCbtxt,nL)
 
 			cPergunta := ""
 			do case
-			case SX1->X1_GSC == "C"
+				case SX1->X1_GSC == "C"
 				do case
-				case SX1->X1_PRESEL == 1; cPergunta := SX1->X1_DEF01
-				case SX1->X1_PRESEL == 2; cPergunta := SX1->X1_DEF02
-				case SX1->X1_PRESEL == 3; cPergunta := SX1->X1_DEF03
-				case SX1->X1_PRESEL == 4; cPergunta := SX1->X1_DEF04
-				case SX1->X1_PRESEL == 5; cPergunta := SX1->X1_DEF05
+					case SX1->X1_PRESEL == 1; cPergunta := SX1->X1_DEF01
+					case SX1->X1_PRESEL == 2; cPergunta := SX1->X1_DEF02
+					case SX1->X1_PRESEL == 3; cPergunta := SX1->X1_DEF03
+					case SX1->X1_PRESEL == 4; cPergunta := SX1->X1_DEF04
+					case SX1->X1_PRESEL == 5; cPergunta := SX1->X1_DEF05
 				endcase
 
-			case SX1->X1_GSC == "G"; cPergunta := SX1->X1_CNT01
+				case SX1->X1_GSC == "G"; cPergunta := SX1->X1_CNT01
 			endcase
 
 			cLinDeImp := ""
@@ -1091,7 +1091,7 @@ Static Function ValStatFin()
 			EndIf
 
 			If !lRet
-				cMsgSta := "O Cliente possui Restrição. Favor abrir solicitação de Crédito!" + Enter + Enter + cMsgSta
+				cMsgSta := "O Cliente possui Restrição:" + Enter + Enter + cMsgSta
 				MsgBox(cMsgSta,"Atenção","ALERT")
 			EndIf
 
@@ -1107,9 +1107,9 @@ User Function QryTitAtra(cCliente,cLoja,cTipoCre,cGrupo,cRisco)
 	Local aEmps := {"01","05","07","14"}
 	Local nEmp	:= 1
 	Local Enter	:= CHR(13)+CHR(10)
-	
+
 	//23397 - Pedro/Pablo alinhado com nadine adição do novo TIPO: JP
-	
+
 	For nEmp:=1 to Len(aEmps)
 
 		If nEmp != 1
@@ -1163,35 +1163,35 @@ User Function QryTitAber(cCliente, cLoja, cTpLc, cGrupo, lFilLibMan)
 		EndIf
 		cQry += " AND 	SE1.E1_TIPO		NOT IN ('NCC','NDC','RA','BOL') AND		" + Enter
 		cQry += "  		SE1.E1_SALDO 	> 0					AND				" + Enter
-		
+
 		cQry += "  (															" + Enter
 		cQry += "  SE1.E1_TIPO 	NOT IN ('NF','ST')								" + Enter
 		cQry += "  OR															" + Enter
 		cQry += "  	(															" + Enter
-        cQry += " 		SE1.E1_TIPO     IN ('NF','ST')    						" + Enter
-        cQry += " 		AND EXISTS (											" + Enter
-        cQry += "     	SELECT NULL FROM SF2"+aEmps[nEmp]+"0 F2 WITH (NOLOCK)	" + Enter
-        cQry += "             INNER JOIN SE4010 E4 WITH (NOLOCK) ON				" + Enter
-        cQry += "             F2_COND                = E4_CODIGO				" + Enter
-        cQry += "             AND E4.D_E_L_E_T_    = ''							" + Enter
-        cQry += "             WHERE												" + Enter
-        If aEmps[nEmp] == "07" 
-        	cQry += "             F2_FILIAL IN ('01','05')           	" + Enter
-        Else
-        	cQry += "             F2_FILIAL = '01' 						" + Enter        
-        EndIf
-        cQry += "             AND F2.F2_CLIENTE    = SE1.E1_CLIENTE				" + Enter
-        cQry += "             AND F2.F2_LOJA       = SE1.E1_LOJA				" + Enter
-        cQry += "             AND F2.F2_DOC        = SE1.E1_NUM					" + Enter
-        cQry += "             AND F2.F2_SERIE      = SE1.E1_PREFIXO				" + Enter
-        cQry += "             AND F2.D_E_L_E_T_    = ''							" + Enter
-        cQry += "             AND E4_DESCRI        NOT LIKE '%ANTE%'			" + Enter	
-        cQry += "      )														" + Enter
-        cQry += "  	)															" + Enter
-        cQry += "  )															" + Enter
-        
+		cQry += " 		SE1.E1_TIPO     IN ('NF','ST')    						" + Enter
+		cQry += " 		AND EXISTS (											" + Enter
+		cQry += "     	SELECT NULL FROM SF2"+aEmps[nEmp]+"0 F2 WITH (NOLOCK)	" + Enter
+		cQry += "             INNER JOIN SE4010 E4 WITH (NOLOCK) ON				" + Enter
+		cQry += "             F2_COND                = E4_CODIGO				" + Enter
+		cQry += "             AND E4.D_E_L_E_T_    = ''							" + Enter
+		cQry += "             WHERE												" + Enter
+		If aEmps[nEmp] == "07" 
+			cQry += "             F2_FILIAL IN ('01','05')           	" + Enter
+		Else
+			cQry += "             F2_FILIAL = '01' 						" + Enter        
+		EndIf
+		cQry += "             AND F2.F2_CLIENTE    = SE1.E1_CLIENTE				" + Enter
+		cQry += "             AND F2.F2_LOJA       = SE1.E1_LOJA				" + Enter
+		cQry += "             AND F2.F2_DOC        = SE1.E1_NUM					" + Enter
+		cQry += "             AND F2.F2_SERIE      = SE1.E1_PREFIXO				" + Enter
+		cQry += "             AND F2.D_E_L_E_T_    = ''							" + Enter
+		cQry += "             AND E4_DESCRI        NOT LIKE '%ANTE%'			" + Enter	
+		cQry += "      )														" + Enter
+		cQry += "  	)															" + Enter
+		cQry += "  )															" + Enter
+
 		//cQry += "  		(SE1.E1_TIPO 	IN ('NF','ST') AND RTRIM(SE1.E1_PREFIXO)+RTRIM(SE1.E1_NUM) IN (SELECT RTRIM(F2.F2_SERIE)+RTRIM(F2.F2_DOC) FROM SF2"+aEmps[nEmp]+"0 F2, SE4010 E4 WHERE F2_FILIAL = '01' AND F2_CLIENTE = SE1.E1_CLIENTE AND F2_LOJA = SE1.E1_LOJA AND F2_COND = E4_CODIGO AND E4_DESCRI NOT LIKE '%ANTE%' AND F2.D_E_L_E_T_ = '' AND E4.D_E_L_E_T_ = ''))) " + Enter
-		
+
 		cQry += " AND SE1.D_E_L_E_T_ = ''									" + Enter
 		If AllTrim(cGrupo) <> "" .AND. AllTrim(cTpLc) == "G"
 			cQry += "	AND	SA1.A1_GRPVEN	= '"+SA1->A1_GRPVEN+"'	AND SA1.A1_YTIPOLC = 'G'  	" + Enter
@@ -1381,19 +1381,19 @@ Return cQry
 //-----------------------------------------------------------------------------------------------------
 
 /*/
-	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-	±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
-	±±³Fun‡„o    ³ACOL45    | Autor ³ BRUNO MADALENO        ³ Data ³ 04/01/07  ³±±
-	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
-	±±³          ³MONTA O ACOLS45 PARA SER CALCULADO OS VALORES DOS IMPOSTOS   ³±±
-	±±³          ³                                                             ³±±
-	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-	±±³Parametros³ NUMERO PEDIDO E A EMPRESA EM QUE ESTA O PEDIDO              ³±±
-	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-	±±³Uso       ³ personalizacao                                              ³±±
-	±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
-	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-	ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³ACOL45    | Autor ³ BRUNO MADALENO        ³ Data ³ 04/01/07  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³MONTA O ACOLS45 PARA SER CALCULADO OS VALORES DOS IMPOSTOS   ³±±
+±±³          ³                                                             ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ NUMERO PEDIDO E A EMPRESA EM QUE ESTA O PEDIDO              ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ personalizacao                                              ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 /*/
 USER FUNCTION ACOL45(CPEDI,EMP)
 	Local cArq   := ""
@@ -1423,44 +1423,44 @@ USER FUNCTION ACOL45(CPEDI,EMP)
 	dbSelectArea("SC6")
 	dbSetOrder(1)
 	#IFDEF TOP
-		//If Ascan(aHeader45,{|x| x[8] == "M"}) == 0
-		aStruSC6:= SC6->(dbStruct())
-		cArqQry := "SC6"
-		lQuery  := .T.
-		cQuery := "SELECT * "
-		If EMP == "01"
-			cQuery += "FROM SC6010 SC6 "
-		ELSEIF EMP == "05"
-			cQuery += "FROM SC6050 SC6 "
-		ELSEIF EMP == "07"
-			cQuery += "FROM SC6070 SC6 "
-		ELSE
-			cQuery += "FROM SC6"+EMP+"0 SC6 "
-		END IF
-		cQuery += "WHERE SC6.C6_NUM='"+CPEDI+"' AND "
-		//	cQuery += "SC6.C6_QTDVEN-SC6.C6_QTDENT > 0 AND C6_BLQ <> 'R' AND "
-		cQuery += "SC6.D_E_L_E_T_= '' "
-		cQuery += "ORDER BY "+SqlOrder(SC6->(IndexKey()))
+	//If Ascan(aHeader45,{|x| x[8] == "M"}) == 0
+	aStruSC6:= SC6->(dbStruct())
+	cArqQry := "SC6"
+	lQuery  := .T.
+	cQuery := "SELECT * "
+	If EMP == "01"
+		cQuery += "FROM SC6010 SC6 "
+	ELSEIF EMP == "05"
+		cQuery += "FROM SC6050 SC6 "
+	ELSEIF EMP == "07"
+		cQuery += "FROM SC6070 SC6 "
+	ELSE
+		cQuery += "FROM SC6"+EMP+"0 SC6 "
+	END IF
+	cQuery += "WHERE SC6.C6_NUM='"+CPEDI+"' AND "
+	//	cQuery += "SC6.C6_QTDVEN-SC6.C6_QTDENT > 0 AND C6_BLQ <> 'R' AND "
+	cQuery += "SC6.D_E_L_E_T_= '' "
+	cQuery += "ORDER BY "+SqlOrder(SC6->(IndexKey()))
 
-		cQuery := ChangeQuery(cQuery)
+	cQuery := ChangeQuery(cQuery)
 
-		dbSelectArea("SC6")
-		dbCloseArea()
-		dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cArqQry,.T.,.T.)
-		For nCntFor := 1 To Len(aStruSC6)
-			If ( aStruSC6[nCntFor,2]<>"C" )
-				TcSetField(cArqQry,aStruSC6[nCntFor,1],aStruSC6[nCntFor,2],aStruSC6[nCntFor,3],aStruSC6[nCntFor,4])
-			EndIf
-		Next nCntFor
-		//Else
+	dbSelectArea("SC6")
+	dbCloseArea()
+	dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cArqQry,.T.,.T.)
+	For nCntFor := 1 To Len(aStruSC6)
+		If ( aStruSC6[nCntFor,2]<>"C" )
+			TcSetField(cArqQry,aStruSC6[nCntFor,1],aStruSC6[nCntFor,2],aStruSC6[nCntFor,3],aStruSC6[nCntFor,4])
+		EndIf
+	Next nCntFor
+	//Else
 	#ENDIF
 	//cArqQry := "SC6"
 	//MsSeek(xFilial("SC6")+CPEDI)
 	#IFDEF TOP
-		//EndIf
+	//EndIf
 	#ENDIF
 	While ( !Eof() .And. (cArqQry)->C6_FILIAL == xFilial("SC6") .And.;
-			(cArqQry)->C6_NUM 	== CPEDI )
+	(cArqQry)->C6_NUM 	== CPEDI )
 		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 		//³ Verifica se este item foi digitada atraves de uma    ³
 		//³ grade, se for junta todos os itens da grade em uma   ³
@@ -1505,19 +1505,19 @@ USER FUNCTION ACOL45(CPEDI,EMP)
 RETURN
 
 /*/
-	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-	±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
-	±±³Fun‡„o    ³CriaHeader³ Autor ³ BRUNO MADALENO        ³ Data ³ 04/01/07  ³±±
-	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
-	±±³          ³   SERVE PARA MONTAR O AHEADER PARA SER UTILIZADO NA ROTINAS ³±±
-	±±³          ³  DE ACOLS                                                   ³±±
-	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-	±±³Parametros³ _ALIAS  ----  NOME DA TABELA A SER MONTADO O Header         ³±±
-	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-	±±³Uso       ³ personalizacao                                              ³±±
-	±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
-	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-	ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³CriaHeader³ Autor ³ BRUNO MADALENO        ³ Data ³ 04/01/07  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³   SERVE PARA MONTAR O AHEADER PARA SER UTILIZADO NA ROTINAS ³±±
+±±³          ³  DE ACOLS                                                   ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ _ALIAS  ----  NOME DA TABELA A SER MONTADO O Header         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ personalizacao                                              ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 /*/
 USER Function CriaHeader(_ALIAS)
 
@@ -1530,34 +1530,34 @@ USER Function CriaHeader(_ALIAS)
 
 	While !Eof() .And. SX3->X3_Arquivo == _ALIAS
 		aAdd(aHeader,{Trim(SX3->X3_Titulo),;
-			SX3->X3_Campo,;
-			SX3->X3_Picture,;
-			SX3->X3_Tamanho,;
-			SX3->X3_Decimal,;
-			SX3->X3_Valid,;
-			SX3->X3_Usado,;
-			SX3->X3_Tipo,;
-			SX3->X3_Arquivo,;
-			SX3->X3_Context})
+		SX3->X3_Campo,;
+		SX3->X3_Picture,;
+		SX3->X3_Tamanho,;
+		SX3->X3_Decimal,;
+		SX3->X3_Valid,;
+		SX3->X3_Usado,;
+		SX3->X3_Tipo,;
+		SX3->X3_Arquivo,;
+		SX3->X3_Context})
 		dbSkip()
 	end
 
 Return
 
 /*/
-	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-	±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
-	±±³Fun‡„o    ³CriaHeader³ Autor ³ BRUNO MADALENO        ³ Data ³ 04/01/07  ³±±
-	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
-	±±³          ³   SERVE PARA MONTAR O AHEADER PARA SER UTILIZADO NA ROTINAS ³±±
-	±±³          ³  DE ACOLS45                                                 ³±±
-	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-	±±³Parametros³ _ALIAS  ----  NOME DA TABELA A SER MONTADO O Header         ³±±
-	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-	±±³Uso       ³ personalizacao                                              ³±±
-	±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
-	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-	ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³Fun‡„o    ³CriaHeader³ Autor ³ BRUNO MADALENO        ³ Data ³ 04/01/07  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³   SERVE PARA MONTAR O AHEADER PARA SER UTILIZADO NA ROTINAS ³±±
+±±³          ³  DE ACOLS45                                                 ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Parametros³ _ALIAS  ----  NOME DA TABELA A SER MONTADO O Header         ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³Uso       ³ personalizacao                                              ³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 /*/
 USER Function 45CriaHeader(_ALIAS)
 
@@ -1572,15 +1572,15 @@ USER Function 45CriaHeader(_ALIAS)
 
 	While !Eof() .And. SX3->X3_Arquivo == _ALIAS
 		aAdd(aHeader45,{Trim(SX3->X3_Titulo),;
-			SX3->X3_Campo,;
-			SX3->X3_Picture,;
-			SX3->X3_Tamanho,;
-			SX3->X3_Decimal,;
-			SX3->X3_Valid,;
-			SX3->X3_Usado,;
-			SX3->X3_Tipo,;
-			SX3->X3_Arquivo,;
-			SX3->X3_Context})
+		SX3->X3_Campo,;
+		SX3->X3_Picture,;
+		SX3->X3_Tamanho,;
+		SX3->X3_Decimal,;
+		SX3->X3_Valid,;
+		SX3->X3_Usado,;
+		SX3->X3_Tipo,;
+		SX3->X3_Arquivo,;
+		SX3->X3_Context})
 		dbSkip()
 	end
 
@@ -1588,7 +1588,7 @@ Return
 
 USER FUNCTION VALI_RE(cCAMPO,lMENSA)
 	DO CASE
-	CASE cCAMPO = "EE9_RE"
+		CASE cCAMPO = "EE9_RE"
 		If !Empty(M->EE9_RE)
 			If Len(AllTrim(M->EE9_RE)) < 12 .or. Val(Right(AllTrim(M->EE9_RE), 3)) = 0
 				lRet := .F.
@@ -1688,9 +1688,9 @@ User Function VLTOTPED(PEDI,lSaldo)
 	Local aFisGetSC5:= {}
 	Local aDupl     := {}
 	Local aVencto   := {}
-*	Local aFlHead   := { STR0046,STR0047,STR0063 } //"Vencimento"###"Valor"
-*	Local aEntr     := {}
-*	Local aDuplTmp  := {}
+	*	Local aFlHead   := { STR0046,STR0047,STR0063 } //"Vencimento"###"Valor"
+	*	Local aEntr     := {}
+	*	Local aDuplTmp  := {}
 	Local aRentab   := {}
 	Local nPLocal   := aScan(aHeader,{|x| AllTrim(x[2])=="C6_LOCAL"})
 	Local nPTotal   := aScan(aHeader,{|x| AllTrim(x[2])=="C6_VALOR"})
@@ -1942,14 +1942,14 @@ User Function VLTOTPED(PEDI,lSaldo)
 			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 			SF4->(dbSetOrder(1))
 			SF4->(MsSeek(xFilial("SF4")+aCols[nX][nPTES]))
-				If ( M->C5_INCISS == "N" .And. M->C5_TIPO == "N")
-					If ( SF4->F4_ISS=="S" )
+			If ( M->C5_INCISS == "N" .And. M->C5_TIPO == "N")
+				If ( SF4->F4_ISS=="S" )
 					nPrcLista := a410Arred(nPrcLista/(1-(MaAliqISS(nItem)/100)),"D2_PRCVEN")
 					nValMerc  := a410Arred(nValMerc/(1-(MaAliqISS(nItem)/100)),"D2_PRCVEN")
 					MaFisAlt("IT_PRCUNI",nPrcLista,nItem)
 					MaFisAlt("IT_VALMERC",nValMerc,nItem)
-					EndIf
 				EndIf
+			EndIf
 
 			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 			//³Altera peso para calcular frete              ³
@@ -1960,28 +1960,28 @@ User Function VLTOTPED(PEDI,lSaldo)
 			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 			//³Analise da Rentabilidade                     ³
 			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-				If SF4->F4_DUPLIC=="S"
+			If SF4->F4_DUPLIC=="S"
 				nTotDesc += MaFisRet(nItem,"IT_DESCONTO")
 				nY := aScan(aRentab,{|x| x[1] == aCols[nX][nPProduto]})
-					If nY == 0
+				If nY == 0
 					aadd(aRenTab,{aCols[nX][nPProduto],0,0,0,0,0})
 					nY := Len(aRenTab)
-					EndIf
-					If cPaisLoc=="BRA"
-					aRentab[nY][2] += (nValMerc - nDesconto)
-					Else
-					aRentab[nY][2] += nValMerc
-					Endif
-				aRentab[nY][3] += If(lSaldo,aCols[nX][nPQtdVen]-nQtdEnt,aCols[nX][nPQtdVen])*SB2->B2_CM1
-				Else
-					If GetNewPar("MV_TPDPIND","1")=="1"
-					nTotDesc += MaFisRet(nItem,"IT_DESCONTO")
-					EndIf
 				EndIf
+				If cPaisLoc=="BRA"
+					aRentab[nY][2] += (nValMerc - nDesconto)
+				Else
+					aRentab[nY][2] += nValMerc
+				Endif
+				aRentab[nY][3] += If(lSaldo,aCols[nX][nPQtdVen]-nQtdEnt,aCols[nX][nPQtdVen])*SB2->B2_CM1
+			Else
+				If GetNewPar("MV_TPDPIND","1")=="1"
+					nTotDesc += MaFisRet(nItem,"IT_DESCONTO")
+				EndIf
+			EndIf
 			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 			//³Ponto de Entrada M410IPI para alterar os valores do IPI referente a palnilha financeira           ³
 			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-				If lM410Ipi
+			If lM410Ipi
 				VALORIPI    := MaFisRet(nItem,"IT_VALIPI")
 				BASEIPI     := MaFisRet(nItem,"IT_BASEIPI")
 				QUANTIDADE  := MaFisRet(nItem,"IT_QUANT")
@@ -1992,11 +1992,11 @@ User Function VLTOTPED(PEDI,lSaldo)
 				MaFisLoad("IT_ALIQIPI",ALIQIPI ,nItem)
 				MaFisLoad("IT_FRETE"  ,BASEIPIFRETE,nItem,"11")
 				MaFisEndLoad(nItem,1)
-				EndIf
+			EndIf
 			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 			//³Ponto de Entrada M410ICM para alterar os valores do ICM referente a palnilha financeira           ³
 			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-				If lM410Icm
+			If lM410Icm
 				_BASEICM    := MaFisRet(nItem,"IT_BASEICM")
 				_ALIQICM    := MaFisRet(nItem,"IT_ALIQICM")
 				_QUANTIDADE := MaFisRet(nItem,"IT_QUANT")
@@ -2012,49 +2012,49 @@ User Function VLTOTPED(PEDI,lSaldo)
 				MaFisLoad("IT_ICMFRETE",_VALICMFRETE,nItem)
 				MaFisLoad("IT_DESCONTO",_DESCONTO   ,nItem)
 				MaFisEndLoad(nItem,1)
-				EndIf
+			EndIf
 			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 			//³Ponto de Entrada M410SOLI para alterar os valores do ICM Solidario referente a palnilha financeira³
 			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-				If lM410Soli
+			If lM410Soli
 				ICMSITEM    := MaFisRet(nItem,"IT_VALICM")		// variavel para ponto de entrada
 				QUANTITEM   := MaFisRet(nItem,"IT_QUANT")		// variavel para ponto de entrada
 				BASEICMRET  := MaFisRet(nItem,"IT_BASESOL")	    // criado apenas para o ponto de entrada
 				MARGEMLUCR  := MaFisRet(nItem,"IT_MARGEM")		// criado apenas para o ponto de entrada
 				aSolid := ExecBlock("M410SOLI",.f.,.f.,{nItem})
 				aSolid := IIF(ValType(aSolid) == "A" .And. Len(aSolid) > 0, aSolid,{})
-					If !Empty(aSolid)
+				If !Empty(aSolid)
 					MaFisLoad("IT_BASESOL",NoRound(aSolid[1],2),nItem)
 					MaFisLoad("IT_VALSOL" ,NoRound(aSolid[2],2),nItem)
 					MaFisLoad("IT_BSFCPST",NoRound(aSolid[3],2),nItem) //BASE
 					MaFisLoad("IT_ALFCST" ,NoRound(aSolid[4],2),nItem) //ALIQ		
 					MaFisLoad("IT_VFECPST",NoRound(aSolid[5],2),nItem) //VALOR					
 					MaFisEndLoad(nItem,1)
-					Endif
-				EndIf
+				Endif
+			EndIf
 			//EndIf
-			Next nX
-		EndIf
+		Next nX
+	EndIf
 	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 	//³Indica os valores do cabecalho               ³
 	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 	MaFisAlt("NF_FRETE",M->C5_FRETE)
-		If !Empty(SC5->(FieldPos("C5_VLR_FRT")))
+	If !Empty(SC5->(FieldPos("C5_VLR_FRT")))
 		MaFisAlt("NF_VLR_FRT",M->C5_VLR_FRT)
-		EndIf
+	EndIf
 	MaFisAlt("NF_SEGURO",M->C5_SEGURO)
 	MaFisAlt("NF_AUTONOMO",M->C5_FRETAUT)
 	MaFisAlt("NF_DESPESA",M->C5_DESPESA)
 	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 	//³Indenizacao por valor                        ³
 	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-		If M->C5_DESCONT > 0
+	If M->C5_DESCONT > 0
 		MaFisAlt("NF_DESCONTO",Min(MaFisRet(,"NF_VALMERC")-0.01,nTotDesc+M->C5_DESCONT),/*nItem*/,/*lNoCabec*/,/*nItemNao*/,GetNewPar("MV_TPDPIND","1")=="2" )
-		EndIf
+	EndIf
 
-		If M->C5_PDESCAB > 0
+	If M->C5_PDESCAB > 0
 		MaFisAlt("NF_DESCONTO",A410Arred(MaFisRet(,"NF_VALMERC")*M->C5_PDESCAB/100,"C6_VALOR")+MaFisRet(,"NF_DESCONTO"))
-		EndIf
+	EndIf
 
 	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 	//³Realiza alteracoes de referencias do SC6         ³
@@ -2080,12 +2080,12 @@ User Function VLTOTPED(PEDI,lSaldo)
 	//³Realiza alteracoes de referencias do SC5 Suframa ³
 	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 	nPSuframa:=aScan(aFisGetSC5,{|x| x[1] == "NF_SUFRAMA"})
-		If !Empty(nPSuframa)
+	If !Empty(nPSuframa)
 		dbSelectArea("SC5")
-			If !Empty(&("M->"+Alltrim(aFisGetSC5[nPSuframa][2])))
+		If !Empty(&("M->"+Alltrim(aFisGetSC5[nPSuframa][2])))
 			MaFisAlt(aFisGetSC5[nPSuframa][1],Iif(&("M->"+Alltrim(aFisGetSC5[nPSuframa][2])) == "1",.T.,.F.),nItem,.F.)
-			EndIf
-		Endif
+		EndIf
+	Endif
 	/*If ExistBlock("M410PLNF")
 	ExecBlock("M410PLNF",.F.,.F.)
 	EndIf*/
@@ -2675,35 +2675,35 @@ Return(nPrcTab)
 
 
 /*/
-	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-	±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
-	±±³FUN‡„O    ³ CALCULA_DESCONTO ³ AUTOR ³ BRUNO MADALENO        ³ DATA ³ 14/03/07  	³±±
-	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-	±±³          ³VL_IMPOS: CALCULA O VALOR DO DESCONTO PARA O PEDIDO DE VENDA 	   		  ³±±
-	±±³          ³                                                                      ³±±
-	±±³          ³          ATENCAO PAR O CORRETO FUNCIONAMENTO DA FUNCAO               ³±±
-	±±³          ³    E NECESSÁRIO ESTAR POSICIONADO NO PEDIDO DE VENDA        	   		  ³±±
-	±±³          ³                                                             	   		  ³±±
-	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-	±±³          ³ CPRODUTO         CODIGO DE PRODUTO                                   ³±±
-	±±³          ³ CCODTABELA       TABELA DE PRECO QUE ESTA EM VIFOR           	 			³±±
-	±±³          ³ CLIENTE          CLIENTE PARA BUSCAR O PERCENTUAL DE DESCONTO				³±±
-	±±³          ³ LOJA             LOJA DO CLIENTE                            					³±±
-	±±³          ³ PRECO INFORMADO  PRECO INFORMADO PELO USUARIO               					³±±
-	±±³          ³ CONDICAO         CONDICAO DE PAGAMENTO PARA BUSCAR O PERCENTUAL      ³±±
-	±±³          ³ CEMPRESA         CODIGO DA EMPRESA                                   ³±±
-	±±³          ³ V_SEGURO         VALOR DO SEGURO                                     ³±±
-	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-	±±³RETORNO   ³ VALOR DO DESCONTO BASEADO NO PRECO INFORMADO                					³±±
-	±±³          ³                                                             		 			³±±
-	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-	±±³DESCRI‡„O ³ESTA FUNCAO EFETUA OS CALCULOS DE DESCONTO SE BASEANDO NO    		 			³±±
-	±±³          ³PRECO INFORMADO PELO USUARIO                                 					³±±
-	±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-	±±³USO       ³ PERSONALIZACAO                                              		 			³±±
-	±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
-	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-	ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄ¿±±
+±±³FUN‡„O    ³ CALCULA_DESCONTO ³ AUTOR ³ BRUNO MADALENO        ³ DATA ³ 14/03/07  	³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³VL_IMPOS: CALCULA O VALOR DO DESCONTO PARA O PEDIDO DE VENDA 	   		  ³±±
+±±³          ³                                                                      ³±±
+±±³          ³          ATENCAO PAR O CORRETO FUNCIONAMENTO DA FUNCAO               ³±±
+±±³          ³    E NECESSÁRIO ESTAR POSICIONADO NO PEDIDO DE VENDA        	   		  ³±±
+±±³          ³                                                             	   		  ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³          ³ CPRODUTO         CODIGO DE PRODUTO                                   ³±±
+±±³          ³ CCODTABELA       TABELA DE PRECO QUE ESTA EM VIFOR           	 			³±±
+±±³          ³ CLIENTE          CLIENTE PARA BUSCAR O PERCENTUAL DE DESCONTO				³±±
+±±³          ³ LOJA             LOJA DO CLIENTE                            					³±±
+±±³          ³ PRECO INFORMADO  PRECO INFORMADO PELO USUARIO               					³±±
+±±³          ³ CONDICAO         CONDICAO DE PAGAMENTO PARA BUSCAR O PERCENTUAL      ³±±
+±±³          ³ CEMPRESA         CODIGO DA EMPRESA                                   ³±±
+±±³          ³ V_SEGURO         VALOR DO SEGURO                                     ³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³RETORNO   ³ VALOR DO DESCONTO BASEADO NO PRECO INFORMADO                					³±±
+±±³          ³                                                             		 			³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³DESCRI‡„O ³ESTA FUNCAO EFETUA OS CALCULOS DE DESCONTO SE BASEANDO NO    		 			³±±
+±±³          ³PRECO INFORMADO PELO USUARIO                                 					³±±
+±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
+±±³USO       ³ PERSONALIZACAO                                              		 			³±±
+±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
+ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 /*/
 
 USER FUNCTION CALCULA_DESCONTO(CPRODUTO, CCODTABELA, CLIENTE, LOJA, _SPRECO_DIG, CONDICAO, CEMPRESA, V_SEGURO)
@@ -3219,11 +3219,11 @@ USER FUNCTION fGeraFatura(dtIni,dtFim)
 	cQuery += " 		A.E1_NUM     = C.F2_DOC 		AND " + Enter
 	cQuery += " 		A.E1_CLIENTE = C.F2_CLIENTE		AND " + Enter
 	cQuery += " 		A.E1_LOJA    = C.F2_LOJA		AND " + Enter
-	
+
 	If Alltrim(cEmpAnt) == '01' //NAO GERA FATURA PARA CLIENTES FIDC
 		cQuery += " 		B.A1_YCDGREG <> '000029'		AND " + Enter 
 	EndIf
-	
+
 	cQuery += " 		B.A1_YGERFAT = 'S'				AND " + Enter
 	cQuery += " 		A.D_E_L_E_T_ = ''				AND " + Enter
 	cQuery += " 		B.D_E_L_E_T_ = ''				AND	" + Enter
@@ -3285,155 +3285,155 @@ USER FUNCTION fGeraFatura(dtIni,dtFim)
 				/*	
 				J := 1
 				IF LEN(A_FATURA[_QUANT_FATURA] ) == 0 // SE FOR A PRIMEIRA TITULO GRAVA SEM PROCURAR
-					FOR I := 1 TO LEN(A_VENCIMENTO)
+				FOR I := 1 TO LEN(A_VENCIMENTO)
 				SPOS  := ASCAN(A_FATURA[J],{|X| X[1]== A_VENCIMENTO[I][1] } )	// POSICAO 1 E A CHAVE (VENCIMENTO+TITULO+CLIENTE+LOJA					
-						IF SPOS == 0
+				IF SPOS == 0
 				AADD(A_FATURA[_QUANT_FATURA] , {A_VENCIMENTO[I][1], A_VENCIMENTO[I][2], A_VENCIMENTO[I][3], "", A_VENCIMENTO[I][5], A_VENCIMENTO[I][6], A_VENCIMENTO[I][7], A_VENCIMENTO[I][8], A_VENCIMENTO[I][9], "" } )
-						ELSE
+				ELSE
 				A_FATURA[J][SPOS][3]  := A_FATURA[J][SPOS][3] + ',' +	A_VENCIMENTO[I][3]	//NUMERO 
 				A_FATURA[J][SPOS][8]  := A_FATURA[J][SPOS][8] + 		A_VENCIMENTO[I][8]	//VALOR
 				A_FATURA[J][SPOS][9]  := A_FATURA[J][SPOS][9] + ',' +	A_VENCIMENTO[I][9]	//R_E_C_N_O_
 				A_FATURA[J][SPOS][10] := "SIM"
-						ENDIF
-					NEXT
+				ENDIF
+				NEXT
 				J += 1
 				*/
 
-				ELSE
-
-					SFLAG	:= "NAO"
-					J		:= 1
-					DO WHILE LEN(A_FATURA[J]) <> 0
-						FOR I := 1 TO LEN(A_VENCIMENTO)
-							SPOS := ASCAN(A_FATURA[J],{|X| X[1]== A_VENCIMENTO[I][1]} )	// POSICAO 1 E A CHAVE (VENCIMENTO+TITULO+CLIENTE+LOJA
-							IF SPOS <> 0
-								LL := J
-								SFLAG := "SIM"
-								//EXIT
-							END IF
-						NEXT
-						J += 1
-					END DO
-
-					// SE ENCONTROU O VENCIMENTO JA GRAVADO
-					IF 	SFLAG = "SIM"
-						J := LL
-						//DO WHILE LEN(A_FATURA[J]) <> 0
-						FOR I := 1 TO LEN(A_VENCIMENTO)
-							SPOS  := ASCAN(A_FATURA[J],{|X| X[1]== A_VENCIMENTO[I][1] } )	// POSICAO 1 E A CHAVE (VENCIMENTO+TITULO+CLIENTE+LOJA
-							IF SPOS <> 0
-								//If Empty(Alltrim(A_FATURA[J][SPOS][4]))
-								//	A_FATURA[J][SPOS][4] := A_VENCIMENTO[I][4]
-								//EndIf
-								A_FATURA[J][SPOS][3]  := A_FATURA[J][SPOS][3] + ',' +	A_VENCIMENTO[I][3]	//NUMERO
-								A_FATURA[J][SPOS][8]  := A_FATURA[J][SPOS][8] + 		A_VENCIMENTO[I][8]	//VALOR
-								A_FATURA[J][SPOS][9]  := A_FATURA[J][SPOS][9] + ',' +	A_VENCIMENTO[I][9]	//R_E_C_N_O_
-								A_FATURA[J][SPOS][10] := "SIM"
-							ELSE
-								AADD(A_FATURA[J], {A_VENCIMENTO[I][1], A_VENCIMENTO[I][2], A_VENCIMENTO[I][3], "", A_VENCIMENTO[I][5], A_VENCIMENTO[I][6], A_VENCIMENTO[I][7], A_VENCIMENTO[I][8], A_VENCIMENTO[I][9],A_VENCIMENTO[I][10] } )
-							END IF
-						NEXT
-						J += 1
-						//END DO
-					ELSE // SENÃO GERA UMA NOVA FATURA.
-						FOR I := 1 TO LEN(A_VENCIMENTO)
-							AADD(A_FATURA[_QUANT_FATURA+1] , {A_VENCIMENTO[I][1], A_VENCIMENTO[I][2], A_VENCIMENTO[I][3], "", A_VENCIMENTO[I][5], A_VENCIMENTO[I][6], A_VENCIMENTO[I][7], A_VENCIMENTO[I][8], A_VENCIMENTO[I][9],A_VENCIMENTO[I][10] } )
-						NEXT
-						_QUANT_FATURA += 1
-					END IF
-
-				END IF
-				A_VENCIMENTO	:= {}
-				NUMERO_TITULO	:= _TITULOS->E1_NUM
 			ELSE
 
-				If Len(A_VENCIMENTO) > 0
-					//For I := 1 To Len(A_VENCIMENTO)
-					SPOS := ASCAN(A_VENCIMENTO,{|X| X[1]== _TITULOS->E1_VENCTO+_TITULOS->E1_PREFIXO+_TITULOS->E1_CLIENTE+_TITULOS->E1_LOJA } )
-					If SPOS == 0
-						AADD(A_VENCIMENTO, {_TITULOS->E1_VENCTO+_TITULOS->E1_PREFIXO+_TITULOS->E1_CLIENTE+_TITULOS->E1_LOJA, _TITULOS->E1_PREFIXO, _TITULOS->E1_NUM, _TITULOS->E1_PARCELA, _TITULOS->E1_CLIENTE, _TITULOS->E1_LOJA, _TITULOS->E1_VENCTO, _TITULOS->E1_VALOR, "'"+Alltrim(Str(_TITULOS->R_E_C_N_O_))+"'", " "} )
-					Else
-						A_VENCIMENTO[SPOS][8]   := A_VENCIMENTO[SPOS][8] + 	  _TITULOS->E1_VALOR						//VALOR
-						A_VENCIMENTO[SPOS][9]   := A_VENCIMENTO[SPOS][9] + ',' + "'"+Alltrim(Str(_TITULOS->R_E_C_N_O_))+"'"//R_E_C_N_O_
-						A_VENCIMENTO[SPOS][10]  := "SIM"
-						//[1]	_TITULOS->E1_VENCTO+_TITULOS->E1_PREFIXO+_TITULOS->E1_CLIENTE+_TITULOS->E1_LOJA,
-						//[2]	_TITULOS->E1_PREFIXO,
-						//[3]	_TITULOS->E1_NUM,
-						//[4]	_TITULOS->E1_PARCELA,
-						//[5]	_TITULOS->E1_CLIENTE,
-						//[6]	_TITULOS->E1_LOJA,
-						//[7]	_TITULOS->E1_VENCTO,
-						//[8]	_TITULOS->E1_VALOR,
-						//[9]	Alltrim(Str(_TITULOS->R_E_C_N_O_))
-					EndIf
-					// Next
-				Else
-					AADD(A_VENCIMENTO, {_TITULOS->E1_VENCTO+_TITULOS->E1_PREFIXO+_TITULOS->E1_CLIENTE+_TITULOS->E1_LOJA, _TITULOS->E1_PREFIXO, _TITULOS->E1_NUM, _TITULOS->E1_PARCELA, _TITULOS->E1_CLIENTE, _TITULOS->E1_LOJA, _TITULOS->E1_VENCTO, _TITULOS->E1_VALOR, "'"+Alltrim(Str(_TITULOS->R_E_C_N_O_))+"'"," "} )
-				EndIf
+				SFLAG	:= "NAO"
+				J		:= 1
+				DO WHILE LEN(A_FATURA[J]) <> 0
+					FOR I := 1 TO LEN(A_VENCIMENTO)
+						SPOS := ASCAN(A_FATURA[J],{|X| X[1]== A_VENCIMENTO[I][1]} )	// POSICAO 1 E A CHAVE (VENCIMENTO+TITULO+CLIENTE+LOJA
+						IF SPOS <> 0
+							LL := J
+							SFLAG := "SIM"
+							//EXIT
+						END IF
+					NEXT
+					J += 1
+				END DO
 
-				_TITULOS->(DBSKIP())
+				// SE ENCONTROU O VENCIMENTO JA GRAVADO
+				IF 	SFLAG = "SIM"
+					J := LL
+					//DO WHILE LEN(A_FATURA[J]) <> 0
+					FOR I := 1 TO LEN(A_VENCIMENTO)
+						SPOS  := ASCAN(A_FATURA[J],{|X| X[1]== A_VENCIMENTO[I][1] } )	// POSICAO 1 E A CHAVE (VENCIMENTO+TITULO+CLIENTE+LOJA
+						IF SPOS <> 0
+							//If Empty(Alltrim(A_FATURA[J][SPOS][4]))
+							//	A_FATURA[J][SPOS][4] := A_VENCIMENTO[I][4]
+							//EndIf
+							A_FATURA[J][SPOS][3]  := A_FATURA[J][SPOS][3] + ',' +	A_VENCIMENTO[I][3]	//NUMERO
+							A_FATURA[J][SPOS][8]  := A_FATURA[J][SPOS][8] + 		A_VENCIMENTO[I][8]	//VALOR
+							A_FATURA[J][SPOS][9]  := A_FATURA[J][SPOS][9] + ',' +	A_VENCIMENTO[I][9]	//R_E_C_N_O_
+							A_FATURA[J][SPOS][10] := "SIM"
+						ELSE
+							AADD(A_FATURA[J], {A_VENCIMENTO[I][1], A_VENCIMENTO[I][2], A_VENCIMENTO[I][3], "", A_VENCIMENTO[I][5], A_VENCIMENTO[I][6], A_VENCIMENTO[I][7], A_VENCIMENTO[I][8], A_VENCIMENTO[I][9],A_VENCIMENTO[I][10] } )
+						END IF
+					NEXT
+					J += 1
+					//END DO
+				ELSE // SENÃO GERA UMA NOVA FATURA.
+					FOR I := 1 TO LEN(A_VENCIMENTO)
+						AADD(A_FATURA[_QUANT_FATURA+1] , {A_VENCIMENTO[I][1], A_VENCIMENTO[I][2], A_VENCIMENTO[I][3], "", A_VENCIMENTO[I][5], A_VENCIMENTO[I][6], A_VENCIMENTO[I][7], A_VENCIMENTO[I][8], A_VENCIMENTO[I][9],A_VENCIMENTO[I][10] } )
+					NEXT
+					_QUANT_FATURA += 1
+				END IF
 
 			END IF
-		END DO
+			A_VENCIMENTO	:= {}
+			NUMERO_TITULO	:= _TITULOS->E1_NUM
+		ELSE
 
-		SFLAG := "NAO"
-		J := 1
-		DO WHILE LEN(A_FATURA[J]) <> 0
-			FOR I := 1 TO LEN(A_VENCIMENTO)
-				SPOS := ASCAN(A_FATURA[J],{|X| X[1]==  A_VENCIMENTO[I][1] }) // POSICAO 1 E A CHAVE (VENCIMENTO+PREFIXO+CLIENTE+LOJA
-				IF SPOS <> 0
-					LL := J
-					SFLAG := "SIM"
-				END IF
-			NEXT
-			J += 1
-		END DO
-
-		// SE ENCONTROU O VENCIMENTO JA GRAVADO
-		IF 	SFLAG = "SIM"
-			J := LL
-			//DO WHILE LEN(A_FATURA[J]) <> 0
-			FOR I := 1 TO LEN(A_VENCIMENTO)
-				SPOS := ASCAN(A_FATURA[J],{|X| X[1]==  A_VENCIMENTO[I][1]})	 // POSICAO 1 E A CHAVE (VENCIMENTO+PREFIXO+CLIENTE+LOJA
-				IF SPOS <> 0
-					//If Empty(Alltrim(A_FATURA[J][SPOS][4]))
-					//	A_FATURA[J][SPOS][4] := A_VENCIMENTO[I][4]
-					//EndIf
-					A_FATURA[J][SPOS][3]  := A_FATURA[J][SPOS][3] + ',' + A_VENCIMENTO[I][3]	//NUMERO
-					A_FATURA[J][SPOS][8]  := A_FATURA[J][SPOS][8] + 	  A_VENCIMENTO[I][8]	//VALOR
-					A_FATURA[J][SPOS][9]  := A_FATURA[J][SPOS][9] + ',' + A_VENCIMENTO[I][9]	//R_E_C_N_O_
-					A_FATURA[J][SPOS][10] := "SIM"
-				ELSE
-					AADD(A_FATURA[J], {A_VENCIMENTO[I][1], A_VENCIMENTO[I][2], A_VENCIMENTO[I][3], "", A_VENCIMENTO[I][5], A_VENCIMENTO[I][6], A_VENCIMENTO[I][7], A_VENCIMENTO[I][8], A_VENCIMENTO[I][9],A_VENCIMENTO[I][10] } )
-				END IF
-			NEXT
-			J += 1
-			//END DO
-
-
-		ELSE // SENÃO GERA UMA NOVA FATURA.
-			FOR I := 1 TO LEN(A_VENCIMENTO)
-				AADD(A_FATURA[_QUANT_FATURA+1] , {A_VENCIMENTO[I][1], A_VENCIMENTO[I][2], A_VENCIMENTO[I][3], "", A_VENCIMENTO[I][5], A_VENCIMENTO[I][6], A_VENCIMENTO[I][7], A_VENCIMENTO[I][8], A_VENCIMENTO[I][9],A_VENCIMENTO[I][10] } )
-			NEXT
-		END IF
-
-		//CORRIGE PARCELA
-		For n := 1 To Len(A_FATURA)
-			If Len(A_FATURA[n]) > 0
-				For r := 1 to Len(A_FATURA[n])
-					If r == 1
-						nParc := 'A'
-					Else
-						nParc := Soma1(nParc,1,.T.)
-					EndIf
-					A_FATURA[n][r][4] := nParc
-				Next
+			If Len(A_VENCIMENTO) > 0
+				//For I := 1 To Len(A_VENCIMENTO)
+				SPOS := ASCAN(A_VENCIMENTO,{|X| X[1]== _TITULOS->E1_VENCTO+_TITULOS->E1_PREFIXO+_TITULOS->E1_CLIENTE+_TITULOS->E1_LOJA } )
+				If SPOS == 0
+					AADD(A_VENCIMENTO, {_TITULOS->E1_VENCTO+_TITULOS->E1_PREFIXO+_TITULOS->E1_CLIENTE+_TITULOS->E1_LOJA, _TITULOS->E1_PREFIXO, _TITULOS->E1_NUM, _TITULOS->E1_PARCELA, _TITULOS->E1_CLIENTE, _TITULOS->E1_LOJA, _TITULOS->E1_VENCTO, _TITULOS->E1_VALOR, "'"+Alltrim(Str(_TITULOS->R_E_C_N_O_))+"'", " "} )
+				Else
+					A_VENCIMENTO[SPOS][8]   := A_VENCIMENTO[SPOS][8] + 	  _TITULOS->E1_VALOR						//VALOR
+					A_VENCIMENTO[SPOS][9]   := A_VENCIMENTO[SPOS][9] + ',' + "'"+Alltrim(Str(_TITULOS->R_E_C_N_O_))+"'"//R_E_C_N_O_
+					A_VENCIMENTO[SPOS][10]  := "SIM"
+					//[1]	_TITULOS->E1_VENCTO+_TITULOS->E1_PREFIXO+_TITULOS->E1_CLIENTE+_TITULOS->E1_LOJA,
+					//[2]	_TITULOS->E1_PREFIXO,
+					//[3]	_TITULOS->E1_NUM,
+					//[4]	_TITULOS->E1_PARCELA,
+					//[5]	_TITULOS->E1_CLIENTE,
+					//[6]	_TITULOS->E1_LOJA,
+					//[7]	_TITULOS->E1_VENCTO,
+					//[8]	_TITULOS->E1_VALOR,
+					//[9]	Alltrim(Str(_TITULOS->R_E_C_N_O_))
+				EndIf
+				// Next
 			Else
-				Exit
+				AADD(A_VENCIMENTO, {_TITULOS->E1_VENCTO+_TITULOS->E1_PREFIXO+_TITULOS->E1_CLIENTE+_TITULOS->E1_LOJA, _TITULOS->E1_PREFIXO, _TITULOS->E1_NUM, _TITULOS->E1_PARCELA, _TITULOS->E1_CLIENTE, _TITULOS->E1_LOJA, _TITULOS->E1_VENCTO, _TITULOS->E1_VALOR, "'"+Alltrim(Str(_TITULOS->R_E_C_N_O_))+"'"," "} )
 			EndIf
-		Next
 
-		RETURN(A_FATURA)
+			_TITULOS->(DBSKIP())
+
+		END IF
+	END DO
+
+	SFLAG := "NAO"
+	J := 1
+	DO WHILE LEN(A_FATURA[J]) <> 0
+		FOR I := 1 TO LEN(A_VENCIMENTO)
+			SPOS := ASCAN(A_FATURA[J],{|X| X[1]==  A_VENCIMENTO[I][1] }) // POSICAO 1 E A CHAVE (VENCIMENTO+PREFIXO+CLIENTE+LOJA
+			IF SPOS <> 0
+				LL := J
+				SFLAG := "SIM"
+			END IF
+		NEXT
+		J += 1
+	END DO
+
+	// SE ENCONTROU O VENCIMENTO JA GRAVADO
+	IF 	SFLAG = "SIM"
+		J := LL
+		//DO WHILE LEN(A_FATURA[J]) <> 0
+		FOR I := 1 TO LEN(A_VENCIMENTO)
+			SPOS := ASCAN(A_FATURA[J],{|X| X[1]==  A_VENCIMENTO[I][1]})	 // POSICAO 1 E A CHAVE (VENCIMENTO+PREFIXO+CLIENTE+LOJA
+			IF SPOS <> 0
+				//If Empty(Alltrim(A_FATURA[J][SPOS][4]))
+				//	A_FATURA[J][SPOS][4] := A_VENCIMENTO[I][4]
+				//EndIf
+				A_FATURA[J][SPOS][3]  := A_FATURA[J][SPOS][3] + ',' + A_VENCIMENTO[I][3]	//NUMERO
+				A_FATURA[J][SPOS][8]  := A_FATURA[J][SPOS][8] + 	  A_VENCIMENTO[I][8]	//VALOR
+				A_FATURA[J][SPOS][9]  := A_FATURA[J][SPOS][9] + ',' + A_VENCIMENTO[I][9]	//R_E_C_N_O_
+				A_FATURA[J][SPOS][10] := "SIM"
+			ELSE
+				AADD(A_FATURA[J], {A_VENCIMENTO[I][1], A_VENCIMENTO[I][2], A_VENCIMENTO[I][3], "", A_VENCIMENTO[I][5], A_VENCIMENTO[I][6], A_VENCIMENTO[I][7], A_VENCIMENTO[I][8], A_VENCIMENTO[I][9],A_VENCIMENTO[I][10] } )
+			END IF
+		NEXT
+		J += 1
+		//END DO
+
+
+	ELSE // SENÃO GERA UMA NOVA FATURA.
+		FOR I := 1 TO LEN(A_VENCIMENTO)
+			AADD(A_FATURA[_QUANT_FATURA+1] , {A_VENCIMENTO[I][1], A_VENCIMENTO[I][2], A_VENCIMENTO[I][3], "", A_VENCIMENTO[I][5], A_VENCIMENTO[I][6], A_VENCIMENTO[I][7], A_VENCIMENTO[I][8], A_VENCIMENTO[I][9],A_VENCIMENTO[I][10] } )
+		NEXT
+	END IF
+
+	//CORRIGE PARCELA
+	For n := 1 To Len(A_FATURA)
+		If Len(A_FATURA[n]) > 0
+			For r := 1 to Len(A_FATURA[n])
+				If r == 1
+					nParc := 'A'
+				Else
+					nParc := Soma1(nParc,1,.T.)
+				EndIf
+				A_FATURA[n][r][4] := nParc
+			Next
+		Else
+			Exit
+		EndIf
+	Next
+
+RETURN(A_FATURA)
 
 /*
 ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
@@ -3504,7 +3504,7 @@ USER FUNCTION EMAI_LIB(C_TITULO,C_ENVIA,C_DESTI,C_COPIA,C_MENS,C_ANEXO)
 	//³ Tenta conexao com o servidor de E-Mail ³
 	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 	CONNECT SMTP                         ;
-		SERVER   GetMV("MV_RELSERV");	// Nome do servidor de e-mail = smtp.bra.terra.com.br
+	SERVER   GetMV("MV_RELSERV");	// Nome do servidor de e-mail = smtp.bra.terra.com.br
 	ACCOUNT  GetMV("MV_RELACNT");	// Nome da conta a ser usada no e-mail = fulano
 	PASSWORD GetMV("MV_RELPSW") ;	// Senha = senha
 	RESULT   lResult				// Resultado da tentativa de conexão
@@ -3719,25 +3719,14 @@ User Function ReplicaIndicador(__EMPRESA,cTipo,cCod)
 				CONOUT("ReplicaIndicador-SBZ: Empresa: " + __EMPRESA + " Produto: " + AllTrim(cCod))
 
 				If isInCallStack("MATA010") .Or. FunName() == "MATA010" .Or. FunName() == "WFPREPENV" .Or. FunName() == "RPC" .Or. AllTrim(FunName()) == "PDMLOPRO"
-					
+
 					RecLock("_SBZ",.T.)
 					//_SBZ->BZ_FILIAL		:= xFilial("SBZ")
 					_SBZ->BZ_FILIAL		:= SPACE(2)
 					_SBZ->BZ_COD		:= SBZ->BZ_COD
 
-					//Gabriel Mafioletti - 10/07/2018 Ticket - 4054
-					If SBZ->BZ_TIPO $ "#PA#PP#"
-						Do Case
-						Case SUBSTR(cEmpAnt,1,2) == "01"
-							_SBZ->BZ_LOCPAD := "02"
-						Case SUBSTR(cEmpAnt,1,2) == "05"
-							_SBZ->BZ_LOCPAD := "04"
-						OtherWise
-							_SBZ->BZ_LOCPAD := SBZ->BZ_LOCPAD
-						EndCase
-					Else
-						_SBZ->BZ_LOCPAD := SBZ->BZ_LOCPAD
-					EndIf
+					// Em 27/10/21 - para atender ao ticket 35219 
+					_SBZ->BZ_LOCPAD     := SBZ->BZ_LOCPAD
 
 					_SBZ->BZ_TE			:= SBZ->BZ_TE
 					_SBZ->BZ_TS			:= SBZ->BZ_TS
@@ -3811,24 +3800,14 @@ User Function ReplicaIndicador(__EMPRESA,cTipo,cCod)
 					EndIf
 
 				Else
+				
 					RecLock("_SBZ",.T.)
 					//_SBZ->BZ_FILIAL		:= xFilial("SBZ")
 					_SBZ->BZ_FILIAL		:= SPACE(2)
 					_SBZ->BZ_COD		:= M->BZ_COD
 
-					//Gabriel Mafioletti - 10/07/2018 Ticket - 4054
-					If M->BZ_TIPO $ "#PA#PP#"
-						Do Case
-						Case SUBSTR(cEmpAnt,1,2) == "01"
-							_SBZ->BZ_LOCPAD := "02"
-						Case SUBSTR(cEmpAnt,1,2) == "05"
-							_SBZ->BZ_LOCPAD := "04"
-						OtherWise
-							_SBZ->BZ_LOCPAD := M->BZ_LOCPAD
-						EndCase
-					Else
-						_SBZ->BZ_LOCPAD := SBZ->BZ_LOCPAD
-					EndIf
+					// Em 27/10/21 - para atender ao ticket 35219 
+					_SBZ->BZ_LOCPAD     := M->BZ_LOCPAD
 
 					_SBZ->BZ_TE			:= M->BZ_TE
 					_SBZ->BZ_TS			:= M->BZ_TS
@@ -3938,25 +3917,15 @@ User Function ReplicaIndicador(__EMPRESA,cTipo,cCod)
 				EndIf
 
 			Else
+
 				RecLock("_SBZ",.T.)
 				//_SBZ->BZ_FILIAL		:= SBZ->BZ_FILIAL
 				_SBZ->BZ_FILIAL		:= SPACE(2)
 				_SBZ->BZ_COD		:= SBZ->BZ_COD
 
-				//Gabriel Mafioletti - 10/07/2018 Ticket - 4054
-				If SBZ->BZ_TIPO $ "#PA#PP#"
-					Do Case
-					Case SUBSTR(cEmpAnt,1,2) == "01"
-						_SBZ->BZ_LOCPAD := "02"
-					Case SUBSTR(cEmpAnt,1,2) == "05"
-						_SBZ->BZ_LOCPAD := "04"
-					OtherWise
-						_SBZ->BZ_LOCPAD := SBZ->BZ_LOCPAD
-					EndCase
-				Else
-					_SBZ->BZ_LOCPAD := SBZ->BZ_LOCPAD
-				EndIf
-
+				// Em 27/10/21 - para atender ao ticket 35219 
+				_SBZ->BZ_LOCPAD     := SBZ->BZ_LOCPAD
+				
 				_SBZ->BZ_TE			:= SBZ->BZ_TE
 				_SBZ->BZ_TS			:= SBZ->BZ_TS
 				_SBZ->BZ_QE			:= SBZ->BZ_QE
@@ -4093,7 +4062,7 @@ User function UPDSX3(Emp)
 
 	RpcClearEnv()
 
-Return
+	Return
 
 	#DEFINE __nMAX_THREADS__ 15
 
@@ -4103,7 +4072,7 @@ User Function UpSxTHR()
 	Local cEmp			:= '00'
 
 	#IFDEF TOP
-		SetTopType( "A" )
+	SetTopType( "A" )
 	#ENDIF
 	RPCSetType(3)
 	RpcSetEnv( '01' , '01' )
@@ -4142,16 +4111,16 @@ Static Function FreeThreads( lFreeAll, cpProcess )
 	lFreeAll	:= .F.
 	//carloDEFAULT lFreeAll	:= .F.
 	aEval( aUserInfoArray , { |aThread| IF(;
-		( aThread[2] == cComputerName );
-		.and.;
-		( aThread[5] == cpProcess );
-		.and.;
-		( aThread[6] == cEnvServer ),;
-		++nThreads,;
-		NIL;
-		);
-		};
-		)
+	( aThread[2] == cComputerName );
+	.and.;
+	( aThread[5] == cpProcess );
+	.and.;
+	( aThread[6] == cEnvServer ),;
+	++nThreads,;
+	NIL;
+	);
+	};
+	)
 
 
 	/*
@@ -4341,7 +4310,7 @@ User function fCalcVlrST(xGrpPd,xNCM,xRegEsp,xCliEsp,xUF,xVlMerc,xVlIcms,xVlIpi,
 			aadd(aVlrSt, nVlrSt)
 			aadd(aVlrSt, 0)  //MVA
 			aadd(aVlrSt, 0)  //ALIQ ST	
-		Else
+			Else
 			nBaseSt	:= (nVlMerc+nVlIpi+nVlAut+nVlTran) + ((nVlMerc+nVlIpi+nVlAut+nVlTran) * aMVA[2] / 100  )
 			If aMVA[4] > 0 //Aplica % de reducao da Base ICMS ST
 			nBaseSt = nBaseSt - (nBaseSt * aMVA[4] /100)
@@ -4354,42 +4323,42 @@ User function fCalcVlrST(xGrpPd,xNCM,xRegEsp,xCliEsp,xUF,xVlMerc,xVlIcms,xVlIpi,
 			aadd(aVlrSt,nVlrSt)
 			aadd(aVlrSt,aMVA[2])  //MVA
 			aadd(aVlrSt,aMVA[3])  //ALIQ ST
-		EndIf
+			EndIf
 			*/
 
-		nBaseSt	:= (nVlMerc+nVlIpi+nVlAut+nVlTran) + ((nVlMerc+nVlIpi+nVlAut+nVlTran) * aMVA[2] / 100  )
-		If aMVA[4] > 0 //Aplica % de reducao da Base ICMS ST
-			nBaseSt = nBaseSt - (nBaseSt * aMVA[4] /100)
+			nBaseSt	:= (nVlMerc+nVlIpi+nVlAut+nVlTran) + ((nVlMerc+nVlIpi+nVlAut+nVlTran) * aMVA[2] / 100  )
+			If aMVA[4] > 0 //Aplica % de reducao da Base ICMS ST
+				nBaseSt = nBaseSt - (nBaseSt * aMVA[4] /100)
+			EndIf
+			If nUF == "MG" .And. GetMV("MV_YSOLMG") > 0 //Aplica reducao do ICMS somente para a UF de MG e empresa 01 e 05
+				nVlIcms := (GetMV("MV_YSOLMG")/100 * nVlIcms)
+			EndIf
+
+			//Ticket 21807
+			//Com a alteração do regulamento de ICMS do MT este cliente passou a ser optante pelo crédito outorgado e com isso o crédito de ICMS deles é limitado a 7%
+			If ( AllTrim(nUF) == 'MT' .And. AllTrim(cCodCli) == '008960' .And. nPIcms > 7.00 )
+
+				nVlIcms := nBaseIcms * (7.00/100)
+
+			EndIf
+
+			nVlrSt	:=  Round((nBaseSt * aMVA[3] / 100 ) - nVlIcms,2)
+
+			aadd(aVlrSt,nBaseSt)
+			aadd(aVlrSt,nVlrSt)
+			aadd(aVlrSt,aMVA[2])  //MVA
+			aadd(aVlrSt,aMVA[3])  //ALIQ ST
+
 		EndIf
-		If nUF == "MG" .And. GetMV("MV_YSOLMG") > 0 //Aplica reducao do ICMS somente para a UF de MG e empresa 01 e 05
-			nVlIcms := (GetMV("MV_YSOLMG")/100 * nVlIcms)
-		EndIf
 
-		//Ticket 21807
-		//Com a alteração do regulamento de ICMS do MT este cliente passou a ser optante pelo crédito outorgado e com isso o crédito de ICMS deles é limitado a 7%
-		If ( AllTrim(nUF) == 'MT' .And. AllTrim(cCodCli) == '008960' .And. nPIcms > 7.00 )
+	Else
 
-			nVlIcms := nBaseIcms * (7.00/100)
-
-		EndIf
-
-		nVlrSt	:=  Round((nBaseSt * aMVA[3] / 100 ) - nVlIcms,2)
-
-		aadd(aVlrSt,nBaseSt)
-		aadd(aVlrSt,nVlrSt)
-		aadd(aVlrSt,aMVA[2])  //MVA
-		aadd(aVlrSt,aMVA[3])  //ALIQ ST
+		aadd(aVlrSt,0)
+		aadd(aVlrSt,0)
+		aadd(aVlrSt,0)
+		aadd(aVlrSt,0)
 
 	EndIf
-
-Else
-
-	aadd(aVlrSt,0)
-	aadd(aVlrSt,0)
-	aadd(aVlrSt,0)
-	aadd(aVlrSt,0)
-
-EndIf
 
 Return(aVlrSt)
 
@@ -4408,8 +4377,8 @@ Return(aVlrSt)
 ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 */
 User Function fValItemCta(xTp, xConta, xClVl, xItemCta, cSubItem)
-Local	lRet	:= .T.			//Retorno da Funcao
-	
+	Local	lRet	:= .T.			//Retorno da Funcao
+
 	Default cSubItem := ""
 
 	If cEmpAnt $ ("01_05_06_07_12_13_14") //Executa apenas para as empresas Biancogres, Incesa, LM e MUNDI
@@ -4422,8 +4391,8 @@ Local	lRet	:= .T.			//Retorno da Funcao
 		If xConta //Se for Conta do Grupo 31401
 			//Obriga a digitacao do Item Contabil para as Classes do Comercial
 			If (Alltrim(xClVl) $ GetMv("MV_YCLVL") .Or. SUBSTR(xClVl,1,1) == "8") .And. Empty(xItemCta)
-				msgBox("Favor informar Item Contábil para esta Classe de Valor!", "UserLibrary(6)")
-				AutoGrLog("Favor informar Item Contábil para esta Classe de Valor!")
+				msgBox("USERLIBRARY(1) - Favor informar Item Contábil para esta Classe de Valor!", "UserLibrary(6)")
+				AutoGrLog("USERLIBRARY(1) - Favor informar Item Contábil para esta Classe de Valor!")
 				lRet := .F.
 			EndIf
 		Else
@@ -4434,8 +4403,8 @@ Local	lRet	:= .T.			//Retorno da Funcao
 				lRet := .F.
 			ElseIf Alltrim(FunName()) == "MATA103" // Implementado Tratamento por Marcos Alberto Soprani para atender ao Projeto de Provisionamento de Comissão. Em 09/01/13
 				If Alltrim(SB1->B1_COD) == "3060238" .and. Substr(xItemCta,1,3) <> "COM"
-					msgBox("Favor informar Item Contábil para esta Classe de Valor!", "UserLibrary(4)")
-					AutoGrLog("Favor informar Item Contábil para esta Classe de Valor!")
+					msgBox("USERLIBRARY(2) - Favor informar Item Contábil para esta Classe de Valor!", "UserLibrary(4)")
+					AutoGrLog("USERLIBRARY(2) - Favor informar Item Contábil para esta Classe de Valor!")
 					lRet := .F.
 				EndIf
 			End
@@ -4443,7 +4412,7 @@ Local	lRet	:= .T.			//Retorno da Funcao
 
 		If xConta //Se for Conta do Grupo 31401
 			//O Item Contabil deve ser preenchido apenas para a Classe de Valor do Comercial e Investimento
-			If ( !Alltrim(xClVl) $ GetMv("MV_YCLVL") .AND. SUBSTR(xClVl,1,1) <> "8") .AND. Alltrim(xClVl) <> '2130' .AND. Alltrim(xClVl) <> '1045' .AND. Alltrim(xClVl) <> '3145' .AND. Alltrim(xClVl) <> '3184' .AND. Alltrim(xClVl) <> '3185' .AND. Alltrim(xClVl) <> '4011' .AND. !Empty(xItemCta)
+			If ( !Alltrim(xClVl) $ GetMv("MV_YCLVL") .AND. SUBSTR(xClVl,1,1) <> "8") .AND. Alltrim(xClVl) <> '2130' .AND. Alltrim(xClVl) <> '1045' .AND. Alltrim(xClVl) <> '3145' .AND. Alltrim(xClVl) <> '2502' .AND. Alltrim(xClVl) <> '3184' .AND. Alltrim(xClVl) <> '3185' .AND. Alltrim(xClVl) <> '2305'.AND. Alltrim(xClVl) <> '4011' .AND. Alltrim(xClVl) <> '2511' .AND. !Empty(xItemCta)
 				Msgbox("Item Contábil não poderá ser informado para esta Classe de Valor!", "UserLibrary(1)")
 				AutoGrLog("Item Contábil não poderá ser informado para esta Classe de Valor!")
 				lRet := .F.
@@ -5359,131 +5328,131 @@ User Function MailAtendente(cEmpresa, cPedido, cVendedor, cCliente, cLoja)
 	Local cAtendente	:= ''
 	Local cQuery		:= ""
 	Local aArea			:= GetArea()
-	
+
 	If Empty(cPedido) .Or. Empty(cVendedor) .Or. Empty(cCliente) .Or. Empty(cCliente) .Or. Empty(cLoja)
 		Return ''
 	EndIf
-	
+
 	If !(Empty(cEmpresa))
-	
+
 		cQuery := " SELECT C5_YEMP FROM SC5"+cEmpresa+"0  						"
 		cQuery += " WHERE C5_FILIAL = '"+xFilial("SC5")+"'						"
 		cQuery += " AND	C5_NUM 		= '"+cPedido+"' 							"
 		cQuery += " AND	D_E_L_E_T_  = ''			 							"
-		
+
 		TCQUERY cQuery ALIAS "QRY_SC5" NEW
-	
+
 		If (!QRY_SC5->(Eof()))
-		
-			
+
+
 			oGerenteAtendente	:= TGerenteAtendente():New()
 			oResult 			:= oGerenteAtendente:GetCliente(QRY_SC5->C5_YEMP, cCliente, cLoja, cVendedor)
-			
+
 			cAtendente			:= 	oResult:cEmailAten
-			
+
 		EndIf
-		
+
 		QRY_SC5->(DbCloseArea())
-	
+
 	EndIf
-	
+
 	RestArea(aArea)
-	
-	
+
+
 	/*
 	Local cAtendente	:= ''
 	Local cTpSeg 		:= ''
 	Local lAchou 		:= .F.
 	Local cLinha 		:= ''
-	
+
 	cTpSeg := (Posicione("SA1",1,xFilial("SA1")+cCliente+cLoja,"A1_YTPSEG"))
 
 	//SE FOR EMPRESA LM, TRATATIVA DIFERENTE PARA BUSCAR DADOS NA TABELA ZZI
 	If cEmpresa =='01' .Or. cEmpresa =='05'
-		//BUSCAR ATENDENTE DE ACORDO COM O VENDEDOR
-		//cQuery := " SELECT * FROM ZZI050 ZZI "
-		cQuery := "SELECT * FROM ZZI"+cEmpresa+"0 ZZI "
-		cQuery += " WHERE ZZI.ZZI_VEND =  '" +cVendedor+ "' AND "
-		cQuery += " ZZI.D_E_L_E_T_= '' "
+	//BUSCAR ATENDENTE DE ACORDO COM O VENDEDOR
+	//cQuery := " SELECT * FROM ZZI050 ZZI "
+	cQuery := "SELECT * FROM ZZI"+cEmpresa+"0 ZZI "
+	cQuery += " WHERE ZZI.ZZI_VEND =  '" +cVendedor+ "' AND "
+	cQuery += " ZZI.D_E_L_E_T_= '' "
 
-		TCQUERY cQuery ALIAS "QRY_ATEND" NEW
+	TCQUERY cQuery ALIAS "QRY_ATEND" NEW
 
-		WHILE !QRY_ATEND->(EOF())
+	WHILE !QRY_ATEND->(EOF())
 
-			If(QRY_ATEND->ZZI_TPSEG == cTpSeg)
-				cAtendente := QRY_ATEND->ZZI_ATENDE
-				lAchou := .T.
-			EndIf
+	If(QRY_ATEND->ZZI_TPSEG == cTpSeg)
+	cAtendente := QRY_ATEND->ZZI_ATENDE
+	lAchou := .T.
+	EndIf
 
-			If lAchou
-				exit
-			EndIf
+	If lAchou
+	exit
+	EndIf
 
-			QRY_ATEND->(DBSKIP())
-		ENDDO
-		QRY_ATEND->(DbCloseArea())
+	QRY_ATEND->(DBSKIP())
+	ENDDO
+	QRY_ATEND->(DbCloseArea())
 
 	Else
-		//	CSQL := "SELECT C5_YLINHA FROM "+RETSQLNAME("SC5")+" AS SC5_TMP "
-		CSQL := "SELECT C5_YLINHA FROM SC5"+cEmpresa+"0 AS SC5_TMP "
-		CSQL += "WHERE SC5_TMP.C5_FILIAL = '"+xFilial("SC5")+"'  "
-		CSQL += "AND SC5_TMP.C5_NUM = '"+cPedido+"' "
+	//	CSQL := "SELECT C5_YLINHA FROM "+RETSQLNAME("SC5")+" AS SC5_TMP "
+	CSQL := "SELECT C5_YLINHA FROM SC5"+cEmpresa+"0 AS SC5_TMP "
+	CSQL += "WHERE SC5_TMP.C5_FILIAL = '"+xFilial("SC5")+"'  "
+	CSQL += "AND SC5_TMP.C5_NUM = '"+cPedido+"' "
 
-		TCQUERY CSQL ALIAS "QRY_SC5" NEW
+	TCQUERY CSQL ALIAS "QRY_SC5" NEW
 
-		cLinha := QRY_SC5->C5_YLINHA
-		QRY_SC5->(DbCloseArea())
+	cLinha := QRY_SC5->C5_YLINHA
+	QRY_SC5->(DbCloseArea())
 
-		cQuery := ""
-		cQuery += " SELECT * FROM "
+	cQuery := ""
+	cQuery += " SELECT * FROM "
 
-		//EMAIL CONFIGURADO DE ACORDO COM A EMPRESA
-		Do Case
-		Case Alltrim(cLinha) == '1'
-			cQuery += " ZZI010 ZZI"
+	//EMAIL CONFIGURADO DE ACORDO COM A EMPRESA
+	Do Case
+	Case Alltrim(cLinha) == '1'
+	cQuery += " ZZI010 ZZI"
 
-		Case Alltrim(cLinha) == '2'
-			cQuery += " ZZI050 ZZI"
+	Case Alltrim(cLinha) == '2'
+	cQuery += " ZZI050 ZZI"
 
-		Case Alltrim(cLinha) == '3'
-			cQuery += " ZZI050 ZZI"
+	Case Alltrim(cLinha) == '3'
+	cQuery += " ZZI050 ZZI"
 
-		OTHERWISE
-			cQuery += " ZZI050 ZZI"
-		EndCase
+	OTHERWISE
+	cQuery += " ZZI050 ZZI"
+	EndCase
 
-		cQuery += " WHERE ZZI.ZZI_VEND =  '" +cVendedor+ "' AND "
-		cQuery += " ZZI.D_E_L_E_T_= '' "
+	cQuery += " WHERE ZZI.ZZI_VEND =  '" +cVendedor+ "' AND "
+	cQuery += " ZZI.D_E_L_E_T_= '' "
 
-		TCQUERY cQuery ALIAS "QRY_ATEND" NEW
+	TCQUERY cQuery ALIAS "QRY_ATEND" NEW
 
-		WHILE !QRY_ATEND->(EOF())
+	WHILE !QRY_ATEND->(EOF())
 
-			If(QRY_ATEND->ZZI_TPSEG == cTpSeg)
-				cAtendente := QRY_ATEND->ZZI_ATENDE
-				lAchou := .T.
-			EndIf
+	If(QRY_ATEND->ZZI_TPSEG == cTpSeg)
+	cAtendente := QRY_ATEND->ZZI_ATENDE
+	lAchou := .T.
+	EndIf
 
-			If lAchou
-				exit
-			EndIf
+	If lAchou
+	exit
+	EndIf
 
-			QRY_ATEND->(DBSKIP())
-		ENDDO
-		QRY_ATEND->(DbCloseArea())
+	QRY_ATEND->(DBSKIP())
+	ENDDO
+	QRY_ATEND->(DbCloseArea())
 	EndIf
 
 	//DbCloseArea("ZZI")
 
 	If !Empty(cAtendente)
-		cAtendente := UsrRetMail(cAtendente)
+	cAtendente := UsrRetMail(cAtendente)
 	EndIf
 
 	If !('@' $ cAtendente)
-		cAtendente := ''
+	cAtendente := ''
 	EndIf
 	*/
-	
+
 Return cAtendente
 
 /*
@@ -5501,7 +5470,7 @@ User Function EmailWF(pRotina, pEmp, pClasse, pTpDest)
 	If Empty(pClasse)
 		pClasse := ""
 	EndIf
-	
+
 	If Empty(pTpDest)
 		pTpDest := ""
 	EndIf
@@ -5585,7 +5554,7 @@ Return(aRet)
 //ATUALIZA SX3 X BANCO DE DADOS
 User Function RACSX3()
 
-		//Inicializa o ambiente
+	//Inicializa o ambiente
 	RPCSetType(3)
 
 	WfPrepEnv("14", "01")
@@ -5595,8 +5564,8 @@ User Function RACSX3()
 		SD1->(dbCloseArea())
 	EndIf
 	X31UpdTable("SD1")
-	
-	
+
+
 
 Return
 
@@ -5981,15 +5950,15 @@ Return(lRet)
 ##############################################################################################################     
 */
 User Function fSegCliente(_nLinha, _cCliente, _cLoja)
-Local nTpSeg	:= ""
-Local aArea		:= GetArea()
+	Local nTpSeg	:= ""
+	Local aArea		:= GetArea()
 
-SA1->(DbSetOrder(1))
-If SA1->(DbSeek(xFilial("SA1")+_cCliente+_cLoja))
-	nTpSeg := SA1->A1_YTPSEG
-EndIf
+	SA1->(DbSetOrder(1))
+	If SA1->(DbSeek(xFilial("SA1")+_cCliente+_cLoja))
+		nTpSeg := SA1->A1_YTPSEG
+	EndIf
 
-RestArea(aArea)	
+	RestArea(aArea)	
 
 Return(nTpSeg)
 
@@ -6362,14 +6331,6 @@ User Function fDifICM3(cLinha,cSubTp,nCli,nLj,nProd,nIcmsOri,nIcmsDes,nFECP,cDIF
 	//	nFator	:= 1.25
 	//	Return(nFator)
 	//EndIf
-
-
-	If cLinha == "6" //Vinilico
-
-		nFator	:= 1
-		Return(nFator)
-
-	EndIf
 
 	//Corrige o %nFECP, caso esteja errado.
 	//Alterado Fernando em 29/06 - problema com a funcao de proposta de engenharia colocado execao para estas funcoes nesta condicao de empresa 01 e MG
@@ -6806,7 +6767,8 @@ User Function LMFatRed(_CUF, _cPacote)
 	Default _cPacote 	:= ""
 
 	If (!Empty(_cPacote) .And. AllTrim(_cPacote) == 'J') //utilizado projeto vinilico  J=Vinilico
-		_nFator := 0.80
+		//_nFator := 0.80
+		_nFator := 0.95 //Ticket 34494
 	Else
 
 		If (_nPos > 0)
@@ -7021,7 +6983,7 @@ User Function fExcVenc(cRegra,cMarca,cCli,cLoja,dEmis,dVenc,nVlBr,nCond,nValIPI,
 	Local aArea		:= GetArea()
 	Local aAreaSA1	:= SA1->(GetArea())
 	Local aAreaSE1	:= SE1->(GetArea())
-	
+
 	//Local cArq		:= ""
 	//Local cInd		:= 0
 	//Local cReg		:= 0
@@ -7156,41 +7118,41 @@ User Function fGetGrTr(cSuframa,lCalcSuf,cTipoCli,cContrib,cInscr,cAtivid,cTPJ)
 	Local cGrTri := ""
 
 	DO CASE
-	CASE cTipoCli == 'X'
+		CASE cTipoCli == 'X'
 		cGrTri := '030'
-	CASE !Empty(AllTrim(cSuframa)) .AND. lCalcSuf == 'S' .AND. cTipoCli == "R" .AND. cContrib == "1"
+		CASE !Empty(AllTrim(cSuframa)) .AND. lCalcSuf == 'S' .AND. cTipoCli == "R" .AND. cContrib == "1"
 		cGrTri := '040'
-	CASE !Empty(AllTrim(cSuframa)) .AND. lCalcSuf == 'I' .AND. cTipoCli $ ("R/S") //.And. A1_YTPCLFI == "1" momentaneamente desnecessario devido a todo IPI ser 0,00
+		CASE !Empty(AllTrim(cSuframa)) .AND. lCalcSuf == 'I' .AND. cTipoCli $ ("R/S") //.And. A1_YTPCLFI == "1" momentaneamente desnecessario devido a todo IPI ser 0,00
 		cGrTri := '044'
-	CASE !Empty(AllTrim(cSuframa)) .AND. lCalcSuf == 'S' .AND. cTipoCli == "F" .AND. cContrib == "2"
+		CASE !Empty(AllTrim(cSuframa)) .AND. lCalcSuf == 'S' .AND. cTipoCli == "F" .AND. cContrib == "2"
 		cGrTri := '043'
-	CASE !Empty(AllTrim(cSuframa)) .AND. lCalcSuf == 'S' .AND. cTipoCli == "F" .AND. cContrib == "1"
+		CASE !Empty(AllTrim(cSuframa)) .AND. lCalcSuf == 'S' .AND. cTipoCli == "F" .AND. cContrib == "1"
 		cGrTri := '042'
-	CASE !Empty(AllTrim(cSuframa)) .AND. lCalcSuf == 'N' .AND. cTipoCli == "F" .AND. cContrib == "1"
+		CASE !Empty(AllTrim(cSuframa)) .AND. lCalcSuf == 'N' .AND. cTipoCli == "F" .AND. cContrib == "1"
 		cGrTri := '041'
-	CASE !Empty(AllTrim(cSuframa)) .AND. lCalcSuf == 'N' .AND. cTipoCli == "F" .AND. cContrib == "2"
+		CASE !Empty(AllTrim(cSuframa)) .AND. lCalcSuf == 'N' .AND. cTipoCli == "F" .AND. cContrib == "2"
 		cGrTri := '045'
-	CASE (ALLTRIM(cInscr) <> "." .AND. ALLTRIM(cInscr) <> "ISENTO" .AND. ALLTRIM(cInscr) <> "") .AND. cAtivid $ "000099/000103/000104" .AND. cContrib == "2"
+		CASE (ALLTRIM(cInscr) <> "." .AND. ALLTRIM(cInscr) <> "ISENTO" .AND. ALLTRIM(cInscr) <> "") .AND. cAtivid $ "000099/000103/000104" .AND. cContrib == "2"
 		cGrTri := '005'
-	CASE (ALLTRIM(cInscr) == "."  .OR. ALLTRIM(cInscr) == "ISENTO"  .OR. ALLTRIM(cInscr) == "") .AND. cAtivid $ "000099/000103/000104" .AND. cContrib == "2"
+		CASE (ALLTRIM(cInscr) == "."  .OR. ALLTRIM(cInscr) == "ISENTO"  .OR. ALLTRIM(cInscr) == "") .AND. cAtivid $ "000099/000103/000104" .AND. cContrib == "2"
 		cGrTri := '006'
-	CASE (ALLTRIM(cInscr) <> "." .AND. ALLTRIM(cInscr) <> "ISENTO" .AND. ALLTRIM(cInscr) <> "") .AND. cAtivid $ "000099/000103/000104" .AND. cContrib == "1"
+		CASE (ALLTRIM(cInscr) <> "." .AND. ALLTRIM(cInscr) <> "ISENTO" .AND. ALLTRIM(cInscr) <> "") .AND. cAtivid $ "000099/000103/000104" .AND. cContrib == "1"
 		cGrTri := '007'
-	CASE (ALLTRIM(cInscr) <> "." .AND. ALLTRIM(cInscr) <> "ISENTO" .AND. ALLTRIM(cInscr) <> "") .AND. cTipoCli == "L" .AND. cContrib == "1"
+		CASE (ALLTRIM(cInscr) <> "." .AND. ALLTRIM(cInscr) <> "ISENTO" .AND. ALLTRIM(cInscr) <> "") .AND. cTipoCli == "L" .AND. cContrib == "1"
 		cGrTri := '012'
-	CASE (ALLTRIM(cInscr) <> "." .AND. ALLTRIM(cInscr) <> "ISENTO" .AND. ALLTRIM(cInscr) <> "") .AND. cTipoCli == "F" .AND. cContrib == "1"
+		CASE (ALLTRIM(cInscr) <> "." .AND. ALLTRIM(cInscr) <> "ISENTO" .AND. ALLTRIM(cInscr) <> "") .AND. cTipoCli == "F" .AND. cContrib == "1"
 		cGrTri := '020'
-	CASE cContrib == "2" .AND. cTipoCli == "F"
+		CASE cContrib == "2" .AND. cTipoCli == "F"
 		cGrTri := '010'
-	CASE (ALLTRIM(cInscr) <> "." .AND. ALLTRIM(cInscr) <> "ISENTO" .AND. ALLTRIM(cInscr) <> "") .AND. cTipoCli $ ("R/S")
+		CASE (ALLTRIM(cInscr) <> "." .AND. ALLTRIM(cInscr) <> "ISENTO" .AND. ALLTRIM(cInscr) <> "") .AND. cTipoCli $ ("R/S")
 		cGrTri := '021'
-	CASE (ALLTRIM(cInscr) == "."  .OR. ALLTRIM(cInscr) == "ISENTO"  .OR. ALLTRIM(cInscr) == "") .AND. cTipoCli $ ("R/S")
+		CASE (ALLTRIM(cInscr) == "."  .OR. ALLTRIM(cInscr) == "ISENTO"  .OR. ALLTRIM(cInscr) == "") .AND. cTipoCli $ ("R/S")
 		cGrTri := '011'
-	CASE (ALLTRIM(cInscr) == "."  .OR. ALLTRIM(cInscr) == "ISENTO"  .OR. ALLTRIM(cInscr) == "") .AND. cContrib == "1" .AND. cTipoCli == "F" .AND. cTPJ == "3"
+		CASE (ALLTRIM(cInscr) == "."  .OR. ALLTRIM(cInscr) == "ISENTO"  .OR. ALLTRIM(cInscr) == "") .AND. cContrib == "1" .AND. cTipoCli == "F" .AND. cTPJ == "3"
 		cGrTri := '022'
-	CASE !Empty(AllTrim(cSuframa))
+		CASE !Empty(AllTrim(cSuframa))
 		MsgBox("Favor procurar o departamento fiscal para corrigir cadastro do SUFRAMA. O Grupo de Tributação não foi gravado corretamente","STOP")
-	OTHERWISE
+		OTHERWISE
 		MsgBox("Favor procurar o departamento fiscal pois nenhuma regra foi encontrada para gravar o campo Grupo de Tributação","STOP")
 	ENDCASE
 
@@ -7424,11 +7386,12 @@ Return()
 @type function
 /*/
 User Function fValDEV()
-Local lDev		 := .F.
-Local cServerIP	 := getServerIP()
-Local cEnvServer := upper(getEnvServer())
- 
-lDev:=((cServerIP=="192.168.20.18") .or. ("DEV"$cEnvServer))
+	Local lDev		 	:= .F.
+	Local cServerIP	 	:= getServerIP()
+	Local cEnvServer	:= Upper(getEnvServer())
+	Local cEspKey		:= Upper(Alltrim(GetSrvProfString("specialkey",'TST')))
+
+	lDev:= ( (cServerIP=="192.168.20.18") .Or. ("DEV"$cEnvServer) .Or. (cEspKey == 'TEST') .Or. (cEspKey == 'DEV'))
 
 Return(lDev)
 
@@ -7442,18 +7405,18 @@ Return(lDev)
 @type function
 /*/
 User Function fGetBase(xSistema)
-Local cBase		 := ""
-Local cSistema	 := xSistema //1-Protheus 2-Bizagi
-Local cServerIP	 := getServerIP()
-Local cEnvServer := upper(getEnvServer())
- 
-If ((cServerIP=="192.168.20.18") .Or. ("DEV"$cEnvServer))
-	cBase := Iif(cSistema=="1","DADOSADV","BIZAGIHOM")
-ElseIf ((cServerIP=="192.168.20.18") .Or. ("HOM"$cEnvServer))
-	cBase := Iif(cSistema=="1","DADOSADV","BIZAGIHOM")
-Else
+	Local cBase		 := ""
+	Local cSistema	 := xSistema //1-Protheus 2-Bizagi
+	Local cServerIP	 := getServerIP()
+	Local cEnvServer := upper(getEnvServer())
+
+	If ((cServerIP=="192.168.20.18") .Or. ("DEV"$cEnvServer))
+		cBase := Iif(cSistema=="1","DADOSADV","BIZAGIHOM")
+	ElseIf ((cServerIP=="192.168.20.18") .Or. ("HOM"$cEnvServer))
+		cBase := Iif(cSistema=="1","DADOSADV","BIZAGIHOM")
+	Else
 	cBase := Iif(cSistema=="1","DADOSADV","BIZAGIPRD")
-EndI
+	EndI
 
 Return(cBase)
 
@@ -7467,22 +7430,35 @@ Return(cBase)
 @type function
 /*/
 User Function fRegCobr(xUF,xCPF,xGRPCLI,xCODCLI)
-Local cCodReg	:= ''
+	Local cCodRegr	:= ''
+	Local _aArea	:= GetArea()
+	Local cQryTMP	:= ""
+	Local cSQL 		:= ""
 
-DO CASE
-	CASE U_fValFunc(xCPF) //Funcionario
-		cCodReg := '000023'	
-	CASE xGRPCLI $ ('001500_000252_001486_000010_000938_000380_000026_000036_001435') //Clientes Especiais
-		cCodReg := '000023'
-	CASE xCODCLI $ ('010083_004536_007871_026308_026423_018410_014395_018714_008615_028071') //Clientes Intragrupo
-		cCodReg := '000023'
-	CASE xUF == 'MG'
-		cCodReg := '000028'  //BANESTES
-	OTHERWISE
-		cCodReg := '000029'  //FIDC
-ENDCASE
+	DO CASE
+		CASE U_fValFunc(xCPF) //Funcionario
+			cCodRegr := '000023'	
 
-Return(cCodReg)
+		CASE !Empty(Alltrim(xGRPCLI))
+			cQryTMP	:= GetNextAlias()
+			cSQL := "SELECT MAX(A1_YCDGREG) A1_YCDGREG FROM "+RetSQLName("SA1")+ " WHERE A1_COD <> '"+xCODCLI+"' AND A1_GRPVEN = '"+xGRPCLI+"' AND A1_YCDGREG <> '' AND D_E_L_E_T_ = '' "
+			TcQuery cSQL New Alias (cQryTMP)
+			
+			If !(cQryTMP)->(Eof())
+				cCodRegr := (cQryTMP)->A1_YCDGREG
+				(cQryTMP)->(DbCloseArea())
+			EndIf 
+
+		CASE xUF == 'MG'
+			cCodRegr := '000028'  //BANESTES
+		
+		OTHERWISE
+			cCodRegr := '000029'  //FIDC
+	ENDCASE
+
+    RestArea(_aArea)
+
+Return(cCodRegr)
 
 
 /*/{Protheus.doc} fValFunc
@@ -7494,22 +7470,22 @@ Return(cCodReg)
 @type function
 /*/
 User Function fValFunc(xCPF)
-Local cSQL		:= ''
-Local cQry		:= GetNextAlias()
-Local lRet		:= .F.
+	Local cSQL		:= ''
+	Local cQry		:= GetNextAlias()
+	Local lRet		:= .F.
 
-If U_fValDEV()
-	cSQL :="SELECT LEN(REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf)) CPF FROM VETORH_DEV.dbo.r034fun WITH (NOLOCK) WHERE REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf) = '"+xCPF+"' "
-Else
-	cSQL :="SELECT LEN(REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf)) CPF FROM VETORH.dbo.r034fun WITH (NOLOCK) WHERE REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf) = '"+xCPF+"' "
-EndIF 
-TcQuery cSQL New Alias (cQry)
+	If U_fValDEV()
+		cSQL :="SELECT LEN(REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf)) CPF FROM VETORH_DEV.dbo.r034fun WITH (NOLOCK) WHERE REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf) = '"+xCPF+"' "
+	Else
+		cSQL :="SELECT LEN(REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf)) CPF FROM VETORH.dbo.r034fun WITH (NOLOCK) WHERE REPLICATE('0',11-LEN(numcpf))+CONVERT(nvarchar,numcpf) = '"+xCPF+"' "
+	EndIF 
+	TcQuery cSQL New Alias (cQry)
 
-If (cQry)->CPF == 11 
-	lRet := .T.
-EndIf
+	If (cQry)->CPF == 11 
+		lRet := .T.
+	EndIf
 
-(cQry)->(DbCloseArea())  
+	(cQry)->(DbCloseArea())  
 
 Return(lRet)
 
@@ -7523,48 +7499,48 @@ Return(lRet)
 @type function
 /*/
 User Function fVlFIDCLM(xNUMPED)
-Local cSQL		:= ''
-Local aArea		:= GetArea()
-Local cQryLM	:= GetNextAlias()
-Local cQryOri	:= GetNextAlias()
-Local lRet		:= .F.
+	Local cSQL		:= ''
+	Local aArea		:= GetArea()
+	Local cQryLM	:= GetNextAlias()
+	Local cQryOri	:= GetNextAlias()
+	Local lRet		:= .F.
 
-If cEmpAnt == "07"
+	If cEmpAnt == "07"
 
-	//Consulta Pedido LM
-	cSQL :="SELECT C5_YPEDORI, C5_YEMPPED FROM "+RetSqlName("SC5")+" WHERE C5_NUM = '"+xNUMPED+"' AND C5_EMISSAO >= '20210720' AND D_E_L_E_T_ = '' "
-	TcQuery cSQL New Alias (cQryLM)
+		//Consulta Pedido LM
+		cSQL :="SELECT C5_YPEDORI, C5_YEMPPED FROM "+RetSqlName("SC5")+" WHERE C5_NUM = '"+xNUMPED+"' AND C5_EMISSAO >= '20210720' AND D_E_L_E_T_ = '' "
+		TcQuery cSQL New Alias (cQryLM)
 
-	If !(cQryLM)->(Eof()) .And. !Empty(Alltrim((cQryLM)->C5_YPEDORI)) .And. !Empty(Alltrim((cQryLM)->C5_YEMPPED))
+		If !(cQryLM)->(Eof()) .And. !Empty(Alltrim((cQryLM)->C5_YPEDORI)) .And. !Empty(Alltrim((cQryLM)->C5_YEMPPED))
 
-		cSQL :="SELECT COUNT(*) QUANT FROM SC5"+(cQryLM)->C5_YEMPPED+"0 WHERE C5_NUM = '"+(cQryLM)->C5_YPEDORI+"' AND C5_EMISSAO >= '20210720' AND C5_CONDPAG = '505' AND D_E_L_E_T_ = '' "
+			cSQL :="SELECT COUNT(*) QUANT FROM SC5"+(cQryLM)->C5_YEMPPED+"0 WHERE C5_NUM = '"+(cQryLM)->C5_YPEDORI+"' AND C5_EMISSAO >= '20210720' AND C5_CONDPAG = '505' AND D_E_L_E_T_ = '' "
+			TcQuery cSQL New Alias (cQryOri)
+
+			If (cQryOri)->QUANT >= 1 
+				lRet := .T.
+			EndIf
+
+			(cQryOri)->(DbCloseArea())  
+
+		EndIf
+
+		(cQryLM)->(DbCloseArea())  
+
+
+	else
+
+		cSQL :="SELECT COUNT(*) QUANT FROM "+RetSqlName("SC5")+" WHERE C5_NUM = '"+xNUMPED+"' AND C5_EMISSAO >= '20210720' AND C5_CONDPAG = '505' AND D_E_L_E_T_ = '' "
 		TcQuery cSQL New Alias (cQryOri)
 
 		If (cQryOri)->QUANT >= 1 
 			lRet := .T.
 		EndIf
-	
+
 		(cQryOri)->(DbCloseArea())  
-	
+
 	EndIf
 
-	(cQryLM)->(DbCloseArea())  
-
-
-else
-		
-	cSQL :="SELECT COUNT(*) QUANT FROM "+RetSqlName("SC5")+" WHERE C5_NUM = '"+xNUMPED+"' AND C5_EMISSAO >= '20210720' AND C5_CONDPAG = '505' AND D_E_L_E_T_ = '' "
-	TcQuery cSQL New Alias (cQryOri)
-
-	If (cQryOri)->QUANT >= 1 
-		lRet := .T.
-	EndIf
-
-	(cQryOri)->(DbCloseArea())  
-
-EndIf
-
-RestArea(aArea)
+	RestArea(aArea)
 
 Return(lRet)
 
@@ -7598,15 +7574,231 @@ Return _cRet
 /*/
 
 User Function fCriaInd()
-Local xv_Emps	:= U_BAGtEmpr("01_02_03_04_05_06_07_08_09_10_11_12_13_14_15_16_17_90_91")
-Local xt		:= 0
+	Local xv_Emps	:= U_BAGtEmpr("01_02_03_04_05_06_07_08_09_10_11_12_13_14_15_16_17_90_91")
+	Local xt		:= 0
 
 	For xt := 1 To Len(xv_Emps)
 
 		RPCSetEnv(xv_Emps[xt,1], xv_Emps[xt,2])
 
 		RpcClearEnv()
-	
+
 	Next
 
 Return
+
+/*/{Protheus.doc} fCtCont
+@description Funcao para selecionar Conta Contábil a partir do Produto e Classe de Valor
+@author Barbara Coelho
+@since 24/06/2021
+@version undefined
+@type function
+/*/
+User Function fCtCont(xCLVL, xProduto)
+	Local cConta    := ""
+
+	DbSelectArea("SB1")
+	DbSetOrder(1)
+	DbSeek(xFilial("SB1")+xProduto,.F.)
+
+	If ((Subs(wsCod,4,4) == "0000") .or. (SB1->B1_TIPO == "MD")) 
+		cConta := SB1->B1_CONTA
+	Else
+		If Substr(SB1->B1_GRUPO,1,3) = '306'
+			If Subs(xCLVL,1,1) $ "1_2_4_5_6_7_8"			
+				cConta := SB1->B1_YCTRADM
+			Elseif Subs(wsCLVL,1,1) == "3"
+				cConta := SB1->B1_YCTRIND	  
+			Endif
+		Else
+			DbSelectArea("SBM")
+			DbSetOrder(1)
+			DbSeek(xFilial("SBM")+SB1->B1_GRUPO,.f.)
+
+			If Subs(xCLVL,1,1) $ "1_2_4_5_6_7_8"	
+				cConta := SBM->BM_YCTRADM
+			Elseif Subs(wsCLVL,1,1) == "3"
+				If SB1->B1_TIPO <> "PI" // Por Marcos Alberto Soprani em 18/05/12
+					cConta := SBM->BM_YCTRIND
+				EndIf	
+			EndIf
+		EndIf		
+	Endif
+Return cConta
+
+
+/*/{Protheus.doc} fDelMSEXP
+@description Funcao para limpar o campo C6_MSEXP, e forcar o calculo do Status para todos os pedidos em aberto 
+@author Ranisses A. Corona
+@since 03/02/2018
+@history 02/05/2019, Ranisses A. Corona, Rotina foi desativado do Schedule do Protheus e transferida para um job no SQL Server.
+@version undefined
+@type function
+/*/
+User Function fCHVSE1()
+	Local aEmp		:= {"01","05","13","14"}
+	Local x 		:= 0
+	Local CSQL		:= ""
+	Local cQrySC9	:= ""
+	Local cQrySD2	:= ""
+	Local cFilOri 	:= "01"
+	Local cSerieOri := ""
+	Local cDocOri 	:= ""
+	Local cCliOri	:= ""
+	Local cLojaOri 	:= ""
+	Local cFornece	:= ""
+
+	//Inicializa o ambiente
+	RPCSetType(3)
+	WfPrepEnv("01","01")
+
+
+	For x := 1 to Len(aEmp)
+
+		If aEmp[x] == "01"
+			cFornece := "000534"
+		ElseIf aEmp[x] == "05"
+			cFornece := "002912"
+		ElseIf aEmp[x] == "13"
+			cFornece := "004695"
+		ElseIf aEmp[x] == "14"
+			cFornece := "003721"
+		Else
+			cFornece := "000534"				
+		EndIf	
+
+		cQrySD2	:= GetNextAlias()
+		cSQL :=""
+		CSQL += "WITH SE1 AS ( "
+		CSQL += "SELECT E1_PREFIXO, E1_NUM, E1_PEDIDO "
+		CSQL += "FROM SE1"+aEmp[x]+"0 SE1 "
+		CSQL += "WHERE E1_FILIAL = '01' AND E1_CLIENTE = '010064' AND E1_EMISSAO <= '20210805' AND SE1.D_E_L_E_T_ = '' "
+		CSQL += "GROUP BY E1_PREFIXO, E1_NUM, E1_PEDIDO "
+		CSQL += ") "
+		CSQL += ", SE2 AS ( "
+		CSQL += "SELECT E2_PREFIXO, E2_NUM "
+		CSQL += "FROM SE2070 "
+		CSQL += "WHERE E2_FILIAL = '01' AND E2_FORNECE = '"+cFornece+"' AND D_E_L_E_T_ = ''  AND E2_SALDO > 0 AND E2_EMISSAO <= '20210802'  "
+		CSQL += "GROUP BY E2_PREFIXO, E2_NUM "
+		CSQL += ") "
+		CSQL += "SELECT  D2_SERIE, D2_DOC, D2_CLIENTE, D2_LOJA "
+		CSQL += "FROM SD2070 WITH (NOLOCK) INNER JOIN "
+		CSQL += "(SELECT C5_NUM, C5_YPEDORI "
+		CSQL += "FROM SC5070 SC5 INNER JOIN "
+		CSQL += "(SELECT DISTINCT(E1_PEDIDO) FROM SE1 INNER JOIN SE2 ON E1_PREFIXO = E2_PREFIXO AND E1_NUM = E2_NUM) TMP ON C5_YPEDORI = E1_PEDIDO "
+		CSQL += "WHERE C5_YEMPPED = '"+aEmp[x]+"' AND D_E_L_E_T_ = '' ) TMP ON D2_PEDIDO = C5_NUM "
+		CSQL += "WHERE D_E_L_E_T_ = '' "
+		CSQL += "GROUP BY D2_SERIE, D2_DOC, D2_CLIENTE, D2_LOJA "
+		CSQL += "ORDER BY D2_SERIE, D2_DOC, D2_CLIENTE, D2_LOJA "
+		TcQuery cSQL New Alias (cQrySD2)
+
+
+		While !(cQrySD2)->(EOF())
+
+			cSerieOri	:= (cQrySD2)->D2_SERIE
+			cDocOri 	:= (cQrySD2)->D2_DOC
+			cCliOri		:= (cQrySD2)->D2_CLIENTE
+			cLojaOri 	:= (cQrySD2)->D2_LOJA		
+
+			cQrySC9	:= GetNextAlias()
+			cSQL :=""
+			CSQL += "SELECT C9_BLINF, SUBSTRING(C9_BLINF,1,2) EMPRESA, SUBSTRING(C9_BLINF,12,3) PREFIXO, SUBSTRING(C9_BLINF,3,9) NOTA, SUBSTRING(C9_BLINF,15,6) PEDIDO, SUBSTRING(C9_BLINF,21,2) ITEM, SUBSTRING(C9_BLINF,23,2) SEQ "
+			CSQL += "FROM SC9070 "
+			CSQL += "WHERE C9_FILIAL = '"+cFilOri+"' AND C9_NFISCAL = '"+cDocOri+"' AND C9_SERIENF = '"+cSerieOri+"' AND C9_CLIENTE = '"+cCliOri+"' AND C9_LOJA = '"+cLojaOri+"' AND C9_BLINF <> '' AND D_E_L_E_T_ = '' "
+			TcQuery cSQL New Alias (cQrySC9)
+
+			If !(cQrySC9)->(Eof())
+
+				If (cQrySC9)->EMPRESA == "01"
+					cFornece := "000534"
+				ElseIf (cQrySC9)->EMPRESA == "05"
+					cFornece := "002912"
+				ElseIf (cQrySC9)->EMPRESA == "13"
+					cFornece := "004695"
+				ElseIf (cQrySC9)->EMPRESA == "14"
+					cFornece := "003721"
+				Else
+					cFornece := "000534"				
+				EndIf	
+
+				CSQL := ""
+				CSQL += " with TAB_SE2 as "
+				CSQL += " ( "
+				CSQL += " SELECT DISTINCT RECSE2 = SE2.R_E_C_N_O_, E2_FILIAL,E2_PREFIXO,E2_NUM,E2_PARCELA, CHVSE1 = (E1_FILIAL+E1_PREFIXO+E1_NUM+E1_PARCELA+E1_TIPO) "
+				CSQL += " from SE1070 SE1 INNER JOIN SE2070 SE2 on " 
+				CSQL += " 		E2_FILIAL 	= '"+cFilOri+"' "
+				CSQL += " 	and E2_PREFIXO	= '"+(cQrySC9)->PREFIXO+"' "
+				CSQL += " 	and E2_NUM 		= '"+(cQrySC9)->NOTA+"' "
+				CSQL += " 	and E2_FORNECE	= '"+cFornece+"' "
+				CSQL += " 	and E2_PARCELA = case "	
+				CSQL += "							when (select COUNT(*) QUANT from SE1070 X " 
+				CSQL += " 										where X.E1_FILIAL	= '"+cFilOri+"' "
+				CSQL += " 										and X.E1_NUM 		= '"+cDocOri+"' "
+				CSQL += " 										and X.E1_PREFIXO 	= '"+cSerieOri+"' "
+				CSQL += " 										and X.E1_TIPO 		= 'NF' "
+				CSQL += " 										and X.E1_NATUREZ 	<> '1230') = 1  OR "
+				CSQL += "								(select COUNT(*) QUANT from SE2070 X " 
+				CSQL += " 										where X.E2_FILIAL 	= '"+cFilOri+"' "
+				CSQL += " 										and X.E2_PREFIXO 	= '"+(cQrySC9)->PREFIXO+"' "
+				CSQL += " 										and X.E2_NUM 		= '"+(cQrySC9)->NOTA+"' "
+				CSQL += "										and X.E2_FORNECE	= '"+cFornece+"' "
+				CSQL += " 										and X.E2_TIPO 		= 'NF' ) = 1 "
+				CSQL += "								then  '' "  			
+				CSQL += " 							when (select COUNT(*) QUANT from SE1070 X " 
+				CSQL += " 										where X.E1_FILIAL	= '"+cFilOri+"' "
+				CSQL += " 										and X.E1_NUM 		= '"+cDocOri+"' "
+				CSQL += " 										and X.E1_PREFIXO 	= '"+cSerieOri+"' "
+				CSQL += " 										and X.E1_TIPO 		= 'NF' "
+				CSQL += " 										and X.E1_NATUREZ 	= '1230') = 1 " 
+				CSQL += " 								then (select top 1 E2_PARCELA from SE2070 X " 
+				CSQL += " 													where X.E2_FILIAL 	= '"+cFilOri+"' "
+				CSQL += " 													and X.E2_PREFIXO 	= '"+(cQrySC9)->PREFIXO+"' "
+				CSQL += " 													and X.E2_NUM 		= '"+(cQrySC9)->NOTA+"' "
+				CSQL += "													and X.E2_FORNECE	= '"+cFornece+"' "
+				CSQL += " 													and X.E2_TIPO 		= 'NF' "
+				CSQL += " 													and X.E2_PARCELA 	< SE1.E1_PARCELA "
+				CSQL += " 													order by X.E2_PARCELA desc) "
+				CSQL += " 							when (select COUNT(*) QUANT from SE1070 X " 
+				CSQL += " 										where X.E1_FILIAL	= '"+cFilOri+"' "
+				CSQL += " 										and X.E1_NUM 		= '"+cDocOri+"' "
+				CSQL += " 										and X.E1_PREFIXO 	= '"+cSerieOri+"' "
+				CSQL += " 										and X.E1_TIPO 		= 'NF' "
+				CSQL += " 										and X.E1_NATUREZ 	<> '1230') > 1 " 
+				CSQL += " 								then (select top 1 E2_PARCELA from SE2070 X " 
+				CSQL += " 													where X.E2_FILIAL	= '"+cFilOri+"' "
+				CSQL += " 													and X.E2_PREFIXO	= '"+(cQrySC9)->PREFIXO+"' "
+				CSQL += " 													and X.E2_NUM 		= '"+(cQrySC9)->NOTA+"' "
+				CSQL += "													and X.E2_FORNECE	= '"+cFornece+"' "
+				CSQL += " 													and X.E2_TIPO 		= 'NF' "
+				CSQL += " 													and X.E2_PARCELA 	= SE1.E1_PARCELA "
+				CSQL += " 													order by X.E2_PARCELA desc) "
+				CSQL += " 							else SE1.E1_PARCELA "
+				CSQL += " 							end "
+				CSQL += " where " 
+				CSQL += " 	  E1_FILIAL  = '"+cFilOri+"' "
+				CSQL += " and E1_PREFIXO = '"+cSerieOri+"' "
+				CSQL += " and E1_NUM	 = '"+cDocOri+"' "
+				CSQL += " and E1_TIPO 	 = 'NF' "
+				CSQL += " and E1_NATUREZ 	<> '1230' "
+				CSQL += " and SE1.D_E_L_E_T_='' "
+				CSQL += " and SE2.D_E_L_E_T_='' "
+				CSQL += " ) "
+				CSQL += " UPDATE SE2070 SET E2_YCHVSE1 = T.CHVSE1 "
+				CSQL += " FROM SE2070 SE2 INNER JOIN TAB_SE2 T on T.RECSE2 = SE2.R_E_C_N_O_ "
+				CSQL += " WHERE E2_YCHVSE1 <> T.CHVSE1 "
+				TCSQLExec(CSQL)
+
+			EndIf
+
+			(cQrySC9)->(DbCloseArea()) 
+
+			(cQrySD2)->(dbSkip())
+
+		End
+
+	Next
+
+	//Finaliza o ambiente criado
+	RpcClearEnv()
+
+Return()

@@ -11,14 +11,9 @@
 /*/
 
 User Function BAF045()
-
-    Local oObj := Nil
-
-    //RpcSetEnv("01", "01")
+Local oObj := Nil
     
     oObj := TAFAlteraVencimentoReceber():New()
     oObj:Send()
 		
-	//RpcClearEnv()
-
 Return()

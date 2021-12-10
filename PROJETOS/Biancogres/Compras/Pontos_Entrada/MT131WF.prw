@@ -27,8 +27,9 @@ USER FUNCTION MT131WF
 	LOCAL TabSC8    	:= RetSqlName("SC8")
 	LOCAL cWhere    	:= ""
 	LOCAL cSuporte  	:= ""
+	Local oObjCot     := Nil
 	Private cCotacao	:= ParamIxb[1]
-	Private cFornece  	:= ''
+	Private cFornece  := ''
 	Private cLoja	  	:= ''
 	Private cIdProces	:= ''
 	Private cErroBiz 	:= ''
@@ -48,14 +49,16 @@ USER FUNCTION MT131WF
 	ENDIF
 	cWhere += "%"
 
+
+
 	BEGINSQL ALIAS cSC8
-		SELECT C8_FILIAL, C8_FORNECE, C8_LOJA
+		SELECT C8_FILIAL, C8_FORNECE, C8_LOJA, C8_YPRCBIZ, C8_VALIDA
 		FROM %TABLE:SC8% SC8
 		WHERE C8_FILIAL = %XFILIAL:SC8%
 		AND C8_NUM    = %EXP:cCotacao%
 		AND SC8.%NotDel%
 		%Exp:cWhere%
-		GROUP BY C8_FILIAL, C8_FORNECE, C8_LOJA
+		GROUP BY C8_FILIAL, C8_FORNECE, C8_LOJA, C8_YPRCBIZ, C8_VALIDA
 	ENDSQL
 
 	SET CENTURY ON
@@ -78,11 +81,24 @@ USER FUNCTION MT131WF
 
 
 			If lBizagi
-				//(04/05/15 - Thiago Dantas) -> Gera Processo de Cotação no BIZAGI.
+
 				IncProc('Gerando a cotação no Bizagi...')
+				If !EMPTY((cSC8)->C8_YPRCBIZ)
+
+					//CancelarCotacaoNoBizagiId -> Primeiro Cancela a cotação no bizagi para gerar a mesma do protheus apenas com outro código bizagi
+					oObjCot := TBizagiIntegracaoCotacao():New()
+
+					If !oObjCot:CancelarCotacaoNoBizagiId((cSC8)->C8_YPRCBIZ)
+						MsgBox('Houve um problema na comunicação do processo de geração da cotação do BIZAGI.' ,'ERRO', 'STOP'  )
+						RETURN .F.
+					EndIf
+
+				EndIf
+
 				cIdProces := U_BIAB002((cSC8)->C8_FORNECE, (cSC8)->C8_LOJA)
-				//STOP AQUI
+
 			Else
+
 				cAssunto := RTRIM(SM0->M0_NOMECOM)+" - Cotação Num. "+cCotacao
 				cBody    := MemoRead("\workflow\cotacao\modelo_email.html")
 				cBody    := FormatMail(cBody, cSC8, cCotacao, cUserMail)
@@ -310,9 +326,11 @@ User Function BIAB002(pFornece,pLoja)
 	Private cLojaCot := pLoja
 
 	// Testa Envio de Xml para o bizagi.
+
 	If AllTrim(UPPER(GetEnvServer())) == "PRODUCAO"
 		cRet := GeraProcBZ()
 	EndIf
+
 
 Return cRet
 
@@ -366,6 +384,7 @@ Static Function GeraProcBZ()
 			CONOUT("COTAÇÃO BIZAGI-------------------------------")
 
 			If !Empty(cXmlRet)
+
 				oXmlRetCot := XmlParser(cXmlRet,"_",@cErro,@cAviso)
 
 
@@ -506,7 +525,7 @@ Static Function cGetXmlCot()
 				cXml += "</ProdCotacaoVirtualizado>"
 				*/
 
-				cXml += '<ProdCotacaoVirtualizado entityName="VW_BZ_VIRT_PROD_COT" businesskey="EMPRESA='
+				cXml += '<ProdCotacaoVirtualizado entityName="VW_BZ_VIRT_PROD_COT" businessKey="EMPRESA='
 				cXml +=  "'"+cEmpAnt+cFilAnt+"' AND CODIGO= '"+TSC8->C8_PRODUTO+"'"+'" />'
 
 				dEntrega := SToD(TSC8->C8_DATPRF)

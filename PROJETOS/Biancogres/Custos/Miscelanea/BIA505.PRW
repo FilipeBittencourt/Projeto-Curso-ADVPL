@@ -10,15 +10,6 @@
 @type function
 /*/
 
-/*/{Protheus.doc} BIA505
-@author Artur Antunes
-@since 19/04/17
-@version 1.1
-@description Inclusão de controle de processamento via SX6 (MV_YULRAC) 
-@obs OS 2304-16
-@type function
-/*/
-
 User Function BIA505()
 
 	Processa({|| RptDetail()})
@@ -48,7 +39,7 @@ Static Function RptDetail()
 		Return
 	EndIf
 
-	ProcRegua(1000)
+	ProcRegua(0)
 	IncProc("Preparando dados...")
 	Sleep(5000)
 
@@ -100,10 +91,10 @@ Static Function RptDetail()
 	dbSelectArea("ZP07")
 	dbGoTop()
 	x1Contad := 1
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
-		IncProc("Gravando... " + Alltrim(ZP07->C2_PRODUTO) + " " + ZP07->D3_NUMSEQ + " " + ZP07->D3_YITCUS + " " + Alltrim(Str(x1Contad)))
+		IncProc("Gravando1... " + Alltrim(ZP07->C2_PRODUTO) + " " + ZP07->D3_NUMSEQ + " " + ZP07->D3_YITCUS + " " + Alltrim(Str(x1Contad)))
 
 		x1CodProd := ZP07->C2_PRODUTO
 		x1NumSeq  := ZP07->D3_NUMSEQ
@@ -135,7 +126,7 @@ Static Function RptDetail()
 	Ferase(ZPcIndex+GetDBExtension())
 	Ferase(ZPcIndex+OrdBagExt())
 
-	ProcRegua(1000)
+	ProcRegua(0)
 	IncProc("Preparando dados...")
 
 	//                        Atualiza quantidade RAC (inicialmente PAC) quanto a Movimento Valorizado
@@ -176,10 +167,10 @@ Static Function RptDetail()
 	dbSelectArea("ZP04")
 	dbGoTop()
 	x1Contad := 1
-	ProcRegua(RecCount())
+	ProcRegua(0)
 	While !Eof()
 
-		IncProc("Gravando... " + Alltrim(ZP04->D3_COD) + " " + ZP04->D3_YITCUS + " " + Alltrim(Str(x1Contad)))
+		IncProc("Gravando2... " + Alltrim(ZP04->D3_COD) + " " + ZP04->D3_YITCUS + " " + Alltrim(Str(x1Contad)))
 
 		x1CodProd := ZP04->D3_COD
 		x1QtdPac  := ZP04->QUANT

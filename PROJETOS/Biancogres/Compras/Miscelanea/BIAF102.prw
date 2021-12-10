@@ -19,17 +19,18 @@ Return()
  
 User Function BIAF102A()
 
-	cRet := "U_BIAMsgRun('Analisando cotação: ' + SC8->C8_NUM + '...', 'Aguarde!', {|| U_BIAF102B() })"
+	cRet := "U_BIAMsgRun('Analisando cotação: ' + SC8->C8_NUM + '...', 'Aguarde!', {|| U_BIAF102B(Recno()) })"
 	
 Return(cRet)
 
 
-User Function BIAF102B()
+User Function BIAF102B(nRec)
 
 	l150Inclui := .F. 
 	l150Propost := .F. 
 	l150Deleta := .F.
 		
-	MATA160(Nil, 6, .T.)
+	//MATA161(Nil, 6, .T.)
+	MATA161('SC8',SC8->(RecNo()),4)
 
 Return()

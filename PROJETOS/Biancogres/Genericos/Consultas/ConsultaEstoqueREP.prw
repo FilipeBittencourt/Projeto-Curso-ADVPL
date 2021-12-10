@@ -18,12 +18,6 @@ User Function ConsRep()
 	Private cCLASSE		:= Space(15) 
 	Private cAlmox		:= '02/04'
 	Private cMarcaPro	:= Space(4)
-
-	// Tratamento para Empresa14. Por Marcos Alberto Soprani em 18/09/13
-	If cEmpAnt $ "14"
-		cAlmox		:= '02/04/07'
-	EndIf 
-
 	Private aCampos0
 	Private cSql
 	Private Enter		:= CHR(13) + CHR(10)
@@ -501,12 +495,14 @@ Static Function SQL_FILTROS()
 	cSQL += "			ISNULL(BF_EMPENHO,0) AS EMPENHO,  "  + Enter
 	cSQL += "			ZZ9.ZZ9_DIVPA AS CAIXA, B1_YFORMAT, B1_YFATOR, B1_YLINHA, B1_YCLASSE, ROUND(ZZ9_PESO+(ZZ9_PESEMB/B1_CONV),4) AS PESOBR "  + Enter
 	cSQL += "	FROM     " + RETSQLNAME("SB1") + "  SB1, "+RetSqlName("ZZ6")+" ZZ6,	"+RetSqlName("ZZ7")+" ZZ7, "+RetSqlName("ZZ9")+" ZZ9, "  + Enter
-	If cEmpAnt $ "01_05_07"
+	If cEmpAnt $ "01_05_07_14"
 		cSQL += "			(SELECT '01' EMPRESA, * FROM SBF010 WHERE BF_FILIAL = '01' AND SUBSTRING(BF_PRODUTO,4,4) NOT IN ('0000','000C') AND BF_LOCAL IN (" + cAlmox + ") AND D_E_L_E_T_ = '' 	"  + Enter
 		cSQL += "			UNION																																																							"  + Enter
 		cSQL += "			SELECT '05' EMPRESA, * FROM SBF050 WHERE BF_FILIAL = '01' AND SUBSTRING(BF_PRODUTO,4,4) NOT IN ('0000','000C')  AND BF_LOCAL IN (" + cAlmox + ") AND D_E_L_E_T_ = ''		"  + Enter
 		cSQL += "			UNION																																																							"  + Enter
 		cSQL += "			SELECT '13' EMPRESA, * FROM SBF130 WHERE BF_FILIAL = '01' AND SUBSTRING(BF_PRODUTO,4,4) NOT IN ('0000','000C')  AND BF_LOCAL IN (" + cAlmox + ") AND D_E_L_E_T_ = '' 	"  + Enter
+		cSQL += "			UNION																																																							"  + Enter
+		cSQL += "			SELECT '14' EMPRESA, * FROM SBF140 WHERE BF_FILIAL = '01' AND SUBSTRING(BF_PRODUTO,4,4) NOT IN ('0000','000C')  AND BF_LOCAL IN (" + cAlmox + ") AND D_E_L_E_T_ = '' 	"  + Enter
 		cSQL += "			UNION																																																							"  + Enter
 		cSQL += "			SELECT '"+cEmpAnt+"' EMPRESA, * FROM "+RetSqlName("SBF")+" WHERE BF_FILIAL = '01' AND SUBSTRING(BF_PRODUTO,4,4) NOT IN ('0000','000C') AND BF_LOCAL IN (" + cAlmox + ") AND D_E_L_E_T_ = '' ) SBF	"  + Enter
 	Else

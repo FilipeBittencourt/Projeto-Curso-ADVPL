@@ -266,8 +266,13 @@ User Function BIA436()
 							//Somou o valor do frete/seguro
 							wNPrcVen := wNPrcVen + wC5VLRFRET + wC5YVLRREV
 
-							ProcFrete()//atualizo variaveis privadas dentro dessa funcao
+							// Inicio - REFERENTE AO Ticket:31051 - Aplica % Seguro Fábrica no preço de venda do produto - 09/11/2021
+							If M->C5_YSEGFAB == "S"
+								wNPrcVen := wNPrcVen + (wNPrcVen * (M->C5_PSEGFAB / 100))
+							Endif
+							// Fim - Ticket:31051
 
+							ProcFrete()//atualizo variaveis privadas dentro dessa funcao
 
 							//Substraindo o DM
 							If M->C5_YRECR == "S"

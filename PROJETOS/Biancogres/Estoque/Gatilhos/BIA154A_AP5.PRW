@@ -132,6 +132,11 @@ User Function BIA154A()
 
 		Endif
 
+		// Emerson Salvador - 01/09/2021 - Ticket 34058								
+		If Alltrim(cCLVL) == "6212"
+			cConta := "16503104"
+		EndIf
+
 		For xxn := 1 to Len(aHeader)
 
 			xcCampo := Trim(aHeader[xxn][2])

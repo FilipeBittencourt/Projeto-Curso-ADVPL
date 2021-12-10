@@ -1,0 +1,808 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "TOPCONN.CH"
+
+/*/{Protheus.doc} TBizagiIntegracaoAlcadaAprovacao
+@author Filipe Bittencourt (Facile)
+@since 13/10/2021
+@project 28966
+@version 1.0
+@description Job para Integração das Alçada de aprovação do  vindas do BIZAGI, substituindo o fonte BIAFG091
+@observation O fonte corresponde ao JOB da tela BIA901.PRW
+@type function
+/*/
+
+//U_BIAFF003
+User Function BIAFF003X()
+
+	Local oObj := Nil
+	Local cMSG := ""
+
+	RpcSetType(3)
+	RpcSetEnv("01", "01",,,"COM")
+
+	cMSG:= "TBizagiIntegracaoAlcadaAprovacao:BIAFF003() => Inicio empresa "+cEmpAnt+"/01 em "+cValToChar(dDataBase)+" - "+Time()+" "
+	ConOut(cMSG)
+	oObj := TBizagiIntegracaoAlcadaAprovacao():New()
+	oObj:Processar()
+	cMSG:= "TBizagiIntegracaoAlcadaAprovacao:BIAFF003() => Fim  empresa "+cEmpAnt+"/01 em "+cValToChar(dDataBase)+" - "+Time()+" "
+	ConOut(cMSG)
+
+	RpcClearEnv()
+
+Return()
+
+
+	Class TBizagiIntegracaoAlcadaAprovacao From LongClassName
+
+		Data aErro
+		Data cEmail
+		Data cProcessoBizagi
+
+
+		Public  Method New() Constructor
+		Public  Method Processar()
+
+		Private Method ValidarDados(cQry)
+		Private Method RegraClasseValor(cQry)
+		Private Method RegraDriver(cQry)
+		Private Method RegraAlcada(cQry)
+		Private Method RegraAprovador(cQry)
+		Private Method RegraPerfilAprovacao(cQry)
+
+
+		Private Method InserirDados(cQry)
+		Private Method SalvarClasseValorCTH(cQry)
+		Private Method SalvarGrupoAprovacao(cQry)
+
+
+		Private Method Status(cStatus, nId, cLog, cNewCod)
+		Private Method LogMail(aObjErr)
+		Private Method GetNewCodigo()
+		Private Method CustoUnitarioProduto(cCod,cLocal)
+
+
+
+
+	EndClass
+
+Method New(lJob) Class TBizagiIntegracaoAlcadaAprovacao
+
+	::aErro   := {}
+	::cProcessoBizagi := ""
+	::cEmail :=  "filipe.bittencourt@facilesistemas.com.br" // U_GetBiaPar("MV_EMAILINTBIZCLI", "sistemas.ti@biancogres.com.br")
+
+
+Return(Self)
+
+Method Processar() Class TBizagiIntegracaoAlcadaAprovacao
+
+	Local cQry  := GetNextAlias()
+	Local _cSQL := ""
+
+	_cSQL := "  SELECT                                           " + CRLF
+	_cSQL += "  CV_EMPRESA             AS EMPRESA                    " + CRLF
+	_cSQL += " ,CV_FILIAL              AS FILIAL                     " + CRLF
+	_cSQL += " ,CV_CLVL                AS CLASSE                     " + CRLF
+	_cSQL += " ,CV_CLASSE              AS TPCLASSE                   " + CRLF
+	_cSQL += " ,CV_DESCRCLVL           AS DESCRCLVL                  " + CRLF
+	_cSQL += " ,CV_CATEGORIAPPR        AS CATEGORIAPPR               " + CRLF
+	_cSQL += " ,CV_CRITERIOCUSTO       AS CRITERIOCUSTO              " + CRLF
+	_cSQL += " ,CV_QUADRORH            AS QUADRORH                   " + CRLF
+	_cSQL += " ,CV_UN			       	     AS UN                         " + CRLF
+	_cSQL += " ,CV_CC			       	     AS CC                         " + CRLF
+	_cSQL += " ,CV_APLICACUSTO		     AS APLICACUSTO                " + CRLF
+	_cSQL += " ,CV_CONTROLATAG		     AS CONTROLATAG                " + CRLF
+	_cSQL += " ,CV_ATRIBUICONTA        AS ATRIBUICONTA               " + CRLF
+	_cSQL += " ,CV_CLVLGMCD            AS CLVLGMCD                   " + CRLF
+	_cSQL += " ,CV_ENTIDADEGMCD        AS ENTIDADEGMCD               " + CRLF
+	_cSQL += " ,CV_SETORGMCD           AS SETORGMCD                  " + CRLF
+
+	_cSQL += " ,CV_CODIGOAPROVADOR     AS CODIGOAPROVADOR            " + CRLF
+	_cSQL += " ,CV_IDUSERAPROVADOR     AS IDUSERAPROVADOR            " + CRLF
+	_cSQL += " ,CV_APROVADORTEMP       AS APROVADORTEMP              " + CRLF
+	_cSQL += " ,CV_LOGINAPROVADOR      AS LOGINAPROVADOR             " + CRLF
+	_cSQL += " ,CV_CODIGOPERFIL        AS CODIGOPERFIL               " + CRLF
+	_cSQL += " ,CV_VALMIN		           AS VALMIN                     " + CRLF
+	_cSQL += " ,CV_VALMAX			         AS VALMAX                     " + CRLF
+	_cSQL += " ,CV_DRIVER              AS DRIVER                     " + CRLF
+	_cSQL += " ,BZNUMPROC              AS BZNUMPROC                  " + CRLF
+	_cSQL += " ,ID                                                   " + CRLF
+	_cSQL += " ,CV_IDUSERAPROVADORTEMP AS  IDUSERAPROVADORTEMP       " + CRLF
+
+	_cSQL += " FROM BZINTEGRACAO_CLASSEVALOR                         " + CRLF
+
+  /*
+  STATUS 
+  A = AGUARDADNDO ProcessarMENTO e INCLUIDO PELO BIZAGI
+  P = ProcessarDO PELO PROTHEUS
+  E = ERRO
+  C = Cancelado
+	*/      
+
+	_cSql += "  WHERE  STATUS = 'A'                     " + CRLF
+
+	_cSql += "  AND ISNULL(CV_EMPRESA,'01')  = '"+cEmpAnt+"'"  + CRLF
+
+//	_cSql += "  AND   BZNUMPROC =  'ALC-000143'                  " + CRLF
+
+	_cSql += " ORDER BY  BZNUMPROC"  + CRLF
+
+	TcQuery _cSQL New Alias (cQry)
+
+	If (cQry)->(!EOF())
+
+		::InserirDados(cQry)
+
+	EndIf
+
+	(cQry)->(DbCloseArea())
+
+Return()
+
+/****************************************************************************/
+/***********************    REGRAS  *****************************************/
+/****************************************************************************/
+Method ValidarDados(cQry) Class TBizagiIntegracaoAlcadaAprovacao
+
+	Local lErro   := .T.
+	Local aObjErr := {}
+	Local aObjAlc := {}
+	Local nI      :=  0
+	Local oObjRet := JsonObject():New()
+
+
+	While (cQry)->(!EOF())
+
+		aObjErr := {}
+
+		//regra 01: Validar se a Classe de Valor existe e está ativa na tabela
+		oObjRet := ::RegraClasseValor(cQry)
+		If ValType(oObjRet) <> "U"
+			AADD(aObjErr, oObjRet)
+		EndIf
+		// fim regra 01
+
+		//	Regra 02:  Validar se o Driver informado já está cadastrado e vinculado a CV correta na tabela ZBZ010
+		oObjRet := ::RegraDriver(cQry)
+		If ValType(oObjRet) <> "U"
+			AADD(aObjErr, oObjRet)
+		EndIf
+		//	fim  Regra 02:  Validar se o Driver informado já está cadastrado e vinculado a CV correta na tabela ZBZ010
+
+		//	Regra 03: Validar se a Alçada de Aprovação existe e está ativa na tabela SAL010
+		oObjRet := ::RegraAlcada(cQry)
+		If ValType(oObjRet) <> "U"
+			AADD(aObjErr, oObjRet)
+		EndIf
+		// fim Regra 03: Validar se a Alçada de Aprovação existe e está ativa na tabela SAL010
+
+		//	Regra 04: Validar se aprovadores ou perfis existem na SAK010
+		oObjRet := ::RegraAprovador(cQry)
+		If ValType(oObjRet) <> "U"
+			AADD(aObjErr, oObjRet)
+		Else
+			//	Regra 4.15: Validar limites de  aprovadores  se atendem
+			oObjRet := ::RegraPerfilAprovacao(cQry)
+			If ValType(oObjRet) <> "U"
+				AADD(aObjErr, oObjRet)
+			EndIf
+			// fim Regra 4.1: Validar limites de  aprovadores  se atendem
+		EndIf
+		// fim Regra 04: Validar se aprovadores ou perfis existem na SAK010
+
+
+		//Montando toda a estrutura que deverá ser salva já com erros
+		AADD(aObjAlc,   JsonObject():New())
+		nI++
+		aObjAlc[nI]["ERROS"]           := aObjErr
+		aObjAlc[nI]["EMPRESA"]         := AllTrim((cQry)->EMPRESA)
+		aObjAlc[nI]["FILIAL"]          := AllTrim((cQry)->FILIAL)
+		aObjAlc[nI]["CLASSE"]          := AllTrim((cQry)->CLASSE)
+		aObjAlc[nI]["TPCLASSE"]        := AllTrim((cQry)->TPCLASSE)
+		aObjAlc[nI]["DESCRCLVL"]       := AllTrim((cQry)->DESCRCLVL)
+		aObjAlc[nI]["CATEGORIAPPR"]    := AllTrim((cQry)->CATEGORIAPPR)
+		aObjAlc[nI]["CRITERIOCUSTO"]   := AllTrim((cQry)->CRITERIOCUSTO)
+		aObjAlc[nI]["QUADRORH"]        := AllTrim((cQry)->QUADRORH)
+		aObjAlc[nI]["UN"]              := AllTrim((cQry)->UN)
+		aObjAlc[nI]["CC"]              := AllTrim((cQry)->CC)
+		aObjAlc[nI]["APLICACUSTO"]     := AllTrim((cQry)->APLICACUSTO)
+		aObjAlc[nI]["CONTROLATAG"]     := AllTrim((cQry)->CONTROLATAG)
+		aObjAlc[nI]["ATRIBUICONTA"]    := AllTrim((cQry)->ATRIBUICONTA)
+		aObjAlc[nI]["CLVLGMCD"]        := AllTrim((cQry)->CLVLGMCD)
+		aObjAlc[nI]["ENTIDADEGMCD"]    := AllTrim((cQry)->ENTIDADEGMCD)
+		aObjAlc[nI]["SETORGMCD"]       := AllTrim((cQry)->SETORGMCD)
+		aObjAlc[nI]["CODIGOAPROVADOR"] := AllTrim((cQry)->CODIGOAPROVADOR)
+		aObjAlc[nI]["IDUSERAPROVADOR"] := AllTrim((cQry)->IDUSERAPROVADOR)
+		aObjAlc[nI]["APROVADORTEMP"]   := AllTrim((cQry)->APROVADORTEMP)
+		aObjAlc[nI]["LOGINAPROVADOR"]  := AllTrim((cQry)->LOGINAPROVADOR)
+		aObjAlc[nI]["CODIGOPERFIL"]    := AllTrim((cQry)->CODIGOPERFIL)
+		aObjAlc[nI]["DRIVER"]          := AllTrim((cQry)->DRIVER)
+		aObjAlc[nI]["VALMIN"]          := (cQry)->VALMIN
+		aObjAlc[nI]["VALMAX"]          := (cQry)->VALMAX
+		aObjAlc[nI]["BZNUMPROC"]       := AllTrim((cQry)->BZNUMPROC)
+		aObjAlc[nI]["ID"]              := (cQry)->ID
+		//FIM Montando toda a estrutura que deverá ser salva já com erros
+
+		(cQry)->(DbSkip())
+
+	EndDo
+
+	// organizando os dados dentro de uma unica estrutura
+	FreeObj(oObjRet)
+	oObjRet := JsonObject():New()
+	oObjRet["ALCADAS"] := aObjAlc
+
+Return oObjRet
+
+Method RegraClasseValor(cQry) Class TBizagiIntegracaoAlcadaAprovacao
+
+	Local cSqlA    := ""
+	Local cQryA    := GetNextAlias()
+	Local oObjRet  := Nil
+
+
+	cSqlA := " SELECT CTH_CLVL " + CRLF
+	cSqlA += " FROM CTH010 (NOLOCK) " + CRLF
+	cSqlA += " WHERE CTH_BLOQ != '1' AND D_E_L_E_T_ = '' " + CRLF
+	cSqlA += " AND CTH_CLVL = '"+(cQry)->CLASSE+"' " + CRLF
+
+	TcQuery cSqlA New Alias (cQryA)
+
+	If !(cQryA)->(EOF())
+
+		oObjRet                      := JsonObject():New()
+		oObjRet["ERRO"]              := JsonObject():New()
+		oObjRet["ERRO"]["MENSAGEM"]  := "Classe de valor "+(cQry)->CLASSE+" já existe na tabela CTH010."
+		oObjRet["ERRO"]["ID"]        := (cQry)->ID
+		oObjRet["ERRO"]["BZNUMPROC"] := (cQry)->BZNUMPROC
+
+	EndIf
+
+	(cQryA)->(DbCloseArea())
+
+Return oObjRet
+
+Method RegraDriver(cQry) Class TBizagiIntegracaoAlcadaAprovacao
+
+	Local cSqlA     := ""
+	Local cQryA     := GetNextAlias()
+	Local oObjRet   := Nil
+
+	cSqlA   := " SELECT ZBZ_DRVDB, ZBZ_CLVLDB " + CRLF
+	cSqlA   += " FROM " + RETSQLNAME("ZBZ") + " (NOLOCK) " + CRLF
+	cSqlA   += " WHERE D_E_L_E_T_ = '' " + CRLF
+	cSqlA   += " AND ZBZ_CLVLDB = '"+(cQry)->CLASSE+"' AND ZBZ_DRVDB  = '"+(cQry)->DRIVER+"' " + CRLF
+
+	TcQuery cSqlA New Alias (cQryA)
+
+	If (cQryA)->(EOF())
+
+		oObjRet                      := JsonObject():New()
+		oObjRet["ERRO"]              := JsonObject():New()
+		oObjRet["ERRO"]["MENSAGEM"]  := "O DRIVE: "+(cQry)->DRIVER+" não foi encontrado  para a classe de valor: "+(cQry)->CLASSE+" "
+		oObjRet["ERRO"]["ID"]        := (cQry)->ID
+		oObjRet["ERRO"]["BZNUMPROC"] := (cQry)->BZNUMPROC
+
+	EndIf
+
+	(cQryA)->(DbCloseArea())
+
+Return oObjRet
+
+Method RegraAlcada(cQry) Class TBizagiIntegracaoAlcadaAprovacao
+
+	Local cSqlA     := ""
+	Local cQryA     := GetNextAlias()
+	Local oObjRet   := Nil
+
+	cSqlA   := " SELECT AL_YCLVL " + CRLF
+	cSqlA   += " FROM SAL010 (NOLOCK) " + CRLF
+	cSqlA   += " WHERE D_E_L_E_T_ = '' " + CRLF
+	cSqlA   += " AND AL_YCLVL = '"+(cQry)->CLASSE+"' AND AL_MSBLQL <> '1' " + CRLF
+
+	TcQuery cSqlA New Alias (cQryA)
+
+	If (cQryA)->(EOF())
+
+		oObjRet                      := JsonObject():New()
+		oObjRet["ERRO"]              := JsonObject():New()
+		oObjRet["ERRO"]["MENSAGEM"]  := "Não existe alçada cadastrada para a classe de valor: "+(cQry)->CLASSE+" "
+		oObjRet["ERRO"]["ID"]        := (cQry)->ID
+		oObjRet["ERRO"]["BZNUMPROC"] := (cQry)->BZNUMPROC
+
+	EndIf
+
+	(cQryA)->(DbCloseArea())
+
+Return oObjRet
+
+Method RegraAprovador(cQry) Class TBizagiIntegracaoAlcadaAprovacao
+
+	Local cSqlA     := ""
+	Local cQryA     := GetNextAlias()
+	Local oObjRet   := Nil
+
+	cSqlA   := " SELECT  AK_COD, AK_USER " + CRLF
+	cSqlA   += " FROM SAK010 (NOLOCK) " + CRLF
+	cSqlA   += " WHERE D_E_L_E_T_ = '' " + CRLF
+	cSqlA   += " AND AK_COD = '"+(cQry)->CODIGOAPROVADOR+"' OR AK_USER = '"+(cQry)->IDUSERAPROVADOR+"' " + CRLF
+
+	TcQuery cSqlA New Alias (cQryA)
+
+	If (cQryA)->(EOF())
+
+		oObjRet                      := JsonObject():New()
+		oObjRet["ERRO"]              := JsonObject():New()
+		oObjRet["ERRO"]["MENSAGEM"]  := "Não existe aprovador cadastrado com o código: "+(cQry)->CODIGOAPROVADOR+"/ "
+		oObjRet["ERRO"]["MENSAGEM"]  += (cQry)->IDUSERAPROVADOR+" "
+		oObjRet["ERRO"]["ID"]        := (cQry)->ID
+		oObjRet["ERRO"]["BZNUMPROC"] := (cQry)->BZNUMPROC
+
+	EndIf
+
+	(cQryA)->(DbCloseArea())
+
+Return oObjRet
+
+Method RegraPerfilAprovacao(cQry) Class TBizagiIntegracaoAlcadaAprovacao
+
+	Local cSqlA     := ""
+	Local cQryA     := GetNextAlias()
+	Local oObjRet   := Nil
+
+
+	cSqlA   := " SELECT  DHL_COD " + CRLF
+	cSqlA   += " FROM DHL010 (NOLOCK) " + CRLF
+	cSqlA   += " WHERE D_E_L_E_T_ = '' " + CRLF
+	cSqlA   += " AND   "+cValTochar((cQry)->VALMIN)+"  >=   DHL_LIMMIN  "+  CRLF
+	cSqlA   += " AND   "+cValTochar((cQry)->VALMAX)+"  <=   DHL_LIMMAX "+  CRLF
+	cSqlA   += " AND DHL_COD = '"+(cQry)->CODIGOAPROVADOR+"' " + CRLF
+	//cSqlA   += " AND   "+cValTochar(VALMIN)+"  BETWEEN   DHL_LIMMIN AND DHL_LIMMAX "+  CRLF
+	//cSqlA   += " AND   "+cValTochar(VALMAX)+"  BETWEEN   DHL_LIMMIN AND DHL_LIMMAX "+  CRLF
+
+	TcQuery cSqlA New Alias (cQryA)
+
+
+	If (cQryA)->(EOF())
+
+		oObjRet                      := JsonObject():New()
+		oObjRet["ERRO"]              := JsonObject():New()
+		oObjRet["ERRO"]["MENSAGEM"]  := "Não existe perfil de aprovação para o usuario: "+(cQry)->CODIGOAPROVADOR+" "
+		oObjRet["ERRO"]["ID"]        := (cQry)->ID
+		oObjRet["ERRO"]["BZNUMPROC"] := (cQry)->BZNUMPROC
+
+	EndIf
+
+	(cQryA)->(DbCloseArea())
+
+Return oObjRet
+/****************************************************************************/
+/***********************  FIM  das REGRAS  **********************************/
+/****************************************************************************/
+
+
+
+/****************************************************************************/
+/***********************  SALVAR DADOS  *************************************/
+/****************************************************************************/
+Method InserirDados(cQry) Class TBizagiIntegracaoAlcadaAprovacao
+
+	Local oJS             := Nil
+	Local nI              := 0
+	Local aJSErro         := {}
+	Local aJSErroExecAuto := {}
+	Local oObjRet         := JsonObject():New()
+
+	oJS := ::ValidarDados(cQry)
+
+	If Len(oJS["ALCADAS"]) > 0
+
+		For nI := 1 To Len(oJS["ALCADAS"])
+
+			BEGIN TRANSACTION
+
+				If Len(oJS["ALCADAS"][nI]["ERROS"]) == 0
+
+					oObjRet := ::SalvarClasseValorCTH(oJS["ALCADAS"][nI]) //ExecAuto CTH
+					If ValType(oObjRet) <> "U"
+						AADD(aJSErroExecAuto, oObjRet)
+					EndIf
+
+					oObjRet := ::SalvarGrupoAprovacao(oJS["ALCADAS"][nI]) //ExecAuto SAL
+					If ValType(oObjRet) <> "U"
+						AADD(aJSErroExecAuto, oObjRet)
+					EndIf
+
+					If Len(aJSErroExecAuto) > 0
+						oJS["ALCADAS"][nI]["ERROS"] := aJSErroExecAuto //PEGANDO TODOS OS ERROS DE EXECAUTO
+					EndIf
+
+				EndIf
+
+				//Verifico novamente caso dê erro,  pois podem surgir novos erros vindos do EXECAUTO/REGRAS.
+				If Len(oJS["ALCADAS"][nI]["ERROS"]) > 0
+
+					DisarmTransaction()
+					AADD(aJSErro,  oJS["ALCADAS"][nI]["ERROS"]) //Reunindo TODOS OS ERROS de EXECAUTO/REGRAS, para envio de email
+					::Status("E", oJS["ALCADAS"][nI]["ERROS"], oJS["ALCADAS"][nI])
+
+				Else
+
+					::Status("P", oJS["ALCADAS"][nI]["ERROS"], oJS["ALCADAS"][nI])
+
+				EndIf
+
+				aJSErroExecAuto := {}
+
+			END TRANSACTION
+
+		Next nI
+
+		If Len(aJSErro) > 0
+
+			::LogMail(aJSErro)
+
+		EndIf
+
+	EndIf
+
+Return()
+
+Method SalvarClasseValorCTH(oJS) Class TBizagiIntegracaoAlcadaAprovacao
+
+	Local oJS           := Nil
+	Local aAlcada       := {}
+	Local oJSErro       := Nil
+	Local cError        := ""
+	Private lMsErroAuto := .F.
+
+	aadd(aAlcada, {"CTH_FILIAL", ""                                                    , NiL})
+	aadd(aAlcada, {"CTH_CLVL"  , oJS["ALCADAS"]["CLASSE"]                              , NiL})
+	aadd(aAlcada, {"CTH_CLASSE", oJS["ALCADAS"]["TPCLASSE"]                            , NiL})
+	aadd(aAlcada, {"CTH_DESC01", oJS["ALCADAS"]["DESCRCLVL"]                           , NiL})
+	aadd(aAlcada, {"CTH_YCAPPR", oJS["ALCADAS"]["CATEGORIAPPR"]                        , NiL})
+	aadd(aAlcada, {"CTH_YCRIT" , oJS["ALCADAS"]["CRITERIOCUSTO"]                       , NiL})
+	aadd(aAlcada, {"CTH_YQUADR", oJS["ALCADAS"]["QUADRORH"]                            , NiL})
+	aadd(aAlcada, {"CTH_YUN"   , oJS["ALCADAS"]["UN"]                                  , NiL})
+	aadd(aAlcada, {"CTH_YCC"   , oJS["ALCADAS"]["CC"]                                  , NiL})
+	aadd(aAlcada, {"CTH_YAPLCT", oJS["ALCADAS"]["APLICACUSTO"]                         , NiL})
+	aadd(aAlcada, {"CTH_YCTRTG", oJS["ALCADAS"]["CONTROLATAG"]                         , NiL})
+	aadd(aAlcada, {"CTH_YATRIB", oJS["ALCADAS"]["ATRIBUICONTA"]                        , NiL})
+	aadd(aAlcada, {"CTH_YCLVLG", oJS["ALCADAS"]["CLVLGMCD"]                            , NiL})
+	aadd(aAlcada, {"CTH_YENTID", oJS["ALCADAS"]["ENTIDADEGMCD"]                        , NiL})
+	aadd(aAlcada, {"CTH_YSETOR", oJS["ALCADAS"]["SETORGMCD"]                           , NiL})
+	aadd(aAlcada, {"CTH_YEMPGR", oJS["ALCADAS"]["EMPRESA"]                             , NiL})
+	aadd(aAlcada, {"CTH_YEMPFL", oJS["ALCADAS"]["EMPRESA"]+oJS["ALCADAS"][nI]["FILIAL"], NiL})
+
+	MSExecAuto({|x, y| CTBA060(x, y)},aAlcada, 3)
+
+	If lMsErroAuto
+
+		cError := MostraErro("/dirdoc", "error.log") // ARMAZENA A MENSAGEM DE ERRO
+		ConOut(PadC("Automatic routine ended with error", 80))
+		ConOut("Error: "+ cError)
+		oJSErro                      := JsonObject():New()
+		oJSErro["ERRO"]              := JsonObject():New()
+		oJSErro["ERRO"]["MENSAGEM"]  := cError
+		oJSErro["ERRO"]["ID"]        := oJS["ALCADAS"]["ID"]
+		oJSErro["ERRO"]["BZNUMPROC"] := oJS["ALCADAS"]["BZNUMPROC"]
+
+	EndIf
+
+Return oJSErro
+
+Method SalvarGrupoAprovacao(oJS) Class TBizagiIntegracaoAlcadaAprovacao
+
+	Local oJSErro       := Nil
+	Local oModel        := Nil
+	Private lMsErroAuto := .F.
+
+	// https://centraldeatendimento.totvs.com/hc/pt-br/articles/360053500013-Cross-Segmento-TOTVS-Backoffice-Linha-Protheus-ADVPL-MATA114-ExecAuto
+
+	// TO DO
+
+
+	oModel := FwLoadModel("MATA114")
+	oModel:SetOperation(MODEL_OPERATION_INSERT)
+	oModel:Activate()
+
+	//MASTER ModelSAL
+
+	oModel:SetValue("ModelSAL","AL_FILIAL  " , xFilial('SAL'))
+	oModel:SetValue("ModelSAL","AL_COD     " ,'GERADO PELO SISTEMA')
+	oModel:SetValue("ModelSAL","AL_DESC    " ,'GRUPO ' + oJS["ALCADAS"]["CLASSE"])
+	oModel:SetValue("ModelSAL","AL_ITEM    " ,"INCREMENTADO A CADA LINHA DE ALÇADA DE APROVAÇÃO (veja a imagem abaixo)"
+	oModel:SetValue("ModelSAL","AL_APROV   " ,oJS["ALCADAS"]["CODIGOAPROVADOR"]
+	oModel:SetValue("ModelSAL","AL_USER    " ,oJS["ALCADAS"]["IDUSERAPROVADOR"]
+	oModel:SetValue("ModelSAL","AL_NIVEL   " ,"0"
+	oModel:SetValue("ModelSAL","AL_LIBAPR  " ,"A"
+	oModel:SetValue("ModelSAL","AL_AUTOLIM " ,"S"
+	oModel:SetValue("ModelSAL","AL_TPLIBER " ,"U"
+	oModel:SetValue("ModelSAL","AL_YCC     " ,oJS["ALCADAS"]["CC"]
+	oModel:SetValue("ModelSAL","AL_YCLVL   " ,oJS["ALCADAS"]["CLASSE"]
+	oModel:SetValue("ModelSAL","AL_PERFIL  " ,oJS["ALCADAS"]["CODIGOPERFIL"]
+	oModel:SetValue("ModelSAL","AL_APROSUP " ,oJS["ALCADAS"]["APROVADORTEMP"]
+	oModel:SetValue("ModelSAL","AL_MSBLQL  " ,'2'
+	oModel:SetValue("ModelSAL","AL_USERSUP " ,oJS["ALCADAS"]["IDUSERAPROVADORTEMP"]
+
+
+
+	If oModel:VldData()
+		oModel:CommitData()
+		conout("Registro INCLUIDO!")
+	Else
+		VarInfo("Erro ao incluir",oModel:GetErrorMessage())
+	EndIf
+	oModel:DeActivate()
+	oModel:Destroy()
+	oModel := nil
+
+Return oJSErro
+/****************************************************************************/
+/*********************** FIM SALVAR DADOS  **********************************/
+/****************************************************************************/
+
+Method Status(cStatus, oJSErr , oJsAlcad) Class TBizagiIntegracaoAlcadaAprovacao
+
+	Local lRet      := .T.
+	Local cSql      := ""
+	Local cMsgErr   := ""
+	Local nI        := 0
+	DEFAULT cStatus   := "" // E=Erro; P=Processardo; A=Aguard. Processarmento
+
+	cSql   := " UPDATE dbo.BZINTEGRACAO_CLASSEVALOR SET "+CRLF
+	cSql   += "   STATUS = '"+cStatus+"' "+CRLF
+	cSql   += " , DTINTEGRA = '"+DTOS(dDataBase)+"' "+CRLF
+	cSql   += " , HRINTEGRA = '"+TIME()+"' "+CRLF
+
+	If cStatus == "E"
+
+		For nI := 1 To Len(oJSErr)
+
+			cMsgErr += oJSErr[nI]["ERRO"]["MENSAGEM"] + CRLF
+
+		Next nI
+
+		cSql  += " , LOG           = '"+StrTran(cMsgErr,"' "," ")+" '"+CRLF
+
+	EndIf
+
+	cSql  += " WHERE BZNUMPROC = '"+oJsAlcad["BZNUMPROC"]+"' "+CRLF
+	cSql  += " AND ID          = "+cValToChar(oJsAlcad["ID"])+" "+CRLF
+
+	lRet   := TcSQLExec(cSql) == 0
+
+	If !lRet
+
+		ConOut("TBizagiIntegracaoAlcadaAprovacao: TCSQLError() -> " + TCSQLError())
+
+	EndIf
+
+Return(lRet)
+
+Method LogMail(aObjErr) Class TBizagiIntegracaoAlcadaAprovacao
+
+	Local nW    := 0
+	Local nI    := 0
+	Local cHtml := ""
+	Local cMSG  := ""
+	Local oMail := TAFMail():New()
+
+	If Len(aObjErr) > 0
+
+		cHtml += '<style type="text/css">'
+		cHtml += '.tg  {border-collapse:collapse;border-color:#aaa;border-spacing:0;}'
+		cHtml += '.tg td{background-color:#fff;border-color:#aaa;border-style:solid;border-width:1px;color:#333;'
+		cHtml += '  font-family:Arial, sans-serIf;font-size:14px;overflow:hidden;padding:10px 5px;word-break:normal;}'
+		cHtml += '.tg th{background-color:#f38630;border-color:#aaa;border-style:solid;border-width:1px;color:#fff;'
+		cHtml += '  font-family:Arial, sans-serIf;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}'
+		cHtml += '.tg .tg-zw5y{border-color:inherit;text-align:center;text-decoration:underline;vertical-align:top}'
+		cHtml += '.tg .tg-0lax{text-align:left;vertical-align:top}'
+		cHtml += '</style>'
+		cHtml += '<table width="100%" class="tg">'
+		cHtml += '<thead>'
+		cHtml += '  <tr>'
+		cHtml += '    <th class="tg-zw5y">' + cEmpAnt + cFilAnt + ' - Aprovação alçada</th>'
+		cHtml += '  </tr>'
+		cHtml += '</thead>'
+		cHtml += '<tbody>'
+
+		For nI := 1 To Len(aObjErr)
+
+			cHtml += '  <tr>'
+			cHtml += '    <td class="tg-0lax">'
+			cHtml += 'Processo Bizagi: '+aObjErr[nI]["BZNUMPROC"]+ ' <br> '
+
+			For nW := 1 To Len(aObjErr[nI]["ERROS"])
+
+				cMSG := aObjErr[nI]["ERROS"][nW]["ERRO"]["MENSAGEM"]
+				cMSG := StrTran(cMSG,chr(10),"<br><br>")
+				cHtml += 'Motivo '+PADL(cValToChar(nW),2,"0")+': '+cMSG+' <br> '
+
+			Next nW
+
+			cHtml += ' 		</td>'
+			cHtml += '  </tr>'
+
+		Next nI
+
+
+
+		cHtml += '</tbody>'
+		cHtml += '</table>'
+
+		oMail:cTo := ::cEmail
+		oMail:cSubject := "TBizagiIntegracaoAlcadaAprovacao - Inconsistências"
+		oMail:cBody := cHtml
+		oMail:Send()
+
+
+	EndIf
+
+RETURN
+
+
+
+
+/*
+Method GetNewCodigo() Class TBizagiIntegracaoAlcadaAprovacao
+
+  Local _msDocSZI := ""
+
+  _msDocSZI := GetSxENum("SZI","ZI_DOC")
+  SZI->(dbSetOrder(1))
+  If SZI->(dbSeek(xFilial("SZI") + _msDocSZI))
+    While .T.
+      _msDocSZI := GetSxENum("SZI","ZI_DOC")
+      SZI->(dbSetOrder(1))
+      If !SZI->(dbSeek(xFilial("SZI") + _msDocSZI))
+        Exit
+      EndIf
+    End
+  EndIf
+
+Return _msDocSZI
+
+
+CREATE TABLE [dbo].[BZINTEGRACAO_CLASSEVALOR](
+
+[ID][int] IDENTITY(1,1) NOT NULL,
+[CV_EMPRESA] [varchar](2) NOT NULL,
+[CV_FILIAL] [varchar](2) NOT NULL,
+
+[CV_CLVL][varchar](9) NOT NULL,
+[CV_CLASSE][varchar](1) NOT NULL,
+[CV_DESCRCLVL][varchar](40) NOT NULL,
+
+[CV_CATEGORIAPPR][varchar](1) NOT NULL, --* Analisar valor default
+[CV_CRITERIOCUSTO][varchar](3) NOT NULL, --* Analisar valor default
+[CV_QUADRORH][varchar](15) NOT NULL, --* Analisar valor default
+
+[CV_UN][varchar](2) NOT NULL, --* Analisar valor default
+[CV_CC][varchar](9) NOT NULL,
+[CV_APLICACUSTO][varchar](1) NOT NULL,
+[CV_CONTROLATAG][varchar](1) NOT NULL,
+
+
+[CV_ATRIBUICONTA][varchar](1) NOT NULL,
+[CV_CLVLGMCD][varchar](4) NOT NULL,
+[CV_ENTIDADEGMCD][varchar](4) NOT NULL,
+[CV_SETORGMCD][varchar](4) NOT NULL,
+
+[CV_CODIGOAPROVADOR][varchar](6) NOT NULL,
+[CV_IDUSERAPROVADOR][varchar](6) NOT NULL,
+[CV_APROVADORTEMP][varchar](6) NOT NULL,
+[CV_LOGINAPROVADOR][varchar](50) NOT NULL,
+[CV_CODIGOPERFIL][varchar](6) NOT NULL,
+
+
+[CV_VALMIN][float] NOT NULL,
+[CV_VALMAX][float] NOT NULL,
+
+
+
+--VALIDAR PRIMEIRO ESSE CAMPO A INFORMAÇÃO VINDA DO BIZAGI DRIVER+CLASSE_VALOR SE EXISTEM NA ZBZ NOS SEGUINTES CAMPOS ZBZ_DRVDB+ZBZ_CLVLBD. SE SIM CONTINUA, SE NÃO ERRO DE DRIVE
+[CV_DRIVER][varchar](9) NULL,
+
+
+
+[BZNUMPROC] [varchar](15) NOT NULL,
+[BZGUID] [varchar](50) NOT NULL,
+[STATUS] [varchar](1) NOT NULL,
+[BZDTINTEGRACAO] [varchar](30) NULL,
+
+
+
+[DTINTEGRA] [varchar](8) NULL,
+[HRINTEGRA] [varchar](8) NULL,
+[LOG] [varchar](max) NULL,
+
+
+
+)
+
+
+
+ALTER TABLE [dbo].[BZINTEGRACAO_CLASSEVALOR] ADD CONSTRAINT [DF_BZINTEGRACAO_CLASSEVALOR] DEFAULT ('') FOR [BZGUID]
+
+
+
+
+select * from BZINTEGRACAO_CLASSEVALOR
+select top 1 CTH_YEMPFL, * from CTH010 ORDER BY R_E_C_N_O_ DESC
+select top 1 * from SAL010
+select top 1 * from SAK010  - aprovadores
+select top 1 * from DHL010  - perfil
+select top 1 * from ZBZ010
+
+
+  EXTRA       -> GRAVAR NO CAMPO 'AL_DESC' := "GRUPO "+CLASSE_VALOR
+
+
+delete from BZINTEGRACAO_CLASSEVALOR where CV_CODIGOAPROVADOR = ''
+
+ UPDATE BZINTEGRACAO_CLASSEVALOR  
+SET
+  CV_DRIVER = ZBZ.ZBZ_DRVDB
+  
+FROM
+  BZINTEGRACAO_CLASSEVALOR BZ
+  INNER JOIN ZBZ010 ZBZ  ON BZ.CV_CLVL = ZBZ_CLVLDB  and ZBZ_DRVDB <> '' 
+
+
+  UPDATE BZINTEGRACAO_CLASSEVALOR SET CV_DRIVER = '000003130' WHERE CV_DRIVER = 'DRIVER'
+  */
+
+
+
+/* 
+
+ARA CADASTAR A CLASSE DE VALOR CTH010
+
+ SELECT   top 10                         
+										  
+  --CV_EMPRESA         AS EMPRESA           
+  CV_FILIAL          AS FILIAL            
+ ,CV_CLVL            AS CLASSE            
+ ,CV_CLASSE          AS TPCLASSE          
+ ,CV_DESCRCLVL       AS DESCRCLVL         
+ ,CV_CATEGORIAPPR    AS CATEGORIAPPR      
+ ,CV_CRITERIOCUSTO   AS CRITERIOCUSTO     
+ ,CV_QUADRORH        AS QUADRORH          
+ ,CV_UN			       	 AS UN            
+ ,CV_CC			       	 AS CC            
+ ,CV_APLICACUSTO		 AS APLICACUSTO   
+ ,CV_CONTROLATAG		 AS CONTROLATAG   
+ ,CV_ATRIBUICONTA    AS ATRIBUICONTA      
+ ,CV_CLVLGMCD        AS CLVLGMCD          
+ ,CV_ENTIDADEGMCD    AS ENTIDADEGMCD      
+ ,CV_SETORGMCD       AS SETORGMCD  
+ ,CV_EMPRESA         AS CTH_YEMPGR
+ ,CV_EMPRESA+CV_FILIAL         AS CTH_YEMPFL
+ from  BZINTEGRACAO_CLASSEVALOR   where BZNUMPROC =  'ALC-000143' 
+
+  SELECT CTH_FILIAL, CTH_CLVL, CTH_CLASSE, CTH_DESC01 , CTH_YCAPPR, CTH_YCRIT, CTH_YQUADR, CTH_YUN, CTH_YCC, CTH_YAPLCT,  CTH_YCTRTG, CTH_YATRIB,
+   CTH_YCLVLG, CTH_YENTID, CTH_YSETOR,   CTH_YEMPGR , CTH_YEMPFL FROM CTH010 WHERE CTH_CLVL = '1100'
+
+
+	 	CTH_FILIAL  AS FILIAL, 
+	CTH_CLVL    AS CLASSE , 
+	CTH_CLASSE  AS TPCLASSE , 
+	CTH_DESC01  AS DESCRCLVL     , 
+	CTH_YCAPPR  AS CATEGORIAPPR     , 
+	CTH_YCRIT   AS  CRITERIOCUSTO    , 
+	CTH_YQUADR  AS  QUADRORH    , 
+	CTH_YUN     AS  UN    , 
+	CTH_YCC     AS  CC    , 
+	CTH_YAPLCT  AS APLICACUSTO     ,
+	CTH_YCTRTG  AS  CONTROLATAG    ,
+	CTH_YATRIB  AS  ATRIBUICONTA    ,
+	CTH_YCLVLG  AS CLVLGMCD     ,
+	CTH_YENTID  AS  ENTIDADEGMCD    ,
+	CTH_YSETOR  AS SETORGMCD     ,
+	CTH_YEMPGR  AS  CV_EMPRESA    
+	--CTH_YEMPFL  AS CV_EMPRESA+CV_FILIAL 
+   
+
+	 */ 
+

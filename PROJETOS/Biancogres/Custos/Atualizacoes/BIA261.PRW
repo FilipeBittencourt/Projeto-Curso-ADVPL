@@ -243,6 +243,9 @@ Static Function RptDetail()
     A0003 += "                       AND SB1.D_E_L_E_T_ = ' '
     A0003 += "  INNER JOIN " + RetSqlName("SBZ") + " SBZ ON BZ_FILIAL = '" + xFilial("SBZ") + "'
     A0003 += "                       AND BZ_COD = G1_COD
+        iF cEmpAnt == '14'
+            A0003 += " AND SUBSTRING(B1_COD,1,1)='V' "
+        ENDIF
     A0003 += "                       AND SBZ.D_E_L_E_T_ = ' '
     A0003 += "  WHERE G1_FILIAL = '"+xFilial("SG1")+"'
     A0003 += "    AND G1_COD BETWEEN '"+MV_PAR01+"' AND '"+MV_PAR02+"'

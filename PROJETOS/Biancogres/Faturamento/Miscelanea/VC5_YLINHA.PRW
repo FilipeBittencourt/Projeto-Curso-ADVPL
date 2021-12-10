@@ -38,8 +38,8 @@ If Type("CREPATU")<>"U" .And. !Empty(CREPATU)
 		EndIf
 
 		//Ticket 32120, solicitação da Paloma
-		If _lRet .And. cEmpAnt != "07" .And. M->C5_YLINHA == "6"
-			MsgAlert("Pedidos Vinílico só podem ser feitos pela LM Comércio.","Empresa do Pedido")
+		If _lRet .And. M->C5_YLINHA == "6" .And. !cEmpAnt $ "07_14" 
+			MsgAlert("Pedidos Vinílico só podem ser feitos pela 07-LM Comércio ou 14-Biancogres Vinilico.","Empresa do Pedido")
 			_lRet := .F.
 		Endif
 	EndIf

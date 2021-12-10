@@ -43,60 +43,49 @@ User Function FROPTE06()
 
 		If lRet .And. !Empty(cRepAtu) .And. !(SA1->A1_COD $ "010064")
 
-			If cEmpAnt == "14"
-				If Alltrim(M->C5_YLINHA) == "1" //VITCER
 
-					If !(SA1->A1_YVENVT1 == cRepAtu .Or. A1_YVENVT2 == cRepAtu .Or. A1_YVENVT3 == cRepAtu)
-						MsgStop("Cliente NÃO permitido para o Representante!","Valida Cliente")
-						lRet := .F.
-					EndIf
+			If Alltrim(M->C5_YLINHA) == "1" //BIANCOGRES
 
-				EndIf
-			Else
-				If Alltrim(M->C5_YLINHA) == "1" //BIANCOGRES
-
-					If !(SA1->A1_VEND == cRepAtu .Or. A1_YVENDB2 == cRepAtu .Or. A1_YVENDB3 == cRepAtu)
-						MsgStop("Cliente NÃO permitido para o Representante!","Valida Cliente")
-						lRet := .F.
-					EndIf
-
-				ElseIf Alltrim(M->C5_YLINHA) == "2" //INCESA
-
-					If !(SA1->A1_YVENDI == cRepAtu .Or. A1_YVENDI2 == cRepAtu .Or. A1_YVENDI3 == cRepAtu)
-						MsgStop("Cliente NÃO permitido para o Representante!","Valida Cliente")
-						lRet := .F.
-					EndIf
-
-				ElseIf Alltrim(M->C5_YLINHA) == "3" //BELLACASA
-
-					If !(SA1->A1_YVENBE1 == cRepAtu .Or. A1_YVENBE2 == cRepAtu .Or. A1_YVENBE3 == cRepAtu)
-						MsgStop("Cliente NÃO permitido para o Representante!","Valida Cliente")
-						lRet := .F.
-					EndIf
-
-				ElseIf Alltrim(M->C5_YLINHA) == "4" //MUNDIALLI
-
-					If !(SA1->A1_YVENML1 == cRepAtu .Or. A1_YVENML2 == cRepAtu .Or. A1_YVENML3 == cRepAtu)
-						MsgStop("Cliente NÃO permitido para o Representante!","Valida Cliente")
-						lRet := .F.
-					EndIf
-
-				ElseIf Alltrim(M->C5_YLINHA) == "5" //PEGASUS
-
-					If !(SA1->A1_YVENPEG == cRepAtu)
-						MsgStop("Cliente NÃO permitido para o Representante!","Valida Cliente")
-						lRet := .F.
-					EndIf
-				ElseIf Alltrim(M->C5_YLINHA) == "6" //VINILICO
-
-					If !(SA1->A1_YVENVI1 == cRepAtu)
-						MsgStop("Cliente NÃO permitido para o Representante!","Valida Cliente")
-						lRet := .F.
-					EndIf
+				If !(SA1->A1_VEND == cRepAtu .Or. A1_YVENDB2 == cRepAtu .Or. A1_YVENDB3 == cRepAtu)
+					MsgStop("Cliente NÃO permitido para o Representante!","Valida Cliente")
+					lRet := .F.
 				EndIf
 
+			ElseIf Alltrim(M->C5_YLINHA) == "2" //INCESA
 
+				If !(SA1->A1_YVENDI == cRepAtu .Or. A1_YVENDI2 == cRepAtu .Or. A1_YVENDI3 == cRepAtu)
+					MsgStop("Cliente NÃO permitido para o Representante!","Valida Cliente")
+					lRet := .F.
+				EndIf
+
+			ElseIf Alltrim(M->C5_YLINHA) == "3" //BELLACASA
+
+				If !(SA1->A1_YVENBE1 == cRepAtu .Or. A1_YVENBE2 == cRepAtu .Or. A1_YVENBE3 == cRepAtu)
+					MsgStop("Cliente NÃO permitido para o Representante!","Valida Cliente")
+					lRet := .F.
+				EndIf
+
+			ElseIf Alltrim(M->C5_YLINHA) == "4" //MUNDIALLI
+
+				If !(SA1->A1_YVENML1 == cRepAtu .Or. A1_YVENML2 == cRepAtu .Or. A1_YVENML3 == cRepAtu)
+					MsgStop("Cliente NÃO permitido para o Representante!","Valida Cliente")
+					lRet := .F.
+				EndIf
+
+			ElseIf Alltrim(M->C5_YLINHA) == "5" //PEGASUS
+
+				If !(SA1->A1_YVENPEG == cRepAtu)
+					MsgStop("Cliente NÃO permitido para o Representante!","Valida Cliente")
+					lRet := .F.
+				EndIf
+			ElseIf Alltrim(M->C5_YLINHA) == "6" //VINILICO
+
+				If !(SA1->A1_YVENVI1 == cRepAtu)
+					MsgStop("Cliente NÃO permitido para o Representante!","Valida Cliente")
+					lRet := .F.
+				EndIf
 			EndIf
+
 		EndIf
 
 

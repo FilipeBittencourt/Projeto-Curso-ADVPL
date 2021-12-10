@@ -25,6 +25,13 @@ User Function BIA518()
 	dbSelectArea("SX2")
 	dbSeek("Z56")
 
+	If !cEmpAnt $ "01/06/14"
+
+		MsgALERT("A empresa " + cEmpAnt + " não está preparada para este processamento!!! Necessário adequar o sistema.", "BIA518")
+		Return
+
+	EndIf
+
 	cCadastro := Upper(Alltrim(SX2->X2_NOME))
 	aRotina   := { {"Pesquisar"         ,"AxPesqui"	                         ,0,1},;
 	{               "Visualizar"        ,"AxVisual"	                         ,0,2},;
@@ -109,6 +116,8 @@ Static Function RptDetail()
 		QY004 += "                         SUBSTRING(D3_COD,1,7) REFEREN,
 	ElseIf cEmpAnt == "06"
 		QY004 += "                         D3_COD REFEREN,
+	ElseIf cEmpAnt == "14"
+		QY004 += "                         SUBSTRING(D3_COD,1,7) REFEREN,
 	EndIf
 	QY004 += "                         D3_COD,
 	QY004 += "                         D3_TIPO,
@@ -123,6 +132,8 @@ Static Function RptDetail()
 		QY004 += "                     AND D3_TIPO IN('PA','PP')
 	ElseIf cEmpAnt == "06"
 		QY004 += "                     AND D3_TIPO IN('MP', 'PI', 'PA')
+	ElseIf cEmpAnt == "14"
+		QY004 += "                     AND D3_TIPO IN('PA')
 	EndIf
 	QY004 += "                     AND D3_TM = '010'
 	QY004 += "                     AND D3_YRFCUST <> 'PRODUCTION ON DEMAND'
@@ -136,6 +147,8 @@ Static Function RptDetail()
 		QY004 += "                       AND SUBSTRING(Z50_COD,1,7) = REFEREN
 	ElseIf cEmpAnt == "06"
 		QY004 += "                       AND Z50_COD = REFEREN
+	ElseIf cEmpAnt == "14"
+		QY004 += "                       AND SUBSTRING(Z50_COD,1,7) = REFEREN
 	EndIf
 	QY004 += "                       AND Z50_VERSAO = '" + MV_PAR04 + "'
 	QY004 += "                       AND Z50_REVISA = '" + MV_PAR05 + "'
@@ -149,10 +162,13 @@ Static Function RptDetail()
 	QY004 += "  INNER JOIN "+RetSqlName("Z29")+" Z29(NOLOCK) ON Z29_FILIAL = '"+xFilial("Z29")+"'
 	If cEmpAnt == "01"
 		QY004 += "                       AND Z29_COD_IT = CT1_YITCUS
+		QY004 += "                       AND Z29_APLIC = D3_TIPO
 	ElseIf cEmpAnt == "06"
 		QY004 += "                       AND Z29_COD_IT = Z50_ITCUS
+		QY004 += "                       AND Z29_APLIC = D3_TIPO
+	ElseIf cEmpAnt == "14"
+		QY004 += "                       AND Z29_COD_IT = CT1_YITCUS
 	EndIf
-	QY004 += "                       AND Z29_APLIC = D3_TIPO
 	QY004 += "                       AND Z29.D_E_L_E_T_ = ' '
 	QY004 += "  ORDER BY D3_COD, Z50_CONTA
 	QYIndex := CriaTrab(Nil,.f.)
@@ -721,6 +737,8 @@ Static Function RptiDetail()
 		QR008 += "                     AND D3_TIPO IN('PA', 'PP', 'PS')
 	ElseIf cEmpAnt == "06"
 		QR008 += "                     AND D3_TIPO IN('MP', 'PI', 'PA')
+	ElseIf cEmpAnt == "14"
+		QR008 += "                     AND D3_TIPO IN('PA')
 	EndIf
 	QR008 += "                     AND D3_ESTORNO = ' '
 	QR008 += "                     AND SD3.D_E_L_E_T_ = ' '

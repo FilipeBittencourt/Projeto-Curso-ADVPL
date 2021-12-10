@@ -300,6 +300,7 @@ Static Function fProcIntMD()
 						aadd(oxlVetRec, {"COFINS"   ,"ZBH_VCOF"                ,"1"} )
 						aadd(oxlVetRec, {"ST"       ,"ZBH_VST"                 ,"1"} )
 						aadd(oxlVetRec, {"DIFAL"    ,"ZBH_VDIFAL"              ,"1"} )
+						aadd(oxlVetRec, {"IPI"    ,"ZBH_VIPI"              ,"1"} )
 						aadd(oxlVetRec, {"VALVER"   ,"ZBH_VALVER + ZBH_VALCPV" ,"1"} )
 						aadd(oxlVetRec, {"ICMSBON"  ,"ZBH_VICMBO"              ,"1"} )
 
@@ -316,6 +317,7 @@ Static Function fProcIntMD()
 							LV007 += "                            Z6_CTAPIS PIS, "
 							LV007 += "                            Z6_CTACOF COFINS, "
 							LV007 += "                            Z6_CTICMST ST, "
+							LV007 += "                            Z6_CTAIPI IPI, "
 							LV007 += "                            '31401020' VALVER, "
 							LV007 += "                            '31701002' ICMSBON, "					
 							LV007 += "                            Z6_CTAICMS DIFAL "
@@ -343,7 +345,8 @@ Static Function fProcIntMD()
 							LV007 += "                            Z6_CTAICMS, "
 							LV007 += "                            Z6_CTAPIS, "
 							LV007 += "                            Z6_CTACOF, "
-							LV007 += "                            Z6_CTICMST) "
+							LV007 += "                            Z6_CTICMST, "
+							LV007 += "                            Z6_CTAIPI) "
 							LV007 += " INSERT INTO ZBZ" + ksEmpres + "0 "
 							LV007 += " (ZBZ_FILIAL, "
 							LV007 += "  ZBZ_VERSAO, "

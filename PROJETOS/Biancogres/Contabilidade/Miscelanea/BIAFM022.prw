@@ -190,6 +190,7 @@ Static Function gerabloco(aArquivo)
 		JURCAP := getpos(aArquivo,"JURCAP",pos)
 		VLDMRD := "0"
 		VLIRRT := getpos(aArquivo,"VALIR",pos)
+		QUALIF := getpos(aArquivo,"QUALIF",pos)
 
 		DBSELECTAREA("CGM")
 		CGM->(DBSETORDER(2))
@@ -224,6 +225,7 @@ Static Function gerabloco(aArquivo)
 			CGM->CGM_JURCAP := Val(aArquivo[pos,i,JURCAP])
 			CGM->CGM_VLDMRD := Val(VLDMRD)
 			CGM->CGM_VLIRRT := Val(aArquivo[pos,i,VLIRRT])
+			CGM->CGM_IDQUAL := cValToChar( aArquivo[pos,i,QUALIF] )
 
 			MsUnlock()	
 

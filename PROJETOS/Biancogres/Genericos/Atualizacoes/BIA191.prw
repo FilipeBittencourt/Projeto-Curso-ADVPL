@@ -117,7 +117,7 @@ User Function BIA191_I(cAlias, nReg, nOpc)
 	Private aCOLS := {}
 	Private aREG := {}  
 
-	If !lCtrlAdm
+	If !lCtrlAdm .And. !FWIsAdmin(__cUserID)
 
 		MsgSTOP("Somente ADMINISTRADOR pode utilizar esta opção.")
 		Return

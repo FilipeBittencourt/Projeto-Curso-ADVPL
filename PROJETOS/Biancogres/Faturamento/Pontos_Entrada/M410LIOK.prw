@@ -493,7 +493,7 @@ static function M410LIOK()
 
 	//Valida CST - Ranisses
 	nClasFis	:= Gdfieldget("C6_CLASFIS",n)
-	If Len(Alltrim(nClasFis)) <> 3
+	If Len(RTRIM(nClasFis)) <> 3
 		Alert("A Classificação Fiscal está incorreta. Favor verificar o campo 'Origem' no cadastro de Produto, e o campo 'Sit.Trib.ICM' no cadastro de TES.")
 		lRetorno := .F.
 		Return(lRetorno)
@@ -604,11 +604,6 @@ static function M410LIOK()
 		Private _cEmpOriPB
 
 		Private __lProdPR	:= .F.
-
-		// If (AllTrim(CEMPANT) == "14") .And. !U_CHKRODA(__nProd)
-		// 	lRetorno := .T.
-		// 	Return(lRetorno)
-		// EndIf
 
 		SA1->(DbSetOrder(1))
 		__cChvCli := ""           

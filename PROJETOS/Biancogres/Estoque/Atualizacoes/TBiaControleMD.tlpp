@@ -57,7 +57,6 @@ Data _cDocSeq
 
 Public Method New() Constructor
 Public Method CheckMD(_cCod, _cLocal) //Verifica se o Produto passado é MD naquele almoxarifado
-Public Method CheckMDAlmoxarifado(_cCod,_cLocal)
 Public Method InsereMovimentacao(_cFilial,_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cCodPro,_nQuant,_cLocal,;
 _cTM,_cSolic,_cSolOri,_cUser,_cRotina,_dDtDig,_cTbOrig,_nRecId) //Insere Movimentação na Tabela
 Public Method DevolucaoMovimentacao(_cFilial,_cSolicit,_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cCodPro,_nQuant,_cLocal,;
@@ -66,8 +65,9 @@ Public Method MovimentaEstoque(_cTes)
 Public Method NextNum()//Calcula o próximo NumSeq
 Public Method Saldo(_cCod,_cLocal,_cSolic,_lPadrao) //Retorna o Saldo total
 Public Method SaldoItem(_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cCod, _cLocal) //Retorna o Saldo Atual de um Item de NF
-Public Method GetMovimentoEntrada(_cCod,_cLocal,_cSolic,_cDocSeq,_nQuant,_cSolOri,_lPadrao) //Busca o movimento de entrada com saldo baseando-se na data de digitação
+Public Method GetMovimentoEntrada(_cCod,_cLocal,_cSolic,_cDocSeq,_nQuant,_cSolOri,_lPadrao,_dDtPrf,_dDtCheg) //Busca o movimento de entrada com saldo baseando-se na data de digitação
 Public Method GetSolicNFE(_cDoc,_cSerie,_cFornece,_cLoja,_cItem)
+Public Method GetDtPrf(_cDoc,_cSerie,_cFornece,_cLoja,_cItem)
 Public Method EstornaMovimentacao(_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cLocal,_cCod,_cRotina,_cTbOrig,_cUser)
 
 Public Method DevolucaoNF(_cDocOri,_cSerieOri,_cForOri,_cLojaOri,_cItemOri,_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cCod,_cLocal,_nQuant,_cUser,_cRotina,;
@@ -79,6 +79,9 @@ _dDtDig,_cTbOrig,_nRecId)
 Public Method SendWF(_cMotivo,_cHtml)
 
 Public Method SaldoSemVinculo(_cCod,_cLocal,_cSolic)
+
+Public Method ZeraMD(_cCod, _cLocal)
+
 
 EndClass
 
@@ -114,7 +117,7 @@ Method CheckMD(_cCod,_cLocal) Class TBiaControleMD
 	DbSelectArea("ZCN")
 	ZCN->(DbSetOrder(2))
 	If ZCN->(DbSeek(xFilial("ZCN")+PADR(_cCod,TamSX3("ZCN_COD")[1])+PADR(_cLocal,TamSX3("ZCN_LOCAL")[1])))
-		If Alltrim(ZCN->ZCN_MD) == "S" .And. Alltrim(ZCN->ZCN_POLIT) == '4' .And. SUBSTR(_cCod,1,1) == '2'
+		If Alltrim(ZCN->ZCN_POLIT) == '4' .And. SUBSTR(_cCod,1,1) $ '2/4'
 			_lRet	:=	.T.
 		EndIF
 	EndIf
@@ -128,7 +131,8 @@ Method InsereMovimentacao(_cFilial,_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cCodPr
 
 	Local _nSaldoMov	:= 0
 	Local _cSolic	
-
+	Local _dDtPrf	:=	Stod("")
+	Local _dDtCheg	:=	StoD("")
 	::_cFilial	:=	_cFilial
 	::_cDoc		:=	PADR(_cDoc,TAMSX3("ZCZ_DOC")[1])
 	::_cSerie	:=	PADR(_cSerie,TAMSX3("ZCZ_SERIE")[1])
@@ -139,8 +143,8 @@ Method InsereMovimentacao(_cFilial,_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cCodPr
 	::_nQuant	:=	_nQuant
 	::_cLocal	:=	PADR(_cLocal,TAMSX3("ZCZ_LOCAL")[1])
 	::_cTM		:=	_cTM
-	::_cSolic	:=	Iif(!Empty(_cSolic) .And. Len(_cSolic) == 6,cEmpAnt,'')+_cSolic
-	::_cSolOri	:=	Iif(!Empty(_cSolOri) .And. Len(_cSolOri) == 6,cEmpAnt,'')+_cSolOri
+	::_cSolic	:=	Iif(!Empty(_cSolic) .And. Len(Alltrim(_cSolic)) == 6,cEmpAnt,'')+_cSolic
+	::_cSolOri	:=	Iif(!Empty(_cSolOri) .And. Len(Alltrim(_cSolOri)) == 6,cEmpAnt,'')+_cSolOri
 	::_cUser	:=	_cUSer
 	::_cRotina	:=	_cRotina
 	::_dDtDig	:=	_dDtDig
@@ -160,6 +164,12 @@ Method InsereMovimentacao(_cFilial,_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cCodPr
 		Else
 			::_cDocSeq	:=	::NextNum()
 		EndIf
+		
+		If Alltrim(::_cTM) == "001"
+			_dDtPrf	:=	::GetDtPrf(::_cDoc,::_cSerie,::_cFornece,::_cLoja,::_cItem)		
+			_dDtCheg	:=	::_dDtDig
+		EndIf
+		
 		RecLock("ZCZ",.T.)
 		ZCZ->ZCZ_FILIAL		:=	::_cFilial
 		ZCZ->ZCZ_DOC        :=	::_cDoc
@@ -179,6 +189,8 @@ Method InsereMovimentacao(_cFilial,_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cCodPr
 		ZCZ->ZCZ_DHMOV      :=	::_cDhMov
 		ZCZ->ZCZ_DOCSEQ     :=	::_cDocSeq
 		ZCZ->ZCZ_TBORIG     :=	::_cTbOrig
+		ZCZ->ZCZ_DATPRF		:=	_dDtPrf
+		ZCZ->ZCZ_DTCHEG		:=	_dDtCheg
 		ZCZ->ZCZ_RECID      :=	::_nRecID
 		ZCZ->(MsUnlock())
 
@@ -188,9 +200,11 @@ Method InsereMovimentacao(_cFilial,_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cCodPr
 			::_cDocSeq	:=	""
 			::_nQuant	:=	0
 			
-			_cSolic	:=	""
+			_cSolic		:=	""
+			_dDtPrf		:=	Stod("")
+			_dDtCheg	:=	Stod("")
 			
-			::GetMovimentoEntrada(::_cCodPro,::_cLocal,::_cSolic,@::_cDocSeq,@::_nQuant,@_cSolic,.T.)
+			::GetMovimentoEntrada(::_cCodPro,::_cLocal,::_cSolic,@::_cDocSeq,@::_nQuant,@_cSolic,.T.,@_dDtPrf,@_dDtCheg)
 
 			If ::_nQuant > 0
 
@@ -215,6 +229,8 @@ Method InsereMovimentacao(_cFilial,_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cCodPr
 				ZCZ->ZCZ_DOCSEQ     :=	::_cDocSeq
 				ZCZ->ZCZ_TBORIG     :=	::_cTbOrig
 				ZCZ->ZCZ_RECID      :=	::_nRecID
+				ZCZ->ZCZ_DATPRF		:=	_dDtPrf
+				ZCZ->ZCZ_DTCHEG		:=	_dDtCheg
 				ZCZ->(MsUnlock())
 			Else
 				Exit
@@ -312,14 +328,16 @@ Method Saldo(_cCod,_cLocal,_cSolic,_lPadrao) Class TBiaControleMD
 
 Return _nSaldo
 
-Method GetMovimentoEntrada(_cCod,_cLocal,_cSolic, _cDocSeq,_nQuant,_cSolOri,_lPadrao) Class TBiaControleMD
+Method GetMovimentoEntrada(_cCod,_cLocal,_cSolic, _cDocSeq,_nQuant,_cSolOri,_lPadrao,_dDtPrf,_dDtCheg) Class TBiaControleMD
 
 	Local _aArea	:=	GetArea()
 	Local _cAlias	:=	GetNextAlias()
 	Local _cIn
 
 	Default _lPadrao := .T.
-
+	Default _dDtPrf	:=	Stod("")
+	Default _dDtCheg	:=	Stod("")
+	
 	If _lPadrao
 		_cIn	:=	"%('" + _cSolic + "','" + "ZZZZZZZZ" + "')%"  
 	Else
@@ -340,6 +358,8 @@ Method GetMovimentoEntrada(_cCod,_cLocal,_cSolic, _cDocSeq,_nQuant,_cSolOri,_lPa
 		THEN ZCZ_QUANT * - 1
 		ELSE ZCZ_QUANT
 	END) QTD
+		,MAX(ZCZ_DATPRF) DATPRF
+		,MAX(ZCZ_DTCHEG) DTCHEG
 	FROM %TABLE:ZCZ% ZCZ (NOLOCK)
 	WHERE ZCZ_FILIAL = %XFILIAL:ZCZ%
 	AND ZCZ_SOLICI IN %Exp:_cIn%
@@ -360,6 +380,8 @@ Method GetMovimentoEntrada(_cCod,_cLocal,_cSolic, _cDocSeq,_nQuant,_cSolOri,_lPa
 		_cSolOri	:=	(_cAlias)->ZCZ_SOLICI
 		_cDocSeq	:=	(_cAlias)->ZCZ_DOCSEQ
 		_nQuant		:=	(_cAlias)->QTD
+		_dDtPrf		:=	Stod((_cAlias)->DATPRF)
+		_dDtCheg	:=	Stod((_cAlias)->DTCHEG)
 	EndIf
 
 	(_cAlias)->(DbCloseArea())
@@ -372,7 +394,7 @@ Method GetSolicNFE(_cDoc,_cSerie,_cFornece,_cLoja,_cItem) Class TBiaControleMD
 
 	Local _aArea	:=	GetArea()
 	Local _cAlias	:=	GetNextAlias()
-
+	Local _cSolic	:=	""
 	BeginSql Alias _cAlias
 		%NoParser%
 		SELECT ISNULL(SC1.C1_YMATRIC,"") SOLIC1, ISNULL(SC1.C1_YMAT,"") SOLIC2
@@ -401,6 +423,42 @@ Method GetSolicNFE(_cDoc,_cSerie,_cFornece,_cLoja,_cItem) Class TBiaControleMD
 	RestArea(_aArea)
 
 Return _cSolic
+
+Method GetDtPrf(_cDoc,_cSerie,_cFornece,_cLoja,_cItem) Class TBiaControleMD
+
+	Local _aArea	:=	GetArea()
+	Local _cAlias	:=	GetNextAlias()
+	Local _dDtPrf	:=	Stod("")
+
+	BeginSql Alias _cAlias
+		%NoParser%
+		SELECT ISNULL(C1_DATPRF,'') AS C1_DATPRF
+		FROM %TABLE:SD1% SD1(NOLOCK)
+		JOIN %TABLE:SC7% SC7(NOLOCK) ON SD1.D1_FILIAL = SC7.C7_FILIAL
+		AND SD1.D1_PEDIDO = SC7.C7_NUM
+		AND SD1.D1_ITEMPC = SC7.C7_ITEM
+		AND SC7.%NotDel%
+		JOIN %TABLE:SC1% SC1 (NOLOCK) ON SC7.C7_FILIAL = SC1.C1_FILIAL
+		AND SC7.C7_NUMSC = SC1.C1_NUM
+		AND SC7.C7_ITEMSC = SC1.C1_ITEM
+		AND SC1.%NotDel%
+		WHERE SD1.D1_FILIAL = %XFILIAL:SC1%
+		AND SD1.D1_DOC = %Exp:_cDoc%
+		AND SD1.D1_SERIE = %Exp:_cSerie%
+		AND SD1.D1_FORNECE = %Exp:_cFornece%
+		AND SD1.D1_LOJA = %Exp:_cLoja%
+		AND SD1.D1_ITEM = %Exp:_cItem%
+		AND SD1.%NotDel%
+	EndSql
+
+	_dDtPrf	:=	Stod((_cAlias)->C1_DATPRF)
+
+	(_cAlias)->(DbCloseArea())
+
+	RestArea(_aArea)
+
+Return _dDtPrf
+
 
 Method EstornaMovimentacao(_cDoc,_cSerie,_cFornece,_cLoja,_cItem,_cCod,_cLocal,_cRotina,_cTbOrig,_cUser) Class TBiaControleMD
 
@@ -1015,35 +1073,85 @@ Method SaldoSemVinculo(_cCod,_cLocal,_cSolic) Class TBiaControleMD
 
 Return _nSaldo
 
-Method CheckMdAlmoxarifado(_cCod,_cLocal) Class TBiaControleMD
+Method ZeraMd(_cCod,_cLocal) Class TBiaControleMD
 
-	Local _lRet	:=	.T.
-	Local _aArea	:=	GetArea()
 	Local _cAlias	:=	GetNextAlias()
+	Local _cEmpFil	:=	cEmpAnt+cFilAnt
+	Local _nSaldoMov	:=	0
+	Local _cDocSeq		:=	""
+	Local _nQuant		:=	0
+	Local _cSolic		:=	""
+	Local _dDtPrf		:=	Stod("")
+	Local _dDtCheg		:=	Stod("")
+
 
 	BeginSql Alias _cAlias
 		%NoParser%
-		SELECT COUNT(*) QTD
-		FROM %TABLE:ZCN% ZCN (NOLOCK)
-		WHERE ZCN.ZCN_MD = 'S'
-		AND ZCN.ZCN_POLIT = '4'
-		AND SUBSTRING(ZCN.ZCN_COD, 1, 1) = '2'
-		AND ZCN.ZCN_COD = %Exp:_cCod%
-		AND ZCN.ZCN_LOCAL = %Exp:_cLocal%
-		AND ZCN.%NotDel%
-		AND EXISTS (
-			SELECT 1
-			FROM %TABLE:ZCN% ZCNALM (NOLOCK)
-			WHERE ZCN.ZCN_FILIAL = ZCNALM.ZCN_FILIAL
-				AND ZCN.ZCN_COD = ZCNALM.ZCN_COD
-				AND ZCN.ZCN_LOCAL <> ZCNALM.ZCN_LOCAL
-				AND ZCNALM.ZCN_POLIT <> '4'
-				AND ZCNALM.%NotDel%
-			)
+		SELECT EMPRESA
+			,SOLICITANTE SOLIC
+			,CODPRO
+			,ALMOX
+			,SALDO
+		FROM VW_BZ_SALDO_MD
+		WHERE EMPRESA = %Exp:_cEmpFil%
+			AND CODPRO = %Exp:_cCod%
+			AND ALMOX = %Exp:_cLocal%
 	EndSql
 
-	_lRet := (_cAlias)->QTD == 0	
+	Begin Transaction
+
+		While (_cAlias)->(!EOF())
+	
+			_nSaldoMov	:=	(_cAlias)->SALDO
+			
+			While _nSaldoMov > 0 .And. ::Saldo(_cCod,_cLocal,(_cAlias)->SOLIC,.F.) >= 0
+				_cDocSeq	:=	""
+				_nQuant	:=	0
+				_cSolic	:=	""
+				_dDtPrf	:=	Stod("")
+				_dDtCheg	:=	Stod("")
+	
+	
+				::GetMovimentoEntrada(_cCod,_cLocal,(_cAlias)->SOLIC,@_cDocSeq,@_nQuant,@_cSolic,.F.,@_dDtPrf,@_dDtCheg)
+		
+				If _nQuant > 0
+
+					_nQuant	:= Min(_nSaldoMov,_nQuant)
+					RecLock("ZCZ",.T.)
+					ZCZ->ZCZ_FILIAL		:=	xFilial("ZCZ")
+					ZCZ->ZCZ_DOC        :=	""
+					ZCZ->ZCZ_SERIE      :=	""
+					ZCZ->ZCZ_FORNEC     :=	""
+					ZCZ->ZCZ_LOJA       :=	""
+					ZCZ->ZCZ_ITEM       :=	""
+					ZCZ->ZCZ_COD        :=	_cCod
+					ZCZ->ZCZ_QUANT      :=	_nQuant
+					ZCZ->ZCZ_LOCAL      :=	_cLocal
+					ZCZ->ZCZ_TM         :=	'504'
+					ZCZ->ZCZ_SOLICI     :=	(_cAlias)->SOLIC
+					ZCZ->ZCZ_MATORI     :=	_cSolic
+					ZCZ->ZCZ_USER       :=	cUserName
+					ZCZ->ZCZ_ROTINA     :=	"ZERAMD"
+					ZCZ->ZCZ_DTDIGI     :=	dDataBase
+					ZCZ->ZCZ_DHMOV      :=	Substr(dTOS(Date()),1,4) + '-' + Substr(dTOS(Date()),5,2) + '-' + Substr(dTOS(Date()),7,2) + ' ' + Time() + ".000"
+					ZCZ->ZCZ_DOCSEQ     :=	_cDocSeq
+					ZCZ->ZCZ_TBORIG     :=	"ZCZ"
+					ZCZ->ZCZ_OBS		:=	"BAIXA TOTAL MD"
+					ZCZ->ZCZ_RECID      :=	0
+					ZCZ->ZCZ_DATPRF		:=	_dDtPrf
+					ZCZ->ZCZ_DTCHEG		:=	_dDtCheg
+					ZCZ->(MsUnlock())
+				Else
+					Exit
+				EndIf
+				_nSaldoMov := _nSaldoMov - _nQuant
+			
+			EndDo
+			(_cAlias)->(DbSkip())
+		EndDo
+		
+	End Transaction
 
 	(_cAlias)->(DbCloseArea())
-	RestArea(_aArea)
-Return _lRet
+
+Return

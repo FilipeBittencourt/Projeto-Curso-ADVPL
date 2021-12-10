@@ -1,0 +1,627 @@
+#INCLUDE "PROTHEUS.CH"
+#INCLUDE "TOPCONN.CH"
+
+/*/{Protheus.doc} TBiaIntegracaoPesoYMS
+@author Gabriel Rossi Mafioletti
+@since 18/11/2021
+@version 1.0
+@description s
+@type class
+/*/
+
+Class TBiaIntegracaoPesoYMS From LongClassName
+
+Data cGrantType
+Data cClientId
+Data cCLientSecret
+Data cAcrValues
+Data cScope
+Data cUsername
+Data cPassword
+Data cUrlToken
+Data cUrlGetPC
+Data cUrlBalancaAutomatica
+Data cUrlGetAguardandoSaida
+Data cUrlPortariaSaida
+
+
+Public Data lErro
+Public Data cErro
+Public Data cToken
+Public Data cRet
+Public Data cSend
+Public Data cUnidadeId
+Public Data aProcessos
+
+Public Method New() Constructor
+Public Method GetToken()
+
+Public Method ValidToken(_cJson)
+Public Method ValidPontosControle(_cJson)
+Public Method ValidSaida(_cJson)
+
+Public Method DecodeConvert(cTexto)
+Public Method GetPontosControle()
+
+Public Method IniciaBalancaAutomatica(cProcPat)
+Public Method FinalizaBalancaAutomatica(cProcPat,nPeso)
+
+
+Public Method GetAguardandoSaida()
+Public Method IniciaPortariaSaida(cProcPat)
+Public Method AutorizaPortariaSaida(cProcPat)
+Public Method FinalizaPortariaSaida(cProcPat)
+
+
+EndClass
+
+Method New() Class TBiaIntegracaoPesoYMS
+
+	::aProcessos		:=	{}
+	
+	::cGrantType	:=	"password"
+	::cClientId		:=	"biancogres_yms"
+	::cCLientSecret	:=	"96ea89b5-de6c-4852-9097-295026210a32"
+	::cAcrValues	:=	"tenant:biancogres"
+	::cScope		:=	"openid profile email authorization_api offline_access"
+	::cUsername		:=	U_GETBIAPAR("MV_USRYMS","cesar.tomporoski")
+	::cPassword		:=	U_GETBIAPAR("MV_PASSYMS","123456789")
+	::cUnidadeId	:=	U_GETBIAPAR("MV_UIDYMS","52ae1961-8771-4ff9-92f9-ad833522d871")
+	::lErro			:=	.F.
+	::cErro			:=	""
+	::cToken		:=	""
+	::cSend			:=	""
+	::cRet			:=	""
+
+	/*URL para Recuperar o Token*/
+	::cUrlToken		:=	U_GetBiaPAr("MV_URLTOKENYMS","https://admin.rac.totvs.app/totvs.rac/connect/token")
+	
+	/*URL De Pontos de Controle*/
+	::cUrlGetPC		:=	U_GetBiaPar("MV_URLGETPCYMS","https://totvs.logistica.totvs.app/yms/query/api/v1/processospatio/aguardandoBalancaAutomatica")
+	::cUrlGetPC	+= "?unidadeId=" + ::cUnidadeId
+
+	::cUrlGetAguardandoSaida	:=	U_GetBiaPar("MV_URLGETSAIDAYMS","https://totvs.logistica.totvs.app/yms/query/api/v1/processospatio/aguardandoParaSair")
+	::cUrlGetAguardandoSaida	+= "?unidadeId=" + ::cUnidadeId
+
+
+	::cUrlBalancaAutomatica	:=	U_GetBiaPar("MV_URLBALAUTYMS","https://totvs.logistica.totvs.app/yms/core/api/v1/processospatio/")
+
+	::cUrlPortariaSaida 	:=	U_GetBiaPar("MV_URLPORSAIYMS","https://totvs.logistica.totvs.app/yms/core/api/v1/processospatio/")
+
+
+Return
+
+Method GetToken() Class TBiaIntegracaoPesoYMS
+
+	Local _aHead	:=	{}
+	Local oRest
+	Local _cBody
+	Local nStatus
+	Local _cRet
+
+	aadd(_aHead,'Content-Type: application/x-www-form-urlencoded')
+
+	oRest := FWRest():New( ::cUrlToken )
+
+	oRest:setPath( "" )
+
+	_cBody	:=	"grant_type=" + ::cGrantType
+	_cBody	+=	"&client_id=" + ::cClientId
+	_cBody	+=	"&client_secret="+ ::cClientSecret
+	_cBody	+=	"&acr_values=" + ::cAcrValues
+	_cBody	+=	"&scope=" + ::cScope
+	_cBody	+=	"&username=" + ::cUsername
+	_cBody	+=	"&password=" + ::cPassword
+
+	::cSend	:=	_cBody
+
+	oRest:SetPostParams( _cBody )
+	oRest:SetChkStatus(.F.)
+
+	If oRest:Post(_aHead)
+		cError	:=	""
+		nStatus := HTTPGetStatus(@cError)
+
+		If nStatus >= 200 .And. nStatus <= 299
+
+			_cRet   := ::DecodeConvert( oRest:getResult() )
+
+			If ValType(_cRet) == "U"
+				::cToken	:=	""
+				::lErro		:=	.T.
+				::cErro		:=	"Erro no Retorno do Endpoint de Token!(TK001)"
+				::cRet		:=	""
+			Else
+				::cToken	:=	::ValidToken(_cRet)
+				::cRet		:=	_cRet
+				If Empty(::cToken)
+					::lErro	:=	.T.
+					::cErro	:=	"Erro ao Recuperar o Token no Retorno do Endpoint de Token(TK002)"
+				Else
+					::lErro	:=	.F.
+					::cErro	:=	""
+				EndIf
+			EndIf
+
+		Else
+			::lErro	:=	.T.
+			::cErro	:=	cError
+			::cRet	:=	AllTrim(Str(nStatus)) + "-" + cError
+		EndIf
+	Else	
+		::lErro	:=	.T.
+		::cErro	:=	"Erro no Post do Endpoint de Token(TK004)"
+		::cRet	:=	""	
+	
+	EndIf
+	freeobj(oRest)
+
+
+Return
+
+Method ValidToken(_cJson) Class TBiaIntegracaoPesoYMS
+
+	Local cToken    := ""
+	Local jJson     := JsonObject():new()
+
+	If !Empty(_cJson)
+
+		jJson:FromJson( _cJson )
+
+		If ValType( jJson['access_token'] ) == "C"
+			cToken  := jJson['token_type'] + " " + jJson['access_token'] 
+		EndIf
+
+	Endif
+	freeobj(jJson)
+Return cToken
+
+Method GetPontosControle() Class TBiaIntegracaoPesoYMS
+
+	Local oRest
+	Local _aHead	:=	{}
+	Local _cRet
+
+	oRest := FWRest():New( ::cUrlGetPC )
+	oRest:setPath( "" )
+
+	
+	aadd(_aHead,'Authorization:' + ::cToken)
+
+	::cSend	:=	""
+
+	If oRest:Get(_aHead)
+		cError	:=	""
+		nStatus := HTTPGetStatus(@cError)
+
+		If nStatus >= 200 .And. nStatus <= 299
+			_cRet   := ::DecodeConvert( oRest:getResult() )
+
+			If ValType(_cRet) == "U"
+				::lErro		:=	.T.
+				::cErro		:=	"Erro no Retorno do Endpoint!(PC001)"
+				::cRet		:=	""
+			Else
+				::aProcessos	:=	::ValidPontosControle(_cRet)
+				::cRet		:=	_cRet
+				::lErro	:=	.F.
+				::cErro	:=	""
+
+			EndIf
+			
+  		Else
+			::lErro	:=	.T.
+			::cErro	:=	cError
+			::cRet	:=	AllTrim(Str(nStatus)) + "-" + cError	
+  
+		EndIF
+	Else
+		::lErro	:=	.T.
+		::cErro	:=	"Erro no Post do Endpoint(PC004)"
+		::cRet	:=	""	
+
+  	EndIf
+
+	freeobj(oRest)
+	
+Return
+
+Method GetAguardandoSaida() Class TBiaIntegracaoPesoYMS
+
+	Local oRest
+	Local _aHead	:=	{}
+	Local _cRet
+
+	oRest := FWRest():New( ::cUrlGetAguardandoSaida )
+	oRest:setPath( "" )
+
+	
+	aadd(_aHead,'Authorization:' + ::cToken)
+
+	::cSend	:=	""
+
+	If oRest:Get(_aHead)
+		cError	:=	""
+		nStatus := HTTPGetStatus(@cError)
+
+		If nStatus >= 200 .And. nStatus <= 299
+			_cRet   := ::DecodeConvert( oRest:getResult() )
+
+			If ValType(_cRet) == "U"
+				::lErro		:=	.T.
+				::cErro		:=	"Erro no Retorno do Endpoint!(PC001)"
+				::cRet		:=	""
+			Else
+				::aProcessos	:=	::ValidSaida(_cRet)
+				::cRet		:=	_cRet
+				::lErro	:=	.F.
+				::cErro	:=	""
+
+			EndIf
+			
+  		Else
+			::lErro	:=	.T.
+			::cErro	:=	cError
+			::cRet	:=	AllTrim(Str(nStatus)) + "-" + cError	
+  
+		EndIF
+	Else
+		::lErro	:=	.T.
+		::cErro	:=	"Erro no Post do Endpoint(PC004)"
+		::cRet	:=	""	
+
+  	EndIf
+
+	freeobj(oRest)
+	
+Return
+
+
+Method DecodeConvert( cTexto )  Class TBiaIntegracaoPesoYMS
+
+  Local cRetorno    := DecodeUTF8( cTexto )
+
+  If ValType(cRetorno) == "U"
+    cRetorno  := cTexto
+  EndIf
+
+Return cRetorno
+
+Method ValidPontosControle(_cJson) Class TBiaIntegracaoPesoYMS
+
+	Local cToken    := ""
+	Local jJson     := JsonObject():new()
+	Local _aProcessos	:=	{}
+	Local _nI
+
+	If !Empty(_cJson)
+
+		jJson:FromJson( _cJson )
+
+		If Valtype(jjson['items']) == "A" .And. Len(jjson['items']) > 0
+			For _nI	:= 1 to Len(jjson['items'])
+				If Valtype(jjson['items'][_nI]['processoPatioId']) == "C" .And.;
+					Valtype(jjson['items'][_nI]['pontoControle']['pontoControleId']) == "C" .And.;
+					Valtype(jjson['items'][_nI]['veiculo']['identificacao']) == "C"
+					
+					aAdd(_aProcessos,{jjson['items'][_nI]['processoPatioId'],jjson['items'][_nI]['pontoControle']['pontoControleId'],jjson['items'][_nI]['veiculo']['identificacao']})	
+				
+				EndIf
+				
+			Next
+		EndIf
+
+	Endif
+	freeobj(jJson)
+Return _aProcessos
+
+Method ValidSaida(_cJson) Class TBiaIntegracaoPesoYMS
+
+	Local cToken    := ""
+	Local jJson     := JsonObject():new()
+	Local _aProcessos	:=	{}
+	Local _nI
+
+	If !Empty(_cJson)
+
+		jJson:FromJson( _cJson )
+
+		If Valtype(jjson['items']) == "A" .And. Len(jjson['items']) > 0
+			For _nI	:= 1 to Len(jjson['items'])
+				If Valtype(jjson['items'][_nI]['processoPatioId']) == "C" .And.;
+					Valtype(jjson['items'][_nI]['veiculo']['identificacao']) == "C"
+					
+					aAdd(_aProcessos,{jjson['items'][_nI]['processoPatioId'],"PORTARIA SAIDA CARREGAMENTO",jjson['items'][_nI]['veiculo']['identificacao']})	
+				
+				EndIf
+				
+			Next
+		EndIf
+
+	Endif
+	freeobj(jJson)
+Return _aProcessos
+
+
+Method IniciaBalancaAutomatica(cProcPat) Class TBiaIntegracaoPesoYMS
+
+	Local oRest
+	Local _aHead	:=	{}
+	Local _cRet
+	Local _cUrl	:=	::cUrlBalancaAutomatica + Alltrim(cProcPat) + "/executarPontoControleBalanceiro"
+
+	oRest := FWRest():New( _cUrl )
+	oRest:setPath( "" )
+
+	
+	aadd(_aHead,'Authorization:' + ::cToken)
+
+	::cSend	:=	""
+
+	If oRest:Post(_aHead)
+		cError	:=	""
+		nStatus := HTTPGetStatus(@cError)
+
+		If nStatus >= 200 .And. nStatus <= 299
+			_cRet   := ::DecodeConvert( oRest:getResult() )
+
+			If ValType(_cRet) == "U"
+				::lErro		:=	.T.
+				::cErro		:=	"Erro no Retorno do Endpoint!(PC001)"
+				::cRet		:=	""
+			Else
+				::cRet		:=	_cRet
+				::lErro	:=	.F.
+				::cErro	:=	""
+			EndIf
+			
+  		Else
+			::lErro	:=	.T.
+			::cErro	:=	cError
+			::cRet	:=	AllTrim(Str(nStatus)) + "-" + cError	
+  
+		EndIF
+	Else
+		_cRet   := ::DecodeConvert( oRest:getResult() )
+		If "YMSPontoControleEmExecucaoException" $ _cRet
+			::lErro	:=	.F.
+			::cRet	:=	_cRet	
+		Else
+			::lErro	:=	.T.
+			::cErro	:=	"Erro no Post do Endpoint(PC004)"
+			::cRet	:=	""			
+		EndIf
+  	EndIf
+
+	freeobj(oRest)
+	
+Return
+
+Method FinalizaBalancaAutomatica(cProcPat,nPeso) Class TBiaIntegracaoPesoYMS
+
+	Local oRest
+	Local _aHead	:=	{}
+	Local _cRet
+	Local _cUrl	:=	::cUrlBalancaAutomatica + Alltrim(cProcPat) + "/finalizarBalancaAutomatica"
+	Local oBody         := JsonObject():New()
+  
+
+	oBody["peso"]   := Alltrim(Str(nPeso))
+
+
+	oRest := FWRest():New( _cUrl )
+	oRest:setPath( "" )
+
+	
+	aadd(_aHead,'Authorization:' + ::cToken)
+	aadd(_aHead,"Content-Type: application/json")
+
+
+	oRest:SetPostParams( oBody:toJson() )
+	oRest:SetChkStatus(.F.)
+
+
+	::cSend	:=	oBody:toJson()
+
+	If oRest:Post(_aHead)
+		cError	:=	""
+		nStatus := HTTPGetStatus(@cError)
+
+		If nStatus >= 200 .And. nStatus <= 299
+			_cRet   := ::DecodeConvert( oRest:getResult() )
+
+			If ValType(_cRet) == "U"
+				::lErro		:=	.T.
+				::cErro		:=	"Erro no Retorno do Endpoint!(PC001)"
+				::cRet		:=	""
+			Else
+				::cRet		:=	_cRet
+				::lErro	:=	.F.
+				::cErro	:=	""
+			EndIf
+			
+  		Else
+			::lErro	:=	.T.
+			::cErro	:=	cError
+			::cRet	:=	AllTrim(Str(nStatus)) + "-" + cError	
+  
+		EndIF
+	Else
+		::lErro	:=	.T.
+		::cErro	:=	"Erro no Post do Endpoint(PC004)"
+		::cRet	:=	""	
+
+  	EndIf
+
+	freeobj(oRest)
+	
+Return
+
+Method IniciaPortariaSaida(cProcPat) Class TBiaIntegracaoPesoYMS
+
+	Local oRest
+	Local _aHead	:=	{}
+	Local _cRet
+	Local _cUrl	:=	::cUrlPortariaSaida + Alltrim(cProcPat) + "/executarPontoControlePorteiro"
+
+	oRest := FWRest():New( _cUrl )
+	oRest:setPath( "" )
+
+	
+	aadd(_aHead,'Authorization:' + ::cToken)
+
+	::cSend	:=	""
+
+	If oRest:Post(_aHead)
+		cError	:=	""
+		nStatus := HTTPGetStatus(@cError)
+
+		If nStatus >= 200 .And. nStatus <= 299
+			_cRet   := ::DecodeConvert( oRest:getResult() )
+
+			If ValType(_cRet) == "U"
+				::lErro		:=	.T.
+				::cErro		:=	"Erro no Retorno do Endpoint!(IPS001)"
+				::cRet		:=	""
+			Else
+				::cRet		:=	_cRet
+				::lErro	:=	.F.
+				::cErro	:=	""
+			EndIf
+			
+  		Else
+			::lErro	:=	.T.
+			::cErro	:=	cError
+			::cRet	:=	AllTrim(Str(nStatus)) + "-" + cError	
+  
+		EndIF
+	Else
+		_cRet   := ::DecodeConvert( oRest:getResult() )
+		If "YMSPontoControleEmExecucaoException" $ _cRet
+			::lErro	:=	.F.
+			::cRet	:=	_cRet	
+		Else
+			::lErro	:=	.T.
+			::cErro	:=	"Erro no Post do Endpoint(IPS004)"
+			::cRet	:=	""			
+		EndIf
+  	EndIf
+
+	freeobj(oRest)
+	
+Return
+
+Method AutorizaPortariaSaida(cProcPat) Class TBiaIntegracaoPesoYMS
+
+	Local oRest
+	Local _aHead	:=	{}
+	Local _cRet
+	Local _cUrl	:=	::cUrlPortariaSaida + Alltrim(cProcPat) + "/autorizarLiberacaoSaidaPorteiro"
+
+	oRest := FWRest():New( _cUrl )
+	oRest:setPath( "" )
+
+	
+	aadd(_aHead,'Authorization:' + ::cToken)
+
+	::cSend	:=	""
+
+	If oRest:Post(_aHead)
+		cError	:=	""
+		nStatus := HTTPGetStatus(@cError)
+
+		If nStatus >= 200 .And. nStatus <= 299
+			_cRet   := ::DecodeConvert( oRest:getResult() )
+
+			If ValType(_cRet) == "U"
+				::lErro		:=	.T.
+				::cErro		:=	"Erro no Retorno do Endpoint!(APS001)"
+				::cRet		:=	""
+			Else
+				::cRet		:=	_cRet
+				::lErro	:=	.F.
+				::cErro	:=	""
+			EndIf
+			
+  		Else
+			::lErro	:=	.T.
+			::cErro	:=	cError
+			::cRet	:=	AllTrim(Str(nStatus)) + "-" + cError	
+  
+		EndIF
+	Else
+		_cRet   := ::DecodeConvert( oRest:getResult() )
+		If "YMSPontoControleEmExecucaoException" $ _cRet
+			::lErro	:=	.F.
+			::cRet	:=	_cRet	
+		Else
+			::lErro	:=	.T.
+			::cErro	:=	"Erro no Post do Endpoint(APS004)"
+			::cRet	:=	""			
+		EndIf
+  	EndIf
+
+	freeobj(oRest)
+	
+Return
+
+Method FinalizaPortariaSaida(cProcPat) Class TBiaIntegracaoPesoYMS
+
+	Local oRest
+	Local _aHead	:=	{}
+	Local _cRet
+	Local _cUrl	:=	::cUrlPortariaSaida + Alltrim(cProcPat) + "/finalizarSaidaPortaria"
+	Local oBody         := JsonObject():New()
+	
+
+	oBody['documentosCarga']	:=	{}
+	oBody['observacao']	:=	""
+	
+
+	oRest := FWRest():New( _cUrl )
+	oRest:setPath( "" )
+
+	
+	aadd(_aHead,'Authorization:' + ::cToken)
+	aadd(_aHead,"Content-Type: application/json")
+
+
+	oRest:SetPostParams( oBody:toJson() )
+	oRest:SetChkStatus(.F.)
+
+
+	::cSend	:=	oBody:toJson()
+
+	If oRest:Post(_aHead)
+		cError	:=	""
+		nStatus := HTTPGetStatus(@cError)
+
+		If nStatus >= 200 .And. nStatus <= 299
+			_cRet   := ::DecodeConvert( oRest:getResult() )
+
+			If ValType(_cRet) == "U"
+				::lErro		:=	.T.
+				::cErro		:=	"Erro no Retorno do Endpoint!(FPS001)"
+				::cRet		:=	""
+			Else
+				::cRet		:=	AllTrim(Str(nStatus)) + "-" +_cRet
+				::lErro	:=	.F.
+				::cErro	:=	""
+			EndIf
+			
+  		Else
+			::lErro	:=	.T.
+			::cErro	:=	cError
+			::cRet	:=	AllTrim(Str(nStatus)) + "-" + cError	
+  
+		EndIF
+	Else
+		::lErro	:=	.T.
+		::cErro	:=	"Erro no Post do Endpoint(FPS004)"
+		::cRet	:=	""	
+
+  	EndIf
+
+	freeobj(oRest)
+	
+Return

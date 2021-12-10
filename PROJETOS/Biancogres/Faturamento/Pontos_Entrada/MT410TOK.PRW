@@ -13,13 +13,12 @@
 /*/
 
 User Function MT410TOK
-	Local aArea		:= GetArea()
-	Local nOpc		:= PARAMIXB[1]
-	Local lRetorno	:= .T.
-	Local I			:= 0
-	Local aColsImp  := {} //Utilizado para Gravar os valores dos Impostos para os Itens do Pedido de Venda
-	Local cRes
-	Local _cSegmento
+Local aArea	:= GetArea()
+Local nOpc := PARAMIXB[1]
+Local lRetorno := .T.
+Local I	:= 0
+Local cRes
+Local _cSegmento
 
 	//Parametro para Filtrar tipo de pedido que nao gera reserva - projeto reserva Estoque/OP
 	Local _cTpNRes	:= GetNewPar("FA_TPNRES","A #RI#")
@@ -35,6 +34,8 @@ User Function MT410TOK
 	Local _cFilPed	:= "01"
 	Local _lRetValP	:= .T.
 
+	// Calcula o valor do impostos para TODOS os Itens do Pedido
+	fCalcImp()
 
 	//Tratamento especial para Replcacao de pedido LM
 	If AllTrim(FunName()) $ GetNewPar("FA_XPEDRPC","BFATRT01###FCOMRT01###BFVCXPED###FCOMXPED###TESTEF1###RPC") .OR. AllTrim(FunName()) $ GetNewPar("FA_XPEDRQC","FRQCTE01###FRQCRT02")
@@ -57,32 +58,6 @@ User Function MT410TOK
 
 	ENDIF
 	///FIM REAJUSTE
-
-	//Calcula o valor do impostos para TODOS os Itens do Pedido
-	aColsImp := U_fItImpos(0,{"IT_BASEPS2","IT_BASECF2","IT_VALPS2","IT_VALCF2","IT_VALICM","IT_VALIPI","IT_ALIQPS2","IT_ALIQCF2","IT_VALMERC","IT_DESCZF","IT_VALSOL","IT_BASEICM","IT_BASEIPI"})
-
-	//Grava o valor dos Impostos para TODOS os Itens do Pedido.
-	For I := 1 To Len(aCols)
-
-		nBasePIS := aColsImp[I][1]
-		nBaseCOF := aColsImp[I][2]
-		nPIS     := aColsImp[I][3]
-		nCOFINS  := aColsImp[I][4]
-		nICMS	 := aColsImp[I][5]
-		nIPI 	 := aColsImp[I][6]
-		nPercPIS := aColsImp[I][7]
-		nPercCOF := aColsImp[I][8]
-		nValMerc := aColsImp[I][9]
-		nDescZF	 := aColsImp[I][10]
-		nValST	 := aColsImp[I][11]
-		nBaseICM := aColsImp[I][12]
-		nBaseIPI := aColsImp[I][13]
-
-		//Função para gravar o valor dos impostos nos itens do Pedido de Venda
-		U_fAtuImp(I,nBasePIS,nBaseCOF,nPIS,nCOFINS,nICMS,nIPI,nPercPIS,nPercCOF,nValMerc,nDescZF,nValST,nBaseICM,nBaseIPI)
-
-	Next
-
 
 	SB1->(DbSetOrder(1))
 
@@ -133,11 +108,7 @@ User Function MT410TOK
 
 		Private __nProd		:= Gdfieldget("C6_PRODUTO",1)  //primeiro produto do pedido
 
-		If (AllTrim(CEMPANT) == "14") .And. !U_CHKRODA(__nProd)
-
-			lRetorno := .T.
-
-		ElseIF (M->C5_YSUBTP $ _cTpNRes)
+		IF (M->C5_YSUBTP $ _cTpNRes)
 
 			lRetorno := .T.
 
@@ -253,7 +224,7 @@ User Function MT410TOK
 						_cFilPed := CFILANT
 					EndIf
 
-					IF ( AllTrim(cEmpAnt) $ "01_05_07_13" )
+					IF ( AllTrim(cEmpAnt) $ "01_05_07_13_14" )
 
 						_lRetValP 	:= ValiPonta(_cProd, _cLote, _nQtdDig, _cPedido, _cItem, _cEmpPed, _cFilPed, I, M->C5_NUM)
 						If (!_lRetValP)
@@ -438,3 +409,35 @@ Static Function ValiPonta(_cProd, _cLote, _nQtdDig, _cPedido,_cItem, _cEmpPed, _
 	SC6->(RestArea(aAreaSC6))
 
 Return _lRet
+
+
+Static Function fCalcImp()
+Local aColsImp  := {} //Utilizado para Gravar os valores dos Impostos para os Itens do Pedido de Venda
+Local nCount := 0
+	
+	//Calcula o valor do impostos para TODOS os Itens do Pedido
+	aColsImp := U_fItImpos(0,{"IT_BASEPS2","IT_BASECF2","IT_VALPS2","IT_VALCF2","IT_VALICM","IT_VALIPI","IT_ALIQPS2","IT_ALIQCF2","IT_VALMERC","IT_DESCZF","IT_VALSOL","IT_BASEICM","IT_BASEIPI"})
+
+	//Grava o valor dos Impostos para TODOS os Itens do Pedido.
+	For nCount := 1 To Len(aCols)
+
+		nBasePIS := aColsImp[nCount][1]
+		nBaseCOF := aColsImp[nCount][2]
+		nPIS     := aColsImp[nCount][3]
+		nCOFINS  := aColsImp[nCount][4]
+		nICMS	 := aColsImp[nCount][5]
+		nIPI 	 := aColsImp[nCount][6]
+		nPercPIS := aColsImp[nCount][7]
+		nPercCOF := aColsImp[nCount][8]
+		nValMerc := aColsImp[nCount][9]
+		nDescZF	 := aColsImp[nCount][10]
+		nValST	 := aColsImp[nCount][11]
+		nBaseICM := aColsImp[nCount][12]
+		nBaseIPI := aColsImp[nCount][13]
+
+		//Função para gravar o valor dos impostos nos itens do Pedido de Venda
+		U_fAtuImp(nCount,nBasePIS,nBaseCOF,nPIS,nCOFINS,nICMS,nIPI,nPercPIS,nPercCOF,nValMerc,nDescZF,nValST,nBaseICM,nBaseIPI)
+
+	Next
+
+Return()

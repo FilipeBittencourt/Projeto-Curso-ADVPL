@@ -36,7 +36,7 @@ IF cempant $ ("01_05_06_07_12_13_14_16")
 	
 ENDIF
 
-	If (SUPERGETMV("MV_YRTPAY", .F., .F.))
+	If (SUPERGETMV("MV_YRTPAY", .F., .T.))
 		//RequestToPay
 		U_RETP0006()
 	EndIf	

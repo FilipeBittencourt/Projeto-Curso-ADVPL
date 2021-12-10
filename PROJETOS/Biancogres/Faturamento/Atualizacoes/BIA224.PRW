@@ -7,11 +7,9 @@
 #DEFINE _MUNDIALLI		4
 #DEFINE _PEGASUS		5
 #DEFINE _VINILICO		6
-#DEFINE _V01			7
-#DEFINE _V02			8
-#DEFINE _V03			9
-#DEFINE _VRP			10
-#DEFINE _VRT			11
+#DEFINE _V03			7
+#DEFINE _VRP			8
+#DEFINE _VRT			9
 
 //---------------------------------------------------------------------------------
 // Desenv 	: Thiago Dantas
@@ -57,7 +55,7 @@ nMarca := MV_PAR01
 
 aPergs := {}
 MV_PAR01 := SPACE(1)
-aMarca	:= {'1=Biancogres', '2=Incesa', '3=Bellacasa', '4=Mundialli', '5=Pegasus', '6=Vinilico', '7=Vinilico Dentro ES', '8=Vinilico Fora ES', '9=LM Filial SP','10=LM Replicação Mundi', '11=LM Replicação Mundi Transferencia'}
+aMarca	:= {'1=Biancogres', '2=Incesa', '3=Bellacasa', '4=Mundialli', '5=Pegasus', '6=Vinilico', '7=LM Filial SP', '8=LM Replicação Mundi', '9=LM Replicação Mundi Transferencia'}
 aAdd( aPergs ,{2,"Marca"				, MV_PAR01, aMarca, 100, ".T.",.F.})
 
 If !ParamBox(aPergs ,"Filtro",,,,,,,,cLoad,.T.,.T.)
@@ -77,30 +75,16 @@ Do Case
 	Case nMarca == _MUNDIALLI
        cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ '4P_4E'"
     Case nMarca == _PEGASUS
-       cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ '5P_5E'"      
+       cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ '5P_5E'"
     Case nMarca == _VINILICO
-       cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ '6P_5E'"  
-    Case nMarca == _V01
-       cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ 'V01'"  
-    Case nMarca == _V02
-       cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ 'V02'"  
+       cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ '6P_6E'"
     Case nMarca == _V03
-       cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ 'V03'"  
+       cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ 'V03'"
    Case nMarca == _VRP   
-       cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ 'VRP'"   
+       cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ 'VRP'"
    Case nMarca == _VRT   
-       cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ 'VRT'"                               
+       cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ 'VRT'"
 EndCase
-/*
-Do Case
-   Case cEmpAnt == "01"
-      cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ '1P_1E'"
-   Case cEmpAnt == "05"
-      cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ '2P_2E_3P_3E'"
-	Case cEmpAnt == "13"
-       cCondicao := "X5_TABELA == 'ZF' .AND. AllTrim(X5_CHAVE) $ '4P_4E'"
-EndCase
-*/
 
 bFiltraBrw := {|| FilBrowse(cAlias,@aIndDAK,@cCondicao) }
 (cAlias)->( Eval( bFiltraBrw ) )

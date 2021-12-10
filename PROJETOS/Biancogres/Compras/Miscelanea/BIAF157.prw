@@ -11,16 +11,17 @@
 /*/
 
 User Function BIAF157(nOpc)
-Private cCodigo
+
+	Private cCodigo
 
 	If cEmpAnt == "02"
-		
+
 		Return()
-		
+
 	EndIf
 
 	If nOpc == 3
-	
+
 		cCodigo := M->B1_COD
 		cGrTrib := SPACE(3)
 
@@ -88,16 +89,16 @@ Private cCodigo
 			cGrTrib := 'PR'
 
 		ENDCASE
-		
+
 		//Vinilico
 		If (AllTrim(M->B1_YPCGMR3) == 'J' .And. M->B1_TIPO == 'PA')
 			cGrTrib 		:= '003' 
 			M->B1_ORIGEM	:= '1'
 			M->B1_CEST 		:= '1000700'
 		EndIf
-		
+
 		M->B1_GRTRIB := cGrTrib
-		
+
 		M->B1_ATIVO  := 'S'
 		IF SUBSTR(M->B1_COD,8,1) == '5' .OR. SUBSTR(M->B1_DESC,1,4) == 'CACO'
 			M->B1_CLASFIS := 'D'
@@ -218,7 +219,7 @@ Private cCodigo
 			cGrTrib := 'PR'
 
 		ENDCASE
-		
+
 		//Vinilico
 		If (AllTrim(M->B1_YPCGMR3) == 'J' .And. M->B1_TIPO == 'PA')
 			cGrTrib 		:= '003' 
@@ -292,13 +293,13 @@ Private cCodigo
 			// A Totvs passou a considerar este campo a partir de OUT/13 no fonte FISXFUN - função AliqIcms
 			// Tratamento do Chamado TIHXAR/0223-14
 			SBZ->BZ_GRTRIB := M->B1_GRTRIB
-			
+
 			//Vinilico
 			If (AllTrim(M->B1_YPCGMR3) == 'J' .And. M->B1_TIPO == 'PA')
 				SBZ->BZ_GRTRIB := '003' 
 				SBZ->BZ_ORIGEM := '2'
-				
-				
+
+
 				If (AllTrim(cEmpAnt) == '13')
 					SBZ->BZ_ORIGEM := '1'
 				EndIf
@@ -320,19 +321,8 @@ Private cCodigo
 			SBZ->BZ_COD     := M->B1_COD
 			SBZ->BZ_YDESC   := U_fDelTab(M->B1_DESC)
 
-			//Gabriel Mafioletti - 10/07/2018 Ticket - 4054
-			If M->B1_TIPO $ "#PA#PP#"
-				Do Case
-					Case SUBSTR(cEmpAnt,1,2) == "01"
-					SBZ->BZ_LOCPAD := "02"
-					Case SUBSTR(cEmpAnt,1,2) == "05"
-					SBZ->BZ_LOCPAD := "04"
-					OtherWise
-					SBZ->BZ_LOCPAD  := M->B1_LOCPAD
-				EndCase
-			Else
-				SBZ->BZ_LOCPAD  := M->B1_LOCPAD
-			EndIf
+			// Em 27/10/21 - para atender ao ticket 35219
+			SBZ->BZ_LOCPAD  := M->B1_LOCPAD
 
 			SBZ->BZ_YPOLIT  := M->B1_YPOLIT
 			DO CASE
@@ -364,12 +354,12 @@ Private cCodigo
 			// A Totvs passou a considerar este campo a partir de OUT/13 no fonte FISXFUN - função AliqIcms
 			// Tratamento do Chamado TIHXAR/0223-14
 			SBZ->BZ_GRTRIB := M->B1_GRTRIB
-			
+
 			//Vinilico
 			If (AllTrim(M->B1_YPCGMR3) == 'J' .And. M->B1_TIPO == 'PA')
 				SBZ->BZ_GRTRIB := '003' 
 				SBZ->BZ_ORIGEM := '2'
-				
+
 				If (AllTrim(cEmpAnt) == '13')
 					SBZ->BZ_ORIGEM := '1'
 				EndIf
@@ -441,13 +431,13 @@ Private cCodigo
 
 	If Inclui
 		IF SUBSTR(M->B1_COD,1,1) == 'I' .AND. M->B1_ORIGEM <> '1'
-			MSGBOX("Este produto de importação deverá ter o campo ORIGEM preenchido corretamente. Favor entrar em contato com o setor contábil!","STOP")
+			MsgAlert("Este produto de importação deverá ter o campo ORIGEM preenchido corretamente. Favor entrar em contato com o setor contábil!","STOP")
 		ENDIF
 	Endif
 
 	If Altera
 		IF SUBSTR(SB1->B1_COD,1,1) == 'I' .AND. M->B1_ORIGEM <> '1'
-			MSGBOX("Este produto de importação deverá ter o campo ORIGEM preenchido corretamente. Favor entrar em contato com o setor contábil!","STOP")
+			MsgAlert("Este produto de importação deverá ter o campo ORIGEM preenchido corretamente. Favor entrar em contato com o setor contábil!","STOP")
 		ENDIF
 	Endif
 
@@ -564,19 +554,8 @@ static function incluiSBZ(pcAplicDireta,pcComum)
 		SBZ->BZ_COD     := M->B1_COD
 		SBZ->BZ_YDESC   := U_fDelTab(M->B1_DESC)
 
-		//Gabriel Mafioletti - 10/07/2018 Ticket - 4054
-		If M->B1_TIPO $ "#PA#PP#"
-			Do Case
-				Case SUBSTR(cEmpAnt,1,2) == "01"
-				SBZ->BZ_LOCPAD := "02"
-				Case SUBSTR(cEmpAnt,1,2) == "05"
-				SBZ->BZ_LOCPAD := "04"
-				OtherWise
-				SBZ->BZ_LOCPAD  := M->B1_LOCPAD
-			EndCase
-		Else
-			SBZ->BZ_LOCPAD  := M->B1_LOCPAD
-		EndIf
+		// Em 27/10/21 - para atender ao ticket 35219
+		SBZ->BZ_LOCPAD  := M->B1_LOCPAD
 
 		SBZ->BZ_YPOLIT  := M->B1_YPOLIT
 
@@ -597,7 +576,7 @@ static function incluiSBZ(pcAplicDireta,pcComum)
 		SBZ->BZ_UCOM    := M->B1_UCOM
 		SBZ->BZ_CUSTD   := M->B1_CUSTD
 		SBZ->BZ_ORIGEM  := M->B1_ORIGEM
-		
+
 		if substr(M->B1_GRUPO,1,3) == '102' .and. M->B1_YPOLIT == '2' 
 			SBZ->BZ_YTMPFAB := 5
 			SBZ->BZ_YTMPIND := 2
@@ -605,7 +584,7 @@ static function incluiSBZ(pcAplicDireta,pcComum)
 			SBZ->BZ_YTMPFAB := 0
 			SBZ->BZ_YTMPIND := 0
 		endif
-		
+
 		//Alterado pelo Wanisay em 19/10/12
 		If isInCallStack("MATA010") .or. funname() == "MATA010"
 
@@ -652,12 +631,12 @@ static function incluiSBZ(pcAplicDireta,pcComum)
 		// A Totvs passou a considerar este campo a partir de OUT/13 no fonte FISXFUN - função AliqIcms
 		// Tratamento do Chamado TIHXAR/0223-14
 		SBZ->BZ_GRTRIB := M->B1_GRTRIB
-		
+
 		//Vinilico
 		If (AllTrim(M->B1_YPCGMR3) == 'J' .And. M->B1_TIPO == 'PA')
 			SBZ->BZ_GRTRIB := '003' 
 			SBZ->BZ_ORIGEM := '2'
-				
+
 			If (AllTrim(cEmpAnt) == '13')
 				SBZ->BZ_ORIGEM := '1'
 			EndIf

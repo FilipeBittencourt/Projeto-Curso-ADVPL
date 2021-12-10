@@ -26,8 +26,17 @@ User Function MT500ANT()
 		// Por Marcos Alberto Soprani, em 13/07/21, em atendimento ao ticket 33607
 		If !SC5->C5_NUM $ "BK4054/F08110"
 
-			MsgStop("Atenção, Não será possível eliminar resíduo do pedido pois o mesmo possui amostras enviadas para o Ecosis. Favor proceder com a exclusão das mesmas para poder eliminar resíduo!", "MT500ANT(a)")
-			lRet	:= .F.
+			//Por Marcos Alberto Soprani, em 23/11/21, em atendimento ao ticket 36721
+			If U_VALOPER("061",.F.)
+
+				MsgALERT("Atenção, Apesar deste pedido estar amarrado ao ECOSIS, o resíduo será eliminado porque você tem acesso especial para efetuar este procedimento! Caso necessite delegar esta atividade, favor abrir chamado para que seja associado o código do usuário que irá receber esta liberação - função ValOper = 061", "MT500ANT(a)")
+
+			Else
+
+				MsgSTOP("Atenção, Não será possível eliminar resíduo do pedido pois o mesmo possui amostras enviadas para o Ecosis. Favor proceder com a exclusão das mesmas para poder eliminar resíduo!", "MT500ANT(b)")
+				lRet	:= .F.
+
+			EndIf
 
 		EndIf
 

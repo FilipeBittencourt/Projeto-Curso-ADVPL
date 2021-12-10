@@ -74,7 +74,7 @@ Return
 Static Function MontaCabecalho()
 
 	Local aColLen := {;
-	50, 60, 50, 50, 100, 50,50,;
+	50, 50, 60, 50, 50, 100, 50,50,;
 	50, 100, 50, 50,  50, 50, 50,;
 	60, 60, 70, 70 ,70,70;
 	}
@@ -82,6 +82,8 @@ Static Function MontaCabecalho()
 	oExcel:AddPlanilha('Pre_Requisicao', aColLen)
 	oExcel:AddLinha(12)
 	oExcel:AddCelula("DATA"				,0,'C',cFonte2,nTamFont2,cCorFont2,.T.,.T.,cCorFun2  ,.T.,.T.,.T.,.T.)
+    //Ticket 33539 - Acrescentar DT.Baixa ao relatorio
+    oExcel:AddCelula("DT.BAIXA"			,0,'C',cFonte2,nTamFont2,cCorFont2,.T.,.T.,cCorFun2  ,.T.,.T.,.T.,.T.)
 	oExcel:AddCelula("REQUISIÇÃO"		,0,'C',cFonte2,nTamFont2,cCorFont2,.T.,.T.,cCorFun2  ,.T.,.T.,.T.,.T.)
 	oExcel:AddCelula("CV"				,0,'C',cFonte2,nTamFont2,cCorFont2,.T.,.T.,cCorFun2  ,.T.,.T.,.T.,.T.)
 	oExcel:AddCelula("MATRICULA" 		,0,'C',cFonte2,nTamFont2,cCorFont2,.T.,.T.,cCorFun2  ,.T.,.T.,.T.,.T.)
@@ -131,6 +133,7 @@ Static Function MontaLinhas()
 
 		oExcel:AddLinha(12)
 		oExcel:AddCelula(dToc(stod((cAliasTemp)->ZI_EMISSAO))							,0,'L',cFonte3,nTamFont3,cCorFont3,.T.,.T.,cCorF  ,.T.,.T.,.T.,.T.)
+        oExcel:AddCelula(dToc(stod((cAliasTemp)->ZI_DTBAIXA))							,0,'L',cFonte3,nTamFont3,cCorFont3,.T.,.T.,cCorF  ,.T.,.T.,.T.,.T.)
 		oExcel:AddCelula((cAliasTemp)->ZI_DOC											,0,'L',cFonte3,nTamFont3,cCorFont3,.T.,.T.,cCorF  ,.T.,.T.,.T.,.T.)
 		oExcel:AddCelula((cAliasTemp)->ZI_CLVL											,0,'L',cFonte3,nTamFont3,cCorFont3,.T.,.T.,cCorF  ,.T.,.T.,.T.,.T.)
 		oExcel:AddCelula((cAliasTemp)->ZI_MATRIC										,0,'L',cFonte3,nTamFont3,cCorFont3,.T.,.T.,cCorF  ,.T.,.T.,.T.,.T.)

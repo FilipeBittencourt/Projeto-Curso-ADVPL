@@ -1428,7 +1428,7 @@ Return
 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
 User Function BIA785C()
 
-	If MsgNOYES("Está prestes a perder as atualizações que foram feitas. Deseja proceguir???")
+	If MsgNOYES("Está prestes a perder as atualizações que foram feitas. Deseja prosseguir???")
 		fh_Esc := .F.
 		fh_InSeq := .T.
 		oDlgSC2:End()

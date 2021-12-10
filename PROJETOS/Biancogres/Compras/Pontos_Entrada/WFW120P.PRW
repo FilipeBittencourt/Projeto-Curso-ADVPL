@@ -231,7 +231,7 @@ IF alltrim(sTRANSP) <> ""
 		//Alert(Alltrim(FunName()))
 		//Alert(AllTrim(SC8->C8_YTPPSS))
 		
-		If (!(Alltrim(FunName()) == 'MATA160' .And. AllTrim(SC8->C8_YTPPSS) == "1"))
+		If (!(Alltrim(FunName()) == 'MATA161' .And. AllTrim(SC8->C8_YTPPSS) == "1"))
 			CRIA_EMAIL()
 		EndIf
 		
@@ -241,7 +241,7 @@ IF alltrim(sTRANSP) <> ""
 		EndIf		
 		
 		
-		If (!IsInCallsTack("U_RETP0001") .And. !(Alltrim(FunName()) == 'MATA160' .And. AllTrim(SC8->C8_YTPPSS)=="1"))
+		If (!IsInCallsTack("U_RETP0001") .And. !(Alltrim(FunName()) == 'MATA161' .And. AllTrim(SC8->C8_YTPPSS)=="1"))
 			// Associa o transportador ao pedido de compra
 			U_BIAF090(CA120NUM)
 		EndIf
@@ -253,7 +253,7 @@ IF alltrim(sTRANSP) <> ""
 		EndIf
 		
 
-		If (!(Alltrim(FunName()) == 'MATA160' .And. AllTrim(SC8->C8_YTPPSS)=="1"))
+		If (!(Alltrim(FunName()) == 'MATA161' .And. AllTrim(SC8->C8_YTPPSS)=="1"))
 			// Avalia se envia e-mail automatico
 			U_BIAF091(CA120NUM, "A")
 			

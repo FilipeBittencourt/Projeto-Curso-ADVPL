@@ -449,7 +449,7 @@ Method Update(cPedido, cItem, cProduto) Class TWCancelarEliminacaoResiduo
 
 	//Fernando/Facile em 05/05/2017 - Se deseliminar o residuo tem que recalcular as Baixas de AI
 	SC5->(DbSetOrder(1))
-	If SC5->(DbSeek(XFilial("SC5")+cPedido)) .And. !(AllTrim(CEMPANT) $ '14')
+	If SC5->(DbSeek(XFilial("SC5")+cPedido)) 
 
 		If !Empty(SC5->C5_YNUMSI)
 			//se existir baixa de AI do pedido exclui

@@ -23,7 +23,9 @@ User Function BIAFG143()
 	Local _cDocSeq		:=	""
 	Local _nQuant		:=	0
 	Local _cSolic		:=	""
-
+	Local _dDtPrf		:=	Stod("")
+	Local _dDtCheg		:=	Stod("")
+	
 	Private _oMd	:=	TBiaControleMD():New()	
 	
 	If !Validperg()
@@ -38,8 +40,10 @@ User Function BIAFG143()
 			_cDocSeq	:=	""
 			_nQuant	:=	0
 			_cSolic	:=	""
+			_dDtPrf	:=	Stod("")
+			_dDtCheg	:=	Stod("")
 
-			_oMd:GetMovimentoEntrada(MV_PAR02,MV_PAR03,MV_PAR01,@_cDocSeq,@_nQuant,@_cSolic,.F.)
+			_oMd:GetMovimentoEntrada(MV_PAR02,MV_PAR03,MV_PAR01,@_cDocSeq,@_nQuant,@_cSolic,.F.,@_dDtPrf,@_dDtCheg)
 
 			If _nQuant > 0
 
@@ -65,6 +69,8 @@ User Function BIAFG143()
 				ZCZ->ZCZ_TBORIG     :=	"ZCZ"
 				ZCZ->ZCZ_OBS		:=	MV_PAR06
 				ZCZ->ZCZ_RECID      :=	0
+				ZCZ->ZCZ_DATPRF		:=	_dDtPrf
+				ZCZ->ZCZ_DTCHEG		:=	_dDtCheg
 				ZCZ->(MsUnlock())
 			Else
 				Exit
@@ -92,7 +98,7 @@ Static Function ValidPerg()
 	MV_PAR05 :=	0		
 	MV_PAR06 := SPACE(300)
 
-	aAdd( aPergs ,{1,"Solicit." 	   			,MV_PAR01 ,""  ,"(MV_PAR01 == 'ZZZZZZZZ' .OR. ExistCpo('ZZY',,3) ) .And. U_BFG143SL()",'ZZY'  ,'.T.',50,.T.})
+	aAdd( aPergs ,{1,"Solicit." 	   			,MV_PAR01 ,""  ,"(MV_PAR01 == 'ZZZZZZZZ' .OR. U_BFG143ZY(MV_PAR01) ) .And. U_BFG143SL()",'ZZY'  ,'.T.',50,.T.})
 	aAdd( aPergs ,{1,"Produto" 	   			,MV_PAR02 ,""  ,"ExistCpo('SB1').And. U_BFG143SL()",'SB1'  ,'.T.',50,.T.})
 	aAdd( aPergs ,{1,"Almoxarif." 	   			,MV_PAR03 ,""  ,"U_BFG143SL()",''  ,'.T.',20,.F.})
 	aAdd( aPergs ,{1,"Saldo" 	   		,MV_PAR04 ,"@E 9,999,999.99999999"  ,"",''  ,'.F.',50,.F.})
@@ -133,4 +139,18 @@ User Function BFG143QT()
 		MsgInfo("A Quantidade não poderá ser superior ao Saldo do Produto!")
 		_lRet	:=	.F.
 	EndIf
+Return _lRet
+
+
+User Function BFG143ZY(_cMat)
+
+	Local _lRet	:=	.T.
+	Local _aArea	:=	GetArea()
+
+	ZZY->(dbSetOrder(3))
+	If !ZZY->(Dbseek(xFilial("ZZY")+_cMat))
+		MsgInfo("Funcionário Inexistente!")
+		_lRet	:=	.F.
+	EndIf
+	RestArea(_aArea)
 Return _lRet

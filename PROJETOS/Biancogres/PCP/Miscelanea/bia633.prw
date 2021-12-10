@@ -15,44 +15,31 @@
 
 User Function BIA633()
 
-	Private cCadastro 	:= "OBZ Integration p/ Orçamento"
-	Private aRotina 	:= { {"Pesquisar"  			          ,"AxPesqui"     ,0,1},;
-	{                         "Visualizar"			          ,"AxVisual"     ,0,2},;
-	{                         "OBZ Integration p/ OrcaFinal"  ,"U_B633IMDD"   ,0,3} }
-
-	dbSelectArea("Z98")
-	dbSetOrder(1)
-
-	mBrowse(6,1,22,75,"Z98",,,,,,)
-
-Return
-
-/*___________________________________________________________________________
-¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
-¦¦+-----------------------------------------------------------------------+¦¦
-¦¦¦Funçao    ¦ B633IMDD ¦ Autor ¦ Marcos Alberto S      ¦ Data ¦ 30/10/17 ¦¦¦
-¦¦+----------+------------------------------------------------------------¦¦¦
-¦¦¦Descriçào ¦ Gera Integração com modelo de OrcaFinal                    ¦¦¦
-¦¦+-----------------------------------------------------------------------+¦¦
-¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
-¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
-User Function B633IMDD()
-
 	Local M001          := GetNextAlias()
 	Local aSays	   		:= {} 
 	Local aButtons 		:= {}  
 	Local lConfirm 		:= .F. 
 	Local oEmp 			:= TLoadEmpresa():New()
+	Local nW
 
 	Private idVersao    := space(010)
 	Private idRevisa    := space(003) 
 	Private idAnoRef    := space(004) 
 	Private msrhEnter   := CHR(13) + CHR(10)
 	Private xkContinua  := .T.
-	Private msEmpAtu  := cEmpAnt
-	Private msFilAtu  := cFilAnt
+	Private msEmpAtu    := cEmpAnt
+	Private msFilAtu    := cFilAnt
+	Private msGravaErr  := ""
 
+	If cEmpAnt <> "01"
+		Msgbox("Esta rotina poderá ser utilizada somente na empresa 01", "BIA633", "STOP")
+		Return
+	EndIf
 
+	If cEmpAnt == "01" .and. cFilAnt <> "01"
+		Msgbox("Esta rotina poderá ser utilizada somente na empresa 01, Filial 01, devido as amarrações com as tabelas origens.", "BIA633", "STOP")
+		Return
+	EndIf
 
 	AADD(aSays, OemToAnsi("Rotina para Geração de Integração dos registros OBZ com Modelo de OrcaFinal!"))   
 	AADD(aSays, OemToAnsi(""))   
@@ -123,38 +110,59 @@ User Function B633IMDD()
 		If xkContinua
 
 			oEmp:GSEmpFil()
-		
+
 			If Len(oEmp:aEmpSel) > 0
-		
+
+				RpcSetType(3)
+				RpcSetEnv( cEmpAnt, cFilAnt )
+				RpcClearEnv()
+
 				For nW := 1 To Len(oEmp:aEmpSel)
-		
+
 					RpcSetEnv( oEmp:aEmpSel[nW][1], Substr(oEmp:aEmpSel[nW][2], 1, 2) )
-				
+
 					smMsnPrc := oEmp:aEmpSel[nW][1] + "/" + Substr(oEmp:aEmpSel[nW][2], 1, 2) + " - " + Alltrim(oEmp:aEmpSel[nW][4])
-		
+
+					xVerRet := .F.
 					oProcess := MsNewProcess():New({|lEnd| fProcIntMD(@oProcess) }, "Gravando...", smMsnPrc, .T.)
 					oProcess:Activate()
-		
-					RpcClearEnv()
-		
+
+					If xVerRet
+
+						RpcClearEnv()
+
+					Else
+
+						Exit
+
+					EndIf
+
 				Next nW
-		
-				Aviso("OBZ Integration - BIA633", "Fim do processamento...", {'Ok'}, 3)
-		
+
 				RpcSetEnv( msEmpAtu, msFilAtu )
-			
+
 				If Type("__cInternet") == "C"
 					__cInternet := Nil
 				EndIf
-	
-//				fVerEmp()	
-		
+
+				If xVerRet
+
+					MsgINFO("Fim do processamento...", "BIA633")
+
+				Else 
+
+					MsgSTOP("Erro na execução do processamento: " + msrhEnter + msrhEnter + msrhEnter + msGravaErr + msrhEnter + msrhEnter + msrhEnter + msrhEnter + "Processo Cancelado!!!", "BIA633" )
+					Return
+
+				EndIf
+
+				fVerEmp()	
+
 			Else
+
 				Aviso("OBZ Integration - BIA633", "Não foram selecionadas empresas! Processamento não realizado" , {'Ok'}, 3)
+
 			EndIf
-			
-			
-			//Processa({ || cMsg := fProcIntMD() },"Aguarde...","Carregando Arquivo...",.F.)
 
 		EndIf
 
@@ -204,8 +212,8 @@ Return
 Static Function fProcIntMD(oProcess)
 
 	Local lvxt
-	Local ny
-	Local trrhEnter := CHR(13) + CHR(10)
+	Local msStaExcQy    := 0
+	Local lOk           := .T.
 
 	oProcess:SetRegua1(1)
 	oProcess:SetRegua2(1000)             
@@ -213,193 +221,237 @@ Static Function fProcIntMD(oProcess)
 	oProcess:IncRegua1(smMsnPrc)
 	oProcess:IncRegua2("Verificando Tabelas...")
 
-	KS001 := " DELETE " + RetSqlName("ZBZ") + " "
-	KS001 += "   FROM " + RetSqlName("ZBZ") + " ZBZ "
-	KS001 += "  WHERE ZBZ.ZBZ_VERSAO = '" + idVersao + "' "
-	KS001 += "    AND ZBZ.ZBZ_REVISA = '" + idRevisa + "' "
-	KS001 += "    AND ZBZ.ZBZ_ANOREF = '" + idAnoRef + "' "
-	KS001 += "    AND ZBZ.ZBZ_ORIPRC = 'OBZ' "
-	KS001 += "    AND ZBZ.D_E_L_E_T_ = ' ' "
-	//U_BIAMsgRun("Aguarde... Apagando registros ZBZ... ",,{|| TcSQLExec(KS001) })
-	oProcess:IncRegua2("Aguarde... Apagando registros ZBZ... ")
-	TcSQLExec(KS001)
+	Begin Transaction
 
-	For lvxt := 1 to 12
+		KS001 := " DELETE ZBZ "
+		KS001 += "   FROM " + RetSqlName("ZBZ") + " ZBZ "
+		KS001 += "  WHERE ZBZ.ZBZ_VERSAO = '" + idVersao + "' "
+		KS001 += "    AND ZBZ.ZBZ_REVISA = '" + idRevisa + "' "
+		KS001 += "    AND ZBZ.ZBZ_ANOREF = '" + idAnoRef + "' "
+		KS001 += "    AND ZBZ.ZBZ_ORIPRC = 'OBZ' "
+		KS001 += "    AND ZBZ.D_E_L_E_T_ = ' ' "
+		oProcess:IncRegua2("Aguarde... Apagando registros ZBZ... ")
+		U_BIAMsgRun("Aguarde... Apagando registros ZBZ... ",,{|| msStaExcQy := TcSQLExec(KS001) })
+		If msStaExcQy < 0
+			lOk := .F.
+		EndIf
 
-		IncProc("Processando mês " + AllTrim(Str(lvxt)) )
+		If lOk
 
-		ghDtRef := idAnoRef + StrZero(lvxt,2) + "01"
+			//TcSQLExec(KS001)
 
-		// Preenchimento permitido para o campo Z98_APLIC, conforme SX3
-		// 0=Nenhum;1=Producao;2=Manutencao;3=Melhoria_M;4=Seguranca;5=Calibracao;6=Melhoria_Prod;7=Administrativo;8=Fiscal;9=Patrimonial;
+			For lvxt := 1 to 12
 
-		LV007 := " WITH OBZINTEG AS (SELECT ISNULL(SUBSTRING(CTH_YEFORC,1,2), 'ER') EMPR, "
-		LV007 += "                          Z98_FILIAL, "
-		LV007 += "                          Z98_VERSAO, "
-		LV007 += "                          Z98_REVISA, "
-		LV007 += "                          Z98_ANOREF, "
-		LV007 += "                          Z98_CLVL, "
-		LV007 += "                          Z98_CONTA, "
-		LV007 += "                          Z98_EMPR, "
-		LV007 += "                          Z98_FIL, "
-		LV007 += "                          ISNULL(CT1_NORMAL, 'E') CT1_NORMAL, "
-		LV007 += "                          Z98_APLIC = CASE "
-		LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = ''               THEN '0' "
-		LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'NENHUM'         THEN '0' "
-		LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'PRODUCAO'       THEN '1' "
-		LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'MANUTENCAO'     THEN '2' "
-		LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'MELHORIA_M'     THEN '3' "
-		LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'SEGURANCA'      THEN '4' "
-		LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'CALIBRACAO'     THEN '5' "
-		LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'MELHORIA_PROD'  THEN '6' "
-		LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'ADMINISTRATIVO' THEN '7' "
-		LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'FISCAL'         THEN '8' "
-		LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'PATRIMONIAL'    THEN '9' "
-		LV007 += "                                        ELSE 'Z' "
-		LV007 += "                                      END, "
-		LV007 += "                          Z98_IDDRV, "
-		LV007 += "                          SUM(Z98_M" + StrZero(lvxt,2) + ") MESREF "
-		LV007 += "                     FROM " + RetSqlName("Z98") + " Z98 "
-		LV007 += "                     LEFT JOIN " + RetSqlName("CT1") + " CT1 ON CT1_CONTA = Z98_CONTA "
-		LV007 += "                                         AND CT1.D_E_L_E_T_ = ' ' "
-		LV007 += "                     LEFT JOIN " + RetSqlName("CTH") + " CTH ON CTH_CLVL = Z98_CLVL "
-		LV007 += "                                         AND CTH.D_E_L_E_T_ = ' ' "
-		LV007 += "                    WHERE Z98.Z98_VERSAO = '" + idVersao + "' "
-		LV007 += "                      AND Z98.Z98_REVISA = '" + idRevisa + "' "
-		LV007 += "                      AND Z98.Z98_ANOREF = '" + idAnoRef + "' "
-		LV007 += "                      AND SUBSTRING(Z98.Z98_CONTA,1,3) NOT IN('165','168') "
-		LV007 += "                      AND RTRIM(Z98_CENARI) NOT IN('ESFORCO OBZ') "
-		LV007 += "                      AND RTRIM(Z98_CENARI) NOT IN('CORTE') " 
-		LV007 += "                      AND Z98_CONTA <> '' "
-		LV007 += "                      AND Z98_M01 + Z98_M02 + Z98_M03 + Z98_M04 + Z98_M05 + Z98_M06 + Z98_M07 + Z98_M08 + Z98_M09 + Z98_M10 + Z98_M11 + Z98_M12 <> 0 "
-		LV007 += "                      AND Z98.D_E_L_E_T_ = ' ' "
-		LV007 += "                    GROUP BY SUBSTRING(CTH_YEFORC,1,2), "
-		LV007 += "                             Z98_FILIAL, "
-		LV007 += "                             Z98_VERSAO, "
-		LV007 += "                             Z98_REVISA, "
-		LV007 += "                             Z98_ANOREF, "
-		LV007 += "                             Z98_CLVL, "
-		LV007 += "                             Z98_CONTA, "
-		LV007 += "                             Z98_EMPR, "
-		LV007 += "                             Z98_FIL, "
-		LV007 += "                             CT1_NORMAL, "
-		LV007 += "                             Z98_APLIC, "
-		LV007 += "                             Z98_IDDRV) "
-		LV007 += " INSERT INTO " + RetSqlName("ZBZ") + " "
-		LV007 += " (ZBZ_FILIAL, "
-		LV007 += "  ZBZ_VERSAO, "
-		LV007 += "  ZBZ_REVISA, "
-		LV007 += "  ZBZ_ANOREF, "
-		LV007 += "  ZBZ_ORIPRC, "
-		LV007 += "  ZBZ_ORGLAN, "
-		LV007 += "  ZBZ_DATA, "
-		LV007 += "  ZBZ_LOTE, "
-		LV007 += "  ZBZ_SBLOTE, "
-		LV007 += "  ZBZ_DOC, "
-		LV007 += "  ZBZ_LINHA, "
-		LV007 += "  ZBZ_DC, "
-		LV007 += "  ZBZ_DEBITO, "
-		LV007 += "  ZBZ_CREDIT, "
-		LV007 += "  ZBZ_CLVLDB, "
-		LV007 += "  ZBZ_CLVLCR, "
-		LV007 += "  ZBZ_ITEMD, "
-		LV007 += "  ZBZ_ITEMC, "
-		LV007 += "  ZBZ_VALOR, "
-		LV007 += "  ZBZ_HIST, "
-		LV007 += "  ZBZ_YHIST, "
-		LV007 += "  ZBZ_SI, "
-		LV007 += "  ZBZ_YDELTA, "
-		LV007 += "  D_E_L_E_T_, "
-		LV007 += "  R_E_C_N_O_, "
-		LV007 += "  R_E_C_D_E_L_, "
-		LV007 += "  ZBZ_APLIC, "
-		LV007 += "  ZBZ_DRVDB, "
-		LV007 += "  ZBZ_DRVCR) "
-		LV007 += " SELECT Z98_FIL Z98_FILIAL, "
-		LV007 += "        Z98_VERSAO, "
-		LV007 += "        Z98_REVISA, "
-		LV007 += "        Z98_ANOREF, "
-		LV007 += "        'OBZ' ZBZ_ORIPRC, "
-		LV007 += "        CASE "
-		LV007 += "          WHEN CT1_NORMAL = '1' THEN 'D' "
-		LV007 += "          WHEN CT1_NORMAL = '2' THEN 'C' "
-		LV007 += "          ELSE 'E' "
-		LV007 += "        END ZBZ_ORGLAN, "
-		LV007 += "        '" + ghDtRef + "' ZBZ_DATA, "
-		LV007 += "        '004500'ZBZ_LOTE, "
-		LV007 += "        '001' ZBZ_SBLOTE, "
-		LV007 += "        '' ZBZ_DOC, "
-		LV007 += "        '' ZBZ_LINHA, "
-		LV007 += "        CT1_NORMAL ZBZ_DC, "
-		LV007 += "        CASE "
-		LV007 += "          WHEN CT1_NORMAL = '1' THEN Z98_CONTA "
-		LV007 += "          WHEN CT1_NORMAL = '2' THEN '' "
-		LV007 += "          ELSE '' "
-		LV007 += "        END ZBZ_DEBITO, "
-		LV007 += "        CASE "
-		LV007 += "          WHEN CT1_NORMAL = '1' THEN '' "
-		LV007 += "          WHEN CT1_NORMAL = '2' THEN Z98_CONTA "
-		LV007 += "          ELSE '' "
-		LV007 += "        END ZBZ_CREDIT, "
-		LV007 += "        CASE "
-		LV007 += "          WHEN CT1_NORMAL = '1' THEN Z98_CLVL "
-		LV007 += "          WHEN CT1_NORMAL = '2' THEN '' "
-		LV007 += "          ELSE '' "
-		LV007 += "        END ZBZ_CLVLDB, "
-		LV007 += "        CASE "
-		LV007 += "          WHEN CT1_NORMAL = '1' THEN '' "
-		LV007 += "          WHEN CT1_NORMAL = '2' THEN Z98_CLVL "
-		LV007 += "          ELSE '' "
-		LV007 += "        END ZBZ_CLVLCR, "
-		LV007 += "        ' ' ZBZ_ITEMD, "
-		LV007 += "        ' ' ZBZ_ITEMC, "
-		LV007 += "        MESREF ZBZ_VALOR, "
-		LV007 += "        'ORCTO OBZ' ZBZ_HIST, "
-		LV007 += "        'ORCAMENTO OBZ' ZBZ_YHIST, "
-		LV007 += "        '' ZBZ_SI, "
-		LV007 += "        '' ZBZ_YDELTA, "
-		LV007 += "        ' ' D_E_L_E_T_, "
-		LV007 += "        (SELECT ISNULL(MAX(R_E_C_N_O_),0) FROM " + RetSqlName("ZBZ") + ") + ROW_NUMBER() OVER(ORDER BY OBZI.Z98_CLVL, OBZI.Z98_CONTA) AS R_E_C_N_O_, "
-		LV007 += "        0 R_E_C_D_E_L_, "
-		LV007 += "        Z98_APLIC, "
-		LV007 += "        CASE "
-		LV007 += "          WHEN CT1_NORMAL = '1' THEN Z98_IDDRV "
-		LV007 += "          WHEN CT1_NORMAL = '2' THEN '' "
-		LV007 += "          ELSE '' "
-		LV007 += "        END ZBZ_DRVDB, "
-		LV007 += "        CASE "
-		LV007 += "          WHEN CT1_NORMAL = '1' THEN '' "
-		LV007 += "          WHEN CT1_NORMAL = '2' THEN Z98_IDDRV "
-		LV007 += "          ELSE '' "
-		LV007 += "        END ZBZ_DRVCR "
-		LV007 += "   FROM OBZINTEG OBZI "
-		LV007 += "  WHERE NOT ( CT1_NORMAL = 'E' OR EMPR = 'ER' ) "
-		LV007 += "    AND EMPR = '" + cEmpAnt + "' "
-		LV007 += "    AND MESREF <> 0 "
-//		U_BIAMsgRun("Aguarde... Convertendo OBZ em DEPESAS... ",,{|| TcSQLExec(LV007) })
-		oProcess:IncRegua2("Aguarde... Convertendo OBZ em DEPESAS...")
-		TcSQLExec(LV007)
+				IncProc("Processando mês " + AllTrim(Str(lvxt)) )
 
+				ghDtRef := idAnoRef + StrZero(lvxt,2) + "01"
 
-	Next lvxt
+				// Preenchimento permitido para o campo Z98_APLIC, conforme SX3
+				// 0=Nenhum;1=Producao;2=Manutencao;3=Melhoria_M;4=Seguranca;5=Calibracao;6=Melhoria_Prod;7=Administrativo;8=Fiscal;9=Patrimonial;
 
-	ZP001 := " UPDATE ZB5 SET ZB5_STATUS = 'F' "
-	ZP001 += "   FROM " + RetSqlName("ZB5") + " ZB5 "
-	ZP001 += "  WHERE ZB5.ZB5_FILIAL = '" + xFilial("ZB5") + "' "
-	ZP001 += "    AND ZB5.ZB5_VERSAO = '" + idVersao + "' "
-	ZP001 += "    AND ZB5.ZB5_REVISA = '" + idRevisa + "' "
-	ZP001 += "    AND ZB5.ZB5_ANOREF = '" + idAnoRef + "' "
-	ZP001 += "    AND RTRIM(ZB5.ZB5_TPORCT) = 'OBZ' "
-	ZP001 += "    AND ZB5.D_E_L_E_T_ = ' ' "
-//	U_BIAMsgRun("Aguarde... Fechando Versão Orçamentária ... ",,{|| TcSQLExec(ZP001) })
-	oProcess:IncRegua2("Aguarde... Fechando Versão Orçamentária ...")
-	TcSQLExec(ZP001)
+				LV007 := " WITH OBZINTEG AS (SELECT ISNULL(SUBSTRING(CTH_YEFORC,1,2), 'ER') EMPR, "
+				LV007 += "                          Z98_FILIAL, "
+				LV007 += "                          Z98_VERSAO, "
+				LV007 += "                          Z98_REVISA, "
+				LV007 += "                          Z98_ANOREF, "
+				LV007 += "                          Z98_CLVL, "
+				LV007 += "                          Z98_CONTA, "
+				LV007 += "                          Z98_EMPR, "
+				LV007 += "                          Z98_FIL, "
+				LV007 += "                          ISNULL(CT1_NORMAL, 'E') CT1_NORMAL, "
+				LV007 += "                          Z98_APLIC = CASE "
+				LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = ''               THEN '0' "
+				LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'NENHUM'         THEN '0' "
+				LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'PRODUCAO'       THEN '1' "
+				LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'MANUTENCAO'     THEN '2' "
+				LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'MELHORIA_M'     THEN '3' "
+				LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'SEGURANCA'      THEN '4' "
+				LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'CALIBRACAO'     THEN '5' "
+				LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'MELHORIA_PROD'  THEN '6' "
+				LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'ADMINISTRATIVO' THEN '7' "
+				LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'FISCAL'         THEN '8' "
+				LV007 += "                                        WHEN UPPER(RTRIM(Z98_APLIC)) = 'PATRIMONIAL'    THEN '9' "
+				LV007 += "                                        ELSE 'Z' "
+				LV007 += "                                      END, "
+				LV007 += "                          Z98_IDDRV, "
+				LV007 += "                          Z98_CENARI, "
+				LV007 += "                          SUM(Z98_M" + StrZero(lvxt,2) + ") MESREF "
+				LV007 += "                     FROM " + RetSqlName("Z98") + " Z98 "
+				LV007 += "                     LEFT JOIN " + RetSqlName("CT1") + " CT1 ON CT1_CONTA = Z98_CONTA "
+				LV007 += "                                         AND CT1.D_E_L_E_T_ = ' ' "
+				LV007 += "                     LEFT JOIN " + RetSqlName("CTH") + " CTH ON CTH_CLVL = Z98_CLVL "
+				LV007 += "                                         AND CTH.D_E_L_E_T_ = ' ' "
+				LV007 += "                    WHERE Z98.Z98_VERSAO = '" + idVersao + "' "
+				LV007 += "                      AND Z98.Z98_REVISA = '" + idRevisa + "' "
+				LV007 += "                      AND Z98.Z98_ANOREF = '" + idAnoRef + "' "
+				LV007 += "                      AND SUBSTRING(Z98.Z98_CONTA,1,3) NOT IN('165','168') "
+				LV007 += "                      AND RTRIM(Z98_CENARI) NOT IN('ESFORCO OBZ') "
+				LV007 += "                      AND RTRIM(Z98_CENARI) NOT IN('CORTE') " 
+				LV007 += "                      AND Z98_CONTA <> '' "
+				LV007 += "                      AND Z98_M01 + Z98_M02 + Z98_M03 + Z98_M04 + Z98_M05 + Z98_M06 + Z98_M07 + Z98_M08 + Z98_M09 + Z98_M10 + Z98_M11 + Z98_M12 <> 0 "
+				LV007 += "                      AND Z98.D_E_L_E_T_ = ' ' "
+				LV007 += "                    GROUP BY SUBSTRING(CTH_YEFORC,1,2), "
+				LV007 += "                             Z98_FILIAL, "
+				LV007 += "                             Z98_VERSAO, "
+				LV007 += "                             Z98_REVISA, "
+				LV007 += "                             Z98_ANOREF, "
+				LV007 += "                             Z98_CLVL, "
+				LV007 += "                             Z98_CONTA, "
+				LV007 += "                             Z98_EMPR, "
+				LV007 += "                             Z98_FIL, "
+				LV007 += "                             CT1_NORMAL, "
+				LV007 += "                             Z98_APLIC, "
+				LV007 += "                             Z98_IDDRV, "
+				LV007 += "                             Z98_CENARI) "
+				LV007 += " INSERT INTO " + RetSqlName("ZBZ") + " "
+				LV007 += " (ZBZ_FILIAL, "
+				LV007 += "  ZBZ_VERSAO, "
+				LV007 += "  ZBZ_REVISA, "
+				LV007 += "  ZBZ_ANOREF, "
+				LV007 += "  ZBZ_ORIPRC, "
+				LV007 += "  ZBZ_ORGLAN, "
+				LV007 += "  ZBZ_DATA, "
+				LV007 += "  ZBZ_LOTE, "
+				LV007 += "  ZBZ_SBLOTE, "
+				LV007 += "  ZBZ_DOC, "
+				LV007 += "  ZBZ_LINHA, "
+				LV007 += "  ZBZ_DC, "
+				LV007 += "  ZBZ_DEBITO, "
+				LV007 += "  ZBZ_CREDIT, "
+				LV007 += "  ZBZ_CLVLDB, "
+				LV007 += "  ZBZ_CLVLCR, "
+				LV007 += "  ZBZ_ITEMD, "
+				LV007 += "  ZBZ_ITEMC, "
+				LV007 += "  ZBZ_VALOR, "
+				LV007 += "  ZBZ_HIST, "
+				LV007 += "  ZBZ_YHIST, "
+				LV007 += "  ZBZ_SI, "
+				LV007 += "  ZBZ_YDELTA, "
+				LV007 += "  D_E_L_E_T_, "
+				LV007 += "  R_E_C_N_O_, "
+				LV007 += "  R_E_C_D_E_L_, "
+				LV007 += "  ZBZ_APLIC, "
+				LV007 += "  ZBZ_DRVDB, "
+				LV007 += "  ZBZ_DRVCR, "
+				LV007 += "  ZBZ_NEGOCI, "
+				LV007 += "  ZBZ_CENARI) "
+				LV007 += " SELECT Z98_FIL Z98_FILIAL, "
+				LV007 += "        Z98_VERSAO, "
+				LV007 += "        Z98_REVISA, "
+				LV007 += "        Z98_ANOREF, "
+				LV007 += "        'OBZ' ZBZ_ORIPRC, "
+				LV007 += "        CASE "
+				LV007 += "          WHEN CT1_NORMAL = '1' THEN 'D' "
+				LV007 += "          WHEN CT1_NORMAL = '2' THEN 'C' "
+				LV007 += "          ELSE 'E' "
+				LV007 += "        END ZBZ_ORGLAN, "
+				LV007 += "        '" + ghDtRef + "' ZBZ_DATA, "
+				LV007 += "        '004500'ZBZ_LOTE, "
+				LV007 += "        '001' ZBZ_SBLOTE, "
+				LV007 += "        '' ZBZ_DOC, "
+				LV007 += "        '' ZBZ_LINHA, "
+				LV007 += "        CT1_NORMAL ZBZ_DC, "
+				LV007 += "        CASE "
+				LV007 += "          WHEN CT1_NORMAL = '1' THEN Z98_CONTA "
+				LV007 += "          WHEN CT1_NORMAL = '2' THEN '' "
+				LV007 += "          ELSE '' "
+				LV007 += "        END ZBZ_DEBITO, "
+				LV007 += "        CASE "
+				LV007 += "          WHEN CT1_NORMAL = '1' THEN '' "
+				LV007 += "          WHEN CT1_NORMAL = '2' THEN Z98_CONTA "
+				LV007 += "          ELSE '' "
+				LV007 += "        END ZBZ_CREDIT, "
+				LV007 += "        CASE "
+				LV007 += "          WHEN CT1_NORMAL = '1' THEN Z98_CLVL "
+				LV007 += "          WHEN CT1_NORMAL = '2' THEN '' "
+				LV007 += "          ELSE '' "
+				LV007 += "        END ZBZ_CLVLDB, "
+				LV007 += "        CASE "
+				LV007 += "          WHEN CT1_NORMAL = '1' THEN '' "
+				LV007 += "          WHEN CT1_NORMAL = '2' THEN Z98_CLVL "
+				LV007 += "          ELSE '' "
+				LV007 += "        END ZBZ_CLVLCR, "
+				LV007 += "        ' ' ZBZ_ITEMD, "
+				LV007 += "        ' ' ZBZ_ITEMC, "
+				LV007 += "        MESREF ZBZ_VALOR, "
+				LV007 += "        'ORCTO OBZ' ZBZ_HIST, "
+				LV007 += "        'ORCAMENTO OBZ' ZBZ_YHIST, "
+				LV007 += "        '' ZBZ_SI, "
+				LV007 += "        '' ZBZ_YDELTA, "
+				LV007 += "        ' ' D_E_L_E_T_, "
+				LV007 += "        (SELECT ISNULL(MAX(R_E_C_N_O_),0) FROM " + RetSqlName("ZBZ") + ") + ROW_NUMBER() OVER(ORDER BY OBZI.Z98_CLVL, OBZI.Z98_CONTA) AS R_E_C_N_O_, "
+				LV007 += "        0 R_E_C_D_E_L_, "
+				LV007 += "        Z98_APLIC, "
+				LV007 += "        CASE "
+				LV007 += "          WHEN CT1_NORMAL = '1' THEN Z98_IDDRV "
+				LV007 += "          WHEN CT1_NORMAL = '2' THEN '' "
+				LV007 += "          ELSE '' "
+				LV007 += "        END ZBZ_DRVDB, "
+				LV007 += "        CASE "
+				LV007 += "          WHEN CT1_NORMAL = '1' THEN '' "
+				LV007 += "          WHEN CT1_NORMAL = '2' THEN Z98_IDDRV "
+				LV007 += "          ELSE '' "
+				LV007 += "        END ZBZ_DRVCR, "
+				LV007 += "        '' NEGOCIO, "
+				LV007 += "        Z98_CENARI "
+				LV007 += "   FROM OBZINTEG OBZI "
+				LV007 += "  WHERE NOT ( CT1_NORMAL = 'E' OR EMPR = 'ER' ) "
+				LV007 += "    AND EMPR = '" + cEmpAnt + "' "
+				LV007 += "    AND MESREF <> 0 "
+				oProcess:IncRegua2("Aguarde... Convertendo OBZ em OrcaFinal...")
+				U_BIAMsgRun("Aguarde... Apagando registros ZBZ... ",,{|| msStaExcQy := TcSQLExec(LV007) })
+				If msStaExcQy < 0
+					lOk := .F.
+					Exit
+				EndIf
 
-//	MsgINFO("Conversão OBZ em OrcaFinal realizada com sucesso para esta empresa!!!")
+				//TcSQLExec(LV007)
+
+			Next lvxt
+
+			If lOk
+
+				ZP001 := " UPDATE ZB5 SET ZB5_STATUS = 'F' "
+				ZP001 += "   FROM " + RetSqlName("ZB5") + " ZB5 "
+				ZP001 += "  WHERE ZB5.ZB5_FILIAL = '" + xFilial("ZB5") + "' "
+				ZP001 += "    AND ZB5.ZB5_VERSAO = '" + idVersao + "' "
+				ZP001 += "    AND ZB5.ZB5_REVISA = '" + idRevisa + "' "
+				ZP001 += "    AND ZB5.ZB5_ANOREF = '" + idAnoRef + "' "
+				ZP001 += "    AND RTRIM(ZB5.ZB5_TPORCT) = 'OBZ' "
+				ZP001 += "    AND ZB5.D_E_L_E_T_ = ' ' "
+				oProcess:IncRegua2("Aguarde... Fechando Versão Orçamentária...")
+				U_BIAMsgRun("Aguarde... Fechando Versão Orçamentária... ",,{|| msStaExcQy := TcSQLExec(ZP001) })
+
+				If msStaExcQy < 0
+					lOk := .F.
+				EndIf
+
+			EndIf
+
+			//TcSQLExec(ZP001)
+
+		EndIf
+
+		If !lOk
+
+			xVerRet := .F.
+			msGravaErr := TCSQLError()
+			DisarmTransaction()
+
+		Else
+
+			xVerRet := .T.
+
+		EndIf
+
+	End Transaction
 
 Return
 
 Static Function fVerEmp()
+
+	Local trrhEnter := CHR(13) + CHR(10)
+	Local ny
 
 	trEmprToO := {}
 	RQ002 := " WITH OBZINTEG AS (SELECT ISNULL(SUBSTRING(CTH_YEFORC,1,2), 'ER') EMPR "

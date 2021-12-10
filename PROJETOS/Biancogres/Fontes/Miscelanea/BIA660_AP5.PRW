@@ -147,6 +147,7 @@ User Function aButtons()
 	EndIf
 
 	AADD(aBotao,{"BUDGETY",{|| U_BIA584() },"Total Quant."})
+	AADD(aBotao,{"BUDGETY",{|| U_TELABLQ(UZ7->UZ7_PEDIDO) },"Bloqueios"})
 
 Return(aBotao)
 
@@ -318,23 +319,21 @@ User Function CalcMargem(nNumPed,lFlag)
 		nPcMCM	:= Round((nVlMCM/nVlrPre)*100,2)
 	EndIf
 
-	If cEmpAnt <> "14"
-		If lFlag <> "3" //1 ou 2
+	If lFlag <> "3" //1 ou 2
 
-			//ATUALIZA CAMPO SC5
-			//If lMundi
-			//	cSQL := "UPDATE "+RetSqlName("SC5")+" SET C5_YPERCMC = '"+Alltrim(Str(nPcMCM))+"' WHERE C5_NUM = '"+nNumPed+"' AND D_E_L_E_T_ = ''	"
-			//Else
-			cSQL := "UPDATE "+RetSqlName("SC5")+" SET C5_YPERCMC = '"+Alltrim(Str(nPercMC))+"' WHERE C5_NUM = '"+nNumPed+"' AND D_E_L_E_T_ = ''	"
-			//EndIf
-			TcSqlExec(cSQL)
+		//ATUALIZA CAMPO SC5
+		//If lMundi
+		//	cSQL := "UPDATE "+RetSqlName("SC5")+" SET C5_YPERCMC = '"+Alltrim(Str(nPcMCM))+"' WHERE C5_NUM = '"+nNumPed+"' AND D_E_L_E_T_ = ''	"
+		//Else
+		cSQL := "UPDATE "+RetSqlName("SC5")+" SET C5_YPERCMC = '"+Alltrim(Str(nPercMC))+"' WHERE C5_NUM = '"+nNumPed+"' AND D_E_L_E_T_ = ''	"
+		//EndIf
+		TcSqlExec(cSQL)
 
-			//ATUALIZA CAMPO SC6
-			cSQL := "UPDATE "+RetSqlName("SC6")+" SET C6_YPERCMC = ROUND((((C6_VALOR-C6_YDESCZF)-(ROUND((C6_VALOR-C6_YDESCZF)*C6_COMIS1/100,2)+C6_YVLTICM+C6_YVLTPIS+C6_YVLTCOF+	ROUND(C6_QTDVEN*(SELECT dbo.FN_CH(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_YEMISSA,C6_YEMISSA)),2)))/(C6_VALOR-C6_YDESCZF))*100,2) "
-			cSQL += " WHERE C6_NUM = '"+nNumPed+"' AND D_E_L_E_T_ = '' "
-			TcSqlExec(cSQL)
+		//ATUALIZA CAMPO SC6
+		cSQL := "UPDATE "+RetSqlName("SC6")+" SET C6_YPERCMC = ROUND((((C6_VALOR-C6_YDESCZF)-(ROUND((C6_VALOR-C6_YDESCZF)*C6_COMIS1/100,2)+C6_YVLTICM+C6_YVLTPIS+C6_YVLTCOF+	ROUND(C6_QTDVEN*(SELECT dbo.FN_CH(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_YEMISSA,C6_YEMISSA)),2)))/(C6_VALOR-C6_YDESCZF))*100,2) "
+		cSQL += " WHERE C6_NUM = '"+nNumPed+"' AND D_E_L_E_T_ = '' "
+		TcSqlExec(cSQL)
 
-		EndIf
 	EndIf
 
 	//ARMAZENA VARIAVEIS PARA MONTAGEM DA TELA
@@ -633,39 +632,37 @@ User Function fMargem2(nNumPed,lFlag)
 	cVlrMC2 	:= Transform(cVlrMC2, 	"@E 999,999,999.99")
 	cPercMC2	:= Transform(cPercMC2, 	"@E 999,999,999.99")
 
-	If cEmpAnt <> "14"
-		If lFlag <> "3" //1 ou 2
+	If lFlag <> "3" //1 ou 2
 
-			//ATUALIZA CAMPO SC5
-			cSQL := "UPDATE "+RetSqlName("SC5")+" SET C5_YPERCMC = '"+Alltrim(Str(rPercMC2))+"' WHERE C5_NUM = '"+nNumPed+"' AND D_E_L_E_T_ = ''	"
-			TcSqlExec(cSQL)
+		//ATUALIZA CAMPO SC5
+		cSQL := "UPDATE "+RetSqlName("SC5")+" SET C5_YPERCMC = '"+Alltrim(Str(rPercMC2))+"' WHERE C5_NUM = '"+nNumPed+"' AND D_E_L_E_T_ = ''	"
+		TcSqlExec(cSQL)
 
-			//ATUALIZA CAMPO SC6
-			cSQL := "UPDATE "+RetSqlName("SC6")+" SET C6_YPERCMC = ROUND((VPF-(IMP+INSS+CP+DAO+DCF+DCVc+DCVi+DCVp))/VPF*100,2) "
-			cSQL += "FROM "
-			cSQL += "(SELECT C6_NUM AS PEDIDO, C6_PRODUTO AS PRODUTO, C6_ITEM AS ITEM, "
-			cSQL += "		ROUND ((C6_VALOR-C6_YDESCZF)/POWER(1+"+Alltrim(Str(nFator))+","+Alltrim(Str(_TMP2->PZM))+"),2) VPF,"
-			cSQL += "		C6_YVLTICM+C6_YVLTCOF+C6_YVLTPIS AS IMP,  "
-			cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*1)/100),2) INSS, "
-			cSQL += "		CP = CASE "
-			cSQL += "				WHEN SUBSTRING(C6_YEMP,1,2) = '13' THEN ROUND((SELECT dbo.FN_CM(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_LOCAL,C6_YEMISSA))*C6_QTDVEN,2) "
-			cSQL += "				ELSE ROUND((SELECT dbo.FN_CP(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_YEMISSA,C6_YEMISSA))*C6_QTDVEN,2) "
-			cSQL += "			END, "
-			//cSQL += "		ROUND((SELECT dbo.FN_CP(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_YEMISSA,C6_YEMISSA))*C6_QTDVEN,2) AS CP, "
-			cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*C6_COMIS1)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS2)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS3)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS4)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS5)/100),2) AS DCVc,      "
-			cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*"+Alltrim(Str(_DAO->Z40_PERC))+")/100),2) DAO, "
-			cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*"+Alltrim(Str(_DCF->Z40_PERC))+")/100),2) DCF, "
-			cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*"+Alltrim(Str(_DCVI->Z40_PERC))+")/100),2) DCVi, "
-			cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*"+Alltrim(Str(_DCVP->Z40_PERC))+")/100),2) DCVp "
-			cSQL += "FROM "+RetSqlName("SC6")+" "
-			cSQL += "WHERE C6_NUM = '"+nNumPed+"' AND D_E_L_E_T_ = '') TMP1, "+RetSqlName("SC6")+" "
-			cSQL += "WHERE PEDIDO  = C6_NUM 	AND "
-			cSQL += "	   PRODUTO = C6_PRODUTO	AND "
-			cSQL += "	   ITEM    = C6_ITEM 	AND "
-			cSQL += "      D_E_L_E_T_ = '' 			"
-			TcSqlExec(cSQL)
+		//ATUALIZA CAMPO SC6
+		cSQL := "UPDATE "+RetSqlName("SC6")+" SET C6_YPERCMC = ROUND((VPF-(IMP+INSS+CP+DAO+DCF+DCVc+DCVi+DCVp))/VPF*100,2) "
+		cSQL += "FROM "
+		cSQL += "(SELECT C6_NUM AS PEDIDO, C6_PRODUTO AS PRODUTO, C6_ITEM AS ITEM, "
+		cSQL += "		ROUND ((C6_VALOR-C6_YDESCZF)/POWER(1+"+Alltrim(Str(nFator))+","+Alltrim(Str(_TMP2->PZM))+"),2) VPF,"
+		cSQL += "		C6_YVLTICM+C6_YVLTCOF+C6_YVLTPIS AS IMP,  "
+		cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*1)/100),2) INSS, "
+		cSQL += "		CP = CASE "
+		cSQL += "				WHEN SUBSTRING(C6_YEMP,1,2) = '13' THEN ROUND((SELECT dbo.FN_CM(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_LOCAL,C6_YEMISSA))*C6_QTDVEN,2) "
+		cSQL += "				ELSE ROUND((SELECT dbo.FN_CP(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_YEMISSA,C6_YEMISSA))*C6_QTDVEN,2) "
+		cSQL += "			END, "
+		//cSQL += "		ROUND((SELECT dbo.FN_CP(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_YEMISSA,C6_YEMISSA))*C6_QTDVEN,2) AS CP, "
+		cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*C6_COMIS1)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS2)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS3)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS4)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS5)/100),2) AS DCVc,      "
+		cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*"+Alltrim(Str(_DAO->Z40_PERC))+")/100),2) DAO, "
+		cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*"+Alltrim(Str(_DCF->Z40_PERC))+")/100),2) DCF, "
+		cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*"+Alltrim(Str(_DCVI->Z40_PERC))+")/100),2) DCVi, "
+		cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*"+Alltrim(Str(_DCVP->Z40_PERC))+")/100),2) DCVp "
+		cSQL += "FROM "+RetSqlName("SC6")+" "
+		cSQL += "WHERE C6_NUM = '"+nNumPed+"' AND D_E_L_E_T_ = '') TMP1, "+RetSqlName("SC6")+" "
+		cSQL += "WHERE PEDIDO  = C6_NUM 	AND "
+		cSQL += "	   PRODUTO = C6_PRODUTO	AND "
+		cSQL += "	   ITEM    = C6_ITEM 	AND "
+		cSQL += "      D_E_L_E_T_ = '' 			"
+		TcSqlExec(cSQL)
 
-		EndIf
 	EndIf
 
 	If lFlag <> "2" //1 ou 3
@@ -1044,63 +1041,61 @@ User Function fMargem3(nNumPed,lFlag)
 	nMO			:= Transform(nMO, 		"@E 999,999,999.99")
 	nPercMO		:= Transform(nPercMO, 	"@E 999,999,999.99")
 
-	If cEmpAnt <> "14"
-		If lFlag <> "3" //1 ou 2
+	If lFlag <> "3" //1 ou 2
 
-			//ATUALIZA CAMPO SC5
-			cSQL := "UPDATE "+RetSqlName("SC5")+" SET C5_YPERCMC = '"+Alltrim(Str(rPercMO))+"' WHERE C5_FILIAL = '"+xFilial("SC5")+"' AND C5_NUM = '"+nNumPed+"' AND D_E_L_E_T_ = ''	"
-			TcSqlExec(cSQL)
+		//ATUALIZA CAMPO SC5
+		cSQL := "UPDATE "+RetSqlName("SC5")+" SET C5_YPERCMC = '"+Alltrim(Str(rPercMO))+"' WHERE C5_FILIAL = '"+xFilial("SC5")+"' AND C5_NUM = '"+nNumPed+"' AND D_E_L_E_T_ = ''	"
+		TcSqlExec(cSQL)
 
-			//ATUALIZA CAMPO SC6
-			cSQL := "UPDATE "+RetSqlName("SC6")+" SET C6_YPERCMC = ROUND((MB-(DAO+DCF+DCVc+DCVi+DCVp))/RL*100,2) " + CRLF
-			cSQL += "FROM " + CRLF
-			cSQL += "(SELECT VPF-(IMP+INSS) AS RL, VPF-(IMP+INSS+CV) AS MC, VPF-(IMP+INSS+CV+CF) AS MB, " + CRLF
-			If _TMP2->C5_EMISSAO >= "20160701" //A partir de 01/07/2016 o cแlculo do DAO/DCF serใo calculos pela RL
-				cSQL += "		ROUND(((VPF-(IMP+INSS))*"+Alltrim(Str(_DAO->PERC))+")/100,2) AS DAO,	" + CRLF
-				cSQL += "		ROUND(((VPF-(IMP+INSS))*"+Alltrim(Str(_DCF->PERC))+")/100,2) AS DCF,	" + CRLF
-			Else
-				cSQL += "		ROUND((RB*"+Alltrim(Str(_DAO->PERC))+")/100,2) AS DAO,					" + CRLF
-				cSQL += "		ROUND((RB*"+Alltrim(Str(_DCF->PERC))+")/100,2) AS DCF,					" + CRLF
-			EndIf
-			cSQL += "  		*																			" + CRLF
-			cSQL += "FROM																				" + CRLF
-			cSQL += "(SELECT C6_NUM AS PEDIDO, C6_PRODUTO AS PRODUTO, C6_ITEM AS ITEM, 	" + CRLF
-			cSQL += "		(C6_VALOR-C6_YDESCZF) RB,									" + CRLF
-			cSQL += "		ROUND ((C6_VALOR-C6_YDESCZF)/POWER(1+"+Alltrim(Str(nFator))+","+Alltrim(Str(_TMP2->PZM))+"),2) VPF," + CRLF
-			cSQL += "		C6_YVLTICM+C6_YVLTCOF+C6_YVLTPIS AS IMP,  " + CRLF
-			If cEmpAnt == "07"
-
-				SM0->(DbSetOrder(1))
-				SM0->(DbSeek(cEmpAnt+cFilAnt))
-				_nFator		:= U_LMFatRed(SM0->M0_ESTCOB)
-
-				cSQL += "		INSS = CASE WHEN C6_YEMISSA <= '20150630' THEN ROUND(((((C6_VALOR-C6_YDESCZF*0.9))*"+Alltrim(Str(_INSS->PERC))+")/100),2) ELSE ROUND(((((C6_VALOR-C6_YDESCZF*"+AllTrim(Str(_nFator))+"))*"+Alltrim(Str(_INSS->PERC))+")/100),2) END, " + CRLF
-			Else
-				cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*"+Alltrim(Str(_INSS->PERC))+")/100),2) INSS, " + CRLF
-			EndIf
-			cSQL += "		CV = CASE 								" + CRLF
-			cSQL += "				WHEN C6_YEMP IN ('1399','1302') THEN ROUND((SELECT dbo.FN_CM(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_LOCAL,C6_YEMISSA))*C6_QTDVEN,2) " + CRLF
-			cSQL += "				WHEN C6_YEMP IN ('1301','1401') THEN 0 " + CRLF
-			cSQL += "				ELSE ROUND((SELECT dbo.FN_CV(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_YEMISSA,C6_YEMISSA))*C6_QTDVEN,2) " + CRLF
-			cSQL += "		  	END,								" + CRLF
-			cSQL += "		CF = CASE 								" + CRLF
-			cSQL += "				WHEN C6_YEMP IN ('1399','1302') THEN 0" + CRLF
-			cSQL += "				WHEN C6_YEMP IN ('1301','1401') THEN 0 " + CRLF
-			cSQL += "				ELSE ROUND((SELECT dbo.FN_CF(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_YEMISSA,C6_YEMISSA))*C6_QTDVEN,2) " + CRLF
-			cSQL += "			END,								" + CRLF
-			cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*C6_COMIS1)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS2)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS3)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS4)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS5)/100),2) AS DCVc,      " + CRLF
-			cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*"+Alltrim(Str(_DCVI->PERC))+")/100),2) DCVi, " + CRLF
-			cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*"+Alltrim(Str(_DCVP->PERC))+")/100),2) DCVp " + CRLF
-			cSQL += "FROM "+RetSqlName("SC6")+" " + CRLF
-			cSQL += "WHERE C6_FILIAL = '"+xFilial("SC6")+"' AND C6_NUM = '"+nNumPed+"' AND D_E_L_E_T_ = '') TMP1) TMP2, "+RetSqlName("SC6")+" " + CRLF
-			cSQL += "WHERE C6_FILIAL = '"+xFilial("SC6")+"' AND " + CRLF
-			cSQL += "	   PEDIDO  = C6_NUM 	AND " + CRLF
-			cSQL += "	   PRODUTO = C6_PRODUTO	AND " + CRLF
-			cSQL += "	   ITEM    = C6_ITEM 	AND " + CRLF
-			cSQL += "      D_E_L_E_T_ = '' 			" + CRLF
-			TcSqlExec(cSQL)
-
+		//ATUALIZA CAMPO SC6
+		cSQL := "UPDATE "+RetSqlName("SC6")+" SET C6_YPERCMC = ROUND((MB-(DAO+DCF+DCVc+DCVi+DCVp))/RL*100,2) " + CRLF
+		cSQL += "FROM " + CRLF
+		cSQL += "(SELECT VPF-(IMP+INSS) AS RL, VPF-(IMP+INSS+CV) AS MC, VPF-(IMP+INSS+CV+CF) AS MB, " + CRLF
+		If _TMP2->C5_EMISSAO >= "20160701" //A partir de 01/07/2016 o cแlculo do DAO/DCF serใo calculos pela RL
+			cSQL += "		ROUND(((VPF-(IMP+INSS))*"+Alltrim(Str(_DAO->PERC))+")/100,2) AS DAO,	" + CRLF
+			cSQL += "		ROUND(((VPF-(IMP+INSS))*"+Alltrim(Str(_DCF->PERC))+")/100,2) AS DCF,	" + CRLF
+		Else
+			cSQL += "		ROUND((RB*"+Alltrim(Str(_DAO->PERC))+")/100,2) AS DAO,					" + CRLF
+			cSQL += "		ROUND((RB*"+Alltrim(Str(_DCF->PERC))+")/100,2) AS DCF,					" + CRLF
 		EndIf
+		cSQL += "  		*																			" + CRLF
+		cSQL += "FROM																				" + CRLF
+		cSQL += "(SELECT C6_NUM AS PEDIDO, C6_PRODUTO AS PRODUTO, C6_ITEM AS ITEM, 	" + CRLF
+		cSQL += "		(C6_VALOR-C6_YDESCZF) RB,									" + CRLF
+		cSQL += "		ROUND ((C6_VALOR-C6_YDESCZF)/POWER(1+"+Alltrim(Str(nFator))+","+Alltrim(Str(_TMP2->PZM))+"),2) VPF," + CRLF
+		cSQL += "		C6_YVLTICM+C6_YVLTCOF+C6_YVLTPIS AS IMP,  " + CRLF
+		If cEmpAnt == "07"
+
+			SM0->(DbSetOrder(1))
+			SM0->(DbSeek(cEmpAnt+cFilAnt))
+			_nFator		:= U_LMFatRed(SM0->M0_ESTCOB)
+
+			cSQL += "		INSS = CASE WHEN C6_YEMISSA <= '20150630' THEN ROUND(((((C6_VALOR-C6_YDESCZF*0.9))*"+Alltrim(Str(_INSS->PERC))+")/100),2) ELSE ROUND(((((C6_VALOR-C6_YDESCZF*"+AllTrim(Str(_nFator))+"))*"+Alltrim(Str(_INSS->PERC))+")/100),2) END, " + CRLF
+		Else
+			cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*"+Alltrim(Str(_INSS->PERC))+")/100),2) INSS, " + CRLF
+		EndIf
+		cSQL += "		CV = CASE 								" + CRLF
+		cSQL += "				WHEN C6_YEMP IN ('1399','1302') THEN ROUND((SELECT dbo.FN_CM(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_LOCAL,C6_YEMISSA))*C6_QTDVEN,2) " + CRLF
+		cSQL += "				WHEN C6_YEMP IN ('1301','1401') THEN 0 " + CRLF
+		cSQL += "				ELSE ROUND((SELECT dbo.FN_CV(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_YEMISSA,C6_YEMISSA))*C6_QTDVEN,2) " + CRLF
+		cSQL += "		  	END,								" + CRLF
+		cSQL += "		CF = CASE 								" + CRLF
+		cSQL += "				WHEN C6_YEMP IN ('1399','1302') THEN 0" + CRLF
+		cSQL += "				WHEN C6_YEMP IN ('1301','1401') THEN 0 " + CRLF
+		cSQL += "				ELSE ROUND((SELECT dbo.FN_CF(SUBSTRING(C6_YEMP,1,2),C6_PRODUTO,C6_YEMISSA,C6_YEMISSA))*C6_QTDVEN,2) " + CRLF
+		cSQL += "			END,								" + CRLF
+		cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*C6_COMIS1)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS2)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS3)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS4)/100)+(((C6_VALOR-C6_YDESCZF)*C6_COMIS5)/100),2) AS DCVc,      " + CRLF
+		cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*"+Alltrim(Str(_DCVI->PERC))+")/100),2) DCVi, " + CRLF
+		cSQL += "		ROUND((((C6_VALOR-C6_YDESCZF)*"+Alltrim(Str(_DCVP->PERC))+")/100),2) DCVp " + CRLF
+		cSQL += "FROM "+RetSqlName("SC6")+" " + CRLF
+		cSQL += "WHERE C6_FILIAL = '"+xFilial("SC6")+"' AND C6_NUM = '"+nNumPed+"' AND D_E_L_E_T_ = '') TMP1) TMP2, "+RetSqlName("SC6")+" " + CRLF
+		cSQL += "WHERE C6_FILIAL = '"+xFilial("SC6")+"' AND " + CRLF
+		cSQL += "	   PEDIDO  = C6_NUM 	AND " + CRLF
+		cSQL += "	   PRODUTO = C6_PRODUTO	AND " + CRLF
+		cSQL += "	   ITEM    = C6_ITEM 	AND " + CRLF
+		cSQL += "      D_E_L_E_T_ = '' 			" + CRLF
+		TcSqlExec(cSQL)
+
 	EndIf
 
 	If lFlag <> "2" //1 ou 3
@@ -1205,3 +1200,48 @@ User Function fMargem3(nNumPed,lFlag)
 	EndIf
 
 Return(nRet)
+
+/*
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+ฑฑษออออออออออัออออออออออออออออออัออออออออออออออออออออหออออออัอออออออออออออปฑฑ
+ฑฑบPrograma  ณ TELABLQ          ณ Marcus Amorim      บ Data ณ  09/11/2021 บฑฑ
+ฑฑฬออออออออออุออออออออออออออออออฯออออออออออออออออออออสออออออฯอออออออออออออนฑฑ
+ฑฑบDesc.     ณ Rotina para mostrar os bloqueios do pedido                 บฑฑ
+ฑฑบ          ณ Chamado 32935                                              บฑฑ
+ฑฑศออออออออออฯออออออออออออออออออออออออออออออออออออออออออออออออออออออออออออผฑฑ
+ฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑฑ
+฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿฿
+*/
+User Function TELABLQ(_NumPed)
+
+Local _cQry  := ""
+Local cRegra := ""
+Local aRegra := {}
+Local nI     := 0
+
+	_cQry := "SELECT ZKL_REGRA "
+	_cQry += "FROM "+RetSqlName("ZKL")+" ZKL "
+	_cQry += "WHERE ZKL.ZKL_PEDIDO = '"+_NumPed+"' "
+	_cQry += "AND ZKL.D_E_L_E_T_ <> '*' "
+
+	If Select("BLQ") > 0
+		BLQ->(dbCloseArea())
+	EndIf
+
+	TcQuery _cQry New Alias "BLQ"
+
+	aRegra := StrTokArr(BLQ->ZKL_REGRA, "/")
+
+	For nI := 1 To Len (aRegra)
+		DbSelectArea("ZKI")
+		ZKI->(DbSetOrder(1))
+
+		If (ZKI->(DbSeek(xFilial('ZKI')+aRegra[nI])))
+			cRegra += "Desc.: "+ZKI->ZKI_DESBLQ+char(10)+chr(13)	
+		EndIf
+	Next nI
+
+	MsgInfo(cRegra, "Bloqueios no pedido: "+_NumPed)
+
+Return

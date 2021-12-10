@@ -187,9 +187,9 @@ Static Function RptDetail()
 			(M001)->(dbGoTop())
 			If (M001)->CONTAD <> 1
 				MsgALERT("A versão informada não está ativa para execução deste processo." + msrhEnter + msrhEnter + "Favor verificar o preenchimento dos campos no tabela de controle de versão conforme abaixo:" + msrhEnter + msrhEnter + xfMensCompl + msrhEnter + msrhEnter + "Favor verificar com o responsável pelo processo Orçamentário!!!")
-				//(M001)->(dbCloseArea())
-				//T004->(dbCloseArea())
-				//Return .F.
+				(M001)->(dbCloseArea())
+				T004->(dbCloseArea())
+				Return .F.
 			EndIf	
 			(M001)->(dbCloseArea())
 

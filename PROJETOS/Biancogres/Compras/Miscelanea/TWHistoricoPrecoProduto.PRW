@@ -270,7 +270,7 @@ Local cPrd := ""
 	
 		cPrd := GdFieldGet("C8_PRODUTO")
 		
-	ElseIf ::cId == "MATA160" // Analisa Cotação
+	ElseIf ::cId == "MATA161" // tação
 	
 		oOwner := GetWndDefault()
 		

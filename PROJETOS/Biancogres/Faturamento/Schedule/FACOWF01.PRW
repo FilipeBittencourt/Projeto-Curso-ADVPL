@@ -27,13 +27,14 @@ User Function FACOWF01(_lManual)
 	//Ticket 28275 - Erro ao executar de forma manual. Pablo S. Nascimento
 	//RPCSetType(3)
 	//RpcSetEnv('01', '01')
-
+  /*
 	If (Upper(AllTrim(getenvserver())) == "SCHEDULE")
 		lManual := .F.
 	Else
 		lManual := .T.
 	EndIf
-
+	*/
+  lManual := .F.
 	Conout("FACOWF01 Inicio - lManual = "+IIf(lManual,"SIM","NAO"))
 
 	If lManual
@@ -120,7 +121,10 @@ User Function FACOWF01(_lManual)
 
 					GetItems(_nMaxFaixa, _cTpAcord)
 
-					_nTotBonus 	+= (QRY)->BONUS
+					//bonus estimado é relacionado apenas ao período ainda em andamento, fechado não conta mais
+					IF (QRY)->STATUS == 'EM ANDAMENTO'
+						_nTotBonus 	+= (QRY)->BONUS_EST
+					ENDIF 
 
 					(Qry)->(DbSkip())
 				EndDo
@@ -221,6 +225,7 @@ Static Function GetData()
 
 	IF Z79->(FieldPos("Z79_YCTPRO")) > 0
 
+		/*BONUS_EST - ticket 36179 - calculo conforme fonte AO_METAS*/
 		BeginSql Alias Qry
 		%NOPARSER%
 
@@ -257,6 +262,15 @@ Static Function GetData()
 		FALTAF4 = CASE WHEN PZ6_METAF4 <= 0 OR (PZ6_METAF4 - PZ6_VALREA) < 0 THEN 0 ELSE (PZ6_METAF4 - PZ6_VALREA) END,
 		METAF5 = PZ6_METAF5,
 		FALTAF5 = CASE WHEN PZ6_METAF5 <= 0 OR (PZ6_METAF5 - PZ6_VALREA) < 0 THEN 0 ELSE (PZ6_METAF5 - PZ6_VALREA) END,
+		BONUS_EST  = ((CASE WHEN (PZ5_PCTVER > 0 AND PZ6_BASVER > 0) THEN PZ6_BASVER ELSE PZ6_VALREA END) *
+			(CASE 
+				WHEN (PZ6_PREALI >= PZ6_METAP5 AND PZ6_VALREA >= PZ6_METAF5) THEN PZ6_PBONF5
+				WHEN (PZ6_PREALI >= PZ6_METAP4 AND PZ6_VALREA >= PZ6_METAF4) THEN PZ6_PBONF4
+				WHEN (PZ6_PREALI >= PZ6_METAP3 AND PZ6_VALREA >= PZ6_METAF3) THEN PZ6_PBONF3
+				WHEN (PZ6_PREALI >= PZ6_METAP2 AND PZ6_VALREA >= PZ6_METAF2) THEN PZ6_PBONF2
+				WHEN (PZ6_PREALI >= PZ6_METAP1 AND PZ6_VALREA >= PZ6_METAF1) THEN PZ6_PBONF1 
+				ELSE 0
+			END)) / 100,
 		BONUS = PZ6_BONUS,     
 		NUMSI = PZ6_SI,
 		TPACOR = PZ5_TPACOR,
@@ -310,12 +324,14 @@ Static Function GetData()
 		where PZ6_PERINI >= %EXP:__CDATAINI%
 		AND %Exp:cExpFim%
 		AND %Exp:cExpAOIni%	AND %Exp:cExpAOFim%
+		AND PZ5_CODIGO in ('000491','000452','000453','000428')
 		order by PZ5_CODVEN, COD_CLI, PZ5_CODIGO, PZ6_PERINI
 
 		EndSql
 
 	ELSE
 
+		/*BONUS_EST - ticket 36179 - calculo conforme fonte AO_METAS*/
 		BeginSql Alias Qry
 		%NOPARSER%
 
@@ -346,6 +362,15 @@ Static Function GetData()
 		FALTAF4 = CASE WHEN PZ6_METAF4 <= 0 OR (PZ6_METAF4 - PZ6_VALREA) < 0 THEN 0 ELSE (PZ6_METAF4 - PZ6_VALREA) END,
 		METAF5 = PZ6_METAF5,
 		FALTAF5 = CASE WHEN PZ6_METAF5 <= 0 OR (PZ6_METAF5 - PZ6_VALREA) < 0 THEN 0 ELSE (PZ6_METAF5 - PZ6_VALREA) END,
+		BONUS_EST  = ((CASE WHEN (PZ5_PCTVER > 0 AND PZ6_BASVER > 0) THEN PZ6_BASVER ELSE PZ6_VALREA END) *
+			(CASE 
+				WHEN (PZ6_PREALI >= PZ6_METAP5 AND PZ6_VALREA >= PZ6_METAF5) THEN PZ6_PBONF5
+				WHEN (PZ6_PREALI >= PZ6_METAP4 AND PZ6_VALREA >= PZ6_METAF4) THEN PZ6_PBONF4
+				WHEN (PZ6_PREALI >= PZ6_METAP3 AND PZ6_VALREA >= PZ6_METAF3) THEN PZ6_PBONF3
+				WHEN (PZ6_PREALI >= PZ6_METAP2 AND PZ6_VALREA >= PZ6_METAF2) THEN PZ6_PBONF2
+				WHEN (PZ6_PREALI >= PZ6_METAP1 AND PZ6_VALREA >= PZ6_METAF1) THEN PZ6_PBONF1 
+				ELSE 0
+			END)) / 100,
 		BONUS = PZ6_BONUS,     
 		NUMSI = PZ6_SI,
 		TPACOR = PZ5_TPACOR,
@@ -390,16 +415,16 @@ Static Function GetData()
 		WHERE
 		PZ5_STATUS = 'S'
 		AND %Exp:cExpMaxPer%
-		//AND PZ5_CODIGO = '000064'  //TESTE
 		AND PZ6.D_E_L_E_T_=''
 		AND PZ5.D_E_L_E_T_=''
 		)
 		select * 
 		,MAXFAIXA = (select max(PZ5_NFAIXA) from tab_ao X where X.PZ5_CODVEN = tab_ao.PZ5_CODVEN)
 		from tab_ao
-		where PZ6_PERINI >= %EXP:__CDATAINI%
+		where PZ6_PERINI >= %EXP:__CDATAINI%	
 		AND %Exp:cExpFim%
 		AND %Exp:cExpAOIni%	AND %Exp:cExpAOFim%
+		AND PZ5_CODIGO in ('000491','000452','000453','000428')
 		order by PZ5_CODVEN, COD_CLI, PZ5_CODIGO, PZ6_PERINI
 
 		EndSql
@@ -565,7 +590,7 @@ Static Function GetFooter(_cTpAcord, _nTotBonus)
 		cHtml += "		<br>"
 		cHtml += "		<br>"
 
-		cHtml += "      	<p><div class = 'footTexto'>Seu BÔNUS ESTIMADO para o próximo semestre até o momento é de: R$ "+Transform(_nTotBonus,"@E 999,999,999,999.99")+". Para conferir o seu extrato na fábrica basta solicitá-lo através do código gerado na coluna No. AG.</div></p>"
+		cHtml += "      	<p><div class = 'footTexto'><br><br><br><br>Seu BÔNUS ESTIMADO para o próximo semestre até o momento é de: R$ "+Transform(_nTotBonus,"@E 999,999,999,999.99")+". Para conferir o seu extrato na fábrica basta solicitá-lo através do código gerado na coluna No. AG.</div></p>"
 		cHtml += "      <br>"
 		cHtml += "      <br>"
 		cHtml += "      	<p><div class = 'footTexto'>Consulte seu representante para que possamos alinhar nossas estratégias, com objetivo de buscar a melhor faixa de benefício possível.</div></p>"
@@ -659,14 +684,19 @@ Static Function SendMail(_cRep, _cCodPZ5)
 
 	If !(Upper(AllTrim(getenvserver())) == "SCHEDULE" .Or. Upper(AllTrim(getenvserver())) == "PRODUCAO") .Or. ( cDataBase <> "DADOSADV" )
 		_cTo := "claudeir.fadini@biancogres.com.br"
-		_cCC := "fernando@facilesistemas.com.br"
+		_cCC := ""
 	EndIf
 	
 	_cBody := cHtml      
 
 	Conout("FACOWF01 Fim - lManual = "+IIf(lManual,"SIM","NAO")+" - enviando e-mail para: "+_cTo)
-	//_lRet := U_BIAEnvMail(, _cTo, _cSubject, _cBody, "", "", , _cCC, _oCC)    // aqui descomentar antes aplicar em produção
-	_lRet := U_BIAEnvMail(, 'karina.barbosa@biancogres.com.br;emerson.salvador@facilesistemas.com.br;filipe.bittencourt@facilesistemas.com.br', _cSubject, _cBody, "", "", , "", "")   //aqui retirar essa linha somente para testes
+	// produção
+ 	//_lRet := U_BIAEnvMail(, _cTo, _cSubject, _cBody, "", "", , _cCC, _oCC)     
+  //produção
+
+	 //Para testes
+	 _lRet := U_BIAEnvMail(, 'karina.barbosa@biancogres.com.br;filipe.bittencourt@facilesistemas.com.br', _cSubject, _cBody, "", "", , "", "")  
+	// Para testes
 	
 	
 

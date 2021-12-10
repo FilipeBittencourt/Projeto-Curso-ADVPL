@@ -160,7 +160,7 @@ Static Function fProcessa(_cEmp,_cFil)
 			AND SD2.D_E_L_E_T_	= ''
 		)
 		
-		JOIN SPED050 SPED(NOLOCK) ON 
+		JOIN [DADOSADV].dbo.SPED050 SPED(NOLOCK) ON 
 		(
 			SPED.ID_ENT 		= %Exp:_cEntid%
 			AND SPED.NFE_ID 	= SF2.F2_SERIE + SF2.F2_DOC
@@ -289,8 +289,13 @@ Static Function fProcessa(_cEmp,_cFil)
 
 			aItem := {}
 
-			_cTesD1 := "0A2"	
-					
+			//Ajuste provisorio TES Vinilico - Sem Invest
+ 			If _cFornece == "003721"
+				_cTesD1 := "4J7"
+			Else
+				_cTesD1 := "3A4"
+			EndIf
+				
 			If SB1->(dbSeek(xFilial("SB1")+(_cAlias)->D2_COD)) .And. AllTrim(SB1->B1_GRTRIB) == "003"
 			
 				_cTesD1 := "0A4"

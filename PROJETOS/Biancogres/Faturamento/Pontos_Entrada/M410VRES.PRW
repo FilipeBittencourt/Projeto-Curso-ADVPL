@@ -40,7 +40,7 @@ User Function M410VRES()
 
 		SC6->(DbSetOrder(1))
 
-		If (AllTrim(CEMPANT) == "14") .And. SC6->(DbSeek(XFilial("SC6")+SC5->C5_NUM)) .And. !U_CHKRODA(SC6->C6_PRODUTO)
+		If SC6->(DbSeek(XFilial("SC6")+SC5->C5_NUM)) .And. !U_CHKRODA(SC6->C6_PRODUTO)
 			lRet := .T.
 		ElseIf Len(U_FRTE02LO("", SC5->C5_NUM, "", "", "")) > 0  
 			MsgBox("Pedido possui RESERVAS vinculadas, não é possível eliminar Resíduo.","M410VRES","STOP")
@@ -107,9 +107,14 @@ User Function M410VRES()
 		oMotCan := Nil		
 
 		//Verificar se existe baixa de AI do pedido e excluir a baixa
-		If !Empty(SC5->C5_YNUMSI) .And. !(AllTrim(CEMPANT) $ '14')
+		If !Empty(SC5->C5_YNUMSI) 
 			U_AIEXCBX(SC5->C5_NUM, SC5->C5_YLINHA, SC5->C5_YNUMSI, SC5->C5_CLIENTE, SC5->C5_YEMPPED)
 		EndIf
+
+		If !Empty(SC5->C5_YNOUTAI)
+			U_AIEXCBX(SC5->C5_NUM, SC5->C5_YLINHA, SC5->C5_YNOUTAI, SC5->C5_CLIENTE, SC5->C5_YEMPPED)
+		EndIf
+
 
 		If (!Empty(SC5->C5_NUM))
 

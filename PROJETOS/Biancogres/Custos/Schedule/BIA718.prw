@@ -30,7 +30,7 @@ Local x
 If Select("SX6") == 0                                 // Via Schedule
 	*****************************************************************
 	
-	xv_Emps    := U_BAGtEmpr("01_05")
+	xv_Emps    := U_BAGtEmpr("01_05_14")
 	For x := 1 to Len(xv_Emps)
 		
 		//Inicializa o ambiente

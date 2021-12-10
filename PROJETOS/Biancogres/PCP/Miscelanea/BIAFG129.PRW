@@ -40,14 +40,15 @@ Return
 Static Function Menudef()
 
 	Local aRotina := {}
-	aAdd( aRotina, { 'Pesquisar'        , 'PesqBrw'   , 0, 1, 0, NIL } )
-	aAdd( aRotina, { 'Visualizar'       , 'U_BFG129V' , 0, 2, 0, NIL } )
-	aAdd( aRotina, { 'Alterar'          , 'U_BFG129A' , 0, 2, 0, NIL } )
-	aAdd( aRotina, { 'Excluir Especif'  , 'U_B129EXC' , 0, 2, 0, NIL } )
-	aAdd( aRotina, { 'Excluir Geral'    , 'U_B129GER' , 0, 2, 0, NIL } )
-	aAdd( aRotina, { 'Mudança Status'   , 'U_BFG129S' , 0, 8, 0, NIL } )
-	aAdd( aRotina, { 'Legenda'          , 'U_BFG129L' , 0, 8, 0, NIL } )
-	aAdd( aRotina, { 'Exportar Excel'   , 'U_BFG129I' , 0, 2, 0, NIL } )
+	aAdd( aRotina, { 'Pesquisar'           , 'PesqBrw'   , 0, 1, 0, NIL } )
+	aAdd( aRotina, { 'Visualizar'          , 'U_BFG129V' , 0, 2, 0, NIL } )
+	aAdd( aRotina, { 'Alterar'             , 'U_BFG129A' , 0, 2, 0, NIL } )
+	aAdd( aRotina, { 'Excluir Especif'     , 'U_B129EXC' , 0, 2, 0, NIL } )
+	aAdd( aRotina, { 'Excluir Geral'       , 'U_B129GER' , 0, 2, 0, NIL } )
+	aAdd( aRotina, { 'Matric. Temporária'  , 'U_B129MTP' , 0, 2, 0, NIL } )
+	aAdd( aRotina, { 'Mudança Status'      , 'U_BFG129S' , 0, 8, 0, NIL } )
+	aAdd( aRotina, { 'Legenda'             , 'U_BFG129L' , 0, 8, 0, NIL } )
+	aAdd( aRotina, { 'Exportar Excel'      , 'U_BFG129I' , 0, 2, 0, NIL } )
 
 Return aRotina
 
@@ -85,6 +86,9 @@ User Function BFG129A()
 	Local aObjects		:= {}
 	Local aInfo			:= {}
 	Local aPosObj		:= {}
+	Local aButtons      := {}
+
+	Aadd( aButtons, {"HISTORIC", {|| BFG129CP(@_oDlg) }, "Copiar Posição", "Copiar Posição" , {|| .T.}} )
 
 	If ( ZLC->ZLC_STATUS == 'A' )
 
@@ -97,7 +101,7 @@ User Function BFG129A()
 		// Carga das inforamções para a GRID.
 		fGeraGd(@_oDlg, aPosObj, "A")
 
-		ACTIVATE DIALOG _oDlg CENTERED on Init EnchoiceBar(_oDlg,  {|| fGrdGrava(), _oDlg:End()}, {|| _oDlg:End()})
+		ACTIVATE DIALOG _oDlg CENTERED on Init EnchoiceBar(_oDlg,  {|| fGrdGrava(), _oDlg:End()}, {|| _oDlg:End()},,@aButtons)
 
 	Else
 
@@ -175,7 +179,6 @@ Static Function fGeraGd(_oDlg, aPosObj, pOpc)
 	Local nGetOpc
 	Local _cAliasSr	:=	"%" + U_fGetDbSr() + ".dbo.r034fun" + "%"
 	Local _cAliasSr2	:=	U_fGetDbSr()
-
 
 	Default _oDlg	:= Nil				// V - Visualizar / A - Alterar.
 	Default aPosObj := Nil
@@ -609,23 +612,37 @@ Static Function fGrdGrava()
 	nPosMob	 := aScan(_oGetDados:aHeader, {|aCampo| AllTrim(aCampo[2]) == "MATOBS"})
 	nPosDat	 := aScan(_oGetDados:aHeader, {|aCampo| AllTrim(aCampo[2]) == "DATOBS"})
 	nPosMot	 := aScan(_oGetDados:aHeader, {|aCampo| AllTrim(aCampo[2]) == "MOTOBS"})
+
 	// Gravação da GRID.
 	DbSelectArea("ZLD")
 	For nX := 1 To Len(_oGetDados:aCols)
+
 		If !Empty(_oGetDados:aCols[nX][nPosCod])
-			ZLD->(DbSetOrder(1))	// ZLD_FILIAL + ZLD_CODIGO + ZLD_CODPOS
-			If ZLD->(DbSeek( ZLC->ZLC_FILIAL + ZLC->ZLC_CODIGO + _oGetDados:aCols[nX][nPosCod]))
+
+			msTipo := ""
+			If Alltrim(_oGetDados:aCols[nX][nPosTip]) = "AUTOMATICO"
+				msTipo := "1"
+			ElseIf Alltrim(_oGetDados:aCols[nX][nPosTip]) = "MANUAL"
+				msTipo := "2"
+			EndIf	
+
+			ZLD->(DbSetOrder(2))
+			If ZLD->(DbSeek( ZLC->ZLC_FILIAL + ZLC->ZLC_CODIGO + _oGetDados:aCols[nX][nPosCod] + msTipo))
+
 				RecLock("ZLD", .F.)
 				ZLD->ZLD_MAT 	:= _oGetDados:aCols[nX][nPosMat]
 				ZLD->ZLD_SITUAC := _oGetDados:aCols[nX][nPosSit]
-				ZLD->ZLD_TIPO	:= _oGetDados:aCols[nX][nPosTip]
+				ZLD->ZLD_TIPO	:= msTipo
 				ZLD->ZLD_OBS	:= _oGetDados:aCols[nX][nPosObs]
 				ZLD->ZLD_MATOBS	:= _oGetDados:aCols[nX][nPosMob]
 				ZLD->ZLD_DATOBS	:= _oGetDados:aCols[nX][nPosDat]
 				ZLD->ZLD_MOTOBS	:= _oGetDados:aCols[nX][nPosMot]
 				ZLD->(MsUnlock())
+
 			EndIf
+
 		EndIf
+
 	Next
 
 Return(.T.)
@@ -778,5 +795,99 @@ Static Function fDeletaGer()
 	U_BHC01PRC()
 
 	MsgINFO("Reprocessamento Excutado com sucesso!!!")
+
+Return
+
+User Function B129MTP()
+
+	If ValidPerg()
+
+		msTpProces := "E"
+		msMatricG  := MV_PAR01
+		msDatRef   := MV_PAR02
+
+		U_BHC01PRC()
+
+		MsgINFO("Reprocessamento Excutado com sucesso!!!")
+
+	EndIf
+
+Return
+
+Static Function ValidPerg()
+
+	local cLoad	    := "B129MTP" + cEmpAnt
+	local cFileName := RetCodUsr() +"_"+ cLoad
+	local lRet		:= .F.
+	Local aPergs	:=	{}
+
+	Local _M0007 := GetNextAlias()
+
+	MV_PAR01 :=	Space(08)
+	MV_PAR02 := CTOD("  /  /  ")
+
+	aAdd( aPergs ,{1, "Matricula"      ,MV_PAR01 ,""            ,"NAOVAZIO()"  ,'SRA623'     ,'.T.',50,.F.})
+	aAdd( aPergs ,{1, "Data Ref."      ,MV_PAR02 ,""            ,"NAOVAZIO()"  ,''           ,'.T.',50,.F.})
+
+	If ParamBox(aPergs ,"Processa Matricula Temporária",,,,,,,,cLoad,.T.,.T.)
+
+		lRet := .T.
+		MV_PAR01 := ParamLoad(cFileName,,1,MV_PAR01) 
+		MV_PAR02 := ParamLoad(cFileName,,2,MV_PAR02)
+
+	EndIf
+
+	BeginSql Alias _M0007
+
+		%NoParser%
+
+		SELECT COUNT(*) CONTAD
+		FROM %TABLE:ZLB% ZLBSUB(NOLOCK)
+		WHERE ZLBSUB.ZLB_FILIAL = %xFilial:ZLB%
+		AND ZLB_MATRES = %Exp:MV_PAR01%
+		AND ((%Exp:dtos(MV_PAR02)% BETWEEN ZLBSUB.ZLB_DTINI AND ZLBSUB.ZLB_DTFIM)
+		OR (%Exp:dtos(MV_PAR02)% >= ZLBSUB.ZLB_DTINI
+		AND ZLBSUB.ZLB_DTFIM = '        '))
+		AND ZLBSUB.ZLB_TIPO = 'T'
+		AND ZLBSUB.%NotDel%		
+
+	EndSql
+
+	If (_M0007)->(!EOF())
+
+		If (_M0007)->(CONTAD) == 0
+			lRet := .F.
+		EndIf
+
+	Else
+
+		lRet := .F.
+
+	EndIf
+
+	If !lRet
+
+		MsgSTOP("Atenção: ou a matrícula informada não é temporário, ou não possui plano de chamada. Favor verificar!!!", "BIAFG129")
+
+	EndIf	
+
+Return lRet
+
+Static Function BFG129CP(_oDlg)
+
+	Local nPos := _oGetDados:nAt
+
+	If nPos > 0
+
+		aAdd(_oGetDados:Acols,{"MANUAL", _oGetDados:Acols[nPos][2], _oGetDados:Acols[nPos][3], Space(08), Space(40), Space(20), Space(254), Space(08), Space(40), ctod("  /  /  "), Space(70), .F.})
+
+		RecLock("ZLD", .T.)
+		ZLD->ZLD_FILIAL := xFilial("ZLD") 
+		ZLD->ZLD_CODIGO := ZLC->ZLC_CODIGO
+		ZLD->ZLD_CODPOS := _oGetDados:Acols[nPos][2]
+		ZLD->ZLD_TIPO	:= "2"
+		ZLD->(MsUnlock())
+
+	EndIf
 
 Return

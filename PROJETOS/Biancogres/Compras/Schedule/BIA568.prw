@@ -32,7 +32,7 @@ User Function BIA568()
 	Private xViaSched 	:= (Select("SX6")== 0)
 	Private xv_Emps 	:= {} 
 
-	xv_Emps := U_BAGtEmpr("01_05_13")
+	xv_Emps := U_BAGtEmpr("01_05_13_14")
 
 	if lDebug
 		xv_Emps := U_BAGtEmpr("13")
@@ -215,10 +215,12 @@ Static Function GeraCab()
 	Else
 		C_HTML += '<h2 align="center" class="style11">ATENÇÃO PARA OS PRAZOS DE ENTREGA ABAIXO</h2> '
 	EndIf
-	If CEmpAnt = "05"                                                                                                
+	If CEmpAnt == "05"                                                                                                
 		C_HTML += '<h4 class="style9">  EMPRESA: INCESA REVESTIMENTO CERÂMICO LTDA </h4> '
-	ElseIf CEmpAnt = "13"
+	ElseIf CEmpAnt == "13"
 		C_HTML += '<h4 class="style9">  EMPRESA: MUNDIALLI </h4> '
+	ElseIf CEmpAnt == "14"
+		C_HTML += '<h4 class="style9">  EMPRESA: BIANCOGRES VINÍLICO </h4> '
 	Else                                                                   
 		C_HTML += '<h4 class="style9">  EMPRESA: BIANCOGRES CERÂMICA S/A </h4> '
 	EndIf

@@ -468,33 +468,18 @@ Return(cSQL)
 
 
 Method GetPagFun() Class TComposicaoSaldoFinanceiroEmpresa
+Local lExist    := .F.
+Local cSQL      := ""
+Local cQry      := ""
+Local cBankData := ""
 
-	Local lExist    := .F.
-	Local cSQL      := ""
-	Local cQry      := ""
-	Local cBankData := ""
-
-	/*cBankData := Alltrim(cBanco) + Alltrim(cAgencia) + Alltrim(cConta)
-	cBankData := Replace(cBankData, ".", Space(0))
-	cBankData := Replace(cBankData, "-", Space(0))
-
-	// Controle de pagamento de funcionarios
-	If (::cCompany == "01" .And. cBankData == "00134312550973") .Or. ; // Folha de pagamento da Biancogress somente sera executado para o banco do brasil na agencia: 34312 e conta: 55.097-3
-	(::cCompany == "05" .And. cBankData == "0013431256669") .Or. ; // Folha de pagamento da Incesa somente sera executado para o banco do brasil na agencia: 34312 e conta: 5.666-9
-	(::cCompany == "06" .And. cBankData == "00134312550981") .Or. ; // Folha de pagamento da JK somente sera executado para o banco do brasil na agencia: 34312 e conta: 55.098-1
-	(::cCompany == "07" .And. cBankData == "0013431252868") .Or. ; // Folha de pagamento da LM somente sera executado para o banco do brasil na agencia: 34312 e conta: 52868
-	(::cCompany == "11" .And. cBankData == "0013431253295") .Or. ; // Folha de pagamento da SP300 somente sera executado para o banco do brasil na agencia: 34312 e conta: 53295
-	(::cCompany == "12" .And. cBankData == "0013431254968") .Or. ; // Folha de pagamento da ST Gestão somente sera executado para o banco do brasil na agencia: 34312 e conta: 54968
-	(::cCompany == "13" .And. cBankData == "0013431254666") .Or. ; // Folha de pagamento da Mundi somente sera executado para o banco do brasil na agencia: 34312 e conta: 54666
-	(::cCompany == "14" .And. cBankData == "001343148755") // Folha de pagamento da Vitcer somente sera executado para o banco do brasil na agencia: 3431 e conta: 48755
-	*/
 		cQry := GetNextAlias()
 
 		iF (::cCompany == "01")
 			cSQL := " SELECT '001' BANCO,  '34312' AGENCIA, '55.097-3' CONTA, E2_VALOR *-1  "
 			lExist := .T.
 		ElseiF (::cCompany == "05")
-			cSQL := " SELECT '001' BANCO,  '34312' AGENCIA, '5.666-9' CONTA, E2_VALOR *-1  "
+			cSQL := " SELECT '021' BANCO,  '552' AGENCIA, '10.532.885' CONTA, E2_VALOR *-1  "
 			lExist := .T.
 		ElseiF (::cCompany == "06")
 			cSQL := " SELECT '001' BANCO,  '34312' AGENCIA, '55.098-1' CONTA, E2_VALOR *-1  "
@@ -503,7 +488,7 @@ Method GetPagFun() Class TComposicaoSaldoFinanceiroEmpresa
 			cSQL := " SELECT '001' BANCO,  '34312' AGENCIA, '52868' CONTA, E2_VALOR *-1  "
 			lExist := .T.
 		ElseiF (::cCompany == "11")
-			cSQL := " SELECT '001' BANCO,  '34312' AGENCIA, '53295' CONTA, E2_VALOR *-1  "
+			cSQL := " SELECT '021' BANCO,  '0552' AGENCIA, '31457237' CONTA, E2_VALOR *-1  "
 			lExist := .T.
 		ElseiF (::cCompany == "12")
 			cSQL := " SELECT '001' BANCO,  '34312' AGENCIA, '54968' CONTA, E2_VALOR *-1  "
@@ -529,7 +514,7 @@ Method GetPagFun() Class TComposicaoSaldoFinanceiroEmpresa
 
 		EndIf
 
-		Return cSQL
+Return cSQL
 
 
 Method GetPagDebAuto() Class TComposicaoSaldoFinanceiroEmpresa

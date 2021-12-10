@@ -232,7 +232,7 @@ Static Function EnviaWfAlt()
 	Local cArqAnexo := ""
 	Local lDebug 	:= .F.
 	Local Enter 	:= CHR(13)+CHR(10)
-	Local cRecebe   := 'suporte.ti@biancogres.com.br'
+	Local cRecebe   := 'sistemas.ti@biancogres.com.br'
 	Local nHora		:= val(SubStr(Time(),1,2))
 
 	If nHora >= 0 .And. nHora < 12

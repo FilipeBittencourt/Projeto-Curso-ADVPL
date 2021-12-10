@@ -27,6 +27,7 @@ User Function BACP0011()
 	
 		RpcSetType(3)
 		RpcSetEnv(xv_Emps[nI,1], xv_Emps[nI,2])
+		//RpcSetEnv(xv_Emps[nI,1], xv_Emps[nI,2],"FACILE","TESTE04","FAT",,{"CDL"})
 		
 		//Parametro para desligar os Jobs Automaticos em caso de Necessidade
 		If (U_GETBIAPAR("BIA_FATAUTO", .T. , xv_Emps[nI,1], xv_Emps[nI,2]))
@@ -66,8 +67,13 @@ Static Function fProcessa(_cEmp)
 	Local _cSerie	:=	""
 	Local _cZZW		:=	""
 	Local _cZZV		:=  ""
-
+	Local _oBiaEnv	:=	tBiaAmbiente():New()
 	Default _cEmp	:=	""
+
+	If _oBiaEnv:lErro
+		ConOut('BACP0011::Erro na configuração de Ambiente '+cEmpAnt+'/'+cFilAnt+' - '+ Time() + " - " + ::cErro)
+		Return
+	EndIf
 
 	Private cIdEnt	:=	GetCfgEntidade(@_cerror)
 
@@ -76,7 +82,7 @@ Static Function fProcessa(_cEmp)
 		Return
 	EndIf
 
-	If cempAnt == '07'
+	If cempAnt == '07' 
 
 		Do Case
 			Case (_cEmp == '01')
@@ -95,7 +101,6 @@ Static Function fProcessa(_cEmp)
 			ConOut('BACP0011::Empresa/Filial não Cadastrada... '+cEmpAnt+'/'+cFilAnt+' - '+ Time())
 			Return
 		EndCase
-
 		BeginSql Alias _cAlias
 			%NoParser%
 
@@ -105,7 +110,7 @@ Static Function fProcessa(_cEmp)
 
 			FROM %TABLE:SF2% SF2(NOLOCK) 
 
-			LEFT JOIN SPED050 SPED(NOLOCK) ON SPED.ID_ENT = %Exp:cIdEnt%
+			LEFT JOIN [DADOSADV].dbo.SPED050 SPED(NOLOCK) ON SPED.ID_ENT = %Exp:cIdEnt%
 			AND SPED.NFE_ID = SF2.F2_SERIE + SF2.F2_DOC
 			AND SPED.%NotDel%
 
@@ -163,18 +168,15 @@ Static Function fProcessa(_cEmp)
 			AND SD2.D2_LOJA = SF2.F2_LOJA
 			AND SD2.%NotDel%
 			)
-
 			ORDER BY SF2.F2_SERIE,SF2.F2_DOC
-
 		EndSql
-
 	Else
 		BeginSql Alias _cAlias
 			%NoParser%
 			SELECT DISTINCT SF2.F2_DOC DOCTO, SF2.F2_SERIE SERIE
 			FROM %TABLE:SF2% SF2(NOLOCK) 
 
-			LEFT JOIN SPED050 SPED(NOLOCK) 
+			LEFT JOIN [DADOSADV].dbo.SPED050 SPED(NOLOCK) 
 			ON SPED.ID_ENT = %Exp:cIdEnt%
 			AND SPED.NFE_ID = SF2.F2_SERIE + SF2.F2_DOC
 			AND SPED.%NotDel%

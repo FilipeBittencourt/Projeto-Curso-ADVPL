@@ -142,28 +142,38 @@ STATIC FUNCTION PREP_EMAIL(C_HTML)
 
 	Local lOk
 											  // Email do Emissor
-	cRecebe     := "vagner.salles@biancogres.com.br;glauco.santos@biancogres.com.br"   // Email Destinatario
-	cRecebeCC	:= "" 																		  // Com Copia
-	//cRecebeCO	:= "luana.ribeiro@biancogres.com.br"
+	cRecebe     := ""// Email Destinatario
+	cRecebeCC	:= ""// Com Copia
 	cRecebeCO	:= ""
 	_NOMEEMP    := ""
 
 	DO CASE
 		CASE CEMPANT = "01"
 		_NOMEEMP := 'BIANCOGRES CERAMICA SA'
-		cRecebe     += ";rosilene.murrer@biancogres.com.br;geovani.gomes@biancogres.com.br;rosicarla.ferreira@biancogres.com.br;avelino.lopes@biancogres.com.br"   
+		cRecebe	:= U_EmailWF("WORK_PCENV","01")
+
 		CASE CEMPANT = "05"	
 		_NOMEEMP := 'INCESA REVESTIMENTO CERÂMICO LTDA'
-		cRecebe     += ";leticia.vicente@biancogres.com.br;leonardo.mengal@biancogres.com.br"
+		cRecebe	:= U_EmailWF("WORK_PCENV","05")
+
 		CASE CEMPANT = "12"	                            
 		_NOMEEMP := 'ST GESTAO DE NEGOCIOS LTDA'   
+		cRecebe	:= U_EmailWF("WORK_PCENV","12")
+
 		CASE CEMPANT = "13"	                            
 		_NOMEEMP := 'MUNDI COMERCIO EXTERIOR E LOGISTICA LTDA'   
+		cRecebe	:= U_EmailWF("WORK_PCENV","13")
+
 		CASE CEMPANT = "14"	                            
 		_NOMEEMP := 'VITCER RETIFICA E COMPLEMENTOS CERAMICOS'   
+		cRecebe	:= U_EmailWF("WORK_PCENV","14")
 	ENDCASE
 
 	cAssunto := ""+_NOMEEMP+" PEDIDOS DE COMPRA NÃO ENVIADOS PARA FORNECEDOR"    
+
+	If(Empty(cRecebe))
+		cRecebe     := "vagner.salles@biancogres.com.br"
+	EndIf
 
 	lOk := U_BIAEnvMail(,cRecebe,cAssunto,C_HTML,'','',,'',cRecebeCC,cRecebeCO)
 

@@ -179,12 +179,11 @@ Return Nil
 @param _NUM_SI, , descricao
 @type function
 /*/
-Static Function QtyBaixas(_NUM_SI, _CEMP) 
+Static Function QtyBaixas(_NUM_SI) 
+Local _CEMP := "01"
 
-	Default _CEMP := CEMPANT
-
-	_cSQL := "exec SP_POL_GET_BAIXAS_AI_"+_CEMP+" '"+_NUM_SI+"'"		
-	TcQuery _cSQL New Alias (cQuery2)
+_cSQL := "exec SP_POL_GET_BAIXAS_AI_"+_CEMP+" '"+_NUM_SI+"'"		
+TcQuery _cSQL New Alias (cQuery2)
 
 Return    
 
@@ -199,56 +198,18 @@ Return
 /*/
 User Function AO_SALDO(_NUM_SI, _CPEDIDO, _LMEM, _DESPED)    
 	Local nSaldo := 0
-	Local cTabSZO
 	Local cQrySZO
-	Local cLinha
-	Local cCodEmP
-	Local _cEmp
 
 	Default _LMEM := .T. 
 	Default _DESPED := .F. //Se desconta valor do proprio pedido
 
 	Private cQuery2	 := "QUERY2"
 
-	If _LMEM
-		cLinha  := M->C5_YLINHA
-		cCodEmP := M->C5_YEMPPED
-	Else
-		SC5->(DbSetOrder(1))
-		SC5->(DbSeek(XFilial("SC5")+_CPEDIDO))
-		cLinha 	:= SC5->C5_YLINHA	
-		cCodEmP	:= SC5->C5_YEMPPED
-	EndIf		
-
-	If AllTrim(CEMPANT) == "07"
-
-		If (!Empty(cCodEmP))
-
-			_cEmp		:= AllTrim(cCodEmP)
-			cTabSZO 	:= "% SZO"+_cEmp+"0 %"		
-
-		Else
-
-			If ( cLinha $ "1_5")		
-				cTabSZO := "% SZO010 %"
-				_cEmp := "01"
-			Else
-				cTabSZO := "% SZO050 %"
-				_cEmp := "05"
-			EndIf
-
-		EndIf	
-
-	Else
-		cTabSZO := "% SZO"+AllTrim(CEMPANT)+"0 %"
-		_cEmp := CEMPANT
-	EndIf
-
 	cQrySZO := GetNextAlias()
 	BeginSql Alias cQrySZO
 		%NoParser%
 
-		SELECT ZO_VALOR FROM %Exp:cTabSZO% WHERE ZO_FILIAL = '01' AND ZO_SI = %Exp:_NUM_SI% AND %NotDel%
+		SELECT ZO_VALOR FROM %TABLE:SZO% WHERE ZO_FILIAL = '01' AND ZO_SI = %Exp:_NUM_SI% AND %NotDel%
 
 	EndSql
 
@@ -257,7 +218,7 @@ User Function AO_SALDO(_NUM_SI, _CPEDIDO, _LMEM, _DESPED)
 
 		nSaldo := (cQrySZO)->ZO_VALOR
 
-		QtyBaixas(_NUM_SI, _cEmp)
+		QtyBaixas(_NUM_SI)
 		If !(cQuery2)->(Eof())
 
 			nSaldo := (cQuery2)->SALDO_FINAL
@@ -337,11 +298,10 @@ User Function AO_VAL_E(_NUM_SI)
 	Local nSaldo
 	Local nValor
 	Local cQUERY
-	Local _cTabSZO
 	Local aSI := {}
 	Local cAliasTmp
-	Local _cEmp
-	Local lOutAI
+	Local _cEmp := "01"
+ 	Local lOutAI
 
 	If Empty(_NUM_SI)
 		Return(.T.)
@@ -357,41 +317,20 @@ User Function AO_VAL_E(_NUM_SI)
 		EndIf		
 	EndIf
 
-	If Alltrim(M->C5_YLINHA) $ "2#3" .And. AllTrim(CEMPANT) $ "05"  //ticket 10958 marreta provisoria AI Incesa na Bianco
-		_cTabSZO 	:= "SZO050"
-		_cEmp		:= "05"
-	Else                    
-		_cTabSZO	:= "SZO010"
-		_cEmp		:= "01"
-	EndIf
-
 	If (AllTrim(CEMPANT) == "07")
 		If ((ValType(aCols) <> "U" .And. Len(aCols) < 1) .Or. Empty(M->C5_YEMPPED))
+		
 			Aviso("AUTORIZAÇÃO DE INVESTIMENTO","Atenção: Na Empresa - LM, é necessario preencher uma linha do pedido, para depois informado o código da AI.",{"OK"},2,"SI informada: "+_NUM_SI)
 			Return(.F.)
+		
 		EndIf
-
-		If (!Empty(M->C5_YEMPPED))
-
-			//habilitando empresa 13 para utilizar AIs criadas na Bianco. Ticket 33082
-			If(Alltrim(M->C5_YEMPPED) == "13")
-				_cEmp		:= "01"
-				_cTabSZO 	:= "SZO010"	
-
-			Else
-				_cEmp		:= AllTrim(M->C5_YEMPPED)
-				_cTabSZO 	:= "SZO"+_cEmp+"0"		
-			EndIf
-		EndIf			
 	EndIf
-
 
 	If Select("QRY") > 0
 		QRY->(DbCloseArea())
 	EndIf
 
-	cQUERY := "select ZO_SI, ZO_ITEMCTA, ZO_FPAGTO from "+_cTabSZO+" where ZO_SI = '"+_NUM_SI+"' and RTRIM(ZO_STATUS) not in ('Baixa Total','Aguard. Aprovação','Aguard. Aprov. Dir.') and D_E_L_E_T_ = '' "
-
+	cQUERY := "select ZO_SI, ZO_ITEMCTA, ZO_FPAGTO from "+RetSqlName("SZO")+" where ZO_SI = '"+_NUM_SI+"' and RTRIM(ZO_STATUS) not in ('Baixa Total','Aguard. Aprovação','Aguard. Aprov. Dir.') and D_E_L_E_T_ = '' "
 	TcQuery cQUERY New Alias "QRY"
 
 	QRY->(dbGoTop())
@@ -567,7 +506,6 @@ User Function AO_INCBX(_CPEDIDO,_CNUMSI, _CTEXTO, _NOPC)
 	Local _NVALOR := 0
 	Local _nFatEntrega
 	Local _cSQL
-	Local _cEmpDest := ""
 	Local _aAreaC5
 
 	Default _CTEXTO		:= "Baixa Aut. Acordo"
@@ -589,29 +527,7 @@ User Function AO_INCBX(_CPEDIDO,_CNUMSI, _CTEXTO, _NOPC)
 	//Inclusao da AI
 	If (_NVALOR > 0)
 
-		//
-		If AllTrim(CEMPANT) == "07"
-
-			_aAreaC5 := SC5->(GetArea())
-			SC5->(DbSetOrder(1))
-			If SC5->(DbSeek(XFilial("SC5")+_CPEDIDO))
-
-				_cEmpDest := SC5->C5_YEMPPED
-
-			EndIf
-			RestArea(_aAreaC5)
-
-		EndIf 
-
-		If Empty(_cEmpDest) .Or. ( AllTrim(CEMPANT) $ "01#05#13#14" )  // Ajuste Ticket 11063 - Se o pedido está na empresa fabrica - a AI tem que estar nesta empresa - nao usar a regra da marca pois apos consolidacao os pedidos sao todos na Biancogres 
-
-			lRet := U_AO_IBX_E(_CPEDIDO,_CNUMSI,_NVALOR,,_CTEXTO)
-
-		Else
-
-			lRet := U_FROPCPRO(SubStr(_cEmpDest,1,2),"01","U_AO_IBX_E", _CPEDIDO, _CNUMSI,_NVALOR, AllTrim(CEMPANT)+AllTrim(CFILANT), _CTEXTO)
-
-		EndIf
+		lRet := U_AO_IBX_E(_CPEDIDO,_CNUMSI,_NVALOR,,_CTEXTO)
 
 	Else
 
@@ -621,7 +537,7 @@ User Function AO_INCBX(_CPEDIDO,_CNUMSI, _CTEXTO, _NOPC)
 		SC5->(DbSetOrder(1))
 		If SC5->(DbSeek(XFilial("SC5")+_CPEDIDO))
 
-			U_AIEXCBX(_CPEDIDO, SC5->C5_YLINHA, _CNUMSI, SC5->C5_CLIENTE, SC5->C5_YEMPPED)
+			U_AIEXCBX(_CPEDIDO, SC5->C5_YLINHA, _CNUMSI, SC5->C5_CLIENTE)
 
 		EndIf
 		RestArea(_aAreaC5)
@@ -752,69 +668,41 @@ Return
 @param _cCliente, , descricao
 @type function
 /*/
-User Function AIEXCBX(_cPedido, _cLinha, _CNUMSI, _cCliente, _cEmpPed)
+User Function AIEXCBX(_cPedido, _cLinha, _CNUMSI, _cCliente)
 
 	Local _cEmpOri := AllTrim(cEmpAnt)+AllTrim(cFilAnt)
 	Local _cQTmp
 
-	//Ticket 33082
-	If(Alltrim(_cEmpPed) == '13')
-		_cEmpPed := '01'
-	EndIF
-
 	//Verificar se existe baixa de AI do pedido e excluir a baixa
 	__cDoc  := 'PED'+_cPedido
-	__cTabZZQ := "ZZQ"+AllTrim(cEmpAnt)+"0"
 
-	If AllTrim(cEmpAnt) == "07"
+	If AllTrim(_cCliente) == "010064"
+		_cEmpOri := "0701"
 
-		If (!Empty(_cEmpPed))
+		//buscar pedido LM
+		_cQTmp := GetNextAlias()
+		BeginSql Alias _cQTmp
+			%NoParser%
 
-			__cTabZZQ 	:= "ZZQ"+AllTrim(_cEmpPed)+"0"		
+			SELECT C5_NUM FROM SC5070 (nolock) WHERE C5_FILIAL = '01' AND C5_YEMPPED = %Exp:AllTrim(cEmpAnt)% AND C5_YPEDORI = %Exp:_cPedido% AND D_E_L_E_T_=''
 
-		Else
-			If (_cLinha $ "1_5")
-				__cTabZZQ := "ZZQ010"
-			Else
-				__cTabZZQ := "ZZQ050"
-			EndIf
-		EndIf
-			
-	Else
+		EndSql			
 
-		If AllTrim(_cCliente) == "010064"
-			_cEmpOri := "0701"
+		If !(_cQTmp)->(Eof())
 
-			//buscar pedido LM
-			_cQTmp := GetNextAlias()
-			BeginSql Alias _cQTmp
-				%NoParser%
-
-				SELECT C5_NUM FROM SC5070 (nolock) WHERE C5_FILIAL = '01' AND C5_YEMPPED = %Exp:AllTrim(cEmpAnt)% AND C5_YPEDORI = %Exp:_cPedido% AND D_E_L_E_T_=''
-
-			EndSql			
-
-			If !(_cQTmp)->(Eof())
-
-				__cDoc  := 'PED'+(_cQTmp)->C5_NUM	
-				__cTabZZQ := "ZZQ"+AllTrim(cEmpAnt)+"0"
-
-			EndIf
-			(_cQTmp)->(DbCloseArea())
+			__cDoc  := 'PED'+(_cQTmp)->C5_NUM	
 
 		EndIf
+		(_cQTmp)->(DbCloseArea())
 
 	EndIf
-
-	__cTabSql := "% "+__cTabZZQ+" %"
 
 	cAliasTmp := GetNextAlias()
 	BeginSql Alias cAliasTmp	
 	%NoParser%
 
 		//fernando em 04/04/2017 - usando o campo ZZQ_FORNEC como empresa origem provisorio - estava dando erro com o ZZQ_ITEM
-
-		select 1 from %Exp:__cTabSql% where ZZQ_COD = %Exp:_CNUMSI% and ZZQ_FORNEC = %Exp:_cEmpOri% and ZZQ_DOC = %Exp:__cDoc% and %NotDel%		
+		select 1 from %TABLE:ZZQ% where ZZQ_COD = %Exp:_CNUMSI% and ZZQ_FORNEC = %Exp:_cEmpOri% and ZZQ_DOC = %Exp:__cDoc% and %NotDel%		
 
 	EndSql
 
@@ -823,7 +711,7 @@ User Function AIEXCBX(_cPedido, _cLinha, _CNUMSI, _cCliente, _cEmpPed)
 	(cAliasTmp)->(DbGoTop())
 	If !(cAliasTmp)->(Eof())
 
-		__cSql := " update "+__cTabZZQ+" set D_E_L_E_T_ = '*' where ZZQ_COD = '"+_CNUMSI+"' and ZZQ_FORNEC = '"+_cEmpOri+"' and ZZQ_DOC = '"+__cDoc+"' and D_E_L_E_T_='' " 
+		__cSql := " update "+RetSqlName("ZZQ")+" set D_E_L_E_T_ = '*' where ZZQ_COD = '"+_CNUMSI+"' and ZZQ_FORNEC = '"+_cEmpOri+"' and ZZQ_DOC = '"+__cDoc+"' and D_E_L_E_T_='' " 
 		TCSQLExec(__cSql)
 
 	EndIf

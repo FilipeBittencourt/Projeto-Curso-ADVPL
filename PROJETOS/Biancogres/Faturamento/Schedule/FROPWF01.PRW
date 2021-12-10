@@ -14,7 +14,7 @@
 
 User Function FROPWF01() 
 
-	Local xv_Emps    := U_BAGtEmpr("01_05")
+	Local xv_Emps    := U_BAGtEmpr("01_05_14")
 	Local nI
 
 	Private cSQL := ""
@@ -256,7 +256,7 @@ Static Function GetCHead2(_lAntec, _lEng)
 		cHtml += '               <th class = "cabtab" width="40" scope="col"> Data Neces. Eng. </th>                               '
 	EndIf
 
-	cHtml += '               <th class = "cabtab" width="40" scope="col"> Nova Data de Entrega </th>                           '
+	cHtml += '               <th class = "cabtab" width="40" scope="col"> Nova previsão de Prod. </th>                           '
 	cHtml += '            </tr>                                                                                                '
 
 Return()
@@ -342,20 +342,11 @@ Static Function SendMail(_cRep, _cAteMail, _sCli, cEmailAte)
 		eAtend := UsrRetMail(ZZI->ZZI_ATENDE)
 	EndIf*/
 
-	If AllTrim(cEmpAnt) == '01'
-		If !Empty(_cAteMail)
-			_cTo := _cAteMail
-			_oCC := U_EmailWF("FROPWF01",AllTrim(cEmpAnt)) + eAtend
-		Else
-			_cTo := U_EmailWF("FROPWF01",AllTrim(cEmpAnt)) + eAtend
-		EndIf
+	If !Empty(_cAteMail)
+		_cTo := _cAteMail
+		_oCC := U_EmailWF("FROPWF01",AllTrim(cEmpAnt)) + eAtend
 	Else
-		If !Empty(_cAteMail)
-			_cTo := _cAteMail
-			_oCC := U_EmailWF("FROPWF01",AllTrim(cEmpAnt)) + eAtend
-		Else
-			_cTo := U_EmailWF("FROPWF01",AllTrim(cEmpAnt)) + eAtend
-		EndIf
+		_cTo := U_EmailWF("FROPWF01",AllTrim(cEmpAnt)) + eAtend
 	EndIf
 
 	If !Empty(SA3->A3_EMAIL)

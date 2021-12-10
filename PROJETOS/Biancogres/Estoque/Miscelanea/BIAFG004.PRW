@@ -13,7 +13,7 @@
 
 User function BIAFG004()
 
-	Local xv_Emps	:=	U_BAGtEmpr("01_05")
+	Local xv_Emps	:=	U_BAGtEmpr("01_05_14")
 	Local _nI
 
 	for	_nI	:=	1 to Len(xv_Emps)
@@ -48,7 +48,7 @@ Static function BIAFG004Pr()
 	                        ZZ9_LOTE ,
 	                        ZZ9_RESTRI,
 	                        ZZ9_OBS
-	               FROM     %TABLE:ZZ9%
+	               FROM     %TABLE:ZZ9% (NOLOCK)
 	               WHERE    ZZ9_FILIAL = %xFilial:ZZ9%
 	                        AND ZZ9_RESTRI = '#'
 	                        AND %NotDel%
@@ -61,21 +61,27 @@ Static function BIAFG004Pr()
 	            ZZ9_OBS,
 	            DA_QTDORI ,
 	            DA_SALDO,
+	            ZCN_SEQUEN,
 	            DATEDIFF(dd,DA_DATA,GETDATE()) DIAS
-	    FROM    %TABLE:SDA% SDA
+	    FROM    %TABLE:SDA% SDA (NOLOCK)
 	            INNER JOIN LOTRESTRIT LRT ON ZZ9_PRODUT = DA_PRODUTO
 	                                         AND ZZ9_LOTE = DA_LOTECTL
+	            INNER JOIN %TABLE:ZCN% ZCN ON ZCN.ZCN_FILIAL = %XFILIAL:ZCN%
+	            	AND ZCN.ZCN_COD = SDA.DA_PRODUTO
+	            	AND ZCN.ZCN_LOCAL = SDA.DA_LOCAL
+	            	AND ZCN.%NotDel%
 	    WHERE   DA_FILIAL = %xFilial:SDA%
 	            AND DA_SALDO <> 0
 	            AND DATEDIFF(dd,DA_DATA,GETDATE()) > 1
 	            AND SDA.%NotDel%
-	
+	    ORDER BY ZCN_SEQUEN,DA_DATA
 	EndSql
 
 	if (_cAlias)->(!EOF())
 		_cHtml		:=	MntHeadHtm()
 		while (_cAlias)->(!EOF())
 			_cHtml	+=	'<tr>																												'
+			_cHtml	+=	'	<td><div align="center">'	+	(_cAlias)->ZCN_SEQUEN													+ '</div></td>'
 			_cHtml	+=	'	<td><div align="center">'	+	DtoC(Stod((_cAlias)->DA_DATA))													+ '</div></td>'
 			_cHtml	+=	'	<td><div align="center">'	+	(_cAlias)->DA_DOC																+ '</div></td>'
 			_cHtml	+=	'	<td><div align="center">'	+	(_cAlias)->DA_PRODUTO															+ '</div></td>'
@@ -120,6 +126,13 @@ Local _cHead	:=	""
 	_cHead	+=	'	<p>Produtos importados e ainda não disponibilizados para distribuição há mais de 1 dia</p>									'
 	_cHead	+=	'	<table width="1143" border="1" cellpadding="0" cellspacing="0" bordercolor="#000000" >										'
 	_cHead	+=	'		<tr>																													'
+	If cEmpAnt == "01"
+		_cHead	+=	'			<th bgcolor="#0033FF" scope="col">															'
+		_cHead	+=	'				<div align="center" class="style4">																				'
+		_cHead	+=	'					Fabrica																								'
+		_cHead	+=	'				</div>																											'
+		_cHead	+=	'			</th>																												'
+	EndIf
 	_cHead	+=	'			<th bgcolor="#0033FF" scope="col">															'
 	_cHead	+=	'				<div align="center" class="style4">																				'
 	_cHead	+=	'					Data																										'
@@ -176,6 +189,9 @@ static function wfSend(_cHtml)
 	Local df_Assu := "Log de Produtos importados e ainda não disponibilizados para distribuição há mais de 1 dia"
 	Local df_Erro := df_Assu + " não enviado. Favor verificar!!!" 
 
-	U_BIAEnvMail(, df_Dest, df_Assu, _cHtml, df_Erro)
-	
+
+		//df_Dest := 'diorgenes.santos@biancogres.com.br'
+		U_BIAEnvMail(, df_Dest, df_Assu, _cHtml, df_Erro)
+
+
 return

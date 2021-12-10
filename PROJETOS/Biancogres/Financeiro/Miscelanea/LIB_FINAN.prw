@@ -106,7 +106,7 @@ STATIC FUNCTION REJ_SE2(nLin)
 
 		// ENVIANCO EMAIL PARA OS RESPONSAVEIS PELO FINANCEIRO
 		C_TITULO 	:= "Titulo do Contas a Pagar Rejeitado "
-		C_DESTI		:= "alessa.gomes@biancogres.com.br"
+		C_DESTI		:= "mikaelly.viana@biancogres.com.br"
 
 		C_MENS 		:= "Titulo Rejeitado na " + IIF(CEMPANT="01","Biancogres",IIF(CEMPANT="05","Incesa",IIF(CEMPANT="14","Vitcer","Biancogres")))
 		C_MENS 		+= " "  + CHR(13)+CHR(10)
@@ -183,7 +183,7 @@ STATIC FUNCTION LIB_SE2(nLin)
 
 		// ENVIANCO EMAIL PARA OS RESPONSAVEIS PELO FINANCEIRO
 		C_TITULO 	:= "Titulo do Contas a Pagar Liberado"
-		C_DESTI		:= "alessa.gomes@biancogres.com.br"
+		C_DESTI		:= "mikaelly.viana@biancogres.com.br"
 		C_MENS 		:= "Titulo Liberado na " + IIF(CEMPANT="01","Biancogres",IIF(CEMPANT="05","Incesa",IIF(CEMPANT="14","Vitcer","Biancogres")))
 		C_MENS 		+= " "  + CHR(13)+CHR(10)
 		C_MENS 		+= "Número do Titulo:	" 	+ SE2->E2_NUM + CHR(13)+CHR(10)
@@ -246,7 +246,7 @@ STATIC FUNCTION REJ_SE1(nLin)
 
 		// ENVIANCO EMAIL PARA OS RESPONSAVEIS PELO FINANCEIRO
 		C_TITULO 	:= "Titulo do Contas a Receber Rejeitado"
-		C_DESTI		:= "wellison.toras@biancogres.com.br;nadine.araujo@biancogres.com.br"
+		C_DESTI		:= "wellison.toras@biancogres.com.br;nadine.araujo@biancogres.com.br;rylayne.eleuterio@biancogres.com.br"
 		C_COPIA		:= ""
 		C_MENS 		:= "Titulo Liberado na " + IIF(CEMPANT="01","Biancogres",IIF(CEMPANT="05","Incesa",IIF(CEMPANT="14","Vitcer","Biancogres")))
 		C_MENS 		+= " "  + CHR(13)+CHR(10)
@@ -326,7 +326,7 @@ STATIC FUNCTION LIB_SE1(nLin)
 
 		// ENVIANCO EMAIL PARA OS RESPONSAVEIS PELO FINANCEIRO
 		C_TITULO 	:= "Titulo do Contas a Receber Liberado"
-		C_DESTI		:= "nadine.araujo@biancogres.com.br"
+		C_DESTI		:= "nadine.araujo@biancogres.com.br;rylayne.eleuterio@biancogres.com.br"
 		C_COPIA		:= ""
 		C_MENS 		:= "Titulo Liberado na " + IIF(CEMPANT="01","Biancogres",IIF(CEMPANT="05","Incesa",IIF(CEMPANT="14","Vitcer","Biancogres")))
 		C_MENS 		+= " "  + CHR(13)+CHR(10)

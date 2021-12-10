@@ -88,9 +88,9 @@ ElseIf cEmpAnt == "13"
 	//guLocPadE := "02','04"
 ElseIf cEmpAnt == "14"
 	guTablEco := "DADOS_14_EOS"
-Else
-	Aviso( 'BIA506', 'Empresa não configurada para o sistema Ecosis', {'Ok'} )
-	Return
+// Else
+// 	Aviso( 'BIA506', 'Empresa não configurada para o sistema Ecosis', {'Ok'} )
+// 	Return
 EndIf
 
 If MV_PAR02 == "1"
@@ -129,37 +129,42 @@ IF MV_PAR01 == "2"
 	GU004 += "        SUM(QZZZZ) QZZZZ," + Enter
 	GU004 += "        SUM(QOUTROS) QOUTROS," + Enter
 	GU004 += "        ALMOX" + Enter
-	GU004 += "   FROM (SELECT cep.cod_produto COLLATE LATIN1_GENERAL_BIN PRODUT," + Enter
-	GU004 += "                cep.etiq_lote COLLATE LATIN1_GENERAL_BIN LOTEPR," + Enter	
-	GU004 += "                CASE " + Enter
-	GU004 += "                  WHEN end_local IN(7,8) THEN '04'" + Enter
-	GU004 += "			        ELSE '02'" + Enter
-	GU004 += "			      END ALMOX," + Enter
-	GU004 += "                Sum(cep.etiq_qtde) QECOSIS," + Enter
-	GU004 += "                0 QPDEVOL," + Enter
-	GU004 += "                0 QPAP," + Enter
-	GU004 += "                0 QPMEC," + Enter
-	GU004 += "                0 QZZZZ," + Enter
-	GU004 += "                0 QOUTROS" + Enter
-	GU004 += "           FROM "+guTablEco+"..cep_etiqueta_pallet cep," + Enter
-	GU004 += "                "+guTablEco+"..cad_produtos prod," + Enter
-	GU004 += "                "+guTablEco+"..cad_ref_produtos ref," + Enter
-	GU004 += "                "+guTablEco+"..cep_etiqueta_endereco d" + Enter
-	
-	GU004 += "          WHERE cep.cod_produto = prod.cod_produto" + Enter
-    GU004 += "            AND cep.COD_ENDERECO = d.COD_ENDERECO" + Enter
-	GU004 += "            AND prod.prd_referencia = ref.prd_referencia" + Enter
-	GU004 += "            AND cep.id_cia = 1" + Enter
-	GU004 += "            AND ref.ref_produto = 1" + Enter
-	GU004 += "            AND cep.etiq_cancelada = 0" + Enter
-	GU004 += "            AND Isnull(cep.nf_numero, '') = ''" + Enter
-	GU004 += "          GROUP BY cep.cod_produto," + Enter
-	GU004 += "                   cep.etiq_lote," + Enter
-	GU004 += "                   CASE" + Enter 
-	GU004 += " 				  	 	WHEN end_local IN(7,8) THEN '04'" + Enter
-	GU004 += " 					 	ELSE '02'" + Enter
-	GU004 += " 				  	 END" + Enter
-	GU004 += "          UNION ALL" + Enter
+	GU004 += "   FROM (		" + Enter
+
+	If cEmpAnt $ "01_05_13_14"
+		GU004 += "   			  SELECT cep.cod_produto COLLATE LATIN1_GENERAL_BIN PRODUT," + Enter
+		GU004 += "                cep.etiq_lote COLLATE LATIN1_GENERAL_BIN LOTEPR," + Enter	
+		GU004 += "                CASE " + Enter
+		GU004 += "                  WHEN end_local IN(7,8) THEN '04'" + Enter
+		GU004 += "			        ELSE '02'" + Enter
+		GU004 += "			      END ALMOX," + Enter
+		GU004 += "                Sum(cep.etiq_qtde) QECOSIS," + Enter
+		GU004 += "                0 QPDEVOL," + Enter
+		GU004 += "                0 QPAP," + Enter
+		GU004 += "                0 QPMEC," + Enter
+		GU004 += "                0 QZZZZ," + Enter
+		GU004 += "                0 QOUTROS" + Enter
+		GU004 += "           FROM "+guTablEco+"..cep_etiqueta_pallet cep," + Enter
+		GU004 += "                "+guTablEco+"..cad_produtos prod," + Enter
+		GU004 += "                "+guTablEco+"..cad_ref_produtos ref," + Enter
+		GU004 += "                "+guTablEco+"..cep_etiqueta_endereco d" + Enter
+		
+		GU004 += "          WHERE cep.cod_produto = prod.cod_produto" + Enter
+		GU004 += "            AND cep.COD_ENDERECO = d.COD_ENDERECO" + Enter
+		GU004 += "            AND prod.prd_referencia = ref.prd_referencia" + Enter
+		GU004 += "            AND cep.id_cia = 1" + Enter
+		GU004 += "            AND ref.ref_produto = 1" + Enter
+		GU004 += "            AND cep.etiq_cancelada = 0" + Enter
+		GU004 += "            AND Isnull(cep.nf_numero, '') = ''" + Enter
+		GU004 += "          GROUP BY cep.cod_produto," + Enter
+		GU004 += "                   cep.etiq_lote," + Enter
+		GU004 += "                   CASE" + Enter 
+		GU004 += " 				  	 	WHEN end_local IN(7,8) THEN '04'" + Enter
+		GU004 += " 					 	ELSE '02'" + Enter
+		GU004 += " 				  	 END" + Enter
+		GU004 += "          UNION ALL" + Enter
+	EndIF
+
 	GU004 += "         SELECT BF_PRODUTO PRODUT," + Enter
 	GU004 += "                BF_LOTECTL LOTEPR," + Enter
 	GU004 += "                BF_LOCAL ALMOX," + Enter

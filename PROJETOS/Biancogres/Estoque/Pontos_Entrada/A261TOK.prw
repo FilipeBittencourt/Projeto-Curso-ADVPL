@@ -16,6 +16,8 @@ User Function A261TOK()
 	Local nLocDest := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_LOCAL"},nLocal+1)
 	Local nPosPrd := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_COD"})
 	Local nPosPrdD := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_COD"},nPosPrd+1)
+	Local nPosMat := aScan(aHeader,{|x|UPPER(Alltrim(x[2])) == "D3_YMATRIC"})
+
 	Local _oMd	:=	TBiaControleMD():New()
 
 
@@ -49,6 +51,33 @@ User Function A261TOK()
 			EndIf
 			Return .F.
 		EndIf
+	
+		If _oMd:CheckMd(aCols[I][nPosPrd],aCols[I][nLocal]) 
+			If Empty(aCols[I][nPosMat])
+				If (IsBlind())
+					Conout("Impossível prosseguir, o produto "+ aCols[I][nPosPrdD] +" é MD na ORIGEM e o campo Matrícula precisa ser preenchido!  => MT260TOK")
+				Else	
+					MsgSTOP("Impossível prosseguir, o produto "+aCols[I][nPosPrdD] +" é MD na ORIGEM e o campo Matrícula precisa ser preenchido!  => MT260TOK")
+				EndIf
+				Return .F.
+			Else
+				_cProd		:= Gdfieldget('D3_COD',	I)
+				_cLocalOri	:= Gdfieldget('D3_LOCAL',	I)
+				_nQuant 	:= Gdfieldget('D3_QUANT', I)
+				
+				If _oMd:Saldo(_cProd,_cLocalOri,aCols[I][nPosMat],.F.) < _nQuant
+					If (IsBlind())
+						Conout("Impossível prosseguir, o produto "+ aCols[I][nPosPrdD] +" pois não há saldo suficiente na matrícula informada!  => MT260TOK")
+					Else	
+						MsgSTOP("Impossível prosseguir, o produto "+aCols[I][nPosPrdD] +" pois não há saldo suficiente na matrícula informada!  => MT260TOK")
+					EndIf
+					Return .F.					
+				Else
+					
+				EndIf				
+			EndIf
+		EndIf	
+	
 	
 		wCod 		:= Gdfieldget('D3_COD',I)
 		cAlmVend	:= aCols[I][nLocDest]

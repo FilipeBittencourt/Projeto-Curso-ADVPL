@@ -9,10 +9,10 @@
 @type Function
 /*/
 
-User Function BIAFG122(_aProds,_cMat,lWs)
+User Function BIAFG122(cEmpresa,_aProds,_cMat,lWs)
 
 	RpcSetType(3)
-	RpcSetEnv('01','01')
+	RpcSetEnv(cEmpresa,'01')
 
 	fProcessa(_aProds,_cMat,lWs)
 
@@ -22,7 +22,7 @@ Return
 
 Static Function fPRocessa(_aProds,_cMat,lWs)
 
-	Local _cClvl	:=	fGetClVl(SUBSTR(_cMat,3))
+	Local _cClvl	:=	fGetClVl(SUBSTR(_cMat,1,2),SUBSTR(_cMat,3))
 	Local _nI
 	Local _cErro	:=	""
 	Local _cSql
@@ -74,13 +74,13 @@ Static Function fPRocessa(_aProds,_cMat,lWs)
 				SZJ->ZJ_VLRTOT	:=	fRetCm(SZJ->ZJ_COD,SZJ->ZJ_LOCAL) * SZJ->ZJ_QUANT
 				SZJ->ZJ_APLIC	:=	"4"
 				SZJ->ZJ_YLOCALI	:=	Posicione("ZCN",2,xFilial("ZCN")+SZJ->ZJ_COD+SZJ->ZJ_LOCAL,"ZCN_LOCALI")
-				SZJ->ZJ_EMPRESA	:=	"01"
-				SZJ->ZJ_EMPDEST	:=	"01"
+				SZJ->ZJ_EMPRESA	:=	cEmpAnt
+				SZJ->ZJ_EMPDEST	:=	cEmpAnt
 				SZJ->ZJ_CLVL	:=	SZI->ZI_CLVL
 				SZJ->ZJ_YPARADA	:=	"N"
 				SZJ->ZJ_QTAPROV	:=	SZJ->ZJ_QUANT
 				SZJ->ZJ_YDRIVER	:=	U_BFG81DPD()
-				SZJ->ZJ_YJTDRV	:=	"DRIVER PREENCHIDO ATRAVES DAS REQUISICAO AUTOMATIZADA"
+				SZJ->ZJ_YJTDRV	:=	"DRIVER PREENCHIDO ATRAVES DA REQUISICAO AUTOMATIZADA"
 
 				SZJ->(MsUnlock())				
 
@@ -127,11 +127,12 @@ Static Function fPRocessa(_aProds,_cMat,lWs)
 
 Return
 
-Static Function fGetClVl(_cMat)
+Static Function fGetClVl(_cEmp,_cMat)
 
 	Local _cClVl	:=	""
 	Local _cAlias	:=	GetNextAlias()
 	Local _nMat		:=	Val(_cMat)
+	Local _nEmp		:=	Val(_cEmp)
 	Local _cAliasSr	:=	"%" + U_fGetDbSr() + ".dbo.r034fun" + "%"
 
 	BeginSql Alias _cAlias
@@ -140,7 +141,7 @@ Static Function fGetClVl(_cMat)
 
 		SELECT codccu RA_CLVL
 		FROM %Exp:_cAliasSr% A
-		WHERE numemp = 1
+		WHERE numemp = %Exp:_nEmp%
 		AND tipcol = 1
 		AND numcad = %Exp:_nMat%
 

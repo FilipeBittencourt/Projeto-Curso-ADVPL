@@ -45,6 +45,8 @@ oExcel:AddColumn(nxPlan, nxTabl, "LOCAL"           ,1,1)
 oExcel:AddColumn(nxPlan, nxTabl, "USUARIO"         ,1,1)
 oExcel:AddColumn(nxPlan, nxTabl, "QUANT"           ,3,2,.T.)
 oExcel:AddColumn(nxPlan, nxTabl, "CUSTO"           ,3,2,.T.)
+oExcel:AddColumn(nxPlan, nxTabl, "CLVL"             ,1,1)
+oExcel:AddColumn(nxPlan, nxTabl, "DSCLVL"             ,1,1)
 oExcel:AddColumn(nxPlan, nxTabl, "OBS"             ,1,1)
 
 RT001 := " SELECT D3_EMISSAO,
@@ -62,11 +64,16 @@ RT001 += "        CASE
 RT001 += "          WHEN D3_TM < '500' THEN D3_CUSTO1
 RT001 += "          ELSE D3_CUSTO1 * (-1)
 RT001 += "        END D3_CUSTO1,
-RT001 += "        D3_YOBS
+RT001 += "        D3_YOBS,
+RT001 += "        D3_CLVL,
+RT001 += "        ISNULL(CTH_DESC01,'') DSCLVL
 RT001 += "   FROM "+RetSqlName("SD3")+" SD3
 RT001 += "  INNER JOIN "+RetSqlName("SB1")+" SB1 ON B1_FILIAL = '"+xFilial("SB1")+"'
 RT001 += "                       AND B1_COD = D3_COD
 RT001 += "                       AND SB1.D_E_L_E_T_ = ' '
+	RT001 += "  LEFT JOIN "+RetSqlName("CTH")+" CTH ON CTH_FILIAL = '"+xFilial("CTH")+"'
+	RT001 += "                       AND CTH_CLVL = D3_CLVL
+	RT001 += "                       AND CTH.D_E_L_E_T_ = ' '
 RT001 += "  WHERE D3_FILIAL = '"+xFilial("SD3")+"'
 RT001 += "    AND D3_EMISSAO BETWEEN '"+dtos(MV_PAR01)+"' AND '"+dtos(MV_PAR02)+"'
 If MV_PAR03 <> 1
@@ -93,12 +100,18 @@ If MV_PAR04 == 1
 	RT001 += "          WHEN D3_TM < '500' THEN D3_CUSTO1
 	RT001 += "          ELSE D3_CUSTO1 * (-1)
 	RT001 += "        END D3_CUSTO1,
-	RT001 += "        D3_YOBS
+	RT001 += "        D3_YOBS,
+	RT001 += "        D3_CLVL,
+	RT001 += "        ISNULL(CTH_DESC01,'') DSCLVL
 	RT001 += "   FROM "+RetSqlName("SD3")+" SD3
 	RT001 += "  INNER JOIN "+RetSqlName("SB1")+" SB1 ON B1_FILIAL = '"+xFilial("SB1")+"'
 	RT001 += "                       AND B1_COD = D3_COD
 	RT001 += "                       AND B1_GRUPO = '102I'
 	RT001 += "                       AND SB1.D_E_L_E_T_ = ' '
+	RT001 += "  LEFT JOIN "+RetSqlName("CTH")+" CTH ON CTH_FILIAL = '"+xFilial("CTH")+"'
+	RT001 += "                       AND CTH_CLVL = D3_CLVL
+	RT001 += "                       AND CTH.D_E_L_E_T_ = ' '
+
 	RT001 += "  WHERE D3_FILIAL = '"+xFilial("SD3")+"'
 	RT001 += "    AND D3_EMISSAO BETWEEN '"+dtos(MV_PAR01)+"' AND '"+dtos(MV_PAR02)+"'
 	RT001 += "    AND D3_TM IN('005','502')
@@ -116,7 +129,7 @@ While !Eof()
 	
 	IncProc()
 	
-	oExcel:AddRow(nxPlan, nxTabl, { dtoc(stod(RT01->D3_EMISSAO)), RT01->D3_TM, RT01->D3_COD, RT01->DESCR, RT01->D3_UM, RT01->D3_LOCAL, RT01->D3_USUARIO, RT01->D3_QUANT, RT01->D3_CUSTO1, RT01->D3_YOBS })
+	oExcel:AddRow(nxPlan, nxTabl, { dtoc(stod(RT01->D3_EMISSAO)), RT01->D3_TM, RT01->D3_COD, RT01->DESCR, RT01->D3_UM, RT01->D3_LOCAL, RT01->D3_USUARIO, RT01->D3_QUANT, RT01->D3_CUSTO1,RT01->D3_CLVL,RT01->DSCLVL, RT01->D3_YOBS })
 	
 	dbSelectArea("RT01")
 	dbSkip()

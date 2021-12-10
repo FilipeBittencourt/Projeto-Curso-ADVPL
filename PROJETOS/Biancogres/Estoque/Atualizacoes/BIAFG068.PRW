@@ -19,6 +19,8 @@ User Function BFG68IN()
 	Local _lRet	:=	.T.
 	Local _cAlias	:=	GetNextALias()
 	Local _nRec	:=	ZCN->(Recno())
+	Local _oMd	:=	tBiaControleMD():New()
+	
 	
 	If Inclui
 		BEGINSQL Alias _cAlias
@@ -56,4 +58,9 @@ User Function BFG68IN()
 	
 	(_cAlias)->(DbCloseArea())
 
+	If ZCN->ZCN_POLIT == '4' .AND. M->ZCN_POLIT <> '4'
+	
+		_oMd:ZeraMd(M->ZCN_COD,M->ZCN_LOCAL)
+	
+	EndIf
 Return _lRet

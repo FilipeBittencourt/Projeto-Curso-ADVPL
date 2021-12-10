@@ -1,0 +1,119 @@
+#include "TOTVS.CH"
+#include "TOPCONN.CH"
+
+/*/{Protheus.doc} tBiaAmbiente
+@description Classe Para verificação de ambientes
+@author Gabriel Mafioletti
+@since 14/10/2021
+@version 1.0
+@type class
+/*/
+
+User Function tstBiaEnv()
+
+	RpcSetType(3)
+	RpcSetEnv("01","01")
+	
+	oTeste:= tBiaAmbiente():New()
+
+Return
+
+Class tBiaAmbiente from LongClassName
+
+	Public Data lProtProd
+	Public Data lTssProd
+	Public Data lSefazProd
+	Public Data lErro
+	Public Data cErro
+	
+	Public Method New() Constructor
+	Method IsProtProd()
+	Method IsTssProd()
+	Method IsSefazProd()
+
+EndClass
+
+
+Method New() Class tBiaAmbiente
+
+	::lErro			:=	.F.
+	::cErro			:=	""
+	::lProtProd		:=	::IsProtProd()
+	::lSefazProd	:=	::IsSefazProd()
+	::lTssProd		:=	::IsTssProd()
+
+	If !(::lErro)
+		If !(::lProtProd == ::lTssProd .And. ::lTssProd == ::lSefazProd)
+			::lErro	:=	.T.
+			::cErro	:=	"Ambiente Protheus = " + Iif(::lProtProd,"Produção","Teste") + CRLF
+			::cErro	+=	"Ambiente Tss = " + Iif(::lTssProd,"Produção","Teste") + CRLF
+			::cErro	+=	"Ambiente Sefaz = " + Iif(::lSefazProd,"Produção","Teste") +CRLF
+		EndIf
+	EndIf
+
+Return
+
+
+Method IsProtProd() Class tBiaAmbiente
+
+	Local _lRet	:=	.F.
+
+	If UPPER(Alltrim(GetSrvProfString("specialkey",'TST'))) == 'PROD'
+		_lret	:=	.T.
+	Else
+		_lret	:=	.F.
+	EndIf
+	
+Return _lRet
+
+Method IsTssProd() Class tBiaAmbiente
+
+	Local _lRet	:=	.F.
+
+	Local cURL      := PadR(GetNewPar("MV_SPEDURL","http://"),250)
+
+	//If "URANO" $ UPPER(cUrl) .Or. "192.168.20.7" $ UPPER(cUrl)
+	If "HEFESTO" $ UPPER(cUrl) .Or. "192.168.20.53" $ UPPER(cUrl)
+		_lRet	:=	.T.
+	Else
+		_lRet	:=	.F.
+	EndIf
+Return _lRet
+
+Method IsSefazProd() Class tBiaAmbiente
+
+	Local _lRet		:=	.F.
+	Local _cError	:=	""
+	Local _cIdEnt	:=	GetCfgEntidade(@_cerror)
+	Local cURL      := PadR(GetNewPar("MV_SPEDURL","http://"),250)
+	Local oWs
+	Local lOk
+	
+	If !Empty(_cError)
+		::lErro	:=	.T.
+		::cErro	:=	_cError
+		Return .F.
+	EndIf
+
+	//Busca o Ambiente
+	oWS := WsSpedCfgNFe():New()
+	oWS:cUSERTOKEN := "TOTVS"
+	oWS:cID_ENT    := _cIdEnt
+	oWS:nAmbiente  := 0
+	oWS:_URL       := AllTrim(cURL)+"/SPEDCFGNFe.apw"
+	lOk			   := execWSRet( oWS, "CFGAMBIENTE")
+	If lOk
+		If Substr(oWS:cCfgAmbienteResult,1,1) == '1' //Produção
+			_lRet	:=	.T.
+		Else
+			_lRet	:=	.F.
+		EndIf
+		FreeOBj(oWs)
+	Else
+		::lErro	:=	.T.
+		::cErro	:=	IIf(Empty(GetWscError(3)),GetWscError(1),GetWscError(3))
+		FreeOBj(oWs)
+		Return .F.
+	EndIf
+
+Return _lRet

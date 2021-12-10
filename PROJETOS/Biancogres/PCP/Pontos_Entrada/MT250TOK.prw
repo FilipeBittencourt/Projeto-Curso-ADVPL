@@ -95,7 +95,7 @@ If M->D3_EMISSAO <= GetMv("MV_YULMES")
 EndIf
 
 
-If xsRet .And. Alltrim(FunName()) == "MATA250" .And. SB1->B1_TIPO == "PI" .And. SB1->B1_GRUPO == 'PI01' .And. M->D3_LOCAL == "01" .And. Empty(M->D3_YRECURS)
+If xsRet .And. Alltrim(FunName()) == "MATA250" .And. SB1->B1_TIPO == "PI" .And. SB1->B1_GRUPO == 'PI01' .And. Empty(M->D3_YRECURS)
 	Aviso('MT250TOK','É necessário informar o campo Recurso' ,{'Ok'})
 	xsRet := .F.
 EndIf

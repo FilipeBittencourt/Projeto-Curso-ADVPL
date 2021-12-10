@@ -26,7 +26,7 @@ USER FUNCTION AVALCOPC
 	CA120LOJ  := SC7->C7_LOJA
 	U_WFW120P()
 	
-	If (!(Alltrim(FunName()) == 'MATA160' .And. AllTrim(SC8->C8_YTPPSS)=="1"))
+	If (!(Alltrim(FunName()) == 'MATA161' .And. AllTrim(SC8->C8_YTPPSS)=="1"))
 		//Fernando em 29/06/2018 => Ticket 5309 => Envio de email para aprovação automatica
 		IF SC7->C7_CONAPRO == "B" 
 	

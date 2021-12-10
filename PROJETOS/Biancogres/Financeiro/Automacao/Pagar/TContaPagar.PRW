@@ -5,6 +5,7 @@ Class TContaPagar From LongClassName
 	
 	Public Data oObj
 	Public Data oResult
+	Public Data lNewNumber
 	
 	Method New() Constructor
 	Method Incluir() 
@@ -13,15 +14,19 @@ Class TContaPagar From LongClassName
 EndClass
 
 Method New() Class TContaPagar
-	::oObj		:= Nil
-	::oResult	:= TContaPagarResultStruct():New()
+
+	::oObj       := Nil
+	::oResult    := TContaPagarResultStruct():New()
+
+	::lNewNumber := .T.
+
 Return()
 
 Method RetNumTit() Class TContaPagar
 
-	Local cQuery 		:= ""
-	Local cAliasTemp	:= GetNextAlias()
-	Local cNumTitulo	:= ""
+	Local cQuery     := ""
+	Local cAliasTemp := GetNextAlias()
+	Local cNumTitulo := ""
 
 	cQuery := " SELECT ISNULL(MAX(E2_NUM), '000000000') AS E2_NUM 			"
 	cQuery += " FROM " + RetSQLName("SE2")+"								"		
@@ -43,37 +48,38 @@ Return(cNumTitulo)
 
 Method Incluir(_oObj) Class TContaPagar
 
-	Local aCabec			:= {}
-	Local lOk				:= .F.
-	Local cMsgLog			:= ""
-	Local nI				:= 0
+	Local aCabec  := {}
+	Local lOk     := .F.
+	Local cMsgLog := ""
+	Local nI      := 0
 	
-	Private lMsErroAuto 	:= .F.
-	Private lMsHelpAuto 	:= .T.
-	Private lAutoErrNoFile	:= .T.
-	
+	Private lMsErroAuto    := .F.
+	Private lMsHelpAuto    := .T.
+	Private lAutoErrNoFile := .T.
+
 	::oObj 			:= _oObj
 
-	
 	varinfo("::oObj", ::oObj )
+
+	If ::lNewNumber
+		::oObj:cNumero 	:= ::RetNumTit()
+	EndIf
 	
-	::oObj:cNumero 		:= oContaPagar::RetNumTit()
-	
-	::oObj:cPrefixo		:= PADR(::oObj:cPrefixo		, TamSX3("E2_PREFIXO")[1])
-	::oObj:cNumero		:= PADR(::oObj:cNumero		, TamSX3("E2_NUM")[1])
-	::oObj:cParcela		:= PADR(::oObj:cParcela		, TamSX3("E2_PARCELA")[1])
-	::oObj:cTipo		:= PADR(::oObj:cTipo		, TamSX3("E2_TIPO")[1])
-	::oObj:cNatureza	:= PADR(::oObj:cNatureza	, TamSX3("E2_NATUREZ")[1])
-	::oObj:cFornecedor	:= PADR(::oObj:cFornecedor	, TamSX3("E2_FORNECE")[1])
-	::oObj:cLoja		:= PADR(::oObj:cLoja		, TamSX3("E2_LOJA")[1])
+	::oObj:cPrefixo    := PADR(::oObj:cPrefixo , TamSX3("E2_PREFIXO")[1])
+	::oObj:cNumero     := PADR(::oObj:cNumero , TamSX3("E2_NUM")[1])
+	::oObj:cParcela    := PADR(::oObj:cParcela , TamSX3("E2_PARCELA")[1])
+	::oObj:cTipo       := PADR(::oObj:cTipo , TamSX3("E2_TIPO")[1])
+	::oObj:cNatureza   := PADR(::oObj:cNatureza , TamSX3("E2_NATUREZ")[1])
+	::oObj:cFornecedor := PADR(::oObj:cFornecedor , TamSX3("E2_FORNECE")[1])
+	::oObj:cLoja       := PADR(::oObj:cLoja , TamSX3("E2_LOJA")[1])
 
 	aAdd(aCabec, {"E2_PREFIXO", 		::oObj:cPrefixo, Nil})
-	aAdd(aCabec, {"E2_NUM", 			::oObj:cNumero, Nil})
+	aAdd(aCabec, {"E2_NUM", 				::oObj:cNumero, Nil})
 	aAdd(aCabec, {"E2_PARCELA", 		::oObj:cParcela, Nil})
-	aAdd(aCabec, {"E2_TIPO", 			::oObj:cTipo, Nil})
+	aAdd(aCabec, {"E2_TIPO", 				::oObj:cTipo, Nil})
 	aAdd(aCabec, {"E2_NATUREZ", 		::oObj:cNatureza, Nil})
 	aAdd(aCabec, {"E2_FORNECE", 		::oObj:cFornecedor, Nil})
-	aAdd(aCabec, {"E2_LOJA", 			::oObj:cLoja, Nil})
+	aAdd(aCabec, {"E2_LOJA", 				::oObj:cLoja, Nil})
 	aAdd(aCabec, {"E2_EMISSAO",			::oObj:dEmissao, Nil})
 	aAdd(aCabec, {"E2_VENCTO", 			::oObj:dVencto, Nil})
 	aAdd(aCabec, {"E2_VALOR", 			::oObj:nValor, Nil})

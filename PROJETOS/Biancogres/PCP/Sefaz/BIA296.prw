@@ -33,30 +33,30 @@ User Function BIA296()
 	dbSelectArea("SDS")
 	dbGoTop()
 	aCores :=  { ;
-	{" DS_STATUS <> 'P' "                          , "BR_VERDE"      },;
-	{" DS_STATUS = 'P' "                           , "BR_VERMELHO"   } }
+		{" DS_STATUS <> 'P' "                          , "BR_VERDE"      },;
+		{" DS_STATUS = 'P' "                           , "BR_VERMELHO"   } }
 
 	n := 1
 	cCadastro := " ....: Importação de XML :.... "
 
 	If __cUserID $ "000553;000996"
 		aRotina   := {  {"Pesquisar"     ,'AxPesqui'                                          ,0, 1},;
-		{                "Processar"     ,'Execblock("BIA296B"    ,.F.,.F.,"P")'              ,0, 2},;
-		{                "Schema"        ,'Execblock("BIA296D"    ,.F.,.F.,"D")'              ,0, 3},;
-		{                "Falta XML"     ,'Execblock("BIA296F"    ,.F.,.F.,"F")'              ,0, 4},;
-		{                "SDS vs SF1"    ,'Execblock("BIA296S"    ,.F.,.F.,"S")'              ,0, 5},;
-		{                "Importar"      ,'Execblock("BIA295"     ,.F.,.F.,"I")'              ,0, 6},;
-		{                "Grv Schma"     ,'Execblock("BIA296G"    ,.F.,.F.,"G")'              ,0, 7},;
-		{                "Baixar Email"  ,'Execblock("WF_BIA290"  ,.F.,.F.,"'+cEmpAnt+'")'    ,0, 8},;
-		{                "Legenda"       ,'Execblock("BIA296A"    ,.F.,.F.,"L")'              ,0, 9} }
+			{                "Processar"     ,'Execblock("BIA296B"    ,.F.,.F.,"P")'              ,0, 2},;
+			{                "Schema"        ,'Execblock("BIA296D"    ,.F.,.F.,"D")'              ,0, 3},;
+			{                "Falta XML"     ,'Execblock("BIA296F"    ,.F.,.F.,"F")'              ,0, 4},;
+			{                "SDS vs SF1"    ,'Execblock("BIA296S"    ,.F.,.F.,"S")'              ,0, 5},;
+			{                "Importar"      ,'Execblock("BIA295"     ,.F.,.F.,"I")'              ,0, 6},;
+			{                "Grv Schma"     ,'Execblock("BIA296G"    ,.F.,.F.,"G")'              ,0, 7},;
+			{                "Baixar Email"  ,'Execblock("WF_BIA290"  ,.F.,.F.,"'+cEmpAnt+'")'    ,0, 8},;
+			{                "Legenda"       ,'Execblock("BIA296A"    ,.F.,.F.,"L")'              ,0, 9} }
 	Else
 		aRotina   := {  {"Pesquisar"     ,'AxPesqui'                                          ,0, 1},;
-		{                "Processar"     ,'Execblock("BIA296B"    ,.F.,.F.,"P")'              ,0, 2},;
-		{                "Schema"        ,'Execblock("BIA296D"    ,.F.,.F.,"D")'              ,0, 3},;
-		{                "Falta XML"     ,'Execblock("BIA296F"    ,.F.,.F.,"F")'              ,0, 4},;
-		{                "Importar"      ,'Execblock("BIA295"     ,.F.,.F.,"I")'              ,0, 6},;
-		{                "Baixar Email"  ,'Execblock("WF_BIA290"  ,.F.,.F.,"'+cEmpAnt+'")'    ,0, 5},;
-		{                "Legenda"       ,'Execblock("BIA296A"    ,.F.,.F.,"L")'              ,0, 6} }
+			{                "Processar"     ,'Execblock("BIA296B"    ,.F.,.F.,"P")'              ,0, 2},;
+			{                "Schema"        ,'Execblock("BIA296D"    ,.F.,.F.,"D")'              ,0, 3},;
+			{                "Falta XML"     ,'Execblock("BIA296F"    ,.F.,.F.,"F")'              ,0, 4},;
+			{                "Importar"      ,'Execblock("BIA295"     ,.F.,.F.,"I")'              ,0, 6},;
+			{                "Baixar Email"  ,'Execblock("WF_BIA290"  ,.F.,.F.,"'+cEmpAnt+'")'    ,0, 5},;
+			{                "Legenda"       ,'Execblock("BIA296A"    ,.F.,.F.,"L")'              ,0, 6} }
 	EndIf
 
 	mBrowse(6,1,22,75, "SDS", , , , , ,aCores)
@@ -613,7 +613,7 @@ User Function BIA296B()
 			EndIf
 
 			cEmp  := zp_Empr
-			kjTES := "0A2"
+			kjTES := "3A4"
 			KR001 := " SELECT F2_YSUBTP, F2_COND, F2_PLIQUI
 			KR001 += "   FROM SF2"+zp_Empr+"0 SF2
 			KR001 += "  WHERE F2_FILIAL = '"+xFilial("SF2")+"'
@@ -643,7 +643,7 @@ User Function BIA296B()
 				If cEmpAnt == '14' .and. zp_Empr == '01'
 					kjTES := '001'
 				ElseIf zp_Empr == '01' .or. zp_Empr == '05'
-					kjTES := '0A2'
+					kjTES := '3A4'
 				ElseIf zp_Empr == '13' .and. Alltrim(KR01->F2_YSUBTP) <> 'A'
 					//kjTES := '0A3'
 					kjTES := '0A4'
@@ -956,16 +956,16 @@ Static Function xeExcSF1()
 	EndIf
 
 	ACABS:= { {'F1_TIPO   '	, _xTipoNf   	 				  , NIL},;
-	{          'F1_DOC    '	, _NFNUM		 				  , NIL},;
-	{          'F1_SERIE  '	, _NFSERIE						  , NIL},;
-	{          'F1_EMISSAO'	, _NFEMIS						  , NIL},;
-	{          'F1_FORNECE'	, _CCODFOR    					  , NIL},;
-	{          'F1_LOJA   '	, _CLOJFOR 			     		  , NIL},;
-	{          'F1_EST    '	, SA2->A2_EST	  				  , NIL},;
-	{          'F1_DTDIGIT'	, dDataBase						  , NIL},;
-	{          'F1_ESPECIE'	, 'SPED'						  , NIL},;
-	{          'F1_FORMUL ' , 'N'             	  		      , NIL},;
-	{          'F1_CHVNFE ' , _CCHVNFE        	  	          , NIL} }
+		{          'F1_DOC    '	, _NFNUM		 				  , NIL},;
+		{          'F1_SERIE  '	, _NFSERIE						  , NIL},;
+		{          'F1_EMISSAO'	, _NFEMIS						  , NIL},;
+		{          'F1_FORNECE'	, _CCODFOR    					  , NIL},;
+		{          'F1_LOJA   '	, _CLOJFOR 			     		  , NIL},;
+		{          'F1_EST    '	, SA2->A2_EST	  				  , NIL},;
+		{          'F1_DTDIGIT'	, dDataBase						  , NIL},;
+		{          'F1_ESPECIE'	, 'SPED'						  , NIL},;
+		{          'F1_FORMUL ' , 'N'             	  		      , NIL},;
+		{          'F1_CHVNFE ' , _CCHVNFE        	  	          , NIL} }
 
 	If !Empty(__CCOND)
 		AADD(ACABS,	{'F1_COND ',__CCOND, NIL})
@@ -1530,7 +1530,7 @@ User Function BIA296G()
 	Processa({|| RptzDetl()})
 Return
 Static Function RptzDetl()
-	#ENDIF
+#ENDIF
 
 	Local  cError   := ""
 	Local  cWarning := ""
@@ -1542,23 +1542,23 @@ Static Function RptzDetl()
 	dbSelectArea("SDS")
 	dbGoTop()
 	ProcRegua(RecCount())
-	While !Eof()
+While !Eof()
 
 		IncProc(SDS->DS_DOC)
-		If Empty(SDS->DS_YSCHEMA)
+	If Empty(SDS->DS_YSCHEMA)
 			cPathXML  := "\P10\XML_NFE\" + cEmpAnt+cFilAnt + "\IMPORTADOS\"+Alltrim(SDS->DS_ARQUIVO)
 			_oXML := XmlParserFile(cPathXML, "_", @cError, @cWarning )
-			If ValType(_oXML) == "O"
+		If ValType(_oXML) == "O"
 				SAVE _oXML XMLSTRING pMGetXML
 				RecLock("SDS",.F.)
 				SDS->DS_YSCHEMA := Alltrim(pMGetXML)
 				MsUnLock()
-			Endif
-		EndIf
+		Endif
+	EndIf
 		dbSelectArea("SDS")
 		dbSkip()
 
-	End
+End
 
 Return
 
@@ -1578,7 +1578,7 @@ User Function BIA296F()
 	Processa({|| RptBIA296F()})
 Return
 Static Function RptBIA296F()
-	#ENDIF
+#ENDIF
 
 	Local xwDados7 := {}
 
@@ -1586,24 +1586,24 @@ Static Function RptBIA296F()
 	U_BIA296S()
 
 	xAccount 			:= "nf-e.biancogres@biancogres.com.br"
-	If cEmpAnt == "01"                                       // Biancogres
+If cEmpAnt == "01"                                       // Biancogres
 		xAccount 			:= "nf-e.biancogres@biancogres.com.br"
-	ElseIf cEmpAnt == "05"                                   // Incesa
+ElseIf cEmpAnt == "05"                                   // Incesa
 		xAccount 			:= "nf-e.incesa@incesa.ind.br"
-	ElseIf cEmpAnt == "12"                                   // St Gestão
+ElseIf cEmpAnt == "12"                                   // St Gestão
 		xAccount 			:= "nf-e.stgestao@biancogres.com.br"
-	ElseIf cEmpAnt == "13"                                   // Mundi
+ElseIf cEmpAnt == "13"                                   // Mundi
 		xAccount 			:= "nf-e.mundi@biancogres.com.br"
-	ElseIf cEmpAnt == "14"                                   // Vitcer
-		xAccount 			:= "nf-e.vitcer@vitcer.com.br"
-	EndIf
+ElseIf cEmpAnt == "14"                                   // Vinilico - Vitcer
+		xAccount 			:= "nf-e.vinilico@biancogres.com.br"
+EndIf
 
 	fPerg := "BIA296F"
 	fTamX1 := IIF(Alltrim(oApp:cVersion) == "MP8.11", 6, 10)
 	ValidPerg()
-	If !Pergunte(fPerg,.T.)
+If !Pergunte(fPerg,.T.)
 		Return
-	EndIf
+EndIf
 
 	TR007 := " SELECT F1_ESPECIE ESPECIE,
 	TR007 += "        F1_FORNECE FORNECE,
@@ -1656,8 +1656,8 @@ Static Function RptBIA296F()
 	dbSelectArea("TR07")
 	dbGoTop()
 	ProcRegua(RecCount())
-	If MV_PAR05 == 1
-		While !Eof()
+If MV_PAR05 == 1
+	While !Eof()
 
 			IncProc("Preparando dados para Excel!!!")
 
@@ -1676,15 +1676,15 @@ Static Function RptBIA296F()
 
 			dbSelectArea("TR07")
 			dbSkip()
-		End
+	End
 		aStru1 := ("TR07")->(dbStruct())
 		TR07->(dbCloseArea())
 
 		U_BIAxExcel(xwDados7, aStru1, "BIA296F"+strzero(seconds()%3500,5) )
 
-	Else
+Else
 
-		While !Eof()
+	While !Eof()
 
 			xdForn  := TR07->FORNECE
 			xdLoja  := TR07->LOJA
@@ -1709,7 +1709,7 @@ Static Function RptBIA296F()
 			WL001 += '     <td width="178" bgcolor="#66CCFF" scope="col"><div align="center"><strong>Emissão</strong></div></td>
 			WL001 += '   </tr>
 
-			While !Eof() .and. xdForn+xdLoja == TR07->FORNECE+TR07->LOJA
+		While !Eof() .and. xdForn+xdLoja == TR07->FORNECE+TR07->LOJA
 
 				IncProc("Enviando Email!!!")
 
@@ -1721,7 +1721,7 @@ Static Function RptBIA296F()
 
 				dbSelectArea("TR07")
 				dbSkip()
-			End
+		End
 
 			xfPosTel := At("27",SM0->M0_TEL)
 
@@ -1752,10 +1752,10 @@ Static Function RptBIA296F()
 			U_BIAEnvMail(df_Orig, df_Dest, df_Assu, WL001, df_Erro)
 
 			dbSelectArea("TR07")
-		End
+	End
 		TR07->(dbCloseArea())
 
-	EndIf
+EndIf
 
 Return
 

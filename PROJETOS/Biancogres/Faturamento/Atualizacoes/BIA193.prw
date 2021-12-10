@@ -19,7 +19,7 @@ User Function BIA193()
 	Private cCodFunc := GetMv( "MV_YBIA193")	//CODIGO DE FUNCOES QUE SAO DE PROMOTORES (CADASTRADO NA TABELA SRA)
 	Private cCodFuncI := GetMv( "MV_BIA193I")	//CODIGO DE FUNCOES QUE SAO DE PROMOTORES - INCESA
 
-	Private cCLVLPVE := GetNewPar("FA_CLVLPVE", "2116/2156/2115/2215/2155/2255")
+	Private cCLVLPVE := GetNewPar("FA_CLVLPVE", "2105/2116/2156/2115/2215/2155/2255/2301")
 
 	cCodFuncI := cCodFunc
 
@@ -75,7 +75,7 @@ User Function BIA193_I(cAlias, nReg, nOpc)
 	oTPanel1:Align := CONTROL_ALIGN_TOP
 
 	@ 11, 006 SAY "Empresa:" SIZE 70,7 PIXEL OF oTPanel1
-	@ 010, 035 MSCOMBOBOX oComboBo1 VAR cCodEmp ITEMS {"01=Biancogres","05=Incesa","07=LM"} SIZE 072, 010 OF oDlg COLORS 0, 16777215 PIXEL
+	@ 010, 035 MSCOMBOBOX oComboBo1 VAR cCodEmp ITEMS {"01=Biancogres","05=Incesa","07=LM","14=Vilinico"} SIZE 072, 010 OF oDlg COLORS 0, 16777215 PIXEL
 
 	@ 11, 112 SAY "Consultor(a):" SIZE 70,7 PIXEL OF oTPanel1
 	@ 11, 230 SAY "Nome:" SIZE 70,7 PIXEL OF oTPanel1
@@ -436,7 +436,7 @@ User Function BIA193_MNT( cAlias, nReg, nOpc )
 	oTPanel1:Align := CONTROL_ALIGN_TOP
 
 	@ 11, 006 SAY "Empresa:" SIZE 70,7 PIXEL OF oTPanel1
-	@ 010, 035 MSCOMBOBOX oComboBo1 VAR cCodEmp ITEMS {"01=Biancogres","05=Incesa","07=LM"} SIZE 072, 010 OF oDlg COLORS 0, 16777215 PIXEL
+	@ 010, 035 MSCOMBOBOX oComboBo1 VAR cCodEmp ITEMS {"01=Biancogres","05=Incesa","07=LM","14=Vinilico"} SIZE 072, 010 OF oDlg COLORS 0, 16777215 PIXEL
 
 	@ 11, 112 SAY "Consultor(a):" SIZE 70,7 PIXEL OF oTPanel1
 	@ 11, 230 SAY "Nome:" SIZE 70,7 PIXEL OF oTPanel1
@@ -651,7 +651,6 @@ Static Function fMSNewGetDados1()
 	A0001 := " SELECT RA_DEMISSA,RA_MAT,RA_CLVL,RA_NOME,RA_CODFUNC,RJ_DESC "
 	A0001 += " FROM VW_SENIOR_SRA SRA "
 	A0001 += " WHERE SRA.CODEMP = '"+cCodEmp+"' "
-
 	If !(AllTrim(FunName()) $ "BIA193_FPVETE04")
 		A0001 += " AND SRA.RA_DEMISSA = ''  "
 	EndIf

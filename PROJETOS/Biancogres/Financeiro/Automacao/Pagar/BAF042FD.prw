@@ -16,9 +16,10 @@ User Function BAF042FD()
 	Local cNatureza  := ""
 	Local nI         := 0
 	Local aListForne := {;
-								{"000534", "01", "1121"},;
+								{"000534", "01", "2209"},;
 								{"002912", "01", "2101"},;
-								{"004695", "01", "2999"};
+								{"004695", "01", "2999"},;
+								{"003721", "01", "2209"};	
 								}
 
 	If Upper( AllTrim( GetEnvServer() ) ) == "COMP-PONTIN" .And. Select("SX6") <= 0

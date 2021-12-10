@@ -19,6 +19,8 @@ Local oObj := Nil
 	aAdd(aEmp, "01")
 	aAdd(aEmp, "05")	
 	aAdd(aEmp, "07")
+
+	U_ChkDirVistoriaObra()
 	
 	For nCount := 1 To Len(aEmp)
 
@@ -39,6 +41,19 @@ Local oObj := Nil
 	Next
 
 Return()
+
+user function ChkDirVistoriaObra()
+	
+	IF !ExistDir("\P10\vistoria_obra")
+		conout("Falha: Diretorio \P10\vistoria_obra não encontrado. Recriando... data: " + DTOS(date()))
+
+		MakeDir("\P10\vistoria_obra")
+		MakeDir("\P10\vistoria_obra\atraso")
+		MakeDir("\P10\vistoria_obra\comprovante")
+		MakeDir("\P10\vistoria_obra\orientacao")
+		MakeDir("\P10\vistoria_obra\termo")
+	ENDIF
+return
 
 /*
 // TESTE para forçar geração de termo de vistoria que não foi gerado na pasta

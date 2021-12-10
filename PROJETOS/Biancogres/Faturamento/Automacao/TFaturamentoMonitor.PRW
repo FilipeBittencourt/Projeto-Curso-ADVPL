@@ -1009,7 +1009,7 @@ Method GetPedidos(lGrid) Class TFaturamentoMonitor
 			WHEN STATUS = 6
 			THEN 'Autorizada'
 		ELSE '' END
-			FROM dbo.SPED050 A ( NOLOCK )
+			FROM [DADOSADV].dbo.SPED050 A ( NOLOCK )
 			WHERE ID_ENT = %Exp:oObjFat:cIdEnt%
 			AND NFE_ID = SC9.C9_SERIENF + SC9.C9_NFISCAL
 			AND A.D_E_L_E_T_ = ''
@@ -1033,7 +1033,7 @@ Method GetPedidos(lGrid) Class TFaturamentoMonitor
 	 		WHEN STATUS = 8
 			THEN 'MDFe Encerrado'
 		ELSE '' END
-			FROM dbo.SPED050 A ( NOLOCK )
+			FROM [DADOSADV].dbo.SPED050 A ( NOLOCK )
 			WHERE ID_ENT = %Exp:oObjFat:cIdEnt%
 			AND NFE_ID = SF2.F2_SERMDF + SF2.F2_NUMMDF
 			AND A.D_E_L_E_T_ = ''	
@@ -1054,7 +1054,7 @@ Method GetPedidos(lGrid) Class TFaturamentoMonitor
 			WHEN STATUS = 5
 			THEN 'Autorizada'
 		ELSE '' END
-			FROM dbo.SPED201 A ( NOLOCK )
+			FROM [DADOSADV].dbo.SPED201 A ( NOLOCK )
 			WHERE ID_ENT = %Exp:oObjFat:cIdEnt%
 			AND ID = SF2.F2_EST + F2_NFICMST
 			AND A.D_E_L_E_T_ = ''
@@ -1075,7 +1075,7 @@ Method GetPedidos(lGrid) Class TFaturamentoMonitor
 			WHEN STATUS = 5
 			THEN 'Autorizada'
 		ELSE '' END
-			FROM dbo.SPED201 A ( NOLOCK )
+			FROM [DADOSADV].dbo.SPED201 A ( NOLOCK )
 			WHERE ID_ENT = %Exp:oObjFat:cIdEnt%
 			AND ID = SF2.F2_EST + F2_GNRDIF
 			AND A.D_E_L_E_T_ = ''
@@ -1096,7 +1096,7 @@ Method GetPedidos(lGrid) Class TFaturamentoMonitor
 			WHEN STATUS = 5
 			THEN 'Autorizada'
 		ELSE '' END
-			FROM dbo.SPED201 A ( NOLOCK )
+			FROM [DADOSADV].dbo.SPED201 A ( NOLOCK )
 			WHERE ID_ENT = %Exp:oObjFat:cIdEnt%
 			AND ID = SF2.F2_EST + F2_GNRFECP
 			AND A.D_E_L_E_T_ = ''
@@ -1615,7 +1615,7 @@ Method AtuLegDoc(lGrid) Class TFaturamentoMonitor
 			SA1->(DBSetOrder(1))
 
 			SA1->(DBSeek(xFilial("SA1") + ::aDocumentos[nW][D_CLIENTE] + ::aDocumentos[nW][D_LOJA]))
-
+			
 			If oObjMDFe:IsValidMDFe(SubStr(::aDocumentos[nW][D_EMPFIL], 1, 2), SubStr(::aDocumentos[nW][D_EMPFIL], 3, 2), ::aDocumentos[nW][D_EST], ::aDocumentos[nW][D_CNPJ], ::aDocumentos[nW][D_UFTRANSP], ::aDocumentos[nW][D_CNPJTRANSP], SA1->A1_COD_MUN)
 
 				If oObjMDFe:IsFaltaRota(SubStr(::aDocumentos[nW][D_EMPFIL], 1, 2), SubStr(::aDocumentos[nW][D_EMPFIL], 3, 2), ::aDocumentos[nW][D_EST])
@@ -1633,7 +1633,7 @@ Method AtuLegDoc(lGrid) Class TFaturamentoMonitor
 					If DA3->(MsSeek(xFilial("DA3") + ::aDocumentos[nW][D_VEIC]))
 
 						If DUT->( msSeek( xFilial( "DUT" ) + DA3->DA3_TIPVEI ) )
-
+							
 							If Empty(::aDocumentos[nW][D_STATUS_MDFE])
 
 								::aDocumentos[nW][D_STATUS_MDFE] := "Aguardando envio"
@@ -1822,61 +1822,63 @@ Method Faturar() Class TFaturamentoMonitor
 
 	Local _aAreaZZV := ZZV->(GetArea())
 	Local oObjFat := ::oObjFat
-
+	Local _oBiaEnv	:=	tBiaAmbiente():New()
 	Public _XCRGATFAT := .T.
 
+	If _oBiaEnv:lErro
+		MsgInfo("FAVOR COMUNICAR À TI! " + _oBiaEnv:cErro)
+		Return .F.
+	EndIf
 	//__oSemaforo				:=	tBiaSemaforo():New()
 	//__oSemaforo:cGrupo		:=	"FATURAMENTO"
 	//__oSemaforo:lShowMsg	:= .T. //Nao Exibir mensagem de LOCK
 	//If __oSemaforo:GeraSemaforo("FAT:Faturamento Automatico")
 
-	::cCarga := ::GetCarga()
+		::cCarga := ::GetCarga()
 
-	ZZV->(DbSetOrder(1))
+		ZZV->(DbSetOrder(1))
 
-	If ZZV->(DbSeek(xFilial("ZZV")+::cCarga))
+		If ZZV->(DbSeek(xFilial("ZZV")+::cCarga))
 
-		::SetKeys(.T.)
+			::SetKeys(.T.)
 
-		If Empty(ZZV->ZZV_PL_UF) .And. !Empty(ZZV->ZZV_PLACA)
+			If Empty(ZZV->ZZV_PL_UF) .And. !Empty(ZZV->ZZV_PLACA)
 
-			Alert("UF do veículo não preenchida!")
+				Alert("UF do veículo não preenchida!")
 
-			_XCRGATFAT := .F.
+				_XCRGATFAT := .F.
 
-			Return(.F.)
-
-		EndIf
-
-		__nVld := oObjFat:VldCarga(ZZV->ZZV_CARGA)
-
-		If ( __nVld == 0 .Or. __nVld == 2 )
-
-			If MsgNoYes("Tem certeza que deseja iniciar o faturamento da CARGA: "+ZZV->ZZV_CARGA,"TFaturamentoMonitor")
-
-				U_GravaPZ2(ZZV->(RecNo()),"ZZV",ZZV->ZZV_CARGA,"FATAUT",AllTrim(FunName()),"FAT", CUSERNAME)
-
-				U_BACP0010(ZZV->ZZV_CARGA, cEmpAnt)
-
-				::cCarga := ""
-
-				::Get()
+				Return(.F.)
 
 			EndIf
 
+			__nVld := oObjFat:VldCarga(ZZV->ZZV_CARGA)
+
+			If ( __nVld == 0 .Or. __nVld == 2 )
+
+				If MsgNoYes("Tem certeza que deseja iniciar o faturamento da CARGA: "+ZZV->ZZV_CARGA,"TFaturamentoMonitor")
+
+					U_GravaPZ2(ZZV->(RecNo()),"ZZV",ZZV->ZZV_CARGA,"FATAUT",AllTrim(FunName()),"FAT", CUSERNAME)
+
+					U_BACP0010(ZZV->ZZV_CARGA, cEmpAnt)
+
+					::cCarga := ""
+
+					::Get()
+
+				EndIf
+
+			EndIf
+
+			::SetKeys()
+
 		EndIf
 
-		::SetKeys()
+		_XCRGATFAT := .F. 	// Estava acontecendo de o usuario abrir o monitor, faturava, essa variavel ficar true,
+		// e abrir a tela de documento de saida para faturar e como continuava true, entendia que estava em job
 
-	EndIf
-
-	_XCRGATFAT := .F. 	// Estava acontecendo de o usuario abrir o monitor, faturava, essa variavel ficar true,
-	// e abrir a tela de documento de saida para faturar e como continuava true, entendia que estava em job
-	// Limpeza de variáveis.
-	::oObjFat := Nil
-	::oObjFat := TFaturamentoAutomatico():New()
-	//Liberar semaforo Faturamento
-	//__oSemaforo:LiberaSemaforo()
+		//Liberar semaforo Faturamento
+		//__oSemaforo:LiberaSemaforo()
 
 	//EndIf
 
@@ -1925,7 +1927,7 @@ Method GetDocCarDest(cEmp, cFil, cUf, cCarga, cCodCli, cCodLoja, cEmissaoNF) Cla
 	cSQL += " 	WHEN STATUS = 6 "
 	cSQL += " 	THEN 'Autorizada' "
 	cSQL += " 	ELSE '' END "
-	cSQL += " FROM dbo.SPED050 A ( NOLOCK ) "
+	cSQL += " FROM [DADOSADV].dbo.SPED050 A ( NOLOCK ) "
 	cSQL += " WHERE ID_ENT = " + ValToSql(oObjFat:cIdEnt)
 	cSQL += " AND NFE_ID = SF2.F2_SERIE + SF2.F2_DOC "
 	cSQL += " AND A.D_E_L_E_T_ = '' "
@@ -1951,7 +1953,7 @@ Method GetDocCarDest(cEmp, cFil, cUf, cCarga, cCodCli, cCodLoja, cEmissaoNF) Cla
 	cSQL += " 		WHEN STATUS = 8 "
 	cSQL += " 		THEN 'MDFe Encerrado' "
 	cSQL += " 		ELSE '' END "
-	cSQL += " 	FROM dbo.SPED050 A ( NOLOCK ) "
+	cSQL += " 	FROM [DADOSADV].dbo.SPED050 A ( NOLOCK ) "
 	cSQL += " 	WHERE ID_ENT = " + ValToSql(oObjFat:cIdEnt)
 	cSQL += " 	AND NFE_ID = SF2.F2_SERMDF + SF2.F2_NUMMDF "
 	cSQL += " 	AND A.D_E_L_E_T_ = ''	 "
@@ -1973,7 +1975,7 @@ Method GetDocCarDest(cEmp, cFil, cUf, cCarga, cCodCli, cCodLoja, cEmissaoNF) Cla
 	cSQL += " 				WHEN STATUS = 5 "
 	cSQL += " 				THEN 'Autorizada' "
 	cSQL += " 				ELSE '' END "
-	cSQL += " 			FROM dbo.SPED201 A ( NOLOCK ) "
+	cSQL += " 			FROM [DADOSADV].dbo.SPED201 A ( NOLOCK ) "
 	cSQL += " 			WHERE ID_ENT = " + ValToSql(oObjFat:cIdEnt)
 	cSQL += " 			AND ID = SF2.F2_EST + SF2.F2_NFICMST "
 	cSQL += " 			AND A.D_E_L_E_T_ = '' "
@@ -1995,7 +1997,7 @@ Method GetDocCarDest(cEmp, cFil, cUf, cCarga, cCodCli, cCodLoja, cEmissaoNF) Cla
 	cSQL += " 				WHEN STATUS = 5 "
 	cSQL += " 				THEN 'Autorizada' "
 	cSQL += " 				ELSE '' END "
-	cSQL += " 			FROM dbo.SPED201 A ( NOLOCK ) "
+	cSQL += " 			FROM [DADOSADV].dbo.SPED201 A ( NOLOCK ) "
 	cSQL += " 			WHERE ID_ENT = " + ValToSql(oObjFat:cIdEnt)
 	cSQL += " 			AND ID = SF2.F2_EST + SF2.F2_GNRDIF "
 	cSQL += " 			AND A.D_E_L_E_T_ = '' "
@@ -2017,7 +2019,7 @@ Method GetDocCarDest(cEmp, cFil, cUf, cCarga, cCodCli, cCodLoja, cEmissaoNF) Cla
 	cSQL += " 				WHEN STATUS = 5 "
 	cSQL += " 				THEN 'Autorizada' "
 	cSQL += " 				ELSE '' END "
-	cSQL += " 			FROM dbo.SPED201 A ( NOLOCK ) "
+	cSQL += " 			FROM [DADOSADV].dbo.SPED201 A ( NOLOCK ) "
 	cSQL += " 			WHERE ID_ENT = " + ValToSql(oObjFat:cIdEnt)
 	cSQL += " 			AND ID = SF2.F2_EST + SF2.F2_GNRFECP "
 	cSQL += " 			AND A.D_E_L_E_T_ = '' "

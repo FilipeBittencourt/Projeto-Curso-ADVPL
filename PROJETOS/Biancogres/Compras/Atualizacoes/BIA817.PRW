@@ -23,8 +23,8 @@ DbSeek(xFilial("SBZ")+cCod)
 
 If SBZ->BZ_YBLSCPC == '1'
 	cCod	:= ""
-	MsgBox("O produto "+Alltrim(SB1->B1_COD)+" está bloqueado para uso em Solicitações e Pedidos. Favor verificar com o Almoxarifado.","Atenção","INFO")
-	AutoGrLog("O produto "+Alltrim(SB1->B1_COD)+" está bloqueado para uso em Solicitações e Pedidos. Favor verificar com o Almoxarifado.")
+	MsgBox("BIA817 - O produto "+Alltrim(SB1->B1_COD)+" está bloqueado para uso em Solicitações e Pedidos. Favor verificar com o Almoxarifado.","Atenção","INFO")
+	AutoGrLog("BIA817 - O produto "+Alltrim(SB1->B1_COD)+" está bloqueado para uso em Solicitações e Pedidos. Favor verificar com o Almoxarifado.")
 EndIf
 
 Return(cCod)

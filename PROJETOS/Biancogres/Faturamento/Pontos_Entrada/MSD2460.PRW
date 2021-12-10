@@ -84,7 +84,7 @@ If !KR01->(EOF())
 EndIf
 
 SF4->(DbSetOrder(1))
-SF4->(DbSeek(xFilial("SF4")+SF2->F2_FILIAL))
+SF4->(DbSeek(xFilial("SF4")+SD2->D2_TES))
 
 If SF2->F2_TIPO == 'D' .And. Alltrim(SF4->F4_ESTOQUE) == 'S' .And. _oMd:CheckMD(SD2->D2_COD,SD2->D2_LOCAL)
 	_oMd:DevolucaoNF(SD2->D2_NFORI,SD2->D2_SERIORI,SD2->D2_CLIENTE,SD2->D2_LOJA,SD2->D2_ITEMORI,SD2->D2_DOC,SD2->D2_SERIE,;

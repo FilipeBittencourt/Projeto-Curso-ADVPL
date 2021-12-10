@@ -35,39 +35,42 @@ Static Function fProcessa()
 	DbSelectArea("ZCN")
 
 	BEGINSQL Alias _cAlias
-
+		%NoParser%
 		SELECT BZ_COD
-		,BZ_LOCPAD
-		,BZ_ESTSEG
-		,BZ_EMIN
-		,BZ_LE
-		,B1_TIPO
-		,BZ_YLOCAL
-		,BZ_YPOLIT
-		,BZ_YMD
-		FROM %TABLE:SBZ% SBZ
-		JOIN %TABLE:SB1% SB1
-		ON SBZ.BZ_COD = SB1.B1_COD
-		AND SB1.%NotDel%
-		LEFT JOIN %TABLE:ZCN% ZCN ON SBZ.BZ_COD = ZCN.ZCN_COD
-		AND ZCN.ZCN_SEQUEN = '1'
-		AND ZCN.%NotDel%
+			,BZ_LOCPAD
+			,BZ_ESTSEG
+			,BZ_EMIN
+			,BZ_LE
+			,B1_TIPO
+			,BZ_YLOCAL
+			,BZ_YPOLIT
+			,BZ_YMD
+		FROM %TABLE:SBZ% SBZ(NOLOCK)
+		JOIN %TABLE:SB1% SB1(NOLOCK) ON SBZ.BZ_COD = SB1.B1_COD
+			AND SB1.%NotDel%
 		WHERE SBZ.%NotDel%
-		AND (
-		ZCN.ZCN_FILIAL IS NULL
-		OR (
-		ZCN.ZCN_FILIAL IS NOT NULL
-		AND (
-		ZCN.ZCN_LOCAL <> SBZ.BZ_LOCPAD
-		OR ZCN.ZCN_ESTSEG <> SBZ.BZ_ESTSEG
-		OR ZCN.ZCN_PONPED <> SBZ.BZ_EMIN
-		OR ZCN.ZCN_LE <> SBZ.BZ_LE
-		OR ZCN.ZCN_LOCALI <> SBZ.BZ_YLOCAL
-		OR ZCN.ZCN_MD <> SBZ.BZ_YMD
-		OR ZCN.ZCN_POLIT <> SBZ.BZ_YPOLIT
-		)
-		)
-		)
+			AND (
+				NOT EXISTS (
+					SELECT 1
+					FROM %TABLE:ZCN% ZCN(NOLOCK)
+					WHERE ZCN.ZCN_FILIAL = %XFILIAL:ZCN%
+						AND SBZ.BZ_COD = ZCN.ZCN_COD
+						AND ZCN.ZCN_SEQUEN = '1'
+						AND ZCN.%NotDel%
+					)
+				OR (
+					%Exp:cEmpant% = '01' 
+					AND	NOT EXISTS (
+						SELECT 1
+						FROM %TABLE:ZCN% ZCN2(NOLOCK)
+						WHERE ZCN2.ZCN_FILIAL = %XFILIAL:ZCN%
+							AND ZCN2.ZCN_COD = SB1.B1_COD
+							AND ZCN2.ZCN_SEQUEN = '2'
+							AND ZCN2.%NotDel%
+						)
+					
+					)
+				)
 
 	ENDSQL
 
@@ -90,28 +93,32 @@ Static Function fProcessa()
 			ZCN->(MsUnlock())
 		EndIf
 
-		xcLocSecPad := "20"
-		
-		// Regra incluída para atender a unificação do controle de almoxarifado dos insumos de MPM
-		SB1->( dbSetOrder(1) )
-		SB1->( dbSeek(xFilial("SB1") + (_cAlias)->BZ_COD))
-		If SB1->B1_TIPO = "MP" .and. SB1->B1_GRUPO >= "101 " .and. SB1->B1_GRUPO <= "101Z"
-			xcLocSecPad := "01"
-		EndIf
+		If cEmpAnt == '01'
 
-		If !ZCN->(DbSeek(xFilial("ZCN")+(_cAlias)->BZ_COD+'2'))
-			Reclock("ZCN",.T.)
-			ZCN->ZCN_FILIAL :=	xFilial("ZCN")
-			ZCN->ZCN_COD	:=	(_cAlias)->BZ_COD
-			ZCN->ZCN_SEQUEN	:=	"2"
-			ZCN->ZCN_LOCAL	:=	IIF(Alltrim((_cAlias)->B1_TIPO) $ "PA_PP", '04', xcLocSecPad)
-			ZCN->ZCN_ESTSEG	:=	(_cAlias)->BZ_ESTSEG
-			ZCN->ZCN_PONPED	:=	(_cAlias)->BZ_EMIN
-			ZCN->ZCN_LE		:=	(_cAlias)->BZ_LE
-			ZCN->ZCN_LOCALI	:=	(_cAlias)->BZ_YLOCAL
-			ZCN->ZCN_POLIT	:=	(_cAlias)->BZ_YPOLIT
-			ZCN->ZCN_MD		:=	(_cAlias)->BZ_YMD
-			ZCN->(MsUnlock())
+			xcLocSecPad := "20"
+			
+			// Regra incluída para atender a unificação do controle de almoxarifado dos insumos de MPM
+			SB1->( dbSetOrder(1) )
+			SB1->( dbSeek(xFilial("SB1") + (_cAlias)->BZ_COD))
+			If SB1->B1_TIPO = "MP" .and. SB1->B1_GRUPO >= "101 " .and. SB1->B1_GRUPO <= "101Z"
+				xcLocSecPad := "01"
+			EndIf
+	
+			If !ZCN->(DbSeek(xFilial("ZCN")+(_cAlias)->BZ_COD+'2'))
+				Reclock("ZCN",.T.)
+				ZCN->ZCN_FILIAL :=	xFilial("ZCN")
+				ZCN->ZCN_COD	:=	(_cAlias)->BZ_COD
+				ZCN->ZCN_SEQUEN	:=	"2"
+				ZCN->ZCN_LOCAL	:=	IIF(Alltrim((_cAlias)->B1_TIPO) $ "PA_PP", '04', xcLocSecPad)
+				ZCN->ZCN_ESTSEG	:=	(_cAlias)->BZ_ESTSEG
+				ZCN->ZCN_PONPED	:=	(_cAlias)->BZ_EMIN
+				ZCN->ZCN_LE		:=	(_cAlias)->BZ_LE
+				ZCN->ZCN_LOCALI	:=	(_cAlias)->BZ_YLOCAL
+				ZCN->ZCN_POLIT	:=	(_cAlias)->BZ_YPOLIT
+				ZCN->ZCN_MD		:=	(_cAlias)->BZ_YMD
+				ZCN->(MsUnlock())
+			EndIf
+
 		EndIf
 
 		(_cAlias)->(DbSkip())
@@ -122,7 +129,7 @@ Static Function fProcessa()
 
 	
 	fAtuMundi()
-	fAtuVinilico()
+///	fAtuVinilico()
 
 Return
 

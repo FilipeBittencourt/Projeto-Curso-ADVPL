@@ -9,7 +9,6 @@
 @description Automatiza sequencia do codigo do Cadastro de Cliente
 @history 29/04/2014, Ranisses A. Corona, Criação do fonte
 @history 29/04/2014, Thiago Dantas, Melhoria na funcao para definicao do codigo
-@history 18/02/2021, Ranisses A. Corona, Criacao da funcao de fRegCobr
 @type function
 /*/
 
@@ -17,8 +16,6 @@ User Function BIA861()
 Local nSeq := "000000"
 
 If !Empty(Alltrim(M->A1_CGC)) .Or. M->A1_TIPO == "X"
-    
-    M->A1_YCDGREG := U_fRegCobr(Alltrim(M->A1_EST), Alltrim(M->A1_CGC), Alltrim(M->A1_GRPVEN), Alltrim(M->A1_COD))
     
     If cEmpAnt == "02"
     	nSeq := M->A1_COD

@@ -30,8 +30,8 @@ User Function BIAEC003()
 	Private nBase   := 050      // Linha da Base
 
 	//Retrato A4
-	Private lLimV := 3000
-	Private lLimH := 2290
+	Private lLimV := 3700
+	Private lLimH := 2350
 
 	//PAISAGEM A4
 	//Private lLimV := 2300          
@@ -41,7 +41,6 @@ User Function BIAEC003()
 	Private aMeses := {"Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"}
 
 	Private cQry := GetNextAlias()
-
 
 	//CONFIGURACOES DO RELATORIO
 	#IFDEF WINDOWS
@@ -125,66 +124,118 @@ Static Function fImpDet()
 		oPrint:StartPage()
 		fImpCabec()  
 
-		nLinha += 10*nSalto
+		nLinha += nSalto
 
-		oPrint:Say  (nLinha,lPosCol1+100,"DECLARAÇÃO DE RESPONSABILIDADE DO TRANSPORTADOR/MOTORISTA",oFont7)
-		nLinha += 4*nSalto   
+		oPrint:Say  (nLinha,lPosCol1+50,"DECLARAÇÃO DE RESPONSABILIDADE DO TRANSPORTADOR/MOTORISTA",oFont7)
+		nLinha += 2*nSalto   
 
 		oPrint:Say  (nLinha,lPosCol1,"Eu, "+ALLTRIM((cQry)->ZZV_MOTOR)+" , motorista devidamente",oFont8)
 		nLinha += nSalto   
 		oPrint:Say  (nLinha,lPosCol1,"habilitado conforme Carteira de Habilitação nº "+ALLTRIM((cQry)->ZZV_DOCMOT)+"",oFont8)
 		nLinha += nSalto   
 		oPrint:Say  (nLinha,lPosCol1,"responsável pelo veículo Placa  "+ALLTRIM((cQry)->ZZV_PLACA)+" declaro para todos",oFont8)
-		nLinha += nSalto   
-		oDanfe:Say  (nLinha,nPosCol1,"os fins de direito, que os produtos descritos na(s) nota(s)",oFont8)
-		nLinha += nSalto   
-		oDanfe:Say  (nLinha,nPosCol1,"fiscal(is)  abaixo  relacionada(s)  estão   adequadamente",oFont8)
-		nLinha += nSalto   	
-		oDanfe:Say  (nLinha,nPosCol1,"acondicionados   para   transporte,  estando a  carga dis-",oFont8)
-		nLinha += nSalto   
-		oDanfe:Say  (nLinha,nPosCol1,"tribuída na carroceria de maneira uniforme sobre os  eixos",oFont8)
-		nLinha += nSalto   
-		oDanfe:Say  (nLinha,nPosCol1,"do  veículo, sendo este veículo adequado  para  suportar o",oFont8)
-		nLinha += nSalto   
-		oDanfe:Say  (nLinha,nPosCol1,"peso da carga e os riscos normais de carregamento, descar-",oFont8)
-		nLinha += nSalto   
-		oDanfe:Say  (nLinha,nPosCol1,"regamento, transbordo e transporte terrestre nas  rodovias",oFont8)
-		nLinha += nSalto   
-		oDanfe:Say  (nLinha,nPosCol1,"estaduais e federais que irá transitar, tudo de acordo com",oFont8)
-		nLinha += nSalto
-		oDanfe:Say  (nLinha,nPosCol1,"a legislação específica, declarando que  a  carga constante",oFont8)
-		nLinha += nSalto
-		oDanfe:Say  (nLinha,nPosCol1,"da(s) referida(s) nota(s) fiscal(is) não excede o peso bruto",oFont8)
-		nLinha += nSalto
-		oDanfe:Say  (nLinha,nPosCol1,"total e nem ao peso  permitido  entre  eixo, adequando-se",oFont8)
-		nLinha += nSalto
-		oDanfe:Say  (nLinha,nPosCol1,"ao limite legalmente permitido  para  este tipo de veículo;",oFont8)
-		nLinha += nSalto
-		oDanfe:Say  (nLinha,nPosCol1,"declaro ter ciência do trajeto a ser seguido sendo de minha",oFont8)
-		nLinha += nSalto
-		oDanfe:Say  (nLinha,nPosCol1,"inteira responsabilidade qualquer penalidade, fiscal ou de",oFont8)
-		nLinha += nSalto
-		oDanfe:Say  (nLinha,nPosCol1,"trânsito, que decorra da inobservância do trajeto original,",oFont8)
-		nLinha += nSalto
-		oDanfe:Say  (nLinha,nPosCol1,"excetuados os casos de força maior; declaro, por fim, que,",oFont8)
-		nLinha += nSalto
-		oDanfe:Say  (nLinha,nPosCol1,"não assumirei novas cargas que comprometam a capacidade,",oFont8)
-		nLinha += nSalto
-		oDanfe:Say  (nLinha,nPosCol1,"total e/ou entre eixos do veículo, sendo de minha inteira",oFont8)
-		nLinha += nSalto
-		oDanfe:Say  (nLinha,nPosCol1,"responsabilidade  eventuais  penalidades  decorrentes do",oFont8)
-		nLinha += nSalto
-		oDanfe:Say  (nLinha,nPosCol1,"excesso de peso total e/ou entre eixos quando o peso afe-",oFont8)
-		nLinha += nSalto
-		oDanfe:Say  (nLinha,nPosCol1,"rido pela  fiscalização  for  superior ao peso aferido na",oFont8)
-		nLinha += nSalto
-		oDanfe:Say  (nLinha,nPosCol1,"saída do estabelecimento de embarque",oFont8)
-		
-		nLinha += 4*nSalto
+		 nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"os fins de direito, que os produtos descritos na(s)",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"nota(s) fiscal(is) abaixo relacionada(s) estão",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"adequadamente acondicionados para transporte, estando",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"a carga distribuída na carroceria de maneira uniforme",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"sobre os eixos do veículo, sendo este veículo adequado",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"para suportar o peso da carga e os riscos normais de",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"carregamento, descarregamento, transbordo e transporte",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"terrestre nas rodovias estaduais e federais que irá",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"transitar, tudo de acordo com a legislação específica;",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"declaro que a carga constante da(s) referida(s)",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"nota(s) fiscal(is) não excede o peso bruto total e nem",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"o peso permitido entre eixos, adequando-se ao limite",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"legalmente permitido para este tipo de veículo;",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"declaro ter ciência do trajeto a ser seguido, sendo de",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"minha inteira responsabilidade qualquer penalidade,",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"fiscal ou de trânsito, que decorra da inobservância do",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"trajeto original, excetuados os casos de força maior;",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"declaro, por fim, que não assumirei novas cargas que",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"comprometam a capacidade total e/ou entre eixos do",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"veículo, sendo de minha inteira responsabilidade",oFont8)
+         nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"eventuais penalidades decorrentes do excesso de peso",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"total e/ou entre eixos quando o peso aferido pela",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"fiscalização for superior ao peso aferido na saída do",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"estabelecimento de embarque.",oFont8)
+
+        nLinha += nSalto
+        oPrint:Say  (nLinha,lPosCol1+20,"Também autorizo expressamente o tratamento dos meus",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"dados pessoais e meus dados pessoais sensíveis tais",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"como, nome, data de nascimento e/ou idade, sexo,",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"nacionalidade, estado civil, número e cópia dos",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"documentos de identificação profissional, CPF, RG,",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"RNE, PIS, CTPS, habilitações, contrato de trabalho,",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"função/cargo, matrícula, fotografia, endereço de",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"residência, e-mail, telefones para contato e repasse",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"perante os Órgãos Públicos, incluindo os Judiciais e",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"Administrativos, Seguradoras e Planos de Saúde,",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"Empresa de Transporte, visando o fiel cumprimento das",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"obrigações de natureza contratual, trabalhista,",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"previdenciária, tributária, cível, em harmonia com a",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"Lei n. 13.709/2018 e com o inciso XII do Artigo 5º da",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"Constituição Federal. Declaro que, em caso de",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"revogação da autorização e/ou alteração dos dados, o",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"farei mediante comunicação por escrito, expressamente",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"e informando quais os dados autorizados devem ser",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"excluídos e/ou quais foram alterados. Concordo ainda",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"que os dados eventualmente não descritos neste",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"documento e fornecidos por livre e espontânea vontade",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"encontram-se também expressamente autorizados, sem",oFont8)
+        nLinha += nSalto
+		oPrint:Say  (nLinha,lPosCol1,"necessidade de celebração de novo termo.",oFont8)
+        
+
+		nLinha += 2*nSalto
 		oPrint:Say  (nLinha,lPosCol1+50,"Serra, "+SUBSTR(DTOS(dDataBase),7,2)+" de "+aMeses[VAL(SUBSTR(DTOS(dDataBase),5,2))]+" de "+SUBSTR(DTOS(dDataBase),1,4),oFont5) 
-		nLinha += 4*nSalto
+		nLinha += 2*nSalto
 		oPrint:Say  (nLinha,lPosCol1+50,"Assinatura:_____________________________________",oFont5) 
-		nLinha += 4*nSalto                                                                         
+		nLinha += 2*nSalto                                                                         
 		oPrint:Say  (nLinha,lPosCol1+50,"Relação das notas fiscais: ",oFont5) 
 
 

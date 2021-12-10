@@ -464,12 +464,14 @@ STATIC Function CRIA_EMAIL()
 	N_DESC_INC		:= 0
 	nTOTAL_QUANT 	:= 0
 	nTOTAL_TOTAL 	:= 0
+	nTOTAL_VLIPI	:= 0
 
 	WHILE !_AUX_PEDIDO->(EOF())    
 
 		N_DESC_INC		+= _AUX_PEDIDO->C6_VALDESC
 		nTOTAL_QUANT 	+= _AUX_PEDIDO->C6_QTDVEN
 		nTOTAL_TOTAL 	+= _AUX_PEDIDO->C6_VALOR + _AUX_PEDIDO->C6_VALDESC
+		nTOTAL_VLIPI	+= _AUX_PEDIDO->C6_YVLTIPI
 
 		C_HTML += '  <tr> '   
 		C_HTML += '    <td>'+ TRANSFORM(nCount	,"@E 999,999,999") +'</td> ' 
@@ -488,7 +490,7 @@ STATIC Function CRIA_EMAIL()
 		nCount ++	                                          
 	EndDo      
 
-	TOTAL_COMIPI 	:=  ((nTOTAL_TOTAL+_AUX_PEDIDO->C5_VLRFRET)-N_DESC_INC)
+	TOTAL_COMIPI 	:=  ((nTOTAL_TOTAL+nTOTAL_VLIPI+_AUX_PEDIDO->C5_VLRFRET)-N_DESC_INC)
 
 	//TOTALIZADOR
 	C_HTML += '  <tr> '   
@@ -785,7 +787,15 @@ Local oWFEng := Nil
 	EndIf
 			 
 
-	If Upper(AllTrim(getenvserver())) == "PRODUCAO" .OR. Upper(AllTrim(getenvserver())) == "REMOTO" .OR. Upper(AllTrim(getenvserver())) == "SCHEDULE"
+	If Upper(AllTrim(getenvserver())) == "PRODUCAO" .OR. Upper(AllTrim(getenvserver())) == "REMOTO" .OR. Upper(AllTrim(getenvserver())) == "SCHEDULE" .OR. Upper(AllTrim(getenvserver())) == "DEV-IPI"
+
+		If U_fValDEV()
+	
+			cRecebe		:= "barbara.madeira@biancogres.com.br;Claudeir.Fadini@biancogres.com.br;ranisses.corona@biancogres.com.br"
+			cRecebeCC 	:= ""
+			cRecebeO	:= ""
+
+		EndIf
 
 		lOK := U_BIAEnvMail(,cRecebe,cTitulo,cMensagem,,cAnexos,.F.,cRecebeCC,cRecebeO)
 
@@ -868,6 +878,7 @@ USER FUNCTION CRIA_ARQUIVO(aaNUM_PED,cEmpPed)
 	cQUERY += ", C6_QTDVEN" + Enter
 	cQUERY += ", C6_PRUNIT" + Enter
 	cQUERY += ", C6_VALOR" + Enter
+	cQUERY += ", C6_YVLTIPI" + Enter	
 	cQUERY += ", C6_VALDESC" + Enter
 	cQUERY += ", C6_QTDVEN  " + Enter
 	cQUERY += ", C6_ENTREG  " + Enter
@@ -1042,6 +1053,7 @@ USER FUNCTION CRIA_ARQUIVO(aaNUM_PED,cEmpPed)
 
 	aTOTAL_QUANT := 0
 	aTOTAL_TOTAL := 0
+	aTOTAL_VLIPI := 0
 
 	//****************************************************************************
 	//*************** LOOP PARA PREENCHER TODOS OS ITENS... **********************
@@ -1081,7 +1093,8 @@ USER FUNCTION CRIA_ARQUIVO(aaNUM_PED,cEmpPed)
 		N_DESC_INC		+= _AUX_PEDIDO->C6_VALDESC
 		aTOTAL_QUANT 	+= _AUX_PEDIDO->C6_QTDVEN
 		aTOTAL_TOTAL 	+= _AUX_PEDIDO->C6_VALOR + _AUX_PEDIDO->C6_VALDESC
-
+		aTOTAL_VLIPI 	+= _AUX_PEDIDO->C6_YVLTIPI
+		
 		cLin := PADR("| "+ORD+" |"+QUANT+"| "+DESCRICAO+" |"+cc_ESTOQUE+"| "+DT_NECESS+" | "+PRECO_UNI+" | "+VALOR_TOT+" |"										,99) + cEOL
 		fWrite(nHdl,cLin)
 		_AUX_PEDIDO->(DBSKIP())
@@ -1107,7 +1120,7 @@ USER FUNCTION CRIA_ARQUIVO(aaNUM_PED,cEmpPed)
 
 	cSEGURO			:=  IIF(_AUX_PEDIDO->C5_VLRFRET == 0,"Não","Sim")
 	SEGURO 			:= Transform((_AUX_PEDIDO->C5_VLRFRET*aTOTAL_QUANT),"@E 9,999,999.999") //PADL("0,58",13) 
-	TOTAL_COMIPI 	:=  Transform((aTOTAL_TOTAL-N_DESC_INC),"@E 99,999,999.99")  //PADL("1548721.25",13)
+	TOTAL_COMIPI 	:=  Transform((aTOTAL_TOTAL+aTOTAL_VLIPI-N_DESC_INC),"@E 99,999,999.99")  //PADL("1548721.25",13)
 	//TOTAL_COMIPI 	:=  Transform((aTOTAL_TOTAL+_AUX_PEDIDO->C5_VLRFRET+((aTOTAL_TOTAL/100)*5)),"@E 99,999,999.99")  //PADL("1548721.25",13)
 	//TOTAL_COMIPI 	:=  Transform(((aTOTAL_TOTAL+(_AUX_PEDIDO->C5_VLRFRET*aTOTAL_QUANT))-N_DESC_INC),"@E 99,999,999.99")  //PADL("1548721.25",13)
 	DES_INC			:= Transform(N_DESC_INC,"@E 9,999,999.999")

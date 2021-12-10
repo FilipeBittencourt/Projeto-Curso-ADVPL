@@ -21,7 +21,9 @@ User Function RETP0003()
 	//Local bErrorBlock	:= ErrorBlock( bError )
 	//Private oError		:= Nil
 	
-	RPCSetEnv(cEmp, cFil, cUser, cSenhaUser)
+	If Select("SX6") == 0
+		RPCSetEnv(cEmp, cFil, cUser, cSenhaUser)
+	EndIf
 	
 	Conout('Executando função: RETP0003')	
 	

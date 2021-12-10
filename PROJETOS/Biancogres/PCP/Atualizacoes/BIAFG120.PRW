@@ -919,6 +919,9 @@ Static Function gxApAtPr( xRecbAcl )
 				If Posicione("SB1", 1, xFilial("SB1") + skProdut, "B1_YTPPROD") == 'RP'
 					fmRetfc := .T.
 				EndIf
+				If cEmpAnt == "14"
+					fmRetfc := .T.
+				EndIf
 
 				//                                                                             PP
 				*********************************************************************************

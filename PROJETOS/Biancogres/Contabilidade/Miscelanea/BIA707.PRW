@@ -173,6 +173,7 @@ Static Function fqBIA707()
 			End
 			msQryPrc = Replace(msQryPrc, "@DATAINI" , dtos(dDataIni))
 			msQryPrc = Replace(msQryPrc, "@DATAFIM" , dtos(dDataFin))
+			msQryPrc = Replace(msQryPrc, "@INITRIM" , dtos(FirstDate(MonthSub(dDataFin, 2))))				
 			msQryPrc = Replace(msQryPrc, "@VERSAO"  , xVersao)
 			msQryPrc = Replace(msQryPrc, "@REVISA"  , xRevisa)
 			msQryPrc = Replace(msQryPrc, "@ANOREF"  , xAnoRef)

@@ -22,7 +22,7 @@ User Function BACP0005(_cCodigo, _cTipo)
 
 	GridZKJ()
 
-	oWindow:Activate()	
+	oWindow:Activate()
 Return
 
 
@@ -51,12 +51,12 @@ Static Function LoadContainer()
 	cItemBox 	:= oContainer:CreateHorizontalBox(100)
 	oContainer:Activate(oWindow:GetPanelMain(), .T.)
 
-Return 
+Return
 
 
 Static Function LoadLayer()
 
-	oPanelConteiner := oContainer:GetPanel(cItemBox)	
+	oPanelConteiner := oContainer:GetPanel(cItemBox)
 
 	// Layer
 	oLayer := FWLayer():New()
@@ -66,8 +66,8 @@ Static Function LoadLayer()
 
 	oLayer:AddCollumn('COLUNA_1', 100, .T., 'LINHA_1')
 
-	// Janela acima 
-	oLayer:AddWindow('COLUNA_1', 'JANELA_1', '', 100, .F. ,.T.,, 'LINHA_1', { || })	
+	// Janela acima
+	oLayer:AddWindow('COLUNA_1', 'JANELA_1', '', 100, .F. ,.T.,, 'LINHA_1', { || })
 
 	oPanel1 := oLayer:GetWinPanel('COLUNA_1', 'JANELA_1', 'LINHA_1')
 
@@ -157,7 +157,7 @@ Static Function GetHeader(aFields)
 	For nX := 1 to Len(aFields)
 		If SX3->(DbSeek(aFields[nX]))
 			Aadd(aHeader, {AllTrim(X3Titulo()),SX3->X3_CAMPO,SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,SX3->X3_VALID,;
-			SX3->X3_USADO,SX3->X3_TIPO,SX3->X3_F3,SX3->X3_CONTEXT,SX3->X3_CBOX,SX3->X3_RELACAO})
+				SX3->X3_USADO,SX3->X3_TIPO,SX3->X3_F3,SX3->X3_CONTEXT,SX3->X3_CBOX,SX3->X3_RELACAO})
 		Endif
 	Next nX
 
@@ -201,11 +201,11 @@ Static Function GravaZKJ()
 				Reclock("ZKJ", .F.)
 
 				ZKJ->ZKJ_ORIAPR	:= cOriAprov
-
-				ZKJ->ZKJ_APROV	:= SPACE(LEN(cAprov))
-				If (AllTrim(cOriAprov) == '1')
-					ZKJ->ZKJ_APROV	:= cAprov
-				EndIf
+				ZKJ->ZKJ_APROV	:= cAprov
+				//ZKJ->ZKJ_APROV	:= SPACE(LEN(cAprov))
+				//If (AllTrim(cOriAprov) == '1')
+				//	ZKJ->ZKJ_APROV	:= cAprov
+				//EndIf
 
 				ZKJ->ZKJ_NIVEL	:= cNivel
 				//ZKJ->ZKJ_APROVT	:= cAprovT
@@ -264,6 +264,6 @@ Static Function GravaZKJ()
 
 		EndIf
 
-	Next nI		
+	Next nI
 
 Return

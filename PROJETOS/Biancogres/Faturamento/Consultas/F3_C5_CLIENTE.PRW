@@ -93,25 +93,19 @@ Static Function fMSNewGetDados1()
 	cQUERY += " WHERE A1_FILIAL = '"+xFilial("SA1")+"' "
 	If(!Empty(cRepAtu))	
 		If AllTrim(FunName()) == "MATA410"
-			If cEmpAnt == "14"
-				If Alltrim(M->C5_YLINHA) == "1" //VITCER
-					cQUERY += " AND (A1_YVENVT1 = '"+cRepAtu+"' OR A1_YVENVT2 = '"+cRepAtu+"' OR A1_YVENVT3 = '"+cRepAtu+"')  "
-				EndIf
-			Else
-				If Alltrim(M->C5_YLINHA) == "1" //BIANCOGRES
-					cQUERY += " AND (A1_VEND = '"+cRepAtu+"' OR A1_YVENDB2 = '"+cRepAtu+"' OR A1_YVENDB3 = '"+cRepAtu+"')  "
-				ElseIf Alltrim(M->C5_YLINHA) == "2" //INCESA
-					cQUERY += " AND (A1_YVENDI = '"+cRepAtu+"' OR A1_YVENDI2 = '"+cRepAtu+"' OR A1_YVENDI3 = '"+cRepAtu+"')  "
-				ElseIf Alltrim(M->C5_YLINHA) == "3" //BELLACASA
-					cQUERY += " AND (A1_YVENBE1 = '"+cRepAtu+"' OR A1_YVENBE2 = '"+cRepAtu+"' OR A1_YVENBE3 = '"+cRepAtu+"')  "
-				ElseIf Alltrim(M->C5_YLINHA) == "4" //MUNDIALLI
-					cQUERY += " AND (A1_YVENML1 = '"+cRepAtu+"' OR A1_YVENML2 = '"+cRepAtu+"' OR A1_YVENML3 = '"+cRepAtu+"')  "
-				ElseIf Alltrim(M->C5_YLINHA) == "5" //PEGASUS
-					cQUERY += " AND (A1_YVENPEG = '"+cRepAtu+"' )  "
-				ElseIf Alltrim(M->C5_YLINHA) == "6" //VINILICO
-					cQUERY += " AND (A1_YVENVI1 = '"+cRepAtu+"' )  "
-				EndIf
-			EndIf		
+			If Alltrim(M->C5_YLINHA) == "1" //BIANCOGRES
+				cQUERY += " AND (A1_VEND = '"+cRepAtu+"' OR A1_YVENDB2 = '"+cRepAtu+"' OR A1_YVENDB3 = '"+cRepAtu+"')  "
+			ElseIf Alltrim(M->C5_YLINHA) == "2" //INCESA
+				cQUERY += " AND (A1_YVENDI = '"+cRepAtu+"' OR A1_YVENDI2 = '"+cRepAtu+"' OR A1_YVENDI3 = '"+cRepAtu+"')  "
+			ElseIf Alltrim(M->C5_YLINHA) == "3" //BELLACASA
+				cQUERY += " AND (A1_YVENBE1 = '"+cRepAtu+"' OR A1_YVENBE2 = '"+cRepAtu+"' OR A1_YVENBE3 = '"+cRepAtu+"')  "
+			ElseIf Alltrim(M->C5_YLINHA) == "4" //MUNDIALLI
+				cQUERY += " AND (A1_YVENML1 = '"+cRepAtu+"' OR A1_YVENML2 = '"+cRepAtu+"' OR A1_YVENML3 = '"+cRepAtu+"')  "
+			ElseIf Alltrim(M->C5_YLINHA) == "5" //PEGASUS
+				cQUERY += " AND (A1_YVENPEG = '"+cRepAtu+"' )  "
+			ElseIf Alltrim(M->C5_YLINHA) == "6" //VINILICO
+				cQUERY += " AND (A1_YVENVI1 = '"+cRepAtu+"' )  "
+			EndIf
 		Else
 			cQUERY += " AND (A1_VEND    = '"+cRepAtu+"' OR A1_YVENDB2 = '"+cRepAtu+"' OR A1_YVENDB3 = '"+cRepAtu+"' OR  "
 			cQUERY += "      A1_YVENDI  = '"+cRepAtu+"' OR A1_YVENDI2 = '"+cRepAtu+"' OR A1_YVENDI3 = '"+cRepAtu+"' OR  "
@@ -173,33 +167,26 @@ Static Function wRetCodCl()
 	cQUERY += " WHERE A1_FILIAL = '"+xFilial("SA1")+"' "
 	If(!Empty(cRepAtu))	
 		If AllTrim(FunName()) == "MATA410"		
-			If cEmpAnt == "14"
-				If Alltrim(M->C5_YLINHA) == "1" //VITCER
-					cQUERY += " AND (A1_YVENVT1 = '"+cRepAtu+"' OR A1_YVENVT2 = '"+cRepAtu+"' OR A1_YVENVT3 = '"+cRepAtu+"')  "
-				EndIf
+			If Alltrim(M->C5_YLINHA) == "1" //BIANCOGRES
+				cQUERY += " AND (A1_VEND = '"+cRepAtu+"' OR A1_YVENDB2 = '"+cRepAtu+"' OR A1_YVENDB3 = '"+cRepAtu+"')  "
+			ElseIf Alltrim(M->C5_YLINHA) == "2" //INCESA
+				cQUERY += " AND (A1_YVENDI = '"+cRepAtu+"' OR A1_YVENDI2 = '"+cRepAtu+"' OR A1_YVENDI3 = '"+cRepAtu+"')  "
+			ElseIf Alltrim(M->C5_YLINHA) == "3" //BELLACASA
+				cQUERY += " AND (A1_YVENBE1 = '"+cRepAtu+"' OR A1_YVENBE2 = '"+cRepAtu+"' OR A1_YVENBE3 = '"+cRepAtu+"')  "
+			ElseIf Alltrim(M->C5_YLINHA) == "4" //MUNDIALLI
+				cQUERY += " AND (A1_YVENML1 = '"+cRepAtu+"' OR A1_YVENML2 = '"+cRepAtu+"' OR A1_YVENML3 = '"+cRepAtu+"')  "
+			ElseIf Alltrim(M->C5_YLINHA) == "5" //PEGASUS
+				cQUERY += " AND (A1_YVENPEG = '"+cRepAtu+"' )  "
+			ElseIf Alltrim(M->C5_YLINHA) == "6" //VINILICO
+				cQUERY += " AND (A1_YVENVI1 = '"+cRepAtu+"' )  "
 			Else
-				If Alltrim(M->C5_YLINHA) == "1" //BIANCOGRES
-					cQUERY += " AND (A1_VEND = '"+cRepAtu+"' OR A1_YVENDB2 = '"+cRepAtu+"' OR A1_YVENDB3 = '"+cRepAtu+"')  "
-				ElseIf Alltrim(M->C5_YLINHA) == "2" //INCESA
-					cQUERY += " AND (A1_YVENDI = '"+cRepAtu+"' OR A1_YVENDI2 = '"+cRepAtu+"' OR A1_YVENDI3 = '"+cRepAtu+"')  "
-				ElseIf Alltrim(M->C5_YLINHA) == "3" //BELLACASA
-					cQUERY += " AND (A1_YVENBE1 = '"+cRepAtu+"' OR A1_YVENBE2 = '"+cRepAtu+"' OR A1_YVENBE3 = '"+cRepAtu+"')  "
-				ElseIf Alltrim(M->C5_YLINHA) == "4" //MUNDIALLI
-					cQUERY += " AND (A1_YVENML1 = '"+cRepAtu+"' OR A1_YVENML2 = '"+cRepAtu+"' OR A1_YVENML3 = '"+cRepAtu+"')  "
-				ElseIf Alltrim(M->C5_YLINHA) == "5" //PEGASUS
-					cQUERY += " AND (A1_YVENPEG = '"+cRepAtu+"' )  "
-				ElseIf Alltrim(M->C5_YLINHA) == "6" //VINILICO
-					cQUERY += " AND (A1_YVENVI1 = '"+cRepAtu+"' )  "
-
-				Else
-					cQUERY += " AND (A1_VEND    = '"+cRepAtu+"' OR A1_YVENDB2 = '"+cRepAtu+"' OR A1_YVENDB3 = '"+cRepAtu+"' OR  "
-					cQUERY += "      A1_YVENDI  = '"+cRepAtu+"' OR A1_YVENDI2 = '"+cRepAtu+"' OR A1_YVENDI3 = '"+cRepAtu+"' OR  "
-					cQUERY += "      A1_YVENBE1 = '"+cRepAtu+"' OR A1_YVENBE2 = '"+cRepAtu+"' OR A1_YVENBE3 = '"+cRepAtu+"' OR  "
-					cQUERY += "      A1_YVENVT1 = '"+cRepAtu+"' OR A1_YVENVT2 = '"+cRepAtu+"' OR A1_YVENVT3 = '"+cRepAtu+"' OR  "
-					cQUERY += "      A1_YVENML1 = '"+cRepAtu+"' OR A1_YVENML2 = '"+cRepAtu+"' OR A1_YVENML3 = '"+cRepAtu+"' OR  "
-					cQUERY += "      A1_YVENPEG = '"+cRepAtu+"' OR A1_YVENVI1 = '"+cRepAtu+"')    "
-				EndIf
-			EndIf		
+				cQUERY += " AND (A1_VEND    = '"+cRepAtu+"' OR A1_YVENDB2 = '"+cRepAtu+"' OR A1_YVENDB3 = '"+cRepAtu+"' OR  "
+				cQUERY += "      A1_YVENDI  = '"+cRepAtu+"' OR A1_YVENDI2 = '"+cRepAtu+"' OR A1_YVENDI3 = '"+cRepAtu+"' OR  "
+				cQUERY += "      A1_YVENBE1 = '"+cRepAtu+"' OR A1_YVENBE2 = '"+cRepAtu+"' OR A1_YVENBE3 = '"+cRepAtu+"' OR  "
+				cQUERY += "      A1_YVENVT1 = '"+cRepAtu+"' OR A1_YVENVT2 = '"+cRepAtu+"' OR A1_YVENVT3 = '"+cRepAtu+"' OR  "
+				cQUERY += "      A1_YVENML1 = '"+cRepAtu+"' OR A1_YVENML2 = '"+cRepAtu+"' OR A1_YVENML3 = '"+cRepAtu+"' OR  "
+				cQUERY += "      A1_YVENPEG = '"+cRepAtu+"' OR A1_YVENVI1 = '"+cRepAtu+"')    "
+			EndIf
 		Else
 			cQUERY += " AND (A1_VEND    = '"+cRepAtu+"' OR A1_YVENDB2 = '"+cRepAtu+"' OR A1_YVENDB3 = '"+cRepAtu+"' OR  "
 			cQUERY += "      A1_YVENDI  = '"+cRepAtu+"' OR A1_YVENDI2 = '"+cRepAtu+"' OR A1_YVENDI3 = '"+cRepAtu+"' OR  "

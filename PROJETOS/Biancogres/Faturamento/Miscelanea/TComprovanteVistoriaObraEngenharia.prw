@@ -60,6 +60,8 @@ Method New() Class TComprovanteVistoriaObraEngenharia
 	::c01TargetFile := ""
 	::c02TargetFile := ""
 	::c03TargetFile := ""		
+	
+	U_ChkDirVistoriaObra()
 
 Return()
 

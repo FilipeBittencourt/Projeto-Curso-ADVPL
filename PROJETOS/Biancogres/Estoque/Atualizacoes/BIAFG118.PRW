@@ -4,7 +4,7 @@
 /*/{Protheus.doc} BIAFG118
 @author Gabriel Rossi Mafioletti
 @since 12/12/2019
-@version 1.0
+@version 1.0 
 @description Tela de Inconsistências de Pré-Requisição	
 @type function
 /*/
@@ -13,15 +13,18 @@ User Function BIAFG118()
 
 	Local _oDlg
 	Local _aSize    := MsAdvSize(.F.)
-	Local _oLayer	:= FWLayer():New()	
+	Local _oLayer	:= FWLayer():New()
 	Local _oWndTop	:= Nil
 	Local _oWndMid1	:= Nil
 	Local _oWndMid2	:= Nil
 	Local _oWndBot	:= Nil
 	Local oFont     := TFont():New("Arial",9,14,.T.,.T.,5,.T.,5,.T.,.F.)
-	Local _aTipos	:= {"1=Baixa Pré-Requisição", "2=Integração Bizagi", "3=Falha Gravação Protheus"}	
+	Local _aTipos	:= {"1=Baixa Pré-Requisição", "2=Integração Bizagi", "3=Falha Gravação Protheus"}
 
 	Private _aCols		:= {}
+	Private _aColsDef	:= {}
+	Private _aHeadDef	:= {}
+
 	Private _aHeader	:= {}
 	Private _aCSrv		:= {}
 	Private _aHSrv		:= {}
@@ -33,8 +36,9 @@ User Function BIAFG118()
 	Private _cCtipo	    := "1"
 
 	fMontaHead()
-
 	fMontaCols()
+
+
 
 	Define MsDialog _oDlg Title "Inconsistências de Pré-Requisição" From _aSize[7],0 To _aSize[6],_aSize[5] Of oMainWnd Pixel STYLE nOR( WS_VISIBLE, WS_POPUP )
 
@@ -68,7 +72,7 @@ User Function BIAFG118()
 	_oWndBot	:=	_oLayer:getWinPanel("COL_BOT","WND_BOT","LIN_BOT")
 
 	@  010,  010 SAY "Tipo:" SIZE 55, 11 OF _oWndTop PIXEL FONT oFont
-	@  010,  047 MsComboBox _oCGrupo Var _ccTipo Items _aTipos Size 90, 11 Of _oWndTop Colors 0, 16777215 Pixel ON CHANGE U_BFG118VL() 
+	@  010,  047 MsComboBox _oCGrupo Var _ccTipo Items _aTipos Size 90, 11 Of _oWndTop Colors 0, 16777215 Pixel ON CHANGE U_BFG118VL()
 
 	_oGetDados := MsNewGetDados():New(0,0,0,0, 0,/*[ cLinhaOk]*/, /*[ cTudoOk]*/, /*"+++ZZ2_COD"/*[ cIniCpos]*/, /*Acpos*/, /*[ nFreeze]*/, 9999,  /*cFieldOK*/, /*[ cSuperDel]*/, /*[ cDelOk]*/, _oWndMid1, _aHeader, _aCols,{ || fAtuErr() })
 
@@ -84,6 +88,10 @@ User Function BIAFG118()
 	oBtnBar:Init(_oWndBot, 018, 018, CONTROL_ALIGN_BOTTOM, .T.)
 	oBtnBar:AddBtnText('Sair'		, 'Fecha a tela.'									, {|| _oDlg:End() },,,CONTROL_ALIGN_RIGHT, .T.)
 
+
+	_aColsDef	:= _oGetDados:aCols
+	_aHeadDef	:= _oGetDados:aHeader
+
 	ACTIVATE DIALOG _oDlg CENTERED
 
 Return
@@ -96,7 +104,7 @@ Static Function fMontaHead()
 	aAdd(_aHeader,{"Emissão"      ,"EMISSAO"  ,"@!"               , 8    , 0,       ,      , "D",   , })      	// 1
 	aAdd(_aHeader,{"Matric."      ,"MAT"      ,"@!"               , 8    , 0,       ,      , "C",   , })      	// 1
 	aAdd(_aHeader,{"Nome"         ,"NOME"     ,"@!"               , 30   , 0,       ,      , "C",   , })      	// 1
-	aAdd(_aHeader,{"Local"        ,"LOCAL"    ,"@!"               , 02   , 0,       ,      , "C",   , })      	// 1	
+	aAdd(_aHeader,{"Local"        ,"LOCAL"    ,"@!"               , 02   , 0,       ,      , "C",   , })      	// 1
 
 Return
 
@@ -104,7 +112,8 @@ Static Function fMontaCols()
 
 	Local _cAlias	:= GetNextAlias()
 	Local _cDtRef	:= DtoS(GetMv("MV_YULMES"))
-	Local _aRet	    := {}
+	Local _aRet	  := {}
+	Local _cAux   := ""
 
 	_aCols	:=	{}
 	_aErros	:=	{}
@@ -133,6 +142,7 @@ Static Function fMontaCols()
 
 	ElseIf _ccTipo	==	"2"
 
+		/*
 		BeginSql Alias _cAlias
 
 			%NoParser%
@@ -142,21 +152,46 @@ Static Function fMontaCols()
 			,CONVERT(VARCHAR(8),CAST(DATA_INTEGRACAO_BIZAGI AS DATETIME), 112) DTBIZ
 			FROM BZINTEGRACAO
 			WHERE PROCESSO_NOME = 'PRQ'
-			AND STATUS = 'ER'
+			AND STATUS = 'ER'			
+
+		EndSql
+		*/
+
+		BeginSql Alias _cAlias
+
+			%NoParser%
+
+			SELECT 
+			 ID
+			,BZNUMPROC AS PROCBIZ
+			,TIPO
+			,CONVERT(VARCHAR(8),CAST(BZDTINTEGRACAO AS DATETIME), 112) DTBIZ
+			,MATRICULA
+			,LOCAL
+
+			FROM BZINTEGRACAO_PRE_REQUISICAO 	
+						 
+			WHERE STATUS = 'E'	
+
+		  ORDER BY PROCBIZ
 
 		EndSql
 
 		While (_cAlias)->(!EOF())
 
-			_aRet	:=	fDados((_cAlias)->DADOS)
+			//_aRet	:=	fDados((_cAlias)->DADOS)
 
 			aAdd(_aErros,(_cAlias)->ID)
 
-			DbSelectArea("ZZY")
-			DbSetOrder(3)
-			DbSeek(xFilial("ZZY")+_aRet[1,3])		
+			//DbSelectArea("ZZY")
+			//DbSetOrder(3)
+			//DbSeek(xFilial("ZZY")+(_cAlias)->LOCAL)
 
-			(_cAlias)->(aAdd(_aCols,{"METAS_BAIXO_LEG", PROCBIZ, _aRet[1,1], Stod(DTBIZ), _aRet[1,3], ZZY->ZZY_NOME, _aRet[2,1,3], .F.}))
+			If _cAux <> (_cAlias)->PROCBIZ
+				(_cAlias)->(aAdd(_aCols,{"METAS_BAIXO_LEG", PROCBIZ, TIPO, Stod(DTBIZ), MATRICULA, Posicione("ZZY",3,xFilial("ZZY")+MATRICULA,"ZZY_NOME"), LOCAL, .F.}))
+			EndIf
+
+			_cAux := (_cAlias)->PROCBIZ
 
 			(_cAlias)->(DbSkip())
 
@@ -167,31 +202,49 @@ Static Function fMontaCols()
 		BeginSql Alias _cAlias
 
 			%NoParser%
-			SELECT ID 
+			/*
+			SELECT ID 			
 			,DADOS_ENTRADA DADOS
 			,PROCESSO_BIZAGI PROCBIZ
 			,CONVERT(VARCHAR(8),CAST(DATA_INTEGRACAO_BIZAGI AS DATETIME), 112) DTBIZ
 			FROM BZINTEGRACAO A
-			LEFT JOIN SZI010 B ON B.[ZI_DOC] = A.[DADOS_RETORNO]
+			LEFT JOIN %TABLE:SZI% B ON B.[ZI_DOC] = A.[DADOS_RETORNO]
 			AND B.[D_E_L_E_T_] = ' '
 			WHERE A.[PROCESSO_NOME] = 'PRQ'
 			AND A.[DATA_INTEGRACAO_BIZAGI] >= '2019-12-27 00:00:00'
 			AND B.[ZI_DOC] IS NULL
 			AND A.[STATUS] = 'AP'
+			*/
+
+			SELECT
+			ID
+			,BZNUMPROC AS PROCBIZ
+			,TIPO
+			,CONVERT(VARCHAR(8),CAST(BZDTINTEGRACAO AS DATETIME), 112) DTBIZ
+			,MATRICULA
+			,LOCAL
+			FROM BZINTEGRACAO_PRE_REQUISICAO A
+			LEFT JOIN %TABLE:SZI% B ON B.[ZI_DOC] = A.[DOCUMENTO]
+			AND B.[D_E_L_E_T_] = ' '
+			WHERE A.[BZDTINTEGRACAO] >= '2019-12-27 00:00:00'
+			AND B.[ZI_DOC] IS NULL
+			AND A.[STATUS] = 'P'
+
+			ORDER BY PROCBIZ
 
 		EndSql
 
 		While (_cAlias)->(!EOF())
 
-			_aRet	:=	fDados((_cAlias)->DADOS)
+			//	_aRet	:=	fDados((_cAlias)->DADOS)
 
 			aAdd(_aErros,(_cAlias)->ID)
 
-			DbSelectArea("ZZY")
-			DbSetOrder(3)
-			DbSeek(xFilial("ZZY")+_aRet[1,3])		
+			If _cAux <> (_cAlias)->PROCBIZ
+				(_cAlias)->(aAdd(_aCols,{"METAS_BAIXO_LEG", PROCBIZ, TIPO, Stod(DTBIZ), MATRICULA, Posicione("ZZY",3,xFilial("ZZY")+MATRICULA,"ZZY_NOME"), LOCAL, .F.}))
+			EndIf
 
-			(_cAlias)->(aAdd(_aCols,{"METAS_BAIXO_LEG", PROCBIZ, _aRet[1,1], Stod(DTBIZ), _aRet[1,3], ZZY->ZZY_NOME, _aRet[2,1,3], .F.}))
+			_cAux := (_cAlias)->PROCBIZ
 
 			(_cAlias)->(DbSkip())
 
@@ -201,21 +254,24 @@ Static Function fMontaCols()
 
 	(_cAlias)->(DbCloseArea())
 
+
+
 Return
 
 Static Function fAtuErr()
 
 	Local _aArea    := Nil
-	Local _cAlias	:= Nil
+	Local _cAlias	  := Nil
+	Local cPROCBIZ   := ""
 
 	_aArea := SZI->(GetArea())
 	_cAlias	:=	GetNextAlias()
 
 	cMultiGet1	:=	""
 
-	If _ccTipo	==	"1" 
+	If Len(_aerros)  > 0
 
-		If Len(_aerros)  > 0
+		If _ccTipo	==	"1"
 
 			SZI->(DbGoTo(_aerros[_oGetDados:nAt]))
 
@@ -223,38 +279,50 @@ Static Function fAtuErr()
 				cMultiGet1	:=	SZI->ZI_ERROLOG
 			EndIf
 
-		EndIf
+		ElseIf _ccTipo	==	"2"
 
-	ElseIf _ccTipo	==	"2"
-
-		If Len(_aerros)  > 0
-
+			cPROCBIZ   :=  _oGetDados:Acols[_oGetDados:nAt,2]
+			/*BeginSql Alias _cAlias
+				SELECT LOG RET
+				FROM BZINTEGRACAO_PRE_REQUISICAO 
+				WHERE ID = %Exp:_aerros[_oGetDados:nAt]%
+			EndSql*/
+			
 			BeginSql Alias _cAlias
-
-				SELECT DADOS_RETORNO RET
-				FROM BZINTEGRACAO
-				WHERE PROCESSO_NOME = 'PRQ'
-				AND ID = %Exp:_aerros[_oGetDados:nAt]%
-
+				SELECT LOG RET
+				FROM BZINTEGRACAO_PRE_REQUISICAO 
+				WHERE BZNUMPROC = %Exp:cPROCBIZ%
 			EndSql
 
-			If (_cAlias)->(!EOF())
-				cMultiGet1	:=	(_cAlias)->RET
-			EndIf
+			While (_cAlias)->(!EOF())
+
+				cMultiGet1	+=	(_cAlias)->RET +CRLF
+			  (_cAlias)->(DbSkip())
+
+			EndDo
 
 			(_cAlias)->(DbCloseArea())
 
+		ElseIf _ccTipo	==	"3"
+
+			cMultiGet1	:=	""
+
+			If Len(_oGetDados:aCols) > 0
+
+				If _oGetDados:aCols[_oGetDados:nAt,1] == "METAS_BAIXO_LEG"
+					cMultiGet1	:=	"FALHA DE INTEGRACAO - ROLLBACK (REVERSAO) INADEQUADA"
+				EndIf
+
+			EndIf
+
 		EndIf
 
-	ElseIf _ccTipo	==	"3"
-
-		If _oGetDados:aCols[_oGetDados:nAt,1] == "METAS_BAIXO_LEG"
-			cMultiGet1	:=	"FALHA DE INTEGRACAO - ROLLBACK (REVERSAO) INADEQUADA"
-		Else
-			cMultiGet1	:=	""
-		EndIf				
-
 	EndIf
+
+	cMultiGet1 := StrTran( cMultiGet1, "<br>", "" )
+	cMultiGet1 := StrTran( cMultiGet1, "<br/>", "" )
+	cMultiGet1 := StrTran( cMultiGet1, "</b>", "" )
+	cMultiGet1 := StrTran( cMultiGet1, "<b>", "" )
 
 	oMultiGet1:Refresh()
 	RestArea(_aArea)
@@ -272,7 +340,7 @@ Static Function fUpdate()
 		If _ccTipo	==	"1"
 
 			SZI->(DbGoTo(_aerros[_oGetDados:nAt]))
-			If SZI->(!EOF()) 
+			If SZI->(!EOF())
 				If SZI->ZI_BAIXA <> "S" .And. SZI->ZI_BAIXA <> "X"
 					Reclock("SZI",.F.)
 					SZI->ZI_STTSREQ :=	"F"
@@ -283,17 +351,16 @@ Static Function fUpdate()
 				_oGetDados:aCols[_nAt,1] := "METAS_CIMA_LEG"
 			EndIf
 
-		ElseIf _ccTipo	==	"2"
+		Else
 
-			_cSql	:=	"UPDATE BZINTEGRACAO SET STATUS = 'IB', DADOS_RETORNO = '' WHERE ID = " + Alltrim(Str(_aerros[_oGetDados:nAt])) 
+		//	_cSql	:=	"UPDATE BZINTEGRACAO_PRE_REQUISICAO SET STATUS = 'A' WHERE ID = " + Alltrim(Str(_aerros[_oGetDados:nAt]))
+
+		_cSql	:=	"UPDATE BZINTEGRACAO_PRE_REQUISICAO SET STATUS = 'A' WHERE BZNUMPROC = '"+Alltrim(_oGetDados:Acols[_oGetDados:nAt,2])+"'"
+		
 			TcSqlExec(_cSql)
 			_oGetDados:aCols[_nAt,1] := "METAS_CIMA_LEG"
 
-		ElseIf _ccTipo	==	"3"
 
-			_cSql	:=	"UPDATE BZINTEGRACAO SET STATUS = 'IB', DADOS_RETORNO = '' WHERE ID = " + Alltrim(Str(_aerros[_oGetDados:nAt])) 
-			TcSqlExec(_cSql)
-			_oGetDados:aCols[_nAt,1] := "METAS_CIMA_LEG"
 
 		EndIf
 
@@ -317,10 +384,13 @@ Static Function fRefresh()
 
 	fMontaCols()
 
-	_oGetDados:aCols	:=	_aCols
+	_oGetDados:aCols := _aCols
 
-	If Len(_aCols) > 0
-		fAtuErr()
+	If Len(_aCols) == 0
+
+		_oGetDados:aHeader := _aHeadDef
+		_oGetDados:aCols := _aColsDef // Array Default que precisa ter  o mesmo tamanho do array _aCols
+
 	EndIf
 
 	oMultiGet1:Refresh()
@@ -331,7 +401,7 @@ Return
 Static Function fDados(_cDados)
 
 	Local _aRet	:=	{;
-	{},; //Cabeçalho
+		{},; //Cabeçalho
 	{};  //Itens
 	}
 
@@ -343,9 +413,9 @@ Static Function fDados(_cDados)
 	_aDados	:=	StrtoKArr(Alltrim(_cDados),";")
 
 	DO CASE
-		CASE Alltrim(_aDados[5]) $ "DU_DN_RE"
+	CASE Alltrim(_aDados[5]) $ "DU_DN_RE"
 		aAdd(_aRet[1],_aDados[5])
-		OTHERWISE
+	OTHERWISE
 		aAdd(_aRet[1],"RE")
 	ENDCASE
 
@@ -374,10 +444,10 @@ Static Function fDados(_cDados)
 	10 - Parada
 	*/
 
-	_aItens	:=	StrToKArr(REPLACE(REPLACE(_aDados[9],"[",""),"]",""),"&")
+			_aItens	:=	StrToKArr(REPLACE(REPLACE(_aDados[9],"[",""),"]",""),"&")
 
-	For _nI	:=	1 to Len(_aItens)
-		aAdd(_aRet[2],StrToKarr(_aItens[_nI],"|"))
-	Next
+			For _nI	:=	1 to Len(_aItens)
+				aAdd(_aRet[2],StrToKarr(_aItens[_nI],"|"))
+			Next
 
-Return _aRet
+			Return _aRet

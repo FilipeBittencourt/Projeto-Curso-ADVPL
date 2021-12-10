@@ -51,7 +51,7 @@ User Function GT1VALCP()
 				kjTES := '0A5'
 			Else
 				If zp_Empr == '01' .or. zp_Empr == '05'
-				kjTES := '0A2'
+				kjTES := '3A4'
 					If cEmpAnt = '05'
 						kjTES := '2A3'
 					EndIf
@@ -71,7 +71,9 @@ User Function GT1VALCP()
 				ElseIf zp_Empr == '13' .and. Alltrim(aInfOri[15]) == 'A'
 					kjTES := '1C6'
 				ElseIf cEmpAnt == '14' .and. zp_Empr == '01'
-					kjTES := '001'
+					kjTES := '001'	
+				ElseIf zp_Empr == '14'
+					kjTES := '4J7'
 				EndIf
 			EndIf
 

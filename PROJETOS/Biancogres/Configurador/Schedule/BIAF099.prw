@@ -38,15 +38,19 @@
 #DEFINE _Residuo 25
 #DEFINE _RecNo 26
 
-
 User Function BIAF099()
 Local cSQL := ""
+Local consultEmp := {}
 Local cSC101 := RetFullName("SC1", "01")
 Local cSC105 := RetFullName("SC1", "05")
+Local cSC114 := RetFullName("SC1", "14")
 Local cSC701 := RetFullName("SC7", "01")
 Local cSC705 := RetFullName("SC7", "05")
+Local cSC714 := RetFullName("SC7", "14")
 Local cSCR01 := RetFullName("SCR", "01")
 Local cSCR05 := RetFullName("SCR", "05")
+Local cSCR14 := RetFullName("SCR", "14")
+
 Local cSA201 := RetFullName("SA2", "01")
 Local cQry := GetNextAlias()
 Local cNomSol := ""
@@ -65,105 +69,72 @@ Local cBizagi := ""
 	RpcSetEnv("01", "01")
 
 	cBizagi := U_fGetBase("2") 	
+
+	Aadd(consultEmp, {cSC101, cSC701, cSCR01, "0101", "Biancogres"})
+	Aadd(consultEmp, {cSC105, cSC705, cSCR05, "0501", "Incesa"})
+	Aadd(consultEmp, {cSC114, cSC714, cSCR14, "1401", "Vinílico"})
 		
 	cSQL := " SELECT * "
 	cSQL += " FROM ( "
-	cSQL += " 	SELECT ISNULL(SOLICITANTE, '') AS NOMSOL, ISNULL(EMAIL, '') AS EMAIL, '01' AS CODEMP, 'Biancogres' AS DESEMP, C1_USER, C1_YBIZAGI, C1_NUM, C1_ITEM, C1_PRODUTO, C1_DESCRI, C7_NUM, C7_ITEM, "
-	cSQL += " 	C7_FORNECE + '-' + C7_LOJA + ' - ' + "
-	cSQL += " 	LTRIM(( "
-	cSQL += " 		SELECT A2_NOME " 
-	cSQL += " 		FROM " + cSA201
-	cSQL += " 		WHERE A2_FILIAL = " + ValToSQL(xFilial("SA2"))
-	cSQL += " 		AND A2_COD = C7_FORNECE "
-	cSQL += " 		AND A2_LOJA = C7_LOJA "
-	cSQL += " 		AND D_E_L_E_T_ = '')) AS A2_NOME, C7_EMISSAO, C7_USER, "	  
-	cSQL += " 	ISNULL(( "
-	cSQL += " 		SELECT TOP 1 CR_USER " 
-	cSQL += " 		FROM " + cSCR01
-	cSQL += " 		WHERE CR_FILIAL = " + ValToSQL(xFilial("SCR")) 
-	cSQL += " 		AND CR_TIPO = 'PC' "
-	cSQL += " 		AND C7_NUM = CR_NUM "
-	cSQL += " 		AND D_E_L_E_T_ = '' "
-	cSQL += " 		ORDER BY R_E_C_N_O_ DESC), '') AS CR_USER, " 
-	cSQL += " 	ISNULL(( "
-	cSQL += " 		SELECT TOP 1 CR_DATALIB " 
-	cSQL += " 		FROM " + cSCR01
-	cSQL += " 		WHERE CR_FILIAL = " + ValToSQL(xFilial("SCR")) 
-	cSQL += " 		AND CR_TIPO = 'PC' "
-	cSQL += " 		AND C7_NUM = CR_NUM " 
-	cSQL += " 		AND D_E_L_E_T_ = '' " 
-	cSQL += " 		ORDER BY R_E_C_N_O_ DESC), '') AS CR_DATALIB, C7_CONAPRO, C7_YDATCHE, "
-	cSQL += " 	CASE "
-	cSQL += " 	WHEN C7_QUJE = 0 AND C7_RESIDUO = '' THEN 'Pendente' "
-	cSQL += " 	WHEN C7_QUANT > C7_QUJE AND C7_RESIDUO = '' THEN 'Entregue Parcial' "
-	cSQL += " 	WHEN C7_QUANT = C7_QUJE AND C7_RESIDUO = '' THEN 'Entregue' "
-	cSQL += " 	WHEN C7_RESIDUO = 'S' THEN 'Eliminado por Residuo' "
-	cSQL += " 	END AS STATUS_ENT, "
-	cSQL += " 	C7_YFOLLOW, C7_YOBSCOM, C7_QUANT, C7_QUJE, C7_RESIDUO, SC1.R_E_C_N_O_ AS RECNO "
-	cSQL += " 	FROM " + cSC701 + " SC7 " 
-	cSQL += " 	INNER JOIN " + cSC101 + " SC1 "
-	cSQL += " 	ON C7_FILIAL = C1_FILIAL "
-	cSQL += " 	AND C7_NUM = C1_PEDIDO "
-	cSQL += " 	AND C7_ITEM = C1_ITEMPED "
-	cSQL += " 	LEFT JOIN "+cBizagi+".dbo.BZ_DADOS_SC SC_BIZ "
-	cSQL += " 	ON BIZAGI COLLATE Latin1_General_BIN = C1_YBIZAGI "
-	cSQL += " 	AND PROTHEUS COLLATE Latin1_General_BIN = C1_NUM "
-	cSQL += " 	AND EMPRESA = '0101' "
-	cSQL += " 	WHERE C7_FILIAL = " + ValToSQL(xFilial("SC7"))
-	cSQL += " 	AND C7_EMISSAO >= '20170101'
-	cSQL += " 	AND SC7.D_E_L_E_T_ = '' "
-	cSQL += " 	AND C1_YENVSC = '' "
-	cSQL += " 	AND SC1.D_E_L_E_T_ = '' "
 
-	cSQL += " 	UNION ALL	"
-	
-	cSQL += " 	SELECT ISNULL(SOLICITANTE, '') AS NOMSOL, ISNULL(EMAIL, '') AS EMAIL, '05' AS CODEMP, 'Incesa' AS DESEMP, C1_USER, C1_YBIZAGI, C1_NUM, C1_ITEM, C1_PRODUTO, C1_DESCRI, C7_NUM, C7_ITEM, "
-	cSQL += " 	C7_FORNECE + '-' + C7_LOJA + ' - ' + "
-	cSQL += " 	LTRIM(( "
-	cSQL += " 		SELECT A2_NOME " 
-	cSQL += " 		FROM " + cSA201
-	cSQL += " 		WHERE A2_FILIAL = " + ValToSQL(xFilial("SA2"))
-	cSQL += " 		AND A2_COD = C7_FORNECE "
-	cSQL += " 		AND A2_LOJA = C7_LOJA "
-	cSQL += " 		AND D_E_L_E_T_ = '')) AS A2_NOME, C7_EMISSAO, C7_USER, "	   
-	cSQL += " 	ISNULL(( "
-	cSQL += " 		SELECT TOP 1 CR_USER " 
-	cSQL += " 		FROM " + cSCR05
-	cSQL += " 		WHERE CR_FILIAL = " + ValToSQL(xFilial("SCR")) 
-	cSQL += " 		AND CR_TIPO = 'PC' "
-	cSQL += " 		AND C7_NUM = CR_NUM "
-	cSQL += " 		AND D_E_L_E_T_ = '' "
-	cSQL += " 		ORDER BY R_E_C_N_O_ DESC), '') AS CR_USER, " 
-	cSQL += " 	ISNULL(( "
-	cSQL += " 		SELECT TOP 1 CR_DATALIB " 
-	cSQL += " 		FROM " + cSCR05
-	cSQL += " 		WHERE CR_FILIAL = " + ValToSQL(xFilial("SCR")) 
-	cSQL += " 		AND CR_TIPO = 'PC' "
-	cSQL += " 		AND C7_NUM = CR_NUM " 
-	cSQL += " 		AND D_E_L_E_T_ = '' " 
-	cSQL += " 		ORDER BY R_E_C_N_O_ DESC), '') AS CR_DATALIB, C7_CONAPRO, C7_YDATCHE, "
-	cSQL += " 	CASE "
-	cSQL += " 	WHEN C7_QUJE = 0 AND C7_RESIDUO = '' THEN 'Pendente' "
-	cSQL += " 	WHEN C7_QUANT > C7_QUJE AND C7_RESIDUO = '' THEN 'Entregue Parcial' "
-	cSQL += " 	WHEN C7_QUANT = C7_QUJE AND C7_RESIDUO = '' THEN 'Entregue' "
-	cSQL += " 	WHEN C7_RESIDUO = 'S' THEN 'Eliminado por Residuo' "
-	cSQL += " 	END AS STATUS_ENT, "
-	cSQL += " 	C7_YFOLLOW, C7_YOBSCOM, C7_QUANT, C7_QUJE, C7_RESIDUO, SC1.R_E_C_N_O_ AS RECNO "
-	cSQL += " 	FROM " + cSC705 + " SC7 " 
-	cSQL += " 	INNER JOIN " + cSC105 + " SC1 "
-	cSQL += " 	ON C7_FILIAL = C1_FILIAL "
-	cSQL += " 	AND C7_NUM = C1_PEDIDO "
-	cSQL += " 	AND C7_ITEM = C1_ITEMPED "
-	cSQL += " 	LEFT JOIN "+cBizagi+".dbo.BZ_DADOS_SC SC_BIZ "
-	cSQL += " 	ON BIZAGI COLLATE Latin1_General_BIN = C1_YBIZAGI "
-	cSQL += " 	AND PROTHEUS COLLATE Latin1_General_BIN = C1_NUM "
-	cSQL += " 	AND EMPRESA = '0501' "
-	cSQL += " 	WHERE C7_FILIAL = " + ValToSQL(xFilial("SC7"))
-	cSQL += " 	AND C7_EMISSAO >= '20170101'
-	cSQL += " 	AND SC7.D_E_L_E_T_ = '' "
-	cSQL += " 	AND C1_YENVSC = '' "
-	cSQL += " 	AND SC1.D_E_L_E_T_ = '' "
+	//para cada empresa faz o select correspondente
+	For nCount := 1 To Len(consultEmp)
+
+		cSQL += " 	SELECT ISNULL(SOLICITANTE, '') AS NOMSOL, ISNULL(EMAIL, '') AS EMAIL, '"+ SubStr(consultEmp[nCount][4], 1, 2) +"' AS CODEMP, '"+ consultEmp[nCount][5] +"' AS DESEMP, C1_USER, C1_YBIZAGI, C1_NUM, C1_ITEM, C1_PRODUTO, C1_DESCRI, C7_NUM, C7_ITEM, "
+		cSQL += " 	C7_FORNECE + '-' + C7_LOJA + ' - ' + "
+		cSQL += " 	LTRIM(( "
+		cSQL += " 		SELECT A2_NOME " 
+		cSQL += " 		FROM " + cSA201 + " (nolock) "
+		cSQL += " 		WHERE A2_FILIAL = " + ValToSQL(xFilial("SA2"))
+		cSQL += " 		AND A2_COD = C7_FORNECE "
+		cSQL += " 		AND A2_LOJA = C7_LOJA "
+		cSQL += " 		AND D_E_L_E_T_ = '')) AS A2_NOME, C7_EMISSAO, C7_USER, "	  
+		cSQL += " 	ISNULL(( "
+		cSQL += " 		SELECT TOP 1 CR_USER " 
+		cSQL += " 		FROM " + consultEmp[nCount][3]  + " (nolock) "// cSCR01
+		cSQL += " 		WHERE CR_FILIAL = " + ValToSQL(xFilial("SCR")) 
+		cSQL += " 		AND CR_TIPO = 'PC' "
+		cSQL += " 		AND C7_NUM = CR_NUM "
+		cSQL += " 		AND D_E_L_E_T_ = '' "
+		cSQL += " 		ORDER BY R_E_C_N_O_ DESC), '') AS CR_USER, " 
+		cSQL += " 	ISNULL(( "
+		cSQL += " 		SELECT TOP 1 CR_DATALIB " 
+		cSQL += " 		FROM " + consultEmp[nCount][3]  + " (nolock) "//cSCR01
+		cSQL += " 		WHERE CR_FILIAL = " + ValToSQL(xFilial("SCR")) 
+		cSQL += " 		AND CR_TIPO = 'PC' "
+		cSQL += " 		AND C7_NUM = CR_NUM " 
+		cSQL += " 		AND D_E_L_E_T_ = '' " 
+		cSQL += " 		ORDER BY R_E_C_N_O_ DESC), '') AS CR_DATALIB, C7_CONAPRO, C7_YDATCHE, "
+		cSQL += " 	CASE "
+		cSQL += " 	WHEN C7_QUJE = 0 AND C7_RESIDUO = '' THEN 'Pendente' "
+		cSQL += " 	WHEN C7_QUANT > C7_QUJE AND C7_RESIDUO = '' THEN 'Entregue Parcial' "
+		cSQL += " 	WHEN C7_QUANT = C7_QUJE AND C7_RESIDUO = '' THEN 'Entregue' "
+		cSQL += " 	WHEN C7_RESIDUO = 'S' THEN 'Eliminado por Residuo' "
+		cSQL += " 	END AS STATUS_ENT, "
+		cSQL += " 	C7_YFOLLOW, C7_YOBSCOM, C7_QUANT, C7_QUJE, C7_RESIDUO, SC1.R_E_C_N_O_ AS RECNO "
+		cSQL += " 	FROM " + consultEmp[nCount][2] + " (nolock) SC7 " //cSC701
+		cSQL += " 	INNER JOIN " + consultEmp[nCount][1] + " (nolock) SC1 " //cSC101
+		cSQL += " 	ON C7_FILIAL = C1_FILIAL "
+		cSQL += " 	AND C7_NUM = C1_PEDIDO "
+		cSQL += " 	AND C7_ITEM = C1_ITEMPED "
+		cSQL += " 	LEFT JOIN "+cBizagi+".dbo.BZ_DADOS_SC SC_BIZ (nolock)"
+		cSQL += " 	ON BIZAGI COLLATE Latin1_General_BIN = C1_YBIZAGI "
+		cSQL += " 	AND PROTHEUS COLLATE Latin1_General_BIN = C1_NUM "
+		cSQL += " 	AND EMPRESA = '" + consultEmp[nCount][4] + "' "
+		cSQL += " 	WHERE C7_FILIAL = " + ValToSQL(xFilial("SC7"))
+		cSQL += " 	AND C7_EMISSAO >= '20170101'
+		cSQL += " 	AND SC7.D_E_L_E_T_ = '' "
+		cSQL += " 	AND C1_YENVSC = '' "
+		cSQL += " 	AND SC1.D_E_L_E_T_ = '' "
+
+		IF (nCount < Len(consultEmp))
+			cSQL += " 	UNION ALL	"
+		ENDIF
+
+	Next nCount
+
 	cSQL += " ) AS SC "	
+	cSql += "  WHERE C7_USER <> '000580' "
 	cSQL += " ORDER BY EMAIL, CODEMP, C7_EMISSAO, C1_YBIZAGI, C1_NUM, C7_NUM, C7_ITEM "	
 			
 	TcQuery cSQL New Alias (cQry)
@@ -397,10 +368,8 @@ Local cRet := ""
 Return(cRet)
 
 
-Static Function fSendMail(cMail, cHtml)
-			
+Static Function fSendMail(cMail, cHtml) 
 	If U_BIAEnvMail(,cMail, "Status das Solicitações de Compra", cHtml)
-	
 		ConOut("[" + cValToChar(dDataBase) + Space(1) + Time() + "] - BIAF099:fSendMail('"+ cMail +"')")
 	
 	EndIf
@@ -431,7 +400,7 @@ Local nCount := 1
 Local nLen := 2	
 	
 	aNome := StrTokArr2(Upper(cNome), Space(1))
-		
+
 	If Len(aNome) > 0
 	
 		nPos := aScan(aNome, {|x| x $ "DAS/DOS/DA/DO/DE"})

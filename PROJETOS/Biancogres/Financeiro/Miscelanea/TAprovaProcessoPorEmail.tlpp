@@ -1,0 +1,340 @@
+#INCLUDE "TOTVS.CH"
+#INCLUDE "TOPCONN.CH"
+
+/*/{Protheus.doc} TAprovaProcessoPorEmail
+@author Filipe Bittencourt
+@since 29/09/2021
+@version 1.0
+@description Classe para controle de aprovação de pedidos de compra por e-mail - baseado no TAprovaPedidoVendaEMail
+@type class
+/*/
+
+Class TAprovaProcessoPorEmail From LongClassName
+
+
+	Public Data oMensagem 	//DADOS PARA CONFIGURAÇÃO DO EMAIL
+	Public Data cAction    //A ação que o processo recebeu pode ser ACEITAR , RECUSAR e etc
+	Public Data cKey       //Chave de identificação da tabela ZKH
+	Public Data cProcess   //Nome do processo
+	Public Data cError     //Capturar erros durante o processo
+	Public Data lError     //Flag para saber se deu erro durante o processo
+
+
+	Public Method New() Constructor
+	Public Method EnviarEmail()
+	Public Method LerCaixaDeEmail(cProcess) //Passar o nome do processo
+	Public Method ExcluirEmailProcessado(cKey, cAction, cProcess)
+	Public Method ExcluirEmailNaoProcessado(cKey, cProcess)   // Excluindo emails que não foram registrados na tabela ZKH
+
+
+EndClass
+
+
+Method New() Class TAprovaProcessoPorEmail
+
+	::oMensagem       := TMailMessage():New()
+	::oMensagem:cFrom := "aprova.processo@biancogres.com.br"
+
+	::cAction   := ""   //A ação que o processo recebeu pode ser ACEITAR , RECUSAR e etc
+	::cKey      := ""   //Chave de identificação da tabela ZKH
+	::cProcess  := ""   //Nome do processo
+	::lError    := .F.  //Flag para saber se deu erro durante o processo
+	::cError    := ""   //Capturar erros durante o processo
+
+Return()
+
+
+Method LerCaixaDeEmail(cProcess) Class TAprovaProcessoPorEmail
+
+	Local cSrvPOP	  := SubStr(GetMv("MV_YSRVPOP"),1,RAT(':',GetMv("MV_YSRVPOP"))-1)
+	Local cConta   	:= "aprova.processo@biancogres.com.br" //GetMv("MV_YPCCTAP")
+	Local cPass 	  := "gBmS%j1S"
+	Local lUseTLS  	:= GetMv("MV_RELTLS")
+	Local cPtPOP3   := Val(SubStr(GetMv("MV_YSRVPOP"),RAT(':',GetMv("MV_YSRVPOP"))+1,Len(Alltrim(GetMv("MV_YSRVPOP")))))
+	Local nI        := 0
+	Local nTotMsg   := 0
+	Local nRetServ  := 0
+	Local oServidor := TMailManager():New()
+	Local oMensagem := TMailMessage():New()
+	Local aRet      := {}
+	Local oObj      := Nil
+
+	oServidor:SetUseSSL(lUseTLS)
+	oServidor:Init(cSrvPOP, "", cConta, cPass, cPtPOP3, 0)
+	oServidor:SetPopTimeOut(60)
+
+	nRetServ := oServidor:PopConnect()
+
+	If nRetServ == 0
+
+		oServidor:GetNumMsgs(@nTotMsg)
+		oMensagem:Clear() //Limpa o conteúdo do objeto. Desta forma, é possível receber várias mensagens no mesmo objeto, apenas limpando o seu conteúdo antes.
+
+		For nI := 1 To nTotMsg
+
+			oMensagem:Receive(oServidor, nI)
+
+			If 'KEY:' $ oMensagem:cSubject .and.  'ACTION:' $ oMensagem:cSubject .and.  'PROC:' $ oMensagem:cSubject
+
+				oObj          :=  TAprovaProcessoPorEmail():New()
+
+				if cProcess == 	SubStr(AllTrim(oMensagem:cSubject), At('PROC:', oMensagem:cSubject) + 4, 8)
+
+					oObj:cKey     := 	SubStr(AllTrim(oMensagem:cSubject), At('KEY:', oMensagem:cSubject) + 3, 33)
+					oObj:cProcess := 	SubStr(AllTrim(oMensagem:cSubject), At('PROC:', oMensagem:cSubject) + 4, 8)
+					oObj:cAction  :=	SubStr(AllTrim(oMensagem:cSubject), At('ACTION:', oMensagem:cSubject) + 6, 7)
+					AADD(aRet,oObj)
+
+				else
+
+					oObj:lError :=  .T.
+					oObj:cError :=  "O Processo:"+cProcess+" , não foi encontrado."
+					AADD(aRet,oObj)
+
+				EndIf
+
+			Else
+
+				oServidor:DeleteMsg(nI) 	// Se não tiver key e proc deletar
+
+			EndIf
+
+		NEXT nI
+
+	Else
+
+		oObj        := TAprovaProcessoPorEmail():New()
+		oObj:lError :=  .T.
+		oObj:cError :=  oServidor:GetErrorString( nRetServ )
+		AADD(aRet,oObj)
+
+	EndIf
+
+Return aRet
+
+Method ExcluirEmailProcessado(cKey, cAction, cProcess ) Class TAprovaProcessoPorEmail
+
+	Local cSrvPOP	  := SubStr(GetMv("MV_YSRVPOP"),1,RAT(':',GetMv("MV_YSRVPOP"))-1)
+	Local cConta   	:= "aprova.processo@biancogres.com.br" //GetMv("MV_YPCCTAP")
+	Local cPass 	  := "gBmS%j1S"
+	Local lUseTLS  	:= GetMv("MV_RELTLS")
+	Local cPtPOP3   := Val(SubStr(GetMv("MV_YSRVPOP"),RAT(':',GetMv("MV_YSRVPOP"))+1,Len(Alltrim(GetMv("MV_YSRVPOP")))))
+	Local nI        := 0
+	Local nTotMsg   := 0
+	Local nRetServ  := 0
+	Local oObj      := Nil
+	Local aRet      := {}
+	Local cMSG      := ""
+
+	Local oServidor := TMailManager():New()
+	Local oMensagem := TMailMessage():New()
+
+	if EMPTY(cKey) .OR. EMPTY(cAction) .OR. EMPTY(cProcess)
+
+		cMSG:= "TAprovaProcessoPorEmail:ExcluirEmailProcessado(cKey, cAction, cProcess) => ERRO -> Não Foi possivel excluir pois os paramentros estão vazio"
+		ConOut(cMSG)
+		oObj        := TAprovaProcessoPorEmail():New()
+		oObj:lError :=  .T.
+		oObj:cError :=  cMSG
+		AADD(aRet,oObj)
+
+	Else
+
+		oServidor:SetUseSSL(lUseTLS)
+		oServidor:Init(cSrvPOP, "", cConta, cPass, cPtPOP3, 0)
+		oServidor:SetPopTimeOut(60)
+
+		nRetServ := oServidor:PopConnect()
+
+		If nRetServ == 0
+
+			oServidor:GetNumMsgs(@nTotMsg)
+			oMensagem:Clear()
+
+			For nI := 1 To nTotMsg
+
+				oMensagem:Receive(oServidor, nI)
+
+				If 'KEY:' $ oMensagem:cSubject .and.  'ACTION:' $ oMensagem:cSubject .and.  'PROC:' $ oMensagem:cSubject
+
+
+					if	    cKey     ==	SubStr(AllTrim(oMensagem:cSubject), At('KEY:', oMensagem:cSubject) + 3, 33);
+							.and. cProcess == 	SubStr(AllTrim(oMensagem:cSubject), At('PROC:', oMensagem:cSubject) + 4, 8);
+							.and. cAction  ==	SubStr(AllTrim(oMensagem:cSubject), At('ACTION:', oMensagem:cSubject) + 6, 7)
+
+						oServidor:DeleteMsg(nI)
+
+					else
+
+						oObj        := TAprovaProcessoPorEmail():New()
+						oObj:cError :=  "A chave não foi encontrada."
+						oObj:lError :=  .T.
+						AADD(aRet,oObj)
+
+					EndIf
+
+				Else
+
+					oServidor:DeleteMsg(nI)
+
+				EndIf
+
+			NEXT nI
+
+		Else
+
+			oObj        := TAprovaProcessoPorEmail():New()
+			oObj:cError :=  oServidor:GetErrorString( nRetServ )
+			oObj:lError :=  .T.
+			AADD(aRet,oObj)
+
+		EndIf
+
+
+	EndIf
+
+Return aRet
+
+Method EnviarEmail() Class TAprovaProcessoPorEmail
+
+	Local nErro     := 0
+	Local lRet      := .F.
+	Local cSrvSMTP	:= SubStr(GetMv("MV_RELSERV"),1,RAT(':',GetMv("MV_RELSERV"))-1)
+	Local lUseTLS 	:= GetMv("MV_RELTLS")
+	Local lUseSSL 	:= GetMv("MV_RELSSL")
+	Local lUseAUT 	:= GetMv("MV_RELAUTH")
+	Local cConta   	:= "aprova.processo@biancogres.com.br" //GetMv("MV_YPCCTAP")
+	Local cSenha 	  := "gBmS%j1S"                          //GetMv("MV_YPCSNAP")
+	Local cPtSMTP   := Val(SubStr(GetMv("MV_RELSERV"),RAT(':',GetMv("MV_RELSERV"))+1,Len(Alltrim(GetMv("MV_RELSERV")))))
+	Local oObj      := Nil
+	Local oServidor := TMailManager():New()
+
+	oServidor:SetUseTLS(lUseTLS)
+	oServidor:SetUseSSL(lUseSSL)
+	oServidor:Init("", cSrvSMTP, cConta, cSenha, 0, cPtSMTP)
+	oServidor:SetSmtpTimeOut(60)
+
+	oObj        := TAprovaProcessoPorEmail():New()
+	oObj:lError :=  .F.
+
+	If oServidor:SmtpConnect() == 0
+
+		If lUseAUT
+			nErro := oServidor:SmtpAuth(cConta,cSenha)
+		Else
+			nErro := 0
+		EndIf
+
+		If nErro == 0
+
+			nErro := ::oMensagem:Send(oServidor)
+
+			If(nErro != 0)
+
+				oObj:cError :=  "TAprovaProcessoPorEmail:EnviarEmail() => ERRO ao enviar e-mail: " + oServidor:GetErrorString( nErro )
+				oObj:lError :=  .T.
+
+			EndIf
+
+		Else
+
+			oObj:cError :=  "TAprovaProcessoPorEmail:EnviarEmail() => ERRO ao enviar e-mail: " + oServidor:GetErrorString( nErro )
+			oObj:lError :=  .T.
+
+		EndIf
+
+		oServidor:SmtpDisconnect()
+
+	Else
+
+		oObj:cError :=  "TAprovaProcessoPorEmail:EnviarEmail() => ERRO ao enviar e-mail: Não foi possivel conectar ao servidor de email: "+cConta
+		oObj:lError :=  .T.
+
+	EndIf
+
+Return(oObj)
+
+
+
+Method ExcluirEmailNaoProcessado(cKey, cProcess ) Class TAprovaProcessoPorEmail
+
+	Local cSrvPOP	  := SubStr(GetMv("MV_YSRVPOP"),1,RAT(':',GetMv("MV_YSRVPOP"))-1)
+	Local cConta   	:= "aprova.processo@biancogres.com.br" //GetMv("MV_YPCCTAP")
+	Local cPass 	  := "gBmS%j1S"
+	Local lUseTLS  	:= GetMv("MV_RELTLS")
+	Local cPtPOP3   := Val(SubStr(GetMv("MV_YSRVPOP"),RAT(':',GetMv("MV_YSRVPOP"))+1,Len(Alltrim(GetMv("MV_YSRVPOP")))))
+	Local nI        := 0
+	Local nTotMsg   := 0
+	Local nRetServ  := 0
+	Local oObj      := Nil
+	Local aRet      := {}
+	Local cMSG      := ""
+
+	Local oServidor := TMailManager():New()
+	Local oMensagem := TMailMessage():New()
+
+	if  EMPTY(cKey) .OR. EMPTY(cProcess)
+
+		cMSG:= "TAprovaProcessoPorEmail:ExcluirEmailNaoProcessado(cKey,  cProcess) => ERRO -> Não Foi possivel excluir pois os paramentros estão vazio"
+		ConOut(cMSG)
+		oObj        := TAprovaProcessoPorEmail():New()
+		oObj:lError :=  .T.
+		oObj:cError :=  cMSG
+		AADD(aRet,oObj)
+
+	Else
+
+		oServidor:SetUseSSL(lUseTLS)
+		oServidor:Init(cSrvPOP, "", cConta, cPass, cPtPOP3, 0)
+		oServidor:SetPopTimeOut(60)
+
+		nRetServ := oServidor:PopConnect()
+
+		If nRetServ == 0
+
+			oServidor:GetNumMsgs(@nTotMsg)
+			oMensagem:Clear()
+
+			For nI := 1 To nTotMsg
+
+				oMensagem:Receive(oServidor, nI)
+
+				If 'KEY:' $ oMensagem:cSubject .and. 'PROC:' $ oMensagem:cSubject
+
+
+					if	    cKey     ==	SubStr(AllTrim(oMensagem:cSubject), At('KEY:', oMensagem:cSubject) + 3, 33);
+							.and. cProcess == 	SubStr(AllTrim(oMensagem:cSubject), At('PROC:', oMensagem:cSubject) + 4, 8)
+
+
+						oServidor:DeleteMsg(nI)
+
+					else
+
+						oObj        := TAprovaProcessoPorEmail():New()
+						oObj:cError :=  "A chave não foi encontrada."
+						oObj:lError :=  .T.
+						AADD(aRet,oObj)
+
+					EndIf
+
+				Else
+
+					oServidor:DeleteMsg(nI)
+
+				EndIf
+
+			NEXT nI
+
+		Else
+
+			oObj        := TAprovaProcessoPorEmail():New()
+			oObj:cError :=  oServidor:GetErrorString( nRetServ )
+			oObj:lError :=  .T.
+			AADD(aRet,oObj)
+
+		EndIf
+
+
+	EndIf
+
+Return aRet

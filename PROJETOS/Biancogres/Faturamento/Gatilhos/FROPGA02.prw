@@ -789,7 +789,7 @@ User Function FROPGA02()
 						
 				Else
 					
-					If (AllTrim(cEmpAnt) == '07')
+					If (AllTrim(cEmpAnt+cFilAnt) == "0701")
 						SB1->(DbSetOrder(1))
 						If SB1->(DbSeek(XFilial("SB1")+_cProd)) .And. !Empty(SB1->B1_YEMPEST)
 
@@ -1075,7 +1075,7 @@ User Function FROPGA02()
 	If !Empty(_cEmpOri)
 		aCols[N][_nPYEMP]	:= _cEmpOri
 	Else
-		If (AllTrim(CEMPANT) <> "07")
+		If (AllTrim(cEmpAnt+cFilAnt) <> "0701")
 			aCols[N][_nPYEMP]	:= CEMPANT
 		Else
 			SB1->(DbSetOrder(1))
@@ -1086,7 +1086,7 @@ User Function FROPGA02()
 	EndIf
 
 	//Check de Empresa origem LM - projeto PBI - Fernando em 17/07/2018
-	If (AllTrim(CEMPANT) == "07") .And. !Empty(_cEmpOri)
+	If (AllTrim(cEmpAnt+cFilAnt) == "0701") .And. !Empty(_cEmpOri)
 
 		M->C5_YEMPPED 	:= _cEmpOri
 

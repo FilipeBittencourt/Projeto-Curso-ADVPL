@@ -145,7 +145,6 @@ Return .T.
 Static Function fBIA389D()
 
 	Local _cAlias   := GetNextAlias()
-	Local M001      := GetNextAlias()
 	Local _cTpOrc	:=	Alltrim(_cComboBox1)
 
 	If Empty(_cVersao) .or. Empty(_cRevisa) .or. Empty(_cAnoRef) .or. Empty(_cCodUser) .Or. Empty(_cComboBox1)
@@ -334,6 +333,7 @@ User Function B389CLVL()
 
 	Local M002        := GetNextAlias()
 	Local _axColsBkp  := aClone(_oGetDados:aCols)
+	Local _cAliasSr	  := "%" + U_fGetDbSr() + ".dbo.r034fun" + "%"
 
 	If !_msCtrlAlt
 
@@ -345,13 +345,14 @@ User Function B389CLVL()
 	If _cComboBox1 == "RH" 
 
 		BeginSql Alias M002
-			SELECT DISTINCT RA_YCLVL CLVL
-			FROM %TABLE:SRA% SRA
-			WHERE SRA.RA_MAT < '2'
-			AND SRA.RA_SITFOLH <> 'D'
-			AND SRA.RA_YCLVL <> '         '
-			AND SRA.%NotDel%
-			ORDER BY SRA.RA_YCLVL
+
+			SELECT DISTINCT 
+			codccu CLVL
+			FROM %Exp:_cAliasSr% a
+			WHERE tipcol = 1
+			AND sitafa <> 7
+			ORDER BY codccu;
+
 		EndSql
 
 	Else
@@ -398,7 +399,6 @@ User Function B389CLVL()
 
 Return
 
-
 User Function B389TPOR()
 
 	If !Empty(_cVersao) .And. !Empty(_cRevisa) .And. !Empty(_cAnoRef) .And. !Empty(_cComboBox1) .And. !Empty(_cCodUser)
@@ -407,10 +407,12 @@ User Function B389TPOR()
 		EndIf
 
 		fCopyTpOrc()
-	Else
-		MsgInfo("Todos os campos do cabeçalho devem estar devidamente preenchidos para realizar a cópia!")
-	EndIf
 
+	Else
+
+		MsgInfo("Todos os campos do cabeçalho devem estar devidamente preenchidos para realizar a cópia!")
+
+	EndIf
 
 Return
 
@@ -437,8 +439,6 @@ Static Function ValidPerg()
 
 	aAdd( aPergs ,{2,"Tipo Orc. Destino " 	,MV_PAR01 ,aOpcs,60,'.T.',.F.})
 
-
-
 	If ParamBox(aPergs ,"Copiar tipo de orçamento",,,,,,,,cLoad,.T.,.T.)
 
 		lRet := .T.
@@ -459,7 +459,6 @@ Static Function fCopyTpOrc()
 	xfMensCompl += "Data Digitação igual a branco" + msrhEnter
 	xfMensCompl += "Data Conciliação igual a branco" + msrhEnter
 	xfMensCompl += "Data Encerramento igual a branco" + msrhEnter
-
 
 	BeginSql Alias _cAlias
 
@@ -540,4 +539,5 @@ Static Function fCopyTpOrc()
 	EndIf
 
 	(_cAlias)->(DbCloseArea())
+
 Return

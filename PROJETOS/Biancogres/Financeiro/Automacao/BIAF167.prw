@@ -21,7 +21,8 @@ User Function BIAF167()
   Local cError    := ""
   Local oError    := ""
   Local cTime     := ""
-  Local cClasVlr  := "1215" //1215 - BIANCO | 1219 - LM
+  Local cNatFin   := ""
+  Local cClasVlr  := ""  //1215 - BIANCO | 1219 - LM
   Local dDtIni    := ""
   Local dDtFin    := ""
 
@@ -59,10 +60,8 @@ User Function BIAF167()
 
       Begin Transaction
 
-        //Classe de valor
-        if (cEmpAnt+cFilAnt) == '0701'
-          cClasVlr  := "1219" //1215 - BIANCO | 1219 - LM
-        EndIf
+        cNatFin   := "2915"
+        cClasVlr  := U_BIA478G("ZJ0_CLVLDB", cNatFin, "P")
 
         cTime := FwTimeStamp()
         cTime := SubStr(cTime,1,4)+'-'+SubStr(cTime,5,2)+'-'+SubStr(cTime,7,2)+'__'+SubStr(cTime,9,2)+'h'+SubStr(cTime,11,2)+'m'+SubStr(cTime,13,2)+'s'
@@ -78,7 +77,7 @@ User Function BIAF167()
           {"E5_TIPODOC"   , "DB"                        ,Nil},;
           {"E5_CLVLDB"    , cClasVlr                    ,Nil},;
           {"E5_VALOR"     , (cQry)->ZK4_VLTAR           ,Nil},;
-          {"E5_NATUREZ"   , "2915"                      ,Nil},;
+          {"E5_NATUREZ"   , cNatFin                     ,Nil},;
           {"E5_BANCO"     , (cQry)->ZK4_BANCO           ,Nil},;
           {"E5_AGENCIA"   , (cQry)->ZK4_AGENCI          ,Nil},;
           {"E5_CONTA"     , (cQry)->ZK4_CONTA           ,Nil},;

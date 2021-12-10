@@ -112,6 +112,12 @@ Static Function RptDetail()
 				fgHstbtf := "CUSTO PRODUCAO BOTA FORA N/MES"
 			EndIf
 
+		ElseIf cEmpAnt == "14"
+			If MV_PAR03 == "PA"
+				fgConta := "11306001"
+				fgHist  := "CUSTO PRODUCAO PRODUTO ACABADO N/MES"
+			EndIf
+
 		EndIf
 
 		If cEmpAnt == "01"
@@ -253,6 +259,58 @@ Static Function RptDetail()
 				CT007 += "  GROUP BY D3_TM, D3_CLVL, D3_TIPO "
 
 			EndIf
+
+		ElseIf cEmpAnt == "14"
+
+			// Producao
+			CT007 := " SELECT 'CT2' ORIGEM, "
+			CT007 += "        DEBITO = '" + fgConta + "', "
+			CT007 += "        CREDIT = '6210100'+SUBSTRING(CTA,3,1), "
+			CT007 += "        0 QUANT, "
+			CT007 += "        ROUND(SUM(VALOR),2) CUSTO, "
+			CT007 += "        '" + fgHist + "' HIST, "
+			CT007 += "        '3000' CCUSTO, "
+			CT007 += "        ' ' ITEMCTA, "
+			CT007 += "        '" + fgclvl + "' CLVL "
+			CT007 += "   FROM " + msNomeTMP + " " 
+			CT007 += "  WHERE CONTRAP = '" + MV_PAR03 + "' "
+			CT007 += "  GROUP BY SUBSTRING(CTA,3,1)
+
+			If MV_PAR03 == "PA"
+				CT007 += "  UNION ALL "
+				CT007 += " SELECT 'SD3' ORIGEM, "
+				CT007 += "        DEBITO = '" + fgConta + "', "
+				CT007 += "        CREDIT = '11307001', "
+				CT007 += "        0 QUANT, "
+				CT007 += "        ROUND(SUM(D3_CUSTO1),2) CUSTO, "
+				CT007 += "        '" + fgHist + "' HIST, "
+				CT007 += "        '3000' CCUSTO, "
+				CT007 += "        ' ' ITEMCTA, "
+				CT007 += "        '" + fgclvl + "' CLVL "
+				CT007 += "   FROM " + RetSqlName("SD3") + " SD3 "
+				CT007 += "  INNER JOIN " + RetSqlName("SC2") + " SC2 ON C2_FILIAL = '" + xFilial("SC2") + "' "
+				CT007 += "                       AND C2_NUM = SUBSTRING(D3_OP,1,6) "
+				CT007 += "                       AND C2_ITEM = SUBSTRING(D3_OP,7,2) "
+				CT007 += "                       AND C2_SEQUEN = SUBSTRING(D3_OP,9,3) "
+				CT007 += "                       AND SC2.D_E_L_E_T_ = ' ' "
+				CT007 += "  INNER JOIN " + RetSqlName("SB1") + " SB1 ON B1_FILIAL = '" + xFilial("SB1") + "' "
+				CT007 += "                       AND B1_COD = C2_PRODUTO "
+				CT007 += "                       AND B1_TIPO = '" + MV_PAR03 + "' "
+				CT007 += "                       AND SB1.D_E_L_E_T_ = ' ' "
+				CT007 += "  WHERE D3_FILIAL = '" + xFilial("SD3") + "' "
+				CT007 += "    AND D3_EMISSAO BETWEEN '" + dtos(MV_PAR01) + "' AND '" + dtos(MV_PAR02) + "' "
+				CT007 += "    AND D3_OP <> '             ' "
+				CT007 += "    AND D3_TM <> '010' "
+				CT007 += "    AND D3_TIPO <> 'PP' "
+				CT007 += "    AND D3_ESTORNO = ' ' "
+				CT007 += "    AND SD3.D_E_L_E_T_ = ' ' "
+
+			EndIf
+
+		Else
+
+			MsgINFO("A empresa " + cEmpAnt + " não está configurada para Contabilização do Custo de Produção", "BIA746")
+			Return
 
 		End
 

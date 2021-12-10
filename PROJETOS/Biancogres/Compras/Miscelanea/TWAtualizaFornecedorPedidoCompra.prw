@@ -385,7 +385,7 @@ Local aArea := GetArea()
 		While !SC7->(Eof()) .And. SC7->C7_NUM == ::cNumPed
 	
 			DbSelectArea("SC8")
-			DbSetOrder(3)
+			DbSetOrder(2)   
 			If SC8->(DbSeek(xFilial("SC8") + SC7->(C7_NUMCOT + C7_PRODUTO + C7_FORNECE + C7_LOJA + C7_NUM + C7_ITEM)))
 			
 				RecLock("SC8", .F.)

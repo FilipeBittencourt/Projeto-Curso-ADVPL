@@ -414,16 +414,13 @@ User Function MT103NFE()
 				//Grava o Peso Liquido
 				__PLiqui := aInfOri[17]
 
-				//Define o TES
-				If(cEmpAnt != '14')
-					kjTES := "0A2"
-				EndIf
-				
+				//Define o TES		
+				kjTES := "3A4"
 				If Alltrim(aInfOri[15]) == 'B'
 					kjTES := '0A5'
 				Else
 					If (zp_Empr == '01' .or. zp_Empr == '05') .And. cEmpAnt != '14'
-						kjTES := '0A2'
+						kjTES := '3A4'
 						If cEmpAnt = '05'
 							kjTES := '2A3'
 						EndIf
@@ -442,6 +439,8 @@ User Function MT103NFE()
 						kjTES := '0A4'
 					ElseIf zp_Empr == '13' .and. Alltrim(aInfOri[15]) == 'A'
 						kjTES := '1C6'
+					ElseIf zp_Empr == '14'
+						kjTES := '4J7'
 					// ElseIf cEmpAnt == '14' .and. zp_Empr == '01'
 					// 	kjTES := '001'
 					EndIf

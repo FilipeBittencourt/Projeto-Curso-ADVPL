@@ -23,8 +23,7 @@ User Function BIA397()
 	Local aNoFields     := {"ZBA_VERSAO", "ZBA_REVISA", "ZBA_ANOREF"}
 
 	Local oFont         := TFont():New("Arial",9,14,.T.,.T.,5,.T.,5,.T.,.F.)
-	Local _nOpcA	    := 0
-	Local _aButtons	:=	{}
+	Local _aButtons	    := {}
 
 	Private _oDlg
 	Private _oGetDados	:= Nil    
@@ -99,8 +98,6 @@ Return
 Static Function fBIA397C()
 
 	Local _msc
-	Local _cAlias    := GetNextAlias()
-	Local M001       := GetNextAlias()
 
 	If Empty(_cVersao) .or. Empty(_cRevisa) .or. Empty(_cAnoRef)
 		MsgInfo("Favor verificar o preenchimento dos campos da capa do cadastro!!!")
@@ -117,7 +114,7 @@ Static Function fBIA397C()
 	M0007 := " WITH LIBCLVL AS (SELECT ZB9.ZB9_CLVL, "
 	M0007 += "                         " + IIF(_msCtrlAlt, "ZB9.ZB9_DIGIT", "'2'") + " ZB9_DIGIT, "
 	M0007 += "                         " + IIF(_msCtrlAlt, "ZB9.ZB9_VISUAL", "'2'") + " ZB9_VISUAL "
-	M0007 += "                    FROM " + RetSqlName("ZB9") + " ZB9 "
+	M0007 += "                    FROM " + RetSqlName("ZB9") + " ZB9(NOLOCK) "
 	M0007 += "                   WHERE ZB9.ZB9_FILIAL = '" + xFilial("ZB9") + "' "
 	M0007 += "                     AND ZB9.ZB9_VERSAO = '" + _cVersao + "' "
 	M0007 += "                     AND ZB9.ZB9_REVISA = '" + _cRevisa + "' "
@@ -126,20 +123,22 @@ Static Function fBIA397C()
 	M0007 += "                     AND ZB9.ZB9_TPORCT = 'RH' "
 	M0007 += "                     AND ( ZB9.ZB9_DIGIT = '1' OR ZB9.ZB9_VISUAL = '1' ) "
 	M0007 += "                     AND ZB9.D_E_L_E_T_ = ' ') "
-	M0007 += " SELECT ZB9.ZB9_DIGIT ZBA_DIGIT,
-	M0007 += "        ZB9.ZB9_VISUAL ZBA_VISUAL,
+	M0007 += " SELECT ZB9.ZB9_DIGIT ZBA_DIGIT, "
+	M0007 += "        ZB9.ZB9_VISUAL ZBA_VISUAL, "
 	M0007 += "        ZBA.*, "
 	M0007 += "        (SELECT COUNT(*) "
-	M0007 += "           FROM " + RetSqlName("ZBA") + " XZBA "
+	M0007 += "           FROM " + RetSqlName("ZBA") + " XZBA(NOLOCK) "
 	M0007 += "          INNER JOIN LIBCLVL ZB9 ON ZB9.ZB9_CLVL = XZBA.ZBA_CLVL "
 	M0007 += "          WHERE XZBA.ZBA_FILIAL = '" + xFilial("ZBA") + "' "
 	M0007 += "            AND XZBA.ZBA_VERSAO = '" + _cVersao + "' "
 	M0007 += "            AND XZBA.ZBA_REVISA = '" + _cRevisa + "' "
 	M0007 += "            AND XZBA.ZBA_ANOREF = '" + _cAnoRef + "' "
 	M0007 += "            AND XZBA.ZBA_PERIOD <> '00' "
-	M0007 += "            AND XZBA.D_E_L_E_T_ = ' ') NREGS "
-	M0007 += "   FROM " + RetSqlName("ZBA") + " ZBA "
+	M0007 += "            AND XZBA.D_E_L_E_T_ = ' ') NREGS, "
+	M0007 += "        TITCAR = a.titcar "
+	M0007 += "   FROM " + RetSqlName("ZBA") + " ZBA(NOLOCK) "
 	M0007 += "  INNER JOIN LIBCLVL ZB9 ON ZB9.ZB9_CLVL = ZBA.ZBA_CLVL "
+	M0007 += "  LEFT JOIN " + U_fGetDbSr() + ".dbo.r024car a(NOLOCK) ON a.codcar = ZBA.ZBA_FUNCAO COLLATE Latin1_General_BIN "
 	M0007 += "  WHERE ZBA.ZBA_FILIAL = '" + xFilial("ZBA") + "' "
 	M0007 += "    AND ZBA.ZBA_VERSAO = '" + _cVersao + "' "
 	M0007 += "    AND ZBA.ZBA_REVISA = '" + _cRevisa + "' "
@@ -170,7 +169,7 @@ Static Function fBIA397C()
 					_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := R_E_C_N_O_
 
 				ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) == "ZBA_DFUNC"
-					_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := Posicione("SRJ", 1, xFilial("SRJ") + M007->ZBA_FUNCAO, "RJ_DESC")
+					_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := M007->TITCAR
 
 				ElseIf Alltrim(_oGetDados:aHeader[_msc][2]) == "ZBA_DCTGFU"
 					_oGetDados:aCols[Len(_oGetDados:aCols), _msc] := Posicione("ZB4", 1, xFilial("ZB4") + M007->ZBA_CATGFU, "ZB4_DESCRI")

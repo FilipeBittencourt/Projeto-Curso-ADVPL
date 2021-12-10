@@ -52,14 +52,14 @@ Local cWorkAE := ""
 Local cTableE := ""
 Local cTableS := ""
 Local cDirTmp := AllTrim(GetTempPath())
-Local lNewTable := .T.
+//Local lNewTable := .T.
 	
   oFWExcel := FWMsExcel():New()
 	  
 	cWorkSE := "Entradas - Sintético"
 	oFWExcel:AddWorkSheet(cWorkSE)
 	
-	cTableE := Capital(FWEmpName(cEmpAnt)) + " - Entradas - "+ AllTrim(oParam:cProd)
+	cTableE := Capital(FWEmpName(cEmpAnt)) + " - Entradas - "+ AllTrim(oParam:cProd)  + " até " + AllTrim(oParam:cProdAte)
 	oFWExcel:AddTable(cWorkSE, cTableE)
 	oFWExcel:AddColumn(cWorkSE, cTableE, "Produto", 1, 1)
 	oFWExcel:AddColumn(cWorkSE, cTableE, "Descrição", 1, 1)
@@ -74,7 +74,7 @@ Local lNewTable := .T.
 	cWorkSS := "Saídas - Sintético"
 	oFWExcel:AddWorkSheet(cWorkSS)
 	
-	cTableS := Capital(FWEmpName(cEmpAnt)) + " - Saídas - "+ AllTrim(oParam:cProd)
+	cTableS := Capital(FWEmpName(cEmpAnt)) + " - Saídas - "+ AllTrim(oParam:cProd) + " até " + AllTrim(oParam:cProdAte)
 	oFWExcel:AddTable(cWorkSS, cTableS)
 	oFWExcel:AddColumn(cWorkSS, cTableS, "Produto", 1, 1)
 	oFWExcel:AddColumn(cWorkSS, cTableS, "Descrição", 1, 1)
@@ -90,7 +90,7 @@ Local lNewTable := .T.
 	cWorkAE := "Entradas - Analítico"
 	oFWExcel:AddWorkSheet(cWorkAE)
 	
-	cTableE := Capital(FWEmpName(cEmpAnt)) + " - Entradas - "+ AllTrim(oParam:cProd)
+	cTableE := Capital(FWEmpName(cEmpAnt)) + " - Entradas - "+ AllTrim(oParam:cProd) + " até " + AllTrim(oParam:cProdAte)
 	oFWExcel:AddTable(cWorkAE, cTableE)
 	oFWExcel:AddColumn(cWorkAE, cTableE, "Produto", 1, 1)
 	oFWExcel:AddColumn(cWorkAE, cTableE, "Descrição", 1, 1)
@@ -107,15 +107,21 @@ Local lNewTable := .T.
 	oFWExcel:AddColumn(cWorkAE, cTableE, "Fornecedor", 1, 1)
 	oFWExcel:AddColumn(cWorkAE, cTableE, "Loja", 1, 1)	
 		
-	// Entradas/Saidas - Sintetico
+	
+    
+    // Entradas/Saidas - Sintetico
 	cQry := GetNextAlias()
 	
-	cSQL := "EXEC SP_MOVIMENTACAO_MATERIA_PRIMA_SINTETICO_"+cEmpAnt + ValToSQL(oParam:dDatDe) + ", "+ ValToSQL(oParam:dDatAte) + ", "+ ValToSQL(oParam:cProd)
+	cSQL := "EXEC SP_MOVIMENTACAO_MATERIA_PRIMA_SINTETICO_"+cEmpAnt + ValToSQL(oParam:dDatDe) + ", "+ ValToSQL(oParam:dDatAte) + ", "+ ValToSQL(oParam:cProd) + ", " + ValToSQL(oParam:cProdAte)
 			
 	TcQuery cSQL New Alias (cQry)
 	  		
 	While (cQry)->(!Eof())
 		
+
+
+
+        
 		If (cQry)->TIPO_MOV == "E"
 			oFWExcel:AddRow(cWorkSE, cTableE, {(cQry)->D1_COD, (cQry)->B1_DESC, (cQry)->D1_GRUPO, (cQry)->D1_UM, (cQry)->D1_SEGUM, dToC(sToD((cQry)->Z11_DATAIN)), (cQry)->QTD_1UM, (cQry)->QTD_2UM, (cQry)->QTD_TK_TON})
 		Else
@@ -126,11 +132,18 @@ Local lNewTable := .T.
 		
 	EndDo
 	
-	
+    If Empty(Alltrim(oParam:cProd))
+        oParam:cProd:="1010000        " // Primeiro produto da Biancgres na SB1, marreta pra aceitar o campo 'produto de' vazio
+    EndIf
+
+	If Empty(AllTrim(oParam:cProdAte))
+        oParam:cProdAte:=oParam:cProd 
+    EndIf
+
 	// Entradas - Analítico
 	cQry := GetNextAlias()
 	
-	cSQL := "EXEC SP_MOVIMENTACAO_MATERIA_PRIMA_ANALITICO_"+cEmpAnt + ValToSQL(oParam:dDatDe) + ", "+ ValToSQL(oParam:dDatAte) + ", "+ ValToSQL(oParam:cProd)
+	cSQL := "EXEC SP_MOVIMENTACAO_MATERIA_PRIMA_ANALITICO_"+cEmpAnt + ValToSQL(oParam:dDatDe) + ", "+ ValToSQL(oParam:dDatAte) + ", "+ ValToSQL(oParam:cProd) + ", " + ValToSQL(oParam:cProdAte)
 			
 	TcQuery cSQL New Alias (cQry)
 	  		

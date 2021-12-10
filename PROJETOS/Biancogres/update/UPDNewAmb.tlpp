@@ -375,7 +375,7 @@ static function FSAtuSPEDURL()
 	nTCLink:=AdvConnection()
 
 	if (TCCanOpen("SPED000"))
-		cQuery:="UPDATE SPED000 SET CONTEUDO='2' WHERE PARAMETRO='MV_AMBIENT'"
+		cQuery:="UPDATE SPED000 SET CONTEUDO='2' WHERE PARAMETRO IN ('MV_AMBIENT','MV_ACTEOS','MV_AMBMDFE','MV_AMBCCE')"
 		if (TCSQLExec(cQuery)<0)
 			AutoGrLog(CRLF+"Erro na Atualizacao do parametro MV_AMBIENT :: " + "SX6 Empresa[" +&("cEmpAnt")+"] " + CRLF + TCSQLError() + CRLF + Replicate( "-", 128 ) + CRLF )
 		else

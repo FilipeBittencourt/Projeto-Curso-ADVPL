@@ -14,13 +14,13 @@ User Function BIPROCSC()
 
     Local oObj := Nil
 
-    //RpcSetEnv("01", "01")
+    RpcSetEnv("01")
 
     oObj := TBizagiIntegracaoSolicitCompra():New()
 
     oObj:Processa()
 
-    //RpcClearEnv()
+    RpcClearEnv()
 
 Return()
 
@@ -176,7 +176,7 @@ Method Processa() Class TBizagiIntegracaoSolicitCompra
             aAdd(aLinha, { "C1_YSTATUS", (cQry)->SC_YSTATUS             , Nil }) // N=Normal;U=Urgente;E=Emergencia;P=Parada
             aAdd(aLinha, { "C1_DATPRF",  STOD((cQry)->SC_DATPRF)        , Nil })
             aAdd(aLinha, { "C1_YINDSUG", (cQry)->SC_YINDSUG             , Nil })
-            aAdd(aLinha, { "C1_YATSERV", IIF(UPPER((cQry)->SC_YATSERV) == "TRUE","S","N") , Nil })
+            aAdd(aLinha, { "C1_YATSERV", UPPER((cQry)->SC_YATSERV)      , Nil })
             aAdd(aLinha, { "C1_YDRIVER", IIF((cQry)->SC_YDRIVER == Nil,'',IIF(EMPTY((cQry)->SC_YDRIVER),"",(cQry)->SC_YDRIVER)) , Nil })
 
             If !Empty((cQry)->SC_YCONTR) .And. AllTrim((cQry)->SC_YCONTR) != '000000'
@@ -191,25 +191,45 @@ Method Processa() Class TBizagiIntegracaoSolicitCompra
 
             EndIf
 
-            aAdd(aLinha, { "C1_LOCAL",  (cQry)->SC_LOCAL               , Nil })
-            aAdd(aLinha, { "C1_YGRUPO",  SB1->B1_GRUPO                  , Nil })
+            aAdd(aLinha, { "C1_LOCAL",  (cQry)->SC_LOCAL, Nil })
+            aAdd(aLinha, { "C1_YGRUPO",  SB1->B1_GRUPO  , Nil })
 
-            If ((cQry)->SC_CONTA != "00000000" )
+            If ((cQry)->SC_CONTA != "00000000" .AND. TRIM((cQry)->SC_CONTA) != "" .AND. !Empty((cQry)->SC_CONTA))
 
-                aAdd(aLinha, { "C1_CONTA",  (cQry)->SC_CONTA           , Nil })
-
-            ElseIf SubStr((cQry)->SC_CLVL, 1, 1) $  "1_2_4_8" .And. !Empty(SB1->B1_YCTRADM)
-
-                aAdd(aLinha, { "C1_CONTA",  SB1->B1_YCTRADM            , Nil })
-
-            ElseIf SubStr((cQry)->SC_CLVL, 1, 1) == "3" .And. !Empty(SB1->B1_YCTRIND) .And. SB1->B1_TIPO <> "PI"
-
-                aAdd(aLinha, { "C1_CONTA",  SB1->B1_YCTRIND            , Nil })
+                aAdd(aLinha, { "C1_CONTA",  (cQry)->SC_CONTA, Nil })
 
             Else
+                if SubStr(SB1->B1_COD,1,3) == '306' //SE FOR SERVIÇO, USA CONTA DO PRODUTO
+                    If SubStr((cQry)->SC_CLVL, 1, 1) $  "1_2_4_8" .And. !Empty(SB1->B1_YCTRADM)                    
 
-                aAdd(aLinha, { "C1_CONTA",  SB1->B1_CONTA              , Nil })
+                        aAdd(aLinha, { "C1_CONTA",  SB1->B1_YCTRADM, Nil })
 
+                    ElseIf SubStr((cQry)->SC_CLVL, 1, 1) == "3" .And. !Empty(SB1->B1_YCTRIND) .And. SB1->B1_TIPO <> "PI"
+
+                        aAdd(aLinha, { "C1_CONTA",  SB1->B1_YCTRIND, Nil })
+
+                    Else
+
+                        aAdd(aLinha, { "C1_CONTA",  SB1->B1_CONTA, Nil })
+                    EndIf
+                else //SE NÃO FOR SERVIÇO USA CONTA DO GRUPO DE PRODUTO
+                    DbSelectArea("SBM")
+                    DbSetOrder(1)
+                    DbSeek(xFilial("SBM")+SB1->B1_GRUPO,.F.)
+
+                    If SubStr((cQry)->SC_CLVL, 1, 1) $  "1_2_4_8" .And. !Empty(SB1->B1_YCTRADM)                    
+
+                        aAdd(aLinha, { "C1_CONTA",  SBM->BM_YCTRADM, Nil })
+
+                    ElseIf SubStr((cQry)->SC_CLVL, 1, 1) == "3" .And. !Empty(SB1->B1_YCTRIND) .And. SB1->B1_TIPO <> "PI"
+
+                        aAdd(aLinha, { "C1_CONTA",  SBM->BM_YCTRIND, Nil })
+
+                    Else
+
+                        aAdd(aLinha, { "C1_CONTA",  SBM->BM_YCONTA, Nil })
+                    EndIf
+                EndIf
             EndIf
 
             aAdd(aLinha, { "C1_CC",  Posicione("CTH",1,XFILIAL("CTH") + alltrim((cQry)->SC_CLVL),"CTH_YCC") , Nil })

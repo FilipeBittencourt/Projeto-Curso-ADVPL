@@ -141,7 +141,7 @@ Method Executar() Class TMovimentacaoInterna
 
 			EndIf
 
-			IF ::cAplica == '4' .AND. !EMPTY(cMelhor) .AND. Subs(::cClasseVr,1,1) == "3"
+			IF ::cAplica == '4' .AND. !EMPTY(cMelhor) .and. cMelhor <> "000000" .AND. Subs(::cClasseVr,1,1) == "3"
 				cConta := '61301010'
 			ENDIF
 
@@ -152,6 +152,11 @@ Method Executar() Class TMovimentacaoInterna
 					cConta	:=	"61110001"
 				EndIf
 			EndIf	
+
+			// Emerson Salvador - 01/09/2021 - Ticket 34058								
+			If Alltrim(::cClasseVr) == "6212"
+				cConta := "16503104"
+			EndIf
 
 			If (::nQuant <= nSaldo)
 

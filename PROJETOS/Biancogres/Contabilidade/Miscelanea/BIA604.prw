@@ -351,7 +351,7 @@ Static Function fProcessa(msFil, cVersao, cRevisa, cAnoRef, cMsg)
 		cSql += "                           THEN 'MOD' + SUBSTRING(CLVL, 2, 1) + RTRIM(SUBSTRING(AGRUP, 1, 10)) + SUBSTRING(CRIT, 1, 3) "
 		cSql += "                           WHEN RTRIM(CLVL) IN('3180', '3181', '3183', '3184', '3280') "
 		cSql += "                           THEN 'MOD' + SUBSTRING(CLVL, 2, 1) + SUBSTRING(CRIT, 1, 3) "
-		cSql += "                           WHEN RTRIM(CLVL) IN('3299') "
+		cSql += "                           WHEN RTRIM(CLVL) IN('3299') AND PERIODO <= '202109' "
 		cSql += "                           THEN 'MOD' + SUBSTRING(CLVL, 2, 1) + SUBSTRING(CRIT, 1, 3) "
 		cSql += "                           WHEN RTRIM(SUBSTRING(AGRUP, 1, 10)) IN('612', '613', '614') "
 		cSql += "                           THEN 'MOD' + SUBSTRING(CLVL, 2, 1) + RTRIM(SUBSTRING(AGRUP, 1, 10)) + SUBSTRING(CRIT, 1, 3) "

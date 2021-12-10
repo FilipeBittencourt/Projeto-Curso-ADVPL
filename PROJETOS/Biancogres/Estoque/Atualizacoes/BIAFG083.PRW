@@ -132,7 +132,7 @@ User Function BIAFG083()
 
 				EndIf
 
-				IF (_cAlias)->ZJ_APLIC == '4' .AND. !EMPTY((_cAlias)->ZJ_YMELHOR) .AND. Subs((_cAlias)->ZI_CLVL,1,1) == "3"
+				IF (_cAlias)->ZJ_APLIC == '4' .AND. !EMPTY((_cAlias)->ZJ_YMELHOR) .and. (_cAlias)->ZJ_YMELHOR <> "000000" .AND. Subs((_cAlias)->ZI_CLVL,1,1) == "3"
 					cConta := '61301010'
 				ENDIF
 
@@ -142,7 +142,12 @@ User Function BIAFG083()
 					ElseIf Alltrim((_cAlias)->ZI_CLVL) == "3136" 
 						cConta	:=	"61110001"
 					EndIf
-				EndIf				
+				EndIf
+
+				// Ticket 34058								
+				If Alltrim((_cAlias)->ZI_CLVL) == "6212"
+					cConta := "16503104"
+				EndIf
 
 				_aLinha	:=	{}
 				aAdd(_aLinha,{"D3_COD"	  	,(_cAlias)->ZJ_COD		    ,NIL})

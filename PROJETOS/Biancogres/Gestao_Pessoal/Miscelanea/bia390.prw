@@ -40,7 +40,9 @@ User Function BIA390()
 	Private _mDescRubi  := SPACE(50) 
 	Private _msCtrlAlt := .T.  
 
-	aAdd(_aButtons,{"HISTORIC",{|| U_BIA393("A")}, "Exporta p/Excel","Exporta p/Excel"})
+	aAdd(_aButtons,{"HISTORIC",{|| U_BIA393("A")}, "Exporta p/Excel"        ,"Exporta p/Excel"})
+	aAdd(_aButtons,{"PRODUTO" ,{|| U_BIA393("E")}, "Layout Integração"      , "Layout Integração"})
+	aAdd(_aButtons,{"PEDIDO"  ,{|| U_BIA390EX() }, "Importa Arquivo"        , "Importa Arquivo"})
 
 	_aSize := MsAdvSize(.T.)                      
 
@@ -166,7 +168,7 @@ Static Function fBIA390D()
 		_oGetDados:lDelete := .F.
 	Else
 		_msCtrlAlt := .T.
-		_oGetDados:lInsert := .T.
+		_oGetDados:lInsert := .F.
 		_oGetDados:lUpdate := .T.
 		_oGetDados:lDelete := .T.
 	EndIf	
@@ -520,7 +522,7 @@ User Function B390FOK()
 
 	Local cMenVar   := ReadVar()
 	Local vfArea    := GetArea()
-	Local _nAt		:=	_oGetDados:nAt
+	Local _nAt		:= _oGetDados:nAt
 	Local _CtrlDigt := GdFieldGet("ZB8_DIGIT",_nAt)
 	Local _mqM01    := 0
 	Local _mqM02    := 0
@@ -715,7 +717,7 @@ User Function B390FOK()
 	Else 
 
 		RestArea( vfArea )
-		
+
 		Return .F.
 
 	EndIf
@@ -728,6 +730,249 @@ User Function B390DOK()
 
 	Local _lRet	:=	.T.
 
-	// Incluir neste ponto o controle de deleção para os casos em que já existir registro de orçamento associado, será necessário primeiro retirar de lá
-
 Return _lRet
+
+User Function BIA390EX()
+
+	Local aSays	   		:= {} 
+	Local aButtons 		:= {}  
+	Local lConfirm 		:= .F. 
+	Private cArquivo	:= space(100)
+
+	fxPergunte()
+
+	AADD(aSays, OemToAnsi("Rotina para importação Rubricas Eventuais"))   
+	AADD(aSays, OemToAnsi("Antes de continuar, verifique os parâmetros!"))   
+	AADD(aSays, OemToAnsi(""))   
+	AADD(aSays, OemToAnsi("IMPORTANTE: >>>> não é permitido importar arquivos que esteja com proteção"))   
+	AADD(aSays, OemToAnsi("                 de planilha ativada!!!"))   
+	AADD(aSays, OemToAnsi(""))   
+	AADD(aSays, OemToAnsi("Deseja Continuar?"))   
+
+	AADD(aButtons, { 5,.T.,{|| fxPergunte() } } )
+	AADD(aButtons, { 1,.T.,{|o| lConfirm := .T. , o:oWnd:End()}} )
+	AADD(aButtons, { 2,.T.,{|o| o:oWnd:End() }} )
+
+	FormBatch( OemToAnsi('Importação...'), aSays, aButtons ,,,500)
+
+	If lConfirm
+
+		If !empty(cArquivo) .and. File(cArquivo)
+			Processa({ || fPrcImpExc() },"Aguarde...","Carregando Arquivo...",.F.)
+		Else
+			MsgStop('Informe o arquivo valido para importação!')
+		EndIf
+
+	EndIf	
+
+Return
+
+//Parametros
+Static Function fxPergunte()
+
+	Local aPergs 	:= {}
+	Local cLoad	    := 'BIA390EX' + cEmpAnt
+	Local cFileName := RetCodUsr() +"_"+ cLoad
+	cArquivo		:= space(100) 
+
+	aAdd( aPergs ,{6,"Arquivo para Importação: " 	,cArquivo  ,"","","", 75 ,.T.,"Arquivo * |*",,GETF_LOCALHARD+GETF_NETWORKDRIVE} )		
+
+	If ParamBox(aPergs ,"Importar Arquivo",,,,,,,,cLoad,.T.,.T.)      
+		cArquivo  := ParamLoad(cFileName,,1,cArquivo) 
+	Endif
+
+Return 
+
+//Processa importação
+Static Function fPrcImpExc()
+
+	Local aArea 			:= GetArea()
+	Local oArquivo 			:= nil
+	Local aArquivo 			:= {}
+	Local aWorksheet 		:= {}
+	Local aCampos			:= {}
+	Local cTemp 			:= ''
+	Local cTabImp			:= 'ZB8'
+	Local aItem 			:= {}
+	Local aLinha			:= {}
+	Local nImport			:= 0
+	Local cConteudo			:= ''
+	Local nTotLin			:= 0
+	Local vnb, ny, _msc, nx, lp
+
+	Local nPosRec  := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZB8_REC_WT"})
+	Local nPosMat  := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZB8_MATR"})
+
+	Local vtMatGrd := {}
+
+	_ImpaColsBkp  := aClone(_oGetDados:aCols)
+
+	For vnb := 1 to Len(_ImpaColsBkp)
+		AADD(vtMatGrd, _ImpaColsBkp[vnb][nPosMat])	
+	Next vnb
+
+	If Len(vtMatGrd) == 1
+		nPrimeralin := _ImpaColsBkp[Len(_ImpaColsBkp)][nPosMat]
+		If nPrimeralin == "      "
+			_oGetDados:aCols := {}
+		EndIf
+	EndIf
+
+	ProcRegua(0) 
+
+	msTmpINI := Time()
+	oArquivo := TBiaArquivo():New()
+	aArquivo := oArquivo:NewGetArq(cArquivo)
+
+	msDtProc  := Date()
+	msHrProc  := Time()
+	msTmpRead := Alltrim(ElapTime(msTmpINI, msHrProc))
+
+	If Len(aArquivo) > 0 
+
+		msTpLin   := Alltrim( Str( ( ( Val( Substr(msTmpRead,1,2)) * 3600 ) + ( Val(Substr(msTmpRead,4,2)) * 360 ) + ( Val(Substr(msTmpRead,7,2)) ) ) / Len(aArquivo[1]) ) )
+
+		aWorksheet 	:= aArquivo[1]	
+		nTotLin		:= len(aWorksheet)
+
+		ProcRegua(nTotLin)
+
+		For nx := 1 to len(aWorksheet) 
+
+			IncProc("Tmp Leit:(" + msTmpRead + ") Proc: " + StrZero(nx,6) + "/" + StrZero(nTotLin,6) )	
+
+			If nx == 1
+
+				aCampos := aWorksheet[nx]
+				For ny := 1 to len(aCampos)
+					cTemp := SubStr(UPPER(aCampos[ny]),AT(cTabImp+'_',UPPER(aCampos[ny])),10)
+					aCampos[ny] := cTemp
+				Next ny
+
+			Else
+
+				aLinha    := aWorksheet[nx]
+				aItem     := {}
+				cConteudo := ''
+
+				nLinReg   := 0
+				nPosRec   := aScan(aCampos,{|x| AllTrim(x) == "ZB8_REC_WT"})
+				nPosMat	  := aScan(aCampos,{|x| AllTrim(x) == "ZB8_MATR"})
+				nPCLVL    := aScan(aCampos,{|x| AllTrim(x) == "ZB8_CLVL"})
+
+				If nPosMat <> 0
+
+					xxContinua := .T.
+					xxMatNew := Alltrim(aLinha[nPosMat])
+					For lp := 1 to len(xxMatNew)
+
+						If Substr(xxMatNew,lp,1) > "9"
+							MsgINFO("A matrícula " + xxMatNew + " não é suportada para conversão e será desprezada.", "Matrícula: com letras!!!")
+							xxContinua := .F.
+							Exit
+						EndIf
+
+					Next lp
+
+					If xxContinua
+
+						ZO0->(dbSetOrder(1))
+						If !ZO0->(dbSeek(xFilial("ZO0") + _cVersao + _cRevisa + _cAnoRef + StrZero(Val(aLinha[nPosMat]),6) ))
+
+							MsgINFO("A matrícula " + StrZero(Val(aLinha[nPosMat]),6) + " não está na lista de matrículas ativas para o processo orçamentário corrente e será desprezada.", "Matricula: não consta!!!")
+
+						Else
+
+							If Alltrim(aLinha[nPCLVL]) <> Alltrim(ZO0->ZO0_CLVL) 
+
+								MsgINFO("A CLVL: " + Alltrim(aLinha[nPCLVL]) +  " não corresponde à matrícula " + StrZero(Val(aLinha[nPosMat]),6) + " e será desprezada.", "CLVL: incorreta!!!")
+
+							Else
+
+								ZB8->(dbGoto( Val(aLinha[nPosRec]) ))
+								If ZB8->ZB8_MATR <> StrZero(Val(aLinha[nPosMat]),6)
+
+									MsgINFO("Ocorreu algo de inesperado, pois a matrícula " + StrZero(Val(aLinha[nPosMat]),6) + " não Corresponde ao REC_WT correspondente e será desprezada.", "Matrícula vs REC_WT!!!")
+
+								Else
+
+									nLinReg := aScan(vtMatGrd,{|x| x == StrZero(Val(aLinha[nPosMat]),6) })
+									If nLinReg == 0
+
+										AADD(_oGetDados:aCols, Array(Len(_oGetDados:aHeader)+1) )
+										nLinReg := Len(_oGetDados:aCols)
+
+									Else
+
+										For _msc := 1 to Len(aCampos)
+
+											If aCampos[_msc] <> "ZB8_REC_WT"
+
+												xkPosCampo := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == aCampos[_msc]})
+												If xkPosCampo <> 0
+
+													If Alltrim(aCampos[_msc]) == "ZB8_MOTIVO"
+														xjMotivo := ""
+														If _oGetDados:aHeader[xkPosCampo][8] == "N"
+															xjMotivo := Alltrim(Str(aLinha[_msc]))
+														Else 
+															xjMotivo := aLinha[_msc]
+														EndIf
+														If xjMotivo $ "1/2/ " 
+															_oGetDados:aCols[nLinReg, xkPosCampo] := xjMotivo
+														Else
+															MsgINFO("Ocorreu algo de inesperado no campo MOTIVO para a matrícula " + StrZero(Val(aLinha[nPosMat]),6) + ". Somente é suportado os valores 1 e 2 e o que foi informador não corresponde a isto. Será desprezada.", "Motivo Errado!!!")
+														EndIf
+													ElseIf Alltrim(aCampos[_msc]) == "ZB8_OBSERV"
+														_oGetDados:aCols[nLinReg, xkPosCampo] := aLinha[_msc]
+													ElseIf "ZB8_M" $ Alltrim(aCampos[_msc]) .and. Substr(Alltrim(aCampos[_msc]), 6, 2) $ "01/02/03/04/05/06/07/08/09/10/11/12"   
+														_oGetDados:aCols[nLinReg, xkPosCampo] := Val(Alltrim(aLinha[_msc]))
+													EndIf
+
+												EndIf
+
+											EndIf
+
+										Next _msc
+
+										_oGetDados:aCols[nLinReg, Len(_oGetDados:aHeader)+1] := .F.	
+										nImport ++
+
+									EndIf
+
+								EndIf
+
+							EndIf
+
+						EndIf
+
+					EndIf
+
+				Else
+
+					MsgALERT("Erro no Layout do Arquivo de Importação!!!")
+					nImport := 0
+					Exit
+
+				EndIf
+
+			EndIf
+
+		Next nx
+
+	EndIf
+
+	If nImport > 0 
+
+		MsgInfo("Registros importados com sucesso")
+
+	Else
+
+		MsgStop("Falha na importação dos registros")
+		_oGetDados:aCols	:=	aClone(_aColsBkp)
+
+	EndIf
+
+	RestArea(aArea)
+
+Return

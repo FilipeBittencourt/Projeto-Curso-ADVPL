@@ -15,6 +15,7 @@ Class TAFConciliacaoDDA From TAFAbstractClass
 	Data dVenctoDe // Periodo inicial
 	Data dVenctoAte // Periodo final
 	Data nID // Identificador do titulo	
+	Data lInterCompany
 
 	Method New() Constructor
 	Method Process()
@@ -34,6 +35,7 @@ Method New() Class TAFConciliacaoDDA
 	::dVenctoDe := dDataBase
 	::dVenctoAte := DataValida(DaySum(::dVenctoDe, 3), .T.)
 	::nID := 0
+	::lInterCompany	:= .F.
 
 Return()
 
@@ -68,12 +70,13 @@ Return()
 
 
 Method Reconcile() Class TAFConciliacaoDDA
-Local aArea := GetArea()
-Local cSQL := ""
-Local cQry := GetNextAlias()
-Local cKey := ""
+Local aArea    := GetArea()
+Local cSQL     := ""
+Local cQry     := GetNextAlias()
+Local cKey     := ""
+Local cCnpjFIG := ""
 
-	cSQL := " SELECT FIG_CNPJ, FIG_VENCTO, FIG_VALOR, FIG_TITULO, FIG_CODBAR, R_E_C_N_O_ AS RECNO "
+	cSQL := " SELECT FIG_CNPJ, FIG_VENCTO, FIG_VALOR, FIG_TITULO, FIG_CODBAR, R_E_C_N_O_ AS RECNO, FIG_FORNEC "
 	cSQL += " FROM " + RetSQLName("FIG")
 	cSQL += " WHERE FIG_FILIAL = " + ValToSQL(xFilial("FIG"))
 	cSQL += " AND FIG_VENCTO BETWEEN " + ValToSQL(::dVenctoDe) + " AND " + ValToSQL(::dVenctoAte)
@@ -87,7 +90,23 @@ Local cKey := ""
 	
 	While !(cQry)->(Eof())
 
-		If ::Exist((cQry)->FIG_CNPJ, (cQry)->FIG_VENCTO, (cQry)->FIG_VALOR, AllTrim((cQry)->FIG_TITULO))
+		::lInterCompany	:= .F.
+
+		//|Tratamento para conciliação de DDA FIDC entre Biancogres e LM |
+		If cEmpAnt == "07"
+
+			If (cQry)->FIG_FORNEC == '015050' //|Fornecedor GOLDEN FIDC |
+				cCnpjFIG	:= "02077546000176"	//|Busca títulos do fornecedor Biancogres |
+				::lInterCompany	:= .T.
+			Else
+				cCnpjFIG	:= (cQry)->FIG_CNPJ
+			EndIf
+
+		Else
+			cCnpjFIG	:= (cQry)->FIG_CNPJ
+		EndIf
+
+		If ::Exist( cCnpjFIG, (cQry)->FIG_VENCTO, (cQry)->FIG_VALOR, AllTrim((cQry)->FIG_TITULO) )
 						
 			DbSelectArea("SE2")
 			SE2->(DbGoto(::nID))			
@@ -118,6 +137,7 @@ Local cKey := ""
 				FIG->FIG_CONCIL	:= "1"
 				FIG->FIG_DTCONC	:= dDatabase
 				FIG->FIG_USCONC	:= cUsername
+				FIG->FIG_CNPJ		:= cCnpjFIG
 				
 				FIG->(MsUnLock())
 				
@@ -220,6 +240,11 @@ Local cQry := GetNextAlias()
 	cSQL += " AND E2_VALOR = " + ValToSQL(nValor)
 	cSQL += " AND E2_CODBAR = '' "
 	cSQL += " AND E2_IDCNAB = '' "
+
+	If ::lInterCompany
+		cSQL += " AND E2_NUM + E2_PARCELA = " + ValToSql(cNumero)
+	EndIf
+
 	cSQL += " AND D_E_L_E_T_ = '' "
 	cSQL += " GROUP BY E2_NUM, R_E_C_N_O_ "	
 

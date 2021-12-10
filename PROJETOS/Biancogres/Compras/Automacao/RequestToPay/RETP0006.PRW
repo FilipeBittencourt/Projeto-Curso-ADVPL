@@ -3,27 +3,27 @@
 
 User Function RETP0006()
 	
-	Local lOk			:= .T.
-	Local aRet			:= {}
-	Local _cPedNum		:= ""
-	Local _cPedItem		:= ""
-	Local aArea 		:= SC8->(GetArea())
+	Local lOk        := .T.
+	Local aRet       := {}
+	Local _cPedNum   := ""
+	Local _cPedItem  := ""
+	Local aArea      := SC8->(GetArea())
 	
-	Local nI			:= 0
-	Local nJ			:= 0
-	Local nK			:= 0
-	Local nL 			:= 0		
+	Local nI         := 0
+	Local nJ         := 0
+	Local nK         := 0
+	Local nL         := 0
 		
-	Local cAliasTemp	:= Nil
-	Local cQuery		:= ""
-	Local _cFornece 	:= ""
-	Local _cLoja	  	:= ""
-	Local _cProd	  	:= ""
-	Local _aListCont	:= {}
-	Local _aListPed	:= {}			
+	Local cAliasTemp := Nil
+	Local cQuery     := ""
+	Local _cFornece  := ""
+	Local _cLoja     := ""
+	Local _cProd     := ""
+	Local _aListCont := {}
+	Local _aListPed  := {}
 	
-	Local _cNumCot		:= SC8->C8_NUM
-	Local _cTppSS		:= SC8->C8_YTPPSS
+	Local _cNumCot   := SC8->C8_NUM
+	Local _cTppSS    := SC8->C8_YTPPSS
 	
 	
 	//_cPedNum	:= SC7->C7_NUM
@@ -75,6 +75,12 @@ User Function RETP0006()
 					Aadd(_aList, _aListCont[nL])
 				EndIf
 			Next nL
+
+			//|Atualiza histórico do pedido |
+			oPIntCCConfirm	:= TPortalIntegracaoCC():New()
+			oPIntCCConfirm:AtualizaHistorico(_cPedNum, "Incluido Pedido de Compra no Protheus com numero: " + _cPedNum )
+
+			FreeObj(oPIntCCConfirm)
 			
 			cNumContrato := ""
 			//geração de contrato para cada pedido que foi gerado
@@ -100,25 +106,34 @@ User Function RETP0006()
 			EndIf	
 			
 			If (lOk)
+
+				_aAreaSA2	:= SA2->( GetArea() )
+				dbSelectArea("SA2")
+				SA2->( dbSetOrder(1) )
 				
-				For nL=1 To Len(_aList)
+				For nL := 1 To Len(_aList)
 				
-					_cPedNum 		:= _aList[nL][1]
-					_cPedItem		:= _aList[nL][2]
-					_cCotFil		:= _aList[nL][3]
-					_cCotNum		:= _aList[nL][4]
-					_cCotForne		:= _aList[nL][5]
-					_cCotLoja		:= _aList[nL][6]
-					_cCotItem		:= _aList[nL][7]
-					_cCotProd		:= _aList[nL][8]
-					_cCotProposta	:= _aList[nL][9]
+					_cPedNum      := _aList[nL][1]
+					_cPedItem     := _aList[nL][2]
+					_cCotFil      := _aList[nL][3]
+					_cCotNum      := _aList[nL][4]
+					_cCotForne    := _aList[nL][5]
+					_cCotLoja     := _aList[nL][6]
+					_cCotItem     := _aList[nL][7]
+					_cCotProd     := _aList[nL][8]
+					_cCotProposta := _aList[nL][9]
+
+					_cCotCnpjForn	:= ""
+					If SA2->( dbSeek( xFilial("SA2") + _cCotForne + _cCotLoja ) )
+						_cCotCnpjForn	:= SA2->A2_CGC
+					EndIf
 				
 					oPIntCCConfirm	:= TPortalIntegracaoCC():New()
-					oPIntCCConfirm:AtualizaPedido(_cCotNum, _cCotItem, _cCotForne, _cCotLoja, _cCotProd, _cCotProposta, _cPedNum, _cPedItem)//confirma item como integrado
+					oPIntCCConfirm:AtualizaPedido(_cCotNum, _cCotItem, _cCotForne, _cCotLoja, _cCotProd, _cCotProposta, _cPedNum, _cPedItem, _cCotCnpjForn)//confirma item como integrado
 					If (AllTrim(_cTppSS) == "1")
-						oPIntCCConfirm:AtualizaContrato(_cCotNum, _cCotItem, _cCotForne, _cCotLoja, _cCotProd, _cCotProposta, cNumContrato, _cPedItem)//confirma item como integrado
+						oPIntCCConfirm:AtualizaContrato(_cCotNum, _cCotItem, _cCotForne, _cCotLoja, _cCotProd, _cCotProposta, cNumContrato, _cPedItem, _cCotCnpjForn)//confirma item como integrado
 					EndIf
-					oPIntCCConfirm:AtualizaVencedor(_cCotNum, _cCotItem, _cCotForne, _cCotLoja, _cCotProd, _cCotProposta)//confirma item como integrado
+					oPIntCCConfirm:AtualizaVencedor(_cCotNum, _cCotItem, _cCotForne, _cCotLoja, _cCotProd, _cCotProposta, _cCotCnpjForn)//confirma item como integrado
 						
 					If (AllTrim(_cTppSS) == "1")
 						//atualização data necessidade do contrato
@@ -165,6 +180,8 @@ User Function RETP0006()
 					EndIf
 				
 				Next nL
+
+				RestArea(_aAreaSA2)
 						
 			EndIf
 			
@@ -255,3 +272,25 @@ User Function RETP0006()
 	SC8->(RestArea(aArea))	
 	
 Return lOk
+
+
+User Function RETP06PT()	
+
+	Local cEmp			:= "01"
+	Local cFil			:= "01"
+	Local cNumSC		:= "SSD074"
+
+	If Select("SX6") == 0
+		RPCSetEnv(cEmp, cFil)
+	EndIf
+
+	//|REPROCESSA UMA COTAÇÃO |
+	dbSelectArea('SC8')
+	SC8->( dbSetOrder(12) )
+	If SC8->( dbSeek( xFilial('SC8') + cNumSC ) )
+
+		U_RETP0006()
+
+	EndIf
+
+Return

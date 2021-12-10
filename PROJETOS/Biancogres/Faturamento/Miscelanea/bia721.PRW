@@ -20,7 +20,7 @@ Aplicação := Envio automático de e-mail para informar ao Comercial que a nota
 
 Local xv_Emps
 Local x
-xv_Emps    := U_BAGtEmpr("01_05_07_12_13")
+xv_Emps    := U_BAGtEmpr("01_05_07_12_13_14")
 
 For x := 1 to Len(xv_Emps)
 	
@@ -50,8 +50,8 @@ For x := 1 to Len(xv_Emps)
 		QJ008 += " 	              F3_CFO,
 		QJ008 += " 	              F3_VALCONT,
 		QJ008 += "                ISNULL((SELECT COUNT(*)
-		QJ008 += "                          FROM SPED050 S050
-		QJ008 += "                         INNER JOIN SPED001 S001 ON S001.ID_ENT = S050.ID_ENT
+		QJ008 += "                          FROM [DADOSADV].dbo.SPED050 S050
+		QJ008 += "                         INNER JOIN [DADOSADV].dbo.SPED001 S001 ON S001.ID_ENT = S050.ID_ENT
 		QJ008 += "                                                AND S001.CNPJ = '"+Alltrim(SM0->M0_CGC)+"'
 		QJ008 += "                                                AND S001.D_E_L_E_T_ = ' '
 		QJ008 += "                         WHERE SUBSTRING(NFE_ID,1,12) = F3_SERIE+F3_NFISCAL
@@ -149,10 +149,11 @@ For x := 1 to Len(xv_Emps)
 				ElseIf gpEmpOri == "07"
 					df_Dest := "valmir.vali@biancogres.com.br;luismar.lucchini@biancogres.com.br;tatiane.perpetua@biancogres.com.br;breno.barbieri@biancogres.com.br;ramon.santos@biancogres.com.br"
 				ElseIf gpEmpOri == "12"
-					//df_Dest := "robert.luchi@biancogres.com.br"
 					df_Dest := "fabio.sa@biancogres.com.br"					
 				ElseIf gpEmpOri == "13"
-					df_Dest := "rodolfo.stanke.mundi@biancogres.com.br"
+					df_Dest := "dalvina.ferreira@biancogres.com.br"
+				ElseIf gpEmpOri == "14"
+					df_Dest := "dalvina.ferreira@biancogres.com.br"					
 				EndIf
 				df_Assu := "Relação de notas não transmitidas à Receita Federal - Empresa " + xv_Emps[x,1] + " Filial " + xv_Emps[x,2]
 				df_Erro := "Relação de notas não transmitidas à Receita Federal - Empresa " + xv_Emps[x,1] + " Filial " + xv_Emps[x,2] + " não enviado. Favor verificar!!!"

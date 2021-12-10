@@ -49,12 +49,12 @@ USER FUNCTION RES_REPRE()
 			nMarca := "3"
 		ElseIf MV_PAR04 == "1399"
 			nMarca := "4"
-		//ElseIf MV_PAR04 == "0199"
-		//	nMarca := "5"			
-		//ElseIf MV_PAR04 == "1302"
-		//	nMarca := "6"	
+		ElseIf MV_PAR04 == "0199"
+			nMarca := "6"			
+		ElseIf MV_PAR04 == "1302"
+			nMarca := "7"	
 		Else
-			MsgAlert("Esta Marca não possui faturamento nesta empresa!")
+			MsgAlert("Marca não configurada para processo de rescisão nesta empresa. Entre em contato com a TI!")
 			Return()		
 		EndIf	
 	EndIf

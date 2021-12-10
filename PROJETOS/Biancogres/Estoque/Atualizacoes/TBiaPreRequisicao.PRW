@@ -391,7 +391,7 @@ Method BaixarReq(_cUsuERP) Class TBiaPreRequisicao
 					nCusto := 0.01
 				EndIF
 
-				IF (cAliasTmp2)->ZJ_APLIC == '4' .AND. !EMPTY((cAliasTmp2)->ZJ_YMELHOR) .AND. Subs(SZI->ZI_CLVL,1,1) == "3"
+				IF (cAliasTmp2)->ZJ_APLIC == '4' .AND. !EMPTY((cAliasTmp2)->ZJ_YMELHOR) .and. (cAliasTmp2)->ZJ_YMELHOR <> "000000" .AND. Subs(SZI->ZI_CLVL,1,1) == "3"
 					nConta := '61301010'
 				ENDIF
 
@@ -413,6 +413,11 @@ Method BaixarReq(_cUsuERP) Class TBiaPreRequisicao
 				// Em 06/04/17... Por Marcos Alberto Soprani... implementado tratamento para atender a OS effettivo 1245-17 
 				If Substr((cAliasTmp2)->ZJ_COD,1,3) == "107" .and. cEmpAnt == "05" .and. Substr(nConta,1,5) == "6110" 
 					nConta := '61108003'
+				EndIf
+
+				// Emerson Salvador - 01/09/2021 - Ticket 34058								
+				If Alltrim(SZI->ZI_CLVL) == "6212"
+					nConta := "16503104"
 				EndIf
 
 				//Novo metodo de baixa por transferencia - Fernando/Facile em 24/10/2014 - projeto req. de produto comum

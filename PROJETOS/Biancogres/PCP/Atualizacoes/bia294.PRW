@@ -280,15 +280,19 @@ User Function BIA294B()
 
 	If !Empty(xf_CLVL)
 
-		If !Alltrim(xf_CLVL) $ "3104/3204"
+		If !Alltrim(xf_CLVL) $ "3104/3204/3704"
+
 			_ftRet := .F.
-			MsgALERT("Somente são permitidas digitar as classes de valor 3104 e 3204, inclusive para a MASSA!!!", "Atenção")
+			MsgALERT("Somente são permitidas digitar as classes de valor 3104, 3204 e 3704, inclusive para a MASSA!!!", "Atenção")
+
 		EndIf
 
 		CTH->(dbSetOrder(1))
 		If !CTH->(dbSeek(xFilial("CTH") + xf_CLVL))
+
 			_ftRet := .F.
 			MsgALERT("Erro na digitação da Classe de valor. Verifique possíveis espaços em branco a esquerda do código!!!", "Atenção")
+
 		EndIf
 
 	EndIf
@@ -393,7 +397,6 @@ Static Function RptDetail()
 	Private xfDatRef := Z15->Z15_DATA
 
 	Private xLocReq := "  "
-	//Private xfCLVLRf := "         "
 
 	oLogProc := TBiaLogProc():New()
 	oLogProc:LogIniProc("BIA294D")
@@ -424,7 +427,8 @@ Static Function RptDetail()
 	{           "QTDSIS" ,"" ,"QuantSis"    ,"@E 999,999,999.99999999"},;
 	{           "DIFERE" ,"" ,"Diferenca"   ,"@E 999,999,999.99999999"},;
 	{           "NUMOP"  ,"" ,"OP"          ,"@!"},;
-	{           "CLVL"   ,"" ,"CLVL"        ,"@!"} }
+	{           "CLVL"   ,"" ,"CLVL"        ,"@!"},;
+	{           "PERRAT" ,"" ,"%RatQtdCLVL" ,"@E 999,999,999.99999999"} }
 
 	oBrw1      := MsSelect():New( "MARK","OK","",ky_Vet,.F.,@cMarca,{nLin*.008,nCol*.005,nLin*.380,nCol*.410},,,oDlg1,,_aCores )
 	//oBrw1:bMark := {| | gInfAjt()}
@@ -532,53 +536,72 @@ Static Function MontTbl1()
 	Aadd( aFds , {"DIFERE"  ,"N",018,008} )
 	Aadd( aFds , {"NUMOP"   ,"C",013,000} )
 	Aadd( aFds , {"CLVL"    ,"C",009,000} )
+	Aadd( aFds , {"PERRAT"  ,"N",018,008} )
 
 	cTmp := CriaTrab( aFds, .T. )
 	Use (cTmp) Alias MARK New Exclusive
 
-	A0001 := " SELECT B1_COD PRODUTO, "
-	A0001 += "        SUBSTRING(B1_DESC, 1, 50) DESCRIC, "
-	A0001 += "        B2_LOCAL LOCB2, "
-	A0001 += "        ISNULL(Z15_CLVL, "
-	A0001 += "               CASE "
-	A0001 += "                   WHEN B2_LOCAL = '01' "
-	A0001 += "                   THEN '3104' "
-	A0001 += "                   WHEN B2_LOCAL = '20' "
-	A0001 += "                   THEN '3204' "
-	A0001 += "                   ELSE '' "
-	A0001 += "               END) CLVL, "
-	A0001 += "        ISNULL(SUM(Z15_QUANTI), 0) QTDFIS, "
-	A0001 += "        0 QTDSEP "
-	A0001 += " FROM " + RetSqlName("SB1") + " SB1(NOLOCK) "
-	A0001 += "      INNER JOIN " + RetSqlName("SB2") + " SB2(NOLOCK) ON B2_FILIAL = '" + xFilial("SB2") + "' "
-	A0001 += "                               AND B2_COD = B1_COD "
-	A0001 += "                               AND B2_LOCAL IN('" + xLocReq + "') "
-	A0001 += "                               AND SB2.D_E_L_E_T_ = ' ' "
-	If msProcGeral
-		A0001 += "      LEFT JOIN " + RetSqlName("Z15") + " Z15(NOLOCK) ON Z15_FILIAL = '" + xFilial("Z15") + "' "
-	Else
-		A0001 += "     INNER JOIN " + RetSqlName("Z15") + " Z15(NOLOCK) ON Z15_FILIAL = '" + xFilial("Z15") + "' "
-	EndIf
-	A0001 += "                              AND Z15_DATA = '" + dtos(xfDatRef) + "' "
-	A0001 += "                              AND Z15_PRODUT = B1_COD "
-	A0001 += "                              AND Z15_LOCAL = B2_LOCAL "
-	A0001 += "                              AND Z15.D_E_L_E_T_ = ' ' "
-	A0001 += " WHERE B1_FILIAL = '" + xFilial("SB1") + "'
+	A0001 := " WITH SOBRATOT "
+	A0001 += "      AS (SELECT PRODUT = Z15_PRODUT, "
+	A0001 += "                 LOCREF = Z15_LOCAL, "
+	A0001 += "                 QTDTOT = SUM(Z15_QUANTI) "
+	A0001 += "          FROM " + RetSqlName("Z15") + " Z15(NOLOCK) "
+	A0001 += "          WHERE Z15_FILIAL = '" + xFilial("Z15") + "' "
+	A0001 += "                AND Z15_DATA = '" + dtos(xfDatRef) + "' "
+	A0001 += "                AND Z15.D_E_L_E_T_ = ' ' "
+	A0001 += "          GROUP BY Z15_PRODUT, "
+	A0001 += "                   Z15_LOCAL), "
+	A0001 += "      RATEIO "
+	A0001 += "      AS (SELECT Z15.Z15_PRODUT, "
+	A0001 += "                 Z15.Z15_LOCAL, "
+	A0001 += "                 Z15.Z15_CLVL, "
+	A0001 += "                 Z15.Z15_QUANTI, "
+	A0001 += "                 STOT.QTDTOT, "
+	A0001 += "                 PERRAT = Z15.Z15_QUANTI / STOT.QTDTOT "
+	A0001 += "          FROM " + RetSqlName("Z15") + " Z15(NOLOCK) "
+	A0001 += "               LEFT JOIN SOBRATOT STOT ON STOT.PRODUT = Z15.Z15_PRODUT "
+	A0001 += "                                          AND STOT.LOCREF = Z15.Z15_LOCAL "
+	A0001 += "          WHERE Z15.Z15_FILIAL = '" + xFilial("Z15") + "' "
+	A0001 += "                AND Z15.Z15_DATA = '" + dtos(xfDatRef) + "' "
+	A0001 += "                AND Z15.D_E_L_E_T_ = ' ') "
+	A0001 += "      SELECT SB1.B1_COD PRODUTO, "
+	A0001 += "             SUBSTRING(SB1.B1_DESC, 1, 50) DESCRIC, "
+	A0001 += "             SB2.B2_LOCAL LOCB2, "
+	A0001 += "             ISNULL(Z15.Z15_CLVL, "
+	A0001 += "                        CASE "
+	A0001 += "                            WHEN SB2.B2_LOCAL = '01' "
+	A0001 += "                            THEN '3104' "
+	A0001 += "                            WHEN SB2.B2_LOCAL = '20' "
+	A0001 += "                            THEN '3204' "
+	A0001 += "                            ELSE '    ' "
+	A0001 += "                        END) CLVL, "
+	A0001 += "             ISNULL(SUM(Z15.Z15_QUANTI), 0) QTDFIS, "
+	A0001 += "             0 QTDSEP, "
+	A0001 += "             PERRAT = ISNULL(SUM(ROUND(Z15.PERRAT, 8)), 0) "
+	A0001 += "      FROM " + RetSqlName("SB1") + " SB1(NOLOCK) "
+	A0001 += "           INNER JOIN " + RetSqlName("SB2") + " SB2(NOLOCK) ON SB2.B2_FILIAL = '" + xFilial("SB2") + "' "
+	A0001 += "                                            AND SB2.B2_COD = SB1.B1_COD "
+	A0001 += "                                            AND SB2.B2_LOCAL IN('" + xLocReq + "') "
+	A0001 += "                                            AND SB2.D_E_L_E_T_ = ' ' "
+	A0001 += "           " + IIF(msProcGeral, "LEFT", "INNER") + " JOIN RATEIO Z15(NOLOCK) ON Z15.Z15_PRODUT = SB1.B1_COD "
+	A0001 += "                                           AND Z15.Z15_LOCAL = SB2.B2_LOCAL "
+	A0001 += "      WHERE SB1.B1_FILIAL = '" + xFilial("SB1") + "' "
 	If !xLocReq == "99"
-		A0001 += "    AND B1_TIPO IN('PI','PP')
+		A0001 += "    AND B1_TIPO IN('PI','PP') "
 	EndIf
 	If xLocReq == "02"
-		A0001 += "    AND B1_COD <> '1020585'
+		A0001 += "    AND B1_COD <> '1020585' "
 	EndIf
 	If xLocReq == "99"
-		A0001 += "    AND B1_COD <> '1022395'
+		A0001 += "    AND B1_COD <> '1022395' "
 	EndIf
-	A0001 += "    AND SB1.D_E_L_E_T_ = ' '
-	A0001 += " 	GROUP BY B1_COD, 
-	A0001 += "          B1_DESC, 
-	A0001 += "          B2_LOCAL, 
-	A0001 += "          Z15_CLVL
-	A0001 += "  ORDER BY B1_COD, B2_LOCAL
+	A0001 += "            AND SB1.D_E_L_E_T_ = ' ' "
+	A0001 += "      GROUP BY SB1.B1_COD, "
+	A0001 += "               SB1.B1_DESC, "
+	A0001 += "               SB2.B2_LOCAL, "
+	A0001 += "               Z15.Z15_CLVL "
+	A0001 += "      ORDER BY SB1.B1_COD, "
+	A0001 += "               SB2.B2_LOCAL "
 	TCQUERY A0001 New Alias "A001"
 	dbSelectArea("A001")
 	dbGotop()
@@ -587,37 +610,39 @@ Static Function MontTbl1()
 
 		IncProc()
 
-		xf_Produ := A001->PRODUTO
-		xf_Descr := A001->DESCRIC
-		xf_Saldo := 0
-		xf_SldFi := A001->QTDFIS
-		xf_qtSep := A001->QTDSEP
-		xf_CLVL  := A001->CLVL
-		While !Eof() .and. A001->PRODUTO == xf_Produ
-			aSaldos := CalcEst(A001->PRODUTO, A001->LOCB2, xfDatRef+1)
-			xf_Saldo += aSaldos[1]
-			dbSelectArea("A001")
-			dbSkip()
-		End
+		xf_Produ  := A001->PRODUTO
+		xf_Descr  := A001->DESCRIC
+		xf_Saldo  := 0
+		xf_SldFi  := A001->QTDFIS
+		xf_qtSep  := A001->QTDSEP
+		xf_CLVL   := A001->CLVL
+		xf_PERRAT := A001->PERRAT
 
-		If xf_Saldo <> 0 .or. xf_SldFi <> 0
+		aSaldos := CalcEst(A001->PRODUTO, A001->LOCB2, xfDatRef+1)
+		xf_Saldo += aSaldos[1]
+
+		msSalRat := xf_Saldo * xf_PERRAT
+
+		If msSalRat <> 0 .or. xf_SldFi <> 0
 
 			dbSelectArea("MARK")
 			RecLock("MARK",.T.)
-			MARK->OK     := IIF(( xf_qtSep + xf_SldFi ) - xf_Saldo <> 0, cMarca, "  ")
+			MARK->OK     := IIF(( xf_qtSep + xf_SldFi ) - msSalRat <> 0, cMarca, "  ")
 			MARK->CODIGO := xf_Produ
 			MARK->DESCRI := xf_Descr
 			MARK->QTDSEP := xf_qtSep
 			MARK->QFISOR := xf_SldFi
 			MARK->QTDFIS := xf_SldFi
-			MARK->QTDSIS := NoRound(xf_Saldo,8)
-			MARK->DIFERE := ( xf_qtSep + xf_SldFi ) - xf_Saldo
+			MARK->QTDSIS := Round(msSalRat,8)
+			MARK->DIFERE := ( xf_qtSep + xf_SldFi ) - msSalRat
 			MARK->CLVL   := xf_CLVL
+			MARK->PERRAT := xf_PERRAT
 			MsUnLock()
 
 		EndIf
 
 		dbSelectArea("A001")
+		dbSkip()
 
 	End
 	A001->(dbCloseArea())
@@ -626,110 +651,6 @@ Static Function MontTbl1()
 	dbGoTop()
 
 Return
-
-/*___________________________________________________________________________
-¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
-¦¦+-----------------------------------------------------------------------+¦¦
-¦¦¦Função    ¦ gInfAjt  ¦ Autor ¦ Marcos Alberto S      ¦ Data ¦ 17.05.12 ¦¦¦
-¦¦+-----------------------------------------------------------------------+¦¦
-¦¦¦Descrição ¦ Apresenta tela para que seja informado a quantidade a ser  ¦¦¦
-¦¦¦          ¦ ajustada e o número da OP                                  ¦¦¦
-¦¦+-----------------------------------------------------------------------+¦¦
-¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
-¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
-Static Function gInfAjt()
-
-	Local oDlgAjst
-	Local kButton1
-	Local kButton2
-	Local oGetNOp
-	Local oGetQtd
-	Local oGroup1
-	Local kSay1
-	Local kSay2
-	Private nGetQtd  := MARK->QTDFIS
-	Private cGetNOp  := Space(13)
-	Private ftFxAj   := .F.
-	Private ftGrAjst := .F.
-
-	dbSelectArea("MARK")
-	RecLock("MARK",.F.)
-	If MARK->OK == cMarca
-
-		DEFINE MSDIALOG oDlgAjst FROM 000, 000  TO 135, 490 COLORS 0, 16777215 PIXEL
-
-		@ 007, 006 GROUP oGroup1 TO 058, 199 OF oDlgAjst COLOR 0, 16777215 PIXEL
-		@ 022, 011 SAY kSay1 PROMPT "Informe a quantidade física:" SIZE 070, 007 OF oDlgAjst COLORS 0, 16777215 PIXEL
-		@ 020, 082 MSGET oGetQtd VAR nGetQtd SIZE 060, 010 OF oDlgAjst PICTURE "@E 999,999,999.99999999" VALID fValQtd() COLORS 0, 16777215 PIXEL
-		@ 037, 201 BUTTON kButton2 PROMPT "Confirmar" SIZE 037, 019 OF oDlgAjst ACTION ( ftFxAj := .T., ftGrAjst := .T., oDlgAjst:End() )  PIXEL
-		@ 040, 011 SAY kSay2 PROMPT "Informe o número da OP que receberá os ajuste:" SIZE 118, 007 OF oDlgAjst COLORS 0, 16777215 PIXEL
-		@ 039, 130 MSGET oGetNOp VAR cGetNOp SIZE 060, 010 OF oDlgAjst VALID fValidOp() COLORS 0, 16777215 F3 "SC2BIA" PIXEL
-		@ 009, 201 BUTTON kButton1 PROMPT "Cancelar"  SIZE 037, 019 OF oDlgAjst ACTION ( ftFxAj := .T., ftGrAjst := .F., oDlgAjst:End() )  PIXEL
-		ACTIVATE MSDIALOG oDlgAjst VALID ftFxAj
-
-		If ftGrAjst
-			MARK->QTDFIS := nGetQtd
-			MARK->NUMOP  := cGetNOp
-			MARK->DIFERE := ( MARK->QTDSEP + MARK->QTDFIS ) - MARK->QTDSIS
-		Else
-			MARK->OK     := ""
-		EndIf
-
-	Else
-
-		MARK->QTDFIS := MARK->QFISOR
-		MARK->NUMOP  := ""
-		MARK->DIFERE := ( MARK->QTDSEP + MARK->QTDFIS ) - MARK->QTDSIS
-
-	EndIf
-	MsUnLock()
-
-	oDlg1:Refresh()
-
-Return
-
-/*___________________________________________________________________________
-¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
-¦¦+-----------------------------------------------------------------------+¦¦
-¦¦¦Função    ¦ fValidOp ¦ Autor ¦ Marcos Alberto S      ¦ Data ¦ 17.05.12 ¦¦¦
-¦¦+-----------------------------------------------------------------------+¦¦
-¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
-¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
-Static Function fValidOp()
-
-	Local kRetOk := .F.
-	If !Empty(cGetNOp)
-		dbSelectArea("SC2")
-		dbSetOrder(1)
-		If dbSeek(xFilial("SC2") + cGetNOp )
-			kRetOk := .T.
-		EndIf
-	Else
-		If MsgNOYES("Deseja continuar mesmo com a OP em branco?")
-			kRetOk := .T.
-		EndIf
-	EndIf
-
-Return ( kRetOk )
-
-/*___________________________________________________________________________
-¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
-¦¦+-----------------------------------------------------------------------+¦¦
-¦¦¦Função    ¦ fValQtd  ¦ Autor ¦ Marcos Alberto S      ¦ Data ¦ 04.06.12 ¦¦¦
-¦¦+-----------------------------------------------------------------------+¦¦
-¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
-¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯*/
-Static Function fValQtd()
-
-	Local kRetOk := .T.
-	If MARK->QTDFIS <> 0
-		If MARK->QTDFIS <> nGetQtd
-			MsgSTOP("Favor verificar o produto versus quantidade que deseja ajustar, pois para este produto, primeiramente é necessário lançar esta quantidade no controle físico?")
-			nGetQtd := MARK->QTDFIS
-		EndIf
-	EndIf
-
-Return ( kRetOk )
 
 /*___________________________________________________________________________
 ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦
@@ -1195,7 +1116,6 @@ User Function BIA294L()
 	EndIf
 
 Return ( _ftRet )
-
 
 /*___________________________________________________________________________
 ¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦

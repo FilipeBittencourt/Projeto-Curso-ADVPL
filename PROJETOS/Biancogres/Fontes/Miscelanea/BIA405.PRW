@@ -188,13 +188,15 @@ While ! EOF()
 		ENDIF
 	ELSE
 		lSexta := .T.
-		IF SUBSTR(ALLTRIM(SM0->M0_NOMECOM),1,1) == 'B'
-			cEmail  := "marcelo.guizzardi@biancogres.com.br;vagner.salles@biancogres.com.br;glauco.santos@biancogres.com.br;rosilene.murrer@biancogres.com.br"
-			cEmail  += ";rosicarla.ferreira@biancogres.com.br;avelino.lopes@biancogres.com.br;anuplio.filho@biancogres.com.br;leonardo.mengal@biancogres.com.br;leticia.vicente@biancogres.com.br"
-		ELSE
-			cEmail  := "marcelo.guizzardi@biancogres.com.br;vagner.salles@biancogres.com.br;glauco.santos@biancogres.com.br;rosilene.murrer@biancogres.com.br"
-			cEmail  += ";rosicarla.ferreira@biancogres.com.br;avelino.lopes@biancogres.com.br;anuplio.filho@biancogres.com.br;leonardo.mengal@biancogres.com.br;leticia.vicente@biancogres.com.br"
-		ENDIF
+		// IF SUBSTR(ALLTRIM(SM0->M0_NOMECOM),1,1) == 'B'
+		// 	cEmail  := "marcelo.guizzardi@biancogres.com.br;vagner.salles@biancogres.com.br;rosilene.murrer@biancogres.com.br"
+		// 	cEmail  += ";rosicarla.ferreira@biancogres.com.br;avelino.lopes@biancogres.com.br;anuplio.filho@biancogres.com.br;leonardo.mengal@biancogres.com.br"
+		// ELSE
+		// 	cEmail  := "marcelo.guizzardi@biancogres.com.br;vagner.salles@biancogres.com.br;rosilene.murrer@biancogres.com.br"
+		// 	cEmail  += ";rosicarla.ferreira@biancogres.com.br;avelino.lopes@biancogres.com.br;anuplio.filho@biancogres.com.br;leonardo.mengal@biancogres.com.br"
+		// ENDIF
+
+		cEmail := U_EmailWF("WORK_PCNAOAPROV")
 		
 		lPassei := .F.
 		DbSelectArea("SC7")
@@ -305,7 +307,7 @@ cMensag := cMensag+'</BODY> '
 cMensag := cMensag+'</HTML>'   
 
 cRecebe     := cEmail																    		// Email do(s) receptor(es)
-cRecebeCC	:= ""																							// Com Copia
+cRecebeCC	:= "vagner.salles@biancogres.com.br"																							// Com Copia
 cRecebeCO	:= ""																							// Copia Oculta
 cAssunto	:= 'Relação de Pedidos de Compras não liberados' 	// Assunto do Email
 
@@ -314,7 +316,7 @@ If lDebug
 Endif 
 
 If !Empty(cEmail)
-	lOK := U_BIAEnvMail(,cRecebe,cAssunto,cMensag)
+	lOK := U_BIAEnvMail(,cRecebe,cAssunto,cMensag, /*erro*/, /*anexo*/, , cRecebeCC)
 
 	If lOk
 		conout('BIA405 - ENVIADO')

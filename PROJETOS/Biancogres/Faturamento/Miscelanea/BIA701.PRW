@@ -7,7 +7,6 @@
 @since 15/07/2020  
 @project C-15
 @version 1.0
-@description 
 @type function
 /*/
 
@@ -20,12 +19,13 @@ User Function BIA701()
 
 	Private cCadastro   := "Integração Baixa por Quebra"
 	Private aRotina 	:= {}
-    Private aCores      := {}
+	Private aCores      := {}
 
-    aAdd(aRotina, { "Pesquisa"      , "AxPesqui"	, 0, 1 })
+	aAdd(aRotina, { "Pesquisa"      , "AxPesqui"	, 0, 1 })
 	aAdd(aRotina, { "Visualizar"    , "AxVisual"	, 0, 2 })
 	aAdd(aRotina, { "Incluir"       , "U_BIA701INC"	, 0, 3 })				
 	aAdd(aRotina, { "Alterar"       , "U_BIA701ALT"	, 0, 5 })						
+	aAdd(aRotina, { "Excluir"       , "U_BIA701EXC"	, 0, 5 })						
 	aAdd(aRotina, { "Legenda"       , "U_BIA701LEG"	, 0, 8 })	
 	aAdd(aRotina, { "Processar"     , "U_BIA701PRO"	, 0, 9 })							
 
@@ -37,7 +37,7 @@ User Function BIA701()
 	DbSelectArea("ZL8")
 
 	DbSetOrder(1)
-	
+
 	mBrowse(6, 1, 22, 75, "ZL8",,,,,, aCores)
 
 Return()      
@@ -62,7 +62,6 @@ USer Function BIA701INC()
 
 Return(lRet)
 
-
 USer Function BIA701ALT()
 
 	Local lRet		 := .T.
@@ -75,7 +74,7 @@ USer Function BIA701ALT()
 	If (ZL8->ZL8_STATUS <> 'P')
 		aCpos := {"ZL8_STATUS"}
 	EndIf
-	
+
 	nOpcao := AxAltera("ZL8",ZL8->(Recno()),4,,aCpos,,,,"",,aButtons,,,,.T.,,,,,)
 
 	If nOpcao == 1
@@ -93,17 +92,25 @@ USer Function BIA701EXC()
 	Local lRet  := .T.
 	Local aArea := GetArea()
 
-	AxDeleta("ZL8", ZL8->(Recno()), 5)
+	If (ZL8->ZL8_STATUS = 'E')
+
+		AxDeleta("ZL8", ZL8->(Recno()), 5)
+	Else
+
+		lRet := .F.
+		MsgINFO("Somente etiquetas com erro de integração poderão ser excluídas")
+
+	EndIf
 
 	RestArea(aArea)
 
 Return(lRet)
-                    
+
 User Function BIA701LEG()     
 
-    Local aLegenda := {}
-    
-    aAdd(aLegenda, { "BR_VERMELHO"  , "Aguard. Processamento"   })
+	Local aLegenda := {}
+
+	aAdd(aLegenda, { "BR_VERMELHO"  , "Aguard. Processamento"   })
 	aAdd(aLegenda, { "BR_VERDE"		, "Processado"	  			})
 	aAdd(aLegenda, { "BR_AMARELO"	, "Bloqueado"	 			})
 	aAdd(aLegenda, { "BR_PRETO"	    , "Erro" 		  			})
@@ -112,10 +119,10 @@ User Function BIA701LEG()
 
 Return(.T.)
 
-
 User Function BIA701PRO()
+
 	Local aArea := GetArea()
-	
+
 	If (ZL8->ZL8_STATUS <> 'P' )
 		If (!Empty(ZL8->ZL8_CODEMP) .And. !Empty(ZL8->ZL8_CODFIL))
 			Processa( {|| StartJob("U_PROCQBIT", GetEnvServer(), .T., ZL8->ZL8_CODEMP, ZL8->ZL8_CODFIL, ZL8->(Recno()))}, "Integração Baixa por Quebra", "Processando...", .T.)
@@ -125,6 +132,7 @@ User Function BIA701PRO()
 	Else
 		MsgInfo("Registro já processado.")
 	EndIf
-	
+
 	RestArea(aArea)
-Return 
+
+Return

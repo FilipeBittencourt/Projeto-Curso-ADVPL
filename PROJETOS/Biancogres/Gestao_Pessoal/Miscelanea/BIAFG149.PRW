@@ -8,13 +8,6 @@
 @description Escalas de Trabalho para Orçamento  
 @type function
 /*/                                                                                               
-
-User Function TBFG149()
-
-GetSrvProfString( 'specialkey', 'xxx' )
-
-Return
-
 User Function BIAFG149()
 
 	Local _aSize 		:= {} 
@@ -34,7 +27,6 @@ User Function BIAFG149()
 	Local _nOpcA	    := 0
 	Local _aButtons	    := {}
 
-
 	Private _oDlg
 	Private _oGetDados	:= Nil    
 	Private _aColsBkp	:= {}
@@ -48,15 +40,8 @@ User Function BIAFG149()
 
 	_aSize := MsAdvSize(.T.)      
 
-
 	aAdd(_aButtons,{"PRODUTO" ,{|| U_BIA393("E")}, "Layout Integração"      , "Layout Integração"})
 	aAdd(_aButtons,{"PEDIDO"  ,{|| U_BFG149EX() }, "Importa Arquivo"        , "Importa Arquivo"})
-
-
-	/*
-	Exportar importar do bia391
-	*/
-
 
 	AAdd(_aObjects, {100, 10, .T. , .T. })
 	AAdd(_aObjects, {100, 90, .T. , .T. })
@@ -211,67 +196,73 @@ Static Function fGrvDados()
 
 	Local _nI
 	Local _msc
-	Local nPosRec := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZOK_REC_WT"})
+	//Local nPosRec := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZOK_REC_WT"})
 	Local nPosDel	:=	Len(_oGetDados:aHeader) + 1
-
+	Local _cChave	:=	xFilial("ZOK") + _cVersao + _cRevisa + _cAnoRef
+	Local _nPosEsc	:=	aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZOK_CODESC"})
 
 	If _msCtrlAlt
 
 		dbSelectArea('ZOK')
+		ZOK->(DbSetOrder(1))		
+
 		For _nI	:=	1 to Len(_oGetDados:aCols)
-		
-			If _oGetDados:aCols[_nI,nPosRec] > 0
-	
-				ZOK->(dbGoTo(_oGetDados:aCols[_nI,nPosRec]))
-				Reclock("ZOK",.F.)
-				If !_oGetDados:aCols[_nI,nPosDel]
-	
-					For _msc := 1 to Len(_oGetDados:aHeader)
-	
-						If _oGetDados:aHeader[_msc][10] == "R"
-	
-							nPosColG := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == Alltrim(_oGetDados:aHeader[_msc][2])})
-							&("ZOK->" + Alltrim(_oGetDados:aHeader[_msc][2])) := _oGetDados:aCols[_nI, nPosColG]
-	
-						EndIf
-	
-					Next _msc
-	
-				Else
-	
-					ZOK->(DbDelete())
-	
-				EndIf
-	
-				ZOK->(MsUnlock())
-	
-			Else
-	
-				If !_oGetDados:aCols[_nI,nPosDel]
-	
-					Reclock("ZOK",.T.)
-	
-					ZOK->ZOK_FILIAL  := xFilial("ZOK")
-					ZOK->ZOK_VERSAO  := MV_PAR01
-					ZOK->ZOK_REVISA  := MV_PAR02
-					ZOK->ZOK_ANOREF  := MV_PAR03
-					For _msc := 1 to Len(_oGetDados:aHeader)
-	
-						If _oGetDados:aHeader[_msc][10] == "R"
-	
-							nPosColG := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == Alltrim(_oGetDados:aHeader[_msc][2])})
-							&("ZOK->" + Alltrim(_oGetDados:aHeader[_msc][2])) := _oGetDados:aCols[_nI, nPosColG]
-	
-						EndIf
-	
-					Next _msc
-	
+
+			If !Empty(_oGetDados:aCols[_nI,_nPosEsc]) 
+
+				If ZOK->(DbSeek(_cChave+_oGetDados:aCols[_nI,_nPosEsc]))
+
+					Reclock("ZOK",.F.)
+					If !_oGetDados:aCols[_nI,nPosDel]
+
+						For _msc := 1 to Len(_oGetDados:aHeader)
+
+							If _oGetDados:aHeader[_msc][10] == "R"
+
+								nPosColG := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == Alltrim(_oGetDados:aHeader[_msc][2])})
+								&("ZOK->" + Alltrim(_oGetDados:aHeader[_msc][2])) := _oGetDados:aCols[_nI, nPosColG]
+
+							EndIf
+
+						Next _msc
+
+					Else
+
+						ZOK->(DbDelete())
+
+					EndIf
+
 					ZOK->(MsUnlock())
-	
+
+				Else
+
+					If !_oGetDados:aCols[_nI,nPosDel]
+
+						Reclock("ZOK",.T.)
+
+						ZOK->ZOK_FILIAL  := xFilial("ZOK")
+						ZOK->ZOK_VERSAO  := _cVersao
+						ZOK->ZOK_REVISA  := _cRevisa
+						ZOK->ZOK_ANOREF  := _cAnoRef
+						For _msc := 1 to Len(_oGetDados:aHeader)
+
+							If _oGetDados:aHeader[_msc][10] == "R"
+
+								nPosColG := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == Alltrim(_oGetDados:aHeader[_msc][2])})
+								&("ZOK->" + Alltrim(_oGetDados:aHeader[_msc][2])) := _oGetDados:aCols[_nI, nPosColG]
+
+							EndIf
+
+						Next _msc
+
+						ZOK->(MsUnlock())
+
+					EndIf
+
 				EndIf
-	
+
 			EndIf
-	
+
 		Next
 
 	EndIf
@@ -299,11 +290,6 @@ Return
 
 User Function FG149FOK()
 
-	Local cMenVar   := ReadVar()
-	Local _nAt		:=	_oGetDados:nAt
-	Local _nI
-
-
 Return .T.
 
 User Function FG149DOK()
@@ -318,34 +304,35 @@ Static Function fIntegra()
 
 	Local _cAlias	:=	GetNextAlias()
 	Local _cAliasSr	:=	"%" + U_fGetDbSr() + ".dbo.r006esc" + "%"
-	
+
 	BeginSql Alias _cAlias
+
 		%NoParser%
 		SELECT ESC.codesc CODESC
-			,ESC.nomesc DESCRI
+		,ESC.nomesc DESCRI
 		FROM %Exp:_cAliasSr% ESC(NOLOCK)
 		WHERE NOT EXISTS (
-				SELECT 1
-				FROM %TABLE:ZOK% ZOK(NOLOCK)
-				WHERE ZOK.ZOK_FILIAL = %XFILIAL:ZOK%
-					AND ZOK.ZOK_VERSAO = %Exp:_cVersao%
-					AND ZOK.ZOK_REVISA = %Exp:_cRevisa%
-					AND ZOK.ZOK_ANOREF = %Exp:_cAnoRef%
-					AND ZOK.ZOK_CODESC = ESC.codesc
-					AND ZOK.%NotDel%
-				)
+		SELECT 1
+		FROM %TABLE:ZOK% ZOK(NOLOCK)
+		WHERE ZOK.ZOK_FILIAL = %XFILIAL:ZOK%
+		AND ZOK.ZOK_VERSAO = %Exp:_cVersao%
+		AND ZOK.ZOK_REVISA = %Exp:_cRevisa%
+		AND ZOK.ZOK_ANOREF = %Exp:_cAnoRef%
+		AND ZOK.ZOK_CODESC = ESC.codesc
+		AND ZOK.%NotDel%
+		)
 		ORDER BY 1
-	
+
 	EndSql
-	
+
 	While (_cAlias)->(!EOF())
-	
+
 		Reclock("ZOK",.T.)
 		ZOK->ZOK_FILIAL	:=	xFilial("ZOK")
 		ZOK->ZOK_VERSAO	:=	_cVersao
 		ZOK->ZOK_REVISA	:=	_cRevisa
 		ZOK->ZOK_ANOREF	:=	_cAnoRef
-		ZOK->ZOK_CODESC	:=	PADL(Alltrim(Str((_cAlias)->CODESC)),TAMSX3("ZOK_CODESC")[1],"0")
+		ZOK->ZOK_CODESC	:=	Alltrim(Str((_cAlias)->CODESC)) // nao se poe zeros a esquerda porque a senior nao tem zeros a esquerda.PADL(Alltrim(Str((_cAlias)->CODESC)),TAMSX3("ZOK_CODESC")[1],"0")
 		ZOK->ZOK_DESCRI	:=	UPPER((_cAlias)->DESCRI)
 		ZOK->(MsUnlock())
 		(_cAlias)->(DbSkip())
@@ -363,7 +350,7 @@ User Function BFG149EX()
 
 	fxPergunte()
 
-	AADD(aSays, OemToAnsi("Rotina para importação de Funcionários NOVOS que não possuem nenhum semenlhante"))   
+	AADD(aSays, OemToAnsi("Rotina para importação de Horas para adicional Noturno"))   
 	AADD(aSays, OemToAnsi("Antes de continuar, verifique os parâmetros!"))   
 	AADD(aSays, OemToAnsi(""))   
 	AADD(aSays, OemToAnsi("IMPORTANTE: >>>> não é permitido importar arquivos que esteja com proteção"))   
@@ -423,16 +410,18 @@ Static Function fPrcImprtExc()
 	Local vnb, ny, _msc, nx
 
 	Local nPosRec  := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZOK_REC_WT"})
-	Local vtRecGrd := {}
+	Local nPosEsc	  := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == "ZOK_CODESC"})
+
+	Local vtEscGrd := {}
 
 	_ImpaColsBkp  := aClone(_oGetDados:aCols)
 
 	For vnb := 1 to Len(_ImpaColsBkp)
-		AADD(vtRecGrd, _ImpaColsBkp[vnb][nPosRec])	
+		AADD(vtEscGrd, _ImpaColsBkp[vnb][nPosEsc])	
 	Next vnb
 
-	If Len(vtRecGrd) == 1
-		nPrimeralin := _ImpaColsBkp[Len(_ImpaColsBkp)][nPosRec]
+	If Len(vtEscGrd) == 1
+		nPrimeralin := _ImpaColsBkp[Len(_ImpaColsBkp)][nPosEsc]
 		If nPrimeralin == 0
 			_oGetDados:aCols := {}
 		EndIf
@@ -442,7 +431,7 @@ Static Function fPrcImprtExc()
 
 	msTmpINI := Time()
 	oArquivo := TBiaArquivo():New()
-	aArquivo := oArquivo:GetArquivo(cArquivo)
+	aArquivo := oArquivo:NewGetArq(cArquivo)
 
 	msDtProc  := Date()
 	msHrProc  := Time()
@@ -477,11 +466,12 @@ Static Function fPrcImprtExc()
 
 				nLinReg   := 0
 				nPosRec   := aScan(aCampos,{|x| AllTrim(x) == "ZOK_REC_WT"})
+				nPosEsc	  := aScan(aCampos,{|x| AllTrim(x) == "ZOK_CODESC"})
 
-				If nPosRec <> 0
+				If nPosEsc <> 0
 
-					nLinReg := aScan(vtRecGrd,{|x| x == Val(Alltrim(aLinha[nPosRec]))})
-					If nLinReg == 0 .or. Val(Alltrim(aLinha[nPosRec])) == 0
+					nLinReg := aScan(vtEscGrd,{|x| x == Alltrim(aLinha[nPosEsc])})
+					If nLinReg == 0 //.or. Val(Alltrim(aLinha[nPosRec])) == 0
 
 						AADD(_oGetDados:aCols, Array(Len(_oGetDados:aHeader)+1) )
 						nLinReg := Len(_oGetDados:aCols)
@@ -490,15 +480,19 @@ Static Function fPrcImprtExc()
 
 					For _msc := 1 to Len(aCampos)
 
-						xkPosCampo := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == aCampos[_msc]})
-						If xkPosCampo <> 0
-							If _oGetDados:aHeader[xkPosCampo][8] == "N"
-								_oGetDados:aCols[nLinReg, xkPosCampo] := Val(Alltrim(aLinha[_msc]))
-							ElseIf _oGetDados:aHeader[xkPosCampo][8] == "D"
-								_oGetDados:aCols[nLinReg, xkPosCampo] := Stod(Alltrim(aLinha[_msc]))
-							Else
-								_oGetDados:aCols[nLinReg, xkPosCampo] := aLinha[_msc]
+						If aCampos[_msc] <> "ZOK_REC_WT"
+
+							xkPosCampo := aScan(_oGetDados:aHeader,{|x| AllTrim(x[2]) == aCampos[_msc]})
+							If xkPosCampo <> 0
+								If _oGetDados:aHeader[xkPosCampo][8] == "N"
+									_oGetDados:aCols[nLinReg, xkPosCampo] := Val(Alltrim(aLinha[_msc]))
+								ElseIf _oGetDados:aHeader[xkPosCampo][8] == "D"
+									_oGetDados:aCols[nLinReg, xkPosCampo] := Stod(Alltrim(aLinha[_msc]))
+								Else
+									_oGetDados:aCols[nLinReg, xkPosCampo] := aLinha[_msc]
+								EndIf
 							EndIf
+
 						EndIf
 
 					Next _msc

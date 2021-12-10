@@ -11,31 +11,41 @@
 /*/
 
 User Function BAF030()
-Local oObj := Nil
-Local _oSemaforo	:=	tBiaSemaforo():New()	
-	
+	Local oObj := Nil
+	Local _oSemaforo	:=	Nil
+
+/*
+	If Select("SX6") == 0
+		RPCSetEnv("07", "01", NIL, NIL, "COM", NIL, {"SB1","SF1", "SF2"})
+	EndIf*/
+
+
+	oObj := Nil
+	_oSemaforo	:=	tBiaSemaforo():New()
+
+
 	U_GravaPZ2(0,"SE5","BAF030","INICIO","EMP:"+CEMPANT,"MNT",CUSERNAME)
 
 	_oSemaforo:cGrupo	:=	"FIN_TESOURARIA"
-	
+
 	If _oSemaforo:GeraSemaforo("JOB - BAF030")
 
 		// Retorno de Conciliacao Bancaria
 		oObj := TAFRetornoConciliacao():New()
 		oObj:Receive()
-		
+
 		// Conciliacao Bancaria
 		oObj := TAFConciliacaoBancaria():New()
 		oObj:Process()
-		
+
 		// Deposito Identificado
 		oObj := TAFDepositoIdentificado():New()
 		oObj:Process()
-	
+
 		_oSemaforo:LiberaSemaforo()
-	
+
 	EndIf
 
 	U_GravaPZ2(0,"SE5","BAF030","FIM","EMP:"+CEMPANT,"MNT",CUSERNAME)
-			
+
 Return()

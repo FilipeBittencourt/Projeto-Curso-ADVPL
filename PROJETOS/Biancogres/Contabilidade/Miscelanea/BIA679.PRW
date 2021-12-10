@@ -42,6 +42,7 @@ User Function BIA679()
 	Private msVetImp  := ""
 	Private msImpArry := {}
 	Private msArryEmp := {}
+	Private msZeraRec := .T.
 
 	Private xoButton1
 	Private xoMultiGe1
@@ -70,6 +71,9 @@ User Function BIA679()
 				msVetImp += "'" + msImpArry[xpq][2] + "'"
 				If xpq + 1 <= Len(msImpArry)
 					msVetImp += ","
+				EndIf
+				If msImpArry[xpq][2] == "00"
+					msZeraRec := .F.
 				EndIf
 			Next xpq
 
@@ -296,6 +300,9 @@ Static Function ExistThenD(oPrcZera)
 		cSql += "                                       AND (SUBSTRING(CVF_YRFDRE, 4, 2) IN(" + msVetImp + ") "
 		cSql += "                                            OR CVF_CTASUP = '' "
 		cSql += "                                            OR LEN(RTRIM(CVF_YRFDRE)) = 5) "
+		If msZeraRec
+			cSql += "                                       AND NOT SUBSTRING(CVF_YRFDRE, 4, 2) IN('00') "
+		EndIf
 		cSql += "                                       AND CVF.D_E_L_E_T_ = ' ' "
 		cSql += " WHERE ZN6_FILIAL = '" + xFilial("ZN6") + "' "
 		cSql += "       AND ZN6_TIPO1 <> 'M' "
@@ -369,6 +376,40 @@ Static Function Prc679EX(oProcess)
 
 	oProcess:SetRegua1(1)
 	oProcess:SetRegua2(1000)             
+
+	xDtInApu := "19800101"
+	xDtFiApu := "19800101"
+	xMesApIR := ""
+	KF003 := Alltrim(" SELECT Z35_PERAPU PERAPU                                                                                              ") + msEnter
+	KF003 += Alltrim(" FROM " + RetSqlName("Z35") + " Z35(NOLOCK)                                                                            ") + msEnter
+	KF003 += Alltrim(" WHERE Z35_EMP = '" + cEmpAnt + "'                                                                                     ") + msEnter
+	KF003 += Alltrim("       AND Z35_FIL = '" + cFilAnt + "'                                                                                 ") + msEnter
+	KF003 += Alltrim("       AND Z35_REGIME = 'LR'                                                                                           ") + msEnter
+	KF003 += Alltrim("       AND Z35.D_E_L_E_T_ = ' '                                                                                        ") + msEnter
+	KFIndex := CriaTrab(Nil,.f.)
+	dbUseArea(.T.,"TOPCONN",TcGenQry(,,KF003),'KF03',.T.,.T.)
+	dbSelectArea("KF03")
+	dbGoTop()
+	If !KF03->(Eof())
+
+		If KF03->PERAPU == "A"
+			xDtInApu := xAnoRef + "0101"
+			xDtFiApu := dtos(dDataFin)
+			xMesApIR := "12"
+
+		Else
+
+			xDtInApu := dtos(FirstDate(MonthSub(dDataFin, 2)))
+			xDtFiApu := dtos(dDataFin)
+			xMesApIR := "03/06/09/12"
+
+		EndIf
+
+	End
+
+	KF03->(dbCloseArea())
+	Ferase(KFIndex+GetDBExtension())
+	Ferase(KFIndex+OrdBagExt())
 
 	QX005 := Alltrim(" SELECT VERCON = ZOY_VERSAO,                                                                                           ") + msEnter
 	QX005 += Alltrim("        CODPLA = CVF_CODIGO,                                                                                           ") + msEnter
@@ -500,6 +541,7 @@ Static Function Prc679EX(oProcess)
 				End
 				msQryPrc = Replace(msQryPrc, "@DATAINI" , dtos(dDataIni))
 				msQryPrc = Replace(msQryPrc, "@DATAFIM" , dtos(dDataFin))
+				msQryPrc = Replace(msQryPrc, "@INITRIM" , dtos(FirstDate(MonthSub(dDataFin, 2))))				
 				msQryPrc = Replace(msQryPrc, "@VERSAO"  , xVersao)
 				msQryPrc = Replace(msQryPrc, "@REVISA"  , xRevisa)
 				msQryPrc = Replace(msQryPrc, "@ANOREF"  , xAnoRef)
@@ -510,6 +552,9 @@ Static Function Prc679EX(oProcess)
 				msQryPrc = Replace(msQryPrc, "@PERIODO" , Substr(dtos(dDataFin), 5, 2))
 				msQryPrc = Replace(msQryPrc, "@YRFDRE"  , xYRFDre)
 				msQryPrc = Replace(msQryPrc, "@SUBTRIB" , xSubTrib)
+				msQryPrc = Replace(msQryPrc, "@DTINAPU" , xDtInApu)
+				msQryPrc = Replace(msQryPrc, "@DTFIAPU" , xDtFiApu)
+				msQryPrc = Replace(msQryPrc, "@MESAPIR" , xMesApIR)
 
 				QPIndex := CriaTrab(Nil,.f.)
 

@@ -22,7 +22,7 @@ User Function BIA174()
 	Private cEmail    	:= ""
 	Private C_HTML  	:= ""
 	Private lOK        := .F.
-	PRIVATE aEmp := {'01','05','13'}   
+	PRIVATE aEmp := {'01','05','13','14'}   
 
 	For nI := 1 to Len(aEmp)                   
 

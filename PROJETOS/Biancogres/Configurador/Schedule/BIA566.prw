@@ -16,9 +16,6 @@ User Function BIA566()
 	Aplicação := Relação de NFs que não fora emitidas nem inutilizadas
 	±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±*/
 
-	LOCAL     xv_Emps    := U_BAGtEmpr("01_05")
-	Local i 
-
 	ConOut("HORA: " + TIME() + " - Iniciando Processo BIA566 ")
 
 	//Inicializa o ambiente
@@ -45,7 +42,7 @@ User Function BIA566()
 		sContadorNfe 	:= 0
 
 		cSql := "SELECT NFE_ID "
-		cSql += "FROM SPED050 "
+		cSql += "FROM [DADOSADV].dbo.SPED050 "
 		cSql += "WHERE ID_ENT = '" + cSqlPrinc->ID_ENT +"' "   //essa data abaixo retorna o primeiro dia do mês corrente - 2 dias, pra não ficar dois dias sempre sem contar
 		cSql += "	AND DATE_NFE BETWEEN CONVERT(VARCHAR, DATEADD(DAY, -2, CONVERT(VARCHAR(04),DATEPART(YEAR,GETDATE())) + '-' + REPLACE(SPACE(2 - LEN(DATEPART(MONTH,GETDATE()))),' ', '0') + CONVERT(VARCHAR(02),DATEPART(MONTH,GETDATE())) + '-' + '01'), 112) "
 		cSql += "						AND CONVERT(VARCHAR, DATEADD(DAY, -1, GETDATE()), 112) AND MODELO = '55' AND D_E_L_E_T_ = '' "
@@ -98,7 +95,7 @@ User Function BIA566()
 		For i := 1 To Len(sVetNFE)
 
 			cSql := "SELECT NFE_ID "
-			cSql += "FROM SPED050 "
+			cSql += "FROM [DADOSADV].dbo.SPED050 "
 			cSql += "WHERE ID_ENT = '" + cSqlPrinc->ID_ENT +"' AND NFE_ID = '" + sVetNFE[i] + "' AND D_E_L_E_T_ = '' "
 
 			TCQUERY cSql New Alias "cSql"

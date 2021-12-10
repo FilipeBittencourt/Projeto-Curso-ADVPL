@@ -1184,14 +1184,16 @@ User Function BF01PRXX(_cLinha, _cCodCli, _cLojCli, _cProduto, _dDEmissa)
 
 	//Buscar a tabela de preco
 	_cCodTab 	:= ""
-	If _cLinha == "1"				//BIANCOGRES
+	If _cLinha == "1"			//BIANCOGRES
 		_cCodTab := Tabela("ZF","1E")
 	ElseIf _cLinha == "2"		//INCESA
 		_cCodTab := Tabela("ZF","2E")
 	ElseIf _cLinha == "3"		//BELLACASA
 		_cCodTab := Tabela("ZF","3E")
-	ElseIf _cLinha == "4"		//MUNDI
+	ElseIf _cLinha == "4"		//MUNDI	
 		_cCodTab := Tabela("ZF","4E")
+	ElseIf _cLinha == "5"		//PEGASUS
+		_cCodTab := Tabela("ZF","5E")
 	ElseIf _cLinha == "6"		//BIANCOGRES VINILICO
 		_cCodTab := Tabela("ZF","6E")		
 	EndIf

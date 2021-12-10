@@ -142,6 +142,9 @@ Method ConfNFE(cChaveF1,cEntrega,cChvNF) Class TIntegraBizagi
 				cInsertSQL += " , 'IP' AS 'STATUS' "
 
 				cXmlRetorno := ::XmlConfCegas(cEntrega,cChvNF,cNumeroNF,cCodEmp,cSerieNF,cCNPJ,cLojaCNPJ,aLst,cTpReceb)
+
+				CONOUT("ConfNFE(2): " + cEntrega + ';' + cChvNF + ';' + cNumeroNF + ';' + cCodEmp + ';' + cSerieNF + ';' + cCNPJ + ';' + cTpReceb)
+
 				If Len(cXmlRetorno) <= 4000
 					cInsertSQL += " , '" + SUBSTR(cXmlRetorno,1,4000) + "' AS 'DADOS_ENTRADA' "
 					cInsertSQL += " , '' AS 'DADOS_ENTRADA_EXTRA' "
@@ -184,6 +187,8 @@ Method ConfNFE(cChaveF1,cEntrega,cChvNF) Class TIntegraBizagi
 				If lRetBz < 0
 					DisarmTransaction()
 					MsgInfo("Erro no processo de integração PROTHEUS x BIZAGI. Favor procurar a TI. (TIntegraBizagi:ConfNFE - BZINTEGRACAO) - Erro : " + TCSQLError())	
+
+					CONOUT("ConfNFE(4): ERRO "+cEntrega+';'+cChvNF+';'+cNumeroNF+';'+cCodEmp+';'+cSerieNF+';'+cCNPJ+';'+cTpReceb)
 				EndIf									
 
 			EndIf			

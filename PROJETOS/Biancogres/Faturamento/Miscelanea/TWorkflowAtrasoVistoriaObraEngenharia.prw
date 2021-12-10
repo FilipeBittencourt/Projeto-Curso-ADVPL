@@ -373,6 +373,8 @@ Local oMail := TAFMail():New()
 
 	cFile := Lower("\P10\vistoria_obra\atraso\atraso_" + cEmpAnt + "_" + cCodVen + "_" + dToS(::dData) + "_" + StrZero(Seconds() * 3500, 10) + ".html")
 	
+	U_ChkDirVistoriaObra()
+
 	If File(cFile)
 
 		fErase(cFile)

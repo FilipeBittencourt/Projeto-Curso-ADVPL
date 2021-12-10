@@ -13,6 +13,7 @@ User Function MT110LOK()
 
 	Local lret      := .T.
 	Local nProd	    := Gdfieldget("C1_PRODUTO",n)
+	Local cLocal	:=	Gdfieldget("C1_LOCAL",n)
 	Private rtCLVL  := Gdfieldget("C1_CLVL",n)
 
 	dbSelectArea("SBZ")
@@ -33,4 +34,32 @@ User Function MT110LOK()
 		Endif
 	Endif
 
+	If lRet .And. !GdDeleted() .And. !fCheckMd(nProd,cLocal)
+		MsgStop("O Produto não poderá ser solicitado no Almoxarifado atual pois o mesmo é MD e não está cadastrado como MD nos demais almoxarifados!")
+		lRet	:=	.F.
+	EndIf
 Return(lret)
+
+Static Function fCheckMd(cProd,cLocal)
+	
+	Local _aArea	:=	GetArea()
+	Local _lRet	:=	.T.
+	Local _oMd	:=	tBiaControleMD():New()
+
+	
+	If _oMd:CheckMd(cProd,cLocal) 
+
+		ZCN->(DbSetOrder(2))
+		If ZCN->(DbSeek(xFilial("ZCN")+cProd))
+			While ZCN->(!EOF()) .And. ZCN->(ZCN_FILIAL+ZCN_COD) == xFilial("ZCN")+cProd
+				If ZCN->ZCN_LOCAL <> cLocal .And. !_oMd:CheckMd(ZCN->ZCN_COD,ZCN->ZCN_LOCAL)
+					_lRet	:= .F.
+				EndIf
+				ZCN->(DbSkip())
+			EndDo
+		EndIf
+
+	EndIf
+	
+	RestArea(_aArea)
+Return _lRet

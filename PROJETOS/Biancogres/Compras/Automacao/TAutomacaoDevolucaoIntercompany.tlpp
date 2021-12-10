@@ -16,6 +16,7 @@ static __cCRLF as character
 @project Automação Entrada
 @version 1.0
 @description Processa as Devoluções Iniciadas em BIA267
+@Correção: Marinaldo de Jesus (Facile) / Gabriel Pinheiro (Facile)
 @type function
 /*/
 
@@ -23,7 +24,7 @@ function U_JOBDEVINTE()
 
     local oTAutDevIntCom as object
 
-    DEFAULT __cCRLF:=CRLF
+    DEFAULT __cCRLF:=CRLF  
 
     oTAutDevIntCom:=TAutomacaoDevolucaoIntercompany():New(.F.)
 
@@ -275,7 +276,7 @@ method ProcessaSaida() class TAutomacaoDevolucaoIntercompany
 
                         if SF2->(!DBSeek(cSF2Filial+ZL9->ZL9_DOC+ZL9->ZL9_SERIE))
 
-                            ZL9->ZL9_STADOC:="" // 5=Cancelada
+                            ZL9->ZL9_STADOC:="5" // 5=Cancelada 
                             ZL9->ZL9_STATUS:="3"
                             ZL9->ZL9_MSBLQL:="1"
                             ZL9->ZL9_DOC:=""
@@ -564,7 +565,7 @@ method EnvioNFe(aNotasEnv) class TAutomacaoDevolucaoIntercompany
         self:nZL9RecNo:=aNotasEnv[nNota][4]
         ZL9->(DBGoTo(self:nZL9RecNo))
         if (lEnv)
-            U_BIAEnvMail(nil,self:cEmailNfDev,"NF-e de Devolução de "+allTrim(SM0->M0_NOME),"Segue nota fiscal eletrônica",nil,allTrim(aNotasEnv[1]),.F.)
+            U_BIAEnvMail(nil,self:cEmailNfDev,"NF-e de Devolução de "+allTrim(SM0->M0_NOME),"Segue nota fiscal eletrônica",nil,allTrim(aNotasEnv[1]),.F.) 
             lEnv:=.F.
         endif
         if (ZL9->(Reclock("ZL9",.F.)))
@@ -631,8 +632,16 @@ method ProcessaDevolucao() class TAutomacaoDevolucaoIntercompany
 
     cSQL:=TAutDevIntQry():ProcessaDevolucao(oEmpDestino:cCodigosCli)
 
-    cTmpAlias:=GetNextAlias()
-    TCQUERY (cSQL) ALIAS (cTmpAlias) NEW
+    cTmpAlias := "__TRX1"
+
+    If Select("__TRX1")>0
+        __TRX1->(DbCloseArea())
+    ENDIF
+
+
+    //cTmpAlias:=GetNextAlias()
+    //TCQUERY (cSQL) ALIAS (cTmpAlias) NEW
+    dbUseArea(.T.,"TOPCONN",TcGenQry(,,cSQL),cTmpAlias,.T.,.T.)
 
     dbSelectArea("SC5")
     SC5->(dbSetOrder(1)) // C5_FILIAL,C5_NUM,R_E_C_N_O_,D_E_L_E_T_
@@ -720,6 +729,12 @@ method ProcessaDevolucao() class TAutomacaoDevolucaoIntercompany
                 cDocOri:=aDocEntOri[nW][1]
                 cSerOri:=aDocEntOri[nW][2]
 
+                If aDocEntOri[nW][7] == 0
+                    nTES := "5I4"
+                else
+                    nTES := "9I4"
+                EndIf 
+
                 aAdd(aItemSC6,{"C6_NUM","",nil})
                 aAdd(aItemSC6,{"C6_ITEM",cItem,nil})
                 aAdd(aItemSC6,{"C6_PRODUTO",(cTmpAlias)->D1_COD,nil})
@@ -727,7 +742,7 @@ method ProcessaDevolucao() class TAutomacaoDevolucaoIntercompany
                 aAdd(aItemSC6,{"C6_PRCVEN",nPreco,nil})
                 aAdd(aItemSC6,{"C6_PRUNIT",nPreco,nil})
                 aAdd(aItemSC6,{"C6_VALOR",nValor,nil})
-                aAdd(aItemSC6,{"C6_TES","5I4",nil})
+                aAdd(aItemSC6,{"C6_TES",nTES,nil})
                 aAdd(aItemSC6,{"C6_LOCAL",(cTmpAlias)->C6_LOCAL,nil})
                 aAdd(aItemSC6,{"C6_LOTECTL",aDocEntOri[nW][4],nil})
                 aAdd(aItemSC6,{"C6_LOCALIZ","LM",nil})
@@ -757,7 +772,11 @@ method ProcessaDevolucao() class TAutomacaoDevolucaoIntercompany
         endif
 
         self:GravaErro()
-
+   
+        If !lOrigFound
+            (cTmpAlias)->(DBSkip())
+        EndIf
+        
     end while
 
     (cTmpAlias)->(dbCloseArea())
@@ -1271,7 +1290,8 @@ method GetDocOri(cDoc,cSerie,cCliente,cLoja,cCodFor,cLojaFor) class TAutomacaoDe
                         D1_ITEM,;
                         D1_LOTECTL,;
                         D1_QUANT,;
-                        D1_VUNIT;
+                        D1_VUNIT,;
+                        D1_IPI;
                     };
                 );
             )
@@ -1486,7 +1506,7 @@ method ProcessaEntrada(aFiliais,lOnlyDistr) class TAutomacaoDevolucaoIntercompan
                 cSQL+=" 	AND SC6.D_E_L_E_T_=''"+__cCRLF
                 cSQL+=" )"+__cCRLF
 
-                cSQL+=" JOIN SPED050 SPED (NOLOCK) ON"+__cCRLF
+                cSQL+=" JOIN [DADOSADV].dbo.SPED050 SPED (NOLOCK) ON"+__cCRLF
                 cSQL+=" ("+__cCRLF
                 cSQL+=" 	SPED.ID_ENT="+ValToSql(oEmpFilVen:cIdEnt)+__cCRLF
                 cSQL+=" 	AND SPED.NFE_ID=SF2.F2_SERIE+SF2.F2_DOC"+__cCRLF
@@ -2304,7 +2324,22 @@ method ProcFat(cDoc,cSerie,cCliente,cLoja) class TAutomacaoDevolucaoIntercompany
 
         endif
 
-    endif
+    Else
+        
+        //|Atualiza o número da nota na ZL9 |
+        If SC5->C5_NUM == ZL9->ZL9_PEDIDO .And. Empty(ZL9->ZL9_DOC)
+        
+           RecLock("ZL9",.F.)
+           ZL9->ZL9_DOC     := SC5->C5_NOTA
+           ZL9->ZL9_SERIE   := SC5->C5_SERIE
+           ZL9->ZL9_STADOC  :="1"
+           ZL9->ZL9_STATUS  :="4"
+           ZL9->( MsUnLock() )
+
+        EndIf
+
+
+    EndIf
 
     if (!xRetorno)
 

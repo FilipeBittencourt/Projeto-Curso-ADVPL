@@ -12,6 +12,6 @@
 
 User Function MT160TEL()
 	
-	SetKey(VK_F8, {|| U_BIAF117() })
+	SetKey(VK_F9, {|| U_BIAF117() })
 	
 Return()
